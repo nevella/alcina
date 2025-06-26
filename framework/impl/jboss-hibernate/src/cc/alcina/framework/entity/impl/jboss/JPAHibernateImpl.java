@@ -41,6 +41,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.persister.entity.EntityPersister;
@@ -442,8 +443,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	public static class UseEntityIdGenerator implements IdentifierGenerator {
 		@Override
-		public Serializable generate(SessionImplementor session, Object object)
-				throws HibernateException {
+		public Serializable generate(SharedSessionContractImplementor session,
+				Object object) throws HibernateException {
 			return ((Entity) object).getId();
 		}
 	}

@@ -2,6 +2,19 @@ package cc.alcina.framework.entity.impl.domain;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.EntityGraph;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
+import javax.persistence.StoredProcedureQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -12,10 +25,10 @@ import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
@@ -27,6 +40,7 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.SessionStatistics;
 
 @SuppressWarnings("deprecation")
@@ -97,11 +111,6 @@ public class DomainStoreSession implements Session {
 	}
 
 	@Override
-	public Connection close() throws HibernateException {
-		return this.delegate.close();
-	}
-
-	@Override
 	public boolean contains(Object arg0) {
 		return this.delegate.contains(arg0);
 	}
@@ -131,16 +140,6 @@ public class DomainStoreSession implements Session {
 	@Override
 	public Query createFilter(Object arg0, String arg1) {
 		return this.delegate.createFilter(arg0, arg1);
-	}
-
-	@Override
-	public Query createQuery(String arg0) {
-		return this.delegate.createQuery(arg0);
-	}
-
-	@Override
-	public SQLQuery createSQLQuery(String arg0) {
-		return this.delegate.createSQLQuery(arg0);
 	}
 
 	@Override
@@ -279,11 +278,6 @@ public class DomainStoreSession implements Session {
 	}
 
 	@Override
-	public FlushMode getFlushMode() {
-		return this.delegate.getFlushMode();
-	}
-
-	@Override
 	public Serializable getIdentifier(Object arg0) throws HibernateException {
 		return this.delegate.getIdentifier(arg0);
 	}
@@ -296,11 +290,6 @@ public class DomainStoreSession implements Session {
 	@Override
 	public ProcedureCall getNamedProcedureCall(String name) {
 		return this.delegate.getNamedProcedureCall(name);
-	}
-
-	@Override
-	public Query getNamedQuery(String arg0) {
-		return this.delegate.getNamedQuery(arg0);
 	}
 
 	@Override
@@ -530,5 +519,383 @@ public class DomainStoreSession implements Session {
 	@Override
 	public void update(String arg0, Object arg1) throws HibernateException {
 		this.delegate.update(arg0, arg1);
+	}
+
+	@Override
+	public void close() throws HibernateException {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'close'");
+	}
+
+	@Override
+	public org.hibernate.query.Query createQuery(String queryString) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createQuery'");
+	}
+
+	@Override
+	public Integer getJdbcBatchSize() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getJdbcBatchSize'");
+	}
+
+	@Override
+	public void setJdbcBatchSize(Integer jdbcBatchSize) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setJdbcBatchSize'");
+	}
+
+	@Override
+	public org.hibernate.query.Query createNamedQuery(String name) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createNamedQuery'");
+	}
+
+	@Override
+	public NativeQuery createNativeQuery(String sqlString) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createNativeQuery'");
+	}
+
+	@Override
+	public NativeQuery createNativeQuery(String sqlString,
+			String resultSetMapping) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createNativeQuery'");
+	}
+
+	@Override
+	public NativeQuery getNamedNativeQuery(String name) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getNamedNativeQuery'");
+	}
+
+	@Override
+	public void detach(Object arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'detach'");
+	}
+
+	@Override
+	public <T> T find(Class<T> arg0, Object arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'find'");
+	}
+
+	@Override
+	public <T> T find(Class<T> arg0, Object arg1, Map<String, Object> arg2) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'find'");
+	}
+
+	@Override
+	public <T> T find(Class<T> arg0, Object arg1, LockModeType arg2) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'find'");
+	}
+
+	@Override
+	public <T> T find(Class<T> arg0, Object arg1, LockModeType arg2,
+			Map<String, Object> arg3) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'find'");
+	}
+
+	@Override
+	public CriteriaBuilder getCriteriaBuilder() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getCriteriaBuilder'");
+	}
+
+	@Override
+	public Object getDelegate() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getDelegate'");
+	}
+
+	@Override
+	public EntityManagerFactory getEntityManagerFactory() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getEntityManagerFactory'");
+	}
+
+	@Override
+	public LockModeType getLockMode(Object arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getLockMode'");
+	}
+
+	@Override
+	public Metamodel getMetamodel() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getMetamodel'");
+	}
+
+	@Override
+	public Map<String, Object> getProperties() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getProperties'");
+	}
+
+	@Override
+	public <T> T getReference(Class<T> arg0, Object arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getReference'");
+	}
+
+	@Override
+	public void joinTransaction() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'joinTransaction'");
+	}
+
+	@Override
+	public void lock(Object arg0, LockModeType arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'lock'");
+	}
+
+	@Override
+	public void lock(Object arg0, LockModeType arg1, Map<String, Object> arg2) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'lock'");
+	}
+
+	@Override
+	public void refresh(Object arg0, Map<String, Object> arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'refresh'");
+	}
+
+	@Override
+	public void refresh(Object arg0, LockModeType arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'refresh'");
+	}
+
+	@Override
+	public void refresh(Object arg0, LockModeType arg1,
+			Map<String, Object> arg2) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'refresh'");
+	}
+
+	@Override
+	public void remove(Object arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'remove'");
+	}
+
+	@Override
+	public void setFlushMode(FlushModeType arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setFlushMode'");
+	}
+
+	@Override
+	public void setProperty(String arg0, Object arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setProperty'");
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'unwrap'");
+	}
+
+	@Override
+	public Session getSession() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getSession'");
+	}
+
+	@Override
+	public void setHibernateFlushMode(FlushMode flushMode) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setHibernateFlushMode'");
+	}
+
+	@Override
+	public FlushMode getHibernateFlushMode() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getHibernateFlushMode'");
+	}
+
+	@Override
+	public boolean contains(String entityName, Object object) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'contains'");
+	}
+
+	@Override
+	public <T> MultiIdentifierLoadAccess<T>
+			byMultipleIds(Class<T> entityClass) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'byMultipleIds'");
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess byMultipleIds(String entityName) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'byMultipleIds'");
+	}
+
+	@Override
+	public <T> org.hibernate.query.Query<T> createQuery(String queryString,
+			Class<T> resultType) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createQuery'");
+	}
+
+	@Override
+	public <T> org.hibernate.query.Query<T>
+			createQuery(CriteriaQuery<T> criteriaQuery) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createQuery'");
+	}
+
+	@Override
+	public org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createQuery'");
+	}
+
+	@Override
+	public org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createQuery'");
+	}
+
+	@Override
+	public <T> org.hibernate.query.Query<T> createNamedQuery(String name,
+			Class<T> resultType) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createNamedQuery'");
+	}
+
+	@Override
+	public NativeQuery createSQLQuery(String queryString) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createSQLQuery'");
+	}
+
+	@Override
+	public <T> EntityGraph<T> createEntityGraph(Class<T> arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createEntityGraph'");
+	}
+
+	@Override
+	public EntityGraph<?> createEntityGraph(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createEntityGraph'");
+	}
+
+	@Override
+	public StoredProcedureQuery createNamedStoredProcedureQuery(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createNamedStoredProcedureQuery'");
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createStoredProcedureQuery'");
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String arg0,
+			Class... arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createStoredProcedureQuery'");
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String arg0,
+			String... arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createStoredProcedureQuery'");
+	}
+
+	@Override
+	public EntityGraph<?> getEntityGraph(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getEntityGraph'");
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getEntityGraphs'");
+	}
+
+	@Override
+	public boolean isJoinedToTransaction() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'isJoinedToTransaction'");
+	}
+
+	@Override
+	public org.hibernate.query.Query getNamedQuery(String queryName) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getNamedQuery'");
+	}
+
+	@Override
+	public NativeQuery createNativeQuery(String sqlString, Class resultClass) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public FlushModeType getFlushMode() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getFlushMode'");
 	}
 }

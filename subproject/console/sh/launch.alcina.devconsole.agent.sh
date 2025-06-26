@@ -26,7 +26,7 @@ CLASSPATH=/g/jade/server/lib/war/httpclient-4.5.13.jar:\
 /g/alcina/lib/framework/gwt/validation-api-1.0.0.GA-sources.jar:\
 /g/alcina/lib/framework/gwt/validation-api-1.0.0.GA.jar:\
 /g/alcina/lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-4.0.4.Final.jar:\
-/g/alcina/lib/framework/impl/jboss-hibernate/hibernate-core-4.3.7.Final.jar:\
+/g/alcina/lib/framework/impl/jboss-hibernate/hibernate-core-5.3.20.Final-patched.jar:\
 /g/alcina/lib/framework/gwt/gwt-user.jar:\
 /g/alcina/lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.3.7.Final.jar:\
 /g/alcina/lib/framework/servlet/jakarta.activation-1.2.1.jar:\

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -148,6 +149,18 @@ public class DevConsoleCommandTransforms {
 	public static class CmdListTransforms extends DevConsoleCommand {
 		boolean foundDteId;
 
+		public static class Result {
+			public List<DomainTransformEvent> transforms;
+
+			public long firstDtrId;
+
+			public Date firstEventDate;
+		}
+
+		public Result result = new Result();
+
+		public boolean muteLogging;
+
 		@Override
 		public boolean canUseProductionConn() {
 			return true;
@@ -266,7 +279,9 @@ public class DevConsoleCommandTransforms {
 						dteFilter.negate());
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
-				System.out.println(console.breakAndPad(1, 80, sql1, 0));
+				if (!muteLogging) {
+					System.out.println(console.breakAndPad(1, 80, sql1, 0));
+				}
 				ids = SqlUtils.toIdSet(ps, sql1, "id", false);
 				ps.close();
 				List<String> args = new ArrayList<String>(Arrays.asList(argv));
@@ -283,15 +298,23 @@ public class DevConsoleCommandTransforms {
 				sql2 = String.format(sql2, dtrName, dteName, filter,
 						orderClause, limit);
 				PreparedStatement ps = conn.prepareStatement(sql2);
-				System.out.println(console.breakAndPad(1, 80, sql2, 0));
+				if (!muteLogging) {
+					System.out.println(console.breakAndPad(1, 80, sql2, 0));
+				}
 				ResultSet rs = ps.executeQuery();
 				if (outputTransforms) {
-					List<DomainTransformEvent> dtes = new RsrowToDteConverter(
-							true).convert(rs);
-					String outPath = "/tmp/transforms.txt";
-					Io.write().string(dtes.toString()).toPath(outPath);
-					Ax.out("wrote %s transforms to \n\t%s", dtes.size(),
-							outPath);
+					RsrowToDteConverter transformer = new RsrowToDteConverter(
+							true);
+					result.transforms = transformer.convert(rs);
+					result.firstDtrId = transformer.firstDtrId;
+					result.firstEventDate = transformer.firstEventDate;
+					if (!muteLogging) {
+						String outPath = "/tmp/transforms.txt";
+						Io.write().string(result.transforms.toString())
+								.toPath(outPath);
+						Ax.out("wrote %s transforms to \n\t%s",
+								result.transforms.size(), outPath);
+					}
 				} else if (valuesOnly) {
 					while (rs.next()) {
 						System.out.format("%s | %s\n", rs.getLong("object_id"),
@@ -732,6 +755,10 @@ public class DevConsoleCommandTransforms {
 			this.modColNames = modColNames;
 		}
 
+		long firstDtrId;
+
+		Date firstEventDate;
+
 		public List<DomainTransformEvent> convert(ResultSet rs)
 				throws Exception {
 			List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
@@ -739,6 +766,10 @@ public class DevConsoleCommandTransforms {
 				DomainTransformEvent dte = TransformManager
 						.createTransformEvent();
 				dtes.add(dte);
+				if (firstDtrId == 0) {
+					firstDtrId = rs.getLong("dtr_id");
+					firstEventDate = rs.getTimestamp("servercommitdate");
+				}
 				dte.setNewStringValue(rs.getString("newStringValue"));
 				dte.setObjectClassRef(ClassRef.forId(rs.getLong(
 						modColNames ? "dte_objref" : "objectclassref_id")));

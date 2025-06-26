@@ -58,7 +58,6 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
@@ -387,9 +386,7 @@ public class TransformCommit {
 				chunkRequest.setEvents(
 						new ArrayList<DomainTransformEvent>(subList));
 				chunk.setText(chunkRequest.toString());
-				commitBulkTransforms(
-						Arrays.asList(new DeltaApplicationRecord[] { chunk }),
-						commitAsWrapperUser, true);
+				commitBulkTransforms(List.of(chunk), commitAsWrapperUser, true);
 				String message = String.format(
 						"written chunk - writing chunk %s of %s", range, size);
 				System.out.println(message);
@@ -397,9 +394,7 @@ public class TransformCommit {
 			}
 		} else {
 			dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
-			commitBulkTransforms(
-					Arrays.asList(new DeltaApplicationRecord[] { dar }),
-					commitAsWrapperUser, true);
+			commitBulkTransforms(List.of(dar), commitAsWrapperUser, true);
 		}
 	}
 

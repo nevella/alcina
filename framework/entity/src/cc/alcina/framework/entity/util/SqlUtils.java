@@ -112,6 +112,8 @@ public class SqlUtils {
 					return (T) rs.getString(1);
 				} else if (clazz == Long.class || clazz == long.class) {
 					return (T) Long.valueOf(rs.getLong(1));
+				} else if (clazz == Integer.class || clazz == int.class) {
+					return (T) Integer.valueOf(rs.getInt(1));
 				} else if (clazz == Timestamp.class) {
 					return (T) rs.getTimestamp(1);
 				} else {
@@ -120,9 +122,13 @@ public class SqlUtils {
 			}
 			if (clazz == long.class) {
 				return (T) Long.valueOf(0L);
+			} else if (clazz == int.class) {
+				return (T) Integer.valueOf(0);
 			} else if (clazz == String.class) {
 				return null;
 			} else if (clazz == Long.class) {
+				return null;
+			} else if (clazz == Integer.class) {
 				return null;
 			} else if (clazz == Timestamp.class) {
 				return null;

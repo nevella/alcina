@@ -1,16 +1,21 @@
 package cc.alcina.framework.entity.impl.domain;
 
+import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Query;
+import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.Session;
@@ -265,5 +270,84 @@ public class DomainStoreEntityManager implements EntityManager {
 	@Override
 	public <T> T unwrap(Class<T> arg0) {
 		return this.delegate.unwrap(arg0);
+	}
+
+	@Override
+	public <T> EntityGraph<T> createEntityGraph(Class<T> arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createEntityGraph'");
+	}
+
+	@Override
+	public EntityGraph<?> createEntityGraph(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createEntityGraph'");
+	}
+
+	@Override
+	public StoredProcedureQuery createNamedStoredProcedureQuery(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createNamedStoredProcedureQuery'");
+	}
+
+	@Override
+	public Query createQuery(CriteriaUpdate arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createQuery'");
+	}
+
+	@Override
+	public Query createQuery(CriteriaDelete arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createQuery'");
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createStoredProcedureQuery'");
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String arg0,
+			Class... arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createStoredProcedureQuery'");
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String arg0,
+			String... arg1) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createStoredProcedureQuery'");
+	}
+
+	@Override
+	public EntityGraph<?> getEntityGraph(String arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getEntityGraph'");
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> arg0) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getEntityGraphs'");
+	}
+
+	@Override
+	public boolean isJoinedToTransaction() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'isJoinedToTransaction'");
 	}
 }

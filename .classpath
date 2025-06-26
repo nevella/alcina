@@ -34,7 +34,7 @@
 	<classpathentry exported="true" kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA-sources.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-4.0.4.Final.jar" />
-	<classpathentry exported="true" kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.3.7.Final.jar" sourcepath="/g/minor/hibernate-orm" />
+	<classpathentry exported="true" kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-5.3.20.Final-patched.jar" sourcepath="/g/minor/hibernate-orm" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/gwt/gwt-user.jar" sourcepath="lib/framework/gwt/gwt-user.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.3.7.Final.jar" sourcepath="/jboss-hibernate-orm" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/servlet/jakarta.activation-1.2.1.jar" />
