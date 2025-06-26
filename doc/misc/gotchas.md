@@ -102,3 +102,7 @@ should be volatile (at the outside), or a rethink (sync?) on how version data is
 
 Note that this issue makes a strong argument for moving commit for a local tx from the main commit queue thread to the
 db commit thread - countervailing to that is 'what about coherency in the queue thread?'
+
+### vscode
+
+turn off lombok

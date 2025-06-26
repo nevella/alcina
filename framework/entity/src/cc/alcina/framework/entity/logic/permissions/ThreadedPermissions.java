@@ -13,15 +13,12 @@
  */
 package cc.alcina.framework.entity.logic.permissions;
 
-import java.util.concurrent.Callable;
-
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.util.ThrowingRunnable;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 /**
  * @author Nick Reddel
@@ -86,5 +83,14 @@ public class ThreadedPermissions extends Permissions {
 	@Override
 	protected void removePerThreadContext0() {
 		threadLocalInstance.remove();
+	}
+
+	@Registration(GetSystemUserClientInstance.class)
+	public static class GetSystemUserClientInstanceImpl
+			implements GetSystemUserClientInstance {
+		@Override
+		public ClientInstance getClientInstance() {
+			return EntityLayerObjects.get().getServerAsClientInstance();
+		}
 	}
 }

@@ -544,7 +544,7 @@ public class Permissions implements DomainTransformListener {
 
 	public static void pushUser(IUser user, LoginState loginState,
 			boolean asRoot) {
-		get().pushUser0(user, loginState, asRoot);
+		get().pushUser0(user, loginState, asRoot, null);
 	}
 
 	private static void recursivePopulateGroupMemberships(Set<IGroup> members,
@@ -1037,22 +1037,30 @@ public class Permissions implements DomainTransformListener {
 
 	protected IUser pushSystemUser0() {
 		IUser systemUser = getSystemUser();
-		pushUser(systemUser, LoginState.LOGGED_IN, true);
+		pushUser0(systemUser, LoginState.LOGGED_IN, true, Registry
+				.impl(GetSystemUserClientInstance.class).getClientInstance());
 		return systemUser;
 	}
 
 	protected void pushUser0(IUser user, LoginState loginState) {
-		pushUser(user, loginState, false);
+		pushUser0(user, loginState, false, null);
 	}
 
-	protected void pushUser0(IUser user, LoginState loginState,
-			boolean asRoot) {
+	protected void pushUser0(IUser user, LoginState loginState, boolean asRoot,
+			ClientInstance clientInstance) {
 		stackDebug.maybeDebugStack(stateStack, true);
 		PermissionsState state = toPermissionsState();
 		stateStack.push(state);
 		setLoginState(loginState);
 		setUser(user);
 		setRoot(asRoot);
+		if (clientInstance != null) {
+			setClientInstance(clientInstance);
+		}
+	}
+
+	public interface GetSystemUserClientInstance {
+		ClientInstance getClientInstance();
 	}
 
 	protected IUser getSystemUser() {

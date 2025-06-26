@@ -65,4 +65,20 @@ public class DatePair
 	public static DatePair since(Date date) {
 		return new DatePair(date, null);
 	}
+
+	public static Date max(Date d1, Date d2) {
+		return new DatePair(d1, d2).max();
+	}
+
+	public Date max() {
+		return CommonUtils.compareDates(d1, d2) >= 0 ? d1 : d2;
+	}
+
+	public static Date min(Date d1, Date d2) {
+		return new DatePair(d1, d2).min();
+	}
+
+	public Date min() {
+		return CommonUtils.compareDates(d1, d2) >= 0 ? d2 : d1;
+	}
 }
