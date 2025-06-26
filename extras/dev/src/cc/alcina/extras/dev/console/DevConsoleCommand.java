@@ -157,6 +157,9 @@ public abstract class DevConsoleCommand {
 				throw new Exception(String.format("Cmd %s is local only",
 						getClass().getSimpleName()));
 			}
+			if (remote) {
+				return console.getDevHelper().getConnProduction();
+			}
 			Class.forName("org.postgresql.Driver");
 			String connStr = remote ? console.getProps().connection_production
 					: console.getProps().connection_local;

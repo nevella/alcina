@@ -393,7 +393,11 @@ public class DomainTransformEvent
 	}
 
 	public boolean provideIsPropertyName(PropertyEnum property) {
-		return Objects.equals(propertyName, property.toString());
+		return provideIsPropertyName(property.name());
+	}
+
+	public boolean provideIsPropertyName(String propertyName) {
+		return Objects.equals(propertyName, this.propertyName);
 	}
 
 	public boolean provideNotApplicableToVmDomain() {

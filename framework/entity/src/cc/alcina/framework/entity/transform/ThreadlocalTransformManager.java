@@ -802,13 +802,18 @@ public class ThreadlocalTransformManager extends TransformManager {
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && id != 0) {
 						newInstance.setId(id);
-						Object fromBefore = Registry
-								.impl(JPAImplementation.class)
-								.beforeSpecificSetId(entityManager,
-										newInstance);
-						entityManager.persist(newInstance);
-						Registry.impl(JPAImplementation.class)
-								.afterSpecificSetId(fromBefore);
+						Object fromBefore = null;
+						try {
+							fromBefore = Registry.impl(JPAImplementation.class)
+									.beforeSpecificSetId(entityManager,
+											newInstance);
+							entityManager.persist(newInstance);
+						} finally {
+							if (fromBefore != null) {
+								Registry.impl(JPAImplementation.class)
+										.afterSpecificSetId(fromBefore);
+							}
+						}
 					} else {
 						/*
 						 * TransformInPersistenceContext does this at the end of

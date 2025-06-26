@@ -613,9 +613,8 @@ public class TransformPersisterInPersistenceContext {
 		/*
 		 * Most insertion transform patterns will be
 		 * "create - modify modify modify - next entity" - this persister
-		 * optimises (by only writing when required) and prevents ensures
-		 * entities are persisted before (incoming) association with other
-		 * entities
+		 * optimises (by only writing when required) and ensures entities are
+		 * persisted before (incoming) association with other entities
 		 */
 		boolean checkPersistEntity(DomainTransformEvent event) {
 			boolean updatedVersions = false;
