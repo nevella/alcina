@@ -1469,12 +1469,12 @@ public class DomainStore implements IDomainStore {
 			if (entity == null) {
 				entity = (V) promotedEntitiesByPrePromotion.get(locator);
 				if (entity != null) {
-					logger.warn(
+					logger.debug(
 							"Found entity {} for locator {} from promoted map",
 							entity.toLocator(), locator);
 				} else {
-					logger.warn(
-							"Did not find entity  for locator {} from promoted map",
+					logger.debug(
+							"Did not find entity  for locator {} from promoted map, checking for ext clientinstance",
 							locator);
 				}
 			}
@@ -1503,8 +1503,14 @@ public class DomainStore implements IDomainStore {
 						EntityLocator persistentLocator = locatorMap
 								.getForLocalId(locator.getLocalId());
 						if (persistentLocator != null) {
-							return find(persistentLocator);
+							V v = find(persistentLocator);
+							if (v != null) {
+								return v;
+							}
 						}
+						logger.warn(
+								"Did not find entity for locator {} from promoted or reconstituted map",
+								locator);
 					}
 				}
 			}

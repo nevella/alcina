@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
@@ -106,7 +107,7 @@ class JobAllocator {
 		 * Top-level jobs will always have a performer set at this point -
 		 * either on creation or via future-to-pending
 		 */
-		boolean visible = job.getPerformer() == ClientInstance.self()
+		boolean visible = job.getPerformer() == ClientInstance.current()
 				|| (ExecutionConstraints.forQueue(queue)
 						.isClusteredChildAllocation()
 						&& JobRegistry.isActiveInstance(job.getCreator()));
@@ -302,7 +303,7 @@ class JobAllocator {
 				}
 				return job.providePreviousOrSelfInSequence().provideIsComplete()
 						&& job.providePreviousOrSelfInSequence()
-								.getPerformer() == ClientInstance.self();
+								.getPerformer() == ClientInstance.current();
 			default:
 				throw new UnsupportedOperationException();
 			}
@@ -313,7 +314,7 @@ class JobAllocator {
 				return true;
 			}
 			boolean selfPerformer = queue.job.getPerformer() == ClientInstance
-					.self();
+					.current();
 			switch (queue.currentPhase) {
 			case Self:
 				if (queue.job.provideIsComplete()) {
@@ -467,11 +468,11 @@ class JobAllocator {
 				logger.debug(
 						"Allocation thread debug -  job {} - phase {} - state {} - selfPerformer {} - sequential {} - deleted {}",
 						job.getId(), queue.currentPhase, job.getState(),
-						job.getPerformer() == ClientInstance.self(),
+						job.getPerformer() == ClientInstance.current(),
 						job.provideRelatedSequential().size(), deleted);
 				if (queue.currentPhase == SubqueuePhase.Complete) {
 					if (job.getState() == JobState.COMPLETED
-							&& job.getPerformer() == ClientInstance.self()
+							&& job.getPerformer() == ClientInstance.current()
 							&& job.provideRelatedSequential().size() > 1
 							&& !deleted) {
 						job.setState(JobState.SEQUENCE_COMPLETE);
@@ -587,7 +588,7 @@ class JobAllocator {
 									invalidAllocated.add(j);
 								} else {
 									j.setState(JobState.ALLOCATED);
-									j.setPerformer(ClientInstance.self());
+									j.setPerformer(ClientInstance.current());
 									logger.debug(
 											"Allocated job {} - queue {}/{}", j,
 											queue.job, queue.currentPhase);
@@ -652,7 +653,7 @@ class JobAllocator {
 							// FIXME - jobs - performer should never be null at
 							// this point
 							|| jobContext.getJob()
-									.getPerformer() == ClientInstance.self())
+									.getPerformer() == ClientInstance.current())
 					&& Configuration.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
 				List<Job> incompleteChildren = job.provideChildren()
@@ -687,16 +688,21 @@ class JobAllocator {
 		public void run() {
 			thread = Thread.currentThread();
 			new JobObservable.AllocationThreadStarted(queue.job).publish();
-			while (!finished) {
-				try {
-					Event event = eventQueue.poll(1, TimeUnit.SECONDS);
-					environment().runInTransactionThread(
-							() -> processAllocationEvent(event));
-				} catch (Exception e) {
-					logger.warn("Exception in allocator (outer)");
-					logger.warn("Trace: ", e);
-					e.printStackTrace();
+			try {
+				Permissions.pushSystemUser();
+				while (!finished) {
+					try {
+						Event event = eventQueue.poll(1, TimeUnit.SECONDS);
+						environment().runInTransactionThread(
+								() -> processAllocationEvent(event));
+					} catch (Exception e) {
+						logger.warn("Exception in allocator (outer)");
+						logger.warn("Trace: ", e);
+						e.printStackTrace();
+					}
 				}
+			} finally {
+				Permissions.popContext();
 			}
 			environment().setAllocatorThreadName("job-allocator::idle");
 		}
@@ -752,7 +758,7 @@ class JobAllocator {
 					percentComplete, completedCount, totalCount);
 			enqueuedStatusMessage = this;
 			if (queue.currentPhase == SubqueuePhase.Sequence
-					&& queue.job.getPerformer() == ClientInstance.self()
+					&& queue.job.getPerformer() == ClientInstance.current()
 					&& jobContext == null) {
 				applyStatusMessage();
 				commit();

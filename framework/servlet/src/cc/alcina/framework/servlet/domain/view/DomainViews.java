@@ -462,7 +462,7 @@ public abstract class DomainViews {
 							processEvent(task);
 						} finally {
 							Transaction.ensureEnded();
-							Permissions.popUser();
+							Permissions.popContext();
 						}
 					}
 					long now = System.currentTimeMillis();

@@ -84,7 +84,7 @@ public abstract class EntityNode<E extends Entity>
 	void validateLocator() {
 		EntityLocator entityLocator = stringRepresentable;
 		if (entityLocator != null && entityLocator.getId() == 0 && entityLocator
-				.getClientInstanceId() != ClientInstance.self().getId()) {
+				.getClientInstanceId() != ClientInstance.current().getId()) {
 			Set<EntityLocator> locators = new LinkedHashSet<>();
 			locators.add(entityLocator);
 			AsyncCallback<Map<EntityLocator, EntityLocator>> callback = Async

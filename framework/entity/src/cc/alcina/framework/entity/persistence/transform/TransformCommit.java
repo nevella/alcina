@@ -192,9 +192,9 @@ public class TransformCommit {
 				DomainTransformRequest request = DomainTransformRequest
 						.fromString(deltaRecord.getText(), chunkUuidString);
 				ClientInstance clientInstance = null;
-				if (deltaRecord.getClientInstanceId() == ClientInstance.self()
-						.getId()) {
-					clientInstance = ClientInstance.self();
+				if (deltaRecord.getClientInstanceId() == ClientInstance
+						.current().getId()) {
+					clientInstance = ClientInstance.current();
 				} else {
 					clientInstance = clientInstanceClass
 							.getDeclaredConstructor().newInstance();
@@ -271,7 +271,7 @@ public class TransformCommit {
 						boolean asRoot = wrapperUser == UserlandProvider.get()
 								.getSystemUser();
 						Permissions.pushUser(wrapperUser, LoginState.LOGGED_IN,
-								asRoot);
+								asRoot, clientInstance);
 					} else {
 						if (!Objects.equals(
 								request.getClientInstance().domain()
@@ -312,7 +312,7 @@ public class TransformCommit {
 					}
 				} finally {
 					if (useWrapperUser) {
-						Permissions.popUser();
+						Permissions.popContext();
 					}
 				}
 				committed++;
@@ -335,7 +335,7 @@ public class TransformCommit {
 		int size = fullRequest.getEvents().size();
 		boolean commitAsWrapperUser = Configuration.is("commitAsWrapperUser");
 		boolean committingVmLocalRecord = dar
-				.getClientInstanceId() == ClientInstance.self().getId();
+				.getClientInstanceId() == ClientInstance.current().getId();
 		if (size > chunkSize && dar.getChunkUuidString() != null) {
 			int rqIdCounter = dar.getRequestId();
 			for (int idx = 0; idx < size;) {
@@ -643,10 +643,10 @@ public class TransformCommit {
 		 */
 		ClientInstance commitInstance = null;
 		int requestId = -1;
-		if (fromInstance == ClientInstance.self()) {
+		if (fromInstance == ClientInstance.current()) {
 			// this jvm controls the requestId counter, so just pass the next
 			// local request id and the local client instance
-			commitInstance = ClientInstance.self();
+			commitInstance = ClientInstance.current();
 			requestId = nextTransformRequestId();
 		} else {
 			// create our temporary instance and requestId series
@@ -693,7 +693,7 @@ public class TransformCommit {
 			Transaction.endAndBeginNew();
 			throw WrappedRuntimeException.wrap(ex);
 		} finally {
-			Permissions.popUser();
+			Permissions.popContext();
 			Preconditions.checkState(
 					TransformManager.get().getTransforms().size() == 0);
 			MetricLogging.get().setMuted(muted);
@@ -928,7 +928,8 @@ public class TransformCommit {
 				Transaction.endAndBeginNew();
 				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 						request, locatorMap,
-						request.getClientInstance() != ClientInstance.self(),
+						request.getClientInstance() != EntityLayerObjects.get()
+								.getServerAsClientInstance(),
 						ignoreClientAuthMismatch, forOfflineTransforms, logger,
 						blockUntilAllListenersNotified);
 				boolean hasUnprocessedRequests = CommonPersistenceProvider.get()
@@ -999,7 +1000,7 @@ public class TransformCommit {
 			persistenceToken.setOriginatingUserId(clientInstanceContext.userId);
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
-			Permissions.popUser();
+			Permissions.popContext();
 		}
 	}
 

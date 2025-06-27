@@ -202,7 +202,7 @@ public class Publisher {
 			if (user == null) {
 				user = UserlandProvider.get().getSystemUser();
 			}
-			ClientInstance clientInstance = ClientInstance.self();
+			ClientInstance clientInstance = ClientInstance.current();
 			if (clientInstance == null) {
 				clientInstance = EntityLayerObjects.get()
 						.getServerAsClientInstance();

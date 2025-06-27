@@ -72,6 +72,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.ArgParser;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -807,6 +808,8 @@ public abstract class DevConsole implements ClipboardOwner {
 			LooseContext.push();
 			Permissions.pushUser(DevHelper.getDefaultUser(),
 					LoginState.LOGGED_IN);
+			Permissions.get().setClientInstance(
+					EntityLayerObjects.get().getServerAsClientInstance());
 			runningJobs.add(command);
 			if (!noHistory) {
 				history.addCommand(lastCommand);
@@ -845,7 +848,7 @@ public abstract class DevConsole implements ClipboardOwner {
 			runningLastCommand = false;
 			// txs just to allow propertychangelistener removal from user
 			Transaction.ensureBegun();
-			Permissions.popUser();
+			Permissions.popContext();
 			Transaction.end();
 			LooseContext.pop();
 			runningJobs.remove(command);

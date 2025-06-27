@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -68,7 +69,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -94,7 +94,6 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
@@ -275,7 +274,7 @@ public class JobRegistry {
 			if (contains) {
 				return true;
 			}
-			if (activeInstances.contains(ClientInstance.self())) {
+			if (activeInstances.contains(ClientInstance.current())) {
 				return false;
 			}
 			int minimumVisibleInstancesForOrphanProcessing = Configuration
@@ -527,7 +526,7 @@ public class JobRegistry {
 					.filter(Job::provideCanAppendPending)
 					.filter(j -> Objects.equals(serialized,
 							j.getTaskSerialized()))
-					.filter(j -> j.getPerformer() == ClientInstance.self())
+					.filter(j -> j.getPerformer() == ClientInstance.current())
 					.findFirst();
 			if (o_inFlight.isPresent()) {
 				Job inFlight = o_inFlight.get();
@@ -795,17 +794,22 @@ public class JobRegistry {
 				Transaction.ensureEnded();
 			}
 			LooseContext.push();
-			LooseContext.set(
-					ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
-					EntityLayerObjects.get().getServerAsClientInstance());
+			/*
+			 * The outer permissions context establishes the server client
+			 * instance, the inner is either the system user/root or a
+			 * job-specific user (but with the server client instance tracking
+			 * persistence)
+			 */
+			Permissions.pushSystemUser();
+			TransactionEnvironment.get().begin();
+			// guaranteed to push a permissions context
+			environment.prepareUserContext(job);
 			DomainTransformPersistenceEvents
 					.setLocalCommitTimeout(120 * TimeConstants.ONE_SECOND_MS);
 			Thread.currentThread().setContextClassLoader(
 					launcherThreadState.contextClassLoader);
 			launcherThreadState.copyContext
 					.forEach((k, v) -> LooseContext.set(k, v));
-			TransactionEnvironment.get().begin();
-			environment.prepareUserContext(job);
 			performJob0(job, queueJobPersistence, launcherThreadState);
 			logger.info("Job complete - {}", job);
 		} catch (RuntimeException e) {
@@ -815,13 +819,15 @@ public class JobRegistry {
 			} else {
 				// will generally be close to the top of a thread - so log, even
 				// if there's logging higher
+				e.printStackTrace();
 				logger.warn(Ax.format("DEVEX::0 - JobRegistry.performJob - %s",
 						job), e);
-				e.printStackTrace();
 			}
 		} finally {
-			Permissions.popUser();
+			logger.info("performJob-4");
+			Permissions.popContext();
 			TransactionEnvironment.get().end();
+			Permissions.popContext();
 			LooseContext.pop();
 			LooseContext.confirmDepth(0);
 			executorServiceProvider.onServiceComplete(executorService);

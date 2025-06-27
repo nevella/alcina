@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.entity.logic.permissions;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -45,17 +47,7 @@ public class ThreadedPermissions extends Permissions {
 	}
 
 	@Override
-	public ClientInstance getClientInstance() {
-		return ThreadedPmClientInstanceResolver.get().getClientInstance();
-	}
-
-	@Override
-	public Long getClientInstanceId() {
-		return ThreadedPmClientInstanceResolver.get().getClientInstanceId();
-	}
-
-	@Override
-	public Permissions getPerThreadInstance() {
+	protected Permissions getPerThreadInstance() {
 		return (ThreadedPermissions) threadLocalInstance.get();
 	}
 
@@ -90,7 +82,13 @@ public class ThreadedPermissions extends Permissions {
 			implements GetSystemUserClientInstance {
 		@Override
 		public ClientInstance getClientInstance() {
-			return EntityLayerObjects.get().getServerAsClientInstance();
+			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
+					.getServerAsClientInstance();
+			/*
+			 * Note that this is null until bootstrap/server client instance
+			 * creation
+			 */
+			return serverAsClientInstance;
 		}
 	}
 }

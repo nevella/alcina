@@ -106,8 +106,8 @@ public class DomainTransformPersistenceQueue {
 		 * note that on warmup ClientInstance.self() will be null, so guard for
 		 * that
 		 */
-		long selfId = ClientInstance.self() == null ? -1
-				: ClientInstance.self().getId();
+		long selfId = ClientInstance.current() == null ? -1
+				: ClientInstance.current().getId();
 		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 				dtrp, null,
 				dtrp.getClientInstance() == null
@@ -563,7 +563,7 @@ public class DomainTransformPersistenceQueue {
 						throw e;
 					} finally {
 						Transaction.ensureBegun();
-						Permissions.popUser();
+						Permissions.popContext();
 						Transaction.ensureEnded();
 						// LooseContext.pop();
 					}

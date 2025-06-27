@@ -787,7 +787,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					InternalMetricTypeAlcina.client,
 					Thread.currentThread().getName(), () -> true);
 			TransformCommit.prepareHttpRequestCommitContext(
-					Permissions.get().getClientInstance().getId(),
+					CommonUtils.lv(Permissions.get().getClientInstanceId()),
 					Permissions.get().getUserId(), ServletLayerUtils
 							.robustGetRemoteAddress(threadLocalRequest));
 			try {

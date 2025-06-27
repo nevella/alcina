@@ -577,7 +577,7 @@ public class JobDomain {
 
 		public long getIncompleteAllocatedJobCountForCurrentPhaseThisVm() {
 			return perPhaseJobs(incompleteStates(currentPhase))
-					.filter(j -> j.getPerformer() == ClientInstance.self())
+					.filter(j -> j.getPerformer() == ClientInstance.current())
 					.count();
 		}
 
@@ -880,7 +880,7 @@ public class JobDomain {
 			return futuresByTask.getAndEnsure(key).stream()
 					.filter(j -> j.getRunAt() != null)
 					.filter(j -> !createdBySelf
-							|| j.getCreator() == ClientInstance.self())
+							|| j.getCreator() == ClientInstance.current())
 					.sorted(new Job.RunAtComparator()).findFirst();
 		}
 
@@ -889,7 +889,7 @@ public class JobDomain {
 			return incompleteTopLevelByTask.getAndEnsure(key).stream()
 					.filter(j -> j.getRunAt() != null)
 					.filter(j -> !createdBySelf
-							|| j.getCreator() == ClientInstance.self())
+							|| j.getCreator() == ClientInstance.current())
 					.sorted(new Job.RunAtComparator()).findFirst();
 		}
 

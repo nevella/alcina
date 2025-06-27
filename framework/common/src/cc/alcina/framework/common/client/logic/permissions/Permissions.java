@@ -268,7 +268,7 @@ public class Permissions implements DomainTransformListener {
 					pushSystemUser();
 					runnable.run();
 				} finally {
-					popUser();
+					popContext();
 				}
 			}
 		} catch (Exception e) {
@@ -285,7 +285,7 @@ public class Permissions implements DomainTransformListener {
 					pushSystemUser();
 					runnable.run();
 				} finally {
-					popUser();
+					popContext();
 				}
 			}
 		} catch (Exception e) {
@@ -464,7 +464,7 @@ public class Permissions implements DomainTransformListener {
 			Permissions.pushUser(user, LoginState.LOGGED_IN);
 			ThrowingRunnable.asRunnable(runnable).run();
 		} finally {
-			Permissions.popUser();
+			Permissions.popContext();
 		}
 	}
 
@@ -494,8 +494,8 @@ public class Permissions implements DomainTransformListener {
 		return get().isRoot0();
 	}
 
-	public static IUser popUser() {
-		return get().popUser0();
+	public static void popContext() {
+		get().popContext0();
 	}
 
 	public static void pushCurrentUser() {
@@ -515,7 +515,7 @@ public class Permissions implements DomainTransformListener {
 				pushSystemUser();
 				return callable.call();
 			} finally {
-				popUser();
+				popContext();
 			}
 		}
 	}
@@ -530,7 +530,7 @@ public class Permissions implements DomainTransformListener {
 					pushSystemUser();
 					return callable.call();
 				} finally {
-					popUser();
+					popContext();
 				}
 			}
 		} catch (Exception e) {
@@ -543,8 +543,8 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	public static void pushUser(IUser user, LoginState loginState,
-			boolean asRoot) {
-		get().pushUser0(user, loginState, asRoot, null);
+			boolean asRoot, ClientInstance clientInstance) {
+		get().pushUser0(user, loginState, asRoot, clientInstance);
 	}
 
 	private static void recursivePopulateGroupMemberships(Set<IGroup> members,
@@ -998,15 +998,13 @@ public class Permissions implements DomainTransformListener {
 
 	public void pushState(PermissionsState state) {
 		// don't push the group map
-		pushUser(state.user, state.loginState, state.root);
-		if (state.clientInstance != null) {
-			this.clientInstance = state.clientInstance;
-		}
+		pushUser(state.user, state.loginState, state.root,
+				state.clientInstance);
 	}
 
 	protected void pushSystemOrCurrentUserAsRoot0() {
 		if (isLoggedIn()) {
-			pushUser(getUser(), getLoginState(), true);
+			pushUser(getUser(), getLoginState(), true, clientInstance);
 		} else {
 			pushSystemUser();
 		}
@@ -1020,7 +1018,7 @@ public class Permissions implements DomainTransformListener {
 		return root;
 	}
 
-	protected IUser popUser0() {
+	protected void popContext0() {
 		stackDebug.maybeDebugStack(stateStack, false);
 		IUser currentUser = getUser();
 		PermissionsState state = stateStack.pop();
@@ -1028,11 +1026,10 @@ public class Permissions implements DomainTransformListener {
 		setUser(state.user);
 		setRoot(state.root);
 		setClientInstance(state.clientInstance);
-		return currentUser;
 	}
 
 	protected void pushCurrentUser0() {
-		pushUser(getUser(), getLoginState(), isRoot());
+		pushUser(getUser(), getLoginState(), isRoot(), getClientInstance());
 	}
 
 	protected IUser pushSystemUser0() {
@@ -1046,6 +1043,11 @@ public class Permissions implements DomainTransformListener {
 		pushUser0(user, loginState, false, null);
 	}
 
+	/*
+	 * Note that in some cases user !=clientInstance.getUser - basically if
+	 * running with the permissions of user X but recording domain mutation to
+	 * the graph of (server) clientinstance Y
+	 */
 	protected void pushUser0(IUser user, LoginState loginState, boolean asRoot,
 			ClientInstance clientInstance) {
 		stackDebug.maybeDebugStack(stateStack, true);
@@ -1093,5 +1095,9 @@ public class Permissions implements DomainTransformListener {
 			permitted = b;
 		}
 		return permitted;
+	}
+
+	public static boolean hasContext() {
+		return depth() != 0;
 	}
 }

@@ -90,7 +90,7 @@ public class InternalMetricData {
 		persistent.setThreadHistory(threadHistory);
 		persistent.setUpdateTime(new Date(lastSliceTime));
 		persistent.setBlackboxData(InternalMetrics.get().getBlackboxData());
-		persistent.setClientInstanceId(ClientInstance.self().getId());
+		persistent.setClientInstanceId(ClientInstance.current().getId());
 		return persistent;
 	}
 

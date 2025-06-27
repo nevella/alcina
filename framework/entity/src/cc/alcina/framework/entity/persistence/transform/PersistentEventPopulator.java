@@ -45,7 +45,7 @@ class PersistentEventPopulator {
 					false);
 		} finally {
 			if (pushed) {
-				Permissions.popUser();
+				Permissions.popContext();
 			}
 		}
 	}

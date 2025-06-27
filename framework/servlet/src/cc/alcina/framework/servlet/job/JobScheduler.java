@@ -195,7 +195,7 @@ public class JobScheduler {
 		Predicate<Job> canModify = job -> {
 			if (Schedule.forTaskClass(job.provideTaskClass()).isVmLocal()) {
 				return scheduleVmLocalJobs
-						&& job.getCreator() == ClientInstance.self();
+						&& job.getCreator() == ClientInstance.current();
 			} else {
 				return scheduleClusterJobs;
 			}
@@ -261,7 +261,7 @@ public class JobScheduler {
 								"Job scheduler - future-to-pending - ABORTED - {} - existingIncomplete - {}",
 								job, earliestIncompleteScheduled);
 					} else {
-						job.setPerformer(ClientInstance.self());
+						job.setPerformer(ClientInstance.current());
 						job.setState(JobState.PENDING);
 						logger.info("Job scheduler - future-to-pending - {}",
 								job);

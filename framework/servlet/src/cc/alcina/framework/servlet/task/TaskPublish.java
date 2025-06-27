@@ -63,7 +63,7 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 				Permissions.pushUser(user, LoginState.LOGGED_IN);
 				result = publicationRequest.publish();
 			} finally {
-				Permissions.popUser();
+				Permissions.popContext();
 			}
 		}
 		if (copyContentToLargeResult || Ax.isTest()) {

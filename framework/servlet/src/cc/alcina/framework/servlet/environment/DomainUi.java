@@ -36,7 +36,7 @@ public interface DomainUi extends RemoteUi {
 	default void onExitIteration() {
 		if (isDomain()) {
 			Transaction.end();
-			Permissions.popUser();
+			Permissions.popContext();
 		}
 	}
 }

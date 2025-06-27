@@ -94,7 +94,7 @@ public class TowardsAMoreDesirableSituation {
 			Transaction.commit();
 			return;
 		}
-		job.setPerformer(ClientInstance.self());
+		job.setPerformer(ClientInstance.current());
 		job.setState(JobState.PENDING);
 		JobDomain.get().getFutureConsistencyJobsEquivalentTo(job)
 				.forEach(Job::delete);

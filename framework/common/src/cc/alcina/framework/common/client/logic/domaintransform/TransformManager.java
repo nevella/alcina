@@ -562,11 +562,11 @@ public abstract class TransformManager
 	protected void addTransformsFromPropertyChange(
 			List<DomainTransformEvent> transforms) {
 		for (DomainTransformEvent transform : transforms) {
-			transform.setInImmediatePropertyChangeCommit(true);
+			transform.inImmediatePropertyChangeCommit = true;
 		}
 		addTransforms(transforms, true);
 		for (DomainTransformEvent transform : transforms) {
-			transform.setInImmediatePropertyChangeCommit(false);
+			transform.inImmediatePropertyChangeCommit = false;
 		}
 	}
 
@@ -2168,7 +2168,7 @@ public abstract class TransformManager
 			}
 			existingTargetObject = null;
 			String propertyName = event.getPropertyName();
-			if (event.isInImmediatePropertyChangeCommit()) {
+			if (event.inImmediatePropertyChangeCommit) {
 				existingTargetObject = event.getOldValue();
 			} else if (event.getSource() == null || propertyName == null) {
 			} else {

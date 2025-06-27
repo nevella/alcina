@@ -195,7 +195,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 				Transaction.ensureEnded();
 			}
 			if (runAsRoot) {
-				Permissions.popUser();
+				Permissions.popContext();
 			}
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();

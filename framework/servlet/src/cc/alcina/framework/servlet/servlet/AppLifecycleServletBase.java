@@ -41,6 +41,8 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
@@ -215,7 +217,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Permissions.pushSystemUser();
 			AuthenticationPersistence.get().createBootstrapClientInstance();
 		} finally {
-			Permissions.popUser();
+			Permissions.popContext();
 			Transaction.end();
 		}
 	}
@@ -300,6 +302,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			getStatusNotifier().failed();
 			throw new ServletException(e);
 		} finally {
+			if (Permissions.hasContext()) {
+				Permissions.popContext();
+			}
 			initServletConfig = null;
 		}
 		MetricLogging.get().end("Web app startup");
@@ -346,6 +351,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initContainerBridge();
 
+	/**
+	 * This will normally initialise the permissions context for the rest of
+	 * startup (after a call to createServletTransformClientInstance();)
+	 */
 	protected abstract void initCustom() throws Exception;
 
 	protected abstract void initCustomServices();
@@ -658,7 +667,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				}
 			}
 		} finally {
-			Permissions.popUser();
+			Permissions.popContext();
 			Transaction.end();
 		}
 	}

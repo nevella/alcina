@@ -96,7 +96,7 @@ public class MethodContext {
 			try {
 				currentThread.setContextClassLoader(entryClassLoader);
 				if (pushedRoot) {
-					Permissions.popUser();
+					Permissions.popContext();
 				}
 				if (metricKey != null) {
 					Logger logger = metricKeyClass == null ? null

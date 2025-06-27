@@ -62,6 +62,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
@@ -592,7 +593,9 @@ public abstract class DevConsoleCommand {
 							console.ensureDomainStore();
 							pushedUser = DevHelper.getDefaultUser();
 							Permissions.pushUser(pushedUser,
-									LoginState.LOGGED_IN);
+									LoginState.LOGGED_IN, true,
+									EntityLayerObjects.get()
+											.getServerAsClientInstance());
 						}
 						console.currentRunnables.push(runnable);
 						runnable.run();
@@ -624,7 +627,7 @@ public abstract class DevConsoleCommand {
 						}
 						try {
 							if (pushedUser != null) {
-								Permissions.popUser();
+								Permissions.popContext();
 							}
 							if (Transactions.isInitialised()) {
 								Transaction.end();

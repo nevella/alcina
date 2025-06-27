@@ -150,7 +150,9 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		this.id = id;
 		setLocalId(localId);
 		if (id == 0) {
-			this.clientInstanceId = Permissions.get().getClientInstanceId();
+			if (Permissions.hasContext()) {
+				this.clientInstanceId = Permissions.get().getClientInstanceId();
+			}
 		}
 	}
 

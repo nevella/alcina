@@ -27,7 +27,6 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
@@ -43,7 +42,6 @@ import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.EntityLocatorMap;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
-import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 
 public abstract class RemoteInvocationServlet extends HttpServlet {
 	public static final String REMOTE_INVOCATION_PARAMETERS = "remoteInvocationParameters";
@@ -75,6 +73,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);
 			LooseContext.setTrue(
 					ThreadlocalTransformManager.CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS);
+			Permissions.pushSystemUser();
 			Transaction.begin();
 			maybeToReadonlyTransaction();
 			LooseContext
@@ -93,6 +92,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			// ensure correct phase
 			maybeToReadonlyTransaction();
 			Transaction.end();
+			Permissions.popContext();
 			LooseContext.pop();
 		}
 	}
@@ -118,7 +118,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					.getClientInstance(params.clientInstanceId);
 			if (clientInstance == null
 					&& params.api.isAllowWithoutClientInstance()) {
-				clientInstance = ClientInstance.self();
+				clientInstance = ClientInstance.current();
 			} else {
 				Preconditions.checkArgument(
 						clientInstance.getAuth() == params.clientInstanceAuth);
@@ -128,9 +128,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 							.getAuthenticationSession().getUser();
 			Permissions.pushUser(
 					clientInstance.getAuthenticationSession().getUser(),
-					LoginState.LOGGED_IN, asRoot);
+					LoginState.LOGGED_IN, asRoot, clientInstance);
 			pushedUser = true;
-			Permissions.get().setClientInstance(clientInstance);
 			Object invocationTarget = getInvocationTarget(params);
 			Class<? extends Object> targetClass = invocationTarget.getClass();
 			Object[] args = params.args;
@@ -193,9 +192,6 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					LooseContext.pushWithBoolean(
 							KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
 							false);
-					LooseContext.set(
-							ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
-							clientInstance);
 					params.context.forEach((k, v) -> {
 						if (!k.matches(
 								"cc.alcina.framework.entity.KryoUtils.*")) {
@@ -221,7 +217,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				}
 			} finally {
 				if (transformMethod) {
-					Permissions.popUser();
+					Permissions.popContext();
 				}
 				InternalMetrics.get().endTracker(request);
 				if (!methodName.equals("callRpc")) {
@@ -263,7 +259,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			throw new ServletException(e);
 		} finally {
 			if (pushedUser) {
-				Permissions.popUser();
+				Permissions.popContext();
 			}
 		}
 	}

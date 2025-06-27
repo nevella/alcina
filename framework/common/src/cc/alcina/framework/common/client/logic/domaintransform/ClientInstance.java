@@ -42,12 +42,16 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	public static final transient String SERVLET_PREFIX = "servlet:";
 
 	/**
+	 * <p>
 	 * Be careful using this in a server context, since it will return a remote
 	 * browser instance if within a normal user permissions context frame, but
 	 * the server-as-client instance if within a (possibly pushed) root/server
 	 * permissions context frame.
+	 * <p>
+	 * That said, 95+% of the time you'll be in a job context and this will be
+	 * the server instance
 	 */
-	public static ClientInstance self() {
+	public static ClientInstance current() {
 		return Permissions.get().getClientInstance();
 	}
 

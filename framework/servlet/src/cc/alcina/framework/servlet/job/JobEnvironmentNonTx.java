@@ -20,7 +20,7 @@ public class JobEnvironmentNonTx implements JobEnvironment {
 
 	@Override
 	public ClientInstance getPerformerInstance() {
-		return ClientInstance.self();
+		return ClientInstance.current();
 	}
 
 	@Override

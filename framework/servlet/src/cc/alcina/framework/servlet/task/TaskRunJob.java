@@ -28,7 +28,7 @@ public class TaskRunJob extends PerformerTask {
 			logger.info("Job {} already completed", jobId);
 		} else {
 			job.setRunAt(null);
-			job.setPerformer(ClientInstance.self());
+			job.setPerformer(ClientInstance.current());
 			job.setState(JobState.PENDING);
 			String message = Ax.format("TaskRunJob - future-to-pending - %s",
 					job);

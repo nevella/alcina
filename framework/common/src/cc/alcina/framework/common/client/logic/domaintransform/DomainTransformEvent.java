@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -97,7 +98,13 @@ public class DomainTransformEvent
 
 	private transient Object oldValue;
 
-	private transient boolean inImmediatePropertyChangeCommit;
+	public transient boolean inImmediatePropertyChangeCommit;
+
+	/*
+	 * When cascading client transforms, the triggered/cascaded changes have a
+	 * different (root) permissions context to that of the client
+	 */
+	public transient PermissionsState permissionsState;
 
 	public DomainTransformEvent() {
 	}
@@ -111,7 +118,7 @@ public class DomainTransformEvent
 	 * 
 	 * TL;DR - don't sort a list of transforms prior to application, and even
 	 * post-application sorting by eventId is not a good idea. So - REVISIT -
-	 * maybe just remove Comparable impelemntation. Persisted events, on the
+	 * maybe just remove Comparable implementation. Persisted events, on the
 	 * other hand, _can_ be sorted by their persistent id (within a single
 	 * request)
 	 */
@@ -158,8 +165,11 @@ public class DomainTransformEvent
 	}
 
 	/**
+	 * <p>
 	 * Used in case the server replies (with generated ids) didn't reach a
 	 * gears-enabled client
+	 * <p>
+	 * Gears! Remember Gears?
 	 *
 	 * @return
 	 */
@@ -374,12 +384,6 @@ public class DomainTransformEvent
 		return result;
 	}
 
-	@Transient
-	@AlcinaTransient
-	public boolean isInImmediatePropertyChangeCommit() {
-		return this.inImmediatePropertyChangeCommit;
-	}
-
 	public boolean provideIsCreationTransform() {
 		return getTransformType() == TransformType.CREATE_OBJECT;
 	}
@@ -483,11 +487,6 @@ public class DomainTransformEvent
 
 	public void setGeneratedServerId(long generatedServerId) {
 		this.generatedServerId = generatedServerId;
-	}
-
-	public void setInImmediatePropertyChangeCommit(
-			boolean inImmediatePropertyChangeCommit) {
-		this.inImmediatePropertyChangeCommit = inImmediatePropertyChangeCommit;
 	}
 
 	public void setNewStringValue(String newStringValue) {

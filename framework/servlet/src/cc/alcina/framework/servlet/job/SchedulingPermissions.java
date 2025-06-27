@@ -29,14 +29,14 @@ class SchedulingPermissions {
 	}
 
 	static boolean canAllocate(Job job) {
-		if (job.getPerformer() == ClientInstance.self()) {
+		if (job.getPerformer() == ClientInstance.current()) {
 			return true;
 		}
 		if (job.getRunAt() == null) {
-			return job.getCreator() == ClientInstance.self();
+			return job.getCreator() == ClientInstance.current();
 		}
 		if (Schedule.forTaskClass(job.provideTaskClass()).isVmLocal()) {
-			return job.getCreator() == ClientInstance.self();
+			return job.getCreator() == ClientInstance.current();
 		} else {
 			return isCurrentScheduledJobExecutor();
 		}
@@ -78,7 +78,7 @@ class SchedulingPermissions {
 			return false;
 		}
 		if (schedule.isVmLocal()) {
-			return job.getCreator() == ClientInstance.self();
+			return job.getCreator() == ClientInstance.current();
 		} else {
 			return isCurrentScheduledJobExecutor();
 		}

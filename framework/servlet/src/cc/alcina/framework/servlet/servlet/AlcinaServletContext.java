@@ -131,7 +131,7 @@ public class AlcinaServletContext {
 	public void end() {
 		try {
 			if (rootPermissions) {
-				Permissions.popUser();
+				Permissions.popContext();
 			}
 			if (looseContextDepth == -1) {
 				// begin failed/did not run - fall through to
