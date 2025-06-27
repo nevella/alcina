@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 class JobEnvironmentTx implements JobEnvironment {
 	@Override
 	public ClientInstance getPerformerInstance() {
-		return EntityLayerObjects.get().getServerAsClientInstance();
+		return ServerClientInstance.get();
 	}
 
 	@Override

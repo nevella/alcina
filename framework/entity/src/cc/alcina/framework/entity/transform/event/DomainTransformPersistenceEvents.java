@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -273,8 +273,7 @@ public class DomainTransformPersistenceEvents
 		Map<Long, AtomicLong> perClientInstanceLocalIdCounter = new LinkedHashMap<>();
 
 		synchronized void runWithOffsetLocalIdCounter(Runnable runnable) {
-			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
-					.getServerAsClientInstance();
+			ClientInstance serverAsClientInstance = ServerClientInstance.get();
 			ClientInstance threadInstance = Permissions.get()
 					.getClientInstance();
 			// hack - Jumail's config? threadInstance should never be null

@@ -30,7 +30,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -204,8 +204,7 @@ public class Publisher {
 			}
 			ClientInstance clientInstance = ClientInstance.current();
 			if (clientInstance == null) {
-				clientInstance = EntityLayerObjects.get()
-						.getServerAsClientInstance();
+				clientInstance = ServerClientInstance.get();
 			}
 			if (Configuration.is("trackPublicationClientInstanceId")) {
 				deliveryModel

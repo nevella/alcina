@@ -118,6 +118,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityValuesMapper;
@@ -1494,8 +1495,7 @@ public class DomainStore implements IDomainStore {
 										+ "\n\t Service instance: {}",
 								locator, Permissions.get().getUser(),
 								Permissions.get().getClientInstance(),
-								EntityLayerObjects.get()
-										.getServerAsClientInstance());
+								ServerClientInstance.get());
 					} else {
 						EntityLocatorMap locatorMap = TransformCommit.get()
 								.getLocatorMapForClient(clientInstance,

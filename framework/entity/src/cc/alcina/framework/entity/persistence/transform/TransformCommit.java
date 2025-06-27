@@ -58,6 +58,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
@@ -453,8 +454,7 @@ public class TransformCommit {
 		if (Ax.isTest() && LooseContext.is(CONTEXT_DISABLED)) {
 			return new DomainTransformLayerWrapper(null);
 		}
-		if (Ax.isTest() && EntityLayerObjects.get()
-				.getServerAsClientInstance() == null) {
+		if (Ax.isTest() && ServerClientInstance.get() == null) {
 			// pre-login test tx (say fixing up credentials) - create dummy
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper(null);
@@ -466,8 +466,7 @@ public class TransformCommit {
 		 */
 		LooseContext.ensure(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT,
 				() -> new CommitClientInstanceContext(
-						EntityLayerObjects.get().getServerAsClientInstance()
-								.getId(),
+						ServerClientInstance.get().getId(),
 						Permissions.get().getUserId(), "0.0.0.0"));
 		long persistentTransformRecordCount = TransformPropagationPolicy.get()
 				.getProjectedPersistentCount(TransformManager.get()
@@ -643,7 +642,7 @@ public class TransformCommit {
 		 */
 		ClientInstance commitInstance = null;
 		int requestId = -1;
-		if (fromInstance == ClientInstance.current()) {
+		if (fromInstance == ServerClientInstance.get()) {
 			// this jvm controls the requestId counter, so just pass the next
 			// local request id and the local client instance
 			commitInstance = ClientInstance.current();
@@ -710,8 +709,7 @@ public class TransformCommit {
 
 	public EntityLocatorMap getLocatorMapForClient(
 			ClientInstance clientInstance, boolean forceRefresh) {
-		if (clientInstance == EntityLayerObjects.get()
-				.getServerAsClientInstance()) {
+		if (clientInstance == ServerClientInstance.get()) {
 			return EntityLayerObjects.get()
 					.getServerAsClientInstanceEntityLocatorMap();
 		}
@@ -928,8 +926,8 @@ public class TransformCommit {
 				Transaction.endAndBeginNew();
 				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 						request, locatorMap,
-						request.getClientInstance() != EntityLayerObjects.get()
-								.getServerAsClientInstance(),
+						request.getClientInstance() != ServerClientInstance
+								.get(),
 						ignoreClientAuthMismatch, forOfflineTransforms, logger,
 						blockUntilAllListenersNotified);
 				boolean hasUnprocessedRequests = CommonPersistenceProvider.get()
@@ -972,8 +970,7 @@ public class TransformCommit {
 		int requestId = nextTransformRequestId();
 		EntityLocatorMap map = EntityLayerObjects.get()
 				.getServerAsClientInstanceEntityLocatorMap();
-		ClientInstance clientInstance = EntityLayerObjects.get()
-				.getServerAsClientInstance();
+		ClientInstance clientInstance = ServerClientInstance.get();
 		DomainTransformRequest request = DomainTransformRequest
 				.createPersistableRequest(requestId, clientInstance.getId());
 		request.setClientInstance(clientInstance);

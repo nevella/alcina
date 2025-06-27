@@ -1,7 +1,6 @@
 package cc.alcina.extras.dev.console;
 
 import java.awt.Color;
-import java.awt.HeadlessException;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -72,7 +71,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.ArgParser;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -808,8 +807,7 @@ public abstract class DevConsole implements ClipboardOwner {
 			LooseContext.push();
 			Permissions.pushUser(DevHelper.getDefaultUser(),
 					LoginState.LOGGED_IN);
-			Permissions.get().setClientInstance(
-					EntityLayerObjects.get().getServerAsClientInstance());
+			Permissions.get().setClientInstance(ServerClientInstance.get());
 			runningJobs.add(command);
 			if (!noHistory) {
 				history.addCommand(lastCommand);

@@ -76,8 +76,8 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.domain.LockUtils;
@@ -598,7 +598,7 @@ public class JobRegistry {
 	public String getExJobSystemNextJobId(Class<?> clazz) {
 		return Ax.format("%s::%s::%s::%s", clazz.getName(),
 				EntityLayerUtils.getLocalHostName(),
-				EntityLayerObjects.get().getServerAsClientInstance().getId(),
+				ServerClientInstance.get().getId(),
 				extJobSystemIdCounter.incrementAndGet());
 	}
 
@@ -1455,8 +1455,7 @@ public class JobRegistry {
 
 		@Override
 		public List<ClientInstance> getActiveServers() {
-			return Arrays.asList(
-					EntityLayerObjects.get().getServerAsClientInstance());
+			return Arrays.asList(ServerClientInstance.get());
 		}
 
 		@Override

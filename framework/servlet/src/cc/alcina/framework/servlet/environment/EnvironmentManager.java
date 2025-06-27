@@ -28,8 +28,8 @@ import cc.alcina.framework.common.client.util.Timeout;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
@@ -191,8 +191,7 @@ public class EnvironmentManager {
 
 	public static class Credentials {
 		public static Credentials createUnique() {
-			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
-					.getServerAsClientInstance();
+			ClientInstance serverAsClientInstance = ServerClientInstance.get();
 			return new Credentials(
 					Ax.format("%s-%s-%s", EntityLayerUtils.getLocalHostName(),
 							serverAsClientInstance == null ? 0

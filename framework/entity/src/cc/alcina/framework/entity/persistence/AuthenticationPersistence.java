@@ -9,8 +9,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +27,9 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
@@ -106,8 +104,7 @@ public class AuthenticationPersistence {
 		ClientInstance domainVersion = persistent.domain().domainVersion();
 		// ensure this instance is the only one ever created in the domain
 		EntityLayerObjects.get().setServerAsClientInstance(domainVersion);
-		Permissions.get().setClientInstance(
-				EntityLayerObjects.get().getServerAsClientInstance());
+		Permissions.get().setClientInstance(ServerClientInstance.get());
 	}
 
 	public ClientInstance createClientInstance(AuthenticationSession session,

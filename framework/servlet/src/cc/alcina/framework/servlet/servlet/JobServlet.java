@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.entity.SimpleHttp;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
 import cc.alcina.framework.servlet.task.TaskLogJobDetails;
@@ -88,8 +88,7 @@ public class JobServlet extends AlcinaServlet {
 		taskUrl += "&return_job_id=true";
 		SimpleHttp query = new SimpleHttp(taskUrl);
 		StringMap headers = new StringMap();
-		ClientInstance clientInstance = EntityLayerObjects.get()
-				.getServerAsClientInstance();
+		ClientInstance clientInstance = ServerClientInstance.get();
 		headers.put(
 				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY,
 				String.valueOf(clientInstance.getId()));

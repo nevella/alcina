@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.mvcc.KryoSupport;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -117,8 +117,7 @@ public class RemoteInvocation {
 			}
 			if (clientInstance != null) {
 				if (clientInstance.getId() == 0) {
-					clientInstance = EntityLayerObjects.get()
-							.getServerAsClientInstance();
+					clientInstance = ServerClientInstance.get();
 				}
 				params.clientInstanceId = clientInstance.getId();
 				ClientInstance f_clientInstance = clientInstance;

@@ -13,14 +13,12 @@
  */
 package cc.alcina.framework.entity.logic.permissions;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 
 /**
  * @author Nick Reddel
@@ -82,8 +80,7 @@ public class ThreadedPermissions extends Permissions {
 			implements GetSystemUserClientInstance {
 		@Override
 		public ClientInstance getClientInstance() {
-			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
-					.getServerAsClientInstance();
+			ClientInstance serverAsClientInstance = ServerClientInstance.get();
 			/*
 			 * Note that this is null until bootstrap/server client instance
 			 * creation

@@ -41,8 +41,6 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
-import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
-import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
@@ -65,6 +63,7 @@ import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
@@ -209,7 +208,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void createServletTransformClientInstance() {
-		if (EntityLayerObjects.get().getServerAsClientInstance() != null) {
+		if (ServerClientInstance.get() != null) {
 			throw new IllegalStateException();
 		}
 		try {
