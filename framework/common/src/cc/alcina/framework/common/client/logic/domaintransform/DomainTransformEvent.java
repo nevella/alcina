@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Lob;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
@@ -607,5 +609,9 @@ public class DomainTransformEvent
 
 	public EntityLocator toValueLocator() {
 		return EntityLocator.valueLocator(this);
+	}
+
+	public static List<DomainTransformEvent> deserialize(String transformStr) {
+		return new PlaintextProtocolHandler().deserialize(transformStr);
 	}
 }
