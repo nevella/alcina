@@ -824,7 +824,6 @@ public class JobRegistry {
 						job), e);
 			}
 		} finally {
-			logger.info("performJob-4");
 			Permissions.popContext();
 			TransactionEnvironment.get().end();
 			Permissions.popContext();

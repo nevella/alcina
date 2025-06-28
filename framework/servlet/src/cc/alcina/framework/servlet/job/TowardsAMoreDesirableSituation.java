@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job;
 
+import java.security.Permission;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -199,6 +201,7 @@ public class TowardsAMoreDesirableSituation {
 					+ EntityLayerUtils.getLocalHostName());
 			while (!finished) {
 				try {
+					Permissions.pushSystemUser();
 					Event event = events.take();
 					if (event.type == Type.SHUTDOWN) {
 						finished = true;
@@ -218,6 +221,8 @@ public class TowardsAMoreDesirableSituation {
 							logger.warn("DEVEX::0 - unknown", e);
 							e.printStackTrace();
 						}
+					} finally {
+						Permissions.popContext();
 					}
 				}
 			}
