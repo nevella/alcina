@@ -593,6 +593,19 @@ public abstract class Job extends VersionableEntity<Job>
 		return resolveState() == JobState.PROCESSING;
 	}
 
+	public boolean provideIsNotCompleteNonFuture() {
+		if (provideIsComplete()) {
+			return false;
+		}
+		if (provideIsFuture()) {
+			return false;
+		}
+		if (provideIsFutureConsistency()) {
+			return false;
+		}
+		return true;
+	}
+
 	public boolean provideIsAllocatable() {
 		// FIXME - mvcc.jobs.1a - there still seem to be issues with state
 		// propagation in JobDescriptor
