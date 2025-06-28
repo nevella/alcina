@@ -806,8 +806,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		try {
 			LooseContext.push();
 			Permissions.pushUser(DevHelper.getDefaultUser(),
-					LoginState.LOGGED_IN);
-			Permissions.get().setClientInstance(ServerClientInstance.get());
+					LoginState.LOGGED_IN, true, ServerClientInstance.get());
 			runningJobs.add(command);
 			if (!noHistory) {
 				history.addCommand(lastCommand);

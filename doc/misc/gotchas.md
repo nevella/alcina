@@ -106,3 +106,7 @@ db commit thread - countervailing to that is 'what about coherency in the queue 
 ### vscode
 
 turn off lombok
+
+## gwt
+
+delete the gwt-unitCache every day, it (heuristically) incrementally slows page load

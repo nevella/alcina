@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
@@ -120,19 +121,25 @@ public class AlcinaServletContext {
 			Transaction.begin();
 		}
 		if (TransformManager.hasInstance()) {
-			AuthenticationManager.get().initialiseContext(httpContext);
+			PermissionsState permissionsState = AuthenticationManager.get()
+					.getPermissionsState();
 			permissionsDepth = Permissions.depth();
+			/*
+			 * Two contexts - the outer context guarantees a clientinstance for
+			 * transforms to attach to
+			 */
+			Permissions.pushSystemUser();
+			AuthenticationManager.get().initialiseContext(httpContext);
 			if (rootPermissions) {
 				Permissions.pushSystemUser();
+			} else {
+				Permissions.pushState(permissionsState);
 			}
 		}
 	}
 
 	public void end() {
 		try {
-			if (rootPermissions) {
-				Permissions.popContext();
-			}
 			if (looseContextDepth == -1) {
 				// begin failed/did not run - fall through to
 				// removePerThreadContexts
@@ -145,6 +152,8 @@ public class AlcinaServletContext {
 			LooseContext.allowUnbalancedFrameRemoval(AlcinaServletContext.class,
 					"begin");
 			if (TransformManager.hasInstance()) {
+				Permissions.popContext();
+				Permissions.popContext();
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				Permissions.confirmDepth(permissionsDepth);
 				Permissions.get().reset();

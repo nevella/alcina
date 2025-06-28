@@ -213,7 +213,7 @@ public class TransformCommit {
 							persistableRequest.getChunkUuidString());
 				}
 				boolean committingUserIsAdministrator = UserlandProvider.get()
-						.getGroupByName(Permissions.ADMINISTRATORS_GROUP_NAME)
+						.getGroupByName(Permissions.Names.ADMINISTRATORS_GROUP)
 						.containsUserOrMemberGroupContainsUser(UserlandProvider
 								.get().getUserById(deltaRecord.getUserId()));
 				if (useWrapperUser == null) {

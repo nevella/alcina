@@ -104,7 +104,6 @@ public class AuthenticationPersistence {
 		ClientInstance domainVersion = persistent.domain().domainVersion();
 		// ensure this instance is the only one ever created in the domain
 		EntityLayerObjects.get().setServerAsClientInstance(domainVersion);
-		Permissions.get().setClientInstance(ServerClientInstance.get());
 	}
 
 	public ClientInstance createClientInstance(AuthenticationSession session,

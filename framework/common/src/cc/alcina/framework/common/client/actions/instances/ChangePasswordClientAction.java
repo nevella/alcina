@@ -29,6 +29,6 @@ public class ChangePasswordClientAction extends NonstandardObjectAction {
 
 	@Override
 	public String rule() {
-		return Permissions.getAdministratorGroupName();
+		return Permissions.Names.ADMINISTRATORS_GROUP;
 	}
 }

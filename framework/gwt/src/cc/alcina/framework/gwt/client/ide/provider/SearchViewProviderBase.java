@@ -339,7 +339,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			}
 			List<Field> fields = null;
 			try {
-				Permissions.get().setOverrideAsOwnedObject(true);
+				Permissions.pushSystemOrCurrentUserAsRoot();
 				fields = BeanFields.query().forBean(bean)
 						.withEditable(isEditableWidgets())
 						.forMultipleWidgetContainer(true)
@@ -347,7 +347,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 								n -> !ignoreProperties.contains(n))
 						.listFields();
 			} finally {
-				Permissions.get().setOverrideAsOwnedObject(false);
+				Permissions.popContext();
 			}
 			int mask = BoundTableExt.HEADER_MASK;
 			if (def.isOrderable()) {

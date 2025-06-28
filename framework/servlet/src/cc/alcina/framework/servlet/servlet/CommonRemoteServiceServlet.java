@@ -629,7 +629,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	protected void onAfterResponseSerialized(String serializedResponse) {
 		LooseContext.confirmDepth(looseContextDepth.get());
-		Permissions.get().setUser(null);
 		super.onAfterResponseSerialized(serializedResponse);
 	}
 

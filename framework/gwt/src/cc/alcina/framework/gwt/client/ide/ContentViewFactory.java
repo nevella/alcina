@@ -1329,7 +1329,7 @@ public class ContentViewFactory {
 						}
 					}
 					if (Permissions.get().isMemberOfGroup(
-							Permissions.getAdministratorGroupName())
+							Permissions.Names.ADMINISTRATORS_GROUP)
 							&& sender != null) {
 						if (GeneralProperties.get()
 								.isAllowAdminInvalidObjectWrite()

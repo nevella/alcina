@@ -120,7 +120,7 @@ public class Permissions implements DomainTransformListener {
 			this.clientInstance = clientInstance;
 		}
 
-		PermissionsState() {
+		public PermissionsState() {
 		}
 
 		public void copyTo(Permissions pm) {
@@ -197,33 +197,35 @@ public class Permissions implements DomainTransformListener {
 		}
 	}
 
-	public static String SYSTEM_GROUP_NAME = "system";
+	public interface GetSystemUserClientInstance {
+		ClientInstance getClientInstance();
+	}
 
-	public static String SYSTEM_USER_NAME = "system_user";
+	public static class Names {
+		public static String SYSTEM_GROUP = "system";
 
-	public static String ANONYMOUS_USER_NAME = "anonymous";
+		public static String SYSTEM_USER = "system_user";
 
-	public static String ANONYMOUS_GROUP_NAME = "anonymous";
+		public static String ANONYMOUS_USER = "anonymous";
 
-	public static String ADMINISTRATORS_GROUP_NAME = "Administrators";
+		public static String ANONYMOUS_GROUP = "anonymous";
 
-	public static String INITIAL_ADMINISTRATOR_USER_NAME = "admin@nodomain.cc";
+		public static String ADMINISTRATORS_GROUP = "Administrators";
 
-	public static String INITIAL_ADMINISTRATOR_PASSWORD = "admin";
+		public static String INITIAL_ADMINISTRATOR_USER = "admin@nodomain.cc";
 
-	public static String DEVELOPERS_GROUP_NAME = "Developers";
+		public static String INITIAL_ADMINISTRATOR_PASSWORD = "admin";
 
-	private static String administratorGroupName = "Administrators";
-
-	private static String developerGroupName = "Developers";
-
-	private static String anonymousUserName = "anonymous";
+		public static String DEVELOPERS_GROUP = "Developers";
+	}
 
 	private static Permissions factoryInstance;
 
-	private static PermissionsExtension permissionsExtension;
+	static PermissionsExtension permissionsExtension;
 
-	private static boolean enabled = true;
+	public static void initialise() {
+		permissionsExtension = new RegistryPermissionsExtension();
+	}
 
 	public static final Permissible ROOT_PERMISSIBLE = new Permissible() {
 		@Override
@@ -319,27 +321,11 @@ public class Permissions implements DomainTransformListener {
 		return factoryInstance;
 	}
 
-	public static String getAdministratorGroupName() {
-		return administratorGroupName;
-	}
-
-	public static String getAnonymousUserName() {
-		return anonymousUserName;
-	}
-
-	public static String getDeveloperGroupName() {
-		return developerGroupName;
-	}
-
 	public static ObjectPermissions getObjectPermissions(Class<?> domainClass) {
 		ObjectPermissions objectPermissions = Reflections.at(domainClass)
 				.annotation(ObjectPermissions.class);
 		return objectPermissions == null ? get().getDefaultObjectPermissions()
 				: objectPermissions;
-	}
-
-	public static PermissionsExtension getPermissionsExtension() {
-		return permissionsExtension;
 	}
 
 	public static Set<IGroup> getReachableGroups(IUser user) {
@@ -400,15 +386,11 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	public static boolean isDeveloper() {
-		if (getAdministratorGroupName() == null || !get().isLoggedIn()) {
+		if (!get().isLoggedIn()) {
 			return false;
 		} else {
-			return get().isMemberOfGroup(getDeveloperGroupName());
+			return get().isMemberOfGroup(Names.DEVELOPERS_GROUP);
 		}
-	}
-
-	public static boolean isEnabled() {
-		return enabled;
 	}
 
 	public static boolean isPermitted(Object o, String ruleName) {
@@ -448,8 +430,8 @@ public class Permissions implements DomainTransformListener {
 		return Objects.equals(get().getSystemUser(), get().getUser());
 	}
 
-	public static void register(Permissions pm) {
-		factoryInstance = pm;
+	public static void register(Permissions permissions) {
+		factoryInstance = permissions;
 	}
 
 	public static void removePerThreadContext() {
@@ -466,28 +448,6 @@ public class Permissions implements DomainTransformListener {
 		} finally {
 			Permissions.popContext();
 		}
-	}
-
-	public static void
-			setAdministratorGroupName(String administratorGroupName) {
-		Permissions.administratorGroupName = administratorGroupName;
-	}
-
-	public static void setAnonymousUserName(String anonymousUserName) {
-		Permissions.anonymousUserName = anonymousUserName;
-	}
-
-	public static void setDeveloperGroupName(String developerGroupName) {
-		Permissions.developerGroupName = developerGroupName;
-	}
-
-	public static void setEnabled(boolean enabled) {
-		Permissions.enabled = enabled;
-	}
-
-	public static void
-			setPermissionsExtension(PermissionsExtension permissionsExtension) {
-		Permissions.permissionsExtension = permissionsExtension;
 	}
 
 	public static boolean isRoot() {
@@ -539,12 +499,16 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	public static void pushUser(IUser user, LoginState loginState) {
-		get().pushUser0(user, loginState);
+		pushUser(user, loginState, false, null);
 	}
 
-	public static void pushUser(IUser user, LoginState loginState,
-			boolean asRoot, ClientInstance clientInstance) {
-		get().pushUser0(user, loginState, asRoot, clientInstance);
+	public static void pushUser(IUser user, LoginState loginState, boolean root,
+			ClientInstance clientInstance) {
+		get().pushState(user, loginState, root, clientInstance);
+	}
+
+	public static boolean hasContext() {
+		return depth() != 0;
 	}
 
 	private static void recursivePopulateGroupMemberships(Set<IGroup> members,
@@ -628,13 +592,7 @@ public class Permissions implements DomainTransformListener {
 
 	protected Stack<PermissionsState> stateStack = new Stack<>();
 
-	private Long authenticatedClientInstanceId;
-
-	private boolean allPermissible = false;
-
 	private boolean root;
-
-	private boolean overrideAsOwnedObject;
 
 	protected Permissions() {
 		super();
@@ -688,10 +646,6 @@ public class Permissions implements DomainTransformListener {
 		if (evt.getSource() instanceof IGroup) {
 			invalidateGroupMap();
 		}
-	}
-
-	public Long getAuthenticatedClientInstanceId() {
-		return this.authenticatedClientInstanceId;
 	}
 
 	/**
@@ -777,19 +731,15 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	public boolean isAdmin() {
-		if (getAdministratorGroupName() == null || !isLoggedIn()) {
+		if (!isLoggedIn()) {
 			return false;
 		} else {
-			return isMemberOfGroup(getAdministratorGroupName());
+			return isMemberOfGroup(Names.ADMINISTRATORS_GROUP);
 		}
 	}
 
-	public boolean isAllPermissible() {
-		return allPermissible;
-	}
-
 	public boolean isAnonymousUser() {
-		return getAnonymousUserName().equals(getUserName());
+		return Names.ANONYMOUS_USER.equals(getUserName());
 	}
 
 	public boolean isLoggedIn() {
@@ -818,15 +768,8 @@ public class Permissions implements DomainTransformListener {
 		return false;
 	}
 
-	public boolean isOverrideAsOwnedObject() {
-		return this.overrideAsOwnedObject;
-	}
-
 	public boolean isPermitted(Object o, Object assigningTo, Permissible p,
 			boolean doNotEvaluateNullObjectPermissions) {
-		if (allPermissible) {
-			return true;
-		}
 		if (p.accessLevel().equals(AccessLevel.GROUP)) {
 			if (p.rule() != null && p.rule().length() != 0
 					&& isMemberOfGroup(p.rule())) {
@@ -859,10 +802,7 @@ public class Permissions implements DomainTransformListener {
 			}
 		}
 		if (!permitted && !doNotEvaluateNullObjectPermissions) {
-			if (getPermissionsExtension() != null) {
-				permitted = evaluatePermissionsExtension(o, assigningTo, p,
-						permitted);
-			}
+			permitted = evaluateRules(o, assigningTo, p, permitted);
 		}
 		return permitted;
 	}
@@ -902,9 +842,6 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
-		if (overrideAsOwnedObject) {
-			return true;
-		}
 		if (hasOwner == null) {
 			return false;
 		}
@@ -933,59 +870,6 @@ public class Permissions implements DomainTransformListener {
 		setLoginState(LoginState.NOT_LOGGED_IN);
 	}
 
-	public void setAllPermissible(boolean allPermissible) {
-		this.allPermissible = allPermissible;
-	}
-
-	public void setAuthenticatedClientInstanceId(
-			Long authenticatedClientInstanceId) {
-		this.authenticatedClientInstanceId = authenticatedClientInstanceId;
-	}
-
-	public void setClientInstance(ClientInstance clientInstance) {
-		ClientInstance old_clientInstance = clientInstance;
-		this.clientInstance = clientInstance;
-		if (!Objects.equals(clientInstance, old_clientInstance)) {
-			topicClientInstanceChange.publish(clientInstance);
-		}
-	}
-
-	public void setDefaultObjectPermissions(
-			ObjectPermissions defaultObjectPermissions) {
-		this.defaultObjectPermissions = defaultObjectPermissions;
-	}
-
-	public void setDefaultPropertyPermissions(
-			PropertyPermissions defaultPropertyPermissions) {
-		this.defaultPropertyPermissions = defaultPropertyPermissions;
-	}
-
-	public void setLoginState(LoginState loginState) {
-		LoginState old_loginState = this.loginState;
-		this.loginState = loginState;
-		if (loginState != old_loginState) {
-			topicLoginStateChange().publish(loginState);
-		}
-	}
-
-	public void setOverrideAsOwnedObject(boolean overrideAsOwnedObject) {
-		this.overrideAsOwnedObject = overrideAsOwnedObject;
-	}
-
-	public void setRoot(boolean root) {
-		this.root = root;
-	}
-
-	public void setUser(IUser user) {
-		root = false;
-		invalidateGroupMap();
-		this.user = user;
-		if (user == null) {
-			// do not fire listeners
-			loginState = LoginState.NOT_LOGGED_IN;
-		}
-	}
-
 	public PermissionsState snapshotState() {
 		PermissionsState state = new PermissionsState();
 		state.user = user;
@@ -996,15 +880,58 @@ public class Permissions implements DomainTransformListener {
 		return state;
 	}
 
-	public void pushState(PermissionsState state) {
-		// don't push the group map
-		pushUser(state.user, state.loginState, state.root,
-				state.clientInstance);
+	public static void pushState(PermissionsState newState) {
+		get().pushState0(newState);
+	}
+
+	void pushState0(PermissionsState newState) {
+		stackDebug.maybeDebugStack(stateStack, true);
+		PermissionsState currentState = toPermissionsState();
+		stateStack.push(currentState);
+		applyState(newState);
+	}
+
+	/*
+	 * Clients need a base state, since event/js entry doesn't go through a
+	 * permissions layer
+	 */
+	public void replaceBaseState(PermissionsState baseState) {
+		Preconditions.checkState(!hasContext());
+		applyState(baseState);
+	}
+
+	protected void setClientInstance(ClientInstance clientInstance) {
+		ClientInstance old_clientInstance = this.clientInstance;
+		this.clientInstance = clientInstance;
+		if (!Objects.equals(clientInstance, old_clientInstance)) {
+			topicClientInstanceChange.publish(clientInstance);
+		}
+	}
+
+	protected void setLoginState(LoginState loginState) {
+		LoginState old_loginState = this.loginState;
+		this.loginState = loginState;
+		if (loginState != old_loginState) {
+			topicLoginStateChange().publish(loginState);
+		}
+	}
+
+	protected void setRoot(boolean root) {
+		this.root = root;
+	}
+
+	protected void setUser(IUser user) {
+		invalidateGroupMap();
+		this.user = user;
+		if (user == null) {
+			// do not fire listeners
+			loginState = LoginState.NOT_LOGGED_IN;
+		}
 	}
 
 	protected void pushSystemOrCurrentUserAsRoot0() {
-		if (isLoggedIn()) {
-			pushUser(getUser(), getLoginState(), true, clientInstance);
+		if (isLoggedIn() || getSystemUser() == null) {
+			pushUser(getUser(), getLoginState(), true, null);
 		} else {
 			pushSystemUser();
 		}
@@ -1034,13 +961,9 @@ public class Permissions implements DomainTransformListener {
 
 	protected IUser pushSystemUser0() {
 		IUser systemUser = getSystemUser();
-		pushUser0(systemUser, LoginState.LOGGED_IN, true, Registry
+		pushState(systemUser, LoginState.LOGGED_IN, true, Registry
 				.impl(GetSystemUserClientInstance.class).getClientInstance());
 		return systemUser;
-	}
-
-	protected void pushUser0(IUser user, LoginState loginState) {
-		pushUser0(user, loginState, false, null);
 	}
 
 	/*
@@ -1048,21 +971,9 @@ public class Permissions implements DomainTransformListener {
 	 * running with the permissions of user X but recording domain mutation to
 	 * the graph of (server) clientinstance Y
 	 */
-	protected void pushUser0(IUser user, LoginState loginState, boolean asRoot,
+	protected void pushState(IUser user, LoginState loginState, boolean root,
 			ClientInstance clientInstance) {
-		stackDebug.maybeDebugStack(stateStack, true);
-		PermissionsState state = toPermissionsState();
-		stateStack.push(state);
-		setLoginState(loginState);
-		setUser(user);
-		setRoot(asRoot);
-		if (clientInstance != null) {
-			setClientInstance(clientInstance);
-		}
-	}
-
-	public interface GetSystemUserClientInstance {
-		ClientInstance getClientInstance();
+		pushState(new PermissionsState(user, loginState, root, clientInstance));
 	}
 
 	protected IUser getSystemUser() {
@@ -1079,25 +990,30 @@ public class Permissions implements DomainTransformListener {
 	protected void removePerThreadContext0() {
 	}
 
+	void applyState(PermissionsState state) {
+		if (state.clientInstance != null) {
+			setClientInstance(state.clientInstance);
+		}
+		setLoginState(state.loginState);
+		setRoot(state.root);
+		setUser(state.user);
+	}
+
 	private int depth0() {
 		return stateStack.size();
 	}
 
-	private boolean evaluatePermissionsExtension(Object o, Object assigningTo,
-			Permissible p, boolean permitted) {
+	boolean evaluateRules(Object o, Object assigningTo, Permissible p,
+			boolean permitted) {
 		Boolean b = null;
 		if (assigningTo != null) {
-			b = getPermissionsExtension().isPermitted(o, assigningTo, p);
+			b = permissionsExtension.isPermitted(o, assigningTo, p);
 		} else {
-			b = getPermissionsExtension().isPermitted(o, p);
+			b = permissionsExtension.isPermitted(o, p);
 		}
 		if (b != null) {
 			permitted = b;
 		}
 		return permitted;
-	}
-
-	public static boolean hasContext() {
-		return depth() != 0;
 	}
 }

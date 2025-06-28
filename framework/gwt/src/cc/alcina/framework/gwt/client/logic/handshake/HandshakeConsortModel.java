@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.OnlineState;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -80,7 +81,10 @@ public class HandshakeConsortModel {
 					.current()).getWrapper();
 			impl.setAuth(wrapper.getClientInstanceAuth());
 			impl.setId(wrapper.getClientInstanceId());
-			Permissions.get().setClientInstance(impl);
+			PermissionsState replaceBaseState = Permissions.get()
+					.toPermissionsState();
+			replaceBaseState.clientInstance = impl;
+			Permissions.get().replaceBaseState(replaceBaseState);
 		}
 	}
 
@@ -194,9 +198,9 @@ public class HandshakeConsortModel {
 					.setInstance(generalProperties);
 		}
 		if (currentUser != null) {
-			Permissions.get().setUser(currentUser);
-			Permissions.get()
-					.setLoginState(HandshakeConsortModel.get().getLoginState());
+			PermissionsState baseState = new PermissionsState(currentUser,
+					HandshakeConsortModel.get().getLoginState(), false, null);
+			Permissions.get().replaceBaseState(baseState);
 			Registry.impl(ClientNotifications.class).log(Ax.format("User: %s",
 					currentUser == null ? null : currentUser.getUserName()));
 		}
@@ -229,8 +233,10 @@ public class HandshakeConsortModel {
 	public void setLoginResponse(LoginResponse loginResponse) {
 		this.loginResponse = loginResponse;
 		if (loginResponse != null) {
-			Permissions.get()
-					.setClientInstance(loginResponse.getClientInstance());
+			PermissionsState replaceBaseState = Permissions.get()
+					.toPermissionsState();
+			replaceBaseState.clientInstance = loginResponse.getClientInstance();
+			Permissions.get().replaceBaseState(replaceBaseState);
 		}
 	}
 
