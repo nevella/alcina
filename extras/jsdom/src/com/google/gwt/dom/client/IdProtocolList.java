@@ -193,7 +193,7 @@ public class IdProtocolList {
 	ConsecutiveTextNodes consecutiveTextNodes = new ConsecutiveTextNodes();
 
 	void fromSubtree(Node subtreeRoot) {
-		List<Node> depthFirstNodes = subtreeRoot.traverse().toList();
+		List<Node> depthFirstNodes = subtreeRoot.stream().toList();
 		for (int idx = 0; idx < depthFirstNodes.size(); idx++) {
 			Node node = depthFirstNodes.get(idx);
 			boolean special = false;

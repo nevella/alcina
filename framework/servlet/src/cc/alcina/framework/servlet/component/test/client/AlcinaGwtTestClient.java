@@ -48,7 +48,7 @@ public class AlcinaGwtTestClient implements EntryPoint {
 	static class Utils {
 		static void clearRootPanel() {
 			RootPanel.get().clear();
-			RootPanel.get().getElement().streamChildren().filter(
+			RootPanel.get().getElement().streamImmediateChildren().filter(
 					n -> !DomNode.from(n).tagIsOneOf("iframe", "script"))
 					.collect(Collectors.toList())
 					.forEach(Node::removeFromParent);

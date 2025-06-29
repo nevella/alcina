@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Selection;
+import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event.NativePreviewEvent;

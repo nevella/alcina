@@ -80,12 +80,12 @@ public class UrlBuilder {
 		}
 	}
 
-	public UrlBuilder host(String host) {
+	public UrlBuilder withHost(String host) {
 		this.host = host;
 		return this;
 	}
 
-	public UrlBuilder protocol(String protocol) {
+	public UrlBuilder withProtocol(String protocol) {
 		if (protocol.endsWith(":")) {
 			protocol = protocol.substring(0, protocol.length() - 1);
 		}
@@ -93,7 +93,7 @@ public class UrlBuilder {
 		return this;
 	}
 
-	public UrlBuilder path(String path) {
+	public UrlBuilder withPath(String path) {
 		if (path.contains("#") || path.contains("?")) {
 			throw new IllegalArgumentException(
 					"Illegal path chars - probably use populateFrom()");
@@ -102,22 +102,22 @@ public class UrlBuilder {
 		return this;
 	}
 
-	public UrlBuilder qsParam(String key, Object value) {
+	public UrlBuilder withQueryStringParam(String key, Object value) {
 		qsParams.put(key, value == null ? null : value.toString());
 		return this;
 	}
 
-	public UrlBuilder queryString(String queryString) {
+	public UrlBuilder withQueryString(String queryString) {
 		this.queryString = queryString;
 		return this;
 	}
 
-	public UrlBuilder hash(String hash) {
+	public UrlBuilder withHash(String hash) {
 		this.hash = hash;
 		return this;
 	}
 
-	public UrlBuilder port(int port) {
+	public UrlBuilder withPort(int port) {
 		this.port = port;
 		return this;
 	}
@@ -146,10 +146,11 @@ public class UrlBuilder {
 		return this;
 	}
 
-	public void clearFromPath() {
+	public UrlBuilder clearFromPath() {
 		path = null;
 		queryString = null;
 		hash = null;
+		return this;
 	}
 
 	public Url asUrl() {

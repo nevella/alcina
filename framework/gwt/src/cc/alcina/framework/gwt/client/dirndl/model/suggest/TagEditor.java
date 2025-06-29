@@ -60,9 +60,7 @@ public class TagEditor extends Model
 	}
 
 	String computeTextContent() {
-		String textContent = inputContainer.streamChildren()
-				.filter(n -> n.getNodeType() == Node.TEXT_NODE)
-				.map(Node::getTextContent).collect(Collectors.joining());
+		String textContent = inputContainer.getTextContent();
 		return textContent;
 	}
 

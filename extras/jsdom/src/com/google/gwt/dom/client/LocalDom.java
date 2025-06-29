@@ -666,10 +666,9 @@ public class LocalDom implements ContextFrame {
 	// not require a linear number of devmode calls
 	void walkPutRemote(ElementJso elemJso, Element elem) {
 		elem.putRemote(elemJso);
-		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
-				(Node) elem,
-				e -> e.streamChildren().collect(Collectors.toList()));
-		traversal.forEach(node -> {
+		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(elem,
+				Node::getChildren);
+		elem.stream().forEach(node -> {
 			if (node.hasRemote()) {
 				return;
 			}
@@ -968,7 +967,7 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public void setDetached(Node node) {
-			node.traverse().forEach(n -> n.setAttached(false, false));
+			node.setAttached(false, false);
 		}
 
 		public Node getNode(int attachId) {

@@ -71,8 +71,7 @@ class MarkupJso {
 
 		void populateRemotes() {
 			Iterator<JavaScriptObject> itr = createdJsos.iterator();
-			container.traverse()
-					.forEach(n -> n.putRemote((NodeJso) itr.next()));
+			container.stream().forEach(n -> n.putRemote((NodeJso) itr.next()));
 		}
 	}
 

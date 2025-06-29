@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.dom.client.AttributeBehaviorHandler;
+import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 

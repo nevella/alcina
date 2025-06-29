@@ -44,8 +44,8 @@ public class DocumentFragment extends Node
 
 	@Override
 	public String getTextContent() throws DOMException {
-		return streamChildren().filter(Node::provideIsText)
-				.map(Node::getNodeValue).collect(Collectors.joining());
+		return stream().filter(Node::provideIsText).map(Node::getNodeValue)
+				.collect(Collectors.joining());
 	}
 
 	@Override

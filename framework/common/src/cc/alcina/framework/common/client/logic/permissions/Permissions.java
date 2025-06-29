@@ -990,7 +990,7 @@ public class Permissions implements DomainTransformListener {
 	protected void removePerThreadContext0() {
 	}
 
-	void applyState(PermissionsState state) {
+	protected void applyState(PermissionsState state) {
 		if (state.clientInstance != null) {
 			setClientInstance(state.clientInstance);
 		}

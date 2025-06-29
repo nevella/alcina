@@ -56,8 +56,9 @@ public class ControlServlet extends AlcinaServlet {
 		queryParameters.put("taskJson",
 				JacksonUtils.serializeWithDefaultsAndTypes(task));
 		UrlBuilder urlBuilder = new UrlBuilder();
-		urlBuilder.path("/control.do");
-		queryParameters.forEach((k, v) -> urlBuilder.qsParam(k, v));
+		urlBuilder.withPath("/control.do");
+		queryParameters
+				.forEach((k, v) -> urlBuilder.withQueryStringParam(k, v));
 		return urlBuilder.build();
 	}
 

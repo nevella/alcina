@@ -74,9 +74,10 @@ public class JobServlet extends AlcinaServlet {
 							: serialized);
 		}
 		UrlBuilder urlBuilder = new UrlBuilder();
-		urlBuilder.path("/job.do");
-		urlBuilder.host(host);
-		queryParameters.forEach((k, v) -> urlBuilder.qsParam(k, v));
+		urlBuilder.withPath("/job.do");
+		urlBuilder.withHost(host);
+		queryParameters
+				.forEach((k, v) -> urlBuilder.withQueryStringParam(k, v));
 		return urlBuilder.build();
 	}
 

@@ -6,11 +6,11 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Selection;
+import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;

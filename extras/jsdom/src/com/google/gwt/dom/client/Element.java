@@ -54,6 +54,9 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  * All HTML element interfaces derive from this class.
@@ -170,6 +173,11 @@ public class Element extends Node implements ClientDomElement,
 
 	private HandlerManager handlerManager;
 
+	/*
+	 * Debugging aid
+	 */
+	private Topic<Boolean> topicAttach;
+
 	protected Element() {
 	}
 
@@ -237,15 +245,26 @@ public class Element extends Node implements ClientDomElement,
 		return ensureHandlers().addHandler(type, handler);
 	}
 
-	/**
+	public ListenerReference addAttachListner(TopicListener<Boolean> listener) {
+		return ensureAttachTopic().add(listener);
+	}
+
+	Topic<Boolean> ensureAttachTopic() {
+		if (topicAttach == null) {
+			topicAttach = Topic.create();
+		}
+		return topicAttach;
+	}
+
+	/*
 	 * Adds this handler to the widget.
 	 *
-	 * @param <H>
-	 *            the type of handler to add
-	 * @param type
-	 *            the event type
-	 * @param handler
-	 *            the handler
+	 * @param <H> the type of handler to add
+	 * 
+	 * @param type the event type
+	 * 
+	 * @param handler the handler
+	 * 
 	 * @return {@link HandlerRegistration} used to remove the handler
 	 */
 	public final <H extends EventHandler> HandlerRegistration
@@ -487,7 +506,7 @@ public class Element extends Node implements ClientDomElement,
 	@Deprecated
 	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
-		List<ElementLocal> list = traverse().filter(Node::provideIsElement)
+		List<ElementLocal> list = stream().filter(Node::provideIsElement)
 				.map(Node::local).map(ElementLocal.class::cast)
 				.collect(Collectors.toList());
 		return new NodeList(new NodeListLocal(list));
@@ -685,13 +704,8 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	void getTextContent0(StringBuilder builder) throws DOMException {
-		streamChildren().forEach(n -> {
-			if (n.getNodeType() == Node.TEXT_NODE) {
-				builder.append(n.getNodeValue());
-			} else if (n.getNodeType() == Node.ELEMENT_NODE) {
-				((Element) n).getTextContent0(builder);
-			}
-		});
+		stream().filter(Node::provideIsText)
+				.forEach(n -> builder.append(n.getNodeValue()));
 	}
 
 	@Override
@@ -796,6 +810,9 @@ public class Element extends Node implements ClientDomElement,
 		}
 		DOM.setEventListener(this, eventListener);
 		super.onAttach();
+		if (topicAttach != null) {
+			topicAttach.publish(false);
+		}
 	}
 
 	@Override
@@ -843,6 +860,9 @@ public class Element extends Node implements ClientDomElement,
 		 */
 		// DOM.setEventListener(this, null);
 		super.onDetach();
+		if (topicAttach != null) {
+			topicAttach.publish(false);
+		}
 	}
 
 	protected ElementAttachId attachIdRemote() {
@@ -1338,7 +1358,7 @@ public class Element extends Node implements ClientDomElement,
 
 		public String toLocalAttachIdString(boolean withTextSnippet) {
 			FormatBuilder builder = new FormatBuilder();
-			Element.this.traverse().forEach(n -> {
+			Element.this.stream().forEach(n -> {
 				String textSnippet = "";
 				if (withTextSnippet && n.provideIsText()) {
 					textSnippet = Ax.format("[%s] %s",
@@ -1350,7 +1370,7 @@ public class Element extends Node implements ClientDomElement,
 						textSnippet);
 			});
 			Ax.out("\n\n----------\n\n");
-			Element.this.traverse().forEach(n -> {
+			Element.this.stream().forEach(n -> {
 				Node cursor = n;
 				while (cursor != null) {
 					builder.append(" ");

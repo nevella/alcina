@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.entity.logic.ServerClientInstance;
 
 /**
@@ -67,6 +68,19 @@ public class ThreadedPermissions extends Permissions {
 			throw new IllegalStateException("No non-root user in stack");
 		} else {
 			return null;
+		}
+	}
+
+	@Override
+	public void replaceBaseState(PermissionsState baseState) {
+		if (Al.isRomcom()) {
+			/*
+			 * apply without checking stack, unavoidable with the way romcom is
+			 * routed
+			 */
+			applyState(baseState);
+		} else {
+			super.replaceBaseState(baseState);
 		}
 	}
 

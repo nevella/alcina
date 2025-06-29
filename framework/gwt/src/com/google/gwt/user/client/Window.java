@@ -901,8 +901,9 @@ public class Window {
 		}
 
 		public static void init(String protocol, String host, String port,
-				String path, String queryString) {
-			get().impl.init(protocol, host, port, path, queryString);
+				String path, String queryString, String href, String origin) {
+			get().impl.init(protocol, host, port, path, queryString, href,
+					origin);
 		}
 
 		/**
@@ -1013,7 +1014,7 @@ public class Window {
 		}
 
 		public void init(String protocol, String host, String port, String path,
-				String queryString) {
+				String queryString, String href, String origin) {
 			throw new UnsupportedOperationException();
 		}
 

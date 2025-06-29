@@ -61,7 +61,8 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 		if (!node.hasRemote()) {
 			node.putRemote(create(node));
 		}
-		node.streamChildren().forEach(NodeAttachId::ensureAttachIdRemote);
+		node.streamImmediateChildren()
+				.forEach(NodeAttachId::ensureAttachIdRemote);
 	}
 
 	protected Node node;

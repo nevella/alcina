@@ -25,6 +25,8 @@ public class LocationMutation {
 		result.host = Window.Location.getHost();
 		result.port = Window.Location.getPort();
 		result.protocol = Window.Location.getProtocol();
+		result.href = Window.Location.getHref();
+		result.origin = Window.Location.getOrigin();
 		result.replace = History.CONTEXT_REPLACING.is();
 		if (startup) {
 			Navigator navigator = new Navigator();
@@ -67,6 +69,10 @@ public class LocationMutation {
 	public String queryString;
 
 	public String hash;
+
+	public String href;
+
+	public String origin;
 
 	public LocationMutation() {
 	}

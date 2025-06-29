@@ -18,15 +18,15 @@ public class UrlRouter implements PerformerResource {
 		Url url = Url.parse(to);
 		UrlBuilder builder = url.toBuilder();
 		if (url.host == null) {
-			builder.protocol(part.protocol);
-			builder.host(part.host);
-			builder.port(part.port);
+			builder.withProtocol(part.protocol);
+			builder.withHost(part.host);
+			builder.withPort(part.port);
 		}
 		if (to.equals("/") && Ax.notBlank(part.path)) {
-			builder.path(part.path);
+			builder.withPath(part.path);
 		}
 		if (part.gwtDevMode) {
-			builder.qsParam("gwt.l", null);
+			builder.withQueryStringParam("gwt.l", null);
 		}
 		return builder.build();
 	}

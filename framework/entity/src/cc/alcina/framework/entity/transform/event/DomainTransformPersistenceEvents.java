@@ -269,6 +269,17 @@ public class DomainTransformPersistenceEvents
 	// cluster-level will need reaper and reconstituter
 	//
 	// FIXME - should look at the TR to check it's an async client
+	/*
+	 * Note re the fixmes - this feature has a potential (very rare) bug if
+	 * there's a commit from an external source which causes cascaded object
+	 * creation.
+	 * 
+	 * The solution is to maintain a cluster-level counter for the
+	 * clientinstance, and reap it on instance expiration.
+	 * 
+	 * That counter could possibly be a field on the persistentrequest, as part
+	 * of the persistence uniquness db constraints
+	 */
 	static class CascadedTransformLocalIdSupport {
 		Map<Long, AtomicLong> perClientInstanceLocalIdCounter = new LinkedHashMap<>();
 

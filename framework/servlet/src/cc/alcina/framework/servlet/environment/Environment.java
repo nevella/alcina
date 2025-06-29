@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
@@ -93,6 +94,9 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * thread
  */
 class Environment {
+	static Configuration.Key invokeSyncTimeoutSecs = Configuration
+			.key("invokeSyncTimeoutSecs");
+
 	static class TimerProvider implements Timer.Provider {
 		static TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
 
@@ -200,8 +204,10 @@ class Environment {
 					hadTimeOut = true;
 					Ax.out("invokesync - [retry]");
 				}
-			} while (timedOut && !queue.finished && TimeConstants.within(start,
-					30 * TimeConstants.ONE_SECOND_MS));
+			} while (timedOut && !queue.finished
+					&& TimeConstants.within(start,
+							invokeSyncTimeoutSecs.intValue()
+									* TimeConstants.ONE_SECOND_MS));
 			if (timedOut) {
 				throw new InvokeException("Timed out");
 			} else {
@@ -397,8 +403,8 @@ class Environment {
 				if (startup) {
 					Window.Location.init(locationMutation.protocol,
 							locationMutation.host, locationMutation.port,
-							locationMutation.path,
-							locationMutation.queryString);
+							locationMutation.path, locationMutation.queryString,
+							locationMutation.href, locationMutation.origin);
 					Window.Navigator.init(
 							locationMutation.navigator.appCodeName,
 							locationMutation.navigator.appName,

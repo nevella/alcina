@@ -4,11 +4,11 @@ import java.util.Objects;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.AttachId;
-import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HrefElement;
+import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 

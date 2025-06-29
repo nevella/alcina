@@ -513,13 +513,13 @@ public abstract class Node
 		return new NodeLocal.ChildNodeList(local());
 	}
 
-	public Stream<Node> traverse() {
+	public Stream<Node> stream() {
 		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(this,
 				Node::getChildren);
 		return traversal.stream();
 	}
 
-	public Stream<Node> streamChildren() {
+	public Stream<Node> streamImmediateChildren() {
 		return getChildNodes().stream();
 	}
 
@@ -540,7 +540,12 @@ public abstract class Node
 		// note this will be undone for the top-of-the-detach-tree (see void
 		// setAttached(boolean attached) )
 		resetRemote();
-		streamChildren().forEach(n -> n.setAttached(false, false));
+		setAttached(false, false);
+		SiblingIterator itr = local().childIterator();
+		while (itr.hasNext()) {
+			NodeLocal childLocal = itr.next();
+			childLocal.node().setAttached(false, false);
+		}
 	}
 
 	protected void validateRemoteStatePreTreeMutation(Node incomingChild) {
@@ -642,9 +647,6 @@ public abstract class Node
 			ClientDomNode remote = remote();
 			onDetach();
 			if (attachRoot) {
-				if (this instanceof Text && remote != null) {
-					int dbg4 = 4;
-				}
 				putRemote(remote);
 			}
 		}

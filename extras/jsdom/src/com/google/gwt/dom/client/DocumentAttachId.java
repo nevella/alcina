@@ -1,7 +1,6 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -12,7 +11,6 @@ import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.ProcessingInstruction;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
@@ -20,6 +18,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.event.GwtEvents.Attach;
 
 public class DocumentAttachId extends NodeAttachId
 		implements ClientDomDocument {
@@ -586,6 +586,9 @@ public class DocumentAttachId extends NodeAttachId
 	 */
 	Map<String, AttachId> elementsById = AlcinaCollections.newLinkedHashMap();
 
+	/*
+	 * this needs to populate the elementsById lookup
+	 */
 	@Override
 	public void emitMutation(MutationRecord mutation) {
 		switch (mutation.type) {
@@ -595,6 +598,16 @@ public class DocumentAttachId extends NodeAttachId
 				elementsById.put(mutation.newValue, mutation.target.attachId);
 				break;
 			}
+			break;
+		case innerMarkup:
+			mutation.target.node.stream().filter(Node::provideIsElement)
+					.forEach(n -> {
+						Element elem = (Element) n;
+						String id = ((Element) n).getId();
+						if (Ax.notBlank(id)) {
+							elementsById.put(id, AttachId.forNode(elem));
+						}
+					});
 			break;
 		}
 		mutationProxy.onMutation(mutation);

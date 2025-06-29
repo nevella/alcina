@@ -247,6 +247,10 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		private String protocol;
 
+		private String href;
+
+		private String origin;
+
 		@Override
 		public void assign(String newURL) {
 			throw new UnsupportedOperationException();
@@ -259,22 +263,22 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public String getHost() {
-			return this.host;
+			return Ax.isBlank(port) ? host : Ax.format("%s:%s", host, port);
 		}
 
 		@Override
 		public String getHostName() {
-			throw new UnsupportedOperationException();
+			return this.host;
 		}
 
 		@Override
 		public String getHref() {
-			throw new UnsupportedOperationException();
+			return href;
 		}
 
 		@Override
 		public String getOrigin() {
-			throw new UnsupportedOperationException();
+			return origin;
 		}
 
 		@Override
@@ -299,12 +303,14 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public void init(String protocol, String host, String port, String path,
-				String queryString) {
+				String queryString, String href, String origin) {
 			this.protocol = protocol;
 			this.host = host;
 			this.port = port;
 			this.path = path;
 			this.queryString = queryString;
+			this.href = href;
+			this.origin = origin;
 		}
 
 		@Override
@@ -346,6 +352,14 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		public void setQueryString(String queryString) {
 			this.queryString = queryString;
+		}
+
+		public void setHref(String href) {
+			this.href = href;
+		}
+
+		public void setOrigin(String origin) {
+			this.origin = origin;
 		}
 	}
 
@@ -412,6 +426,12 @@ public class GWTBridgeHeadless extends GWTBridge {
 		}
 	}
 
+	public static ThreadLocal<Boolean> inClient = new ThreadLocal<>() {
+		protected Boolean initialValue() {
+			return false;
+		};
+	};
+
 	private Set<Class> notImplemented = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
@@ -443,10 +463,4 @@ public class GWTBridgeHeadless extends GWTBridge {
 			e.printStackTrace();
 		}
 	}
-
-	public static ThreadLocal<Boolean> inClient = new ThreadLocal<>() {
-		protected Boolean initialValue() {
-			return false;
-		};
-	};
 }

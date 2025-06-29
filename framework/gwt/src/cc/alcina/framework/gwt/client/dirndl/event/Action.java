@@ -107,7 +107,13 @@ public abstract class Action<T> implements Permissible {
 		public String getTitle() {
 			String description = action.getDescription();
 			// only display if != text
-			return Objects.equals(description, getLabel()) ? null : description;
+			/*
+			 * actually no - description may be hidden by css. Always render
+			 * unless explictly (subclass) not
+			 */
+			// return Objects.equals(description, getLabel()) ? null :
+			// description;
+			return description;
 		}
 
 		@Override

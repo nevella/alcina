@@ -226,15 +226,16 @@ public class MutationsTests {
 				try {
 					consoleLog("Running " + getClass().getSimpleName(), false);
 					RootPanel.get().clear();
-					RootPanel.get().getElement().streamChildren().filter(n -> {
-						switch (n.getNodeName().toLowerCase()) {
-						case "iframe":
-						case "script":
-							return false;
-						default:
-							return true;
-						}
-					}).collect(Collectors.toList())
+					RootPanel.get().getElement().streamImmediateChildren()
+							.filter(n -> {
+								switch (n.getNodeName().toLowerCase()) {
+								case "iframe":
+								case "script":
+									return false;
+								default:
+									return true;
+								}
+							}).collect(Collectors.toList())
 							.forEach(Node::removeFromParent);
 					TestContainer cont = new TestContainer(color);
 					Rendered rendered = new DirectedLayout().render(cont)

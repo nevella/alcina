@@ -30,6 +30,20 @@ other improvements are tracked in the FIXMEs and ALC- tickets
  * </code>
  * </pre>
  */
+/*
+ * FIXME - categorise:
+ * @formatter:off
+ 
+Client request persistence uniqueness - this needs to be enforced during request table creation (if clustered backends) via:
+exSql("create index domaintransformrequest_chunk_uuid_idx on domaintransformrequest using btree( chunk_uuid);",
+		true);
+exSql("ALTER TABLE domaintransformrequest ADD CONSTRAINT domaintransformrequest_chunk_uuid_unique unique (chunk_uuid);",
+		true);
+
+
+		
+ * @formatter:on
+ */
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Parent(Feature_Ui_support.class)
 public interface Feature_Mvcc extends Feature {
