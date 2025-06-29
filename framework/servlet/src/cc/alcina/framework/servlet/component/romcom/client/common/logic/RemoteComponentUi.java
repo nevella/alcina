@@ -8,7 +8,7 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler.BehaviorRegistry;
+import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;

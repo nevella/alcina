@@ -6,7 +6,16 @@ import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
-public class NotificationObservable implements ProcessObservable {
+/**
+ * <p>
+ * This is implemented as a contextobservable - and that's a general pattern for
+ * per-client observables.
+ * 
+ * <p>
+ * Single-threaded (GWT) clients should register as a base observer on c
+ */
+public class NotificationObservable
+		implements ContextObservers.Observable.Base {
 	/**
 	 * NOTE! This will return a Notification<b>Context</b>Observable if in a
 	 * romcom environment
@@ -20,25 +29,12 @@ public class NotificationObservable implements ProcessObservable {
 	}
 
 	public static ProcessObservable of(String message) {
-		if (Al.isRomcom()) {
-			ContextObservable result = new ContextObservable();
-			result.message = message;
-			return result;
-		} else {
-			NotificationObservable result = new NotificationObservable();
-			result.message = message;
-			return result;
-		}
+		NotificationObservable result = new NotificationObservable();
+		result.message = message;
+		return result;
 	}
 
 	public String message;
 
 	public LogLevel level;
-
-	public static class ContextObservable
-			implements ContextObservers.Observable {
-		public String message;
-
-		public LogLevel level;
-	}
 }

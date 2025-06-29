@@ -4,9 +4,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.context.LooseContextInstance.Frame;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Multimap;
 
 /*
@@ -23,8 +26,17 @@ import cc.alcina.framework.common.client.util.Multimap;
  * a particular context observable)
  */
 public class ContextObservers {
+	private static ContextObservers baseObservers;
+
+	public static void registerBaseObservers() {
+		Preconditions.checkState(!Al.isBrowser());
+		baseObservers = new ContextObservers();
+	}
+
 	static ContextObservers get() {
-		return has() ? LooseContext.get(key()) : new ContextObservers();
+		return has() ? LooseContext.get(key())
+				: baseObservers != null ? baseObservers
+						: new ContextObservers();
 	}
 
 	public static boolean has() {
@@ -38,6 +50,12 @@ public class ContextObservers {
 	public interface Observable extends ProcessObservable {
 		default void publish() {
 			ProcessObservers.context().publish(this);
+		}
+
+		/**
+		 * These observables will be routed to the base observer if one exists
+		 */
+		public interface Base extends Observable {
 		}
 	}
 

@@ -10,7 +10,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Selection;
-import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
+import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -172,8 +172,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		/*
 		 * AttributeBehaviorHandler registration is required
 		 */
-		Preconditions.checkState(
-				AttributeBehaviorHandler.BehaviorRegistry.isInitialised());
+		Preconditions.checkState(BehaviorRegistry.isInitialised());
 		this.descriptor = builder.descriptor;
 		this.suggestorProvider = builder.suggestorProvider;
 		this.decoratorParent = builder.decoratorParent;

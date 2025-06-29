@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
+import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
@@ -131,7 +131,7 @@ public class EnvironmentManager {
 				Window.Resources.class, true);
 		EventFrame.contextProvider = ContextProvider.createProvider(
 				ctx -> new EventFrame(), null, null, EventFrame.class, true);
-		AttributeBehaviorHandler.BehaviorRegistry.get().init(false);
+		BehaviorRegistry.get().init(false);
 		if (flightRecordingEnabled.is()) {
 			startFlightRecording();
 		}

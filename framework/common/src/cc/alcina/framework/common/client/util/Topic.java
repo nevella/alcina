@@ -198,30 +198,30 @@ public class Topic<T> {
 		 * use a list - the listener may be added/removed multiple times
 		 * (although that's probably not what's wanted)
 		 */
-		private volatile List<TopicListener> lookup;
+		private volatile List<TopicListener> listeners;
 
 		public void addListener(TopicListener listener) {
 			synchronized (this) {
-				List<TopicListener> list = lookup == null ? new ArrayList<>()
-						: new ArrayList<>(lookup);
+				List<TopicListener> list = listeners == null ? new ArrayList<>()
+						: new ArrayList<>(listeners);
 				list.add(listener);
 				if (listener instanceof TopicListener.HandlesSubscription) {
 					((TopicListener.HandlesSubscription) listener)
 							.onSubscription(true);
 				}
-				lookup = list;
+				listeners = list;
 			}
 		}
 
 		public void clearListeners() {
 			Preconditions.checkState(GWT.isClient());
 			synchronized (this) {
-				lookup = null;
+				listeners = null;
 			}
 		}
 
 		public boolean hasListeners() {
-			List<TopicListener> lookup = this.lookup;
+			List<TopicListener> lookup = this.listeners;
 			return lookup != null && lookup.size() > 0;
 		}
 
@@ -234,7 +234,7 @@ public class Topic<T> {
 		}
 
 		public void publishTopic(Object message) {
-			List<TopicListener> lookup = this.lookup;
+			List<TopicListener> lookup = this.listeners;
 			if (lookup == null) {
 				return;
 			}
@@ -245,10 +245,10 @@ public class Topic<T> {
 
 		public void removeListener(TopicListener listener) {
 			synchronized (this) {
-				if (lookup == null) {
+				if (listeners == null) {
 					return;
 				}
-				List<TopicListener> list = new ArrayList<>(lookup);
+				List<TopicListener> list = new ArrayList<>(listeners);
 				boolean removed = list.remove(listener);
 				if (removed) {
 					if (listener instanceof TopicListener.HandlesSubscription) {
@@ -256,7 +256,7 @@ public class Topic<T> {
 								.onSubscription(false);
 					}
 				}
-				lookup = list;
+				listeners = list;
 			}
 		}
 	}

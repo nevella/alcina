@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
@@ -86,7 +87,7 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		if (!reloading) {
 			Preconditions.checkState(Ax.isTest());
 			reloading = true;
-			StatusModule.get().showMessageTransitional(message);
+			NotificationObservable.of(message).publish();
 			RemoteUi.get().flush();
 			ServletLayerTopics.topicRestartConsole.signal();
 		}

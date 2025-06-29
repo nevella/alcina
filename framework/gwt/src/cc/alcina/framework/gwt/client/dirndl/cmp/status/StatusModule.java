@@ -55,7 +55,6 @@ public class StatusModule {
 				.add(message -> showMessage(message,
 						Channel.EXCEPTION_MESSAGE_PUBLISHED));
 		new NotificationObserver().bind();
-		new ContextNotificationObserver().bind();
 	}
 
 	@Reflected
@@ -63,16 +62,6 @@ public class StatusModule {
 			implements ProcessObserver<NotificationObservable> {
 		@Override
 		public void topicPublished(NotificationObservable message) {
-			showMessage(message.message, Channel.MESSAGE_PUBLISHED);
-		}
-	}
-
-	@Reflected
-	class ContextNotificationObserver implements
-			ContextObservers.Observer<NotificationObservable.ContextObservable> {
-		@Override
-		public void topicPublished(
-				NotificationObservable.ContextObservable message) {
 			showMessage(message.message, Channel.MESSAGE_PUBLISHED);
 		}
 	}

@@ -5,7 +5,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Selection;
-import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -47,7 +47,7 @@ public interface DecoratorBehavior {
 	 * but they should be otherwise invisible to the user.
 	 */
 	public static class ModifyNonEditableSelectionBehaviour
-			implements DecoratorBehavior, AttributeBehaviorHandler {
+			implements DecoratorBehavior, ElementBehavior {
 		@Override
 		public String getEventType() {
 			return BrowserEvents.SELECTIONCHANGE;
@@ -119,7 +119,7 @@ public interface DecoratorBehavior {
 	 * 
 	 */
 	public static class InterceptUpDownBehaviour
-			implements DecoratorBehavior, AttributeBehaviorHandler {
+			implements DecoratorBehavior, ElementBehavior {
 		@Override
 		public String getEventType() {
 			return BrowserEvents.KEYDOWN;
@@ -164,7 +164,7 @@ public interface DecoratorBehavior {
 	 * (between two editable text cursor positions)
 	 */
 	public static class ExtendKeyboardNavigationAction
-			implements DecoratorBehavior, AttributeBehaviorHandler {
+			implements DecoratorBehavior, ElementBehavior {
 		enum Direction {
 			left, right, none;
 

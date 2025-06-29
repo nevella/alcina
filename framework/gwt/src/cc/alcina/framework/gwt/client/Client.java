@@ -8,8 +8,8 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
 import com.google.gwt.dom.client.Document.RemoteType;
-import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.place.shared.PlaceController;
@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.reflection.ClientReflectorFactory;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
@@ -104,7 +105,7 @@ public abstract class Client implements ContextFrame {
 			EventFrame.contextProvider = ContextProvider.createProvider(
 					ctx -> new EventFrame(), null, null, EventFrame.class,
 					false);
-			AttributeBehaviorHandler.BehaviorRegistry.get().init(true);
+			BehaviorRegistry.get().init(true);
 			Document.get().onDocumentEventSystemInit();
 		}
 
@@ -130,6 +131,10 @@ public abstract class Client implements ContextFrame {
 			}
 			JavascriptKeyableLookup.initJs();
 			Reflections.init();
+			/*
+			 * Single-threaded app init
+			 */
+			ContextObservers.registerBaseObservers();
 		}
 
 		private static void registry() {

@@ -8,7 +8,7 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HrefElement;
-import com.google.gwt.dom.client.behavior.AttributeBehaviorHandler;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 
@@ -112,7 +112,7 @@ class ClientEventDispatch {
 						String href = elem.getAttribute("href");
 						if (Ax.isBlank(href) || href.equals("#")
 								|| elem.hasAttribute(
-										AttributeBehaviorHandler.BEHAVIOR_PREVENT_DEFAULT)) {
+										ElementBehavior.BEHAVIOR_PREVENT_DEFAULT)) {
 							if (!(event.getMetaKey() || event.getCtrlKey())) {
 								event.preventDefault();
 							}
