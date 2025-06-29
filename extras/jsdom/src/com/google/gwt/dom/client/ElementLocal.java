@@ -15,6 +15,7 @@ import org.w3c.dom.NamedNodeMap;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -881,5 +882,26 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public String getComputedStyleValue(String key) {
 		throw new UnsupportedOperationException();
+	}
+
+	List<Class<? extends ElementBehavior>> behaviors;
+
+	public void addBehavior(Class<? extends ElementBehavior> clazz) {
+		/*
+		 * given the probable size (1 or rarely a few more), this is more
+		 * efficient than using a set
+		 */
+		if (behaviors == null) {
+			behaviors = new ArrayList<>();
+		} else {
+			if (behaviors.contains(clazz)) {
+				return;
+			}
+		}
+		behaviors.add(clazz);
+	}
+
+	List<Class<? extends ElementBehavior>> getBehaviors() {
+		return behaviors;
 	}
 }

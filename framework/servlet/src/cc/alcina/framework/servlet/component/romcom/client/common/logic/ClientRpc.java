@@ -7,6 +7,7 @@ import java.util.function.BiConsumer;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.mutations.ElementSelectionRangeRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.http.client.Request;
@@ -18,14 +19,18 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasWindowState;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Mutations;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.WindowStateUpdate;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
@@ -75,28 +80,37 @@ public class ClientRpc implements HandlerContext {
 		get().transportLayer.sendMessage(message);
 	}
 
+	@Feature.Ref(Feature_Romcom_Impl._WindowState.class)
 	void prepareMessage(Message message) {
-		if (message instanceof HasWindowState) {
-			HasWindowState hasWindowState = (HasWindowState) message;
-			conditionallyPopulateWindowState(hasWindowState);
+		if (message instanceof Startup) {
+			((Startup) message).windowState = generateWindowState();
+		} else if (message instanceof Message.PrependWindowState) {
+			WindowStateUpdate windowStateUpdate = new WindowStateUpdate();
+			/*
+			 * mutations sends the selection delta itself (not prepended)
+			 */
+			if (!(message instanceof Mutations)) {
+				windowStateUpdate.selectionRecord = generateSelectionMutation();
+			}
+			send(windowStateUpdate);
+		} else if (message instanceof Message.WindowStateUpdate) {
+			((WindowStateUpdate) message).windowState = generateWindowState();
 		}
 	}
 
-	void conditionallyPopulateWindowState(HasWindowState hasWindowState) {
+	SelectionRecord generateSelectionMutation() {
 		SelectionRecord currentSelectionRecord = Document.get().getSelection()
 				.getSelectionRecord();
 		if (!Objects.equals(lastSelectionRecord, currentSelectionRecord)) {
 			lastSelectionRecord = currentSelectionRecord;
-			hasWindowState.setSelectionMutation(currentSelectionRecord);
 		}
-		// HTMLInputElementSelectionRangeRecord currentSelectionRecord =
-		// Document.get().getf
-		if (!Objects.equals(lastSelectionRecord, currentSelectionRecord)) {
-			lastSelectionRecord = currentSelectionRecord;
-			hasWindowState.setSelectionMutation(currentSelectionRecord);
-		}
-		hasWindowState
-				.setEventContext(new DomEventContextGenerator().generate());
+		return currentSelectionRecord;
+	}
+
+	WindowState generateWindowState() {
+		WindowState windowState = new WindowStateGenerator(
+				ui.offsetObservedElements).generate();
+		return windowState;
 	}
 
 	ElementSelectionRangeRecord lastElementSelectionRangeMutation;

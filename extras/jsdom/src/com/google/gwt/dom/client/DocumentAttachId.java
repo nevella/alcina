@@ -12,6 +12,7 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.ProcessingInstruction;
 
 import com.google.gwt.dom.client.mutations.LocationMutation;
+import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -19,7 +20,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.event.GwtEvents.Attach;
+import cc.alcina.framework.common.client.util.Topic;
 
 public class DocumentAttachId extends NodeAttachId
 		implements ClientDomDocument {
@@ -34,6 +35,8 @@ public class DocumentAttachId extends NodeAttachId
 	List<Runnable> sinkEventsQueue = new ArrayList<>();
 
 	private SelectionAttachId selection;
+
+	public Topic<Element> topicAttachingElement = Topic.create();
 
 	public DocumentAttachId(Document document) {
 		super(document);
@@ -607,10 +610,22 @@ public class DocumentAttachId extends NodeAttachId
 						if (Ax.notBlank(id)) {
 							elementsById.put(id, AttachId.forNode(elem));
 						}
+						ensureBehaviors(mutation, elem);
 					});
 			break;
+		case childList:
+			mutation.addedNodes.stream().map(MutationNode::node)
+					.filter(Node::provideIsElement).forEach(n -> {
+						Element elem = (Element) n;
+						ensureBehaviors(mutation, elem);
+					});
 		}
 		mutationProxy.onMutation(mutation);
+	}
+
+	void ensureBehaviors(MutationRecord mutation, Element elem) {
+		topicAttachingElement.publish(elem);
+		mutation.registerBehaviors(elem);
 	}
 
 	void addSunkEvent(Runnable runnable) {
@@ -862,8 +877,14 @@ public class DocumentAttachId extends NodeAttachId
 		throw new UnsupportedOperationException();
 	}
 
-	public void onRemoteUiContextReceived(DomEventContext eventContext) {
-		invokeProxy.eventContext = eventContext;
+	/*
+	 * Thread-safety - this can be accessed outsdie the environment thread (it's
+	 * a swap)
+	 */
+	public void onRemoteUiContextReceived(WindowState windowState) {
+		Ax.out("received windowstate - %s nodes",
+				windowState.nodeUiStates.size());
+		invokeProxy.windowState = windowState;
 	}
 
 	@Override

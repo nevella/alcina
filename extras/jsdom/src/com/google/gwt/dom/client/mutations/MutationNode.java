@@ -311,7 +311,7 @@ public final class MutationNode {
 		}
 	}
 
-	Node node() {
+	public Node node() {
 		if (node != null) {
 			return node;
 		} else if (remoteNode != null) {

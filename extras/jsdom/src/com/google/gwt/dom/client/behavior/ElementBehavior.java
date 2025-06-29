@@ -24,6 +24,11 @@ public interface ElementBehavior extends EventBehavior {
 
 	String getMagicAttributeName();
 
+	/**
+	 * This may be null, for more general housekeeping behaviors
+	 * 
+	 * @return
+	 */
 	String getEventType();
 
 	default boolean matches(Element elem) {

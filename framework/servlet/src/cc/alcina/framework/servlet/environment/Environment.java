@@ -18,6 +18,7 @@ import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentAttachId;
+import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
@@ -432,6 +433,13 @@ class Environment {
 			queue.stop();
 		}
 
+		/*
+		 * Not queued. These are just offsets
+		 */
+		void applyWindowState(WindowState eventContext) {
+			document.attachIdRemote().onRemoteUiContextReceived(eventContext);
+		}
+
 		void applyDomMutations(List<MutationRecord> mutations) {
 			if (mutations.isEmpty()) {
 				return;
@@ -440,10 +448,12 @@ class Environment {
 			// Ax.sysLogHigh("mutations");
 			// Ax.out(mutations);
 			// Ax.out("\n-------==========--------\n");
-			queue.invoke(() -> LocalDom.attachIdRepresentations()
-					.applyMutations(mutations, false));
-			// // FIXME - measure (this shouldn't be required)
-			Document.get().domDocument.invalidateLocations();
+			queue.invoke(() -> {
+				LocalDom.attachIdRepresentations().applyMutations(mutations,
+						false);
+				// // FIXME - measure (this shouldn't be required)
+				Document.get().domDocument.invalidateLocations();
+			});
 		}
 
 		/*
@@ -512,11 +522,6 @@ class Environment {
 
 		void onDomEventMessage(DomEventMessage message) {
 			queue.invoke(() -> {
-				if (message.getSelectionMutation() != null) {
-					applySelectionMutation(message.getSelectionMutation());
-				}
-				document.attachIdRemote()
-						.onRemoteUiContextReceived(message.getEventContext());
 				message.events.forEach(eventData -> LocalDom
 						.attachIdRepresentations().applyEvent(eventData));
 			});
@@ -534,13 +539,21 @@ class Environment {
 			}
 		}
 
-		void applySelectionMutation(SelectionRecord selectionMutation) {
-			if (selectionMutation == null) {
+		/*
+		 * FIXME - at the moment this is applied queued, unlike other
+		 * windowstate (offset etc) data.
+		 * 
+		 * Since the romcom server -can- modify selection, but can't modify
+		 * offsets, that's probably the right choice. Documentation would be
+		 * useful here.
+		 */
+		void applySelectionRecord(SelectionRecord selectionRecord) {
+			if (selectionRecord == null) {
 				return;
 			}
 			queue.invoke(() -> {
 				document.attachIdRemote()
-						.onSelectionMutationReceived(selectionMutation);
+						.onSelectionMutationReceived(selectionRecord);
 			});
 		}
 
@@ -673,7 +686,7 @@ class Environment {
 		}
 		if (mutations != null) {
 			Document.get().attachIdRemote().flushSinkEventsQueue();
-			mutations.setSelectionMutation(pendingSelectionMutation);
+			mutations.selectionMutation = pendingSelectionMutation;
 			queue.sendToClient(mutations);
 			mutations = null;
 		}
@@ -822,7 +835,7 @@ class Environment {
 	private void startup(MessageProcessingToken token, Startup message) {
 		access().applyDomMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
-		access().applySelectionMutation(message.getSelectionMutation());
+		access().applyWindowState(message.windowState);
 		initialiseSettings(message.settings);
 		startClient();
 	}

@@ -668,7 +668,7 @@ public class LocalDom implements ContextFrame {
 		elem.putRemote(elemJso);
 		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(elem,
 				Node::getChildren);
-		elem.stream().forEach(node -> {
+		traversal.stream().forEach(node -> {
 			if (node.hasRemote()) {
 				return;
 			}

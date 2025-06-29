@@ -85,15 +85,6 @@ public abstract class Timer {
 		});
 	}
 
-	public static void scheduleDelayed(Runnable runnable, long delay) {
-		new Timer() {
-			@Override
-			public void run() {
-				runnable.run();
-			}
-		}.schedule((int) delay);
-	}
-
 	private boolean isRepeating;
 
 	private int timerId;

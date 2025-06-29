@@ -12,6 +12,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.JsArrayString;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
@@ -19,6 +20,7 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
+import java_cup.emit;
 
 public final class ElementJso extends NodeJso implements ElementRemote {
 	/*

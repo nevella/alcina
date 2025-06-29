@@ -77,21 +77,32 @@ public abstract class MessageHandlerServer<PM extends Message>
 		}
 	}
 
+	public static class WindowStateUpdateHandler
+			extends MessageHandlerServer<Message.WindowStateUpdate> {
+		@Override
+		public void handle(MessageProcessingToken token, Environment.Access env,
+				Message.WindowStateUpdate message) {
+			env.applyWindowState(message.windowState);
+			env.applySelectionRecord(message.selectionRecord);
+		}
+
+		@Override
+		public boolean isSynchronous() {
+			return true;
+		}
+	}
+
 	public static class MutationsHandler
 			extends MessageHandlerServer<Message.Mutations> {
 		@Override
 		public void handle(MessageProcessingToken token, Environment.Access env,
 				Message.Mutations message) {
-			/*
-			 * Currently romcom doesn't handle non-localdom browser .js mutation
-			 * of the dom - it's planned that it will
-			 */
 			env.applyDomMutations(message.domMutations);
 			Preconditions.checkState(message.eventSystemMutations.isEmpty());
 			if (message.locationMutation != null) {
 				env.applyLocationMutation(message.locationMutation, false);
 			}
-			env.applySelectionMutation(message.getSelectionMutation());
+			env.applySelectionRecord(message.selectionMutation);
 		}
 	}
 

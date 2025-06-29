@@ -147,7 +147,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				Message.Mutations message) {
 			LocalDom.attachIdRepresentations()
 					.applyMutations(message.domMutations, true);
-			SelectionRecord selectionMutation = message.getSelectionMutation();
+			SelectionRecord selectionMutation = message.selectionMutation;
 			if (selectionMutation != null) {
 				LocalDom.flush();
 				selectionMutation.populateNodes();
@@ -187,6 +187,10 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 							.get().firingLocationMutation = false;
 				}
 			}
+			/*
+			 * state changed, emit an update
+			 */
+			ClientRpc.send(new Message.WindowStateUpdate());
 		}
 
 		static class DispatchListener implements EventListener {

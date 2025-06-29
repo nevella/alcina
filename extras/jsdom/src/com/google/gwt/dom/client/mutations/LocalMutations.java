@@ -7,8 +7,10 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -51,6 +53,18 @@ A: (simple)
  * @formatter:on
  */
 public class LocalMutations {
+	public static class BehaviorAdded {
+		public Element element;
+
+		public Class<? extends ElementBehavior> behavior;
+
+		BehaviorAdded(Element element,
+				Class<? extends ElementBehavior> behavior) {
+			this.element = element;
+			this.behavior = behavior;
+		}
+	}
+
 	MutationsAccess mutationsAccess;
 
 	List<MutationRecord> mutations = new ArrayList<>();
@@ -70,17 +84,15 @@ public class LocalMutations {
 	public Topic<MutationRecord> topicUnbatchedUnattachedMutations = Topic
 			.create();
 
+	public Topic<BehaviorAdded> topicBehaviorAdded = Topic.create();
+
 	ScheduledCommand finallyCommand;
+
+	boolean firing = false;
 
 	public LocalMutations(MutationsAccess mutationsAccess) {
 		this.mutationsAccess = mutationsAccess;
 	}
-
-	boolean hasMutations() {
-		return mutations.size() > 0;
-	}
-
-	boolean firing = false;
 
 	public void fireMutations() {
 		if (firing) {
@@ -103,13 +115,6 @@ public class LocalMutations {
 		}
 	}
 
-	void validateLocations() {
-		Document document = mutationsAccess.getDocument();
-		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())) {
-			// document.domDocument.locations().validateLocations();
-		}
-	}
-
 	public void notifyAttributeModification(Node target, String name,
 			String data) {
 		if (!target.isAttached()) {
@@ -122,22 +127,6 @@ public class LocalMutations {
 		record.attributeName = name;
 		record.newValue = data;
 		addMutation(record);
-	}
-
-	void addMutation(MutationRecord record) {
-		record.deltaFlagInstance(
-				MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
-				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
-		topicUnbatchedUnattachedMutations.publish(record);
-		// validateLocations();
-		if (record.target.node().isAttached()) {
-			mutations.add(record);
-			topicUnbatchedAttachedMutations.publish(record);
-			if (GWT.isClient() && finallyCommand == null) {
-				finallyCommand = this::fireMutations;
-				Scheduler.get().scheduleFinally(finallyCommand);
-			}
-		}
 	}
 
 	public void notifyCharacterData(Node target, String previousValue,
@@ -180,6 +169,38 @@ public class LocalMutations {
 				record.nextSibling = MutationNode.forNode(nextSibling);
 				record.removedNodes.add(MutationNode.forNode(child));
 				addMutation(record);
+			}
+		}
+	}
+
+	public void notifyAddedBehavior(Element element,
+			Class<? extends ElementBehavior> behavior) {
+		topicBehaviorAdded.publish(new BehaviorAdded(element, behavior));
+	}
+
+	boolean hasMutations() {
+		return mutations.size() > 0;
+	}
+
+	void validateLocations() {
+		Document document = mutationsAccess.getDocument();
+		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())) {
+			// document.domDocument.locations().validateLocations();
+		}
+	}
+
+	void addMutation(MutationRecord record) {
+		record.deltaFlagInstance(
+				MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
+				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
+		topicUnbatchedUnattachedMutations.publish(record);
+		// validateLocations();
+		if (record.target.node().isAttached()) {
+			mutations.add(record);
+			topicUnbatchedAttachedMutations.publish(record);
+			if (GWT.isClient() && finallyCommand == null) {
+				finallyCommand = this::fireMutations;
+				Scheduler.get().scheduleFinally(finallyCommand);
 			}
 		}
 	}

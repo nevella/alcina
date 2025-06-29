@@ -27,6 +27,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DocumentJso;
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
@@ -453,6 +454,9 @@ public class WidgetUtils {
 		boolean hidden = isZeroOffsetDims(from);
 		int kidCount = from.getChildCount();
 		if (kidCount != 0 && !hidden) {
+			return from;
+		}
+		if (DomContext.isUseBoundingClientRect() && !hidden) {
 			return from;
 		}
 		Node parent = from.getParentNode();

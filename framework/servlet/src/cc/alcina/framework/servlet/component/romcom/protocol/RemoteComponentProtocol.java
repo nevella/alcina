@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.google.gwt.dev.protobuf.Message;
 import com.google.gwt.dom.client.AttachId;
-import com.google.gwt.dom.client.DomEventContext;
+import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.ElementSelectionRangeRecord;
@@ -99,41 +100,8 @@ public class RemoteComponentProtocol {
 		 * Not an album by Beck.
 		 */
 		public static class DomEventMessage extends Message
-				implements HasWindowState {
+				implements PrependWindowState {
 			public List<DomEventData> events = new ArrayList<>();
-
-			private DomEventContext eventContext;
-
-			private SelectionRecord selectionMutation;
-
-			private ElementSelectionRangeRecord elementSelectionRangeRecord;
-
-			public DomEventContext getEventContext() {
-				return eventContext;
-			}
-
-			public void setEventContext(DomEventContext eventContext) {
-				this.eventContext = eventContext;
-			}
-
-			public SelectionRecord getSelectionMutation() {
-				return selectionMutation;
-			}
-
-			public void
-					setSelectionMutation(SelectionRecord selectionMutation) {
-				this.selectionMutation = selectionMutation;
-			}
-
-			public ElementSelectionRangeRecord
-					getElementSelectionRangeRecord() {
-				return elementSelectionRangeRecord;
-			}
-
-			public void setElementSelectionRangeRecord(
-					ElementSelectionRangeRecord elementSelectionRangeRecord) {
-				this.elementSelectionRangeRecord = elementSelectionRangeRecord;
-			}
 
 			@Override
 			protected String provideMessageData() {
@@ -211,6 +179,10 @@ public class RemoteComponentProtocol {
 		 * to-client message sequence
 		 */
 		public static class SetCookieServerSide extends Message {
+			public String name;
+
+			public String value;
+
 			public SetCookieServerSide() {
 			}
 
@@ -218,10 +190,6 @@ public class RemoteComponentProtocol {
 				this.name = name;
 				this.value = value;
 			}
-
-			public String name;
-
-			public String value;
 		}
 
 		// FIXME - doc this annotation
@@ -266,7 +234,7 @@ public class RemoteComponentProtocol {
 		 * An album by Beck. Amazing.
 		 */
 		public static class Mutations extends Message
-				implements HasWindowState {
+				implements PrependWindowState {
 			public static Mutations ofLocation() {
 				Mutations result = new Mutations();
 				result.locationMutation = LocationMutation.ofWindow(false);
@@ -279,46 +247,15 @@ public class RemoteComponentProtocol {
 
 			public List<EventSystemMutation> eventSystemMutations = new ArrayList<>();
 
-			private SelectionRecord selectionMutation;
-
-			private ElementSelectionRangeRecord elementSelectionRangeRecord;
-
 			public LocationMutation locationMutation;
 
-			private DomEventContext eventContext;
-
-			public DomEventContext getEventContext() {
-				return eventContext;
-			}
-
-			public void setEventContext(DomEventContext eventContext) {
-				this.eventContext = eventContext;
-			}
-
-			public ElementSelectionRangeRecord
-					getElementSelectionRangeRecord() {
-				return elementSelectionRangeRecord;
-			}
-
-			public void setElementSelectionRangeRecord(
-					ElementSelectionRangeRecord elementSelectionRangeRecord) {
-				this.elementSelectionRangeRecord = elementSelectionRangeRecord;
-			}
-
-			public SelectionRecord getSelectionMutation() {
-				return selectionMutation;
-			}
-
-			public void
-					setSelectionMutation(SelectionRecord selectionMutation) {
-				this.selectionMutation = selectionMutation;
-			}
+			public SelectionRecord selectionMutation;
 
 			@Override
 			public String toDebugString() {
 				return FormatBuilder.keyValues("dom", domMutations.size(),
 						"event", eventSystemMutations.size(), "loc",
-						locationMutation, "sel", selectionMutation);
+						locationMutation);
 			}
 
 			public void addDomMutation(MutationRecord mutationRecord) {
@@ -333,14 +270,10 @@ public class RemoteComponentProtocol {
 							.map(dm -> dm.target.nodeName).distinct()
 							.collect(Collectors.joining(", ")));
 				}
-				if (domMutations.isEmpty() && selectionMutation == null
-						&& eventSystemMutations.size() > 0) {
+				if (domMutations.isEmpty() && eventSystemMutations.size() > 0) {
 					format.append(eventSystemMutations.stream()
 							.map(esm -> esm.eventTypeName).distinct()
 							.collect(Collectors.joining(", ")));
-				}
-				if (selectionMutation != null) {
-					format.format("[selection: %s]", selectionMutation);
 				}
 				return format.toString();
 			}
@@ -384,25 +317,36 @@ public class RemoteComponentProtocol {
 			}
 		}
 
-		public interface HasWindowState {
-			SelectionRecord getSelectionMutation();
+		/**
+		 * The client should send a WindowStateUpdate message prior to this
+		 * message
+		 */
+		public interface PrependWindowState {
+		}
 
-			void setSelectionMutation(SelectionRecord selectionMutation);
+		public static class WindowStateUpdate extends Message {
+			public WindowState windowState;
 
-			public ElementSelectionRangeRecord getElementSelectionRangeRecord();
+			public SelectionRecord selectionRecord;
 
-			public void setElementSelectionRangeRecord(
-					ElementSelectionRangeRecord elementSelectionRangeRecord);
+			public ElementSelectionRangeRecord elementSelectionRangeRecord;
 
-			public DomEventContext getEventContext();
-
-			public void setEventContext(DomEventContext eventContext);
+			@Override
+			protected String provideMessageData() {
+				FormatBuilder format = new FormatBuilder().separator(" - ");
+				format.format("[node offsets: %s]",
+						windowState.nodeUiStates.size());
+				if (selectionRecord != null) {
+					format.format("[selection: %s]", selectionRecord);
+				}
+				return format.toString();
+			}
 		}
 
 		/*
 		 * Sent by the client on startup, to initialise the server dom
 		 */
-		public static class Startup extends Message implements HasWindowState {
+		public static class Startup extends Message {
 			public static Startup forClient() {
 				Startup result = new Startup();
 				result.domMutations = LocalDom.attachIdRepresentations()
@@ -417,7 +361,7 @@ public class RemoteComponentProtocol {
 				return result;
 			}
 
-			private DomEventContext eventContext;
+			public WindowState windowState;
 
 			public String settingsException;
 
@@ -425,38 +369,7 @@ public class RemoteComponentProtocol {
 
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
-			SelectionRecord selectionMutation;
-
-			ElementSelectionRangeRecord elementSelectionRangeRecord;
-
 			public String settings;
-
-			public DomEventContext getEventContext() {
-				return eventContext;
-			}
-
-			public void setEventContext(DomEventContext eventContext) {
-				this.eventContext = eventContext;
-			}
-
-			public ElementSelectionRangeRecord
-					getElementSelectionRangeRecord() {
-				return elementSelectionRangeRecord;
-			}
-
-			public void setElementSelectionRangeRecord(
-					ElementSelectionRangeRecord elementSelectionRangeRecord) {
-				this.elementSelectionRangeRecord = elementSelectionRangeRecord;
-			}
-
-			public SelectionRecord getSelectionMutation() {
-				return selectionMutation;
-			}
-
-			public void
-					setSelectionMutation(SelectionRecord selectionMutation) {
-				this.selectionMutation = selectionMutation;
-			}
 		}
 
 		/*

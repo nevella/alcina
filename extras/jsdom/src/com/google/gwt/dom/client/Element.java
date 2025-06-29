@@ -33,6 +33,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy.Flag;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -1363,8 +1364,8 @@ public class Element extends Node implements ClientDomElement,
 				if (withTextSnippet && n.provideIsText()) {
 					textSnippet = Ax.format("[%s] %s",
 							n.getTextContent().length(),
-							Ax.trim(n.getTextContent(), 20).replace("\n", "\\n")
-									.replace("\r", "\\r").replace("\t", "\\t"));
+							Ax.trim(n.getTextContent(), 20).replace("\n", "\n")
+									.replace("\r", "\r").replace("\t", "\t"));
 				}
 				builder.line("%s - %s%s", n.attachId, n.getNodeName(),
 						textSnippet);
@@ -1382,8 +1383,8 @@ public class Element extends Node implements ClientDomElement,
 					String substring = textContent.substring(0,
 							Math.min(20, textContent.length()));
 					textSnippet = Ax.format("[%s] %s", textContent.length(),
-							substring.replace("\n", "\\n").replace("\r", "\\r")
-									.replace("\t", "\\t"));
+							substring.replace("\n", "\n").replace("\r", "\r")
+									.replace("\t", "\t"));
 				}
 				builder.line("%s - %s%s", n.getNodeName(), n.attachId,
 						textSnippet);
@@ -1498,5 +1499,23 @@ public class Element extends Node implements ClientDomElement,
 	public double getComputedStyleValueNumeric(String key) {
 		String value = getComputedStyleValue(key);
 		return value == null ? 0.0 : Double.parseDouble(value);
+	}
+
+	/**
+	 * Behaviors are not intended to be removed, so there's no corresponding
+	 * remove method
+	 */
+	public void addBehavior(Class<? extends ElementBehavior> clazz) {
+		local().addBehavior(clazz);
+		mutations().notifyAddedBehavior(this, clazz);
+		/*
+		 * Behaviors are not used for ElementJso, and are marshalled at
+		 * emitMutation time by DocumentAttachId
+		 */
+		// sync(() -> remote().addBehavior(clazz));
+	}
+
+	public List<Class<? extends ElementBehavior>> getBehaviors() {
+		return local().getBehaviors();
 	}
 }

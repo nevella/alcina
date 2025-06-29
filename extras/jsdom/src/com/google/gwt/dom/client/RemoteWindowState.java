@@ -3,8 +3,10 @@ package com.google.gwt.dom.client;
 import java.util.List;
 
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
-import com.google.gwt.dom.client.DomEventContext.NodeUiState;
+import com.google.gwt.dom.client.WindowState.NodeUiState;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Stores the current UI state object from the client, and if possible returns
@@ -14,17 +16,17 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 class RemoteWindowState implements InvokeProxy {
 	InvokeProxy remoteDelegate = null;
 
-	public DomEventContext eventContext;
+	WindowState windowState;
 
 	public void invoke(NodeAttachId node, String methodName,
 			List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 			AsyncCallback<?> callback) {
-		if (eventContext != null && node != null
+		if (windowState != null && node != null
 				&& node instanceof DocumentAttachId) {
 			switch (methodName) {
 			case "setActiveElement":
-				if (eventContext.activeElement != null) {
-					((Element) eventContext.activeElement.node()).blur();
+				if (windowState.activeElement != null) {
+					((Element) windowState.activeElement.node()).blur();
 				}
 				return;
 			}
@@ -35,25 +37,38 @@ class RemoteWindowState implements InvokeProxy {
 
 	public <T> T invokeSync(NodeAttachId node, String methodName,
 			List<Class> argumentTypes, List<?> arguments, List<Flag> flags) {
-		if (eventContext != null && argumentTypes == null) {
+		if (windowState != null && argumentTypes == null) {
 			if (node != null) {
-				NodeUiState nodeUiState = eventContext
+				NodeUiState nodeUiState = windowState
 						.uiStateFor(node.getAttachId());
 				if (nodeUiState != null) {
 					switch (methodName) {
 					case "getScrollTop":
 						return (T) (Integer) nodeUiState.scrollPos.i2;
 					case "getBoundingClientRect":
+						Ax.out("bcr: %s", node.node().toNameAttachId());
 						return (T) nodeUiState.boundingClientRect;
 					case "getClientHeight":
 					case "getClientWidth":
 						break;
 					}
+				} else {
+					switch (methodName) {
+					case "getBoundingClientRect":
+						if (node.node().asDomNode().nameIs("p")) {
+							Object result = remoteDelegate.invokeSync(node,
+									methodName, argumentTypes, arguments,
+									flags);
+							int debug = 3;
+						}
+						Ax.out("bcr: [miss] %s", node.node().toNameAttachId());
+						break;
+					}
 				}
 				switch (methodName) {
 				case "getActiveElement":
-					return eventContext.activeElement == null ? null
-							: (T) eventContext.activeElement.node();
+					return windowState.activeElement == null ? null
+							: (T) windowState.activeElement.node();
 				}
 			}
 		}

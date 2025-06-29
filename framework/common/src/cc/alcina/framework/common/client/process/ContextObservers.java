@@ -29,7 +29,7 @@ public class ContextObservers {
 	private static ContextObservers baseObservers;
 
 	public static void registerBaseObservers() {
-		Preconditions.checkState(!Al.isBrowser());
+		Preconditions.checkState(Al.isIsolatedStatics());
 		baseObservers = new ContextObservers();
 	}
 

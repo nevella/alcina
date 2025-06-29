@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.ClientDomElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.IdProtocolList;
@@ -12,6 +13,7 @@ import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -22,6 +24,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multimap;
 import elemental.json.Json;
 import elemental.json.JsonNull;
 import elemental.json.JsonObject;
@@ -85,32 +88,6 @@ public final class MutationRecord {
 				LooseContext.remove(CONTEXT_FLAGS);
 			}
 		}
-	}
-
-	static List<Class<? extends Flag>> mutateFlags(
-			List<Class<? extends Flag>> flags, Class<? extends Flag> flag,
-			boolean add) {
-		// copy-on-write
-		/*
-		 * 
-		 */
-		flags = flags == null ? null : new ArrayList<>(flags);
-		if (add) {
-			if (flags == null) {
-				flags = new ArrayList<>();
-			}
-			if (!flags.contains(flag)) {
-				flags.add(flag);
-			}
-		} else {
-			if (flags == null) {
-			} else {
-				flags.remove(flag);
-				if (flags.isEmpty()) {
-				}
-			}
-		}
-		return flags;
 	}
 
 	public static MutationRecord generateDocumentInsert(String markup) {
@@ -222,6 +199,62 @@ public final class MutationRecord {
 		}
 	}
 
+	public static List<MutationRecord>
+			generateAttributeAndStyleMutationRecords(Element elem) {
+		List<MutationRecord> result = new ArrayList<>();
+		elem.getAttributeMap().entrySet().forEach(e -> {
+			if (e.getKey().equals("style")) {
+				/*
+				 * handled below
+				 */
+				return;
+			}
+			String value = e.getValue();
+			MutationRecord record = new MutationRecord();
+			record.type = Type.attributes;
+			record.newValue = e.getValue();
+			record.attributeName = e.getKey();
+			record.target = MutationNode.forNode(elem);
+			result.add(record);
+		});
+		String style = elem.implAccess().getLocalAttrPlusLocalStyleCss();
+		if (Ax.notBlank(style)) {
+			MutationRecord record = new MutationRecord();
+			record.type = Type.attributes;
+			record.newValue = style;
+			record.attributeName = "style";
+			record.target = MutationNode.forNode(elem);
+			result.add(record);
+		}
+		return result;
+	}
+
+	static List<Class<? extends Flag>> mutateFlags(
+			List<Class<? extends Flag>> flags, Class<? extends Flag> flag,
+			boolean add) {
+		// copy-on-write
+		/*
+		 * 
+		 */
+		flags = flags == null ? null : new ArrayList<>(flags);
+		if (add) {
+			if (flags == null) {
+				flags = new ArrayList<>();
+			}
+			if (!flags.contains(flag)) {
+				flags.add(flag);
+			}
+		} else {
+			if (flags == null) {
+			} else {
+				flags.remove(flag);
+				if (flags.isEmpty()) {
+				}
+			}
+		}
+		return flags;
+	}
+
 	static MutationRecord generateMarkupMutationRecord(Node node) {
 		Element elem = (Element) node;
 		MutationRecord markupRecord = new MutationRecord();
@@ -278,6 +311,20 @@ public final class MutationRecord {
 	 */
 	public IdProtocolList attachIds;
 
+	public Multimap<Class<? extends ElementBehavior>, List<AttachId>> behaviors;
+
+	public void registerBehaviors(Element elem) {
+		List<Class<? extends ElementBehavior>> behaviors = elem.getBehaviors();
+		if (behaviors == null) {
+			return;
+		}
+		if (this.behaviors == null) {
+			this.behaviors = new Multimap<>();
+		}
+		behaviors.forEach(
+				clazz -> this.behaviors.add(clazz, AttachId.forNode(elem)));
+	}
+
 	transient MutationRecordJso jso;
 
 	transient SyncMutations sync;
@@ -289,10 +336,6 @@ public final class MutationRecord {
 	// for serialization
 	public MutationRecord() {
 		flags = LooseContext.get(CONTEXT_FLAGS);
-	}
-
-	public void deltaFlagInstance(Class<? extends Flag> flag, boolean add) {
-		flags = mutateFlags(flags, flag, add);
 	}
 
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {
@@ -343,6 +386,10 @@ public final class MutationRecord {
 		}
 	}
 
+	public void deltaFlagInstance(Class<? extends Flag> flag, boolean add) {
+		flags = mutateFlags(flags, flag, add);
+	}
+
 	public boolean hasFlag(Class<? extends Flag> flag) {
 		return flags != null && flags.contains(flag);
 	}
@@ -386,6 +433,39 @@ public final class MutationRecord {
 		default:
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public void populateAttachIds() {
+		populateAttachIds(false);
+	}
+
+	public void populateAttachIds(boolean allowLocalIdWithoutRemote) {
+		/*
+		 * This is needed to track attachids of removed nodes
+		 */
+		MutationsAccess mutationsAccess = allowLocalIdWithoutRemote
+				? this.mutationsAccess
+				: null;
+		MutationNode.populateAttachId(target, mutationsAccess);
+		MutationNode.populateAttachId(previousSibling, mutationsAccess);
+		MutationNode.populateAttachId(nextSibling, mutationsAccess);
+		addedNodes.forEach(
+				n -> MutationNode.populateAttachId(n, mutationsAccess));
+		removedNodes.forEach(
+				n -> MutationNode.populateAttachId(n, mutationsAccess));
+	}
+
+	public boolean appliesTo(Node node) {
+		if (target.node == node) {
+			return true;
+		}
+		if (addedNodes.stream().anyMatch(n -> n.node == node)) {
+			return true;
+		}
+		if (removedNodes.stream().anyMatch(n -> n.node == node)) {
+			return true;
+		}
+		return false;
 	}
 
 	void apply(ApplyTo applyTo) {
@@ -494,68 +574,5 @@ public final class MutationRecord {
 		} else {
 			return jsonValue.asString();
 		}
-	}
-
-	public void populateAttachIds() {
-		populateAttachIds(false);
-	}
-
-	public void populateAttachIds(boolean allowLocalIdWithoutRemote) {
-		/*
-		 * This is needed to track attachids of removed nodes
-		 */
-		MutationsAccess mutationsAccess = allowLocalIdWithoutRemote
-				? this.mutationsAccess
-				: null;
-		MutationNode.populateAttachId(target, mutationsAccess);
-		MutationNode.populateAttachId(previousSibling, mutationsAccess);
-		MutationNode.populateAttachId(nextSibling, mutationsAccess);
-		addedNodes.forEach(
-				n -> MutationNode.populateAttachId(n, mutationsAccess));
-		removedNodes.forEach(
-				n -> MutationNode.populateAttachId(n, mutationsAccess));
-	}
-
-	public static List<MutationRecord>
-			generateAttributeAndStyleMutationRecords(Element elem) {
-		List<MutationRecord> result = new ArrayList<>();
-		elem.getAttributeMap().entrySet().forEach(e -> {
-			if (e.getKey().equals("style")) {
-				/*
-				 * handled below
-				 */
-				return;
-			}
-			String value = e.getValue();
-			MutationRecord record = new MutationRecord();
-			record.type = Type.attributes;
-			record.newValue = e.getValue();
-			record.attributeName = e.getKey();
-			record.target = MutationNode.forNode(elem);
-			result.add(record);
-		});
-		String style = elem.implAccess().getLocalAttrPlusLocalStyleCss();
-		if (Ax.notBlank(style)) {
-			MutationRecord record = new MutationRecord();
-			record.type = Type.attributes;
-			record.newValue = style;
-			record.attributeName = "style";
-			record.target = MutationNode.forNode(elem);
-			result.add(record);
-		}
-		return result;
-	}
-
-	public boolean appliesTo(Node node) {
-		if (target.node == node) {
-			return true;
-		}
-		if (addedNodes.stream().anyMatch(n -> n.node == node)) {
-			return true;
-		}
-		if (removedNodes.stream().anyMatch(n -> n.node == node)) {
-			return true;
-		}
-		return false;
 	}
 }

@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Al.Context;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
@@ -304,5 +305,13 @@ public abstract class Client implements ContextFrame {
 
 	public static <P extends Place> P pendingPlace() {
 		return (P) get().pendingPlace;
+	}
+
+	public static void runWithWindowState(Runnable runnable) {
+		if (Al.isBrowser()) {
+			runnable.run();
+		} else {
+			Timer.scheduleDelayed(runnable, 2000);
+		}
 	}
 }

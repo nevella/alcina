@@ -18,6 +18,19 @@ public interface Timer {
 
 	void scheduleDeferredIfOnUIThread();
 
+	public static Timer scheduleDelayed(Runnable runnable, long delayMillis) {
+		Timer timer = Provider.get().getTimer(runnable);
+		timer.schedule(delayMillis);
+		return timer;
+	}
+
+	public static Timer scheduleRepeating(Runnable runnable,
+			long periodMillis) {
+		Timer timer = Provider.get().getTimer(runnable);
+		timer.scheduleRepeating(periodMillis);
+		return timer;
+	}
+
 	@Reflected
 	public interface Provider {
 		public static Timer.Provider get() {

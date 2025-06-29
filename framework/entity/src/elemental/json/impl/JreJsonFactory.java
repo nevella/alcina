@@ -64,6 +64,7 @@ public class JreJsonFactory implements JsonFactory {
 	@Override
 	public <T extends JsonValue> T parse(String jsonString)
 			throws JsonException {
+		String origString = jsonString;
 		if (jsonString.startsWith("(") && jsonString.endsWith(")")) {
 			// some clients send in (json) expecting an eval is required
 			jsonString = jsonString.substring(1, jsonString.length() - 1);

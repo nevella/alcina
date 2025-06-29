@@ -66,8 +66,15 @@ public class Al {
 		}
 	}
 
-	public static boolean isMultiThreaded() {
+	public static boolean isPermitSameThreadAwait() {
 		return !isBrowser() && CONTEXT_multiThreaded.optional().orElse(true);
+	}
+
+	/*
+	 * Each client has an isolated classloader (i.e. GWT, not romcom)
+	 */
+	public static boolean isIsolatedStatics() {
+		return isBrowser();
 	}
 
 	public static boolean isGwtCodesrver() {

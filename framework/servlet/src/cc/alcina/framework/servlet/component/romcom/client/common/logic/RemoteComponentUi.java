@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -9,6 +10,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
+import com.google.gwt.dom.client.mutations.LocalMutations;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -168,6 +170,8 @@ public class RemoteComponentUi {
 
 	EnvironmentSettings environmentSettings = new EnvironmentSettings();
 
+	List<Element> offsetObservedElements = new ArrayList<>();
+
 	public void init() {
 		previewEventRouter = new PreviewEventRouter();
 		messageStateRouter = new MessageStateRouter();
@@ -195,6 +199,8 @@ public class RemoteComponentUi {
 		LocalDom.topicPublishException().add(this::onLocalDomException);
 		LocalDom.getLocalMutations().topicBatchedMutations
 				.add(this::onLocalMutations);
+		LocalDom.getLocalMutations().topicBehaviorAdded
+				.add(this::onBehaviorAdded);
 		ClientRpc.get().transportLayer.session = ReflectiveSerializer
 				.deserializeRpc(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
@@ -227,6 +233,12 @@ public class RemoteComponentUi {
 		Message.Mutations mutations = new Message.Mutations();
 		mutations.domMutations = mutationRecords;
 		ClientRpc.send(mutations);
+	}
+
+	void onBehaviorAdded(LocalMutations.BehaviorAdded behaviorAdded) {
+		if (behaviorAdded.behavior == RemoteElementBehaviors.ElementOffsetsRequired.class) {
+			offsetObservedElements.add(behaviorAdded.element);
+		}
 	}
 
 	void onLocalDomException(Exception exception) {

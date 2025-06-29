@@ -524,8 +524,8 @@ public class InstanceOracle {
 		}
 
 		T await() {
-			Preconditions
-					.checkState(Al.isMultiThreaded() && !provider.isAsync());
+			Preconditions.checkState(
+					Al.isPermitSameThreadAwait() && !provider.isAsync());
 			ensureLatch();
 			try {
 				awaitLatch.await();

@@ -22,4 +22,13 @@ public interface Feature_Romcom_Impl extends Feature {
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _Transforms extends Feature {
 	}
+
+	/**
+	 * Windowstate (offsets, scroll etc) is key - batches are sent async from
+	 * the client and accessed ASAP by the server, to avoid blocking
+	 * getBoundingClientRect() calls and such
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _WindowState extends Feature {
+	}
 }

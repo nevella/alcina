@@ -87,4 +87,8 @@ public final class DomRect implements Serializable {
 	public String toString() {
 		return Ax.format("[%s,%s],[%s,%s]", left, top, right, bottom);
 	}
+
+	public boolean isZeroDimensions() {
+		return left == 0 && top == 0 && right == 0 && bottom == 0;
+	}
 }
