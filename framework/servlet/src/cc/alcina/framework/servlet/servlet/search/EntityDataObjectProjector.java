@@ -43,7 +43,8 @@ public class EntityDataObjectProjector {
 					.getNonPrimitiveOrDataFieldsForClass(entity.getClass());
 			for (Field field : nonPrimitive) {
 				if (Entity.class.isAssignableFrom(field.getType())) {
-					Entity toOneRel = (Entity) GraphProjection.getFieldValueOrMvccProperty(field, entity);
+					Entity toOneRel = (Entity) GraphProjection
+							.getFieldValueOrMvccProperty(field, entity);
 					if (toOneRel != null) {
 						if (seeds.add(toOneRel)) {
 							projectable.add(toOneRel);
@@ -52,7 +53,8 @@ public class EntityDataObjectProjector {
 					}
 				}
 				if (Collection.class.isAssignableFrom(field.getType())) {
-					Collection collection = (Collection) field.get(entity);
+					Collection collection = (Collection) GraphProjection
+							.getFieldValueOrMvccProperty(field, entity);
 					if (collection != null) {
 						collection.stream().filter(o -> o instanceof Entity)
 								.forEach(o -> projectable.add((Entity) o));
