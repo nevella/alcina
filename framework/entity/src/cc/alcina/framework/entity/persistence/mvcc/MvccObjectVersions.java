@@ -142,9 +142,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	// recent tx/version tuple
 	private Object2ObjectAVLTreeMap<Transaction, ObjectVersion<T>> versions;
 
-	protected T visibleAllTransactions;
+	protected volatile T visibleAllTransactions;
 
-	private CachedResolution cachedResolution;
+	private volatile CachedResolution cachedResolution;
 
 	/*
 	 * Only used to determine if a txmap key is not visible to a given
@@ -355,6 +355,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		updateCached(transaction, domainIdentity, true);
 	}
 
+	/*
+	 * All reached fields must be volatile
+	 */
 	T resolveWithoutSync(Transaction transaction, boolean writeableVersion) {
 		if (writeableVersion && transaction.isReadonly()
 				&& !TransformManager.get().isIgnorePropertyChanges()) {
@@ -649,13 +652,13 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	class CachedResolution {
-		private T read;
+		private volatile T read;
 
-		private T writeable;
+		private volatile T writeable;
 
-		private TransactionId readTransactionId;
+		private volatile TransactionId readTransactionId;
 
-		private TransactionId writableTransactionId;
+		private volatile TransactionId writableTransactionId;
 
 		@Override
 		public String toString() {
