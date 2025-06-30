@@ -250,7 +250,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 18;
+		private static final transient int VERSION = 19;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.create();
