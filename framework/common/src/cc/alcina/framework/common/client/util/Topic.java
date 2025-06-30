@@ -234,11 +234,11 @@ public class Topic<T> {
 		}
 
 		public void publishTopic(Object message) {
-			List<TopicListener> lookup = this.listeners;
-			if (lookup == null) {
+			List<TopicListener> listeners = this.listeners;
+			if (listeners == null) {
 				return;
 			}
-			for (TopicListener listener : lookup) {
+			for (TopicListener listener : listeners) {
 				listener.topicPublished(message);
 			}
 		}

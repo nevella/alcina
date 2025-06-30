@@ -59,13 +59,6 @@ public class ContextObservers {
 		}
 	}
 
-	public interface Observer<T extends Observable> extends ProcessObserver<T> {
-		@Override
-		default void bind() {
-			ProcessObservers.context().observe(this);
-		}
-	}
-
 	private ProcessObservers instance = new ProcessObservers();
 
 	private Multimap<LooseContextInstance.Frame, List<ProcessObserver>> observers = new Multimap<>();

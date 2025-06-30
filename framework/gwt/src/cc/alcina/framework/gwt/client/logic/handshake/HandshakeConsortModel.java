@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.OnlineState;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
-import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -81,10 +81,10 @@ public class HandshakeConsortModel {
 					.current()).getWrapper();
 			impl.setAuth(wrapper.getClientInstanceAuth());
 			impl.setId(wrapper.getClientInstanceId());
-			PermissionsState replaceBaseState = Permissions.get()
-					.toPermissionsState();
-			replaceBaseState.clientInstance = impl;
-			Permissions.get().replaceBaseState(replaceBaseState);
+			PermissionsContext replaceBaseContext = Permissions.get()
+					.toPermissionsContext();
+			replaceBaseContext.clientInstance = impl;
+			Permissions.get().replaceContext(replaceBaseContext);
 		}
 	}
 
@@ -198,9 +198,9 @@ public class HandshakeConsortModel {
 					.setInstance(generalProperties);
 		}
 		if (currentUser != null) {
-			PermissionsState baseState = new PermissionsState(currentUser,
+			PermissionsContext baseContext = new PermissionsContext(currentUser,
 					HandshakeConsortModel.get().getLoginState(), false, null);
-			Permissions.get().replaceBaseState(baseState);
+			Permissions.get().replaceContext(baseContext);
 			Registry.impl(ClientNotifications.class).log(Ax.format("User: %s",
 					currentUser == null ? null : currentUser.getUserName()));
 		}
@@ -233,10 +233,11 @@ public class HandshakeConsortModel {
 	public void setLoginResponse(LoginResponse loginResponse) {
 		this.loginResponse = loginResponse;
 		if (loginResponse != null) {
-			PermissionsState replaceBaseState = Permissions.get()
-					.toPermissionsState();
-			replaceBaseState.clientInstance = loginResponse.getClientInstance();
-			Permissions.get().replaceBaseState(replaceBaseState);
+			PermissionsContext replaceBaseContext = Permissions.get()
+					.toPermissionsContext();
+			replaceBaseContext.clientInstance = loginResponse
+					.getClientInstance();
+			Permissions.get().replaceContext(replaceBaseContext);
 		}
 	}
 

@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.Iid;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
-import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -335,27 +335,27 @@ public class AuthenticationManager {
 		AuthenticationContext context = ensureContext();
 		context.tokenStore = tokenStore;
 		IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
-		context.authenticatedPermissionsState.user = anonymousUser;
-		context.authenticatedPermissionsState.loginState = LoginState.NOT_LOGGED_IN;
+		context.authenticatedPermissionsContext.user = anonymousUser;
+		context.authenticatedPermissionsContext.loginState = LoginState.NOT_LOGGED_IN;
 		ensureIid(context);
 		ensureAuthenticationSession(context);
 		setupClientInstanceFromHeaders(context);
 		if (context.session != null
 				&& context.session.getUser() != anonymousUser) {
-			context.authenticatedPermissionsState.user = context.session
+			context.authenticatedPermissionsContext.user = context.session
 					.getUser();
-			context.authenticatedPermissionsState.loginState = LoginState.LOGGED_IN;
+			context.authenticatedPermissionsContext.loginState = LoginState.LOGGED_IN;
 		}
 		if (context.clientInstance != null) {
 			persistence.wasAccessed(context.clientInstance);
-			context.authenticatedPermissionsState.clientInstance = context.clientInstance;
+			context.authenticatedPermissionsContext.clientInstance = context.clientInstance;
 		}
 		// all auth objects persisted as root
 		Transaction.commit();
 	}
 
-	public PermissionsState getPermissionsState() {
-		return ensureContext().authenticatedPermissionsState;
+	public PermissionsContext getPermissionsContext() {
+		return ensureContext().authenticatedPermissionsContext;
 	}
 
 	public void invalidateSession(AuthenticationSession session,
@@ -431,7 +431,7 @@ public class AuthenticationManager {
 
 		Authenticator<?> authenticator = Registry.impl(Authenticator.class);
 
-		PermissionsState authenticatedPermissionsState = new PermissionsState();
+		PermissionsContext authenticatedPermissionsContext = new PermissionsContext();
 
 		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
 			return (Authenticator<U>) authenticator;

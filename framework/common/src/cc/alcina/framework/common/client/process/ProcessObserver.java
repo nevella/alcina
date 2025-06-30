@@ -17,7 +17,12 @@ import cc.alcina.framework.gwt.client.util.HasBind;
 public interface ProcessObserver<T extends ProcessObservable>
 		extends TopicListener<T>, HasBind {
 	default void bind() {
-		ProcessObservers.observe(this, true);
+		if (Reflections.isAssignableFrom(ContextObservers.Observable.class,
+				getObservableClass())) {
+			ProcessObservers.context().observe(this);
+		} else {
+			ProcessObservers.observe(this, true);
+		}
 	}
 
 	default Class<T> getObservableClass() {

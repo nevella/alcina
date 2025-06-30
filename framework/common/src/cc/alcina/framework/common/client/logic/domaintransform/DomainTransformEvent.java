@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
-import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -106,7 +106,7 @@ public class DomainTransformEvent
 	 * When cascading client transforms, the triggered/cascaded changes have a
 	 * different (root) permissions context to that of the client
 	 */
-	public transient PermissionsState permissionsState;
+	public transient PermissionsContext permissionsContext;
 
 	public DomainTransformEvent() {
 	}

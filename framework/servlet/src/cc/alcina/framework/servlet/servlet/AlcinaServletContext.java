@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
-import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
@@ -121,8 +121,8 @@ public class AlcinaServletContext {
 			Transaction.begin();
 		}
 		if (TransformManager.hasInstance()) {
-			PermissionsState permissionsState = AuthenticationManager.get()
-					.getPermissionsState();
+			PermissionsContext permissionsContext = AuthenticationManager.get()
+					.getPermissionsContext();
 			permissionsDepth = Permissions.depth();
 			/*
 			 * Two contexts - the outer context guarantees a clientinstance for
@@ -133,7 +133,7 @@ public class AlcinaServletContext {
 			if (rootPermissions) {
 				Permissions.pushSystemUser();
 			} else {
-				Permissions.pushState(permissionsState);
+				Permissions.pushContext(permissionsContext);
 			}
 		}
 	}

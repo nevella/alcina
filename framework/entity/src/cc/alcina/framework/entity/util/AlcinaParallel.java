@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
-import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
@@ -117,7 +117,8 @@ public class AlcinaParallel {
 
 	Callable wrapRunnableForParallel(LooseContextInstance snapshot,
 			Runnable runnable) {
-		PermissionsState permissionsState = Permissions.get().snapshotState();
+		PermissionsContext permissionsContext = Permissions.get()
+				.snapshotContext();
 		ClassLoader callingThreadContextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
 		return () -> {
@@ -140,7 +141,7 @@ public class AlcinaParallel {
 				if (jobChecker.isCancelled()) {
 					return null;
 				}
-				permissionsState.copyTo(Permissions.get());
+				permissionsContext.copyTo(Permissions.get());
 				LooseContext.putSnapshotProperties(snapshot);
 				runnable.run();
 			} catch (Throwable t) {

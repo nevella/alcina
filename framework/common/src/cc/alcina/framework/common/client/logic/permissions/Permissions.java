@@ -67,8 +67,8 @@ import cc.alcina.framework.common.client.util.Topic;
  * name + the evaluator.
  * 
  * <p>
- * FIXME - possibly (probably) clientinstance should be a normal part of state,
- * but that'll take testing
+ * FIXME - possibly (probably) clientinstance should be a normal part of
+ * context, but that'll take testing
  *
  * @author Nick Reddel
  */
@@ -94,9 +94,9 @@ public class Permissions implements DomainTransformListener {
 		public abstract String getRuleName();
 	}
 
-	public static class PermissionsState {
-		public static PermissionsState root() {
-			return new PermissionsState(Permissions.get().getSystemUser(),
+	public static class PermissionsContext {
+		public static PermissionsContext root() {
+			return new PermissionsContext(Permissions.get().getSystemUser(),
 					LoginState.LOGGED_IN, true, null);
 		}
 
@@ -112,15 +112,15 @@ public class Permissions implements DomainTransformListener {
 
 		public Map<String, IGroup> groupMap;
 
-		public PermissionsState(IUser user, LoginState loginState, boolean root,
-				ClientInstance clientInstance) {
+		public PermissionsContext(IUser user, LoginState loginState,
+				boolean root, ClientInstance clientInstance) {
 			this.user = user;
 			this.loginState = loginState;
 			this.root = root;
 			this.clientInstance = clientInstance;
 		}
 
-		public PermissionsState() {
+		public PermissionsContext() {
 		}
 
 		public void copyTo(Permissions pm) {
@@ -504,7 +504,7 @@ public class Permissions implements DomainTransformListener {
 
 	public static void pushUser(IUser user, LoginState loginState, boolean root,
 			ClientInstance clientInstance) {
-		get().pushState(user, loginState, root, clientInstance);
+		get().pushContext(user, loginState, root, clientInstance);
 	}
 
 	public static boolean hasContext() {
@@ -590,7 +590,7 @@ public class Permissions implements DomainTransformListener {
 		}
 	};
 
-	protected Stack<PermissionsState> stateStack = new Stack<>();
+	protected Stack<PermissionsContext> contextStack = new Stack<>();
 
 	private boolean root;
 
@@ -856,48 +856,54 @@ public class Permissions implements DomainTransformListener {
 		}
 	}
 
-	public PermissionsState toPermissionsState() {
-		return new PermissionsState(getUser(), getLoginState(), isRoot(),
+	public PermissionsContext toPermissionsContext() {
+		return new PermissionsContext(getUser(), getLoginState(), isRoot(),
 				getClientInstance());
 	}
 
 	// This should never be necessary, if the code always surrounds user
 	// push/pop in try/finally...but...
 	public void reset() {
-		stateStack.clear();
+		contextStack.clear();
 		setRoot(false);
 		setUser(null);
 		setLoginState(LoginState.NOT_LOGGED_IN);
 	}
 
-	public PermissionsState snapshotState() {
-		PermissionsState state = new PermissionsState();
-		state.user = user;
-		state.groupMap = groupMap == null ? null : new HashMap<>(groupMap);
-		state.loginState = loginState;
-		state.onlineState = onlineState;
-		state.root = root;
-		return state;
+	public PermissionsContext snapshotContext() {
+		PermissionsContext context = new PermissionsContext();
+		context.user = user;
+		context.groupMap = groupMap == null ? null : new HashMap<>(groupMap);
+		context.loginState = loginState;
+		context.onlineState = onlineState;
+		context.root = root;
+		return context;
 	}
 
-	public static void pushState(PermissionsState newState) {
-		get().pushState0(newState);
+	public static void pushContext(PermissionsContext newContext) {
+		get().pushContext0(newContext);
 	}
 
-	void pushState0(PermissionsState newState) {
-		stackDebug.maybeDebugStack(stateStack, true);
-		PermissionsState currentState = toPermissionsState();
-		stateStack.push(currentState);
-		applyState(newState);
+	void pushContext0(PermissionsContext newContext) {
+		stackDebug.maybeDebugStack(contextStack, true);
+		PermissionsContext currentContext = toPermissionsContext();
+		contextStack.push(currentContext);
+		applyContext(newContext);
 	}
 
 	/*
-	 * Clients need a base state, since event/js entry doesn't go through a
-	 * permissions layer
+	 * Clients need a base context, since event/js entry doesn't go through a
+	 * permissions layer. This call will fail unless the Permissions context
+	 * stack is empty
 	 */
-	public void replaceBaseState(PermissionsState baseState) {
-		Preconditions.checkState(!hasContext());
-		applyState(baseState);
+	public void replaceContext(PermissionsContext baseContext) {
+		replaceContext(baseContext, true);
+	}
+
+	protected void replaceContext(PermissionsContext context,
+			boolean baseOnly) {
+		Preconditions.checkState(!baseOnly || !hasContext());
+		applyContext(context);
 	}
 
 	protected void setClientInstance(ClientInstance clientInstance) {
@@ -946,13 +952,13 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	protected void popContext0() {
-		stackDebug.maybeDebugStack(stateStack, false);
+		stackDebug.maybeDebugStack(contextStack, false);
 		IUser currentUser = getUser();
-		PermissionsState state = stateStack.pop();
-		setLoginState(state.loginState);
-		setUser(state.user);
-		setRoot(state.root);
-		setClientInstance(state.clientInstance);
+		PermissionsContext context = contextStack.pop();
+		setLoginState(context.loginState);
+		setUser(context.user);
+		setRoot(context.root);
+		setClientInstance(context.clientInstance);
 	}
 
 	protected void pushCurrentUser0() {
@@ -961,7 +967,7 @@ public class Permissions implements DomainTransformListener {
 
 	protected IUser pushSystemUser0() {
 		IUser systemUser = getSystemUser();
-		pushState(systemUser, LoginState.LOGGED_IN, true, Registry
+		pushContext(systemUser, LoginState.LOGGED_IN, true, Registry
 				.impl(GetSystemUserClientInstance.class).getClientInstance());
 		return systemUser;
 	}
@@ -971,9 +977,10 @@ public class Permissions implements DomainTransformListener {
 	 * running with the permissions of user X but recording domain mutation to
 	 * the graph of (server) clientinstance Y
 	 */
-	protected void pushState(IUser user, LoginState loginState, boolean root,
+	protected void pushContext(IUser user, LoginState loginState, boolean root,
 			ClientInstance clientInstance) {
-		pushState(new PermissionsState(user, loginState, root, clientInstance));
+		pushContext(
+				new PermissionsContext(user, loginState, root, clientInstance));
 	}
 
 	protected IUser getSystemUser() {
@@ -990,17 +997,17 @@ public class Permissions implements DomainTransformListener {
 	protected void removePerThreadContext0() {
 	}
 
-	protected void applyState(PermissionsState state) {
-		if (state.clientInstance != null) {
-			setClientInstance(state.clientInstance);
+	protected void applyContext(PermissionsContext context) {
+		if (context.clientInstance != null) {
+			setClientInstance(context.clientInstance);
 		}
-		setLoginState(state.loginState);
-		setRoot(state.root);
-		setUser(state.user);
+		setLoginState(context.loginState);
+		setRoot(context.root);
+		setUser(context.user);
 	}
 
 	private int depth0() {
-		return stateStack.size();
+		return contextStack.size();
 	}
 
 	boolean evaluateRules(Object o, Object assigningTo, Permissible p,

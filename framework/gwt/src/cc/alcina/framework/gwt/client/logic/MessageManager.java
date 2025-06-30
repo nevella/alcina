@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.logic;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -23,11 +24,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * FIXME - dirndl 1x3 - the topic payload should be a [Model,String] tuple - and
  * possibly reduce topics to just one (plus a variant)
  *
- *
+ * Actually - don't use in dirndl - use notificationobservable
  *
  * @author Nick Reddel
  */
 @Registration.Singleton
+@Registration.EnvironmentSingleton
 public class MessageManager {
 	public static final Topic<String> topicMessagePublished = Topic.create();
 
@@ -52,23 +54,35 @@ public class MessageManager {
 	}
 
 	public void centerMessage(String message) {
+		checkRomcom();
 		topicCenterMessagePublished.publish(message);
 	}
 
 	public void exceptionMessage(String messageHtml) {
+		checkRomcom();
 		topicExceptionMessagePublished.publish(messageHtml);
 	}
 
 	public void icyCenterMessage(String message) {
+		checkRomcom();
 		topicIcyCenterMessagePublished.publish(message);
 	}
 
 	public void icyMessage(String message) {
+		checkRomcom();
 		topicIcyMessagePublished.publish(message);
 	}
 
 	public void showMessage(String message) {
+		checkRomcom();
 		topicMessagePublished.publish(message);
+	}
+
+	void checkRomcom() {
+		if (Al.isRomcom()) {
+			throw new UnsupportedOperationException(
+					"statics are not romcom-friendly. Use notificationobservable");
+		}
 	}
 
 	public void showMessage(String string, Object... args) {

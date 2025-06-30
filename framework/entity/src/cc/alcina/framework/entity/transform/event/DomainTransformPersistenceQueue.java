@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -356,7 +357,7 @@ public class DomainTransformPersistenceQueue {
 
 		@Override
 		public long getCurrentTransactionId() {
-			return Transaction.current().getId().id;
+			return Al.isRomcom() ? 0 : Transaction.current().getId().id;
 		}
 
 		@Override
@@ -365,7 +366,7 @@ public class DomainTransformPersistenceQueue {
 				queue = DomainStore.writableStore().getPersistenceEvents()
 						.getQueue();
 			}
-			return queue.getTransformCommitPosition();
+			return Al.isRomcom() ? null : queue.getTransformCommitPosition();
 		}
 	}
 

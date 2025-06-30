@@ -2,11 +2,12 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.WindowState.NodeUiState;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Stores the current UI state object from the client, and if possible returns
@@ -17,6 +18,8 @@ class RemoteWindowState implements InvokeProxy {
 	InvokeProxy remoteDelegate = null;
 
 	WindowState windowState;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void invoke(NodeAttachId node, String methodName,
 			List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
@@ -46,7 +49,7 @@ class RemoteWindowState implements InvokeProxy {
 					case "getScrollTop":
 						return (T) (Integer) nodeUiState.scrollPos.i2;
 					case "getBoundingClientRect":
-						Ax.out("bcr: %s", node.node().toNameAttachId());
+						// Ax.out("bcr: %s", node.node().toNameAttachId());
 						return (T) nodeUiState.boundingClientRect;
 					case "getClientHeight":
 					case "getClientWidth":
@@ -55,13 +58,8 @@ class RemoteWindowState implements InvokeProxy {
 				} else {
 					switch (methodName) {
 					case "getBoundingClientRect":
-						if (node.node().asDomNode().nameIs("p")) {
-							Object result = remoteDelegate.invokeSync(node,
-									methodName, argumentTypes, arguments,
-									flags);
-							int debug = 3;
-						}
-						Ax.out("bcr: [miss] %s", node.node().toNameAttachId());
+						logger.debug("get-bcr [not cached] {}",
+								node.node().toNameAttachId());
 						break;
 					}
 				}

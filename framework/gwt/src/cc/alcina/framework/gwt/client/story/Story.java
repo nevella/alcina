@@ -726,6 +726,32 @@ public interface Story {
 						}
 					}
 				}
+
+				/**
+				 * A select area action - select a screen area relative to elem
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface SelectArea {
+					public static class ConverterImpl
+							implements Converter<SelectArea> {
+						@Override
+						public Story.Action convert(SelectArea ann) {
+							return new Story.Action.Ui.SelectArea(ann.fromX(),
+									ann.fromY(), ann.toX(), ann.toY());
+						}
+					}
+
+					int fromX();
+
+					int fromY();
+
+					int toX();
+
+					int toY();
+				}
 			}
 		}
 
@@ -1183,7 +1209,7 @@ public interface Story {
 			public static class Script extends ActionWithText {
 			}
 
-			public static class ResizeViewport extends ActionWithText {
+			public static class ResizeViewport implements Ui {
 				public ResizeViewport() {
 				}
 
@@ -1198,6 +1224,26 @@ public interface Story {
 				public int height;
 
 				public boolean maximise;
+			}
+
+			public static class SelectArea implements Ui {
+				int fromX;
+
+				int fromY;
+
+				int toX;
+
+				int toY;
+
+				public SelectArea() {
+				}
+
+				SelectArea(int fromX, int fromY, int toX, int toY) {
+					this.fromX = fromX;
+					this.fromY = fromY;
+					this.toX = toX;
+					this.toY = toY;
+				}
 			}
 		}
 

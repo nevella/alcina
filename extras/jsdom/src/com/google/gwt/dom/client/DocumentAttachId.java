@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
@@ -877,12 +879,14 @@ public class DocumentAttachId extends NodeAttachId
 		throw new UnsupportedOperationException();
 	}
 
+	static Logger logger = LoggerFactory.getLogger(DocumentAttachId.class);
+
 	/*
 	 * Thread-safety - this can be accessed outsdie the environment thread (it's
 	 * a swap)
 	 */
 	public void onRemoteUiContextReceived(WindowState windowState) {
-		Ax.out("received windowstate - %s nodes",
+		logger.debug("received window.state [observed offsets] {}",
 				windowState.nodeUiStates.size());
 		invokeProxy.windowState = windowState;
 	}

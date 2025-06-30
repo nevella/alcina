@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
-import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.Configuration;
@@ -117,7 +117,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	private boolean inTransaction;
 
-	private PermissionsState permissionsState;
+	private PermissionsContext permissionsContext;
 
 	private String threadName;
 
@@ -131,7 +131,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	public AlcinaChildRunnable(String name) {
 		this.threadName = name;
-		this.permissionsState = Permissions.get().snapshotState();
+		this.permissionsContext = Permissions.get().snapshotContext();
 		this.contextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
 		if (Configuration.is("traceConstruction")) {
@@ -168,7 +168,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			LooseContext.push();
 			// different thread-local
 			getRunContext().tLooseContextDepth = LooseContext.depth();
-			this.permissionsState.copyTo(Permissions.get());
+			this.permissionsContext.copyTo(Permissions.get());
 			Thread.currentThread().setContextClassLoader(contextClassLoader);
 			copyContext.forEach((k, v) -> LooseContext.set(k, v));
 			if (runAsRoot) {

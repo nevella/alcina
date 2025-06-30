@@ -12,6 +12,7 @@ import org.openqa.selenium.interactions.Actions;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.extras.webdriver.query.ElementQuery;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -307,6 +308,27 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 					driver.manage().window().maximize();
 					driver.manage().window().setSize(toSize);
 				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	public static class SelectArea
+			implements TypedPerformer<Story.Action.Ui.SelectArea> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.SelectArea action) throws Exception {
+			WdExec exec = wdPerformer.wdContext.exec;
+			ElementQuery query = WdActionPerformer.createQuery(wdPerformer);
+			WebElement elem = query.getElement();
+			try {
+				Actions actions = exec.actions();
+				// there's something weird about these moves...but this combo
+				// works
+				actions.moveToElement(elem, -60, -5).clickAndHold()
+						.moveToElement(elem, 50, 10).release().build()
+						.perform();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

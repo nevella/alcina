@@ -56,11 +56,11 @@ public class ThreadedPermissions extends Permissions {
 
 	public <IU extends IUser> IU
 			provideNonSystemUserInStackOrThrow(boolean throwIfNotFound) {
-		int idx = stateStack.size() - 1;
+		int idx = contextStack.size() - 1;
 		while (idx >= 0) {
-			Boolean isRoot = stateStack.get(idx).root;
+			Boolean isRoot = contextStack.get(idx).root;
 			if (!isRoot) {
-				return (IU) stateStack.get(idx).user;
+				return (IU) contextStack.get(idx).user;
 			}
 			idx--;
 		}
@@ -71,16 +71,22 @@ public class ThreadedPermissions extends Permissions {
 		}
 	}
 
+	/**
+	 * Replace the current context. Client only, since clients require a
+	 * universal conext
+	 * 
+	 * @param baseContext
+	 */
 	@Override
-	public void replaceBaseState(PermissionsState baseState) {
+	public void replaceContext(PermissionsContext baseContext) {
 		if (Al.isRomcom()) {
 			/*
-			 * apply without checking stack, unavoidable with the way romcom is
-			 * routed
+			 * apply without checking the stack, unavoidable with the way romcom
+			 * is routed (unless we rewrite GWT#entry)
 			 */
-			applyState(baseState);
+			replaceContext(baseContext, false);
 		} else {
-			super.replaceBaseState(baseState);
+			super.replaceContext(baseContext, true);
 		}
 	}
 

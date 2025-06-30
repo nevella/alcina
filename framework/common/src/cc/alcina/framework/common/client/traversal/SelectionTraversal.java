@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
 import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
@@ -717,7 +718,7 @@ public class SelectionTraversal
 	}
 
 	class SuppressedExceptionObserver
-			implements ContextObservers.Observer<SuppressedException> {
+			implements ProcessObserver<SuppressedException> {
 		@Override
 		public void topicPublished(SuppressedException message) {
 			selections().exceptions.put(contextSelection(), message.e);
