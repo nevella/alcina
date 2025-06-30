@@ -690,7 +690,8 @@ public class GraphProjection {
 		return result;
 	}
 
-	private Object getFieldValue(Field field, Object source) throws Exception {
+	public static Object getFieldValueOrMvccProperty(Field field, Object source)
+			throws Exception {
 		// Trying hard to avoid the first case (it's very much not optimal)
 		if (source instanceof MvccObject
 				&& ((MvccObject) source).__getMvccVersions__() != null) {
@@ -971,7 +972,7 @@ public class GraphProjection {
 					continue;
 				}
 			}
-			Object value = getFieldValue(field, source);
+			Object value = getFieldValueOrMvccProperty(field, source);
 			if (value == null) {
 				field.set(projected, null);
 			} else {
@@ -1007,7 +1008,7 @@ public class GraphProjection {
 					continue;
 				}
 			}
-			Object value = getFieldValue(field, source);
+			Object value = getFieldValueOrMvccProperty(field, source);
 			if (value == null) {
 				field.set(projected, null);
 			} else {
