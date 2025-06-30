@@ -691,19 +691,6 @@ public class GraphProjection {
 	}
 
 	private Object getFieldValue(Field field, Object source) throws Exception {
-		Object value0 = getFieldValue0(field, source);
-		if (value0 instanceof LiSet) {
-			/*
-			 * attempt to force a barrier
-			 */
-			synchronized (value0) {
-				((LiSet) value0).size();
-			}
-		}
-		return value0;
-	}
-
-	private Object getFieldValue0(Field field, Object source) throws Exception {
 		// Trying hard to avoid the first case (it's very much not optimal)
 		if (source instanceof MvccObject
 				&& ((MvccObject) source).__getMvccVersions__() != null) {
