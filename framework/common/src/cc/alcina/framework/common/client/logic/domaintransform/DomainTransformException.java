@@ -45,6 +45,7 @@ public class DomainTransformException extends Exception
 	private boolean silent;
 
 	public DomainTransformException() {
+		int debug = 4;
 	}
 
 	public DomainTransformException(DomainTransformEvent event,
