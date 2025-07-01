@@ -83,7 +83,11 @@ public class EnvironmentRegistry extends Registry {
 			if (contextRegistry != null) {
 				return contextRegistry;
 			} else {
-				return delegateProvider.getRegistry();
+				if (delegateProvider == this) {
+					return null;
+				} else {
+					return delegateProvider.getRegistry();
+				}
 			}
 		}
 	}

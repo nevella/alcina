@@ -29,17 +29,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  * <p>
  * This class handles 'promoted' objects (local->global)
  * 
- * <p>
- * This class should be used as the main mvcc referenced entity class - it's
- * designed for contention - after some obscure issues with reads on other
- * threads immediately after writes, marking all fields as volatile (rather than
- * the entity fields themselves - a much bigger job) resolved these issues
- * 
- * <p>
- * This class is not designed for field-level serialization (the fields are
- * transient) - but all serialization frameworks (except JVM) use iterator-based
- * serialization for the general serializer case, so serialize without issues
- * 
  * @param <H>
  */
 public class LiSet<H extends Entity> extends AbstractSet<H>
@@ -136,13 +125,13 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return 0;
 	}
 
-	private transient volatile Entity[] elementData;
+	private transient Entity[] elementData;
 
-	transient volatile int size = 0;
+	transient int size = 0;
 
-	transient volatile int modCount = 0;
+	transient int modCount = 0;
 
-	private transient volatile Set<H> degenerate;
+	private transient Set<H> degenerate;
 
 	public LiSet() {
 	}

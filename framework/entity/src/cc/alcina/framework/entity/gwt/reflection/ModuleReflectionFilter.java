@@ -130,6 +130,7 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 
 	@Override
 	public void updateReachableTypes(List<JClassType> types) {
+		Ax.out("types.size: %s", types.size());
 		TypeList unknownList = moduleTypes
 				.ensureTypeList(ReflectionModule.UNKNOWN);
 		unknownList.types.clear();

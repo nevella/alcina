@@ -251,7 +251,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 18;
+		private static final transient int VERSION = 19;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.create();
@@ -1008,7 +1008,8 @@ class ClassTransformer {
 					 */
 					CtField f = new CtField(mvccObjectVersionsCtClass,
 							"__mvccObjectVersions__", ctClass);
-					f.setModifiers(Modifier.PRIVATE | Modifier.TRANSIENT);
+					f.setModifiers(Modifier.PRIVATE | Modifier.TRANSIENT
+							| Modifier.VOLATILE);
 					ctClass.addField(f);
 					tasks.add(() -> {
 						String body = "{\n\treturn __mvccObjectVersions__;}";

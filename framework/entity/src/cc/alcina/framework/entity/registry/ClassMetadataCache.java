@@ -31,8 +31,8 @@ public class ClassMetadataCache<T extends ClassMetadata>
 	public List<String> ignorePackageSegments = new ArrayList<String>();
 
 	public String dump() {
-		return toString() + "\n"
-				+ classData.keySet().stream().collect(Collectors.joining("\n"));
+		return toString() + "\n" + classData.keySet().stream().sorted()
+				.collect(Collectors.joining("\n"));
 	}
 
 	public synchronized void insert(T item) {
