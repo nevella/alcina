@@ -237,7 +237,9 @@ public class HandshakeConsortModel {
 					.toPermissionsContext();
 			replaceBaseContext.clientInstance = loginResponse
 					.getClientInstance();
-			replaceBaseContext.user = loginResponse.getUser();
+			if (loginResponse.getUser() != null) {
+				replaceBaseContext.user = loginResponse.getUser();
+			}
 			Permissions.get().replaceContext(replaceBaseContext);
 			/*
 			 * temp, pending lgoinstate in the response

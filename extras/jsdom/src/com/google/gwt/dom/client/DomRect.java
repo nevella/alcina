@@ -91,4 +91,9 @@ public final class DomRect implements Serializable {
 	public boolean isZeroDimensions() {
 		return left == 0 && top == 0 && right == 0 && bottom == 0;
 	}
+
+	public boolean intersectsWith(DomRect other) {
+		return xRange().intersectsWith(other.xRange())
+				&& yRange().intersectsWith(other.yRange());
+	}
 }

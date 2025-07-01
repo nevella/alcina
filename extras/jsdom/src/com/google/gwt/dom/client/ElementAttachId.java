@@ -6,11 +6,9 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -214,7 +212,9 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public boolean getPropertyBoolean(String name) {
-		throw new UnsupportedOperationException();
+		String propertyString = getPropertyString(name);
+		return Ax.isBlank(propertyString) ? false
+				: Boolean.parseBoolean(propertyString);
 	}
 
 	@Override

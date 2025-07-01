@@ -27,7 +27,6 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DocumentJso;
-import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
@@ -1034,7 +1033,19 @@ public class WidgetUtils {
 	public static void scrollIntoView(Element elem, int fromTop,
 			boolean forceFromTop) {
 		if (!Al.isBrowser()) {
-			Ax.err("scrollIntoView :: %s", elem);
+			/*
+			 * current behavior (of scrollIntoView, browser) is this,
+			 * irrespective of forceFromTop. TODO - check usages of
+			 * scrollIntoView (expand element api)
+			 */
+			if (forceFromTop || true) {
+				if (!Window.getRect()
+						.intersectsWith(elem.getBoundingClientRect())) {
+					Window.scrollTo(0,
+							Math.max(0, elem.getAbsoluteTop() - fromTop));
+				}
+			}
+			elem.scrollIntoView(0, fromTop);
 			return;
 		}
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();

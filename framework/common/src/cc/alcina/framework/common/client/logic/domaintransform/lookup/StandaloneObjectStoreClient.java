@@ -118,9 +118,9 @@ public class StandaloneObjectStoreClient extends StandaloneObjectStore {
 	}
 
 	@Override
-	public synchronized void mapObject(Entity obj) {
+	public synchronized void mapObject(Entity entity) {
 		mappedObjects = new PerClassLookup();
-		addObjectOrCollectionToEndOfQueue(obj);
+		addObjectOrCollectionToEndOfQueue(entity);
 		iterateRegistration();
 		// assert toRegister.isEmpty();
 		// it'd be nice, but not always possible to assert this (counterexample:

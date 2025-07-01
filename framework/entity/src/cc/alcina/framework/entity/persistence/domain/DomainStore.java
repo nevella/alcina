@@ -530,6 +530,9 @@ public class DomainStore implements IDomainStore {
 
 	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
+		if (Thread.currentThread().getName().contains("romcom-exec")) {
+			int debug = 3;
+		}
 		if (t == null) {
 			if (domainDescriptor.perClass.containsKey(clazz)
 					&& domainDescriptor.perClass.get(clazz)
@@ -1694,7 +1697,6 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	@Registration.Singleton
 	public static class DomainStores {
 		// not concurrent, handle in methods
 		private Map<DomainDescriptor, DomainStore> descriptorMap = new LinkedHashMap<>();
@@ -1706,8 +1708,9 @@ public class DomainStore implements IDomainStore {
 		private Collection<DomainStore> stores;
 
 		private DomainStore writableStore;
+		//
 
-		DomainStoresDomainHandler storesHandler = new DomainStoresDomainHandler();
+		public final DomainStoresDomainHandler storesHandler = new DomainStoresDomainHandler();
 
 		Logger logger = LoggerFactory.getLogger(getClass());
 

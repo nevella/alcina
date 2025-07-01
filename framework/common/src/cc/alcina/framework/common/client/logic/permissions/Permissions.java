@@ -109,6 +109,11 @@ public class Permissions implements DomainTransformListener {
 					LoginState.LOGGED_IN, true, null);
 		}
 
+		public PermissionsContext clone() {
+			return new PermissionsContext(user, loginState, root,
+					clientInstance);
+		}
+
 		public IUser user;
 
 		public ClientInstance clientInstance;

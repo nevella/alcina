@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +17,20 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
+import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.flight.FlightEvent;
+import cc.alcina.framework.common.client.logic.domain.DomainHandlerClient;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Timeout;
@@ -30,6 +39,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.ServerClientInstance;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
@@ -138,6 +148,92 @@ public class EnvironmentManager {
 		new EnvironmentReaper().start();
 	}
 
+	class EnvironmentHandler implements DomainHandler {
+		DomainHandler storesHandler;
+
+		DomainHandlerClient clientHandler = new DomainHandlerClient();
+
+		DomainHandler handler() {
+			if (Environment.has()) {
+				return clientHandler;
+			} else {
+				return storesHandler;
+			}
+		}
+
+		public <V extends Entity> void async(Class<V> clazz, long objectId,
+				boolean create, Consumer<V> resultConsumer) {
+			handler().async(clazz, objectId, create, resultConsumer);
+		}
+
+		public <V extends Entity> V byProperty(Class<V> clazz,
+				String propertyName, Object value) {
+			return handler().byProperty(clazz, propertyName, value);
+		}
+
+		public <V extends Entity> V create(Class<V> clazz) {
+			return handler().create(clazz);
+		}
+
+		public <V extends Entity> V detachedVersion(V v) {
+			return handler().detachedVersion(v);
+		}
+
+		public <V extends Entity> V find(Class clazz, long id) {
+			return handler().find(clazz, id);
+		}
+
+		public <V extends Entity> V find(EntityLocator locator) {
+			return handler().find(locator);
+		}
+
+		public <V extends Entity> V find(V v) {
+			return handler().find(v);
+		}
+
+		public <V extends Entity> boolean isDomainVersion(V v) {
+			return handler().isDomainVersion(v);
+		}
+
+		public <V extends Entity> boolean isMvccObject(V v) {
+			return handler().isMvccObject(v);
+		}
+
+		public <V extends Entity> List<V> listByProperty(Class<V> clazz,
+				String propertyName, Object value) {
+			return handler().listByProperty(clazz, propertyName, value);
+		}
+
+		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+			return handler().query(clazz);
+		}
+
+		public <V extends Entity> V resolve(V v) {
+			return handler().resolve(v);
+		}
+
+		public Class<? extends Object>
+				resolveEntityClass(Class<? extends Object> clazz) {
+			return handler().resolveEntityClass(clazz);
+		}
+
+		public <V extends Entity> int size(Class<V> clazz) {
+			return handler().size(clazz);
+		}
+
+		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
+			return handler().stream(clazz);
+		}
+
+		public boolean wasRemoved(Entity entity) {
+			return handler().wasRemoved(entity);
+		}
+
+		EnvironmentHandler() {
+			storesHandler = DomainStore.stores().storesHandler;
+		}
+	}
+
 	void startFlightRecording() {
 		new RemoteComponentEventObserver().bind();
 		if (decoratorEventRecordingEnabled.is()) {
@@ -177,11 +273,24 @@ public class EnvironmentManager {
 
 	public Environment register(RemoteUi ui, Session session,
 			long nonInteractionTimeout) {
+		if (ui instanceof DomainUi) {
+			ensureDomainHandler();
+		}
 		Environment environment = new Environment(ui, session);
 		environments.put(session.id, environment);
 		ui.setEnvironment(environment);
 		environment.access().setNonInteractionTimeout(nonInteractionTimeout);
 		return environment;
+	}
+
+	volatile EnvironmentHandler environmentHandler;
+
+	synchronized void ensureDomainHandler() {
+		if (DomainStore.hasStores() && environmentHandler == null) {
+			InstanceOracle.query(DomainStore.class).await();
+			environmentHandler = new EnvironmentHandler();
+			Domain.registerHandler(environmentHandler);
+		}
 	}
 
 	Environment singletonEnvironment() {

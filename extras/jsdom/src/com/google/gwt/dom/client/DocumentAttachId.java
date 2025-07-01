@@ -779,7 +779,7 @@ public class DocumentAttachId extends NodeAttachId
 
 	@Override
 	public boolean hasFocus() {
-		throw new UnsupportedOperationException();
+		return invokeSync("hasFocus");
 	}
 
 	@Override
