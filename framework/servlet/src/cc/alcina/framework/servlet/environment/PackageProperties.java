@@ -6,6 +6,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.environment.AbstractUi;
+import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 import com.google.gwt.place.shared.Place;
 import java.lang.Boolean;
 import java.util.List;
@@ -19,6 +20,7 @@ public class PackageProperties {
     
     public static class _AbstractUi implements TypedProperty.Container {
       public TypedProperty<AbstractUi, Set> appCommandContexts = new TypedProperty<>(AbstractUi.class, "appCommandContexts");
+      public TypedProperty<AbstractUi, AuthenticationTokenStore> authenticationTokenStore = new TypedProperty<>(AbstractUi.class, "authenticationTokenStore");
       public TypedProperty<AbstractUi, AbstractUi.ClientExceptionNotificationPolicy> clientExceptionNotificationPolicy = new TypedProperty<>(AbstractUi.class, "clientExceptionNotificationPolicy");
       public TypedProperty<AbstractUi, CommandContext.Provider> commandContextProvider = new TypedProperty<>(AbstractUi.class, "commandContextProvider");
       public TypedProperty<AbstractUi, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(AbstractUi.class, "keybindingsHandler");
