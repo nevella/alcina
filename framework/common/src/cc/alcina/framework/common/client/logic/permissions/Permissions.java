@@ -69,6 +69,15 @@ import cc.alcina.framework.common.client.util.Topic;
  * <p>
  * FIXME - possibly (probably) clientinstance should be a normal part of
  * context, but that'll take testing
+ * 
+ * Note re clientinstances and context - most of the time when pushing/popping,
+ * the clientinstance will not be specified - rather just the user and/or root
+ * state.
+ * 
+ * So if the pushed context has null clientinstance, and the current
+ * clientinstance is non null, the null will effectively be replaced by the
+ * current non-null client instance. Which implies that once clientInstance is
+ * non null, the only way to null it is to pop the context
  *
  * @author Nick Reddel
  */
@@ -129,7 +138,9 @@ public class Permissions implements DomainTransformListener {
 			pm.loginState = loginState;
 			pm.onlineState = onlineState;
 			pm.root = root;
-			pm.clientInstance = clientInstance;
+			if (clientInstance != null) {
+				pm.clientInstance = clientInstance;
+			}
 		}
 	}
 
