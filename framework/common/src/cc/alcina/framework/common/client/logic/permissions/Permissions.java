@@ -750,7 +750,7 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	public boolean isAnonymousUser() {
-		return Names.ANONYMOUS_USER.equals(getUserName());
+		return getUser() == null || Names.ANONYMOUS_USER.equals(getUserName());
 	}
 
 	public boolean isLoggedIn() {
