@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainHandlerClient;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -40,6 +41,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.ServerClientInstance;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
@@ -154,7 +156,8 @@ public class EnvironmentManager {
 		DomainHandlerClient clientHandler = new DomainHandlerClient();
 
 		DomainHandler handler() {
-			if (Environment.has()) {
+			if (Environment.has() && !(TransformManager
+					.get() instanceof ThreadlocalTransformManager)) {
 				return clientHandler;
 			} else {
 				return storesHandler;
