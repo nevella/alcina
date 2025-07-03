@@ -618,11 +618,20 @@ public abstract class Node
 		}
 	}
 
+	protected final void validateInsert(Node newChild) {
+		if (getOwnerDocument().validateHtmlTags) {
+			validateInsert0(newChild);
+		}
+	}
+
 	/*
 	 * For subclasses (tables essentially) to disallow invalid *local* dom,
 	 * since that would cause a local/remote mismatch
+	 * 
+	 * Keep in sync with any code which bypasses validation (e.g. document
+	 * transformation)
 	 */
-	protected void validateInsert(Node newChild) {
+	protected void validateInsert0(Node newChild) {
 		// FIXME disallow invalid inserts (i.e. Node throws by default, Element
 		// disallows Document insert etc)
 	}

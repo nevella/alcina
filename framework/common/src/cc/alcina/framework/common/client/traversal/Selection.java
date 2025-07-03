@@ -149,8 +149,8 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	}
 
 	/*
-	 * A marker, selections of this type cannot be select once used as the
-	 * inputs of a lyer
+	 * A marker, affecting permitted layer structures (Layers with input types
+	 * that are *not* ImmutableInput have more restricted structures)
 	 */
 	public interface ImmutableInput {
 	}

@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 
 import com.google.common.base.Preconditions;
@@ -689,6 +688,35 @@ public class Location implements Comparable<Location> {
 		public String toString() {
 			return Ax.format("%s/%s - %s", getNode().getNodeName(), getOffset(),
 					getLocation().toString());
+		}
+	}
+
+	public LocationSnapshot toLocationSnapshot() {
+		return new LocationSnapshot();
+	}
+
+	/*
+	 * A public snapshot of the location's indicies
+	 */
+	public class LocationSnapshot {
+		public final int treeIndex;
+
+		public final int index;
+
+		public final int textLengthSelf;
+
+		LocationSnapshot() {
+			this.treeIndex = getTreeIndex();
+			this.index = getIndex();
+			this.textLengthSelf = containingNode.textLengthSelf();
+		}
+
+		public IntPair asTextIndexPair() {
+			return new IntPair(index, index + textLengthSelf);
+		}
+
+		public boolean hasTextLength() {
+			return textLengthSelf != 0;
 		}
 	}
 

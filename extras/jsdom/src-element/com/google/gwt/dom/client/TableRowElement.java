@@ -243,7 +243,7 @@ public class TableRowElement extends Element {
 	}
 
 	@Override
-	protected void validateInsert(Node newChild) {
+	protected void validateInsert0(Node newChild) {
 		if (newChild.provideIsElement()) {
 			String tagName = newChild.getNodeName().toLowerCase();
 			Preconditions
@@ -253,6 +253,6 @@ public class TableRowElement extends Element {
 			Preconditions.checkState(
 					TextUtils.isWhitespaceOrEmpty(newChild.getTextContent()));
 		}
-		super.validateInsert(newChild);
+		super.validateInsert0(newChild);
 	}
 }

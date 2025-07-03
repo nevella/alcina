@@ -1102,6 +1102,10 @@ public class DomNode {
 			}
 			return out;
 		}
+
+		public List<String> toSubtreeNameList() {
+			return stream().map(DomNode::name).toList();
+		}
 	}
 
 	public interface DomNodeDebugSupport {

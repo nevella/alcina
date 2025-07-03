@@ -427,12 +427,12 @@ public class TableElement extends Element {
 	}
 
 	@Override
-	protected void validateInsert(Node newChild) {
+	protected void validateInsert0(Node newChild) {
 		if (newChild.provideIsElement() && Ax.isTest()) {
 			String tagName = newChild.getNodeName().toLowerCase();
 			Preconditions.checkState(tagName.equals("thead")
 					|| tagName.equals("tbody") || tagName.equals("tfoot"));
 		}
-		super.validateInsert(newChild);
+		super.validateInsert0(newChild);
 	}
 }

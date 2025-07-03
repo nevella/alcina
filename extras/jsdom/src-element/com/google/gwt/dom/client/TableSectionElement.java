@@ -83,12 +83,12 @@ public class TableSectionElement extends Element {
 	}
 
 	@Override
-	protected void validateInsert(Node newChild) {
+	protected void validateInsert0(Node newChild) {
 		if (newChild.provideIsElement() && Ax.isTest()) {
 			String tagName = newChild.getNodeName().toLowerCase();
 			Preconditions.checkState(tagName.equals("tr"));
 		}
-		super.validateInsert(newChild);
+		super.validateInsert0(newChild);
 	}
 
 	protected TableSectionElement() {

@@ -36,6 +36,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -58,6 +59,9 @@ import cc.alcina.framework.common.client.util.TopicListener;
 public class Document extends Node implements ClientDomDocument,
 		org.w3c.dom.Document, org.w3c.dom.ranges.DocumentRange,
 		org.w3c.dom.traversal.DocumentTraversal, ContextFrame {
+	public static final LooseContext.Key<Boolean> CONTEXT_TAG_VALIDATION_DISABLED = LooseContext
+			.key(Document.class, "CONTEXT_TAG_VALIDATION_DISABLED");
+
 	public static ContextProvider<RemoteType, Document> contextProvider;
 
 	public static Document get() {
@@ -101,6 +105,8 @@ public class Document extends Node implements ClientDomDocument,
 	 */
 	public boolean htmlTags = true;
 
+	public final boolean validateHtmlTags;
+
 	Selection selection;
 
 	protected Document(RemoteType remoteType) {
@@ -120,6 +126,7 @@ public class Document extends Node implements ClientDomDocument,
 		}
 		this.local = new DocumentLocal(this);
 		this.selection = new Selection(this);
+		this.validateHtmlTags = !CONTEXT_TAG_VALIDATION_DISABLED.is();
 		localDom = new LocalDom();
 	}
 
