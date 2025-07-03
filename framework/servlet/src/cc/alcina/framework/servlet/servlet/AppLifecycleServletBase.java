@@ -32,6 +32,7 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.slf4j.LoggerFactory;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
@@ -147,6 +148,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Registry.Internals.setProvider(ClassLoaderAwareRegistryProvider.get());
 		EnvironmentRegistry.registerDelegateProvider(null);
 	}
+
+	protected static org.slf4j.Logger logger = LoggerFactory
+			.getLogger(AppLifecycleServletBase.class);
 
 	protected ServletConfig initServletConfig;
 
