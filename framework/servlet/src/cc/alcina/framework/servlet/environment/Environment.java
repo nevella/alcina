@@ -18,11 +18,11 @@ import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentAttachId;
-import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeAttachId;
+import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
@@ -437,6 +437,10 @@ class Environment {
 		 * Not queued. These are just offsets
 		 */
 		void applyWindowState(WindowState eventContext) {
+			if (document == null || document.attachIdRemote() == null) {
+				// this is off-thread, so may be early
+				return;
+			}
 			document.attachIdRemote().onRemoteUiContextReceived(eventContext);
 		}
 

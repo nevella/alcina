@@ -567,6 +567,8 @@ public abstract class DevConsoleCommand {
 			return runnable != null && runnable.rerunIfMostRecentOnRestart();
 		}
 
+		boolean hasTransaction;
+
 		@Override
 		public String run(String[] argv) throws Exception {
 			List<Class> classes = Registry.query(DevConsoleRunnable.class)
@@ -585,6 +587,7 @@ public abstract class DevConsoleCommand {
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
 						if (Transactions.isInitialised()) {
 							Transaction.ensureBegun();
+							hasTransaction = true;
 						}
 						if (runnable.requiresDomainStore()
 								&& DevHelper.getDefaultUser() == null) {
@@ -628,7 +631,7 @@ public abstract class DevConsoleCommand {
 							if (pushedUser != null) {
 								Permissions.popContext();
 							}
-							if (Transactions.isInitialised()) {
+							if (hasTransaction) {
 								Transaction.end();
 							}
 						} catch (Exception e2) {
