@@ -561,6 +561,11 @@ public class JobRegistry {
 	 * PROCESSING or COMPLETE (not SEQUENCE_COMPLETE), this vm
 	 */
 	public int getActiveJobCount() {
+		checkActiveJobs();
+		return activeJobs.size();
+	}
+
+	void checkActiveJobs() {
 		// FIXME - mvcc.jobs - both (a) remove on transform, not here and (b)
 		// track why not removed in this-vm process (i.e. finally of performJob0
 		// not completing).
@@ -569,15 +574,23 @@ public class JobRegistry {
 			try {
 				// this is more a guard against exceptions rather than logically
 				// correct - correctness would be a txview
-				return Mvcc.isVisible(job)
-						&& job.getState() == JobState.ABORTED;
+				if (Mvcc.isVisible(job) && job.getState() == JobState.ABORTED) {
+					return true;
+				} else if (job.domain().wasPersisted()
+						&& Domain.find(job) == null) {
+					/*
+					 * Deleted, but with issues during persistence propagation
+					 */
+					return true;
+				} else {
+					return false;
+				}
 			} catch (Exception e) {
 				// FIXME - devex - presumably mvcc-deleted
 				e.printStackTrace();
 				return false;
 			}
 		});
-		return activeJobs.size();
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {
