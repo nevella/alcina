@@ -57,6 +57,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Al.Context;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -773,6 +774,9 @@ public abstract class DevConsole implements ClipboardOwner {
 			}
 			DevConsoleCommand command = template.getClass()
 					.getDeclaredConstructor().newInstance();
+			if (command.requiresDomainStore()) {
+				InstanceOracle.query(DomainStore.class).await();
+			}
 			prepareCommand(command);
 			for (DevConsoleCommand c2 : runningJobs) {
 				if (c2.getClass() == command.getClass()

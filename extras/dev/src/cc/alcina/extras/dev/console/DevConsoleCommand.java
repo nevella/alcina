@@ -1677,4 +1677,8 @@ public abstract class DevConsoleCommand {
 	public boolean isAllowParallelExecution() {
 		return false;
 	}
+
+	public boolean requiresDomainStore() {
+		return false;
+	}
 }

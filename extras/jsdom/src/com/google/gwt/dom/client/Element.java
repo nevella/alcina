@@ -1227,9 +1227,16 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setTextContent(String textContent) throws DOMException {
-		Preconditions.checkState(getChildCount() == 0);
-		Text text = getOwnerDocument().createTextNode(textContent);
-		appendChild(text);
+		if (getChildCount() > 1 || !getFirstChild().provideIsText()) {
+			throw new IllegalStateException(
+					"Non-empty or non-single-text-child");
+		}
+		if (getChildCount() == 0) {
+			Text text = getOwnerDocument().createTextNode(textContent);
+			appendChild(text);
+		} else {
+			getFirstChild().setTextContent(textContent);
+		}
 	}
 
 	@Override

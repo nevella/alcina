@@ -541,8 +541,7 @@ public class DomNode {
 		if (isText()) {
 			((Text) node).setData(text);
 		} else {
-			if (children.noElements() && descendants()
-					.noneMatch(DomNode::isProcessingInstruction)) {
+			if (children.nodes().stream().allMatch(DomNode::isText)) {
 				node.setTextContent(text);
 			} else {
 				throw new RuntimeException("node has child elements");
