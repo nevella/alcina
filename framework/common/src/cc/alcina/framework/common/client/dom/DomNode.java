@@ -670,6 +670,22 @@ public class DomNode {
 				: name();
 	}
 
+	public String toOffsetText() {
+		return Ax.format("%s :: %s", asLocation().toTextIndexPair(),
+				Ax.trimForLogging(textContent(), 40));
+	}
+
+	public String toOffsetNameText() {
+		if (isText()) {
+			return Ax.format("%s :: %s :: %s", toTagClassName(),
+					asLocation().toTextIndexPair(),
+					Ax.trimForLogging(textContent(), 40));
+		} else {
+			return Ax.format("%s :: %s ", toTagClassName(),
+					asLocation().getIndex());
+		}
+	}
+
 	public String toXml() {
 		return DomEnvironment.get().toXml(node);
 	}
@@ -1104,6 +1120,15 @@ public class DomNode {
 
 		public List<String> toSubtreeNameList() {
 			return stream().map(DomNode::name).toList();
+		}
+
+		public List<String> toOffsetTextList() {
+			return stream().filter(DomNode::isText).map(DomNode::toOffsetText)
+					.toList();
+		}
+
+		public List<String> toOffsetNodeList() {
+			return stream().map(DomNode::toOffsetNameText).toList();
 		}
 	}
 

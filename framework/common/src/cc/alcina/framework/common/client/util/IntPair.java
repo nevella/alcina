@@ -225,6 +225,30 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		return result;
 	}
 
+	public IntPair removePartialIntersections(List<IntPair> maybeIntersect) {
+		IntPair result = this;
+		for (IntPair pair : maybeIntersect) {
+			result = result.removePartialIntersection(pair);
+		}
+		return result;
+	}
+
+	/*
+	 * requires that the intersection result is a single non-empty range;
+	 */
+	public IntPair removePartialIntersection(IntPair pair) {
+		if (!intersectsWith(this)) {
+			return this;
+		}
+		if (pair.contains(this)) {
+			throw new IllegalArgumentException();
+		}
+		if (i1 < pair.i1 && i2 > pair.i2) {
+			throw new IllegalArgumentException();
+		}
+		return new IntPair(Math.max(i1, pair.i2), Math.min(i2, pair.i1));
+	}
+
 	public int i1;
 
 	public int i2;

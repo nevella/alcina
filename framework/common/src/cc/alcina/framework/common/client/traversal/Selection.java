@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -303,15 +304,21 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	};
 
 	default <V extends Selection> V ancestorSelection(Class<V> clazz) {
+		return ancestorSelection(cursor -> Reflections.isAssignableFrom(clazz,
+				cursor.getClass()));
+	}
+
+	default <V extends Selection> V
+			ancestorSelection(Predicate<Selection> predicate) {
 		Selection cursor = this;
 		while (cursor != null) {
-			if (Reflections.isAssignableFrom(clazz, cursor.getClass())) {
+			if (predicate.test(cursor)) {
 				return (V) cursor;
 			}
 			cursor = cursor.parentSelection();
 		}
 		return null;
-	};
+	}
 
 	default Iterator<Selection> ancestorIterator() {
 		return new AncestorIteratorTopDown(this);

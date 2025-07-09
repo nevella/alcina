@@ -49,6 +49,7 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils.LogMuter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityBrowser;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -809,8 +810,13 @@ public abstract class DevConsole implements ClipboardOwner {
 			DevConsoleCommand command, boolean topLevel) {
 		try {
 			LooseContext.push();
+			ClientInstance clientInstance = ServerClientInstance.get();
+			/*
+			 * This may be null if the command doesn't require a domainstore
+			 */
+			// Preconditions.checkNotNull(clientInstance);
 			Permissions.pushUser(DevHelper.getDefaultUser(),
-					LoginState.LOGGED_IN, true, ServerClientInstance.get());
+					LoginState.LOGGED_IN, true, clientInstance);
 			runningJobs.add(command);
 			if (!noHistory) {
 				history.addCommand(lastCommand);

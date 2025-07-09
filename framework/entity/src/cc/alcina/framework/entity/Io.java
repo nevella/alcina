@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FileLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -640,6 +641,10 @@ public class Io {
 			public Resource string(String string) {
 				this.string = string;
 				return WriteOp.this.resource;
+			}
+
+			public Resource stringList(List<String> list) {
+				return string(CommonUtils.join(list, "\n"));
 			}
 		}
 

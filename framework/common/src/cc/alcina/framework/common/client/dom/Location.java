@@ -1153,8 +1153,17 @@ public class Location implements Comparable<Location> {
 		if (containingNode.isText()) {
 			return this;
 		}
+		Location cursor = this;
+		if (cursor.getContainingNode().isDocumentNode()) {
+			/*
+			 * ensure we're not at the top tree index but somewhere in the weeds
+			 * of text
+			 */
+			cursor = new Location(treeIndex, index, after, null,
+					locationContext, this);
+		}
 		DomNode text = Ax
-				.last(locationContext.getContainingNodes(this, index, after));
+				.last(locationContext.getContainingNodes(cursor, index, after));
 		Preconditions.checkState(text.isText());
 		return new Location(text.asLocation().treeIndex, index, after, text,
 				locationContext);
