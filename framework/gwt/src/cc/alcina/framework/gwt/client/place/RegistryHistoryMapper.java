@@ -210,10 +210,14 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	 *
 	 * @throws UnparseablePlaceException
 	 */
-	protected synchronized Place parseAndReturnPlace(String o_token)
+	protected synchronized Place parseAndReturnPlace(String token0)
 			throws UnparseablePlaceException {
+		String token1 = token0;
+		if (token1.matches(".+[^/]\\?.*")) {
+			token1 = token1.replace("?", "/?");
+		}
 		String token = cleanGwtCodesvr(
-				removeAppPrefixAndLeadingSlashes(o_token));
+				removeAppPrefixAndLeadingSlashes(token1));
 		String[] split = token.split("/");
 		String top = split[0];
 		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
@@ -238,7 +242,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			// emit as null
 		}
 		if (place == null) {
-			throw new UnparseablePlaceException(o_token);
+			throw new UnparseablePlaceException(token0);
 			// nope - client must handle null
 			// if (GWT.isClient()) {
 			// // handle doc internal hrefs

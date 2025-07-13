@@ -112,7 +112,7 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 		return getPlace1(token, false);
 	}
 
-	P getPlace1(String token, boolean retry) {
+	protected P getPlace1(String token, boolean retry) {
 		Preconditions.checkState(mutable);
 		String[] fragments = token.split("//");
 		token = fragments[0];
