@@ -109,6 +109,10 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 
 	@Override
 	public P getPlace(String token) {
+		return getPlace1(token, false);
+	}
+
+	P getPlace1(String token, boolean retry) {
 		Preconditions.checkState(mutable);
 		String[] fragments = token.split("//");
 		token = fragments[0];
@@ -122,12 +126,13 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 			}
 			return place0;
 		} catch (Exception e) {
-			if (e.getClass() == RuntimeException.class || !GWT.isScript()) {
+			if (e.getClass() == RuntimeException.class || !GWT.isScript()
+					|| !retry) {
 				// key collisions etc
 				throw WrappedRuntimeException.wrap(e);
 			} else {
 				e.printStackTrace();
-				return getPlace(getPrefix());
+				return getPlace1(getPrefix(), true);
 			}
 		}
 	}

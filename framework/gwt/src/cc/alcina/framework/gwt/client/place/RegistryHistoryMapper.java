@@ -228,9 +228,15 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			o_tokenizer = tokenizersByPrefix.getAndEnsure(top).stream()
 					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
 		}
-		Place place = o_tokenizer.isPresent()
-				? o_tokenizer.get().mutableInstance().getPlace(token)
-				: null;
+		Place place = null;
+		try {
+			place = o_tokenizer.isPresent()
+					? o_tokenizer.get().mutableInstance().getPlace(token)
+					: null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			// emit as null
+		}
 		if (place == null) {
 			throw new UnparseablePlaceException(o_token);
 			// nope - client must handle null
