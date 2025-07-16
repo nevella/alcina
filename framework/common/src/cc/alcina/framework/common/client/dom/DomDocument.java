@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Predicate;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -61,9 +62,33 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public DomDocument clone() {
+		return clone(node -> true);
+		// DomDocument clone = DomDocument.from((Document) DomEnvironment.get()
+		// .loadFromXml(fullToString(), isGwtNode()));
+		// clone.setReadonly(isReadonly());
+		// return clone;
+	}
+
+	public DomDocument clone(Predicate<DomNode> sourceFilter) {
+		String topLevelMarkup = getDocumentElementNode().cloneNode(false)
+				.fullToString();
 		DomDocument clone = DomDocument.from((Document) DomEnvironment.get()
-				.loadFromXml(fullToString(), isGwtNode()));
+				.loadFromXml(topLevelMarkup, isGwtNode()));
 		clone.setReadonly(isReadonly());
+		// ensure
+		clone.getDocumentElementNode();
+		clone.documentElementDomNode.copyAttributesFrom(documentElementDomNode);
+		Map<DomNode, DomNode> sourceTarget = AlcinaCollections.newHashMap();
+		sourceTarget.put(documentElementDomNode, clone.documentElementDomNode);
+		documentElementDomNode.descendants().forEach(sourceNode -> {
+			if (!sourceFilter.test(sourceNode)) {
+				return;
+			}
+			DomNode cloneParent = sourceTarget.get(sourceNode.parent());
+			DomNode cloneChild = cloneParent.children.importFrom(sourceNode,
+					false);
+			sourceTarget.put(sourceNode, cloneChild);
+		});
 		return clone;
 	}
 
@@ -184,8 +209,10 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public DomNode getDocumentElementNode() {
-		return documentElementDomNode != null ? documentElementDomNode
-				: nodeFor(w3cDoc().getDocumentElement());
+		if (documentElementDomNode == null) {
+			documentElementDomNode = nodeFor(w3cDoc().getDocumentElement());
+		}
+		return documentElementDomNode;
 	}
 
 	public Element getElementById(String elementId) {

@@ -233,6 +233,10 @@ public class JobRegistry {
 		}
 	}
 
+	/**
+	 * Allows specification of a non-default job timeout (based on the task
+	 * class)
+	 */
 	@Registration({ SequenceTimeoutProvider.class, Object.class })
 	public static class SequenceTimeoutProvider {
 		public long getJobAllocatorSequenceTimeout() {
