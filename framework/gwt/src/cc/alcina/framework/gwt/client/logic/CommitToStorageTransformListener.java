@@ -83,7 +83,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  */
 @Reflected
 @Registration.Singleton
-@EnvironmentRegistration
+@EnvironmentSingleton
 public class CommitToStorageTransformListener
 		implements DomainTransformListener {
 	// FIXME - model - this should just be Scheduler.scheduleFinally
