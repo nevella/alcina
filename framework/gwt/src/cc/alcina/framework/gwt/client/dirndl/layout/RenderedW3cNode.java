@@ -110,4 +110,14 @@ class RenderedW3cNode implements Rendered {
 	public boolean hasAttributes() {
 		return node instanceof org.w3c.dom.Element;
 	}
+
+	@Override
+	public void insertAfter(Rendered rendered, Rendered afterRendered) {
+		if (afterRendered == null) {
+			insertAsFirstChild(rendered);
+		} else {
+			node.insertBefore(rendered.getNode(),
+					afterRendered.getNode().getNextSibling());
+		}
+	}
 }

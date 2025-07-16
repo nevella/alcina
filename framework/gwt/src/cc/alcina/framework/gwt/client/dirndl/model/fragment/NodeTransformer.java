@@ -139,11 +139,15 @@ public interface NodeTransformer {
 					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
 
+		Directed directed = null;
+
 		protected Directed getDirected() {
-			AnnotationLocation annotationLocation = new AnnotationLocation(
-					fragmentNodeType, null, fragmentModel.provideResolver());
-			Directed directed = annotationLocation
-					.getAnnotation(Directed.class);
+			if (directed == null) {
+				AnnotationLocation annotationLocation = new AnnotationLocation(
+						fragmentNodeType, null,
+						fragmentModel.provideResolver());
+				directed = annotationLocation.getAnnotation(Directed.class);
+			}
 			return directed;
 		}
 

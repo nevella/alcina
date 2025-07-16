@@ -1289,12 +1289,15 @@ public class DirectedLayout implements AlcinaProcess {
 			List<Node> oldChildren = children.stream()
 					.collect(Collectors.toList());
 			int insertionIndex = parent.children.indexOf(this);
+			Node insertAfterCursor = this;
 			// FIXME - fragmentmodel - this doesn't allow for delegating etc (in
 			// fact all the mutation methods don't)
 			for (Node child : oldChildren) {
 				child.parent = parent;
-				parent.children.add(insertionIndex, child);
-				parent.rendered.insertChild(child.rendered, insertionIndex++);
+				parent.children.add(insertionIndex++, child);
+				parent.rendered.insertAfter(child.rendered,
+						insertAfterCursor.rendered);
+				insertAfterCursor = child;
 			}
 			/*
 			 * Performing a direct reparent in the loop, so need to clear
@@ -2001,6 +2004,8 @@ public class DirectedLayout implements AlcinaProcess {
 		void insertAsFirstChild(Rendered rendered);
 
 		void insertChild(Rendered rendered, int i);
+
+		void insertAfter(Rendered rendered, Rendered afterRendered);
 
 		boolean isElement();
 
