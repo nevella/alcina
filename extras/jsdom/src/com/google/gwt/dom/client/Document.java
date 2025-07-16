@@ -59,6 +59,10 @@ import cc.alcina.framework.common.client.util.TopicListener;
 public class Document extends Node implements ClientDomDocument,
 		org.w3c.dom.Document, org.w3c.dom.ranges.DocumentRange,
 		org.w3c.dom.traversal.DocumentTraversal, ContextFrame {
+	/**
+	 * Disable HTML markup validation (allow invalid children such as SPAN
+	 * inside TR nodes, e.g.). Particularly useful for MSWord docs
+	 */
 	public static final LooseContext.Key<Boolean> CONTEXT_TAG_VALIDATION_DISABLED = LooseContext
 			.key(Document.class, "CONTEXT_TAG_VALIDATION_DISABLED");
 
