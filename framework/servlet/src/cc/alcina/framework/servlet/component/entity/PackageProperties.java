@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.entity;
 
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
@@ -41,10 +42,44 @@ public class PackageProperties {
       public TypedProperty<EntityBrowser.Ui, String> traversalId = new TypedProperty<>(EntityBrowser.Ui.class, "traversalId");
       public TypedProperty<EntityBrowser.Ui, String> traversalPath = new TypedProperty<>(EntityBrowser.Ui.class, "traversalPath");
       public TypedProperty<EntityBrowser.Ui, Boolean> useSelectionSegmentPath = new TypedProperty<>(EntityBrowser.Ui.class, "useSelectionSegmentPath");
+      public static class InstanceProperties extends InstanceProperty.Container<EntityBrowser.Ui> {
+        public  InstanceProperties(EntityBrowser.Ui source){super(source);}
+        public InstanceProperty<EntityBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.appCommandContexts);}
+        public InstanceProperty<EntityBrowser.Ui, Boolean> appendTableSelections(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.appendTableSelections);}
+        public InstanceProperty<EntityBrowser.Ui, NonOptimisedQueryCache> cache(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.cache);}
+        public InstanceProperty<EntityBrowser.Ui, Boolean> clearPostSelectionLayers(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.clearPostSelectionLayers);}
+        public InstanceProperty<EntityBrowser.Ui, CommandContext.Provider> commandContextProvider(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.commandContextProvider);}
+        public InstanceProperty<EntityBrowser.Ui, Model> eventHandlerCustomisation(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.eventHandlerCustomisation);}
+        public InstanceProperty<EntityBrowser.Ui, RemoteComponentObservables.ObservableEntry> history(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.history);}
+        public InstanceProperty<EntityBrowser.Ui, KeybindingsHandler> keybindingsHandler(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.keybindingsHandler);}
+        public InstanceProperty<EntityBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.mainCaption);}
+        public InstanceProperty<EntityBrowser.Ui, EntityBrowser.Ui.EntityPeer> peer(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.peer);}
+        public InstanceProperty<EntityBrowser.Ui, TraversalPlace> place(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.place);}
+        public InstanceProperty<EntityBrowser.Ui, SelectionMarkup> selectionMarkup(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.selectionMarkup);}
+        public InstanceProperty<EntityBrowser.Ui, TraversalSettings> settings(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.settings);}
+        public InstanceProperty<EntityBrowser.Ui, SelectionTraversal> traversal(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.traversal);}
+        public InstanceProperty<EntityBrowser.Ui, String> traversalId(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.traversalId);}
+        public InstanceProperty<EntityBrowser.Ui, String> traversalPath(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.traversalPath);}
+        public InstanceProperty<EntityBrowser.Ui, Boolean> useSelectionSegmentPath(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.useSelectionSegmentPath);}
+      }
+      
+      public  InstanceProperties instance(EntityBrowser.Ui instance) {
+        return new InstanceProperties( instance);
+      }
+      
     }
     
     static class _NonOptimisedQueryCache_EntrySummary implements TypedProperty.Container {
       TypedProperty<NonOptimisedQueryCache.EntrySummary, Object> message = new TypedProperty<>(NonOptimisedQueryCache.EntrySummary.class, "message");
+      static class InstanceProperties extends InstanceProperty.Container<NonOptimisedQueryCache.EntrySummary> {
+         InstanceProperties(NonOptimisedQueryCache.EntrySummary source){super(source);}
+        InstanceProperty<NonOptimisedQueryCache.EntrySummary, Object> message(){return new InstanceProperty<>(source,PackageProperties.nonOptimisedQueryCache_entrySummary.message);}
+      }
+      
+       InstanceProperties instance(NonOptimisedQueryCache.EntrySummary instance) {
+        return new InstanceProperties( instance);
+      }
+      
     }
     
 //@formatter:on
