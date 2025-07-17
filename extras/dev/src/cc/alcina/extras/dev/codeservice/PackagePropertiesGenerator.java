@@ -27,6 +27,7 @@ import cc.alcina.extras.dev.console.code.CompilationUnits;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.PersistentUnitData;
 import cc.alcina.extras.dev.console.code.UnitType;
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -146,6 +147,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 					.filter(DeclarationProperties::hasTypedProperties).sorted()
 					.map(TypeWriter::new).collect(Collectors.toList());
 			imports.add(TypedProperty.class.getName());
+			imports.add(InstanceProperty.class.getName());
 			typeWriters.forEach(TypeWriter::addImports);
 			imports.forEach(composerFactory::addImport);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -190,6 +192,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 
 			void write() {
 				String containerTypeName = getContainerTypeName();
+				String containingTypeName = resolvedTypeName(clazz);
 				sourceWriter.println(
 						"%sstatic class %s implements TypedProperty.Container {",
 						modifier, containerTypeName);
@@ -202,23 +205,54 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 					possibleInvalidClassFiles.add(clazz);
 				}
 				properties.forEach(this::writeProperty);
+				/*
+				 * write instanceProperties container
+				 */
+				sourceWriter.println(
+						"%sstatic class InstanceProperties extends InstanceProperty.Container<%s> {",
+						modifier, containingTypeName);
+				sourceWriter.indent();
+				sourceWriter.println(
+						"%s InstanceProperties(%s source){super(source);}",
+						modifier, containingTypeName);
+				properties.forEach(this::writeInstancePropertyGenerator);
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.println();
+				sourceWriter.println(
+						"%s InstanceProperties instance(%s instance) {",
+						modifier, containingTypeName);
+				sourceWriter.indent();
+				sourceWriter
+						.println("return new InstanceProperties( instance);");
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.println();
+				/*
+				 * write instanceProperties container constructor
+				 */
 				sourceWriter.outdent();
 				sourceWriter.println("}");
 				sourceWriter.println();
 			}
 
-			private String getContainerTypeName() {
+			String getContainerTypeName() {
 				return "_" + NestedName.get(clazz).replace(".", "_");
 			}
 
 			void writeField() {
 				String containerTypeName = getContainerTypeName();
+				String fieldName = getFieldName(containerTypeName);
+				sourceWriter.println("%sstatic %s %s = new %s();", modifier,
+						containerTypeName, fieldName, containerTypeName);
+			}
+
+			String getFieldName(String containerTypeName) {
 				String fieldName = Arrays
 						.stream(containerTypeName.substring(1).split("_"))
 						.map(CommonUtils::lcFirst)
 						.collect(Collectors.joining("_"));
-				sourceWriter.println("%sstatic %s %s = new %s();", modifier,
-						containerTypeName, fieldName, containerTypeName);
+				return fieldName;
 			}
 
 			void writeProperty(Property property) {
@@ -229,6 +263,18 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 						"%sTypedProperty<%s, %s> %s = new TypedProperty<>(%s.class, \"%s\");",
 						modifier, containingTypeName, propertyTypeName,
 						property.getName(), containingTypeName,
+						property.getName());
+			}
+
+			void writeInstancePropertyGenerator(Property property) {
+				String containingTypeName = resolvedTypeName(
+						property.getOwningType());
+				String propertyTypeName = resolvedTypeName(property.getType());
+				String containerTypeName = getContainerTypeName();
+				sourceWriter.println(
+						"%sInstanceProperty<%s, %s> %s(){return new InstanceProperty<>(source,PackageProperties.%s.%s);}",
+						modifier, containingTypeName, propertyTypeName,
+						property.getName(), getFieldName(containerTypeName),
 						property.getName());
 			}
 

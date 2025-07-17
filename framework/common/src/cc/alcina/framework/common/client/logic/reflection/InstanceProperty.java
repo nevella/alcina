@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
+import java.util.function.Supplier;
+
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
@@ -12,15 +14,30 @@ public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 		this.property = property;
 	}
 
+	public interface SourceSupplier<S> {
+		S getSource();
+	}
+
 	public T get() {
-		return property.get(source);
+		return property.get(getSource());
 	}
 
 	public void set(T t) {
-		property.set(source, t);
+		property.set(getSource(), t);
 	}
 
 	public S getSource() {
 		return source;
+	}
+
+	/*
+	 * A base for generated classes containing instance properties
+	 */
+	public static abstract class Container<S> {
+		protected S source;
+
+		public Container(S source) {
+			this.source = source;
+		}
 	}
 }

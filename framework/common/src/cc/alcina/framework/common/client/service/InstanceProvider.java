@@ -126,4 +126,13 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 	default boolean isAsync() {
 		return false;
 	}
+
+	/*
+	 * Server-side environments can interact either with whole-server objects
+	 * -or- client-specific - by default clients use a per-client provider, this
+	 * interface indicates they should delegate to the main server provider (the
+	 * provider will run off-ui-thread, so must not interact with DOM etc etc)
+	 */
+	public interface ExEnvironmentProvider {
+	}
 }
