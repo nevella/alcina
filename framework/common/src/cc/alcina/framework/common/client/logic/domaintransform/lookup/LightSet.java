@@ -15,7 +15,9 @@ import cc.alcina.framework.common.client.domain.DomainCollections;
 
 /**
  * 
- * 
+ * An optimised set which, when small, is essentially a list (so has a
+ * relatively low object creation count and memory footprint), but switches to a
+ * standard HashSet at DEGENERATE_THRESHOLD for performance
  * 
  * @param <H>
  */
