@@ -29,6 +29,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -148,21 +150,34 @@ public class DevConsoleRemote {
 		devConsole.performCommand(commandString);
 	}
 
+	Map<String, RomcomServerHandler> hostComponentHandlers = new LinkedHashMap<>();
+
 	void registerRemoteComponent(RemoteComponent component) {
 		{
 			ContextHandler protocolHandler = new ContextHandler(handlers,
 					component.getPath());
 			protocolHandler.setAllowNullPathInfo(true);
-			protocolHandler.setHandler(new RomcomServerHandler(component));
+			RomcomServerHandler pathHandler = new RomcomServerHandler(component,
+					false);
+			String host = component.getHost();
+			if (host != null) {
+				RomcomServerHandler rootHandler = new RomcomServerHandler(
+						component, true);
+				Preconditions
+						.checkState(!hostComponentHandlers.containsKey(host));
+				hostComponentHandlers.put(host, rootHandler);
+			}
+			protocolHandler.setHandler(pathHandler);
 		}
 	}
 
 	public static class RomcomServerHandler extends AbstractHandler {
 		RemoteComponentHandler handler;
 
-		public RomcomServerHandler(RemoteComponent component) {
-			handler = new RemoteComponentHandler(component, component.getPath(),
-					true);
+		public RomcomServerHandler(RemoteComponent component,
+				boolean rootContext) {
+			handler = new RemoteComponentHandler(component,
+					rootContext ? "" : component.getPath(), true);
 		}
 
 		@Override
@@ -272,6 +287,11 @@ public class DevConsoleRemote {
 		registerRemoteComponents(handlers);
 		addSubclassHandlers(handlers);
 		{
+			ContextHandler protocolHandler = new ContextHandler(handlers, "/");
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler.setHandler(new RootComponentHandler());
+		}
+		{
 			ServletContextHandler resourceHandler = new ServletContextHandler(
 					ServletContextHandler.SESSIONS);
 			resourceHandler.setContextPath("/");
@@ -301,6 +321,23 @@ public class DevConsoleRemote {
 		}
 		// server.dumpStdErr();
 		server.join();
+	}
+
+	class RootComponentHandler extends AbstractHandler {
+		public RootComponentHandler() {
+		}
+
+		@Override
+		public void handle(String target, Request baseRequest,
+				HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+			String host = request.getHeader("host");
+			RomcomServerHandler componentHandler = hostComponentHandlers
+					.get(host);
+			if (componentHandler != null) {
+				componentHandler.handle(target, baseRequest, request, response);
+			}
+		}
 	}
 
 	public void setDevConsole(DevConsole devConsole) {

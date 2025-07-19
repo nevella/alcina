@@ -225,4 +225,12 @@ public interface RemoteUi {
 
 	default void onExitContext() {
 	}
+
+	/*
+	 * if true, enable the pushstate history (non #-based) on the client. Sync
+	 * to component
+	 */
+	default boolean isHistoryPushState() {
+		return false;
+	}
 }

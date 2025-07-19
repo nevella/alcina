@@ -925,15 +925,19 @@ public class Window {
 			get().impl.replace(newURL);
 		}
 
-		public static void setHash(String token) {
-			get().impl.setHash(token);
+		public static void setHash(String hash) {
+			get().impl.setHash(hash);
 		}
 
-		public static Topic<String> topicHashChanged() {
-			return get().topicHashChanged;
+		public static void setPath(String path) {
+			get().impl.setPath(path);
 		}
 
-		private Topic<String> topicHashChanged = Topic.create();
+		public static Topic<String> topicHistoryChanged() {
+			return get().topicHistoryChanged;
+		}
+
+		private Topic<String> topicHistoryChanged = Topic.create();
 
 		private String cachedQueryString = "";
 
@@ -1027,6 +1031,10 @@ public class Window {
 		}-*/;
 
 		public void setHash(String token) {
+			throw new UnsupportedOperationException();
+		}
+
+		public void setPath(String path) {
 			throw new UnsupportedOperationException();
 		}
 	}

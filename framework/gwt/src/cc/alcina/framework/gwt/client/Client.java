@@ -311,6 +311,7 @@ public abstract class Client implements ContextFrame {
 		if (Al.isBrowser()) {
 			runnable.run();
 		} else {
+			// FIXME - romcom - rather, this should wait for mutation post-state
 			Timer.scheduleDelayed(runnable, 2000);
 		}
 	}

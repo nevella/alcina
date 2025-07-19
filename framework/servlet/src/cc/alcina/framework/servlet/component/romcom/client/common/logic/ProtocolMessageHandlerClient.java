@@ -19,9 +19,9 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
-import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
@@ -179,8 +179,10 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = true;
 					History.CONTEXT_REPLACING.runWith(
-							() -> History
-									.newItem(message.locationMutation.hash),
+							() -> History.newItem(
+									HistoryImplDelegate.pushStateEnabled
+											? message.locationMutation.path
+											: message.locationMutation.hash),
 							message.locationMutation.replace);
 				} finally {
 					RemoteObjectModelComponentState

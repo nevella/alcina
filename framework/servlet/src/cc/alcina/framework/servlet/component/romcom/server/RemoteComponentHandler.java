@@ -167,6 +167,9 @@ public class RemoteComponentHandler {
 			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser)
 			throws IOException {
 		String path = request.getPathInfo();
+		if (featurePath.isEmpty() && (path.isEmpty() || path.equals("/"))) {
+			path = null;
+		}
 		boolean injectSession = false;
 		if (path == null) {
 			path = "/rc.html";
@@ -231,14 +234,17 @@ public class RemoteComponentHandler {
 						"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.nocache.js");
 				String nocacheJs = Io.read()
 						.fromStream(nocacheJsUrl.openStream()).asString();
-				String websocketTransportClientPrefix = featurePath
-						.substring(1);
+				String websocketTransportClientPrefix = featurePath.isEmpty()
+						? ""
+						: featurePath.substring(1) + "/";
 				bootstrapHtml = bootstrapHtml.replace("%%SESSION_JSON%%",
 						sessionJson);
 				bootstrapHtml = bootstrapHtml.replace("%%NOCACHE_JS%%",
 						nocacheJs);
 				bootstrapHtml = bootstrapHtml.replace("%%FEATURE_PATH%%",
 						featurePath);
+				bootstrapHtml = bootstrapHtml.replace("%%HISTORY_PUSHSTATE%%",
+						String.valueOf(component.isHistoryPushState()));
 				bootstrapHtml = bootstrapHtml.replace(
 						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
 						websocketTransportClientPrefix);

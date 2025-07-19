@@ -42,6 +42,11 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  * @author <a href="mailto:jb@barop.de">Johannes Barop</a>
  */
 public class HistoryImplPushState extends HistoryImpl {
+	@Override
+	public void attachListener() {
+		// NOOP, do not track hash changes
+	}
+
 	public static final String CONTEXT_IN_POP_STATE = HistoryImplPushState.class
 			.getName() + ".HistoryImplPushState";
 

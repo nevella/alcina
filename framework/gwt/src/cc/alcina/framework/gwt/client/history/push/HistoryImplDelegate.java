@@ -34,6 +34,8 @@ import com.google.gwt.user.client.HistoryImpl;
  * 
  */
 public class HistoryImplDelegate extends HistoryImpl {
+	public static boolean pushStateEnabled = true;
+
 	public static native boolean isHtml5() /*-{
     return !!(window['history'] && window['history']['pushState'] && (typeof (window.history.pushState) == "function"));
 	}-*/;
@@ -68,7 +70,7 @@ public class HistoryImplDelegate extends HistoryImpl {
 
 	private void ensureImpl() {
 		if (impl == null) {
-			if (isHtml5()) {
+			if (isHtml5() && pushStateEnabled) {
 				impl = new HistoryImplPushState();
 			} else {
 				impl = new HistoryImpl();

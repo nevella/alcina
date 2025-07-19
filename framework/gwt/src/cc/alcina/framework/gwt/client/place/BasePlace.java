@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.place.shared.Place;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -17,6 +18,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
+import cc.alcina.framework.gwt.client.history.push.CodeServerParameterHelper;
 
 /**
  * <p>
@@ -57,7 +59,7 @@ public abstract class BasePlace extends Place
 	}
 
 	@Reflected
-	@Registration.Singleton
+	@EnvironmentRegistration
 	public static class HrefProvider {
 		public static BasePlace.HrefProvider get() {
 			return Registry.impl(BasePlace.HrefProvider.class);
@@ -65,6 +67,19 @@ public abstract class BasePlace extends Place
 
 		public String toHrefString(BasePlace basePlace) {
 			return "#" + BasePlace.tokenFor(basePlace);
+		}
+	}
+
+	@Registration(
+		value = BasePlace.HrefProvider.class,
+		priority = Registration.Priority.REMOVE)
+	public static class HrefProviderPushStateServer
+			extends BasePlace.HrefProvider {
+		@Override
+		public String toHrefString(BasePlace basePlace) {
+			String path = "/" + BasePlace.tokenFor(basePlace);
+			path = CodeServerParameterHelper.append(path);
+			return path;
 		}
 	}
 

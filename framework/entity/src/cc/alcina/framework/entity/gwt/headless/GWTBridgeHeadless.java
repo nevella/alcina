@@ -24,6 +24,7 @@ import com.google.gwt.user.client.impl.WindowImpl;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
@@ -57,9 +58,18 @@ public class GWTBridgeHeadless extends GWTBridge {
 	@Registration(HistoryImpl.class)
 	public static class HistoryImplHeadless extends HistoryImpl
 			implements TopicListener<String> {
+		public static LooseContext.Key CONTEXT_PUSH_STATE = LooseContext
+				.key(HistoryImplHeadless.class, "CONTEXT_PUSH_STATE");
+
+		boolean pushSate;
+
+		public HistoryImplHeadless() {
+			pushSate = CONTEXT_PUSH_STATE.is();
+		}
+
 		@Override
 		public void attachListener() {
-			Window.Location.topicHashChanged().add(this);
+			Window.Location.topicHistoryChanged().add(this);
 		}
 
 		@Override
@@ -109,7 +119,11 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public void newToken(String historyToken) {
-			Window.Location.setHash(historyToken);
+			if (pushSate) {
+				Window.Location.setPath(historyToken);
+			} else {
+				Window.Location.setHash(historyToken);
+			}
 		}
 
 		@Override
@@ -329,17 +343,23 @@ public class GWTBridgeHeadless extends GWTBridge {
 			String old_hash = this.hash;
 			this.hash = hash;
 			if (!Objects.equals(old_hash, hash) && old_hash != null) {
-				// old_hash == null -> startup, do not publish
-				Window.Location.topicHashChanged().publish(hash);
+				// old_hash == null -> startup, do not signal
+				Window.Location.topicHistoryChanged().signal();
+			}
+		}
+
+		@Override
+		public void setPath(String path) {
+			String old_path = this.path;
+			this.path = path;
+			if (!Objects.equals(old_path, path) && old_path != null) {
+				// old_path == null -> startup, do not signal
+				Window.Location.topicHistoryChanged().signal();
 			}
 		}
 
 		public void setHost(String host) {
 			this.host = host;
-		}
-
-		public void setPath(String path) {
-			this.path = path;
 		}
 
 		public void setPort(String port) {

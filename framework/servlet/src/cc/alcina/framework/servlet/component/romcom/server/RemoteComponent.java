@@ -69,6 +69,21 @@ public interface RemoteComponent {
 
 	String getPath();
 
+	/*
+	 * if non-null, bare requests matching the host will be routed to the
+	 * component
+	 */
+	default String getHost() {
+		return null;
+	}
+
+	/*
+	 * if true, enable the pushstate history (non #-based) on the client
+	 */
+	default boolean isHistoryPushState() {
+		return false;
+	}
+
 	default RemoteUi getUiInstance() {
 		return Reflections.newInstance(getUiType());
 	}

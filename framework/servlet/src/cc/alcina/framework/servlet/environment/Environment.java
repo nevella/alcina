@@ -414,9 +414,16 @@ class Environment {
 							locationMutation.navigator.userAgent,
 							locationMutation.navigator.cookieEnabled);
 				}
-				String token = locationMutation.hash.startsWith("#")
-						? locationMutation.hash.substring(1)
-						: locationMutation.hash;
+				String token = null;
+				if (ui.isHistoryPushState()) {
+					token = locationMutation.path.startsWith("/")
+							? locationMutation.path.substring(1)
+							: locationMutation.path;
+				} else {
+					token = locationMutation.hash.startsWith("#")
+							? locationMutation.hash.substring(1)
+							: locationMutation.hash;
+				}
 				String decoded = UrlComponentEncoder.get().decode(token);
 				Ax.logEvent("Navigate %s:: -> %s", startup ? "(startup) " : "",
 						decoded);
@@ -724,6 +731,8 @@ class Environment {
 		// the order - location, history, client, document - is necessary
 		location = Window.Location.contextProvider.createFrame(null);
 		navigator = Window.Navigator.contextProvider.createFrame(null);
+		GWTBridgeHeadless.HistoryImplHeadless.CONTEXT_PUSH_STATE
+				.set(ui.isHistoryPushState());
 		history = History.contextProvider.createFrame(null);
 		windowResources = Window.Resources.contextProvider.createFrame(null);
 		eventFrame = EventFrame.contextProvider.createFrame(null);

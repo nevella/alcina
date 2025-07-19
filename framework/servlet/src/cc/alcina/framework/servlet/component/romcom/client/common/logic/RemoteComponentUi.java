@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
+import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
@@ -181,6 +182,9 @@ public class RemoteComponentUi {
 		Registry.register().singleton(Timer.Provider.class,
 				new TimerGwt.Provider());
 		Registry.register().singleton(ClientRpc.class, new ClientRpc(this));
+		HistoryImplDelegate.pushStateEnabled = Boolean
+				.valueOf(ClientUtils.wndString(
+						RemoteComponentProtocolServer.ROMCOM_HISTORY_PUSHSTATE));
 		History.addValueChangeHandler(hash -> {
 			if (!RemoteObjectModelComponentState.get().firingLocationMutation) {
 				ClientRpc.send(Message.Mutations.ofLocation());
