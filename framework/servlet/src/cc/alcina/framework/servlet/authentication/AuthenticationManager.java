@@ -101,10 +101,12 @@ public class AuthenticationManager {
 
 	private void createClientInstance(AuthenticationContext context) {
 		String userAgent = context.tokenStore.getUserAgent();
+		context.authenticator.getReferrer(context.tokenStore);
 		context.clientInstance = persistence.createClientInstance(
 				context.session, userAgent,
 				context.tokenStore.getRemoteAddress(),
-				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
+				context.authenticator.getReferrer(context.tokenStore),
+				context.authenticator.getUrl(context.tokenStore));
 		context.authenticator.postCreateClientInstance(context.clientInstance);
 	}
 

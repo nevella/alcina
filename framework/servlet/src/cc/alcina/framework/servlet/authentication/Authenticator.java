@@ -33,6 +33,7 @@ import cc.alcina.framework.servlet.module.login.LoginAttempts;
 import cc.alcina.framework.servlet.module.login.LoginModel;
 import cc.alcina.framework.servlet.module.login.LoginRequestHandler.TwoFactorAuthResult;
 import cc.alcina.framework.servlet.module.login.TwoFactorAuthentication;
+import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 
 @Registration(Authenticator.class)
 public abstract class Authenticator<U extends Entity & IUser> {
@@ -273,5 +274,13 @@ public abstract class Authenticator<U extends Entity & IUser> {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+	}
+
+	public String getReferrer(AuthenticationTokenStore tokenStore) {
+		return tokenStore.getReferrer();
+	}
+
+	public String getUrl(AuthenticationTokenStore tokenStore) {
+		return tokenStore.getUrl();
 	}
 }

@@ -3,12 +3,14 @@ package cc.alcina.framework.servlet.servlet;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.servlet.CookieUtils;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.SessionProvider;
 
 public class HttpContext implements AuthenticationTokenStore {
 	public HttpServletRequest request;
@@ -91,5 +93,10 @@ public class HttpContext implements AuthenticationTokenStore {
 
 		public void onContextDestruction(HttpContext httpContext) {
 		}
+	}
+
+	public HttpSession getSession() {
+		return Registry.impl(SessionProvider.class).getSession(request,
+				response);
 	}
 }
