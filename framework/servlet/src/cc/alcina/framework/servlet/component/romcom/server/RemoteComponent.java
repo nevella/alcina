@@ -93,4 +93,9 @@ public interface RemoteComponent {
 	public static class EnvironmentPath extends Model.All {
 		public String id;
 	}
+
+	default boolean isApplicationPath(String path) {
+		return path == null || (getPath().isEmpty()
+				&& (path.isEmpty() || path.equals("/")));
+	}
 }

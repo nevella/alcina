@@ -846,10 +846,17 @@ class Environment {
 	}
 
 	private void startup(MessageProcessingToken token, Startup message) {
+		/*
+		 * these must occur before Client init (since things like
+		 * Window.Navigator.getPlatform are required for client init)
+		 */
+		History.setEnabled(false);
 		access().applyDomMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
 		access().applyWindowState(message.windowState);
 		initialiseSettings(message.settings);
 		startClient();
+		History.setEnabled(true);
+		History.fireCurrentHistoryState();
 	}
 }

@@ -167,11 +167,8 @@ public class RemoteComponentHandler {
 			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser)
 			throws IOException {
 		String path = request.getPathInfo();
-		if (featurePath.isEmpty() && (path.isEmpty() || path.equals("/"))) {
-			path = null;
-		}
 		boolean injectSession = false;
-		if (path == null) {
+		if (component.isApplicationPath(path)) {
 			path = "/rc.html";
 			injectSession = true;
 		}

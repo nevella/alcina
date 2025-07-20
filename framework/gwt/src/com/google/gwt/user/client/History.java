@@ -137,6 +137,9 @@ public class History implements ContextFrame {
 	 * history handlers of the initial application state.
 	 */
 	public static void fireCurrentHistoryState() {
+		if (!get().enabled) {
+			return;
+		}
 		String currentToken = getToken();
 		get().historyEventSource.fireValueChangedEvent(currentToken);
 	}
@@ -308,6 +311,12 @@ public class History implements ContextFrame {
 	HistoryTokenEncoder tokenEncoder = GWT.create(HistoryTokenEncoder.class);
 
 	String token;
+
+	boolean enabled = true;
+
+	public static void setEnabled(boolean enabled) {
+		get().enabled = enabled;
+	}
 
 	public History() {
 		impl = GWT.create(HistoryImpl.class);
