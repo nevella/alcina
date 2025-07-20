@@ -68,6 +68,13 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onBack(Back event);
 		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onBack(Back event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
 	}
 
 	public static class BeforeClosed
@@ -405,6 +412,13 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onForward(Forward event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onForward(Forward event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 

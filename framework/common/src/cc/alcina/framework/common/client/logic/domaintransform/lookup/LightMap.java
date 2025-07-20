@@ -19,8 +19,8 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  * Minimises memory usage for small size, falls through for large
  *
- * Currently don't optimise with a separate array for hashes - not sure how much
- * that would help js performance
+ * Currently this doesn't optimise with a separate array for hashes - not sure
+ * how much that would help js performance
  *
  * 
  * @param <H>
@@ -93,8 +93,11 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	private int getIndex(Object key) {
+		int keyHash = Objects.hash(key);
 		for (int idx = 0; idx < size; idx++) {
-			if (Objects.equals(key, elementData[idx * 2])) {
+			Object test = elementData[idx * 2];
+			int testHash = Objects.hash(test);
+			if (keyHash == testHash && Objects.equals(key, test)) {
 				return idx;
 			}
 		}

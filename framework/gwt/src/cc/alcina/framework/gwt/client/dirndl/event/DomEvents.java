@@ -28,6 +28,7 @@ import com.google.gwt.event.dom.client.SelectionChangedEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class DomEvents {
 	public static class BeforeInput extends NodeEvent<BeforeInput.Handler> {
@@ -168,6 +169,13 @@ public class DomEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onFocusin(Focusin event);
 		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onFocusin(Focusin event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
 	}
 
 	public static class Focusout extends NodeEvent<Focusout.Handler> {
@@ -186,6 +194,13 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onFocusout(Focusout event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onFocusout(Focusout event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 

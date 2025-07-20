@@ -46,9 +46,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.model.ModelBinding.TargetBinding;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
-import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents.PositionedDescendants;
 
 /**
  * <p>
@@ -246,6 +244,13 @@ public abstract class Model extends Bindable implements
 	 * 
 	 * FIXME - dirndl - simplify to just from(SPCE/TOPIC) and
 	 * add(listenerbinding)
+	 * 
+	 * <p>
+	 * Plan #2 - this is actually about event streams from disparate event
+	 * sources (PropertyChangeEvent, NodeEvent, TopicEvent), only some of which
+	 * are bindings - so I'm tilting towards "EventBinding"...maybe? EventPipe?
+	 * C'est un pipe?
+	 * 
 	 * 
 	 */
 	public class Bindings {
@@ -469,6 +474,27 @@ public abstract class Model extends Bindable implements
 		public void addBindHandler(BindHandler bindHandler) {
 			addListener(new BindHandler.Reference(bindHandler));
 		}
+
+		public void onNodeEvent(NodeEvent event) {
+			modelBindings.stream().filter(
+					binding -> binding.fromNodeEventClass == event.getClass())
+					.forEach(binding -> binding.acceptStreamElement(event));
+		}
+
+		<E extends NodeEvent> ModelBinding<E>
+				fromNodeEventClass(Class<E> nodeEventClass) {
+			ModelBinding binding = new ModelBinding(this);
+			modelBindings.add(binding);
+			return binding.fromNodeEventClass(nodeEventClass);
+		}
+	}
+
+	public <T> ModelBinding<T> from(InstanceProperty<?, T> instanceProperty) {
+		return bindings().from(instanceProperty);
+	}
+
+	public <E extends NodeEvent> ModelBinding<E> on(Class<E> nodeEventClass) {
+		return bindings().fromNodeEventClass(nodeEventClass);
 	}
 
 	@FunctionalInterface

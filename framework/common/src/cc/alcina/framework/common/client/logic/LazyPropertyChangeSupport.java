@@ -20,8 +20,24 @@ import java.beans.PropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 
 /**
+ * FIXME - dirndl - lowish
  * 
+ * <p>
+ * Write a propertychangesupport where the properties are backed by a LightMap
+ * (actually a lightmap wrapping class that behaves like a list but with
+ * constant removal time ...mapping Listener to an integer...wait a sec, this
+ * actually gets a little tricky...linked list with lookup? yrrch. wait a sec -
+ * no, this is fine. Proxy the binding! So forget all this, but show an example
+ * of a proxy binding)- in degenerate cases where there are 1000s of listeners
+ * on a single topic, clearing the listeners if they're all from one component
+ * is o(n^2) which is potentially ...nasty
  *
+ * <p>
+ * <ul>
+ * <li>Proxy binding -
+ * from(proxyObject.proxyProperty).to(many-times-repeated-prop)
+ * <li>from(original.property).to(proxyObject.proxyProperty).oneWay()
+ * <li>clear proxyObject.proxyProperty bindings before many-times-repeated
  */
 public class LazyPropertyChangeSupport {
 	public static final transient Object UNSPECIFIED_PROPERTY_CHANGE = new Object();

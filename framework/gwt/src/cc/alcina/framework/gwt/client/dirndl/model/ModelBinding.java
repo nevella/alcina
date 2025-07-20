@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
 
 /**
@@ -201,6 +202,8 @@ public class ModelBinding<T> {
 
 	boolean ifNotEqual;
 
+	public Class<? extends NodeEvent> fromNodeEventClass;
+
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
@@ -256,15 +259,21 @@ public class ModelBinding<T> {
 	/**
 	 * The source of the binding property changes
 	 */
-	public ModelBinding<T> from(SourcesPropertyChangeEvents from) {
+	ModelBinding<T> from(SourcesPropertyChangeEvents from) {
 		Preconditions.checkNotNull(from);
 		this.fromPropertyChangeSource = from;
 		return this;
 	}
 
-	public <TE> ModelBinding<TE> from(Topic<TE> topic) {
+	<TE> ModelBinding<TE> from(Topic<TE> topic) {
 		this.fromTopic = topic;
 		return (ModelBinding<TE>) this;
+	}
+
+	<E extends NodeEvent> ModelBinding<E>
+			fromNodeEventClass(Class<E> nodeEventClass) {
+		this.fromNodeEventClass = nodeEventClass;
+		return (ModelBinding<E>) this;
 	}
 
 	/**
