@@ -98,7 +98,7 @@ public class NodeFactory {
 							&& Permissions.get()
 									.checkEffectivePropertyPermission(op, pp,
 											domainObject, true)
-							&& Permissions.get().isPermitted(domainObject,
+							&& Permissions.isPermitted(domainObject,
 									display.visible());
 					return fieldVisible;
 				}).collect(Collectors.toList()));

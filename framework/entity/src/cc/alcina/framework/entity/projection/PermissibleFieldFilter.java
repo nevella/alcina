@@ -55,7 +55,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 				return true;
 				// optimisation for clustered transform commit
 			}
-			if (Permissions.get().isPermitted(null, ap, true)) {
+			if (Permissions.isPermitted(null, ap, true)) {
 				return true;
 			}
 			if (ap.accessLevel() == AccessLevel.GROUP) {

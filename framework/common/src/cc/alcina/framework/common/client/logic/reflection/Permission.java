@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 @Documented
 @ClientVisible
 @Inherited
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.TYPE })
 /**
  *
  * <p>

@@ -252,6 +252,9 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
+			if (input.model.getClass().getName().contains(".History")) {
+				int debug = 3;
+			}
 			for (Property property : Reflections.at(input.model).properties()) {
 				Property directedProperty = input.resolver
 						.resolveDirectedProperty(property);

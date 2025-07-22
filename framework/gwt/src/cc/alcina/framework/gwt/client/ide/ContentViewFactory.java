@@ -641,7 +641,7 @@ public class ContentViewFactory {
 						|| actionClass == EditAction.class
 						|| actionClass == ViewAction.class
 						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck || Permissions.get().isPermitted(bean,
+				if (noPermissionsCheck || Permissions.isPermitted(bean,
 						new AnnotatedPermissible(action.permission()))) {
 					result.add(actionClass);
 				}
@@ -1407,7 +1407,7 @@ public class ContentViewFactory {
 						Display display = rightProperty
 								.annotation(Display.class);
 						if (display != null) {
-							if (!Permissions.get().isPermitted(right.object,
+							if (!Permissions.isPermitted(right.object,
 									display.visible())) {
 								grid.setRowVisibility(r, false);
 							}
@@ -1415,7 +1415,7 @@ public class ContentViewFactory {
 						PropertyPermissions pp = rightProperty
 								.annotation(PropertyPermissions.class);
 						if (pp != null) {
-							if (!Permissions.get().isPermitted(right.object,
+							if (!Permissions.isPermitted(right.object,
 									pp.write())) {
 								SourcesPropertyChangeEvents left = b
 										.getLeft().object;

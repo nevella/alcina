@@ -5,8 +5,8 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public abstract class PermissionRule<E extends Entity> {
@@ -24,8 +24,8 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(Permissions.get().isPermitted(e,
-					objectPermissions.create()));
+			throwIfFalse(
+					Permissions.isPermitted(e, objectPermissions.create()));
 			return e;
 		}
 	}
@@ -36,8 +36,8 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(Permissions.get().isPermitted(e,
-					objectPermissions.delete()));
+			throwIfFalse(
+					Permissions.isPermitted(e, objectPermissions.delete()));
 			return e;
 		}
 	}
@@ -67,8 +67,7 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(
-					Permissions.get().isPermitted(e, objectPermissions.read()));
+			throwIfFalse(Permissions.isPermitted(e, objectPermissions.read()));
 			return e;
 		}
 	}
@@ -79,8 +78,7 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(Permissions.get().isPermitted(e,
-					objectPermissions.write()));
+			throwIfFalse(Permissions.isPermitted(e, objectPermissions.write()));
 			return e;
 		}
 	}

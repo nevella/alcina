@@ -214,7 +214,7 @@ public class MainTabPanel extends TabPanel implements IMainTabPanel {
 						.visibleForLoginState(state);
 			}
 			if (button instanceof Permissible) {
-				curVis &= Permissions.get().isPermitted((Permissible) button);
+				curVis &= Permissions.isPermitted((Permissible) button);
 			}
 			bp.getWidget(index++).setVisible(curVis);
 			if (index > 1) {

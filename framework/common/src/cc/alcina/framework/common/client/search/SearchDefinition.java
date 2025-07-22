@@ -213,7 +213,7 @@ public abstract class SearchDefinition extends Bindable
 		int ct = 0;
 		int paramCounter = 1;
 		for (CriteriaGroup cg : getCriteriaGroups()) {
-			if (!Permissions.get().isPermitted(cg)) {
+			if (!Permissions.isPermitted(cg)) {
 				continue;
 			}
 			EqlWithParameters ewp2 = cg.eql();

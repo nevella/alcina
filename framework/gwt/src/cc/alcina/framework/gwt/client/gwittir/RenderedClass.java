@@ -38,7 +38,7 @@ public class RenderedClass {
 					|| actionClass == EditAction.class
 					|| actionClass == ViewAction.class
 					|| actionClass == DeleteAction.class;
-			if (noPermissionsCheck || Permissions.get().isPermitted(object,
+			if (noPermissionsCheck || Permissions.isPermitted(object,
 					new AnnotatedPermissible(action.permission()))) {
 				result.add(actionClass);
 			}

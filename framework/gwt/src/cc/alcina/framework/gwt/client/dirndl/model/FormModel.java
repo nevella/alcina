@@ -1090,8 +1090,7 @@ public class FormModel extends Model
 				op = op == null
 						? Permissions.get().getDefaultObjectPermissions()
 						: op;
-				state.editable = Permissions.get().isPermitted(entity,
-						op.write());
+				state.editable = Permissions.isPermitted(entity, op.write());
 				if (state.editable) {
 					entity = ClientTransformManager.cast()
 							.ensureEditable(entity);

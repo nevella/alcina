@@ -139,6 +139,11 @@ public class AnnotationLocation {
 	}
 
 	public <A extends Annotation> Optional<A>
+			getAnnotationOptional(Class<A> annotationClass) {
+		return Optional.ofNullable(getAnnotation(annotationClass));
+	}
+
+	public <A extends Annotation> Optional<A>
 			optional(Class<A> annotationClass) {
 		return Optional.ofNullable(getAnnotation(annotationClass));
 	}
@@ -423,5 +428,9 @@ public class AnnotationLocation {
 		AnnotationLocation location = new AnnotationLocation(classLocation,
 				property, replaceResolver);
 		return location;
+	}
+
+	public boolean hasProperty() {
+		return property != null;
 	}
 }

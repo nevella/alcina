@@ -2,9 +2,15 @@ package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Optional;
 
 public interface HasAnnotations {
 	<A extends Annotation> A annotation(Class<A> annotationClass);
+
+	default <A extends Annotation> Optional<A>
+			annotationOptional(Class<A> annotationClass) {
+		return Optional.ofNullable(annotation(annotationClass));
+	}
 
 	<A extends Annotation> List<A> annotations(Class<A> annotationClass);
 

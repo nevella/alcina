@@ -169,4 +169,12 @@ public class DateUtil {
 				Integer.parseInt(matchResult.getGroup(2)),
 				Integer.parseInt(matchResult.getGroup(3)));
 	}
+
+	public static Date parseDdMmYyyy(String ymd) {
+		RegExp regExp = RegExp.compile("(\\d{2}).(\\d{2}).(\\d{4})");
+		MatchResult matchResult = regExp.exec(ymd);
+		return Ax.date(Integer.parseInt(matchResult.getGroup(3)),
+				Integer.parseInt(matchResult.getGroup(2)),
+				Integer.parseInt(matchResult.getGroup(1)));
+	}
 }

@@ -247,7 +247,7 @@ public class JobRegistry {
 	private static void checkAnnotatedPermissions(Object o) {
 		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
 		if (annotation != null) {
-			if (!Permissions.get().isPermitted(o,
+			if (!Permissions.isPermitted(o,
 					new AnnotatedPermissible(annotation.customPermission()))) {
 				RuntimeException e = new RuntimeException(
 						"Permission denied for action " + o);

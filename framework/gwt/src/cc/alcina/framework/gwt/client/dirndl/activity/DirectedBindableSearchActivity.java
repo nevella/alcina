@@ -68,7 +68,7 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 			Class<? extends Entity> entityClass = ((EntityPlace) getPlace())
 					.provideEntityClass();
 			Stream<Class<? extends ModelEvent>> superStream = super.getActions();
-			if (Permissions.get().isPermitted(
+			if (Permissions.isPermitted(
 					Permissions.getObjectPermissions(entityClass).create())) {
 				return Stream.concat(superStream,
 						Stream.of(ModelEvents.Create.class));

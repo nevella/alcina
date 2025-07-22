@@ -117,7 +117,7 @@ public class ObjectTreeRenderer {
 			TreeRenderer parent) {
 		if (renderable instanceof Permissible) {
 			Permissible permissible = (Permissible) renderable;
-			if (!Permissions.get().isPermitted(permissible)) {
+			if (!Permissions.isPermitted(permissible)) {
 				return;
 			}
 		}

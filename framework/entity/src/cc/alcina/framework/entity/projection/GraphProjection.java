@@ -571,7 +571,7 @@ public class GraphProjection {
 				return true;
 			} else {
 				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
-				return Permissions.get().isPermitted(source, ap);
+				return Permissions.isPermitted(source, ap);
 			}
 		}
 		return valid;
@@ -827,7 +827,7 @@ public class GraphProjection {
 		PropertyPermissions pp = perFieldPermission.get(field);
 		if (pp != null) {
 			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
-			return Permissions.get().isPermitted(source, ap);
+			return Permissions.isPermitted(source, ap);
 		}
 		return false;
 	}

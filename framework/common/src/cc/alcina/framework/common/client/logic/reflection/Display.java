@@ -131,7 +131,7 @@ public @interface Display {
 						.checkEffectivePropertyPermission(op, pp,
 								templateInstance, true)
 						&& display != null
-						&& Permissions.get().isPermitted(templateInstance,
+						&& Permissions.isPermitted(templateInstance,
 								display.visible())
 						&& ((display.displayMask() & DISPLAY_AS_PROPERTY) != 0);
 				if (!fieldVisible) {

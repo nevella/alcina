@@ -77,8 +77,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -851,7 +851,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws SerializationException {
 		AnnotatedPermissible ap = new AnnotatedPermissible(
 				webMethod.customPermission());
-		if (!Permissions.get().isPermitted(ap)) {
+		if (!Permissions.isPermitted(ap)) {
 			WebException wex = new WebException(
 					"Action not permitted: " + method.toString());
 			logRpcException(wex,

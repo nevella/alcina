@@ -369,7 +369,7 @@ public class Permissions implements DomainTransformListener {
 		if (op == null) {
 			return false;
 		} else {
-			return Permissions.get().isPermitted(object, op.delete());
+			return Permissions.isPermitted(object, op.delete());
 		}
 	}
 
@@ -631,7 +631,7 @@ public class Permissions implements DomainTransformListener {
 	public boolean checkEffectivePropertyPermission(ObjectPermissions op,
 			PropertyPermissions pp, Object bean, boolean read) {
 		op = op == null ? Permissions.get().getDefaultObjectPermissions() : op;
-		if (pp == null && !Permissions.get().isPermitted(bean,
+		if (pp == null && !Permissions.isPermitted(bean,
 				read ? op.read() : op.write())) {
 			return false;
 		}
@@ -784,7 +784,13 @@ public class Permissions implements DomainTransformListener {
 		return false;
 	}
 
-	public boolean isPermitted(Object o, Object assigningTo, Permissible p,
+	public static boolean isPermitted(Object o, Object assigningTo,
+			Permissible p, boolean doNotEvaluateNullObjectPermissions) {
+		return get().isPermitted0(o, assigningTo, p,
+				doNotEvaluateNullObjectPermissions);
+	}
+
+	protected boolean isPermitted0(Object o, Object assigningTo, Permissible p,
 			boolean doNotEvaluateNullObjectPermissions) {
 		if (p.accessLevel().equals(AccessLevel.GROUP)) {
 			if (p.rule() != null && p.rule().length() != 0
@@ -823,27 +829,28 @@ public class Permissions implements DomainTransformListener {
 		return permitted;
 	}
 
-	public boolean isPermitted(Object o, Permissible p) {
+	public static boolean isPermitted(Object o, Permissible p) {
 		return isPermitted(o, p, false);
 	}
 
-	public boolean isPermitted(Object o, Permissible p,
+	public static boolean isPermitted(Object o, Permissible p,
 			boolean doNotEvaluateNullObjectPermissions) {
-		return isPermitted(o, null, p, doNotEvaluateNullObjectPermissions);
+		return get().isPermitted0(o, null, p,
+				doNotEvaluateNullObjectPermissions);
 	}
 
-	public boolean isPermitted(Object o, Permission p) {
+	public static boolean isPermitted(Object o, Permission p) {
 		return isPermitted(o, new AnnotatedPermissible(p));
 	}
 
-	public boolean isPermitted(Permissible p) {
+	public static boolean isPermitted(Permissible p) {
 		return isPermitted(null, p);
 	}
 
 	// pretty much only for create (or explicit) permi8ssion checks (all others
 	// may be
 	// object-dependent)
-	public boolean isPermitted(Permission nullTargetPermission) {
+	public static boolean isPermitted(Permission nullTargetPermission) {
 		return isPermitted(new AnnotatedPermissible(nullTargetPermission));
 	}
 
