@@ -627,6 +627,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	public static class ContainerModel extends ContextResolver {
 		public ContainerModel() {
 			new ContainerObjectService().register(this);
+			resolveDirectedPropertyAscends = true;
 		}
 	}
 
