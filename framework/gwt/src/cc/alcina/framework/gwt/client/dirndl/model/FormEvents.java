@@ -98,12 +98,28 @@ public class FormEvents {
 	 * event - the FormModel will respond with a QueryValidityResult event
 	 */
 	public static class QueryValidity extends
-			ModelEvent.DescendantEvent<Object, QueryValidity.Handler, QueryValidity.Emitter> {
+			ModelEvent.DescendantEvent<QueryValidity.Parameters, QueryValidity.Handler, QueryValidity.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onQueryValidity(QueryValidity event);
 		}
 
+		@Override
+		public <T0 extends Parameters> T0 getModel() {
+			T0 result = super.getModel();
+			if (result == null) {
+				result = (T0) new Parameters();
+				setModel(result);
+			}
+			return result;
+		}
+
 		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public static class Parameters {
+			public boolean commitInputsBeforeValidation = true;
+
+			public boolean validateRequired = true;
 		}
 
 		@Override

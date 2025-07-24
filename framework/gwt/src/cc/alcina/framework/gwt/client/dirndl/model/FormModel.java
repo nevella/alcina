@@ -437,7 +437,8 @@ public class FormModel extends Model
 	 * bubbled after (possibly async) validation is complete
 	 */
 	void submit(ModelEvent event) {
-		formValidation.validate(this::onSubmitResult, event);
+		formValidation.validate(this::onSubmitResult, event,
+				new QueryValidity.Parameters());
 	}
 
 	public static class BindableFormModelTransformer extends
@@ -1167,7 +1168,8 @@ public class FormModel extends Model
 	 */
 	@Override
 	public void onQueryValidity(QueryValidity event) {
-		formValidation.validate(this::onQueryValidityResult, event);
+		formValidation.validate(this::onQueryValidityResult, event,
+				event.getModel());
 	}
 
 	void onQueryValidityResult(ValidationResult result) {

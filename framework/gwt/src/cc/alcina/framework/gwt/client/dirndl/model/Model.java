@@ -44,6 +44,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus.QueuedEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
@@ -612,5 +613,39 @@ public abstract class Model extends Bindable implements
 			to = NodeAttachId.ATTR_NAME_TRANSMIT_STATE,
 			literal = "true"))
 	public interface TransmitState {
+	}
+
+	public void runDeferredIfBound(Runnable lambda) {
+		Client.eventBus().queued().deferred().lambda(() -> {
+			if (provideIsBound()) {
+				lambda.run();
+			}
+		}).dispatch();
+	}
+
+	public Exec exec(Runnable lambda) {
+		return new Exec(lambda);
+	}
+
+	/*
+	 * sugary execution support (such as deferred-if-bound)
+	 */
+	public class Exec {
+		Runnable lambda;
+
+		boolean ifBound;
+
+		Exec(Runnable lambda) {
+			this.lambda = lambda;
+		}
+
+		public QueuedEvent ifBound() {
+			this.ifBound = true;
+			return Client.eventBus().queued().lambda(() -> {
+				if (provideIsBound()) {
+					lambda.run();
+				}
+			});
+		}
 	}
 }

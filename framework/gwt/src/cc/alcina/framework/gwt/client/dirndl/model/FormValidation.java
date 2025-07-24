@@ -4,16 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import javax.lang.model.element.ModuleElement.RequiresDirective;
+
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.gwittir.validator.Validation;
 import cc.alcina.framework.common.client.gwittir.validator.ValidationState;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidity;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidity.Parameters;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.Feedback;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormElement;
@@ -58,11 +63,11 @@ public class FormValidation {
 	}
 
 	void validate(TopicListener<ValidationResult> validationResultListener,
-			ModelEvent originatingEvent) {
+			ModelEvent originatingEvent, QueryValidity.Parameters parameters) {
 		topicValidationResult.add(new RemovableListener(
 				validationResultListener, originatingEvent));
 		ensureObservers();
-		commitInputsAndValidate();
+		commitInputsAndValidate(parameters);
 	}
 
 	void ensureObservers() {
@@ -129,23 +134,30 @@ public class FormValidation {
 		}
 	}
 
-	void commitInputsAndValidate() {
+	void commitInputsAndValidate(Parameters parameters) {
 		topicValidationResult
 				.publish(new ValidationResult(ValidationState.VALIDATING));
 		try {
-			if ((Al.isBrowser() && !WidgetUtils.docHasFocus()) ||
+			LooseContext.push();
+			NotBlankValidator.CONTEXT_IGNORE.set(!parameters.validateRequired);
+			if ((Al.isBrowser() && !WidgetUtils.docHasFocus()
+					&& !parameters.commitInputsBeforeValidation) ||
 			// don't test if romcom, just commit
 					true) {
 				GwittirUtils
 						.commitAllTextBoxes(formModel.getState().formBinding);
 			}
-			/*
-			 * This is...OK, having a ValidationContext would be nicer, but
-			 * would require backwards compatibility
-			 */
-			LooseContext
-					.pushWithTrue(ContentViewFactory.CONTEXT_VALIDATING_BEAN);
-			validations.forEach(Validation::validate);
+			try {
+				/*
+				 * This is...OK, having a ValidationContext would be nicer, but
+				 * would require backwards compatibility
+				 */
+				LooseContext.pushWithTrue(
+						ContentViewFactory.CONTEXT_VALIDATING_BEAN);
+				validations.forEach(Validation::validate);
+			} finally {
+				LooseContext.pop();
+			}
 		} finally {
 			LooseContext.pop();
 		}
