@@ -28,6 +28,16 @@
  * client (but see package {@link cc.alcina.framework.servlet.environment} -
  * romcom handshake - this is probably changing)
  *
+ * <h4>Behaviors
+ * <ul>
+ * <li>Server-side code can define 'behaviors' - small fragments of
+ * functionality that run synchronously on the client, to handle things like DOM
+ * event default cancelling and offset caching
+ * <li>This is a WIP: plans include incremental offset data transmission (from
+ * the client), and replacement of most of the bespoke event handling logic in
+ * ClientRpc with [possibly html-tag-keyed] behaviors
+ * <li>WIP#2 - generate behaviors based on DOM tag *or* Dirndl model
+ * </ul>
  * <h4>Future
  * <p>
  * FIXME - remcom - check handling of dropped packets (client), multiple
