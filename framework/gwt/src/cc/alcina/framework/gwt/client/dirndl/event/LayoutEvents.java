@@ -3,11 +3,26 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
+ * <p>
  * The nested Event classes are special - they're not called by standard (Node,
  * Model) event pipelines, rather during render. But because the call site looks
  * the same, the NodeEvent class is reused
+ * 
+ * <p>
+ * Because bindings work better with Bound/Unbound (rather the Bind with a
+ * boolean bound field), there are two flavors of Bind events - Handler - for
+ * 'do x if bound, y if not' - using onBind - or Binding - on(Bound.class),
+ * on(Unbound.class)
+ * 
+ * <p>
+ * Note that models don't need to explictly register for onBind - but do for
+ * LayoutEvents.Bound, LayoutEvents.Unbound - via say
+ * ,LayoutEvents.Bound.Binding. They're fundamentally different mechanisms - the
+ * latter is standard event dispatch, the former is imperative code called
+ * during render. Use whichever is cleanest for your code
  */
 public class LayoutEvents {
 	/**
@@ -95,6 +110,50 @@ public class LayoutEvents {
 
 		public static Bind exTreeBindEvent() {
 			return new Bind(null, true);
+		}
+	}
+
+	/*
+	 * Note that this will be called with a null context (it doesn't propagate
+	 * etc)
+	 */
+	public static class Bound extends ModelEvent<Object, Bound.Handler> {
+		@Override
+		public void dispatch(Bound.Handler handler) {
+			handler.onBound(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBound(Bound event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onBound(Bound event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	/*
+	 * Note that this will be called with a null context (it doesn't propagate
+	 * etc)
+	 */
+	public static class Unbound extends ModelEvent<Object, Unbound.Handler> {
+		@Override
+		public void dispatch(Unbound.Handler handler) {
+			handler.onUnbound(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onUnbound(Unbound event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onUnbound(Unbound event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 

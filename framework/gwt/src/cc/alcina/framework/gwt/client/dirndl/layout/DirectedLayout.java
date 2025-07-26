@@ -665,6 +665,7 @@ public class DirectedLayout implements AlcinaProcess {
 				if (bind) {
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, true));
+					fireEvent(new LayoutEvents.Bound());
 				}
 			}
 		}
@@ -1335,10 +1336,12 @@ public class DirectedLayout implements AlcinaProcess {
 		void unbind() {
 			if (model instanceof LayoutEvents.Bind.Handler) {
 				if (parent != null && parent.model == model) {
-					// noop
+					// noop (to prevent multiple bind event firings on the same
+					// model)
 				} else {
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, false));
+					fireEvent(new LayoutEvents.Unbound());
 				}
 			}
 			if (onUnbind != null) {
