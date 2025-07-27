@@ -1,7 +1,10 @@
 package com.google.gwt.dom.client.behavior;
 
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventBehavior;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -22,7 +25,13 @@ public interface ElementBehavior extends EventBehavior {
 	 */
 	public static String BEHAVIOR_PREVENT_DEFAULT = "__bhvr_pd";
 
-	String getMagicAttributeName();
+	default String getMagicAttributeName() {
+		return null;
+	}
+
+	default boolean isEventHandler() {
+		return getEventType() != null;
+	}
 
 	/**
 	 * This may be null, for more general housekeeping behaviors
@@ -32,8 +41,37 @@ public interface ElementBehavior extends EventBehavior {
 	String getEventType();
 
 	default boolean matches(Element elem) {
-		return elem.hasAttribute(getMagicAttributeName());
+		return elem.hasAttribute(getMagicAttributeName())
+				|| elem.hasBehavior(getClass());
 	}
 
 	void onNativeEvent(NativePreviewEvent event, Element registeredElement);
+
+	/**
+	 * <p>
+	 * This behavior prevents the default handling of [enter] on the element
+	 * 
+	 */
+	public static class PreventDefaultEnterBehaviour
+			implements ElementBehavior {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.KEYDOWN;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			onKeyDown(event.getNativeEvent(), registeredElement);
+		}
+
+		public void onKeyDown(NativeEvent nativeKeydownEvent,
+				Element registeredElement) {
+			switch (nativeKeydownEvent.getKeyCode()) {
+			case KeyCodes.KEY_ENTER:
+				nativeKeydownEvent.preventDefault();
+				break;
+			}
+		}
+	}
 }

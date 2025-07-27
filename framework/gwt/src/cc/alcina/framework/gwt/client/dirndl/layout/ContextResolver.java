@@ -22,6 +22,8 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ProcessingInstruction;
 import com.google.gwt.dom.client.Text;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -48,6 +50,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService.Provider;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService.ProviderInvoker;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 
@@ -210,6 +214,29 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		this.rootModel = rootModel;
 	}
 
+	void registerServices(DirectedLayout.Node node) {
+		if (rootModel == null) {
+			return;
+		}
+		if (rootModel instanceof ContextService) {
+			registerService(
+					(Class<? extends ContextService>) rootModel.getClass(),
+					(ContextService) rootModel);
+		}
+		Reflections.at(rootModel).getInterfaces().stream()
+				.filter(intf -> Reflections
+						.isAssignableFrom(ContextService.Provider.class, intf))
+				.forEach(intf -> {
+					ProviderInvoker providerInvoker = Registry
+							.impl(ContextService.ProviderInvoker.class, intf);
+					Class<? extends ContextService> registration = providerInvoker
+							.getServiceClass();
+					ContextService contextService = providerInvoker
+							.get((Provider) rootModel);
+					registerService(registration, contextService);
+				});
+	}
+
 	protected void init(DirectedLayout.Node node) {
 		init(node.getResolver(), node.parent.resolver.layout,
 				this.rootModel = node.getModel());
@@ -241,14 +268,16 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
+		registerServices(event.node);
 		// generally, setup child bindings for complex structures
 		if (parent != null) {
 			parent.onBeforeRender(event);
 		}
 	}
 
-	protected void register(ContextService service) {
-		services.put(service.registration(), Optional.of(service));
+	protected void registerService(Class<? extends ContextService> service,
+			ContextService implementation) {
+		services.put(service, Optional.of(implementation));
 	}
 
 	@Override
@@ -278,6 +307,11 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		String cssClass = layoutNode.directed.className();
 		if (cssClass.length() > 0) {
 			element.addStyleName(cssClass);
+		}
+		if (layoutNode.model instanceof HasElementBehaviors) {
+			List<Class<? extends ElementBehavior>> behaviors = ((HasElementBehaviors) layoutNode.model)
+					.getBehaviors();
+			behaviors.forEach(element::addBehavior);
 		}
 		layoutNode.rendered = new RenderedW3cNode(element);
 	}
@@ -487,34 +521,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		}
 	}
 
-	/*
-	 * Half-baked (but promising) implementation of composable resolvers -
-	 * essentially a child can choose to only override/implement specific
-	 * resolver services (ContextService) and optionally delegate to a parent
-	 * via ancestorService
-	 */
-	public interface ContextService {
-		void register(ContextResolver resolver);
-
-		default Class registration() {
-			ServiceRegistration serviceRegistration = Reflections.at(this)
-					.annotation(ServiceRegistration.class);
-			return serviceRegistration == null ? getClass()
-					: (Class) serviceRegistration.value();
-		}
-
-		@Reflected
-		public static abstract class Base implements ContextService {
-			ContextResolver resolver;
-
-			@Override
-			public void register(ContextResolver resolver) {
-				this.resolver = resolver;
-				resolver.register(this);
-			}
-		}
-	}
-
 	/**
 	 * Used for getting the default app top-level resolver
 	 *
@@ -563,77 +569,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	public static class WithoutResolveModelAscends extends ContextResolver {
 		public WithoutResolveModelAscends() {
 			resolveModelAscends = false;
-		}
-	}
-
-	public static abstract class DelegateToParent extends ContextResolver {
-		ContextResolver logicalParent;
-
-		public DelegateToParent(ContextResolver logicalParent) {
-			this.logicalParent = logicalParent;
-		}
-
-		@Override
-		protected void init(ContextResolver parent, DirectedLayout layout,
-				Object rootModel) {
-			super.init(parent, layout, rootModel);
-			this.parent = logicalParent;
-		}
-
-		@Override
-		public synchronized <A extends Annotation> List<A> resolveAnnotations(
-				Class<A> annotationClass, AnnotationLocation location) {
-			return parent.resolveAnnotations(annotationClass, location);
-		}
-
-		@Override
-		protected <A extends Annotation> List<A> resolveAnnotations0(
-				Class<A> annotationClass, AnnotationLocation location) {
-			return parent.resolveAnnotations0(annotationClass, location);
-		}
-
-		@Override
-		protected <A extends Annotation> List<A> resolveAnnotations1(
-				Class<A> annotationClass, AnnotationLocation location) {
-			return parent.resolveAnnotations1(annotationClass, location);
-		}
-
-		@Override
-		Property resolveDirectedProperty(Property property) {
-			return parent.resolveDirectedProperty(property);
-		}
-
-		@Override
-		protected Property resolveDirectedProperty0(Property property) {
-			return parent.resolveDirectedProperty0(property);
-		}
-
-		@Override
-		protected Object resolveModel(AnnotationLocation location,
-				Object model) {
-			return parent.resolveModel(location, model);
-		}
-
-		@Override
-		protected Class resolveLocationClass(AnnotationLocation location) {
-			return parent.resolveLocationClass(location);
-		}
-	}
-
-	/**
-	 * Apply to the container model to access it (from within a deeper, complex
-	 * model such as Choice.Single)
-	 */
-	public static class ContainerModel extends ContextResolver {
-		public ContainerModel() {
-			new ContainerObjectService().register(this);
-			resolveDirectedPropertyAscends = true;
-		}
-	}
-
-	public class ContainerObjectService extends ContextService.Base {
-		public <T> T get() {
-			return (T) resolver.rootModel;
 		}
 	}
 

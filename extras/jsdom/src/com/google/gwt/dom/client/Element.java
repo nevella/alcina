@@ -1526,4 +1526,8 @@ public class Element extends Node implements ClientDomElement,
 	public List<Class<? extends ElementBehavior>> getBehaviors() {
 		return local().getBehaviors();
 	}
+
+	public boolean hasBehavior(Class<? extends ElementBehavior> clazz) {
+		return local().hasBehavior(clazz);
+	}
 }

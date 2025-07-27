@@ -155,7 +155,7 @@ public abstract class DirectedRenderer {
 	 */
 	@Registration({ DirectedRenderer.class, AbstractCollection.class })
 	public static class Collection extends DirectedRenderer
-			implements GeneratesTransformModel {
+			implements GeneratesTransformModel, RendersNull {
 		@Override
 		protected void render(RendererInput input) {
 			Preconditions
@@ -252,9 +252,6 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
-			if (input.model.getClass().getName().contains(".History")) {
-				int debug = 3;
-			}
 			for (Property property : Reflections.at(input.model).properties()) {
 				Property directedProperty = input.resolver
 						.resolveDirectedProperty(property);

@@ -12,7 +12,11 @@ import java.util.List;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -209,15 +213,23 @@ public class Property implements HasAnnotations {
 	}
 
 	/**
-	 * *NOT* a property method or field
+	 * *NOT* a property method or field. Will be inherited if applied to an
+	 * interface
 	 * 
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@Resolution(
+		inheritance = { Inheritance.PROPERTY },
+		mergeStrategy = Not.MergeStrategy.class)
 	@ClientVisible
 	public @interface Not {
+		@Reflected
+		public static class MergeStrategy extends
+				AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<Not> {
+		}
 	}
 
 	@Override

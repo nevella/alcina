@@ -45,6 +45,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus.QueuedEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
@@ -647,5 +648,9 @@ public abstract class Model extends Bindable implements
 				}
 			});
 		}
+	}
+
+	public <T extends ContextService> T service(Class<T> serviceType) {
+		return provideNode().getResolver().getService(serviceType).get();
 	}
 }

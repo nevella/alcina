@@ -6,7 +6,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -15,6 +17,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
@@ -92,11 +96,11 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			ModelEvents.Commit.class })
 @TypeSerialization(reflectiveSerializable = false)
 @TypedProperties
-public class StringInput extends Model.Value<String>
-		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
-		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
-		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler,
-		DomEvents.KeyDown.Handler, ModelEvents.FormElementLabelClicked.Handler {
+public class StringInput extends Model.Value<String> implements FocusOnBind,
+		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
+		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
+		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
+		ModelEvents.FormElementLabelClicked.Handler, HasElementBehaviors {
 	static PackageProperties._StringInput properties = PackageProperties.stringInput;
 
 	private String value;
@@ -142,6 +146,15 @@ public class StringInput extends Model.Value<String>
 	}
 
 	public StringInput() {
+	}
+
+	@Override
+	public List<Class<? extends ElementBehavior>> getBehaviors() {
+		List<Class<? extends ElementBehavior>> result = new ArrayList<>();
+		if (commitOnEnter) {
+			result.add(ElementBehavior.PreventDefaultEnterBehaviour.class);
+		}
+		return result;
 	}
 
 	public StringInput(String value) {

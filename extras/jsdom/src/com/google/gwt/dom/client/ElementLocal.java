@@ -894,7 +894,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		if (behaviors == null) {
 			behaviors = new ArrayList<>();
 		} else {
-			if (behaviors.contains(clazz)) {
+			if (hasBehavior(clazz)) {
 				return;
 			}
 		}
@@ -903,5 +903,9 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	List<Class<? extends ElementBehavior>> getBehaviors() {
 		return behaviors;
+	}
+
+	public boolean hasBehavior(Class<? extends ElementBehavior> clazz) {
+		return behaviors != null && behaviors.contains(clazz);
 	}
 }

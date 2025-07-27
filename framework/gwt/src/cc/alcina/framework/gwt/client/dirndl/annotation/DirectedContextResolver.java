@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMer
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
 
 /**
  * TODO - dirndl. It would be useful to allow multiple resolvers at a point, and
@@ -33,9 +34,11 @@ public @interface DirectedContextResolver {
 	boolean includeSelf() default true;
 
 	/**
-	 * Resolve annotations + models in the node's subtree with this resolver
+	 * Resolve annotations + models in the node's subtree with this resolver.
+	 * The default delegates to the parent, so is correct for pure service
+	 * registrations
 	 */
-	Class<? extends ContextResolver> value();
+	Class<? extends ContextResolver> value() default DelegatingContextResolver.class;
 
 	@Reflected
 	public static class MergeStrategy extends

@@ -2,6 +2,7 @@ package com.google.gwt.dom.client.behavior;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -55,16 +56,15 @@ public class BehaviorRegistry implements NativePreviewHandler {
 			return;
 		}
 		initialised = true;
-		handlers = registerHandlers
-				? Registry.query(ElementBehavior.class).implementations()
-						.collect(Collectors.toList())
-				: List.of();
+		handlers = registerHandlers ? Registry.query(ElementBehavior.class)
+				.implementations().filter(ElementBehavior::isEventHandler)
+				.collect(Collectors.toList()) : List.of();
 		magicAttributeNames = new LinkedHashSet<>();
 		addMagicName(NodeAttachId.ATTR_NAME_TRANSMIT_STATE);
 		handlers.stream().map(ElementBehavior::getMagicAttributeName)
-				.forEach(this::addMagicName);
+				.filter(Objects::nonNull).forEach(this::addMagicName);
 		handlers.stream().map(ElementBehavior::getEventType)
-				.forEach(eventTypes::add);
+				.filter(Objects::nonNull).forEach(eventTypes::add);
 		if (registerHandlers) {
 			Event.addNativePreviewHandler(this);
 		}
@@ -116,7 +116,7 @@ public class BehaviorRegistry implements NativePreviewHandler {
 		}
 		Element cursor = targetElement;
 		while (cursor != null) {
-			if (cursor.hasAttributes()) {
+			if (cursor.hasAttributes() || cursor.getBehaviors() != null) {
 				Element registeredElement = cursor;
 				handlers.stream()
 						.filter(h -> h.matches(registeredElement)

@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import java.util.function.Supplier;
+import java.beans.PropertyChangeListener;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -39,5 +39,9 @@ public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 		public Container(S source) {
 			this.source = source;
 		}
+	}
+
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		source.addPropertyChangeListener(listener);
 	}
 }

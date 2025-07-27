@@ -588,6 +588,10 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
+		public <T extends ContextService> T service(Class<T> serviceType) {
+			return getResolver().getService(serviceType).get();
+		}
+
 		void bind(boolean modelToRendered) {
 			bindModel(modelToRendered);
 			bindParentProperty();
@@ -1846,12 +1850,6 @@ public class DirectedLayout implements AlcinaProcess {
 		public void deferIfFiring(Runnable runnable) {
 			DirectedLayout.this.deferIfFiring(runnable);
 		}
-
-		public <T> T getRegisteredContainer() {
-			return getResolver()
-					.getService(ContextResolver.ContainerObjectService.class)
-					.get().get();
-		}
 	}
 
 	void deferIfFiring(Runnable runnable) {
@@ -2267,10 +2265,6 @@ public class DirectedLayout implements AlcinaProcess {
 					// #moveChildren()
 					node.rendered = rendered;
 				} else {
-					if (model != null && model.getClass().getName()
-							.contains("TableValueModel")) {
-						int debug = 3;
-					}
 					DirectedRenderer renderer = resolveRenderer();
 					renderer.render(this);
 				}

@@ -14,6 +14,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
 
@@ -322,6 +324,12 @@ public class ModelBinding<T> {
 		return new TargetBinding(this, to);
 	}
 
+	public <BSP extends SourcesPropertyChangeEvents, T2> TargetBinding
+			to(InstanceProperty<BSP, T2> instanceProperty) {
+		return to(instanceProperty.source)
+				.on((TypedProperty) instanceProperty.property);
+	}
+
 	/**
 	 * Define the type of the incoming property
 	 */
@@ -350,6 +358,13 @@ public class ModelBinding<T> {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
+		return this;
+	}
+
+	public ModelBinding<?> withFinalDispatch() {
+		Preconditions.checkState(dispatchRef == null);
+		dispatchRef = Ref
+				.of(r -> Scheduler.get().scheduleFinally(() -> r.run()));
 		return this;
 	}
 
@@ -489,5 +504,15 @@ public class ModelBinding<T> {
 
 	private Property fromProperty() {
 		return Reflections.at(fromPropertyChangeSource).property(on);
+	}
+
+	public <E> void emit(Class<? extends ModelEvent<E, ?>> modelEventClass) {
+		emit(modelEventClass, null);
+	}
+
+	/* A terminal, stream output will emit the corresponding event */
+	public <E> void emit(Class<? extends ModelEvent<E, ?>> modelEventClass,
+			E value) {
+		signal(() -> bindings.model().emitEvent(modelEventClass, value));
 	}
 }

@@ -61,6 +61,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
@@ -884,7 +885,7 @@ public class TableModel extends Model
 
 	class CellEditor {
 		class ValueEditor extends Model.All implements ContextResolver.Has {
-			class Resolver extends ContextResolver.DelegateToParent
+			class Resolver extends DelegatingContextResolver
 					implements NodeEditorContext.Has {
 				class NodeEditorContextImpl implements NodeEditorContext {
 					@Override
