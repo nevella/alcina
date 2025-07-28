@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
@@ -134,6 +135,7 @@ public class EnvironmentManager {
 		ProcessObservers.observe(new RemoteComponentEventObserver(), true);
 	}
 
+	@Reflected
 	class RemoteComponentEventObserver
 			implements ProcessObserver<RemoteComponentEvent> {
 		@Override

@@ -32,6 +32,8 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 
 	String sessionId;
 
+	public long timeNs;
+
 	public static FlightEventRecorder get() {
 		return Registry.impl(FlightEventRecorder.class);
 	}
@@ -66,6 +68,10 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 
 	boolean finished;
 
+	public int threadPriority = Thread.NORM_PRIORITY;
+
+	public int recordedEventCount;
+
 	class RecorderThread extends Thread {
 		BlockingQueue<FlightEvent> events = new LinkedBlockingDeque<>();
 
@@ -98,6 +104,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		new MarkRecordedEventsObserver().bind();
 		new PersistRecordedEventsObserver().bind();
 		this.recorderThread = new RecorderThread();
+		this.recorderThread.setPriority(threadPriority);
 		this.recorderThread.start();
 	}
 
@@ -107,6 +114,16 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 	}
 
 	void writeMessage(FlightEvent message) {
+		long nanoTime = System.nanoTime();
+		try {
+			writeMessage0(message);
+		} finally {
+			timeNs += (System.nanoTime() - nanoTime);
+			recordedEventCount++;
+		}
+	}
+
+	void writeMessage0(FlightEvent message) {
 		File writeTo = null;
 		try {
 			if (sessionId == null) {
