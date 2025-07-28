@@ -1,9 +1,6 @@
 package cc.alcina.extras.webdriver.story;
 
-import java.awt.Toolkit;
-
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 
 import com.google.common.base.Preconditions;
@@ -86,7 +83,7 @@ public class WdContext implements PerformerResource {
 		}
 	}
 
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientMessageState.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientMessageState.class)
 	public class ActionPerformedObserver
 			implements ProcessObserver<StoryPerformer.ActionPerformed> {
 		static final String INFLIGHT_NON_AWAIT_MESSAGE = "__romcom_inflightNonAwaitMessage";

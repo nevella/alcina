@@ -97,6 +97,25 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
  * </pre>
  *
  */
+/*
+ * @formatter:off
+ 
+ FIXME - dirndl
+ 
+context resolver#2 [partially implemented, in that there is working service support - now it's just a matter of gradually migrating 
+existing resolvers to a service model]
+
+* a context resolver provides services to descendant nodes
+* services are determined from the implemented types of the root model
+* often have a service and an inner provider which implements ContextService - i.e.:
+    * 
+* note that contextresolvers form a tree, with an ordered mapping to the node tree
+* if a service is not available at a particular resolver, it delegates to the parent
+* if a service is available, it *may* delegate to the parent
+* some commonly used services are cached as fields on the resolver
+
+ * @formatter:on
+ */
 @Reflected
 public class ContextResolver extends AnnotationLocation.Resolver
 		implements LayoutEvents.BeforeRender.Handler {

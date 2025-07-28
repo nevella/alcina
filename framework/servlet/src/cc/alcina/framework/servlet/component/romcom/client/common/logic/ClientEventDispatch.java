@@ -20,7 +20,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 
 class ClientEventDispatch {
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientEventThrottling.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientEventThrottling.class)
 	static void dispatchEventMessage(Event event, Element listenerElement,
 			boolean preview) {
 		/*

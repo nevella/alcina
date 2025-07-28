@@ -61,7 +61,7 @@ public class RemoteComponentUi {
 	 * Transforms some rpc messages observables into UI mods (for testing,
 	 * long-running message processing indication)
 	 */
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientMessageState.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientMessageState.class)
 	class MessageStateRouter {
 		void onMessageHandlingException(Message message, Throwable e) {
 			// FIXME - ask the context to log

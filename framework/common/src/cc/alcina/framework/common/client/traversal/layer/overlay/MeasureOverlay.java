@@ -22,7 +22,7 @@ mutating measures. Behaviours are:
 
 Points are:
 
-- How do overlapping overlays of the same time interact?
+- How do overlapping overlays of the same type interact?
 - How do overlapping overlays of different types interact?
 - Particularly when merge/split happens out of order?
 - What are the persistence requirements?

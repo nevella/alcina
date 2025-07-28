@@ -49,7 +49,7 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 	 * dubiousx)
 	 */
 	@Override
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientEventThrottling.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientEventThrottling.class)
 	protected boolean isDispatchAvailable() {
 		boolean finished = (RemoteObjectModelComponentState.get().finished
 				|| this.messageTransportLayerClient.willFinish);

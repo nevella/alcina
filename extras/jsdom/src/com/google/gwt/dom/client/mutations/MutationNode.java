@@ -116,7 +116,7 @@ public final class MutationNode {
 
 	 * @formatter:on
 	 */
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_Impl.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._Impl.class)
 	void minimizeRpc() {
 		attributes = null;
 		nodeType = 0;

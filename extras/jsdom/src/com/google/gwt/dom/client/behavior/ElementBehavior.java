@@ -18,6 +18,20 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
  * navigation)
  * 
  */
+/*
+ * FIXME - dirndl 1
+ 
+ @formatter:off
+* modality to specify behavior [prevent default, say]
+    * magic attribute
+        * deprecate - then remove. even when mutation is originally client-side, 
+		  server propagation (fragmentmodel) should emit behaviour mutation
+	* parameters
+		* if a behavior is parameterised (say prevent defaults for lots of different keycombos), 
+		  send that parameter object as a magic-named attribute (json). Slightly messy, but it's one fewer sync mech to track
+
+ @formatter:on
+ */
 @Registration.Self
 public interface ElementBehavior extends EventBehavior {
 	/**
