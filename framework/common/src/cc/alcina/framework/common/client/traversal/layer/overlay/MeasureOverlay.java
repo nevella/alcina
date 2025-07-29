@@ -1,13 +1,21 @@
 package cc.alcina.framework.common.client.traversal.layer.overlay;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token.DocumentElementToken;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.overlay.BoundaryParser.ExtendResult;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /* 
 @formatter:off
@@ -27,10 +35,16 @@ Points are:
 - Particularly when merge/split happens out of order?
 - What are the persistence requirements?
 
+Api weakness:
+
+- Measure is really "range + meaning" - is it really appropriate for this? Because it's really "range + overlay"
+... ahh, no, it's not the inputs that are measures, it's the outputs. Gotcha
+
  * @formatter:on
  */
 public class MeasureOverlay {
-	public static class HighlightToken implements Measure.Token {
+	public static class HighlightToken
+			implements Measure.Token.Typed<Highlighter> {
 		public static HighlightToken TYPE = new HighlightToken();
 
 		private HighlightToken() {
@@ -105,14 +119,48 @@ public class MeasureOverlay {
 
 	StyleResolver styleResolver;
 
+	public List<Measure> overlays = new ArrayList<>();
+
+	public Highlighter highlighter;
+
+	public interface Highlighter {
+		DomNode highlight(DomNode node);
+
+		public static class TagClassName implements Highlighter {
+			String tagName;
+
+			String className;
+
+			public TagClassName(String tagName, String className) {
+				this.tagName = tagName;
+				this.className = className;
+			}
+
+			@Override
+			public DomNode highlight(DomNode node) {
+				DomNodeBuilder builder = node.builder().tag(tagName);
+				if (Ax.notBlank(className)) {
+					builder.className(className);
+				}
+				return builder.wrap();
+			}
+		}
+	}
+
+	public void detach() {
+		overlays.forEach(overlay -> overlay.containingNode().strip());
+	}
+
 	public ExtendResult extend(BoundaryTraversals quota, boolean reversed) {
 		return new BoundaryParser(this).extend(quota, reversed);
 	}
 
-	public MeasureOverlay(StyleResolver styleResolver,
-			Location.Range initialRange) {
+	public MeasureOverlay(StyleResolver styleResolver, DomDocument document,
+			IntPair textRange) {
 		this.styleResolver = styleResolver;
-		this.initialRange = initialRange;
+		this.initialRange = document.getDocumentElementNode().asRange()
+				.truncateAbsolute(textRange.i1, textRange.i2)
+				.toShallowestNodes();
 	}
 
 	public void mergeExtensionRange(Range range) {
@@ -128,5 +176,37 @@ public class MeasureOverlay {
 		if (range.end.compareTo(extendedRange.end) > 0) {
 			extendedRange = new Range(extendedRange.start, range.end);
 		}
+	}
+
+	public void attach() {
+		if (highlighter != null) {
+			containedTexts().stream().map(node -> {
+				DomNode highlit = highlighter.highlight(node);
+				Measure measure = Measure.fromNode(highlit, HighlightToken.TYPE)
+						.withData(highlighter);
+				return measure;
+			}).forEach(overlays::add);
+		}
+	}
+
+	List<DomNode> containedTexts() {
+		Location start = initialRange.start;
+		if (!initialRange.start.isAtNodeBoundary()) {
+			start = initialRange.start.split().after.asLocation();
+		}
+		Location end = initialRange.end;
+		if (!initialRange.end.isAtNodeBoundary()) {
+			end = initialRange.end.split().after.asLocation();
+		}
+		List<DomNode> result = new ArrayList<>();
+		Location cursor = start;
+		while (cursor.getIndex() < end.getIndex()) {
+			if (cursor.isTextNode()) {
+				result.add(cursor.getContainingNode());
+			}
+			cursor = cursor
+					.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
+		}
+		return result;
 	}
 }

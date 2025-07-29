@@ -350,6 +350,16 @@ public class Measure extends Location.Range {
 
 		public interface IgnoreEmptyText {
 		}
+
+		/**
+		 * For future use, a token which specifies the corresponding measure
+		 * data
+		 */
+		public interface Typed<T> extends Token {
+			default T measureData(Measure measure) {
+				return (T) measure.typedData();
+			}
+		}
 	}
 
 	public Measure trimWhitespace() {

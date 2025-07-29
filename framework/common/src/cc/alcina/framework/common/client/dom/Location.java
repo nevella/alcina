@@ -12,6 +12,7 @@ import org.w3c.dom.Text;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.collections.PublicCloneable;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -110,6 +111,11 @@ All class usages should validate document locations (treeIndex, index, containin
 - Locations are stored on the domnode
 - There's no explicit 'contents' text storage - just the dom text nodes. It's the indicies we store separately
 - 
+
+## Serialization
+
+- Not currently serializable - or intended to be (directly), instead rehydrate from document/indextuples
+- Mutation should be only performed by package-private classes, since it's intimately tied to mutation tracking
 
 
  * @formatter:on
@@ -727,13 +733,18 @@ public class Location implements Comparable<Location> {
 	 * 
 	 */
 	static class IndexTuple {
+		static final IndexTuple zero = new IndexTuple(0, 0, false);
+
 		final int treeIndex;
 
 		final int index;
 
-		IndexTuple(int treeIndex, int index) {
+		final boolean after;
+
+		IndexTuple(int treeIndex, int index, boolean after) {
 			this.treeIndex = treeIndex;
 			this.index = index;
+			this.after = after;
 			/*
 			 * Not true - individually, yes - but not as a sum
 			 */
@@ -745,7 +756,8 @@ public class Location implements Comparable<Location> {
 		public boolean equals(Object obj) {
 			if (obj instanceof IndexTuple) {
 				IndexTuple o = (IndexTuple) obj;
-				return treeIndex == o.treeIndex && index == o.index;
+				return treeIndex == o.treeIndex && index == o.index
+						&& after == o.after;
 			} else {
 				return false;
 			}
@@ -753,12 +765,12 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public int hashCode() {
-			return treeIndex ^ index;
+			return treeIndex ^ index ^ (after ? 1 : 0);
 		}
 
 		@Override
 		public String toString() {
-			return Ax.format("[%s,%s]", treeIndex, index);
+			return Ax.format("[%s,%s,%s]", treeIndex, index, after ? '>' : '<');
 		}
 
 		IndexTuple add(IndexTuple tuple) {
@@ -771,7 +783,7 @@ public class Location implements Comparable<Location> {
 
 		IndexTuple add(int treeIndexDelta, int indexDelta) {
 			return new IndexTuple(treeIndex + treeIndexDelta,
-					index + indexDelta);
+					index + indexDelta, after);
 		}
 
 		boolean isZero() {
@@ -782,16 +794,31 @@ public class Location implements Comparable<Location> {
 		 * Equivalently, a mutation at other would not affect a location at this
 		 * indextuple. See also
 		 * {@link TrackingLocationContext.IndexMutation#IndexMutation}
+		 * 
+		 * Note that this is not symmettric (since the coordinates are related
+		 * but there's an ordering between [treeindex|after,index], not
+		 * [treeindex,index]
 		 */
 		boolean isBefore(IndexTuple other) {
-			if (treeIndex < other.treeIndex) {
+			/*
+			 * tree-index affecting. treeindex mutations to other will affect
+			 * this only if other.treeIndex < treeIndex, irrespective of after
+			 */
+			if (other.treeIndex < treeIndex) {
+				return false;
+			}
+			/*
+			 * text-index affecting. handle before/after separately
+			 */
+			if (after) {
+				return index < other.index;
+			} else {
 				return index <= other.index;
 			}
-			return index < other.index && treeIndex < other.treeIndex;
 		}
 
 		IndexTuple negate() {
-			return new IndexTuple(-treeIndex, -index);
+			return new IndexTuple(-treeIndex, -index, after);
 		}
 
 		/*
@@ -827,7 +854,7 @@ public class Location implements Comparable<Location> {
 	 * Absolute character index (in the document tex run, aka 'innerText". As
 	 * per Swing, it's notionally 'before' the character. Can be
 	 * innerText.length()+1 (in which case it's after the last character in the
-	 * document)
+	 * document) [can it? that seems wrong]
 	 */
 	private int index;
 
@@ -1055,11 +1082,11 @@ public class Location implements Comparable<Location> {
 		this.containingNode = containingNode;
 	}
 
-	public void setIndex(int index) {
+	void setIndex(int index) {
 		this.index = index;
 	}
 
-	public void setTreeIndex(int treeIndex) {
+	void setTreeIndex(int treeIndex) {
 		this.treeIndex = treeIndex;
 	}
 
@@ -1223,7 +1250,7 @@ public class Location implements Comparable<Location> {
 	 * are current
 	 */
 	IndexTuple asIndexTuple() {
-		return new IndexTuple(treeIndex, index);
+		return new IndexTuple(treeIndex, index, after);
 	}
 
 	/*
@@ -1234,5 +1261,13 @@ public class Location implements Comparable<Location> {
 		treeIndex += delta.treeIndex;
 		documentMutationPosition = locationContext
 				.getDocumentMutationPosition();
+	}
+
+	public SplitResult split() {
+		return getContainingNode().text().split(0, getTextOffsetInNode());
+	}
+
+	public boolean isAtNodeBoundary() {
+		return isAtNodeStart() || isAtNodeEnd();
 	}
 }

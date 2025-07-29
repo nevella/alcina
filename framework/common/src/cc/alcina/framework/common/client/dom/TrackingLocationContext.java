@@ -13,7 +13,6 @@ import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Ref;
@@ -101,8 +100,9 @@ class TrackingLocationContext implements LocationContext {
 
 		IndexTuple computeDelta(MutationRecord mutation) {
 			if (mutation.type == MutationRecord.Type.characterData) {
-				return new IndexTuple(0, mutation.newValue.length()
-						- mutation.oldValue.length());
+				return new IndexTuple(0,
+						mutation.newValue.length() - mutation.oldValue.length(),
+						false);
 			}
 			MutationNode added = Ax.first(mutation.addedNodes);
 			/*
@@ -147,7 +147,7 @@ class TrackingLocationContext implements LocationContext {
 				 * effects of sequential removals from potentially o(n^2) for
 				 * large sequential removals to o(1)
 				 */
-				Ref<IndexTuple> nodeSpan = Ref.of(new IndexTuple(0, 0));
+				Ref<IndexTuple> nodeSpan = Ref.of(IndexTuple.zero);
 				node.stream().forEach(n -> {
 					nodeSpan.set(nodeSpan.get().add(1, n.textLengthSelf()));
 				});
@@ -493,7 +493,7 @@ class TrackingLocationContext implements LocationContext {
 		 */
 		if (indexTuple.treeIndex <= 1 && indexTuple.index == 0
 				&& !location.after) {
-			location.applyIndexDelta(new IndexTuple(0, 0));
+			location.applyIndexDelta(IndexTuple.zero);
 			return;
 		}
 		DomNode containingNode = location.getContainingNode();
@@ -568,7 +568,7 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public void validateLocations() {
-		Ref<IndexTuple> ref = Ref.of(new IndexTuple(0, 0));
+		Ref<IndexTuple> ref = Ref.of(IndexTuple.zero);
 		gwtDocument.domDocument.stream().forEach(n -> {
 			if (n.location == null) {
 				throw new IllegalStateException();

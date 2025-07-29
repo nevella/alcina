@@ -79,10 +79,12 @@ public class EditSelection {
 		tree.setCurrentNode(cursor);
 		while ((cursor = tree.currentNode()) != containingNode) {
 			if (cursor.isText() && !cursor.isEmptyTextContent()) {
-				Location result = cursor.asLocation().clone();
-				result.setIndex(
-						result.getIndex() + cursor.textContent().length());
-				return result;
+				Location cursorLocation = cursor.asLocation();
+				return new Location(cursorLocation.getTreeIndex(),
+						cursorLocation.getIndex()
+								+ cursor.textContent().length(),
+						cursorLocation.after, cursor,
+						cursorLocation.getLocationContext());
 			}
 			tree.previousLogicalNode();
 		}
