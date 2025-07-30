@@ -78,6 +78,10 @@ class TrackingLocationContext implements LocationContext {
 		 */
 		void init(MutationRecord firstMutation) {
 			location = computeAffectedLocation(firstMutation);
+			/*
+			 * mark the affectedLocation as current (mutationposition)
+			 */
+			location.applyIndexDelta(IndexTuple.zero);
 			at = location.asIndexTuple();
 			delta = computeDelta(firstMutation);
 			addDomMutation(firstMutation);
@@ -196,8 +200,9 @@ class TrackingLocationContext implements LocationContext {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s :: %s :: %s", at, delta,
-					location.getContainingNode().toShortDebugString());
+			return location == null ? "[null]"
+					: Ax.format("%s :: %s :: %s", at, delta,
+							location.getContainingNode().toShortDebugString());
 		}
 
 		IndexTuple applyTo(IndexTuple mutatingPointRef) {
@@ -461,6 +466,7 @@ class TrackingLocationContext implements LocationContext {
 					if (child.isText()) {
 						return childRange.start;
 					} else {
+						child.asRange();
 						node = child;
 						break;
 					}
@@ -523,11 +529,13 @@ class TrackingLocationContext implements LocationContext {
 						treePreviousNode.textLengthSelf());
 				location.applyIndexDelta(
 						nextFromTpl.subtract(location.asIndexTuple()));
+				flushCurrentMutationIfAffecting(location);
 				return;
 			}
 		}
 		/*
-		 * Apply all indexmutations occuring node-previous and time-previous
+		 * Apply all indexmutations occuring node-previous and time-previous,
+		 * flushing current if needed
 		 */
 		applyPriorMutations(location);
 	}
@@ -568,24 +576,21 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public void validateLocations() {
-		Ref<IndexTuple> ref = Ref.of(IndexTuple.zero);
-		gwtDocument.domDocument.stream().forEach(n -> {
-			if (n.location == null) {
-				throw new IllegalStateException();
+		IndexTuple cumulative = IndexTuple.zero;
+		List<DomNode> list = gwtDocument.domDocument.stream().toList();
+		for (int idx = 0; idx < list.size(); idx++) {
+			DomNode n = list.get(idx);
+			Location location = n.asLocation();
+			IndexTuple preEnsure = location.asIndexTuple();
+			int documentMutationPosition = location.documentMutationPosition;
+			ensureCurrent(location);
+			IndexTuple locationTuple = location.asIndexTuple();
+			if (Objects.equals(locationTuple, cumulative)) {
+				cumulative = cumulative.add(1, n.textLengthSelf());
 			} else {
-				Location location = n.asLocation();
-				IndexTuple preEnsure = location.asIndexTuple();
-				int documentMutationPosition = location.documentMutationPosition;
-				ensureCurrent(location);
-				IndexTuple locationTuple = location.asIndexTuple();
-				IndexTuple cumulative = ref.get();
-				if (Objects.equals(locationTuple, cumulative)) {
-					ref.set(cumulative.add(1, n.textLengthSelf()));
-				} else {
-					throw new LocationValidationException();
-				}
+				throw new LocationValidationException();
 			}
-		});
+		}
 	}
 
 	static class LocationValidationException extends IllegalStateException {
@@ -638,14 +643,26 @@ class TrackingLocationContext implements LocationContext {
 		 * reference to the an index tuple (as index mutations are applied) -
 		 * it's a sort of pointer/accumulator thing
 		 */
-		IndexTuple mutatingPointRef = location.asIndexTuple();
+		IndexTuple initialLocationTuple = location.asIndexTuple();
+		IndexTuple mutatingPointRef = initialLocationTuple;
 		for (int idx = location.documentMutationPosition; idx < mutations
 				.size(); idx++) {
 			mutatingPointRef = mutations.get(idx).applyTo(mutatingPointRef);
 		}
 		IndexTuple locationDelta = mutatingPointRef
-				.subtract(location.asIndexTuple());
+				.subtract(initialLocationTuple);
 		location.applyIndexDelta(locationDelta);
+		if (!locationDelta.isZero()) {
+			flushCurrentMutationIfAffecting(location);
+		}
+	}
+
+	void flushCurrentMutationIfAffecting(Location updatedLocation) {
+		if (currentMutation != null && currentMutation.at != null) {
+			if (!updatedLocation.asIndexTuple().isBefore(currentMutation.at)) {
+				currentMutation = null;
+			}
+		}
 	}
 
 	void resetLocationMutations() {

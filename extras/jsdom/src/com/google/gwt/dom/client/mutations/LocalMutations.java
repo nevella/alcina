@@ -185,7 +185,7 @@ public class LocalMutations {
 	void validateLocations() {
 		Document document = mutationsAccess.getDocument();
 		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())) {
-			// document.domDocument.locations().validateLocations();
+			document.domDocument.locations().validateLocations();
 		}
 	}
 
@@ -194,10 +194,14 @@ public class LocalMutations {
 				MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
 				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
 		topicUnbatchedUnattachedMutations.publish(record);
-		// validateLocations();
 		if (record.target.node().isAttached()) {
 			mutations.add(record);
 			topicUnbatchedAttachedMutations.publish(record);
+			if (record.removedNodes.isEmpty()) {
+				// removed notifications fire before dom modify, so cannot
+				// validate
+				validateLocations();
+			}
 			if (GWT.isClient() && finallyCommand == null) {
 				finallyCommand = this::fireMutations;
 				Scheduler.get().scheduleFinally(finallyCommand);

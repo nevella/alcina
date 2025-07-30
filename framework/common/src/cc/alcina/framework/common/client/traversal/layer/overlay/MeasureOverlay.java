@@ -5,6 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
@@ -192,11 +193,13 @@ public class MeasureOverlay {
 	List<DomNode> containedTexts() {
 		Location start = initialRange.start;
 		if (!initialRange.start.isAtNodeBoundary()) {
-			start = initialRange.start.split().after.asLocation();
+			SplitResult split = initialRange.start.split();
+			start = split.after.asLocation();
 		}
 		Location end = initialRange.end;
 		if (!initialRange.end.isAtNodeBoundary()) {
-			end = initialRange.end.split().after.asLocation();
+			SplitResult split = initialRange.end.split();
+			end = split.after.asLocation();
 		}
 		List<DomNode> result = new ArrayList<>();
 		Location cursor = start;

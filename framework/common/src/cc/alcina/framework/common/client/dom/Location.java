@@ -770,7 +770,7 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public String toString() {
-			return Ax.format("[%s,%s,%s]", treeIndex, index, after ? '>' : '<');
+			return Ax.format("[%s,%s%s]", treeIndex, index, after ? ",>" : "");
 		}
 
 		IndexTuple add(IndexTuple tuple) {
@@ -1257,10 +1257,13 @@ public class Location implements Comparable<Location> {
 	 * The only mutation method
 	 */
 	void applyIndexDelta(IndexTuple delta) {
-		index += delta.index;
-		treeIndex += delta.treeIndex;
 		documentMutationPosition = locationContext
 				.getDocumentMutationPosition();
+		if (delta.equals(IndexTuple.zero)) {
+			return;
+		}
+		index += delta.index;
+		treeIndex += delta.treeIndex;
 	}
 
 	public SplitResult split() {
