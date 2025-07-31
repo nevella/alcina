@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 
@@ -474,5 +475,17 @@ public class ClassReflector<T> implements HasAnnotations {
 					}).filter(Objects::nonNull).toList();
 			return comparison;
 		}
+	}
+
+	public String toPropertiesString(T t) {
+		FormatBuilder builder = new FormatBuilder().separator(", ");
+		properties().forEach(prop -> {
+			Object object = prop.get(t);
+			if (object != null) {
+				builder.format("%s:%s", prop.getName(),
+						Ax.trimForLogging(object, 50));
+			}
+		});
+		return Ax.format("[%s]", builder.toString());
 	}
 }
