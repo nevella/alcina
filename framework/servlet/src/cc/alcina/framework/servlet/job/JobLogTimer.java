@@ -36,7 +36,7 @@ public class JobLogTimer implements DomainTransformPersistenceListener {
 		this.timer = new EventCollator<Job>(delay, () -> {
 			MethodContext.instance().withWrappingTransaction().run(() -> {
 				Job job = timer.getLastObject();
-				if (job.provideIsActive()) {
+				if (job.provideIsProcessing()) {
 					Ax.out("[Job progress :: %s] - %s", job,
 							job.getStatusMessage());
 				}
