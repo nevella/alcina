@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -1312,10 +1313,10 @@ public class Document extends Node implements ClientDomDocument,
 	}
 
 	private native void writeClipboardText0(String clipboardText) /*-{
-	if($wnd.navigator.clipboard==null){
-		$wnd.alert('Cannot access clipboard in non-secure context')
+	if(.navigator.clipboard==null){
+		.alert('Cannot access clipboard in non-secure context')
 	}else{
-    	$wnd.navigator.clipboard.writeText(clipboardText);
+    	.navigator.clipboard.writeText(clipboardText);
 	}
 	}-*/;
 
@@ -1343,5 +1344,10 @@ public class Document extends Node implements ClientDomDocument,
 	@Override
 	public void setActiveElement(Element elem) {
 		remote.setActiveElement(elem);
+	}
+
+	public DomNode nodeForAttachId(Integer attachId) {
+		Node node = localDom.attachIds.getNode(attachId);
+		return node == null ? null : node.asDomNode();
 	}
 }
