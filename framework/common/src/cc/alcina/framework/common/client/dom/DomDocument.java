@@ -489,21 +489,7 @@ public class DomDocument extends DomNode implements Cloneable {
 				}
 			}
 			int cursor = treeIndex;
-			if (test.after) {
-				// there's no non-empty text node ending at index 0
-				Preconditions.checkArgument(test.getIndex() != 0);
-				while (cursor >= 0) {
-					Location found = locations[cursor];
-					// will loop until found.index < test.index (which will
-					// be the text node that ends at test.index)
-					if (found.getIndex() < test.getIndex()) {
-						treeIndex = cursor;
-						break;
-					} else {
-						cursor--;
-					}
-				}
-			} else {
+			if (test.start) {
 				// there's no non-empty text node starting at index
 				// [contents.length]
 				Preconditions
@@ -523,6 +509,20 @@ public class DomDocument extends DomNode implements Cloneable {
 				// edge case, last text node
 				if (treeIndex == -1) {
 					treeIndex = locations.length - 1;
+				}
+			} else {
+				// there's no non-empty text node ending at index 0
+				Preconditions.checkArgument(test.getIndex() != 0);
+				while (cursor >= 0) {
+					Location found = locations[cursor];
+					// will loop until found.index < test.index (which will
+					// be the text node that ends at test.index)
+					if (found.getIndex() < test.getIndex()) {
+						treeIndex = cursor;
+						break;
+					} else {
+						cursor--;
+					}
 				}
 			}
 			return locations[treeIndex];
@@ -728,5 +728,32 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public DomNode creeateElement(String tagName) {
 		return DomNode.from(w3cDoc().createElement(tagName));
+	}
+
+	public DomNode nodeForAttachId(Integer attachId) {
+		return ((com.google.gwt.dom.client.Document) w3cDoc())
+				.nodeForAttachId(attachId);
+	}
+
+	/*
+	 * Create a lookup from node to notional attachId for an arbitrary w3c dom
+	 * document. idx 1 is the document node, 2 is the documentelementnode etc
+	 */
+	public Map<Node, Integer> getNodeTraversalIndex() {
+		Map<Node, Integer> result = new LinkedHashMap<>();
+		stream().forEach(
+				domNode -> result.put(domNode.w3cNode(), result.size() + 1));
+		return result;
+	}
+
+	/*
+	 * Create a lookup from node to notional attachId for an arbitrary w3c dom
+	 * document. idx 1 is the document node, 2 is the documentelementnode etc
+	 */
+	public Map<Integer, Node> getTraversalIndexNode() {
+		Map<Integer, Node> result = new LinkedHashMap<>();
+		stream().forEach(
+				domNode -> result.put(result.size() + 1, domNode.w3cNode()));
+		return result;
 	}
 }

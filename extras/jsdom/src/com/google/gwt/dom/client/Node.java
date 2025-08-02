@@ -26,6 +26,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.dom.client.NodeLocal.SiblingIterator;
 import com.google.gwt.dom.client.mutations.LocalMutations;
+import com.google.gwt.dom.client.mutations.MutationGroup;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeType;
@@ -678,5 +679,31 @@ public abstract class Node
 
 	public String toNameAttachId() {
 		return Ax.format("%s::%s", getNodeName(), getAttachId());
+	}
+
+	public MutationGroups mutationGroups() {
+		return new MutationGroups();
+	}
+
+	public class MutationGroups {
+		public void exit() {
+			getOwnerDocument().localDom.mutationGroup = null;
+		}
+
+		public void enterWrap() {
+			getOwnerDocument().localDom.mutationGroup = MutationGroup.wrap;
+		}
+
+		public void enterStrip() {
+			getOwnerDocument().localDom.mutationGroup = MutationGroup.strip;
+		}
+
+		public void enterSplit() {
+			getOwnerDocument().localDom.mutationGroup = MutationGroup.split;
+		}
+
+		public MutationGroup getActiveGroup() {
+			return getOwnerDocument().localDom.mutationGroup;
+		}
 	}
 }

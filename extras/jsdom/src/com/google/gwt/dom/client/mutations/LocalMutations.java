@@ -124,6 +124,7 @@ public class LocalMutations {
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.attributes;
 		record.target = MutationNode.forNode(target);
+		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.attributeName = name;
 		record.newValue = data;
 		addMutation(record);
@@ -138,6 +139,7 @@ public class LocalMutations {
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.characterData;
 		record.target = MutationNode.forNode(target);
+		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.oldValue = previousValue;
 		record.newValue = newValue;
 		addMutation(record);
@@ -150,6 +152,7 @@ public class LocalMutations {
 			record.mutationsAccess = mutationsAccess;
 			record.type = Type.childList;
 			record.target = MutationNode.forNode(target);
+			record.mutationGroup = target.mutationGroups().getActiveGroup();
 			record.previousSibling = MutationNode.forNode(previousSibling);
 			record.nextSibling = MutationNode.forNode(nextSibling);
 			record.addedNodes.add(MutationNode.forNode(child));
@@ -165,6 +168,7 @@ public class LocalMutations {
 				record.mutationsAccess = mutationsAccess;
 				record.type = Type.childList;
 				record.target = MutationNode.forNode(target);
+				record.mutationGroup = target.mutationGroups().getActiveGroup();
 				record.previousSibling = MutationNode.forNode(previousSibling);
 				record.nextSibling = MutationNode.forNode(nextSibling);
 				record.removedNodes.add(MutationNode.forNode(child));

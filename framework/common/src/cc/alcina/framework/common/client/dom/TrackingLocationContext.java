@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.mutations.MutationGroup;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
@@ -55,6 +56,8 @@ class TrackingLocationContext implements LocationContext {
 
 		IndexTuple delta;
 
+		MutationGroup mutationGroup;
+
 		/*
 		 * The first location at which the mutation occurred
 		 */
@@ -84,6 +87,7 @@ class TrackingLocationContext implements LocationContext {
 			location.applyIndexDelta(IndexTuple.zero);
 			at = location.asIndexTuple();
 			delta = computeDelta(firstMutation);
+			mutationGroup = firstMutation.mutationGroup;
 			addDomMutation(firstMutation);
 			clearLocationIfRemove(firstMutation);
 		}
@@ -227,14 +231,19 @@ class TrackingLocationContext implements LocationContext {
 			 * Applied non-contiguous, not extendable
 			 */
 			extendable = false;
+			/*
+			 * If in a mutation group, the cumulative effect on any character
+			 * sequence index is 0.
+			 */
+			int indexDelta = mutationGroup == null ? delta.index : 0;
 			if (mutatingPointRef.treeIndex < at.treeIndex) {
 				/*
 				 * the text run mutation is visible, the tree mutation is not
 				 * (to #mutatingPointRef)
 				 */
-				return mutatingPointRef.add(0, delta.index);
+				return mutatingPointRef.add(0, indexDelta);
 			} else {
-				return mutatingPointRef.add(delta.treeIndex, delta.index);
+				return mutatingPointRef.add(delta.treeIndex, indexDelta);
 			}
 		}
 
@@ -242,7 +251,7 @@ class TrackingLocationContext implements LocationContext {
 		boolean extendWith(MutationRecord mutation) {
 			if (!extendable
 					|| mutation.type == MutationRecord.Type.characterData
-					|| false) {
+					|| mutation.mutationGroup != null || false) {
 				return false;
 			}
 			Location affectedLocation = computeAffectedLocation(mutation);
@@ -509,28 +518,30 @@ class TrackingLocationContext implements LocationContext {
 		 */
 		Preconditions.checkState(containingNode.isAttached() || document
 				.getDocumentElementNode().isAncestorOf(containingNode));
-		DomNode treePreviousNode = location.after
-				? containingNode.relative().lastDescendant()
-				: containingNode.relative().treePreviousNode();
-		if (treePreviousNode != null) {
-			/*
-			 * FIXME - location - revisit - rather than
-			 * treePreviousNode.location - the question is, should location ever
-			 * be null? doesn't the act of attaching ensure the location? in
-			 * order, if the attached is a tree?
-			 * 
-			 * 
-			 */
-			Location treePreviousLocation = treePreviousNode.asLocation();
-			if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
-				IndexTuple treePreviousTuple = treePreviousLocation
-						.asIndexTuple();
-				IndexTuple nextFromTpl = treePreviousTuple.add(1,
-						treePreviousNode.textLengthSelf());
-				location.applyIndexDelta(
-						nextFromTpl.subtract(location.asIndexTuple()));
-				flushCurrentMutationIfAffecting(location);
-				return;
+		if (location.atStart) {
+			DomNode treePreviousNode = location.after
+					? containingNode.relative().lastDescendant()
+					: containingNode.relative().treePreviousNode();
+			if (treePreviousNode != null) {
+				/*
+				 * FIXME - location - revisit - rather than
+				 * treePreviousNode.location - the question is, should location
+				 * ever be null? doesn't the act of attaching ensure the
+				 * location? in order, if the attached is a tree?
+				 * 
+				 * 
+				 */
+				Location treePreviousLocation = treePreviousNode.asLocation();
+				if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
+					IndexTuple treePreviousTuple = treePreviousLocation
+							.asIndexTuple();
+					IndexTuple nextFromTpl = treePreviousTuple.add(1,
+							treePreviousNode.textLengthSelf());
+					location.applyIndexDelta(
+							nextFromTpl.subtract(location.asIndexTuple()));
+					flushCurrentMutationIfAffecting(location);
+					return;
+				}
 			}
 		}
 		/*

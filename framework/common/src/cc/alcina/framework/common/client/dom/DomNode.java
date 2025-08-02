@@ -595,8 +595,18 @@ public class DomNode {
 	 */
 	public DomNode strip() {
 		List<DomNode> nodes = children.nodes();
-		nodes.forEach(relative()::insertBeforeThis);
-		removeFromParent();
+		com.google.gwt.dom.client.Node gwtNode = isGwtNode() ? gwtNode() : null;
+		try {
+			if (gwtNode != null) {
+				gwtNode.mutationGroups().enterStrip();
+			}
+			nodes.forEach(relative()::insertBeforeThis);
+			removeFromParent();
+		} finally {
+			if (gwtNode != null) {
+				gwtNode.mutationGroups().exit();
+			}
+		}
 		return Ax.first(nodes);
 	}
 
@@ -1639,8 +1649,19 @@ public class DomNode {
 		public DomNode wrap(String tag) {
 			DomNode wrapper = document
 					.nodeFor(document.w3cDoc().createElement(tag));
-			replaceWith(wrapper);
-			wrapper.children.append(DomNode.this);
+			com.google.gwt.dom.client.Node gwtNode = isGwtNode() ? gwtNode()
+					: null;
+			try {
+				if (gwtNode != null) {
+					gwtNode.mutationGroups().enterWrap();
+				}
+				replaceWith(wrapper);
+				wrapper.children.append(DomNode.this);
+			} finally {
+				if (gwtNode != null) {
+					gwtNode.mutationGroups().exit();
+				}
+			}
 			wrapper.copyAttributesFrom(DomNode.this);
 			return wrapper;
 		}
@@ -1769,6 +1790,17 @@ public class DomNode {
 			}
 		}
 
+		/**
+		 * <p>
+		 * A possibly multiple split of a text node into [0...from, from...to,
+		 * to...len(text)]
+		 * 
+		 * @param from
+		 *            the start of the split
+		 * @param to
+		 *            the end of the split
+		 * @return a SplitResult, modelling the parts of the split
+		 */
 		public SplitResult split(int from, int to) {
 			SplitResult result = new SplitResult();
 			Preconditions.checkState(isText());
@@ -1776,19 +1808,15 @@ public class DomNode {
 			result.contents = cursor;
 			if (from > 0) {
 				result.before = cursor;
-				result.contents = cursor.builder()
-						.text(cursor.textContent().substring(from))
-						.insertAfterThis();
-				cursor.setText(cursor.textContent().substring(0, from));
+				Text secondText = cursor.w3cText().splitText(from);
+				result.contents = document.nodeFor(secondText);
 				cursor = result.contents;
 				to -= from;
 				from = 0;
 			}
 			if (to < cursor.textContent().length()) {
-				result.after = cursor.builder()
-						.text(cursor.textContent().substring(to))
-						.insertAfterThis();
-				cursor.setText(cursor.textContent().substring(0, to));
+				Text secondText = cursor.w3cText().splitText(to);
+				result.after = document.nodeFor(secondText);
 			}
 			return result;
 		}

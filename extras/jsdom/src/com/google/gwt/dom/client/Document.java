@@ -32,6 +32,7 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.mutations.MutationGroup;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
@@ -1312,10 +1313,10 @@ public class Document extends Node implements ClientDomDocument,
 	}
 
 	private native void writeClipboardText0(String clipboardText) /*-{
-	if($wnd.navigator.clipboard==null){
-		$wnd.alert('Cannot access clipboard in non-secure context')
+	if(.navigator.clipboard==null){
+		.alert('Cannot access clipboard in non-secure context')
 	}else{
-    	$wnd.navigator.clipboard.writeText(clipboardText);
+    	.navigator.clipboard.writeText(clipboardText);
 	}
 	}-*/;
 
@@ -1343,5 +1344,11 @@ public class Document extends Node implements ClientDomDocument,
 	@Override
 	public void setActiveElement(Element elem) {
 		remote.setActiveElement(elem);
+	}
+
+	public void setMutationGroup(MutationGroup split) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setMutationGroup'");
 	}
 }

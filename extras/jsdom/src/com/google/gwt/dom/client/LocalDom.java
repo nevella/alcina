@@ -22,6 +22,7 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.MarkupJso.MarkupToken;
 import com.google.gwt.dom.client.mutations.LocalMutations;
+import com.google.gwt.dom.client.mutations.MutationGroup;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.RemoteMutations;
@@ -577,6 +578,8 @@ public class LocalDom implements ContextFrame {
 	boolean syncing;
 
 	boolean applyingDetachedMutationsToLocalDom;
+
+	public MutationGroup mutationGroup;
 
 	void flush0(boolean force) {
 		if (syncing) {

@@ -371,7 +371,9 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	public void setAttribute(String name, String value) {
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.attributes;
-		record.target = MutationNode.forNode(elementFor());
+		Element elem = elementFor();
+		record.target = MutationNode.forNode(elem);
+		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.attributeName = name;
 		record.newValue = value;
 		emitMutation(record);

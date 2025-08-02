@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.LocationSnapshot;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Measure;
@@ -192,14 +193,20 @@ public class MeasureOverlay {
 
 	List<DomNode> containedTexts() {
 		Location start = initialRange.start;
-		if (!initialRange.start.isAtNodeBoundary()) {
-			SplitResult split = initialRange.start.split();
-			start = split.after.asLocation();
-		}
 		Location end = initialRange.end;
-		if (!initialRange.end.isAtNodeBoundary()) {
-			SplitResult split = initialRange.end.split();
-			end = split.after.asLocation();
+		LocationSnapshot startSnapshot = start.toLocationSnapshot();
+		LocationSnapshot endSnapshot = end.toLocationSnapshot();
+		if (!start.isAtNodeBoundary()) {
+			SplitResult split = start.split();
+			LocationSnapshot startSnapshot2 = start.toLocationSnapshot();
+			LocationSnapshot endSnapshot2 = end.toLocationSnapshot();
+			start = split.contents.asLocation();
+			LocationSnapshot startSnapshot3 = start.toLocationSnapshot();
+			LocationSnapshot endSnapshot3 = end.toLocationSnapshot();
+		}
+		if (!end.isAtNodeBoundary()) {
+			SplitResult split = end.split();
+			end = split.contents.asLocation();
 		}
 		List<DomNode> result = new ArrayList<>();
 		Location cursor = start;

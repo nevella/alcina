@@ -1,0 +1,20 @@
+package com.google.gwt.dom.client.mutations;
+
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+
+/**
+ * <p>
+ * A mutatiob is assigned to a mutationgroup (there are at least two mutations
+ * per group) if the cumulative effect of the mutattions is no modification in
+ * the character sequence of the document
+ * 
+ * <p>
+ * Examples are splitting a text node and wrapping any node. The primary use
+ * case is to preserve the text index for Location instances, even when they're
+ * within the text node being mutated; this extra modelling also allows
+ * preservation of attachIds (and elides unbind/bind cycles) for wrapped nodes.
+ */
+@Reflected
+public enum MutationGroup {
+	split, wrap, merge, strip
+}
