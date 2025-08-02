@@ -42,7 +42,6 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
-import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -589,7 +588,7 @@ public abstract class Job extends VersionableEntity<Job>
 				.anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
 	}
 
-	public boolean provideIsActive() {
+	public boolean provideIsProcessing() {
 		return resolveState() == JobState.PROCESSING;
 	}
 
@@ -922,6 +921,17 @@ public abstract class Job extends VersionableEntity<Job>
 	public Job root() {
 		return provideFirstInSequence().provideParent().map(Job::root)
 				.orElse(domainIdentity());
+	}
+
+	public Job rootAwaiter() {
+		Job firstInSequence = provideFirstInSequence();
+		Optional<Job> awaiting = firstInSequence.provideAwaiting();
+		if (awaiting.isPresent()) {
+			return awaiting.get().rootAwaiter();
+		} else {
+			return firstInSequence.provideParent().map(Job::rootAwaiter)
+					.orElse(domainIdentity());
+		}
 	}
 
 	public void setCause(String cause) {
