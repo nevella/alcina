@@ -269,9 +269,9 @@ public class Location implements Comparable<Location> {
 					return false;
 				} else if (end.getIndex() == test.getIndex()) {
 					/*
-					 * true if test location is start
+					 * true if test location is not a start (next-node) location
 					 */
-					return test.start;
+					return !test.start;
 				} else {
 					return true;
 				}
@@ -336,7 +336,7 @@ public class Location implements Comparable<Location> {
 		 */
 		public Location.Range extendText(int delta) {
 			if (delta < 0) {
-				return new Range(start.textRelativeLocation(-1, false), end);
+				return new Range(start.textRelativeLocation(-1, true), end);
 			} else {
 				return new Range(start, end.textRelativeLocation(1, false));
 			}
@@ -351,7 +351,7 @@ public class Location implements Comparable<Location> {
 		@Property.Not
 		public boolean isWholeNode() {
 			return isSingleNode() && start.isAtNodeStart() && end.isAtNodeEnd()
-					&& (end.start || start.isTextNode());
+					&& (!end.start || start.isTextNode());
 		}
 
 		@Property.Not
@@ -507,10 +507,10 @@ public class Location implements Comparable<Location> {
 		}
 
 		public Range truncateAbsolute(int startIndex, int endIndex) {
-			Location modifiedEnd = end
-					.textRelativeLocation(endIndex - end.getIndex(), true);
 			Location modifiedStart = start
-					.textRelativeLocation(startIndex - start.getIndex(), false);
+					.textRelativeLocation(startIndex - start.getIndex(), true);
+			Location modifiedEnd = end
+					.textRelativeLocation(endIndex - end.getIndex(), false);
 			return new Range(modifiedStart, modifiedEnd);
 		}
 
@@ -521,28 +521,28 @@ public class Location implements Comparable<Location> {
 		 * last character, etc
 		 */
 		public Range truncateRelative(int startIndex, int endIndex) {
-			Location modifiedEnd = end.textRelativeLocation(
-					start.getIndex() + endIndex - end.getIndex(), true);
 			Location modifiedStart = start.textRelativeLocation(startIndex,
-					false);
+					true);
+			Location modifiedEnd = end.textRelativeLocation(
+					start.getIndex() + endIndex - end.getIndex(), false);
 			return new Range(modifiedStart, modifiedEnd);
 		}
 
 		public Range truncateToEndNode() {
 			Location modifiedStart = end.textRelativeLocation(
-					start.getIndex() - end.getIndex(), false);
+					start.getIndex() - end.getIndex(), true);
 			return new Range(modifiedStart, end);
 		}
 
 		public Range truncateToIndexEnd(int endIndex) {
 			Location modifiedEnd = end.textRelativeLocation(
-					endIndex - (end.getIndex() - start.getIndex()), true);
+					endIndex - (end.getIndex() - start.getIndex()), false);
 			return new Range(start, modifiedEnd);
 		}
 
 		public Range truncateToIndexStart(int startIndex) {
 			Location modifiedStart = start.textRelativeLocation(startIndex,
-					false);
+					true);
 			return new Range(modifiedStart, end);
 		}
 
@@ -658,12 +658,12 @@ public class Location implements Comparable<Location> {
 				offset = getTextOffsetInNode();
 			} else {
 				if (start) {
-					node = containingDomNode.w3cNode();
-					offset = containingNode.children.nodes().size();
-				} else {
 					node = containingDomNode.parent().w3cNode();
 					offset = containingDomNode.parent().children.nodes()
 							.indexOf(containingDomNode);
+				} else {
+					node = containingDomNode.w3cNode();
+					offset = containingNode.children.nodes().size();
 				}
 			}
 		}
@@ -711,10 +711,13 @@ public class Location implements Comparable<Location> {
 
 		public final int textLengthSelf;
 
+		public final boolean start;
+
 		LocationSnapshot() {
 			this.treeIndex = getTreeIndex();
 			this.index = getIndex();
 			this.textLengthSelf = containingNode.textLengthSelf();
+			this.start = isStart();
 		}
 
 		public IntPair asTextIndexPair() {
@@ -727,8 +730,8 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public String toString() {
-			return Ax.format("[%s,%s] :: %s chars", treeIndex, index,
-					textLengthSelf);
+			return Ax.format("[%s,%s,%s] :: %s chars", treeIndex, index,
+					start ? "<" : ">", textLengthSelf);
 		}
 	}
 
@@ -739,7 +742,7 @@ public class Location implements Comparable<Location> {
 	 * 
 	 */
 	static class IndexTuple {
-		static final IndexTuple zero = new IndexTuple(0, 0, false);
+		static final IndexTuple zero = new IndexTuple(0, 0, true, null);
 
 		final int treeIndex;
 
@@ -747,10 +750,18 @@ public class Location implements Comparable<Location> {
 
 		final boolean start;
 
-		IndexTuple(int treeIndex, int index, boolean start) {
+		final DomNode containingNode;
+
+		IndexTuple(int treeIndex, int index, boolean start,
+				DomNode containingNode) {
 			this.treeIndex = treeIndex;
 			this.index = index;
 			this.start = start;
+			/*
+			 * normally null, unless the location node is changed due to
+			 * split/merge
+			 */
+			this.containingNode = containingNode;
 			/*
 			 * Not true - individually, yes - but not as a sum
 			 */
@@ -776,7 +787,7 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public String toString() {
-			return Ax.format("[%s,%s%s]", treeIndex, index, start ? ",>" : "");
+			return Ax.format("[%s,%s,%s]", treeIndex, index, start ? "<" : ">");
 		}
 
 		IndexTuple add(IndexTuple tuple) {
@@ -789,7 +800,7 @@ public class Location implements Comparable<Location> {
 
 		IndexTuple add(int treeIndexDelta, int indexDelta) {
 			return new IndexTuple(treeIndex + treeIndexDelta,
-					index + indexDelta, start);
+					index + indexDelta, start, containingNode);
 		}
 
 		boolean isZero() {
@@ -817,14 +828,14 @@ public class Location implements Comparable<Location> {
 			 * text-index affecting. handle before/start separately
 			 */
 			if (start) {
-				return index < other.index;
-			} else {
 				return index <= other.index;
+			} else {
+				return index < other.index;
 			}
 		}
 
 		IndexTuple negate() {
-			return new IndexTuple(-treeIndex, -index, start);
+			return new IndexTuple(-treeIndex, -index, start, containingNode);
 		}
 
 		/*
@@ -849,6 +860,14 @@ public class Location implements Comparable<Location> {
 				return 0;
 			}
 		}
+
+		IndexTuple withStart(boolean start) {
+			return new IndexTuple(treeIndex, index, start, containingNode);
+		}
+
+		IndexTuple withContainingNode(DomNode containingNode) {
+			return new IndexTuple(treeIndex, index, start, containingNode);
+		}
 	}
 
 	/**
@@ -868,13 +887,24 @@ public class Location implements Comparable<Location> {
 	 *
 	 */
 	/***
-	 * The location is *start* (immediately start the end of) the
-	 * containingNode. Immutable under document modification (wheras index and
-	 * treeIndex are not)
+	 * <p>
+	 * Effectively final (index, startIndex, containerNode are not).
+	 * 
+	 * <p>
+	 * This is not where the location is, but what it logically represents,
+	 * since location character index mutation depends on whether it's logically
+	 * at the start (default) or end of a range. If {@link #start} == true,
+	 * character index mutation at {@link #index} will not affect
+	 * {@link #index}, otherwise it will
 	 *
 	 *
 	 */
-	public boolean start;
+	private boolean start;
+
+	public boolean isStart() {
+		locationContext.ensureCurrent(this);
+		return start;
+	}
 
 	/*
 	 * the domnode at treeindex
@@ -884,19 +914,6 @@ public class Location implements Comparable<Location> {
 	private transient LocationContext locationContext;
 
 	transient int documentMutationPosition;
-
-	/*
-	 * TODO - this should probably be combined with 'start' - the initial usage
-	 * of this field is to indicate to TrackingLocationContext that it can
-	 * optimise location updates - it can only do so in general if the location
-	 * is at the start of the node (so internal text mutations will not affect
-	 * the location)
-	 */
-	transient boolean atStart;
-
-	public Location(int treeIndex, int index, boolean start) {
-		this(treeIndex, index, start, null, null);
-	}
 
 	/**
 	 * Constructs a representation location in a document
@@ -908,8 +925,11 @@ public class Location implements Comparable<Location> {
 	 *            text node containing the text at param index
 	 * @param index
 	 *            the index in the document text of the location
-	 * @param start
-	 *            at the end of the dom node at treeIndex
+	 * @param start.
+	 *            This is not where the location is, but what it logically
+	 *            represents, since location mutation depends on whether it's
+	 *            logically at the start (default) or end of a range
+	 * 
 	 * @param containingNode
 	 *            the containing node
 	 * @param locationContext
@@ -931,11 +951,6 @@ public class Location implements Comparable<Location> {
 			containingNode = locationContext.getContainingNode(this,
 					searchFrom);
 		}
-		if (containingNode.isText()) {
-			start = false;
-		}
-		this.atStart = !start && (containingNode.location == null
-				|| containingNode.location.index == index);
 		this.start = start;
 		this.containingNode = containingNode;
 	}
@@ -952,6 +967,11 @@ public class Location implements Comparable<Location> {
 
 	@Override
 	public Location clone() {
+		return new Location(treeIndex, index, start, containingNode,
+				locationContext);
+	}
+
+	public Location cloneWithStart(boolean start) {
 		return new Location(treeIndex, index, start, containingNode,
 				locationContext);
 	}
@@ -997,8 +1017,12 @@ public class Location implements Comparable<Location> {
 	}
 
 	/**
+	 * <p>
 	 * This does not invalidate the LocationContext locations, do that manually
 	 * (until the tree/log location invalidation handling is implemented)
+	 * 
+	 * <p>
+	 * FIXME - location
 	 */
 	public void ensureAtBoundary() {
 		int textOffsetInNode = getTextOffsetInNode();
@@ -1020,6 +1044,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public DomNode getContainingNode() {
+		locationContext.ensureCurrent(this);
 		return containingNode;
 	}
 
@@ -1136,13 +1161,13 @@ public class Location implements Comparable<Location> {
 
 	public String toLocationString() {
 		String dir = containingNode == null ? "[detached location]"
-				: containingNode.isText() ? "" : start ? ",>" : ",<";
+				: containingNode.isText() ? "" : start ? ",<" : ",>";
 		return Ax.format("%s,%s%s", treeIndex, index, dir);
 	}
 
 	public String toLocationTagString() {
 		String dir = containingNode == null ? "[detached location]"
-				: containingNode.isText() ? "" : start ? ",>" : ",<";
+				: containingNode.isText() ? "" : start ? ",<" : ",>";
 		String tag = "[null]";
 		if (containingNode != null) {
 			tag = containingNode.name();
@@ -1155,7 +1180,7 @@ public class Location implements Comparable<Location> {
 
 	public Location toStartTextLocationIfAtEnd() {
 		if (isAtNodeEnd() && isTextNode()) {
-			return new Location(treeIndex + 1, index, false, null,
+			return new Location(treeIndex + 1, index, true, null,
 					locationContext);
 		} else {
 			return this;
@@ -1164,10 +1189,10 @@ public class Location implements Comparable<Location> {
 
 	public Location toStartLocation() {
 		if (isAtNodeEnd() && isTextNode()) {
-			return new Location(treeIndex + 1, index, false, null,
+			return new Location(treeIndex + 1, index, true, null,
 					locationContext);
-		} else if (start) {
-			return new Location(treeIndex + 1, index, false, null,
+		} else if (!start) {
+			return new Location(treeIndex + 1, index, true, null,
 					locationContext);
 		} else {
 			return this;
@@ -1186,8 +1211,8 @@ public class Location implements Comparable<Location> {
 			nodeData = Ax.format("<%s%s> :: '%s'", containingNode.name(),
 					classData, getSubsequentDebugText(50));
 		}
-		String dir = containingNode.isText() ? "" : start ? ",>" : ",<";
-		return Ax.format("%s,%s%s %s", treeIndex, index, dir, nodeData);
+		String dir = start ? "<" : ">";
+		return Ax.format("%s,%s,%s %s", treeIndex, index, dir, nodeData);
 	}
 
 	public Location toTextLocation(boolean toTextLocation) {
@@ -1201,7 +1226,7 @@ public class Location implements Comparable<Location> {
 		if (cursor.getContainingNode().isDocumentNode()) {
 			/*
 			 * ensure we're not at the top tree index but somewhere in the weeds
-			 * of text
+			 * of text.
 			 */
 			cursor = new Location(treeIndex, index, start, null,
 					locationContext, this);
@@ -1256,9 +1281,9 @@ public class Location implements Comparable<Location> {
 
 	public Location toOppositeEnd() {
 		if (start) {
-			return getContainingNode().asLocation();
-		} else {
 			return relativeLocation(RelativeDirection.CURRENT_NODE_END);
+		} else {
+			return getContainingNode().asLocation();
 		}
 	}
 
@@ -1267,27 +1292,43 @@ public class Location implements Comparable<Location> {
 	 * are current
 	 */
 	IndexTuple asIndexTuple() {
-		return new IndexTuple(treeIndex, index, start);
+		return new IndexTuple(treeIndex, index, start, containingNode);
 	}
 
 	/*
 	 * The only mutation method
 	 */
 	void applyIndexDelta(IndexTuple delta) {
-		documentMutationPosition = locationContext
-				.getDocumentMutationPosition();
-		if (delta.equals(IndexTuple.zero)) {
-			return;
-		}
+		markCurrentMutationPosition();
 		index += delta.index;
 		treeIndex += delta.treeIndex;
+		// will never be different
+		// start = delta.start;
+		if (delta.containingNode != null) {
+			/*
+			 * Note this - split/merge can change container nodeif splitting at
+			 * that location)
+			 */
+			this.containingNode = delta.containingNode;
+		}
 	}
 
+	/**
+	 * 
+	 * @return a SplitResult where contents == the node with text
+	 *         [0...getTextOffsetInNode()] and after = the node with text
+	 *         [getTextOffsetInNode(), containingNode.textContent().length()]
+	 */
 	public SplitResult split() {
 		return getContainingNode().text().split(0, getTextOffsetInNode());
 	}
 
 	public boolean isAtNodeBoundary() {
 		return isAtNodeStart() || isAtNodeEnd();
+	}
+
+	void markCurrentMutationPosition() {
+		documentMutationPosition = locationContext
+				.getDocumentMutationPosition();
 	}
 }

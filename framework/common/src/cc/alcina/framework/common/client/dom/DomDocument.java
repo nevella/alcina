@@ -429,7 +429,7 @@ public class DomDocument extends DomNode implements Cloneable {
 				int depth = node.depth() - rootOffset;
 				int treeIndex = byNode.size();
 				Location location = new Location(treeIndex, content.length(),
-						false, node, this);
+						true, node, this);
 				byNode.put(node, location);
 				byTreeIndex.put(treeIndex, node);
 				contentLengths.put(node, 0);
@@ -489,7 +489,7 @@ public class DomDocument extends DomNode implements Cloneable {
 				}
 			}
 			int cursor = treeIndex;
-			if (test.start) {
+			if (test.isStart()) {
 				// there's no non-empty text node starting at index
 				// [contents.length]
 				Preconditions
@@ -560,7 +560,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			ensureLookups();
 			DomNode documentElementNode = getDocumentElementNode();
 			Location start = byNode.get(documentElementNode);
-			Location end = new Location(0, contents.length(), true,
+			Location end = new Location(0, contents.length(), false,
 					documentElementNode, this);
 			return new Location.Range(start, end);
 		}

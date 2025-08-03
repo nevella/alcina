@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.LocationSnapshot;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token.DocumentElementToken;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
@@ -194,28 +195,22 @@ public class MeasureOverlay {
 	List<DomNode> containedTexts() {
 		Location start = initialRange.start;
 		Location end = initialRange.end;
-		LocationSnapshot startSnapshot = start.toLocationSnapshot();
-		LocationSnapshot endSnapshot = end.toLocationSnapshot();
 		if (!start.isAtNodeBoundary()) {
 			SplitResult split = start.split();
-			LocationSnapshot startSnapshot2 = start.toLocationSnapshot();
-			LocationSnapshot endSnapshot2 = end.toLocationSnapshot();
-			start = split.contents.asLocation();
-			LocationSnapshot startSnapshot3 = start.toLocationSnapshot();
-			LocationSnapshot endSnapshot3 = end.toLocationSnapshot();
+			start = split.after.asLocation();
 		}
 		if (!end.isAtNodeBoundary()) {
 			SplitResult split = end.split();
-			end = split.contents.asLocation();
+			end = split.after.asLocation();
 		}
 		List<DomNode> result = new ArrayList<>();
 		Location cursor = start;
 		while (cursor.getIndex() < end.getIndex()) {
-			if (cursor.isTextNode()) {
+			if (cursor.isTextNode() && cursor.isAtNodeStart()) {
 				result.add(cursor.getContainingNode());
 			}
-			cursor = cursor
-					.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
+			cursor = cursor.relativeLocation(RelativeDirection.NEXT_LOCATION,
+					TextTraversal.EXIT_NODE);
 		}
 		return result;
 	}

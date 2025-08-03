@@ -373,8 +373,8 @@ public class LayerParser {
 		}
 
 		Measure match(BranchToken token) {
-			boolean atEndBoundary = forwardsTraversalOrder ? location.after
-					: !location.after;
+			boolean atEndBoundary = forwardsTraversalOrder ? !location.isStart()
+					: location.isStart();
 			// text traversal is only at start location
 			if (!location.getContainingNode().isText()) {
 				switch (token.matchesBoundary()) {

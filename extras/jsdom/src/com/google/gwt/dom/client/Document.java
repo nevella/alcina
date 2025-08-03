@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -1313,10 +1314,10 @@ public class Document extends Node implements ClientDomDocument,
 	}
 
 	private native void writeClipboardText0(String clipboardText) /*-{
-	if(.navigator.clipboard==null){
-		.alert('Cannot access clipboard in non-secure context')
+	if($wnd.navigator.clipboard==null){
+		$wnd.alert('Cannot access clipboard in non-secure context')
 	}else{
-    	.navigator.clipboard.writeText(clipboardText);
+    	$wnd.navigator.clipboard.writeText(clipboardText);
 	}
 	}-*/;
 
@@ -1346,9 +1347,8 @@ public class Document extends Node implements ClientDomDocument,
 		remote.setActiveElement(elem);
 	}
 
-	public void setMutationGroup(MutationGroup split) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'setMutationGroup'");
+	public DomNode nodeForAttachId(Integer attachId) {
+		Node node = localDom.attachIds.getNode(attachId);
+		return node == null ? null : node.asDomNode();
 	}
 }

@@ -84,7 +84,7 @@ class TrackingLocationContext implements LocationContext {
 			/*
 			 * mark the affectedLocation as current (mutationposition)
 			 */
-			location.applyIndexDelta(IndexTuple.zero);
+			location.markCurrentMutationPosition();
 			at = location.asIndexTuple();
 			delta = computeDelta(firstMutation);
 			mutationGroup = firstMutation.mutationGroup;
@@ -110,7 +110,7 @@ class TrackingLocationContext implements LocationContext {
 			if (mutation.type == MutationRecord.Type.characterData) {
 				return new IndexTuple(0,
 						mutation.newValue.length() - mutation.oldValue.length(),
-						false);
+						false, null);
 			}
 			MutationNode added = Ax.first(mutation.addedNodes);
 			/*
@@ -235,7 +235,51 @@ class TrackingLocationContext implements LocationContext {
 			 * If in a mutation group, the cumulative effect on any character
 			 * sequence index is 0.
 			 */
-			int indexDelta = mutationGroup == null ? delta.index : 0;
+			int indexDelta = delta.index;
+			/*
+			 * special case mutation groups
+			 */
+			if (mutationGroup != null) {
+				indexDelta = 0;
+				switch (mutationGroup) {
+				case split:
+					if (delta.treeIndex == 0) {
+						/*
+						 * first part of split, pure character update, ignore
+						 */
+						return mutatingPointRef;
+					} else {
+						if (at.index <= mutatingPointRef.index
+								&& at.treeIndex == mutatingPointRef.treeIndex
+										+ 1
+								&& !mutatingPointRef.start) {
+							// boolean locationToStart = at.index ==
+							// mutatingPointRef.index;
+							/*
+							 * bump treeindex (location is now tracking the node
+							 * created by split), location is now a start
+							 * location
+							 */
+							return mutatingPointRef.add(1, 0)
+									/*
+									 * Actually, start *will* never change -
+									 * start is not about location position in a
+									 * node, but location intention
+									 */
+									// .withStart(locationToStart)
+									.withContainingNode(
+											location.getContainingNode());
+						}
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+				/*
+				 * Fall through if not a special case (such as directly affected
+				 * split)
+				 */
+			}
 			if (mutatingPointRef.treeIndex < at.treeIndex) {
 				/*
 				 * the text run mutation is visible, the tree mutation is not
@@ -401,7 +445,7 @@ class TrackingLocationContext implements LocationContext {
 			treeIndex = previousLocation.getTreeIndex() + 1;
 			index = previousLocation.getIndex() + previous.textLengthSelf();
 		}
-		return new Location(treeIndex, index, false, domNode, this);
+		return new Location(treeIndex, index, true, domNode, this);
 	}
 
 	@Override
@@ -502,26 +546,41 @@ class TrackingLocationContext implements LocationContext {
 		if (location.documentMutationPosition == getDocumentMutationPosition()) {
 			return;
 		}
+		/*
+		 * Make a snapshot of the location coordinates (at its mutation
+		 * position) - subsequent code in this method requires an understanding
+		 * of what *could* mutate (i.e. which aspects of this snapshot are
+		 * usable)
+		 */
 		IndexTuple indexTuple = location.asIndexTuple();
 		/*
-		 * document and documentelementnode start are invariant
+		 * document and documentelementnode start are invariant.
 		 */
 		if (indexTuple.treeIndex <= 1 && indexTuple.index == 0
-				&& !location.after) {
-			location.applyIndexDelta(IndexTuple.zero);
+				&& indexTuple.start) {
+			location.markCurrentMutationPosition();
 			return;
 		}
-		DomNode containingNode = location.getContainingNode();
+		DomNode containingNode = indexTuple.containingNode;
 		/*
 		 * Edge case - during client mutation sync/node removal, attached may be
 		 * false but the ancestry chain to document still intact
 		 */
-		Preconditions.checkState(containingNode.isAttached() || document
-				.getDocumentElementNode().isAncestorOf(containingNode));
-		if (location.atStart) {
-			DomNode treePreviousNode = location.after
-					? containingNode.relative().lastDescendant()
-					: containingNode.relative().treePreviousNode();
+		DomNode documentElementNode = document.getDocumentElementNode();
+		Preconditions.checkState(containingNode.isAttached()
+				|| documentElementNode.isAncestorOf(containingNode));
+		if (indexTuple.start || containingNode == documentElementNode) {
+			/*
+			 * note - almost always the former case. We *could* optimise for
+			 * node ends (not internal locations) - but that would require
+			 * tracking start/internal/end, which is more complex
+			 * 
+			 * So node ends currently are not optimised -unless- the node is the
+			 * documentelementnode
+			 */
+			DomNode treePreviousNode = indexTuple.start
+					? containingNode.relative().treePreviousNode()
+					: containingNode.relative().lastDescendant();
 			if (treePreviousNode != null) {
 				/*
 				 * FIXME - location - revisit - rather than
@@ -535,10 +594,12 @@ class TrackingLocationContext implements LocationContext {
 				if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
 					IndexTuple treePreviousTuple = treePreviousLocation
 							.asIndexTuple();
-					IndexTuple nextFromTpl = treePreviousTuple.add(1,
-							treePreviousNode.textLengthSelf());
-					location.applyIndexDelta(
-							nextFromTpl.subtract(location.asIndexTuple()));
+					IndexTuple nextFromTpl = treePreviousTuple
+							.add(1, treePreviousNode.textLengthSelf())
+							.withContainingNode(null);
+					IndexTuple locationTuple = location.asIndexTuple();
+					location.applyIndexDelta(nextFromTpl.subtract(locationTuple)
+							.withStart(locationTuple.start));
 					flushCurrentMutationIfAffecting(location);
 					return;
 				}
@@ -599,6 +660,9 @@ class TrackingLocationContext implements LocationContext {
 			if (Objects.equals(locationTuple, cumulative)) {
 				cumulative = cumulative.add(1, n.textLengthSelf());
 			} else {
+				Ax.err("Location exception: [%s->%s] %s :: -> %s [correct: %s]",
+						documentMutationPosition, getDocumentMutationPosition(),
+						preEnsure, locationTuple, cumulative);
 				throw new LocationValidationException();
 			}
 		}
@@ -655,7 +719,8 @@ class TrackingLocationContext implements LocationContext {
 		 * it's a sort of pointer/accumulator thing
 		 */
 		IndexTuple initialLocationTuple = location.asIndexTuple();
-		IndexTuple mutatingPointRef = initialLocationTuple;
+		IndexTuple mutatingPointRef = initialLocationTuple
+				.withContainingNode(null);
 		for (int idx = location.documentMutationPosition; idx < mutations
 				.size(); idx++) {
 			mutatingPointRef = mutations.get(idx).applyTo(mutatingPointRef);

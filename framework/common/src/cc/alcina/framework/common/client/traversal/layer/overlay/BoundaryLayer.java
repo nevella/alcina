@@ -24,7 +24,11 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multiset;
 
 /**
+ * <p>
  * Transforms a Document into a set of boundary traversal selections
+ * 
+ * <p>
+ * Note that the
  */
 class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 	public enum Token implements BranchToken {
@@ -33,11 +37,12 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 			public Measure match(ParserState state) {
 				ParserPeer peer = peer(state);
 				/*
-				 * if !after + fowards (or after + backwards), return null. So
-				 * effectively return 'is start'
+				 * if start + fowards (or !start + backwards), return null. So
+				 * effectively return 'no match if at start of node in traversal
+				 * direction'
 				 */
-				if (!(state.getLocation().after
-						^ peer.isForwardsTraversalOrder())) {
+				if (state.getLocation().isStart()
+						^ peer.isForwardsTraversalOrder()) {
 					return null;
 				}
 				boolean match = false;
@@ -71,11 +76,12 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 				if (!match) {
 					ParserPeer peer = peer(state);
 					/*
-					 * if after + fowards (or !after + backwards), return null.
-					 * So effectively return 'is start'
+					 * if start + fowards (or !start + backwards), return null.
+					 * So effectively return 'no match if at start of node in
+					 * traversal direction'
 					 */
-					if (!(state.getLocation().after
-							^ peer.isForwardsTraversalOrder())) {
+					if (state.getLocation().isStart()
+							^ peer.isForwardsTraversalOrder()) {
 						return null;
 					}
 					DomNode containingNode = state.getLocation()
@@ -98,9 +104,11 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 					ParserPeer peer = peer(state);
 					/*
 					 * if after + fowards (or !after + backwards), return null.
-					 * So effectively return 'is start'
+					 * So effectively return ' match if at start of node in
+					 * traversal direction'. Note, it's different to SEGMENT/DOC
+					 * boundary
 					 */
-					if (state.getLocation().after
+					if ((!state.getLocation().isStart())
 							^ peer.isForwardsTraversalOrder()) {
 						return null;
 					}

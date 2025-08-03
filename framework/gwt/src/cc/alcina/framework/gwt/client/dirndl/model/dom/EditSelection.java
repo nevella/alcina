@@ -70,7 +70,7 @@ public class EditSelection {
 	 * needed at end
 	 */
 	Location caretLocation(Location location) {
-		if (!location.after) {
+		if (location.isStart()) {
 			return location;
 		}
 		DomNode containingNode = location.getContainingNode();
@@ -83,7 +83,7 @@ public class EditSelection {
 				return new Location(cursorLocation.getTreeIndex(),
 						cursorLocation.getIndex()
 								+ cursor.textContent().length(),
-						cursorLocation.after, cursor,
+						cursorLocation.isStart(), cursor,
 						cursorLocation.getLocationContext());
 			}
 			tree.previousLogicalNode();
@@ -107,12 +107,11 @@ public class EditSelection {
 		}
 		if (tagRange.end.isAfter(range.end)) {
 			if (anchorBeforeFocus) {
-				modifiedFocusLocation = node.asLocation().clone();
-				modifiedFocusLocation.after = true;
+				modifiedFocusLocation = node.asLocation().cloneWithStart(false);
 				modifiedFocusLocation = caretLocation(modifiedFocusLocation);
 			} else {
-				modifiedAnchorLocation = node.asLocation().clone();
-				modifiedAnchorLocation.after = true;
+				modifiedAnchorLocation = node.asLocation()
+						.cloneWithStart(false);
 				modifiedAnchorLocation = caretLocation(modifiedAnchorLocation);
 			}
 		}

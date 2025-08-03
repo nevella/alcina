@@ -201,6 +201,7 @@ public class PackageProperties {
     
     public static class _StringInput implements TypedProperty.Container {
       public TypedProperty<StringInput, String> autocomplete = new TypedProperty<>(StringInput.class, "autocomplete");
+      public TypedProperty<StringInput, List> behaviors = new TypedProperty<>(StringInput.class, "behaviors");
       public TypedProperty<StringInput, Boolean> commitOnEnter = new TypedProperty<>(StringInput.class, "commitOnEnter");
       public TypedProperty<StringInput, String> currentValue = new TypedProperty<>(StringInput.class, "currentValue");
       public TypedProperty<StringInput, Boolean> disabled = new TypedProperty<>(StringInput.class, "disabled");
@@ -219,6 +220,7 @@ public class PackageProperties {
       public static class InstanceProperties extends InstanceProperty.Container<StringInput> {
         public  InstanceProperties(StringInput source){super(source);}
         public InstanceProperty<StringInput, String> autocomplete(){return new InstanceProperty<>(source,PackageProperties.stringInput.autocomplete);}
+        public InstanceProperty<StringInput, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.stringInput.behaviors);}
         public InstanceProperty<StringInput, Boolean> commitOnEnter(){return new InstanceProperty<>(source,PackageProperties.stringInput.commitOnEnter);}
         public InstanceProperty<StringInput, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.stringInput.currentValue);}
         public InstanceProperty<StringInput, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput.disabled);}
@@ -259,6 +261,7 @@ public class PackageProperties {
     
     public static class _StringInput_DateInput implements TypedProperty.Container {
       public TypedProperty<StringInput.DateInput, String> autocomplete = new TypedProperty<>(StringInput.DateInput.class, "autocomplete");
+      public TypedProperty<StringInput.DateInput, List> behaviors = new TypedProperty<>(StringInput.DateInput.class, "behaviors");
       public TypedProperty<StringInput.DateInput, Boolean> commitOnEnter = new TypedProperty<>(StringInput.DateInput.class, "commitOnEnter");
       public TypedProperty<StringInput.DateInput, String> currentValue = new TypedProperty<>(StringInput.DateInput.class, "currentValue");
       public TypedProperty<StringInput.DateInput, Boolean> disabled = new TypedProperty<>(StringInput.DateInput.class, "disabled");
@@ -277,6 +280,7 @@ public class PackageProperties {
       public static class InstanceProperties extends InstanceProperty.Container<StringInput.DateInput> {
         public  InstanceProperties(StringInput.DateInput source){super(source);}
         public InstanceProperty<StringInput.DateInput, String> autocomplete(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.autocomplete);}
+        public InstanceProperty<StringInput.DateInput, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.behaviors);}
         public InstanceProperty<StringInput.DateInput, Boolean> commitOnEnter(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.commitOnEnter);}
         public InstanceProperty<StringInput.DateInput, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.currentValue);}
         public InstanceProperty<StringInput.DateInput, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.disabled);}
@@ -302,6 +306,7 @@ public class PackageProperties {
     
     public static class _StringInput_Editor implements TypedProperty.Container {
       public TypedProperty<StringInput.Editor, String> autocomplete = new TypedProperty<>(StringInput.Editor.class, "autocomplete");
+      public TypedProperty<StringInput.Editor, List> behaviors = new TypedProperty<>(StringInput.Editor.class, "behaviors");
       public TypedProperty<StringInput.Editor, Boolean> commitOnEnter = new TypedProperty<>(StringInput.Editor.class, "commitOnEnter");
       public TypedProperty<StringInput.Editor, String> currentValue = new TypedProperty<>(StringInput.Editor.class, "currentValue");
       public TypedProperty<StringInput.Editor, Boolean> disabled = new TypedProperty<>(StringInput.Editor.class, "disabled");
@@ -320,6 +325,7 @@ public class PackageProperties {
       public static class InstanceProperties extends InstanceProperty.Container<StringInput.Editor> {
         public  InstanceProperties(StringInput.Editor source){super(source);}
         public InstanceProperty<StringInput.Editor, String> autocomplete(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.autocomplete);}
+        public InstanceProperty<StringInput.Editor, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.behaviors);}
         public InstanceProperty<StringInput.Editor, Boolean> commitOnEnter(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.commitOnEnter);}
         public InstanceProperty<StringInput.Editor, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.currentValue);}
         public InstanceProperty<StringInput.Editor, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.disabled);}
