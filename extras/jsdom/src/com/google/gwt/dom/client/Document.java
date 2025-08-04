@@ -1313,10 +1313,10 @@ public class Document extends Node implements ClientDomDocument,
 	}
 
 	private native void writeClipboardText0(String clipboardText) /*-{
-	if(.navigator.clipboard==null){
-		.alert('Cannot access clipboard in non-secure context')
+	if($wnd.navigator.clipboard==null){
+		$wnd.alert('Cannot access clipboard in non-secure context')
 	}else{
-    	.navigator.clipboard.writeText(clipboardText);
+    	$wnd.navigator.clipboard.writeText(clipboardText);
 	}
 	}-*/;
 
