@@ -163,9 +163,6 @@ public class ElementQuery {
 	}
 
 	public void click() {
-		if (debugClick.is()) {
-			Ax.out(outerHtml());
-		}
 		withElement(WebElement::click);
 	}
 
