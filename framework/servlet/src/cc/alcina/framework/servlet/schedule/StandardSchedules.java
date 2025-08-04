@@ -183,6 +183,21 @@ public class StandardSchedules {
 		}
 	}
 
+	public static class OneMinuteSchedule extends Schedule {
+		public OneMinuteSchedule() {
+			LocalDateTime now = LocalDateTime.now();
+			withNext(now.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1));
+		}
+	}
+
+	public static class OneMinuteScheduleFactory
+			implements RegistryFactory<Schedule> {
+		@Override
+		public Schedule impl() {
+			return new StandardSchedules.OneMinuteSchedule();
+		}
+	}
+
 	public static class WeeklySchedule extends Schedule {
 		public WeeklySchedule() {
 			withNext(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
