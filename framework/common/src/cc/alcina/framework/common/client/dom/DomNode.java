@@ -2263,8 +2263,13 @@ public class DomNode {
 	}
 
 	public String toShortDebugString() {
-		return Ax.format("%s :: %s", gwtNode().toNameAttachId(),
-				Ax.ntrim(Ax.trimForLogging(textContent()), 25));
+		if (isGwtNode()) {
+			return Ax.format("%s :: %s", gwtNode().toNameAttachId(),
+					Ax.ntrim(Ax.trimForLogging(textContent()), 25));
+		} else {
+			return Ax.format("%s :: %s", toTagClassName(),
+					Ax.ntrim(Ax.trimForLogging(textContent()), 25));
+		}
 	}
 
 	public DomNode getCommonAncestorContainer(DomNode other,
