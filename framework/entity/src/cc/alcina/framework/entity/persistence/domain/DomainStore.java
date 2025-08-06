@@ -1595,6 +1595,15 @@ public class DomainStore implements IDomainStore {
 
 	public volatile long lastExceptionPostProcessDelayWarning;
 
+	public static class ExceptionalPostProcessDelay
+			implements ProcessObservable {
+		public String message;
+
+		public ExceptionalPostProcessDelay(String message) {
+			this.message = message;
+		}
+	}
+
 	public class DomainStoreHealth {
 		public long domainStoreMaxPostProcessTime;
 
@@ -1637,14 +1646,17 @@ public class DomainStore implements IDomainStore {
 				 */
 				boolean exceptionalLongPostProcess = time > 5000;
 				String prefix = exceptionalLongPostProcess ? "Very " : "";
-				logger.warn(
-						"{}Long postprocess time - {} ms - {}\n{}\n\n{}\n\n",
-						prefix, time, postProcessThread2, postProcessTransform2,
+				String message = Ax.format(
+						"%sLong postprocess time - %s ms - %s  - %s\n%s\n\n%s\n\n",
+						prefix, time, postProcessEvent.toStringId(),
+						postProcessThread2, postProcessTransform2,
 						SEUtilities.getStacktraceSlice(postProcessThread2,
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
+				logger.warn(message);
 				if (exceptionalLongPostProcess) {
 					lastExceptionPostProcessDelayWarning = System
 							.currentTimeMillis();
+					new ExceptionalPostProcessDelay(message).publish();
 				}
 			}
 			return time;
