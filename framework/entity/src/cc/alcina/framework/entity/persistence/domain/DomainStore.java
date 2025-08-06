@@ -1593,6 +1593,8 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public volatile long lastExceptionPostProcessDelayWarning;
+
 	public class DomainStoreHealth {
 		public long domainStoreMaxPostProcessTime;
 
@@ -1627,12 +1629,23 @@ public class DomainStore implements IDomainStore {
 			// t/unsafe - if time > 100, the earlier copies are sure to be
 			// correct
 			if (time > 100 && postProcessThread2 != null) {
-				String prefix = time > 5000 ? "Very " : "";
+				/*
+				 * this affects all request processing - timeouts should be
+				 * recomputed from now(), since there's no misbehaving
+				 * communications, only some sort of slownexs (huge request) in
+				 * the to-graph bottleneck
+				 */
+				boolean exceptionalLongPostProcess = time > 5000;
+				String prefix = exceptionalLongPostProcess ? "Very " : "";
 				logger.warn(
 						"{}Long postprocess time - {} ms - {}\n{}\n\n{}\n\n",
 						prefix, time, postProcessThread2, postProcessTransform2,
 						SEUtilities.getStacktraceSlice(postProcessThread2,
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
+				if (exceptionalLongPostProcess) {
+					lastExceptionPostProcessDelayWarning = System
+							.currentTimeMillis();
+				}
 			}
 			return time;
 		}
