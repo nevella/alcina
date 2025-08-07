@@ -124,6 +124,7 @@ import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityValuesMapper;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentLoader;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
+import cc.alcina.framework.entity.persistence.mvcc.MvccException;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -451,12 +452,42 @@ public class DomainStore implements IDomainStore {
 				return visible;
 			}
 			Entity existing = null;
+			RuntimeException getAnyTransactionException = null;
 			try {
 				existing = cache.getAnyTransaction(clazz, id);
 			} catch (RuntimeException e) {
-				logger.warn("Exception in ensureEntity :: {}/{}/{}",
-						clazz.getSimpleName(), id, localId);
-				throw e;
+				getAnyTransactionException = e;
+			}
+			if (getAnyTransactionException != null) {
+				if (getAnyTransactionException instanceof MvccException.NoNonRemovedValueException) {
+					/*
+					 * oooh. but this is really a hack anyway - barring a formal
+					 * description of interactions between vacuum and getters.
+					 * 
+					 * These exceptions are very rare, around lazy-load objects
+					 * (well, their id lookup vacuum policies). I'm trying a
+					 * simple delay as a holding patch
+					 */
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					getAnyTransactionException = null;
+					try {
+						existing = cache.getAnyTransaction(clazz, id);
+					} catch (RuntimeException e) {
+						getAnyTransactionException = e;
+						logger.warn(
+								"Exception on getAnyTransaction retry :: {}/{}/{}",
+								clazz.getSimpleName(), id, localId);
+					}
+				}
+				if (getAnyTransactionException != null) {
+					logger.warn("Exception in ensureEntity :: {}/{}/{}",
+							clazz.getSimpleName(), id, localId);
+					throw getAnyTransactionException;
+				}
 			}
 			// the Transactions.resolve calls force a visible version
 			if (existing != null) {
@@ -1593,6 +1624,17 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public volatile long lastExceptionPostProcessDelayWarning;
+
+	public static class ExceptionalPostProcessDelay
+			implements ProcessObservable {
+		public String message;
+
+		public ExceptionalPostProcessDelay(String message) {
+			this.message = message;
+		}
+	}
+
 	public class DomainStoreHealth {
 		public long domainStoreMaxPostProcessTime;
 
@@ -1627,12 +1669,26 @@ public class DomainStore implements IDomainStore {
 			// t/unsafe - if time > 100, the earlier copies are sure to be
 			// correct
 			if (time > 100 && postProcessThread2 != null) {
-				String prefix = time > 5000 ? "Very " : "";
-				logger.warn(
-						"{}Long postprocess time - {} ms - {}\n{}\n\n{}\n\n",
-						prefix, time, postProcessThread2, postProcessTransform2,
+				/*
+				 * this affects all request processing - timeouts should be
+				 * recomputed from now(), since there's no misbehaving
+				 * communications, only some sort of slownexs (huge request) in
+				 * the to-graph bottleneck
+				 */
+				boolean exceptionalLongPostProcess = time > 5000;
+				String prefix = exceptionalLongPostProcess ? "Very " : "";
+				String message = Ax.format(
+						"%sLong postprocess time - %s ms - %s  - %s\n%s\n\n%s\n\n",
+						prefix, time, postProcessEvent.toStringId(),
+						postProcessThread2, postProcessTransform2,
 						SEUtilities.getStacktraceSlice(postProcessThread2,
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
+				logger.warn(message);
+				if (exceptionalLongPostProcess) {
+					lastExceptionPostProcessDelayWarning = System
+							.currentTimeMillis();
+					new ExceptionalPostProcessDelay(message).publish();
+				}
 			}
 			return time;
 		}

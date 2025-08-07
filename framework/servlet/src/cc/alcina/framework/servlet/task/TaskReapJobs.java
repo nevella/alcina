@@ -27,10 +27,12 @@ import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
-public class TaskReapJobs extends PerformerTask.Fields {
+public class TaskReapJobs extends PerformerTask.Remote {
 	transient Job currentJob;
 
 	public boolean force;
+
+	public long filterId;
 
 	public TaskReapJobs withForce(boolean force) {
 		this.force = force;
@@ -48,7 +50,9 @@ public class TaskReapJobs extends PerformerTask.Fields {
 				.setTrue(DomainStore.CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS);
 		ProcessObservers.context()
 				.observe(new IgnoredLocalIdLocatorResolutionObserver());
-		Stream<? extends Job> jobs = JobDomain.get().getAllJobs();
+		Stream<? extends Job> jobs = filterId != 0
+				? Stream.of(Job.byId(filterId))
+				: JobDomain.get().getAllJobs();
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
 		AtomicInteger exceptions = new AtomicInteger(0);

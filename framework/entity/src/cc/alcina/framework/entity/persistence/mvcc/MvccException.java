@@ -16,4 +16,10 @@ public class MvccException extends RuntimeException {
 	public MvccException(Throwable cause) {
 		super(cause);
 	}
+
+	public static class NoNonRemovedValueException extends MvccException {
+		public NoNonRemovedValueException(String message) {
+			super(message);
+		}
+	}
 }

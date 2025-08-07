@@ -27,8 +27,13 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 
 	private AtomicInteger requestCounter = new AtomicInteger(0);
 
+	static final String ATTR_REQUEST_START = AlcinaContextEntryFilter.class
+			.getName() + "ATTR_REQUEST_START";
+
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
+		httpRequest.setAttribute(ATTR_REQUEST_START,
+				System.currentTimeMillis());
 		if (AlcinaServletContext.checkRefusing(httpRequest, httpResponse)) {
 			return;
 		}
@@ -47,5 +52,9 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 	private boolean shouldRunWithRootPermissions() {
 		return resourceInfo.getResourceMethod()
 				.getAnnotation(RootPermissions.class) != null;
+	}
+
+	public static long getRequestStart(HttpServletRequest httpRequest) {
+		return (Long) httpRequest.getAttribute(ATTR_REQUEST_START);
 	}
 }

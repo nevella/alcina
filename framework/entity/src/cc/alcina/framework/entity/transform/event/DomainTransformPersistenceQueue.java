@@ -616,21 +616,30 @@ public class DomainTransformPersistenceQueue {
 		}
 
 		private void await0() throws InterruptedException {
-			long startTime = System.currentTimeMillis();
-			long warnLongRunningTime = startTime + 1000;
+			long fromTime = System.currentTimeMillis();
+			long warnLongRunningTime = fromTime + 1000;
 			while (true) {
 				long now = System.currentTimeMillis();
-				long timeRemaining = -now + startTime + timeoutMs;
+				long timeRemaining = -now + fromTime + timeoutMs;
 				int awaitingRequestCount = 0;
 				if (timeRemaining <= 0) {
-					logger.warn("Queue waiter timeout - {} - {} ms", this,
-							now - startTime);
-					timedOut = true;
-					return;
+					long lastExceptionPostProcessDelayWarning = persistenceEvents.domainStore.lastExceptionPostProcessDelayWarning;
+					if (lastExceptionPostProcessDelayWarning > fromTime) {
+						logger.info(
+								"Long running wait for processed - resetting (post-process delay) - {}",
+								this);
+						fromTime = lastExceptionPostProcessDelayWarning;
+						warnLongRunningTime = fromTime + 1000;
+					} else {
+						logger.warn("Queue waiter timeout - {} - {} ms", this,
+								now - fromTime);
+						timedOut = true;
+						return;
+					}
 				}
 				if (now > warnLongRunningTime) {
 					logger.info("Long running wait for processed - {} - {} ms",
-							this, now - startTime);
+							this, now - fromTime);
 				}
 				synchronized (state) {
 					state.removeFiredFrom(awaitingRequestIds);

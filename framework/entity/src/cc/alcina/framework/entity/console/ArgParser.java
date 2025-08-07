@@ -89,4 +89,8 @@ public class ArgParser {
 			return Optional.ofNullable(value);
 		}
 	}
+
+	public boolean isEmpty() {
+		return argv.isEmpty();
+	}
 }

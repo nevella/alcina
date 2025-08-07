@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.job;
 
-import java.security.Permission;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,8 +18,8 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -80,11 +79,12 @@ public class TowardsAMoreDesirableSituation {
 		DomainTransformCommitPosition entryPosition = DomainStore.stores()
 				.writableStore().getPersistenceEvents().getQueue()
 				.getTransformCommitPosition();
-		// note resubmit is required for future
-		// consistency aborts (unless task has other
-		// logical consistency
-		// ensurance mechanism - e.g. jade parsers)
-		//
+		/*
+		 * note resubmit is required for future consistency aborts (unless task
+		 * has other logical consistency ensurance mechanism - e.g. jade
+		 * parsers)
+		 * 
+		 */
 		Job job = next.get();
 		if (job.getPerformer() != null) {
 			logger.info(

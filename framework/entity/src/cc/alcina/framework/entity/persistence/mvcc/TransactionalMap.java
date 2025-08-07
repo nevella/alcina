@@ -699,7 +699,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 							objectVersion.object))
 					.findFirst();
 			if (version.isEmpty()) {
-				throw new IllegalStateException(Ax.format(
+				throw new MvccException.NoNonRemovedValueException(Ax.format(
 						"getAnyTransaction - no non-removed value (vacuum race?): %s",
 						key));
 			}
@@ -807,7 +807,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected void vacuum0(VacuumableTransactions vacuumableTransactions) {
+		protected synchronized void
+				vacuum0(VacuumableTransactions vacuumableTransactions) {
 			super.vacuum0(vacuumableTransactions);
 			if (getSize() == 0
 					&& visibleAllTransactions.get() == REMOVED_VALUE_MARKER) {
