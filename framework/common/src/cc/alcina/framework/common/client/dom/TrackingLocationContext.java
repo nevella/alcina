@@ -273,35 +273,21 @@ class TrackingLocationContext implements LocationContext {
 					}
 					break;
 				case strip:
-					if (delta.treeIndex == 0) {
+					/*
+					 * the combined effect (on all non-removed nodes) is just
+					 * tree-index : -=1
+					 * 
+					 * the first mutation will be treeindex negative, the second
+					 * positive. hijack the first, noop the second
+					 */
+					if (delta.treeIndex < 0) {
 						/*
-						 * first part of split, pure character update, ignore
+						 * first part of strip
 						 */
-						return mutatingPointRef;
+						return mutatingPointRef.add(-1, 0);
 					} else {
-						if (at.index <= mutatingPointRef.index
-								&& at.treeIndex == mutatingPointRef.treeIndex
-										+ 1
-								&& !mutatingPointRef.start) {
-							// boolean locationToStart = at.index ==
-							// mutatingPointRef.index;
-							/*
-							 * bump treeindex (location is now tracking the node
-							 * created by split), location is now a start
-							 * location
-							 */
-							return mutatingPointRef.add(1, 0)
-									/*
-									 * Actually, start *will* never change -
-									 * start is not about location position in a
-									 * node, but location intention
-									 */
-									// .withStart(locationToStart)
-									.withContainingNode(
-											location.getContainingNode());
-						}
+						return mutatingPointRef;
 					}
-					break;
 				default:
 					throw new UnsupportedOperationException();
 				}
