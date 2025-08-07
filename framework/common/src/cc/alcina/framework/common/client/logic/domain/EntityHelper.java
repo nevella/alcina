@@ -35,18 +35,27 @@ public class EntityHelper {
 	}
 
 	public static int compare(Entity o1, Entity o2) {
-		int i = o1.entityClass().getName()
-				.compareTo(o2.entityClass().getName());
-		if (i != 0) {
-			return i;
+		int cmp = 0;
+		{
+			if (o1.entityClass() != o2.entityClass()) {
+				cmp = o1.entityClass().getName()
+						.compareTo(o2.entityClass().getName());
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
 		}
-		i = CommonUtils.compareLongs(o1.getId(), o2.getId());
-		if (i != 0) {
-			return i;
+		{
+			cmp = CommonUtils.compareLongs(o1.getId(), o2.getId());
+			if (cmp != 0) {
+				return cmp;
+			}
 		}
-		i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
-		if (i != 0) {
-			return i;
+		{
+			cmp = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
+			if (cmp != 0) {
+				return cmp;
+			}
 		}
 		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
 	}
