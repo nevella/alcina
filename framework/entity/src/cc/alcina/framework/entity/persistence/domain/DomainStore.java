@@ -124,6 +124,7 @@ import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityValuesMapper;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentLoader;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
+import cc.alcina.framework.entity.persistence.mvcc.MvccException;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -451,12 +452,42 @@ public class DomainStore implements IDomainStore {
 				return visible;
 			}
 			Entity existing = null;
+			RuntimeException getAnyTransactionException = null;
 			try {
 				existing = cache.getAnyTransaction(clazz, id);
 			} catch (RuntimeException e) {
-				logger.warn("Exception in ensureEntity :: {}/{}/{}",
-						clazz.getSimpleName(), id, localId);
-				throw e;
+				getAnyTransactionException = e;
+			}
+			if (getAnyTransactionException != null) {
+				if (getAnyTransactionException instanceof MvccException.NoNonRemovedValueException) {
+					/*
+					 * oooh. but this is really a hack anyway - barring a formal
+					 * description of interactions between vacuum and getters.
+					 * 
+					 * These exceptions are very rare, around lazy-load objects
+					 * (well, their id lookup vacuum policies). I'm trying a
+					 * simple delay as a holding patch
+					 */
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					getAnyTransactionException = null;
+					try {
+						existing = cache.getAnyTransaction(clazz, id);
+					} catch (RuntimeException e) {
+						getAnyTransactionException = e;
+						logger.warn(
+								"Exception on getAnyTransaction retry :: {}/{}/{}",
+								clazz.getSimpleName(), id, localId);
+					}
+				}
+				if (getAnyTransactionException != null) {
+					logger.warn("Exception in ensureEntity :: {}/{}/{}",
+							clazz.getSimpleName(), id, localId);
+					throw getAnyTransactionException;
+				}
 			}
 			// the Transactions.resolve calls force a visible version
 			if (existing != null) {
