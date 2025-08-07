@@ -272,6 +272,36 @@ class TrackingLocationContext implements LocationContext {
 						}
 					}
 					break;
+				case strip:
+					if (delta.treeIndex == 0) {
+						/*
+						 * first part of split, pure character update, ignore
+						 */
+						return mutatingPointRef;
+					} else {
+						if (at.index <= mutatingPointRef.index
+								&& at.treeIndex == mutatingPointRef.treeIndex
+										+ 1
+								&& !mutatingPointRef.start) {
+							// boolean locationToStart = at.index ==
+							// mutatingPointRef.index;
+							/*
+							 * bump treeindex (location is now tracking the node
+							 * created by split), location is now a start
+							 * location
+							 */
+							return mutatingPointRef.add(1, 0)
+									/*
+									 * Actually, start *will* never change -
+									 * start is not about location position in a
+									 * node, but location intention
+									 */
+									// .withStart(locationToStart)
+									.withContainingNode(
+											location.getContainingNode());
+						}
+					}
+					break;
 				default:
 					throw new UnsupportedOperationException();
 				}
