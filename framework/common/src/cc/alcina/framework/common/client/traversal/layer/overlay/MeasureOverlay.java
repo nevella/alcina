@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Location.LocationSnapshot;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
@@ -198,6 +197,7 @@ public class MeasureOverlay {
 		if (!start.isAtNodeBoundary()) {
 			SplitResult split = start.split();
 			start = split.after.asLocation();
+			end.getIndex();
 		}
 		if (!end.isAtNodeBoundary()) {
 			SplitResult split = end.split();
