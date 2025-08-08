@@ -73,12 +73,19 @@ public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 		return Ax.format("%s.%s", NestedName.get(definingType), name);
 	}
 
-	public void setIfNotEqual(S propertySource, T newValue) {
+	/**
+	 * 
+	 * @param propertySource
+	 * @param newValue
+	 * @return true if the setter files (!Objects.equals(newValue,oldValue))
+	 */
+	public boolean setIfNotEqual(S propertySource, T newValue) {
 		T existing = get(propertySource);
 		if (Objects.equals(existing, newValue)) {
-			return;
+			return false;
 		} else {
 			set(propertySource, newValue);
+			return true;
 		}
 	}
 
