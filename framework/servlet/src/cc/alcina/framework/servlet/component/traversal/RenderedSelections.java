@@ -159,7 +159,7 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 				listSourceSelection = listSource.path.selection();
 			}
 			if (listSourceSelection != null) {
-				properties.selectionTable.setIfNotEqual(this,
+				boolean fired = properties.selectionTable.setIfNotEqual(this,
 						new SelectionTableArea(
 								traversal.layers().get(listSourceSelection),
 								listSourceSelection));

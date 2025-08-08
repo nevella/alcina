@@ -152,7 +152,13 @@ public class SelectionTableArea extends Model.Fields
 	public boolean equals(Object input) {
 		if (input instanceof SelectionTableArea) {
 			SelectionTableArea typed = (SelectionTableArea) input;
-			return typed != null && Objects.equals(typed.hasTable, hasTable);
+			if (typed != null && Objects.equals(typed.hasTable, hasTable)) {
+				boolean equals = Objects.equals(typed.selectionBindables,
+						selectionBindables);
+				return equals;
+			} else {
+				return false;
+			}
 		} else {
 			return false;
 		}
