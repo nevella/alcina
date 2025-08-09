@@ -454,7 +454,7 @@ public class Location implements Comparable<Location> {
 
 		/**
 		 * 
-		 * @return the range containing the shallowest nodes which being/end at
+		 * @return the range containing the shallowest nodes which begin/end at
 		 *         the location (or are the text node containing the location)
 		 */
 		public Range toShallowestNodes() {
@@ -472,7 +472,8 @@ public class Location implements Comparable<Location> {
 			Location start = this.start
 					.toContainingTreeIndex(startContainers.get(0).asLocation());
 			Location end = this.end
-					.toContainingTreeIndex(endContainers.get(0).asLocation());
+					.toContainingTreeIndex(endContainers.get(0).asLocation())
+					.cloneWithStart(false);
 			return new Range(start, end);
 		}
 
@@ -758,8 +759,8 @@ public class Location implements Comparable<Location> {
 			this.index = index;
 			this.start = start;
 			/*
-			 * normally null, unless the location node is changed due to
-			 * split/merge
+			 * normally null for a delta, unless the location node is changed
+			 * due to split/merge
 			 */
 			this.containingNode = containingNode;
 			/*
@@ -816,21 +817,32 @@ public class Location implements Comparable<Location> {
 		 * but there's an ordering between [treeindex|start,index], not
 		 * [treeindex,index]
 		 */
-		boolean isBefore(IndexTuple other) {
+		boolean isAffectedBy(IndexTuple at, IndexTuple delta) {
 			/*
 			 * tree-index affecting. treeindex mutations to other will affect
 			 * this only if other.treeIndex < treeIndex, irrespective of start
 			 */
-			if (other.treeIndex < treeIndex) {
-				return false;
+			if (at.treeIndex < treeIndex) {
+				return true;
+			}
+			if (at.treeIndex == treeIndex && at.index == index && start) {
+				/*
+				 * edgy - a delta exactly at this index, when the index is a
+				 * start, will only have effect if the delta is a tree-index
+				 * delta (possibly also an index delta)
+				 */
+				return delta.treeIndex != 0;
 			}
 			/*
 			 * text-index affecting. handle before/start separately
 			 */
 			if (start) {
-				return index <= other.index;
+				/*
+				 * unaffected by text inserts (or deletes) at index
+				 */
+				return at.index < index;
 			} else {
-				return index < other.index;
+				return at.index <= index;
 			}
 		}
 
@@ -911,7 +923,7 @@ public class Location implements Comparable<Location> {
 	 */
 	private transient DomNode containingNode;
 
-	private transient LocationContext locationContext;
+	transient LocationContext locationContext;
 
 	transient int documentMutationPosition;
 
@@ -937,16 +949,23 @@ public class Location implements Comparable<Location> {
 	 */
 	public Location(int treeIndex, int index, boolean start,
 			DomNode containingNode, LocationContext locationContext) {
-		this(treeIndex, index, start, containingNode, locationContext, null);
+		this(treeIndex, index, start, containingNode, locationContext, null,
+				locationContext.getDocumentMutationPosition());
 	}
 
 	Location(int treeIndex, int index, boolean start, DomNode containingNode,
 			LocationContext locationContext, Location searchFrom) {
+		this(treeIndex, index, start, containingNode, locationContext,
+				searchFrom, locationContext.getDocumentMutationPosition());
+	}
+
+	Location(int treeIndex, int index, boolean start, DomNode containingNode,
+			LocationContext locationContext, Location searchFrom,
+			int documentMutationPosition) {
 		this.treeIndex = treeIndex;
 		this.index = index;
 		this.locationContext = locationContext;
-		this.documentMutationPosition = locationContext
-				.getDocumentMutationPosition();
+		this.documentMutationPosition = documentMutationPosition;
 		if (containingNode == null) {
 			containingNode = locationContext.getContainingNode(this,
 					searchFrom);
@@ -968,12 +987,12 @@ public class Location implements Comparable<Location> {
 	@Override
 	public Location clone() {
 		return new Location(treeIndex, index, start, containingNode,
-				locationContext);
+				locationContext, null, documentMutationPosition);
 	}
 
 	public Location cloneWithStart(boolean start) {
 		return new Location(treeIndex, index, start, containingNode,
-				locationContext);
+				locationContext, null, documentMutationPosition);
 	}
 
 	/**
@@ -1309,7 +1328,10 @@ public class Location implements Comparable<Location> {
 			 * Note this - split/merge can change container nodeif splitting at
 			 * that location)
 			 */
-			this.containingNode = delta.containingNode;
+			if (delta.containingNode.relative()
+					.previousSibling() == this.containingNode) {
+				this.containingNode = delta.containingNode;
+			}
 		}
 	}
 

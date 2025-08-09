@@ -1645,26 +1645,6 @@ public class DomNode {
 				parent.children.append(other);
 			}
 		}
-
-		public DomNode wrap(String tag) {
-			DomNode wrapper = document
-					.nodeFor(document.w3cDoc().createElement(tag));
-			com.google.gwt.dom.client.Node gwtNode = isGwtNode() ? gwtNode()
-					: null;
-			try {
-				if (gwtNode != null) {
-					gwtNode.mutationGroups().enterWrap();
-				}
-				replaceWith(wrapper);
-				wrapper.children.append(DomNode.this);
-			} finally {
-				if (gwtNode != null) {
-					gwtNode.mutationGroups().exit();
-				}
-			}
-			wrapper.copyAttributesFrom(DomNode.this);
-			return wrapper;
-		}
 	}
 
 	public class DomNodeStyle {

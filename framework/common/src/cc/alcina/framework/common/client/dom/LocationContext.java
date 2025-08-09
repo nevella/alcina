@@ -86,6 +86,7 @@ public interface LocationContext {
 		int contentLength = getContentLength(containingNode);
 		int relativeIndex = location.getIndex() + offset
 				- containingNode.asLocation().getIndex();
+		start = true;
 		if (relativeIndex > 0 && relativeIndex <= contentLength) {
 			return new Location(location.getTreeIndex(), index, start,
 					location.getContainingNode(), this);

@@ -198,11 +198,23 @@ public class DomNodeBuilder {
 	}
 
 	public DomNode wrap() {
-		DomNode node = build();
-		relativeTo.node.getParentNode().insertBefore(node.node,
-				relativeTo.node);
-		node.node.appendChild(relativeTo.node);
-		return node;
+		com.google.gwt.dom.client.Node gwtNode = relativeTo.isGwtNode()
+				? relativeTo.gwtNode()
+				: null;
+		try {
+			if (gwtNode != null) {
+				gwtNode.mutationGroups().enterWrap();
+			}
+			DomNode node = build();
+			relativeTo.node.getParentNode().insertBefore(node.node,
+					relativeTo.node);
+			node.node.appendChild(relativeTo.node);
+			return node;
+		} finally {
+			if (gwtNode != null) {
+				gwtNode.mutationGroups().exit();
+			}
+		}
 	}
 
 	public DomNode wrapChildren() {

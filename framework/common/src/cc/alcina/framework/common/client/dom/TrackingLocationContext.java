@@ -14,6 +14,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Ref;
@@ -206,7 +207,8 @@ class TrackingLocationContext implements LocationContext {
 		public String toString() {
 			return location == null ? "[null]"
 					: Ax.format("%s :: %s :: %s", at, delta,
-							location.getContainingNode().toShortDebugString());
+							location.asIndexTuple().containingNode
+									.toShortDebugString());
 		}
 
 		IndexTuple applyTo(IndexTuple mutatingPointRef) {
@@ -224,7 +226,7 @@ class TrackingLocationContext implements LocationContext {
 				 */
 				return mutatingPointRef;
 			}
-			if (mutatingPointRef.isBefore(at)) {
+			if (!mutatingPointRef.isAffectedBy(at, delta)) {
 				return mutatingPointRef;
 			}
 			/*
@@ -237,57 +239,34 @@ class TrackingLocationContext implements LocationContext {
 			 */
 			int indexDelta = delta.index;
 			/*
-			 * special case mutation groups
+			 * special case mutation groups. the indexmutation will always
+			 * combine the mutations into one group
 			 */
 			if (mutationGroup != null) {
 				indexDelta = 0;
 				switch (mutationGroup) {
 				case split:
-					if (delta.treeIndex == 0) {
-						/*
-						 * first part of split, pure character update, ignore
-						 */
-						return mutatingPointRef;
-					} else {
-						if (at.index <= mutatingPointRef.index
-								&& at.treeIndex == mutatingPointRef.treeIndex
-										+ 1
-								&& !mutatingPointRef.start) {
-							// boolean locationToStart = at.index ==
-							// mutatingPointRef.index;
-							/*
-							 * bump treeindex (location is now tracking the node
-							 * created by split), location is now a start
-							 * location
-							 */
-							return mutatingPointRef.add(1, 0)
-									/*
-									 * Actually, start *will* never change -
-									 * start is not about location position in a
-									 * node, but location intention
-									 */
-									// .withStart(locationToStart)
-									.withContainingNode(
-											location.getContainingNode());
-						}
-					}
-					break;
+					/*
+					 * anything in the split range will have its containing node
+					 * changed
+					 */
+					DomNode createdNode = domMutations.get(1).addedNodes
+							.get(0).node.asDomNode();
+					return mutatingPointRef.add(1, 0)
+							.withContainingNode(createdNode);
 				case strip:
 					/*
 					 * the combined effect (on all non-removed nodes) is just
 					 * tree-index : -=1
-					 * 
-					 * the first mutation will be treeindex negative, the second
-					 * positive. hijack the first, noop the second
 					 */
-					if (delta.treeIndex < 0) {
-						/*
-						 * first part of strip
-						 */
-						return mutatingPointRef.add(-1, 0);
-					} else {
-						return mutatingPointRef;
-					}
+					return mutatingPointRef.add(-1, 0);
+				case wrap:
+					/*
+					 * the combined effect (on all non-removed nodes) is just
+					 * tree-index : +=1
+					 * 
+					 */
+					return mutatingPointRef.add(1, 0);
 				default:
 					throw new UnsupportedOperationException();
 				}
@@ -309,9 +288,32 @@ class TrackingLocationContext implements LocationContext {
 
 		/* only child list mutations in the same direction can be extended */
 		boolean extendWith(MutationRecord mutation) {
+			if (mutation.mutationGroup != null) {
+				if (this.mutationGroup != mutation.mutationGroup) {
+					return false;
+				} else {
+					int mutationCount = domMutations.size();
+					int groupMutationCount = 0;
+					switch (mutationGroup) {
+					case split:
+						groupMutationCount = 2;
+						break;
+					case strip:
+					case wrap:
+						groupMutationCount = 3;
+						break;
+					default:
+						throw new UnsupportedOperationException();
+					}
+					boolean groupExtendable = mutationCount < groupMutationCount;
+					if (groupExtendable) {
+						addDomMutation(mutation);
+					}
+					return groupExtendable;
+				}
+			}
 			if (!extendable
-					|| mutation.type == MutationRecord.Type.characterData
-					|| mutation.mutationGroup != null || false) {
+					|| mutation.type == MutationRecord.Type.characterData) {
 				return false;
 			}
 			Location affectedLocation = computeAffectedLocation(mutation);
@@ -469,6 +471,25 @@ class TrackingLocationContext implements LocationContext {
 		return getContainingLocation(test, null);
 	}
 
+	class ContainmentDebug {
+		DomNode node;
+
+		List<DomNode> nodes;
+
+		IntPair intPair;
+
+		ContainmentDebug(DomNode node) {
+			this.node = node;
+			nodes = node.children.nodes();
+			intPair = node.asRange().toIntPair();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - %s", node.toTagClassName(), intPair);
+		}
+	}
+
 	@Override
 	public Location getContainingLocation(Location test, Location startAt) {
 		startAt = startAt == null ? getDocumentElementNode().asLocation()
@@ -514,11 +535,13 @@ class TrackingLocationContext implements LocationContext {
 		if (node.isText()) {
 			return node.asLocation();
 		}
+		List<ContainmentDebug> containmentDebugs = new ArrayList<>();
 		while (true) {
 			/*
 			 * descend loop
 			 */
 			List<DomNode> nodes = node.children.nodes();
+			containmentDebugs.add(new ContainmentDebug(node));
 			int length = nodes.size();
 			int lowerBound = 0;
 			int upperBound = length - 1;
@@ -559,6 +582,12 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public void ensureCurrent(Location location) {
+		ensureCurrent(location, false);
+	}
+
+	String logMutationTag = "find-result";
+
+	void ensureCurrent(Location location, boolean withoutSideEffects) {
 		if (location.documentMutationPosition == getDocumentMutationPosition()) {
 			return;
 		}
@@ -578,6 +607,8 @@ class TrackingLocationContext implements LocationContext {
 			return;
 		}
 		DomNode containingNode = indexTuple.containingNode;
+		ProcessObservers.publish(TrackingLocationMutationObservable.class,
+				() -> new TrackingLocationMutationObservable(location, true));
 		/*
 		 * Edge case - during client mutation sync/node removal, attached may be
 		 * false but the ancestry chain to document still intact
@@ -597,7 +628,7 @@ class TrackingLocationContext implements LocationContext {
 			DomNode treePreviousNode = indexTuple.start
 					? containingNode.relative().treePreviousNode()
 					: containingNode.relative().lastDescendant();
-			if (treePreviousNode != null) {
+			if (treePreviousNode != null && !withoutSideEffects) {
 				/*
 				 * FIXME - location - revisit - rather than
 				 * treePreviousNode.location - the question is, should location
@@ -617,6 +648,10 @@ class TrackingLocationContext implements LocationContext {
 					location.applyIndexDelta(nextFromTpl.subtract(locationTuple)
 							.withStart(locationTuple.start));
 					flushCurrentMutationIfAffecting(location);
+					ProcessObservers.publish(
+							TrackingLocationMutationObservable.class,
+							() -> new TrackingLocationMutationObservable(
+									location, false));
 					return;
 				}
 			}
@@ -626,6 +661,8 @@ class TrackingLocationContext implements LocationContext {
 		 * flushing current if needed
 		 */
 		applyPriorMutations(location);
+		ProcessObservers.publish(TrackingLocationMutationObservable.class,
+				() -> new TrackingLocationMutationObservable(location, false));
 	}
 
 	@Override
@@ -664,21 +701,34 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public void validateLocations() {
+		validateLocations(false);
+	}
+
+	void validateLocations(boolean withoutSideEffects) {
 		IndexTuple cumulative = IndexTuple.zero;
 		List<DomNode> list = gwtDocument.domDocument.stream().toList();
 		for (int idx = 0; idx < list.size(); idx++) {
 			DomNode n = list.get(idx);
 			Location location = n.asLocation();
+			Location validationLocation = location;
+			Location locationClone = location.clone();
 			IndexTuple preEnsure = location.asIndexTuple();
 			int documentMutationPosition = location.documentMutationPosition;
-			ensureCurrent(location);
-			IndexTuple locationTuple = location.asIndexTuple();
+			if (withoutSideEffects) {
+				validationLocation = location.clone();
+				ensureCurrent(validationLocation, true);
+			} else {
+				ensureCurrent(validationLocation);
+			}
+			IndexTuple locationTuple = validationLocation.asIndexTuple();
 			if (Objects.equals(locationTuple, cumulative)) {
 				cumulative = cumulative.add(1, n.textLengthSelf());
 			} else {
 				Ax.err("Location exception: [%s->%s] %s :: -> %s [correct: %s]",
 						documentMutationPosition, getDocumentMutationPosition(),
 						preEnsure, locationTuple, cumulative);
+				validationLocation = locationClone.clone();
+				ensureCurrent(validationLocation, true);
 				throw new LocationValidationException();
 			}
 		}
@@ -739,7 +789,8 @@ class TrackingLocationContext implements LocationContext {
 				.withContainingNode(null);
 		for (int idx = location.documentMutationPosition; idx < mutations
 				.size(); idx++) {
-			mutatingPointRef = mutations.get(idx).applyTo(mutatingPointRef);
+			IndexMutation indexMutation = mutations.get(idx);
+			mutatingPointRef = indexMutation.applyTo(mutatingPointRef);
 		}
 		IndexTuple locationDelta = mutatingPointRef
 				.subtract(initialLocationTuple);
@@ -751,7 +802,8 @@ class TrackingLocationContext implements LocationContext {
 
 	void flushCurrentMutationIfAffecting(Location updatedLocation) {
 		if (currentMutation != null && currentMutation.at != null) {
-			if (!updatedLocation.asIndexTuple().isBefore(currentMutation.at)) {
+			if (updatedLocation.asIndexTuple().isAffectedBy(currentMutation.at,
+					currentMutation.delta)) {
 				currentMutation = null;
 			}
 		}
