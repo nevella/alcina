@@ -100,6 +100,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		if (!Configuration.is("enabled")) {
 			return;
 		}
+		maxEvents = Configuration.getInt("maxEvents");
 		new FlightEventObserver().bind();
 		new MarkRecordedEventsObserver().bind();
 		new PersistRecordedEventsObserver().bind();
@@ -112,6 +113,10 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 	public void onApplicationShutdown() {
 		finished = true;
 	}
+
+	int maxEvents;
+
+	int counter;
 
 	void writeMessage(FlightEvent message) {
 		long nanoTime = System.nanoTime();
@@ -126,6 +131,14 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 	void writeMessage0(FlightEvent message) {
 		File writeTo = null;
 		try {
+			counter++;
+			if (counter > maxEvents) {
+				return;
+			}
+			if (counter == maxEvents) {
+				throw new RuntimeException(
+						"Exceeded FlightEventRecorder maxEvents");
+			}
 			if (sessionId == null) {
 				sessionId = message.event.getSessionId();
 			}
