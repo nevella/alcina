@@ -47,7 +47,6 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -385,9 +384,6 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		msg += getStandardErrorText();
 		msg = "<div class='errorOops'>Ooops - an error has occurred</div>"
 				+ "<div class='errorSub'>" + msg + "</div>";
-		if (!Permissions.isDeveloper()) {
-			exceptionTrace = "";
-		}
 		showDialog(msg, null, exceptionTrace, MessageType.ERROR,
 				new ArrayList<Button>());
 	}
