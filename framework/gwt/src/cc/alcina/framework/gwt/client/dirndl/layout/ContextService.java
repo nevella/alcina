@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.Optional;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
@@ -38,5 +40,9 @@ public interface ContextService {
 		ContextService get(P provider);
 
 		Class<? extends ContextService> getServiceClass();
+	}
+
+	public interface Source {
+		<T extends ContextService> Optional<T> getService(Class<T> serviceType);
 	}
 }

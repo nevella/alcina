@@ -118,7 +118,7 @@ existing resolvers to a service model]
  */
 @Reflected
 public class ContextResolver extends AnnotationLocation.Resolver
-		implements LayoutEvents.BeforeRender.Handler {
+		implements LayoutEvents.BeforeRender.Handler, ContextService.Source {
 	protected ContextResolver parent;
 
 	protected DirectedLayout layout;
