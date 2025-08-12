@@ -50,6 +50,25 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * <li>Note that for sequential removals, the optimisation to 'calculate
  * location coords from treeprevious if treeprevious is current' is key
  * </ul>
+ * <p>
+ * Debugging
+ * 
+ * <pre>
+ * <code>
+ * 
+ * 
+ public static class TrackingLocationMutationObservableObserver
+extends AppDebugJvm
+implements ProcessObserver<TrackingLocationMutationObservable> {
+...
+public void topicPublished(TrackingLocationMutationObservable message) {
+if (message.tagIs("find-result")) {
+if (message.indexTupleRepr().equals("[28,2054404,<]")
+&& message.pre) {
+message.debug();
+}
+ * </code>
+ * </pre>
  */
 class TrackingLocationContext implements LocationContext {
 	static class IndexMutation {
