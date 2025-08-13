@@ -67,12 +67,17 @@ class EntityTraversalQueryLayer extends Layer
 				.get(Filter.class);
 		DomainFilter domainFilter = filter == null ? null
 				: filter.toDomainFilter(entityClass);
-		String cacheMarker = filter != null && domainFilter == null
-				? Ui.traversingPlace().truncateTo(layer.index + 1)
-						.toTokenString()
+		String cacheMarker = filter != null
+				? Ui.traversingPlace().truncateTo(2).withoutPaths()
+						.withoutListSource().toTokenString()
 				: null;
-		// note this code double filters - but the second application will be
-		// already filtered, so low perf impact
+		/*
+		 * note this code double filters (in addStream) - but the second
+		 * application will be already filtered, so low perf impact
+		 * 
+		 * note that we *can* cache the results of this layer - since there's no
+		 * layered filters on this layer. The trick is reuse
+		 */
 		Stream domainStream = domainFilter == null ? Domain.stream(entityClass)
 				: Domain.query(entityClass).filter(domainFilter).stream();
 		Stream<Entity> stream = Stream.concat(Stream.of(selected), domainStream)
