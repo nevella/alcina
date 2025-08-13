@@ -147,6 +147,9 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 
 		public Csv toCsv() {
 			Csv csv = new Csv("");
+			if (collection.isEmpty()) {
+				return new Csv("no-results");
+			}
 			Class<?> commonType = CollectionUtil.getCommonType(collection);
 			List<Property> properties = Reflections.at(commonType).properties()
 					.stream().filter(Property::isReadable).toList();
