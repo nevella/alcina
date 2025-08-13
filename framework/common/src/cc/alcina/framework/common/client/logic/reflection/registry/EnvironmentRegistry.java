@@ -287,7 +287,8 @@ public class EnvironmentRegistry extends Registry {
 		public void singleton(Class type, Object implementation) {
 			Object existingImplementation = environmentImplementations
 					.get(type);
-			if (existingImplementation != null) {
+			if (existingImplementation != null
+					&& !Registry.CONTEXT_ALLOW_SINGLETON_REDEFINITION.is()) {
 				throw new IllegalStateException(Ax.format(
 						"Existing implementation: %s :: %s, attempted registration %s",
 						NestedName.get(type),
@@ -299,8 +300,16 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public void singleton(Class type, Class key, Object implementation) {
-			Preconditions.checkState(
-					!environmentMultikeyImplementations.containsKey(type, key));
+			Object existingImplementation = environmentMultikeyImplementations
+					.get(type, key);
+			if (existingImplementation != null
+					&& !Registry.CONTEXT_ALLOW_SINGLETON_REDEFINITION.is()) {
+				throw new IllegalStateException(Ax.format(
+						"Existing implementation: %s.%s :: %s, attempted registration %s",
+						NestedName.get(type), NestedName.get(key),
+						NestedName.get(existingImplementation),
+						NestedName.get(implementation)));
+			}
 			environmentMultikeyImplementations.put(type, key, implementation);
 		}
 	}
