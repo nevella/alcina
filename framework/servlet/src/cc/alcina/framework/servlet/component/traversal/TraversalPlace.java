@@ -574,4 +574,16 @@ public class TraversalPlace extends BasePlace {
 			}
 		}
 	}
+
+	public TraversalPlace withoutPaths() {
+		TraversalPlace result = copy();
+		result.paths.clear();
+		return result;
+	}
+
+	public TraversalPlace withoutListSource() {
+		TraversalPlace result = copy();
+		result.listSource = null;
+		return result;
+	}
 }
