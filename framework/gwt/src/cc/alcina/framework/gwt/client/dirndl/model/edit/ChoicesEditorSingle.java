@@ -6,6 +6,7 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -29,6 +30,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * - esc cancels (probably whole-editor behavior - revert to original values and fire a blur())
  * * @formatter:on
  */
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 		implements HasValue<T> {
 	static PackageProperties._ChoicesEditorSingle properties = PackageProperties.choicesEditorSingle;
@@ -57,6 +59,7 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 	 */
 	@Directed.Delegating
 	@Bean(PropertySource.FIELDS)
+	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 	public static class SingleSuggestions<T> extends Model.Value<T>
 			implements ModelEvents.SelectionChanged.Handler {
 		public static class To
