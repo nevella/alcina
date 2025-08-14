@@ -159,8 +159,9 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 
 	@Override
 	public final void render() {
-		PlaceChangeEvent.Handler placeChangeHandler = evt -> properties.place
-				.set(this, (P) evt.getNewPlace());
+		PlaceChangeEvent.Handler placeChangeHandler = evt -> {
+			properties.place.set(this, (P) evt.getNewPlace());
+		};
 		keybindingsHandler = new KeybindingsHandler(eventType -> {
 			layout.layoutResult.getRoot().dispatch(eventType, null);
 		}, getCommandContextProvider());

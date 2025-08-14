@@ -228,7 +228,13 @@ public abstract class Client implements ContextFrame {
 
 	public static void refreshCurrentPlace() {
 		BasePlace place = (BasePlace) currentPlace();
-		place.setRefreshed(true);
+		/*
+		 * it turns out overriding equality (with refreshed) in the place is the
+		 * best way to handle refresh logic, since it's often modelled in
+		 * children as a property - in which case publishing a change event will
+		 * not be enough to cause change
+		 */
+		place.refreshed = true;
 		place = place.copy();
 		place.go();
 	}

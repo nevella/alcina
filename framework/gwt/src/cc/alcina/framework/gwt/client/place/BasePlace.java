@@ -94,7 +94,12 @@ public abstract class BasePlace extends Place
 	@Property.Not
 	public List<BasePlace> fragments = new ArrayList<>();
 
-	private boolean refreshed;
+	/*
+	 * Indicates that a place has been refreshed (by a user action), so should
+	 * use identity equality
+	 */
+	@Property.Not
+	public transient boolean refreshed;
 
 	public class Fragments {
 		public void remove(Class<? extends BasePlace> fragmentType) {
@@ -133,7 +138,7 @@ public abstract class BasePlace extends Place
 	public boolean equals(Object obj) {
 		if (obj != null && obj.getClass() == getClass()) {
 			BasePlace other = (BasePlace) obj;
-			if (isRefreshed() || other.isRefreshed()) {
+			if (refreshed || other.refreshed) {
 				return obj == this;
 			} else {
 				return tokenFor(other).equals(tokenFor(this));
@@ -151,14 +156,6 @@ public abstract class BasePlace extends Place
 	@Override
 	public int hashCode() {
 		return tokenFor(this).hashCode();
-	}
-
-	public boolean isRefreshed() {
-		return this.refreshed;
-	}
-
-	public void setRefreshed(boolean refreshed) {
-		this.refreshed = refreshed;
 	}
 
 	public String toAbsoluteHrefString() {
