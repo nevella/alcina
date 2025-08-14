@@ -432,8 +432,12 @@ public abstract class Model extends Bindable implements
 			binding.bind();
 			listenerBindings.bind();
 			modelBindings.forEach(ModelBinding::bind);
-			nodeEventTypeValidator.validate(Model.this.getClass(),
-					getModelEventBindings());
+			// FIXME - dirndl - remove Bind.exTreeBindEvent - and then this
+			// check
+			if (nodeEventTypeValidator != null) {
+				nodeEventTypeValidator.validate(Model.this.getClass(),
+						getModelEventBindings());
+			}
 			bound = true;
 		}
 
