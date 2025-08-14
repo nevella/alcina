@@ -4,6 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -182,7 +183,7 @@ public abstract class Model extends Bindable implements
 			}
 			node = event.getContext().node;
 			if (bindings != null) {
-				bindings.bind();
+				bindings.bind(event.nodeEventTypeValidator);
 			}
 			// I'm not sure that this is the best way to dispatch, but there may
 			// be no other way
@@ -426,12 +427,20 @@ public abstract class Model extends Bindable implements
 			};
 		}
 
-		public void bind() {
+		public void bind(NodeEventTypeValidator nodeEventTypeValidator) {
 			Preconditions.checkState(!bound);
 			binding.bind();
 			listenerBindings.bind();
 			modelBindings.forEach(ModelBinding::bind);
+			nodeEventTypeValidator.validate(Model.this.getClass(),
+					getModelEventBindings());
 			bound = true;
+		}
+
+		List<Class<? extends NodeEvent>> getModelEventBindings() {
+			return (List) modelBindings.stream()
+					.map(binding -> binding.fromNodeEventClass)
+					.filter(Objects::nonNull).toList();
 		}
 
 		public <T extends SourcesPropertyChangeEvents> ModelBinding<T>
@@ -652,5 +661,10 @@ public abstract class Model extends Bindable implements
 
 	public <T extends ContextService> T service(Class<T> serviceType) {
 		return provideNode().getResolver().getService(serviceType).get();
+	}
+
+	public interface NodeEventTypeValidator {
+		void validate(Class<? extends Model> modelType,
+				List<Class<? extends NodeEvent>> modelEventBindings);
 	}
 }

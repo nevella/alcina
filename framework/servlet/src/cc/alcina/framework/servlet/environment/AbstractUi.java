@@ -32,7 +32,9 @@ import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 /**
  * <p>
  * Activity routing - all AbstractUi apps use the {@link Place} and
- * {@link Activity} system for modelling main UI state
+ * {@link Activity} system for modelling main UI state. Generally the toplevel
+ * UI component will observe the app place property and remit
+ * {@link ModelEvents.PlaceChanged} events
  */
 @TypedProperties
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)

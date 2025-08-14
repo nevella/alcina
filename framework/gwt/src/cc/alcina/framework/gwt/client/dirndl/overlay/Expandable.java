@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Toggle;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.util.Async;
@@ -30,6 +31,18 @@ public class Expandable extends Model.Fields
 
 	public Expandable(String string) {
 		this(string, 80, "", null);
+	}
+
+	/*
+	 * Note that this won't work in (say) a table yet - use an Expandable
+	 * property. FIXME - dirndl - this is really best solved by the full
+	 * annotation derivation history
+	 */
+	public static class To implements ModelTransform<String, Expandable> {
+		@Override
+		public Expandable apply(String t) {
+			return new Expandable(t);
+		}
 	}
 
 	public Expandable(String string, int trimTo, String blankMessage,

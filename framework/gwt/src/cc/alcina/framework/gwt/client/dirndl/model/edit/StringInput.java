@@ -541,7 +541,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 	@Registration({ Model.Value.class, FormModel.Editor.class, Date.class })
 	public static class DateInput extends StringInput
-			implements DomEvents.KeyPress.Handler, DomEvents.Blur.Handler {
+			implements DomEvents.KeyPress.Handler, DomEvents.Focusout.Handler {
 		public DateInput() {
 			setType("date");
 		}
@@ -573,11 +573,12 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		}
 
 		@Override
-		public void onBlur(Blur event) {
+		public void onFocusout(Focusout event) {
 			if (suppressedChange) {
 				handleChange(event);
 				suppressedChange = false;
 			}
+			super.onFocusout(event);
 		}
 	}
 

@@ -515,4 +515,18 @@ public class ModelBinding<T> {
 			E value) {
 		signal(() -> bindings.model().emitEvent(modelEventClass, value));
 	}
+
+	public <E> void emitStreamElement(
+			Class<? extends ModelEvent<E, ?>> modelEventClass) {
+		accept(value -> {
+			int debug = 3;
+			bindings.model().emitEvent(modelEventClass, value);
+		});
+	}
+
+	public <FT> ModelBinding<FT> filterType(Class<FT> clazz) {
+		ModelBinding<T> filtered = filter(e -> e == null ? false
+				: Reflections.isAssignableFrom(clazz, e.getClass()));
+		return (ModelBinding<FT>) filtered;
+	}
 }
