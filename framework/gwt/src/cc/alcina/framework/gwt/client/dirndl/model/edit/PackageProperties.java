@@ -21,6 +21,7 @@ public class PackageProperties {
     public static _ChoiceEditor choiceEditor = new _ChoiceEditor();
     static _ChoiceEditor_ChoiceNode choiceEditor_choiceNode = new _ChoiceEditor_ChoiceNode();
     public static _ChoicesEditorMultiple choicesEditorMultiple = new _ChoicesEditorMultiple();
+    public static _ChoicesEditorSingle choicesEditorSingle = new _ChoicesEditorSingle();
     public static _DecoratorNode decoratorNode = new _DecoratorNode();
     public static _EditArea editArea = new _EditArea();
     public static _EntityNode entityNode = new _EntityNode();
@@ -107,6 +108,37 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(ChoicesEditorMultiple instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _ChoicesEditorSingle implements TypedProperty.Container {
+      public TypedProperty<ChoicesEditorSingle, List> choices = new TypedProperty<>(ChoicesEditorSingle.class, "choices");
+      public TypedProperty<ChoicesEditorSingle, List> decorators = new TypedProperty<>(ChoicesEditorSingle.class, "decorators");
+      public TypedProperty<ChoicesEditorSingle, EditArea> editArea = new TypedProperty<>(ChoicesEditorSingle.class, "editArea");
+      public TypedProperty<ChoicesEditorSingle, Boolean> magicName = new TypedProperty<>(ChoicesEditorSingle.class, "magicName");
+      public TypedProperty<ChoicesEditorSingle, Boolean> magicName2 = new TypedProperty<>(ChoicesEditorSingle.class, "magicName2");
+      public TypedProperty<ChoicesEditorSingle, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorSingle.class, "repeatableChoices");
+      public TypedProperty<ChoicesEditorSingle, Object> selectedValue = new TypedProperty<>(ChoicesEditorSingle.class, "selectedValue");
+      public TypedProperty<ChoicesEditorSingle, Object> value = new TypedProperty<>(ChoicesEditorSingle.class, "value");
+      public TypedProperty<ChoicesEditorSingle, Class> valueTransformer = new TypedProperty<>(ChoicesEditorSingle.class, "valueTransformer");
+      public TypedProperty<ChoicesEditorSingle, List> values = new TypedProperty<>(ChoicesEditorSingle.class, "values");
+      public static class InstanceProperties extends InstanceProperty.Container<ChoicesEditorSingle> {
+        public  InstanceProperties(ChoicesEditorSingle source){super(source);}
+        public InstanceProperty<ChoicesEditorSingle, List> choices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.choices);}
+        public InstanceProperty<ChoicesEditorSingle, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.decorators);}
+        public InstanceProperty<ChoicesEditorSingle, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.editArea);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName2);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.repeatableChoices);}
+        public InstanceProperty<ChoicesEditorSingle, Object> selectedValue(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.selectedValue);}
+        public InstanceProperty<ChoicesEditorSingle, Object> value(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.value);}
+        public InstanceProperty<ChoicesEditorSingle, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.valueTransformer);}
+        public InstanceProperty<ChoicesEditorSingle, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.values);}
+      }
+      
+      public  InstanceProperties instance(ChoicesEditorSingle instance) {
         return new InstanceProperties( instance);
       }
       
@@ -201,6 +233,7 @@ public class PackageProperties {
     
     public static class _StringInput implements TypedProperty.Container {
       public TypedProperty<StringInput, String> autocomplete = new TypedProperty<>(StringInput.class, "autocomplete");
+      public TypedProperty<StringInput, List> behaviors = new TypedProperty<>(StringInput.class, "behaviors");
       public TypedProperty<StringInput, Boolean> commitOnEnter = new TypedProperty<>(StringInput.class, "commitOnEnter");
       public TypedProperty<StringInput, String> currentValue = new TypedProperty<>(StringInput.class, "currentValue");
       public TypedProperty<StringInput, Boolean> disabled = new TypedProperty<>(StringInput.class, "disabled");
@@ -219,6 +252,7 @@ public class PackageProperties {
       public static class InstanceProperties extends InstanceProperty.Container<StringInput> {
         public  InstanceProperties(StringInput source){super(source);}
         public InstanceProperty<StringInput, String> autocomplete(){return new InstanceProperty<>(source,PackageProperties.stringInput.autocomplete);}
+        public InstanceProperty<StringInput, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.stringInput.behaviors);}
         public InstanceProperty<StringInput, Boolean> commitOnEnter(){return new InstanceProperty<>(source,PackageProperties.stringInput.commitOnEnter);}
         public InstanceProperty<StringInput, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.stringInput.currentValue);}
         public InstanceProperty<StringInput, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput.disabled);}
@@ -259,6 +293,7 @@ public class PackageProperties {
     
     public static class _StringInput_DateInput implements TypedProperty.Container {
       public TypedProperty<StringInput.DateInput, String> autocomplete = new TypedProperty<>(StringInput.DateInput.class, "autocomplete");
+      public TypedProperty<StringInput.DateInput, List> behaviors = new TypedProperty<>(StringInput.DateInput.class, "behaviors");
       public TypedProperty<StringInput.DateInput, Boolean> commitOnEnter = new TypedProperty<>(StringInput.DateInput.class, "commitOnEnter");
       public TypedProperty<StringInput.DateInput, String> currentValue = new TypedProperty<>(StringInput.DateInput.class, "currentValue");
       public TypedProperty<StringInput.DateInput, Boolean> disabled = new TypedProperty<>(StringInput.DateInput.class, "disabled");
@@ -277,6 +312,7 @@ public class PackageProperties {
       public static class InstanceProperties extends InstanceProperty.Container<StringInput.DateInput> {
         public  InstanceProperties(StringInput.DateInput source){super(source);}
         public InstanceProperty<StringInput.DateInput, String> autocomplete(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.autocomplete);}
+        public InstanceProperty<StringInput.DateInput, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.behaviors);}
         public InstanceProperty<StringInput.DateInput, Boolean> commitOnEnter(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.commitOnEnter);}
         public InstanceProperty<StringInput.DateInput, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.currentValue);}
         public InstanceProperty<StringInput.DateInput, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.disabled);}
@@ -302,6 +338,7 @@ public class PackageProperties {
     
     public static class _StringInput_Editor implements TypedProperty.Container {
       public TypedProperty<StringInput.Editor, String> autocomplete = new TypedProperty<>(StringInput.Editor.class, "autocomplete");
+      public TypedProperty<StringInput.Editor, List> behaviors = new TypedProperty<>(StringInput.Editor.class, "behaviors");
       public TypedProperty<StringInput.Editor, Boolean> commitOnEnter = new TypedProperty<>(StringInput.Editor.class, "commitOnEnter");
       public TypedProperty<StringInput.Editor, String> currentValue = new TypedProperty<>(StringInput.Editor.class, "currentValue");
       public TypedProperty<StringInput.Editor, Boolean> disabled = new TypedProperty<>(StringInput.Editor.class, "disabled");
@@ -320,6 +357,7 @@ public class PackageProperties {
       public static class InstanceProperties extends InstanceProperty.Container<StringInput.Editor> {
         public  InstanceProperties(StringInput.Editor source){super(source);}
         public InstanceProperty<StringInput.Editor, String> autocomplete(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.autocomplete);}
+        public InstanceProperty<StringInput.Editor, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.behaviors);}
         public InstanceProperty<StringInput.Editor, Boolean> commitOnEnter(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.commitOnEnter);}
         public InstanceProperty<StringInput.Editor, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.currentValue);}
         public InstanceProperty<StringInput.Editor, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.disabled);}

@@ -217,6 +217,12 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.forEach(editArea.fragmentModel.getFragmentRoot()::append);
 	}
 
+	void updateAreaFromSelectedValue(T value) {
+		List<T> values = value == null ? List.of() : List.of(value);
+		Client.eventBus().queued()
+				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
+	}
+
 	void updateAreaFromSelectedValues(List<T> values) {
 		Client.eventBus().queued()
 				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
