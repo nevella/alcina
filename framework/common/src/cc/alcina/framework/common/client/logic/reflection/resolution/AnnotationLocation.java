@@ -279,6 +279,9 @@ public class AnnotationLocation {
 	 *
 	 * - note that hashcode/equals do *not* depend on the parent - there's
 	 * probably some formal logic out there explaining why this is always true
+	 * 
+	 * - further FIXME - rather than 'resolutionstate', 'resolutionhistory' -
+	 * with current state as a possibly-derived value. That's the ticket!
 	 */
 	public static class ResolutionState {
 		public AnnotationLocation transformationParent;

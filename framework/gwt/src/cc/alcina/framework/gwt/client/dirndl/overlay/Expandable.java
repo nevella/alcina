@@ -35,8 +35,10 @@ public class Expandable extends Model.Fields
 
 	/*
 	 * Note that this won't work in (say) a table yet - use an Expandable
-	 * property. FIXME - dirndl - this is really best solved by the full
-	 * annotation derivation history
+	 * property.
+	 * 
+	 * The true fix requires completion of AnnotationLocation.ResolutionState ->
+	 * ResolutionHistory
 	 */
 	public static class To implements ModelTransform<String, Expandable> {
 		@Override
