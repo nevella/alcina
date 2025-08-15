@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 
 /**
  * <p>
@@ -75,6 +76,8 @@ public class LayoutEvents {
 	 */
 	public static class Bind extends LayoutEvent<Bind.Handler> {
 		private final boolean bound;
+
+		public NodeEventTypeValidator nodeEventTypeValidator;
 
 		public Bind(DirectedLayout.Node node, boolean bound) {
 			setContext(Context.fromNode(node));

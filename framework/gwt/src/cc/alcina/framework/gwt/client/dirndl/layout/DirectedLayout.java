@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -44,6 +45,7 @@ import cc.alcina.framework.common.client.reflection.AttributeTemplate;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -74,6 +76,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.RendersNull
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.util.ClassNames;
 import cc.alcina.framework.gwt.client.util.StyleUtil;
@@ -477,6 +480,32 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 	}
 
+	class NodeEventTypeValidatorImpl implements NodeEventTypeValidator {
+		Set<Class<? extends Model>> checked = AlcinaCollections.newUniqueSet();
+
+		public void validate(Class<? extends Model> modelType,
+				List<Class<? extends NodeEvent>> modelEventBindings) {
+			if (checked.add(modelType) && modelEventBindings.size() > 0) {
+				modelEventBindings.forEach(type -> {
+					// convention hack - nicer would be to use generics or the
+					// registry, but this works
+					String bindingTypeName = type.getName() + "$Binding";
+					boolean hasBinding = Reflections.at(modelType)
+							.getInterfaces().stream().anyMatch(intf -> Objects
+									.equals(intf.getName(), bindingTypeName));
+					if (!hasBinding) {
+						throw new IllegalStateException(Ax.format(
+								"Type %s registers for event %s but does not emit the corresponding Binding class",
+								NestedName.get(modelType),
+								NestedName.get(type)));
+					}
+				});
+			}
+		}
+	}
+
+	NodeEventTypeValidatorImpl nodeEventTypeValidator = new NodeEventTypeValidatorImpl();
+
 	/**
 	 *
 	 * <p>
@@ -667,8 +696,10 @@ public class DirectedLayout implements AlcinaProcess {
 					bind = false;
 				}
 				if (bind) {
-					((LayoutEvents.Bind.Handler) model)
-							.onBind(new LayoutEvents.Bind(this, true));
+					LayoutEvents.Bind bindEvent = new LayoutEvents.Bind(this,
+							true);
+					bindEvent.nodeEventTypeValidator = nodeEventTypeValidator;
+					((LayoutEvents.Bind.Handler) model).onBind(bindEvent);
 					fireEvent(new LayoutEvents.Bound());
 				}
 			}

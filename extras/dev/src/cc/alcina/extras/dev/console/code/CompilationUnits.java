@@ -259,7 +259,7 @@ public class CompilationUnits {
 				if (!file.isDirectory()) {
 					try {
 						CompilationUnitWrapper unit = new CompilationUnitWrapper();
-						unit.compute(file, null);
+						unit.compute(file, units);
 						unit.unit().accept(visitorCreator.apply(units, unit),
 								null);
 						units.addUnit(unit);
@@ -551,6 +551,30 @@ public class CompilationUnits {
 				unitTypes.add(type);
 			}
 			return type;
+		}
+
+		Content content;
+
+		/**
+		 * A cache of the source file content
+		 */
+		public class Content {
+			List<String> lines;
+
+			Content() {
+				lines = List.of(Io.read().path(path).asString().split("\n"));
+			}
+
+			public String getLine(int lineNumberOneBased) {
+				return lines.get(lineNumberOneBased - 1);
+			}
+		}
+
+		public Content content() {
+			if (content == null) {
+				content = new Content();
+			}
+			return content;
 		}
 	}
 

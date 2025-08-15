@@ -81,4 +81,8 @@ public class DatePair
 	public Date min() {
 		return CommonUtils.compareDates(d1, d2) >= 0 ? d2 : d1;
 	}
+
+	public int toDayCount() {
+		return DateUtil.ageInDays(d2) - DateUtil.ageInDays(d1);
+	}
 }

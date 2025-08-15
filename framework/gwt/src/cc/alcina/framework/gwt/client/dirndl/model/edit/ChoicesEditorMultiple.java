@@ -26,7 +26,7 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 	}
 
 	/*
-	 * * Binds a collection property (in an editor) to a MultipleSuggestor
+	 * * Binds a collection property (in an editor) to a ChoicesEditorMultiple
 	 */
 	@Directed.Delegating
 	@Bean(PropertySource.FIELDS)
@@ -43,7 +43,7 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 		}
 
 		@Directed
-		public ChoicesEditorMultiple<T> multipleSuggestions;
+		public ChoicesEditorMultiple<T> editor;
 
 		private List<T> value;
 
@@ -52,10 +52,10 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 
 		@Override
 		public void onBeforeRender(BeforeRender event) {
-			multipleSuggestions = new ChoicesEditorMultiple<>();
+			editor = new ChoicesEditorMultiple<>();
 			// populate the delegate values from this node's AnnotationLocation
-			multipleSuggestions.populateFromNodeContext(event.node, null);
-			value = multipleSuggestions.getSelectedValues();
+			editor.populateFromNodeContext(event.node, null);
+			value = editor.getSelectedValues();
 			super.onBeforeRender(event);
 		}
 
@@ -67,12 +67,12 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 		@Override
 		public void setValue(List<T> value) {
 			set("value", this.value, value, () -> this.value = value);
-			multipleSuggestions.setSelectedValues(value);
+			editor.setSelectedValues(value);
 		}
 
 		@Override
 		public void onSelectionChanged(ModelEvents.SelectionChanged event) {
-			setValue(multipleSuggestions.getSelectedValues());
+			setValue(editor.getSelectedValues());
 		}
 	}
 

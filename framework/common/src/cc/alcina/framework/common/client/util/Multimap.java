@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -341,5 +342,12 @@ public class Multimap<K, V extends List>
 	public Stream<K> keysWithMultipleValues() {
 		return this.map.entrySet().stream().filter(e -> e.getValue().size() > 1)
 				.map(Map.Entry::getKey);
+	}
+
+	public <T> void removeIf(Predicate<T> predicate) {
+		entrySet().removeIf(e -> {
+			e.getValue().removeIf(predicate);
+			return e.getValue().isEmpty();
+		});
 	}
 }

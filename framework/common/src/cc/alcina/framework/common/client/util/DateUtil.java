@@ -71,6 +71,11 @@ public class DateUtil {
 						CommonUtils.padTwo(date.getMonth() + 1));
 	}
 
+	public static Date plusDays(Date date, int days) {
+		// yeah, rubbish wrt leap seconds not fussed
+		return new Date(date.getTime() + TimeConstants.ONE_DAY_MS * days);
+	}
+
 	public static Date yearAsDate(Integer year) {
 		if (year == null) {
 			year = 0;

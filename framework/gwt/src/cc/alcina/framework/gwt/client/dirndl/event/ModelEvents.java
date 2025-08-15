@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import com.google.gwt.place.shared.Place;
+
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -809,6 +811,33 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onView(View event);
+		}
+	}
+
+	/**
+	 * For large component structures, have the service root emit a PlaceChanged
+	 * descendant event, rather than each subcomponent listening on the GWT
+	 * event system. Bind handling etc is significantly easier
+	 */
+	public static class PlaceChanged extends
+			ModelEvent.DescendantEvent<Place, PlaceChanged.Handler, PlaceChanged.Emitter> {
+		@Override
+		public void dispatch(PlaceChanged.Handler handler) {
+			handler.onPlaceChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPlaceChanged(PlaceChanged event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onPlaceChanged(PlaceChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
 }

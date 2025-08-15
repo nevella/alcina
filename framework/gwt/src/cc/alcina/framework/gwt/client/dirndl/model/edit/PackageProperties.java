@@ -21,6 +21,7 @@ public class PackageProperties {
     public static _ChoiceEditor choiceEditor = new _ChoiceEditor();
     static _ChoiceEditor_ChoiceNode choiceEditor_choiceNode = new _ChoiceEditor_ChoiceNode();
     public static _ChoicesEditorMultiple choicesEditorMultiple = new _ChoicesEditorMultiple();
+    public static _ChoicesEditorSingle choicesEditorSingle = new _ChoicesEditorSingle();
     public static _DecoratorNode decoratorNode = new _DecoratorNode();
     public static _EditArea editArea = new _EditArea();
     public static _EntityNode entityNode = new _EntityNode();
@@ -107,6 +108,37 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(ChoicesEditorMultiple instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _ChoicesEditorSingle implements TypedProperty.Container {
+      public TypedProperty<ChoicesEditorSingle, List> choices = new TypedProperty<>(ChoicesEditorSingle.class, "choices");
+      public TypedProperty<ChoicesEditorSingle, List> decorators = new TypedProperty<>(ChoicesEditorSingle.class, "decorators");
+      public TypedProperty<ChoicesEditorSingle, EditArea> editArea = new TypedProperty<>(ChoicesEditorSingle.class, "editArea");
+      public TypedProperty<ChoicesEditorSingle, Boolean> magicName = new TypedProperty<>(ChoicesEditorSingle.class, "magicName");
+      public TypedProperty<ChoicesEditorSingle, Boolean> magicName2 = new TypedProperty<>(ChoicesEditorSingle.class, "magicName2");
+      public TypedProperty<ChoicesEditorSingle, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorSingle.class, "repeatableChoices");
+      public TypedProperty<ChoicesEditorSingle, Object> selectedValue = new TypedProperty<>(ChoicesEditorSingle.class, "selectedValue");
+      public TypedProperty<ChoicesEditorSingle, Object> value = new TypedProperty<>(ChoicesEditorSingle.class, "value");
+      public TypedProperty<ChoicesEditorSingle, Class> valueTransformer = new TypedProperty<>(ChoicesEditorSingle.class, "valueTransformer");
+      public TypedProperty<ChoicesEditorSingle, List> values = new TypedProperty<>(ChoicesEditorSingle.class, "values");
+      public static class InstanceProperties extends InstanceProperty.Container<ChoicesEditorSingle> {
+        public  InstanceProperties(ChoicesEditorSingle source){super(source);}
+        public InstanceProperty<ChoicesEditorSingle, List> choices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.choices);}
+        public InstanceProperty<ChoicesEditorSingle, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.decorators);}
+        public InstanceProperty<ChoicesEditorSingle, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.editArea);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName2);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.repeatableChoices);}
+        public InstanceProperty<ChoicesEditorSingle, Object> selectedValue(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.selectedValue);}
+        public InstanceProperty<ChoicesEditorSingle, Object> value(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.value);}
+        public InstanceProperty<ChoicesEditorSingle, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.valueTransformer);}
+        public InstanceProperty<ChoicesEditorSingle, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.values);}
+      }
+      
+      public  InstanceProperties instance(ChoicesEditorSingle instance) {
         return new InstanceProperties( instance);
       }
       
