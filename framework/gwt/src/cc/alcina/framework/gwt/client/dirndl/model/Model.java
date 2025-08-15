@@ -263,7 +263,7 @@ public abstract class Model extends Bindable implements
 
 		private boolean bound;
 
-		public List<ModelBinding> modelBindings = new ArrayList<>();
+		public List<StreamBinding> modelBindings = new ArrayList<>();
 
 		public Binding add(Object leftPropertyName,
 				Converter leftToRightConverter,
@@ -431,7 +431,7 @@ public abstract class Model extends Bindable implements
 			Preconditions.checkState(!bound);
 			binding.bind();
 			listenerBindings.bind();
-			modelBindings.forEach(ModelBinding::bind);
+			modelBindings.forEach(StreamBinding::bind);
 			// FIXME - dirndl - remove Bind.exTreeBindEvent - and then this
 			// check
 			if (nodeEventTypeValidator != null) {
@@ -447,20 +447,20 @@ public abstract class Model extends Bindable implements
 					.filter(Objects::nonNull).toList();
 		}
 
-		public <T extends SourcesPropertyChangeEvents> ModelBinding<T>
+		public <T extends SourcesPropertyChangeEvents> StreamBinding<T>
 				from(T source) {
-			ModelBinding binding = new ModelBinding(this);
+			StreamBinding binding = new StreamBinding();
 			modelBindings.add(binding);
 			return binding.from(source);
 		}
 
-		public <T> ModelBinding<T>
+		public <T> StreamBinding<T>
 				from(InstanceProperty<?, T> instanceProperty) {
 			return from(instanceProperty.source).on(instanceProperty.property);
 		}
 
-		public <TE> ModelBinding<TE> fromTopic(Topic<TE> topic) {
-			ModelBinding binding = new ModelBinding(this);
+		public <TE> StreamBinding<TE> fromTopic(Topic<TE> topic) {
+			StreamBinding binding = new StreamBinding();
 			modelBindings.add(binding);
 			return binding.from(topic);
 		}
@@ -475,12 +475,12 @@ public abstract class Model extends Bindable implements
 
 		public void setLeft() {
 			binding.setLeft();
-			modelBindings.forEach(ModelBinding::prepare);
+			modelBindings.forEach(StreamBinding::prepare);
 		}
 
 		public void unbind() {
 			Preconditions.checkState(bound);
-			modelBindings.forEach(ModelBinding::unbind);
+			modelBindings.forEach(StreamBinding::unbind);
 			listenerBindings.unbind();
 			binding.unbind();
 			bound = false;
@@ -496,19 +496,19 @@ public abstract class Model extends Bindable implements
 					.forEach(binding -> binding.acceptStreamElement(event));
 		}
 
-		<E extends NodeEvent> ModelBinding<E>
+		<E extends NodeEvent> StreamBinding<E>
 				fromNodeEventClass(Class<E> nodeEventClass) {
-			ModelBinding binding = new ModelBinding(this);
+			StreamBinding binding = new StreamBinding();
 			modelBindings.add(binding);
 			return binding.fromNodeEventClass(nodeEventClass);
 		}
 	}
 
-	public <T> ModelBinding<T> from(InstanceProperty<?, T> instanceProperty) {
+	public <T> StreamBinding<T> from(InstanceProperty<?, T> instanceProperty) {
 		return bindings().from(instanceProperty);
 	}
 
-	public <E extends NodeEvent> ModelBinding<E> on(Class<E> nodeEventClass) {
+	public <E extends NodeEvent> StreamBinding<E> on(Class<E> nodeEventClass) {
 		return bindings().fromNodeEventClass(nodeEventClass);
 	}
 

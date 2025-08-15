@@ -58,7 +58,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
  * 
  * @param <T>
  */
-public class ModelBinding<T> {
+public class StreamBinding<T> {
 	public static class TargetBinding<BSP extends SourcesPropertyChangeEvents, T2> {
 		BSP to;
 
@@ -66,20 +66,20 @@ public class ModelBinding<T> {
 
 		Function map;
 
-		ModelBinding<T2> binding;
+		StreamBinding<T2> binding;
 
 		Property property;
 
-		TargetBinding(ModelBinding<T2> binding, BSP to) {
+		TargetBinding(StreamBinding<T2> binding, BSP to) {
 			this.binding = binding;
 			binding.targetBinding = this;
 			this.to = to;
 		}
 
-		public ModelBinding<T2> bidi() {
+		public StreamBinding<T2> bidi() {
 			acceptLeftToRight();
-			ModelBinding source = binding;
-			ModelBinding<?> reverse = new ModelBinding<>(binding.bindings);
+			StreamBinding source = binding;
+			StreamBinding<?> reverse = new StreamBinding<>();
 			binding.bindings.modelBindings.add(reverse);
 			reverse.fromPropertyChangeSource = to;
 			reverse.map = map;
@@ -89,7 +89,7 @@ public class ModelBinding<T> {
 					.to(source.fromPropertyChangeSource);
 			reverseTargetBinding.on = source.on;
 			reverseTargetBinding.acceptLeftToRight();
-			return (ModelBinding<T2>) reverse;
+			return (StreamBinding<T2>) reverse;
 		}
 
 		public TargetBinding<BSP, ?> onUntyped(PropertyEnum on) {
@@ -206,11 +206,10 @@ public class ModelBinding<T> {
 
 	public Class<? extends NodeEvent> fromNodeEventClass;
 
-	public ModelBinding(Bindings bindings) {
-		this.bindings = bindings;
+	public StreamBinding() {
 	}
 
-	public ModelBinding ifNotEqual() {
+	public StreamBinding ifNotEqual() {
 		ifNotEqual = true;
 		return this;
 	}
@@ -232,7 +231,7 @@ public class ModelBinding<T> {
 	 * @param predicate
 	 * @return
 	 */
-	public ModelBinding<T> filter(Predicate<T> predicate) {
+	public StreamBinding<T> filter(Predicate<T> predicate) {
 		Predicate existingFilter = null;
 		if (map != null) {
 			existingFilter = this.postMapPredicate;
@@ -249,11 +248,11 @@ public class ModelBinding<T> {
 		return this;
 	}
 
-	public ModelBinding<T> nonNull() {
+	public StreamBinding<T> nonNull() {
 		return filter(Objects::nonNull);
 	}
 
-	public ModelBinding<T> debug() {
+	public StreamBinding<T> debug() {
 		this.debug = true;
 		return this;
 	}
@@ -261,53 +260,53 @@ public class ModelBinding<T> {
 	/**
 	 * The source of the binding property changes
 	 */
-	ModelBinding<T> from(SourcesPropertyChangeEvents from) {
+	StreamBinding<T> from(SourcesPropertyChangeEvents from) {
 		Preconditions.checkNotNull(from);
 		this.fromPropertyChangeSource = from;
 		return this;
 	}
 
-	<TE> ModelBinding<TE> from(Topic<TE> topic) {
+	<TE> StreamBinding<TE> from(Topic<TE> topic) {
 		this.fromTopic = topic;
-		return (ModelBinding<TE>) this;
+		return (StreamBinding<TE>) this;
 	}
 
-	<E extends NodeEvent> ModelBinding<E>
+	<E extends NodeEvent> StreamBinding<E>
 			fromNodeEventClass(Class<E> nodeEventClass) {
 		this.fromNodeEventClass = nodeEventClass;
-		return (ModelBinding<E>) this;
+		return (StreamBinding<E>) this;
 	}
 
 	/**
 	 * Add an intermediate mapping to the pipeline
 	 */
-	public <U> ModelBinding<U> map(Function<T, U> map) {
+	public <U> StreamBinding<U> map(Function<T, U> map) {
 		this.map = (Function) map;
-		return (ModelBinding<U>) this;
+		return (StreamBinding<U>) this;
 	}
 
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public <P> ModelBinding<P> on(PropertyEnum fromPropertyName) {
+	public <P> StreamBinding<P> on(PropertyEnum fromPropertyName) {
 		this.on = fromPropertyName;
-		return (ModelBinding<P>) this;
+		return (StreamBinding<P>) this;
 	}
 
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public <PT> ModelBinding<PT> on(TypedProperty<?, PT> typedProperty) {
+	public <PT> StreamBinding<PT> on(TypedProperty<?, PT> typedProperty) {
 		this.on = typedProperty;
-		return (ModelBinding<PT>) this;
+		return (StreamBinding<PT>) this;
 	}
 
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public <P> ModelBinding<P> on(String fromPropertyName) {
+	public <P> StreamBinding<P> on(String fromPropertyName) {
 		this.on = fromPropertyName;
-		return (ModelBinding<P>) this;
+		return (StreamBinding<P>) this;
 	}
 
 	/**
@@ -333,35 +332,35 @@ public class ModelBinding<T> {
 	/**
 	 * Define the type of the incoming property
 	 */
-	public <V> ModelBinding<V> typed(Class<V> propertyType) {
-		return (ModelBinding<V>) this;
+	public <V> StreamBinding<V> typed(Class<V> propertyType) {
+		return (StreamBinding<V>) this;
 	}
 
 	/**
 	 * When the change occurs, rather than pipe the event/change, pipe the
 	 * object from <code>supplier</code>
 	 */
-	public <V> ModelBinding<V> value(Supplier<V> supplier) {
+	public <V> StreamBinding<V> value(Supplier<V> supplier) {
 		this.supplier = supplier;
-		return (ModelBinding<V>) this;
+		return (StreamBinding<V>) this;
 	}
 
 	/**
 	 * When the change occurs, rather than pipe the event/change, pipe the
 	 * replaceWith object
 	 */
-	public <V> ModelBinding<V> value(V replaceWith) {
+	public <V> StreamBinding<V> value(V replaceWith) {
 		return value(() -> replaceWith);
 	}
 
-	public ModelBinding<?> withDeferredDispatch() {
+	public StreamBinding<?> withDeferredDispatch() {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
 		return this;
 	}
 
-	public ModelBinding<?> withFinalDispatch() {
+	public StreamBinding<?> withFinalDispatch() {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleFinally(() -> r.run()));
@@ -372,12 +371,12 @@ public class ModelBinding<T> {
 	 * Trigger the pipeline with the source's initial value when the binding is
 	 * created (defaults to true)
 	 */
-	public ModelBinding<T> withSetOnInitialise(boolean setOnInitialise) {
+	public StreamBinding<T> withSetOnInitialise(boolean setOnInitialise) {
 		this.setOnInitialise = setOnInitialise;
 		return this;
 	}
 
-	public ModelBinding<T> withTransformsNull() {
+	public StreamBinding<T> withTransformsNull() {
 		this.transformsNull = true;
 		return this;
 	}
@@ -491,7 +490,7 @@ public class ModelBinding<T> {
 		}
 	}
 
-	void unbind() {
+	public void unbind() {
 		if (listener != null) {
 			listener.unbind();
 		}
@@ -516,17 +515,22 @@ public class ModelBinding<T> {
 		signal(() -> bindings.model().emitEvent(modelEventClass, value));
 	}
 
+	/**
+	 * Emit the stream element at the payload of a model event
+	 * 
+	 * @param <E>
+	 * @param modelEventClass
+	 */
 	public <E> void emitStreamElement(
 			Class<? extends ModelEvent<E, ?>> modelEventClass) {
 		accept(value -> {
-			int debug = 3;
 			bindings.model().emitEvent(modelEventClass, value);
 		});
 	}
 
-	public <FT> ModelBinding<FT> filterType(Class<FT> clazz) {
-		ModelBinding<T> filtered = filter(e -> e == null ? false
+	public <FT> StreamBinding<FT> filterType(Class<FT> clazz) {
+		StreamBinding<T> filtered = filter(e -> e == null ? false
 				: Reflections.isAssignableFrom(clazz, e.getClass()));
-		return (ModelBinding<FT>) filtered;
+		return (StreamBinding<FT>) filtered;
 	}
 }
