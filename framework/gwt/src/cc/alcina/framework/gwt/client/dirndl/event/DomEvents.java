@@ -170,7 +170,7 @@ public class DomEvents {
 			void onFocusin(Focusin event);
 		}
 
-		public interface Binding extends Handler {
+		public interface Binding extends Handler, NodeEvent.Binding {
 			@Override
 			default void onFocusin(Focusin event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -196,7 +196,7 @@ public class DomEvents {
 			void onFocusout(Focusout event);
 		}
 
-		public interface Binding extends Handler {
+		public interface Binding extends Handler, NodeEvent.Binding {
 			@Override
 			default void onFocusout(Focusout event) {
 				((Model) this).bindings().onNodeEvent(event);

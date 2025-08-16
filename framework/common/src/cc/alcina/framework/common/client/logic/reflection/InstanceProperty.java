@@ -4,6 +4,17 @@ import java.beans.PropertyChangeListener;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+/**
+ * Access like so:
+ * 
+ * <pre>
+ * <code>
+ * public PackageProperties._RangeMatches.InstanceProperties properties() {
+		return PackageProperties.rangeMatches.instance(this);
+	}
+ * </code>
+ * </pre>
+ */
 public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 	public S source;
 

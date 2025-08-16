@@ -110,6 +110,10 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * There's also partial support for column filtering/sorting (working - e.g. in
  * the EntityBrowser, but sorting/filtering can relate to larger application
  * attributes such as the url doesn't have many examples)
+ * 
+ * <p>
+ * Note that the rendered model (which is transformed to a tablemodel) can't
+ * (currently) receive modelevents - but it *can* bind via EventService
  *
  */
 public class TableModel extends Model
@@ -621,6 +625,7 @@ public class TableModel extends Model
 		}
 
 		public TableColumn(String caption) {
+			this.caption = caption;
 			/*
 			 * A placeholder column
 			 */

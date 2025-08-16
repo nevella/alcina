@@ -68,7 +68,7 @@ public class TreeTable extends Model.Fields
 		tableModel.init(event.node);
 		columns = tableModel.header.getColumns().stream()
 				.collect(Collectors.toList());
-		columns.add(0, new TableColumn(""));
+		columns.add(0, new TableColumn("\u00A0"));
 		populateGridTemplateColumns();
 		super.onBeforeRender(event);
 	}
