@@ -234,7 +234,16 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	public interface DirectlyInvoked {
 	}
 
+	/**
+	 * Subtypes handle events via on[hanslermethod] overrides
+	 */
 	public interface Handler extends EventHandler {
+	}
+
+	/**
+	 * Subtypes handle events via on([eventclass]) in their constructor
+	 */
+	public interface Binding extends Handler {
 	}
 
 	public static class Type<H extends EventHandler> extends GwtEvent.Type<H> {

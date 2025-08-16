@@ -323,7 +323,7 @@ public class StreamBinding<T> {
 		return new TargetBinding(this, to);
 	}
 
-	public <BSP extends SourcesPropertyChangeEvents, T2> TargetBinding
+	public <BSP extends SourcesPropertyChangeEvents, T2> TargetBinding<BSP, T2>
 			to(InstanceProperty<BSP, T2> instanceProperty) {
 		return to(instanceProperty.source)
 				.on((TypedProperty) instanceProperty.property);

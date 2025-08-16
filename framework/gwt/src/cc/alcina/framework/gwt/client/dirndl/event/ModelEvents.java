@@ -71,7 +71,7 @@ public class ModelEvents {
 			void onBack(Back event);
 		}
 
-		public interface Binding extends Handler {
+		public interface Binding extends Handler, NodeEvent.Binding {
 			@Override
 			default void onBack(Back event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -416,7 +416,7 @@ public class ModelEvents {
 			void onForward(Forward event);
 		}
 
-		public interface Binding extends Handler {
+		public interface Binding extends Handler, NodeEvent.Binding {
 			@Override
 			default void onForward(Forward event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -830,7 +830,7 @@ public class ModelEvents {
 			void onPlaceChanged(PlaceChanged event);
 		}
 
-		public interface Binding extends Handler {
+		public interface Binding extends Handler, NodeEvent.Binding {
 			@Override
 			default void onPlaceChanged(PlaceChanged event) {
 				((Model) this).bindings().onNodeEvent(event);

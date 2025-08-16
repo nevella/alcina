@@ -13,6 +13,13 @@ public class LeafTransforms {
 			}
 		}
 
+		public static class Slash implements ModelTransform<Date, String> {
+			@Override
+			public String apply(Date t) {
+				return DateStyle.DATE_SLASH.format(t);
+			}
+		}
+
 		public static class TimestampHuman
 				implements ModelTransform<Date, String> {
 			@Override

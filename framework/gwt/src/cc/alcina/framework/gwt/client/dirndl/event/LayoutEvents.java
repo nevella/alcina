@@ -130,7 +130,7 @@ public class LayoutEvents {
 			void onBound(Bound event);
 		}
 
-		public interface Binding extends Handler {
+		public interface Binding extends Handler, NodeEvent.Binding {
 			@Override
 			default void onBound(Bound event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -152,7 +152,7 @@ public class LayoutEvents {
 			void onUnbound(Unbound event);
 		}
 
-		public interface Binding extends Handler {
+		public interface Binding extends Handler, NodeEvent.Binding {
 			@Override
 			default void onUnbound(Unbound event) {
 				((Model) this).bindings().onNodeEvent(event);
