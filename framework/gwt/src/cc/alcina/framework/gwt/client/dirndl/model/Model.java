@@ -449,7 +449,7 @@ public abstract class Model extends Bindable implements
 
 		public <T extends SourcesPropertyChangeEvents> StreamBinding<T>
 				from(T source) {
-			StreamBinding binding = new StreamBinding();
+			StreamBinding binding = new StreamBinding(this);
 			modelBindings.add(binding);
 			return binding.from(source);
 		}
@@ -460,7 +460,7 @@ public abstract class Model extends Bindable implements
 		}
 
 		public <TE> StreamBinding<TE> fromTopic(Topic<TE> topic) {
-			StreamBinding binding = new StreamBinding();
+			StreamBinding binding = new StreamBinding(this);
 			modelBindings.add(binding);
 			return binding.from(topic);
 		}
@@ -498,7 +498,7 @@ public abstract class Model extends Bindable implements
 
 		<E extends NodeEvent> StreamBinding<E>
 				fromNodeEventClass(Class<E> nodeEventClass) {
-			StreamBinding binding = new StreamBinding();
+			StreamBinding binding = new StreamBinding(this);
 			modelBindings.add(binding);
 			return binding.fromNodeEventClass(nodeEventClass);
 		}

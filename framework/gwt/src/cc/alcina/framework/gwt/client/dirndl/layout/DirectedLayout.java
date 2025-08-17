@@ -495,7 +495,7 @@ public class DirectedLayout implements AlcinaProcess {
 									.equals(intf.getName(), bindingTypeName));
 					if (!hasBinding) {
 						throw new IllegalStateException(Ax.format(
-								"Type %s registers for event %s but does not emit the corresponding Binding class",
+								"Type %s registers for event %s but does not implement the corresponding Binding class",
 								NestedName.get(modelType),
 								NestedName.get(type)));
 					}

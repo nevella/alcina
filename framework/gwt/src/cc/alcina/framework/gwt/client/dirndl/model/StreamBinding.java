@@ -79,7 +79,7 @@ public class StreamBinding<T> {
 		public StreamBinding<T2> bidi() {
 			acceptLeftToRight();
 			StreamBinding source = binding;
-			StreamBinding<?> reverse = new StreamBinding<>();
+			StreamBinding<?> reverse = new StreamBinding<>(binding.bindings);
 			binding.bindings.modelBindings.add(reverse);
 			reverse.fromPropertyChangeSource = to;
 			reverse.map = map;
@@ -206,7 +206,8 @@ public class StreamBinding<T> {
 
 	public Class<? extends NodeEvent> fromNodeEventClass;
 
-	public StreamBinding() {
+	public StreamBinding(Bindings bindings) {
+		this.bindings = bindings;
 	}
 
 	public StreamBinding ifNotEqual() {
@@ -459,7 +460,8 @@ public class StreamBinding<T> {
 
 	Consumer<Runnable> ensureDispatch() {
 		if (dispatchRef == null) {
-			if (bindings.model().provideIsBound()) {
+			if (bindings != null && bindings.model() != null
+					&& bindings.model().provideIsBound()) {
 				dispatchRef = bindings.model().provideNode().getResolver()
 						.dispatch();
 			} else {

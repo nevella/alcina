@@ -54,6 +54,13 @@ public interface EventService extends ContextService {
 
 			public ServiceBinding(Class<M> clazz) {
 				this.clazz = clazz;
+				/*
+				 * Note that - since this stream binding only accepts events
+				 * (not property changes) - we require that any events are
+				 * *fired* on the dispatch thread, so there's no need to pass a
+				 * dispatchref for stream event dispatch
+				 */
+				streamBinding = new StreamBinding<>(null);
 			}
 
 			@Override

@@ -71,7 +71,7 @@ public class ModelEvents {
 			void onBack(Back event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onBack(Back event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -194,6 +194,13 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onClose(Close event);
+		}
+
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
+			@Override
+			default void onClose(Close event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 
@@ -416,7 +423,7 @@ public class ModelEvents {
 			void onForward(Forward event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onForward(Forward event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -830,7 +837,7 @@ public class ModelEvents {
 			void onPlaceChanged(PlaceChanged event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onPlaceChanged(PlaceChanged event) {
 				((Model) this).bindings().onNodeEvent(event);

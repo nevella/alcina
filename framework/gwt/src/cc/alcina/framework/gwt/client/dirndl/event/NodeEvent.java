@@ -243,7 +243,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	/**
 	 * Subtypes handle events via on([eventclass]) in their constructor
 	 */
-	public interface Binding extends Handler {
+	public interface TypeBinding extends Handler {
 	}
 
 	public static class Type<H extends EventHandler> extends GwtEvent.Type<H> {
