@@ -294,7 +294,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		}
 	}
 
-	protected void registerService(Class<? extends ContextService> service,
+	public void registerService(Class<? extends ContextService> service,
 			ContextService implementation) {
 		services.put(service, Optional.of(implementation));
 	}
