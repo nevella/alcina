@@ -679,4 +679,8 @@ public abstract class Node
 	public String toNameAttachId() {
 		return Ax.format("%s::%s", getNodeName(), getAttachId());
 	}
+
+	public boolean nameIs(String name) {
+		return getNodeName().equals(name);
+	}
 }
