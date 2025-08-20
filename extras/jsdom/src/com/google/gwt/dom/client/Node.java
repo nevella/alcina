@@ -681,6 +681,10 @@ public abstract class Node
 		return Ax.format("%s::%s", getNodeName(), getAttachId());
 	}
 
+	public boolean nameIs(String name) {
+		return getNodeName().equals(name);
+	}
+
 	public MutationGroups mutationGroups() {
 		return new MutationGroups();
 	}
