@@ -178,7 +178,13 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	}
 
 	/**
+	 * <p>
 	 * The event should be routed to descendant nodes, rather than ancestors
+	 * 
+	 * <p>
+	 * Note that the emitter of a descendant event cannot itself be a handler
+	 * (due to the ordering of the rendering sequence) - but it can effectively
+	 * be a handler by registering on its resolver's EventService
 	 */
 	public abstract static class DescendantEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
 			extends ModelEvent<T, H> {
