@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
@@ -121,10 +120,6 @@ public class LocalDom implements ContextFrame {
 		if (Al.isBrowser()) {
 			consoleLog0(message, error);
 		}
-	}
-
-	static Element createElement(String tagName) {
-		return get().createElement0(tagName);
 	}
 
 	synchronized static String declarativeCssName(String key) {
@@ -483,7 +478,7 @@ public class LocalDom implements ContextFrame {
 		return newChild;
 	}
 
-	private Element createElement0(String tagName) {
+	Element createElement(String tagName) {
 		Supplier<Element> creator = elementCreators.get(lc.lc(tagName));
 		if (creator == null) {
 			return new Element();

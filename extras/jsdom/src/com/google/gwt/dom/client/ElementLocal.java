@@ -151,7 +151,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public Node cloneNode(boolean deep) {
 		ElementLocal cloneLocal = new ElementLocal(ownerDocument, tagName);
-		Element clone = LocalDom.createElement(tagName).putLocal(cloneLocal);
+		Element clone = ownerDocument.document.localDom.createElement(tagName)
+				.putLocal(cloneLocal);
 		clone.cloneLocalStyle(element);
 		cloneLocal.hasUnparsedStyle = hasUnparsedStyle;
 		cloneLocal.attributes.putAll(attributes);
