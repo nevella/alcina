@@ -161,7 +161,8 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 	@Override
 	public Element createElement(String tagName) {
 		ElementLocal local = new ElementLocal(this, tagName);
-		Element element = LocalDom.createElement(tagName).putLocal(local);
+		Element element = document.localDom.createElement(tagName)
+				.putLocal(local);
 		switch (element.getTagName()) {
 		case "head":
 			headElement = element;

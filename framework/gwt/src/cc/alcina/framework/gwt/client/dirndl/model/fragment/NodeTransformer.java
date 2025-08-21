@@ -1,6 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.TypeTag;
+import cc.alcina.framework.common.client.dom.DomNode.TypeTagClassName;
 import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -51,6 +53,27 @@ public interface NodeTransformer {
 	void setLayoutNode(DirectedLayout.Node node);
 
 	void setNode(DomNode node);
+
+	/*
+	 * return the node tag + specific classname that this transformer matches
+	 * (priority: 0)
+	 */
+	default DomNode.TypeTagClassName getTypeTagClassName() {
+		return null;
+	}
+
+	/*
+	 * return the node tag that this transformer matches, irrespective of
+	 * classname (priority: 1)
+	 */
+	default DomNode.TypeTag getTypeTag() {
+		return null;
+	}
+
+	/*
+	 * return the node type that this transformer matches (priority: 2)
+	 */
+	DomNodeType getType();
 
 	public abstract static class AbstractNodeTransformer
 			implements NodeTransformer {
@@ -133,10 +156,43 @@ public interface NodeTransformer {
 		}
 
 		@Override
+		public TypeTagClassName getTypeTagClassName() {
+			Directed directed = getDirected();
+			String nodeClassname = directed.className();
+			if (Ax.isBlank(nodeClassname)) {
+				return null;
+			}
+			DomNodeType rendersAsType = Reflections.at(directed.renderer())
+					.templateInstance().rendersAsType();
+			String nodeName = Ax.blankTo(directed.tag(),
+					DirectedRenderer.tagName(fragmentNodeType));
+			return new TypeTagClassName(rendersAsType, nodeName, nodeClassname);
+		}
+
+		@Override
+		public TypeTag getTypeTag() {
+			Directed directed = getDirected();
+			String nodeClassname = directed.className();
+			if (Ax.notBlank(nodeClassname)) {
+				return null;
+			}
+			DomNodeType rendersAsType = Reflections.at(directed.renderer())
+					.templateInstance().rendersAsType();
+			String nodeName = Ax.blankTo(directed.tag(),
+					DirectedRenderer.tagName(fragmentNodeType));
+			return new TypeTag(rendersAsType, nodeName);
+		}
+
+		@Override
 		public void apply(DirectedLayout.Node parentNode) {
 			Model model = (Model) Reflections.newInstance(fragmentNodeType);
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
+		}
+
+		@Override
+		public DomNodeType getType() {
+			return null;
 		}
 
 		Directed directed = null;
@@ -178,6 +234,11 @@ public interface NodeTransformer {
 		}
 
 		@Override
+		public TypeTagClassName getTypeTagClassName() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
 		public void refreshBindings() {
 			// NOOP (fragment root does not bind via mutations)
 		}
@@ -198,6 +259,11 @@ public interface NodeTransformer {
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
+
+		@Override
+		public DomNodeType getType() {
+			return DomNodeType.COMMENT;
+		}
 	}
 
 	/**
@@ -217,6 +283,11 @@ public interface NodeTransformer {
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}
+
+		@Override
+		public DomNodeType getType() {
+			return DomNodeType.ELEMENT;
+		}
 	}
 
 	/**
@@ -234,6 +305,11 @@ public interface NodeTransformer {
 			FragmentNode.GenericProcessingInstruction model = new FragmentNode.GenericProcessingInstruction();
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
+		}
+
+		@Override
+		public DomNodeType getType() {
+			return DomNodeType.PROCESSING_INSTRUCTION;
 		}
 	}
 
@@ -255,6 +331,11 @@ public interface NodeTransformer {
 			Model model = new TextNode();
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
+		}
+
+		@Override
+		public DomNodeType getType() {
+			return DomNodeType.TEXT;
 		}
 	}
 }

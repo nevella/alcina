@@ -102,6 +102,95 @@ public class DomNode {
 	private static Map<String, DomNodeReadonlyLookupQuery> queryLookup = Collections
 			.synchronizedMap(new LinkedHashMap<>());
 
+	public static class TypeTagClassName {
+		public final String nodeName;
+
+		public final String nodeClassname;
+
+		public final DomNodeType domNodeType;
+
+		public TypeTagClassName(DomNode node) {
+			this(node.getDomNodeType(), node.name(), node.getClassName());
+		}
+
+		public TypeTagClassName(DomNodeType domNodeType, String nodeName,
+				String nodeClassname) {
+			this.domNodeType = domNodeType;
+			this.nodeName = nodeName;
+			this.nodeClassname = nodeClassname;
+		}
+
+		transient int hash = 0;
+
+		@Override
+		public int hashCode() {
+			if (hash == 0) {
+				hash = Objects.hash(domNodeType, nodeName, nodeClassname);
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof TypeTagClassName) {
+				TypeTagClassName o = (TypeTagClassName) obj;
+				if (!Objects.equals(domNodeType, o.domNodeType)) {
+					return false;
+				}
+				if (!Objects.equals(nodeName, o.nodeName)) {
+					return false;
+				}
+				return Objects.equals(nodeClassname, o.nodeClassname);
+			} else {
+				return super.equals(obj);
+			}
+		}
+	}
+
+	public static class TypeTag {
+		public final String nodeName;
+
+		public final DomNodeType domNodeType;
+
+		public TypeTag(DomNode node) {
+			this(node.getDomNodeType(), node.name());
+		}
+
+		public TypeTag(DomNodeType domNodeType, String nodeName) {
+			this.domNodeType = domNodeType;
+			this.nodeName = nodeName;
+		}
+
+		transient int hash = 0;
+
+		@Override
+		public int hashCode() {
+			if (hash == 0) {
+				hash = Objects.hash(domNodeType, nodeName);
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof TypeTag) {
+				TypeTag o = (TypeTag) obj;
+				if (!Objects.equals(domNodeType, o.domNodeType)) {
+					return false;
+				}
+				return Objects.equals(nodeName, o.nodeName);
+			} else {
+				return super.equals(obj);
+			}
+		}
+	}
+
 	public static DomNode from(Node node) {
 		if (node instanceof com.google.gwt.dom.client.Node) {
 			return ((com.google.gwt.dom.client.Node) node).asDomNode();
@@ -1256,15 +1345,15 @@ public class DomNode {
 		}
 	}
 
-	class DomNodeReadonlyLookup {
-		public DomNodeReadonlyLookup() {
+	static class DomNodeReadonlyLookup {
+		DomNodeReadonlyLookup() {
 		}
 
-		public boolean handlesXpath(String xpath) {
+		boolean handlesXpath(DomNode node, String xpath) {
 			DomNodeReadonlyLookupQuery query = parse(xpath);
 			return query.valid && (query.immediateChild || query.grandChild
-					|| DomNode.this == document
-					|| DomNode.this == document.getDocumentElementNode());
+					|| node == node.document
+					|| node == node.document.getDocumentElementNode());
 		}
 
 		private String normaliseTag(String tag) {
@@ -1385,13 +1474,13 @@ public class DomNode {
 			return query;
 		}
 
-		Stream<DomNode> stream(String xpath) {
+		Stream<DomNode> stream(DomNode node, String xpath) {
 			DomNodeReadonlyLookupQuery query = parse(xpath);
 			if (query.immediateChild) {
-				return children.byTag(query.tag).stream()
+				return node.children.byTag(query.tag).stream()
 						.filter(query.predicate).flatMap(query.map);
 			} else if (query.grandChild) {
-				return children.byTag(query.tag).stream()
+				return node.children.byTag(query.tag).stream()
 						.filter(query.predicate)
 						.map(n -> n.children.byTag(query.grandChildTag))
 						.flatMap(Collection::stream).flatMap(query.map);
@@ -1399,12 +1488,16 @@ public class DomNode {
 				Stream<DomNode> stream = null;
 				if (Ax.notBlank(query.id2)) {
 					stream = Stream.concat(
-							document.byId().getAndEnsure(query.id).stream(),
-							document.byId().getAndEnsure(query.id2).stream());
+							node.document.byId().getAndEnsure(query.id)
+									.stream(),
+							node.document.byId().getAndEnsure(query.id2)
+									.stream());
 				} else if (Ax.notBlank(query.id)) {
-					stream = document.byId().getAndEnsure(query.id).stream();
+					stream = node.document.byId().getAndEnsure(query.id)
+							.stream();
 				} else {
-					stream = document.byTag().getAndEnsure(query.tag).stream();
+					stream = node.document.byTag().getAndEnsure(query.tag)
+							.stream();
 				}
 				return stream.filter(query.predicate).flatMap(query.map)
 						.filter(Objects::nonNull);
@@ -2010,7 +2103,8 @@ public class DomNode {
 		}
 
 		public DomNode node() {
-			if (document.isReadonly() && lookup().handlesXpath(query)) {
+			if (document.isReadonly()
+					&& lookup().handlesXpath(DomNode.this, query)) {
 				return stream().findFirst().orElse(null);
 			} else {
 				Node domNode = evaluator.getNodeByXpath(query, node);
@@ -2032,8 +2126,9 @@ public class DomNode {
 		}
 
 		public Stream<DomNode> stream() {
-			if (document.isReadonly() && lookup().handlesXpath(query)) {
-				return lookup.stream(query);
+			if (document.isReadonly()
+					&& lookup().handlesXpath(DomNode.this, query)) {
+				return lookup.stream(DomNode.this, query);
 			} else {
 				List<Node> domNodes = evaluator.getNodesByXpath(query, node);
 				return domNodes.stream().map(document::nodeFor);

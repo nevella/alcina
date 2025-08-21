@@ -1112,6 +1112,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 			Ax.out("**WARNING ** TLTM - cleared (but still pending) transforms [%s]:\n %s",
 					pendingTransforms.size(), pendingTransforms.stream()
 							.limit(1000).collect(Collectors.toList()));
+			new Exception().printStackTrace();
 			try {
 				AlcinaTopics.devWarning
 						.publish(new UncomittedTransformsException());
