@@ -18,6 +18,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
  * Note though that although the *effect* of this service is intra-component
  * communication, it's explicitly not modelled as such - rather as a broadcast
  * service (like say UDP) with typed listeners
+ * 
+ * <p>
+ * Note the special handling by DirectedLayout descendant event emission
+ * (they're routed to the EventService as well, if it exists)
  */
 public interface EventService extends ContextService {
 	public interface Provider extends ContextService.Provider {
@@ -31,6 +35,8 @@ public interface EventService extends ContextService {
 	void emitEvent(Class<? extends ModelEvent> clazz, Object value);
 
 	<M extends ModelEvent> StreamBinding<M> on(Class<M> clazz);
+
+	void publishEvent(ModelEvent event);
 
 	static class ProviderInvoker
 			implements ContextService.ProviderInvoker<EventService.Provider> {

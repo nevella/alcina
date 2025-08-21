@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.ContextObservers;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 /**
@@ -12,7 +12,8 @@ import cc.alcina.framework.gwt.client.logic.LogLevel;
  * per-client observables.
  * 
  * <p>
- * Single-threaded (GWT) clients should register as a base observer on c
+ * Single-threaded (GWT) clients should register as a base observer on context
+ * entry
  */
 @Reflected
 public class NotificationObservable
@@ -25,17 +26,33 @@ public class NotificationObservable
 	 * @param args
 	 * @return
 	 */
-	public static ProcessObservable of(String template, Object... args) {
+	public static NotificationObservable of(String template, Object... args) {
 		return of(Ax.format(template, args));
 	}
 
-	public static ProcessObservable of(String message) {
+	public static NotificationObservable of(String message) {
 		NotificationObservable result = new NotificationObservable();
 		result.message = message;
 		return result;
 	}
 
+	public static NotificationObservable of(Throwable throwable) {
+		NotificationObservable result = new NotificationObservable();
+		result.message = CommonUtils.toSimpleExceptionMessage(throwable);
+		return result;
+	}
+
+	public NotificationObservable withLevel(LogLevel level) {
+		this.level = level;
+		return this;
+	}
+
 	public String message;
 
-	public LogLevel level;
+	public LogLevel level = LogLevel.INFO;
+
+	@Override
+	public String toString() {
+		return Ax.format("[%s] %s", level, message);
+	}
 }
