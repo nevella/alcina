@@ -157,7 +157,7 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 		public String toCsvString() {
 			Csv csv = Csv.blankWithKeys(Keys.class);
 			entries.forEach(e -> e.toRow(csv.addRow()));
-			return csv.toCsv();
+			return csv.toCsvString();
 		}
 
 		enum Keys {

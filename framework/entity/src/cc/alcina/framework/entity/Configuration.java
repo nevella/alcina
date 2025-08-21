@@ -963,7 +963,7 @@ public class Configuration {
 			nodes = getRoot().depthFirst();
 			Stream.of(Header.values()).forEach(csv::addColumn);
 			nodes.stream().forEach(node -> node.addTo(csv));
-			return csv.toCsv();
+			return csv.toCsvString();
 		}
 
 		public StringMap asMap() {
