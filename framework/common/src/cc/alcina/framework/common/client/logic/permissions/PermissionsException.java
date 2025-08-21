@@ -20,17 +20,28 @@ package cc.alcina.framework.common.client.logic.permissions;
 public class PermissionsException extends Exception {
 	public PermissionsException() {
 		super();
+		postlude();
 	}
 
 	public PermissionsException(String message) {
 		super(message);
+		postlude();
 	}
 
 	public PermissionsException(String message, Throwable cause) {
 		super(message, cause);
+		postlude();
 	}
 
 	public PermissionsException(Throwable cause) {
 		super(cause);
+		postlude();
+	}
+
+	/*
+	 * simplify exception debugging
+	 */
+	void postlude() {
+		int debug = 4;
 	}
 }
