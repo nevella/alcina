@@ -102,6 +102,95 @@ public class DomNode {
 	private static Map<String, DomNodeReadonlyLookupQuery> queryLookup = Collections
 			.synchronizedMap(new LinkedHashMap<>());
 
+	public static class TypeTagClassName {
+		public final String nodeName;
+
+		public final String nodeClassname;
+
+		public final DomNodeType domNodeType;
+
+		public TypeTagClassName(DomNode node) {
+			this(node.getDomNodeType(), node.name(), node.getClassName());
+		}
+
+		public TypeTagClassName(DomNodeType domNodeType, String nodeName,
+				String nodeClassname) {
+			this.domNodeType = domNodeType;
+			this.nodeName = nodeName;
+			this.nodeClassname = nodeClassname;
+		}
+
+		transient int hash = 0;
+
+		@Override
+		public int hashCode() {
+			if (hash == 0) {
+				hash = Objects.hash(domNodeType, nodeName, nodeClassname);
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof TypeTagClassName) {
+				TypeTagClassName o = (TypeTagClassName) obj;
+				if (!Objects.equals(domNodeType, o.domNodeType)) {
+					return false;
+				}
+				if (!Objects.equals(nodeName, o.nodeName)) {
+					return false;
+				}
+				return Objects.equals(nodeClassname, o.nodeClassname);
+			} else {
+				return super.equals(obj);
+			}
+		}
+	}
+
+	public static class TypeTag {
+		public final String nodeName;
+
+		public final DomNodeType domNodeType;
+
+		public TypeTag(DomNode node) {
+			this(node.getDomNodeType(), node.name());
+		}
+
+		public TypeTag(DomNodeType domNodeType, String nodeName) {
+			this.domNodeType = domNodeType;
+			this.nodeName = nodeName;
+		}
+
+		transient int hash = 0;
+
+		@Override
+		public int hashCode() {
+			if (hash == 0) {
+				hash = Objects.hash(domNodeType, nodeName);
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof TypeTag) {
+				TypeTag o = (TypeTag) obj;
+				if (!Objects.equals(domNodeType, o.domNodeType)) {
+					return false;
+				}
+				return Objects.equals(nodeName, o.nodeName);
+			} else {
+				return super.equals(obj);
+			}
+		}
+	}
+
 	public static DomNode from(Node node) {
 		if (node instanceof com.google.gwt.dom.client.Node) {
 			return ((com.google.gwt.dom.client.Node) node).asDomNode();
