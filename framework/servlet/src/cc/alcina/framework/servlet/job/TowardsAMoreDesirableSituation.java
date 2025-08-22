@@ -142,11 +142,13 @@ public class TowardsAMoreDesirableSituation {
 		if (!Configuration.is("enabled")) {
 			return;
 		}
-		activeJobs.removeIf(
-				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
 		AtomicInteger skipCount = filter.getSkipCount();
 		while (canAllocate()) {
+			synchronized (activeJobs) {
+				activeJobs.removeIf(j -> j.domain().wasRemoved()
+						|| j.provideIsSequenceComplete());
+			}
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get().withJobMetadataLock(
