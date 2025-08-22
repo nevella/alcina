@@ -50,9 +50,6 @@ class TransformerMatcher {
 		if (matchingTransformer == null) {
 			matchingTransformer = typeTransformer.get(node.getDomNodeType());
 		}
-		NodeTransformer matchingTransformer2 = this.matcherTransformers.stream()
-				.filter(transformer -> transformer.appliesTo(node)).findFirst()
-				.get();
 		NodeTransformer transformer = createTransformerForType(
 				matchingTransformer.getFragmentNodeType());
 		transformer.setNode(node);

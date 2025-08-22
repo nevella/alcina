@@ -1321,7 +1321,8 @@ public class XmlUtils {
 		StringWriter w = new StringWriter();
 		try {
 			_streamXML(n, w, null);
-			return w.toString();
+			String result = w.toString();
+			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return "";

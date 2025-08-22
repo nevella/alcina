@@ -17,7 +17,7 @@ class PropertySelection extends AbstractSelection<Property>
 		EntitySelection entitySelection = parent
 				.ancestorSelection(EntitySelection.class);
 		Entity entity = entitySelection.get();
-		propertyValue = get().get(entity);
+		propertyValue = get().safeGet(entity);
 	}
 
 	@Override

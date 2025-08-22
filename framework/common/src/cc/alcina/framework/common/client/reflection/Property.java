@@ -259,4 +259,20 @@ public class Property implements HasAnnotations {
 	public Class firstGenericBound() {
 		return getTypeBounds().bounds.get(0);
 	}
+
+	/**
+	 * use when on-demand deserialization has a chance of throwing, and null is
+	 * OK (e.g. entity view frameworks)
+	 * 
+	 * @param object
+	 * @return
+	 */
+	public Object safeGet(Object object) {
+		try {
+			return get(object);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

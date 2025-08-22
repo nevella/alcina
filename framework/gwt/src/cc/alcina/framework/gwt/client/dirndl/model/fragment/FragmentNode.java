@@ -6,6 +6,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -24,6 +25,7 @@ import org.w3c.dom.NamedNodeMap;
 import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
+import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -571,5 +573,17 @@ public abstract class FragmentNode extends Model.Fields
 
 	public boolean isType(Class<? extends FragmentNode> clazz) {
 		return Reflections.isAssignableFrom(clazz, getClass());
+	}
+
+	public static class DocumentOrderComparator
+			implements Comparator<FragmentNode> {
+		public static final DocumentOrderComparator INSTANCE = new DocumentOrderComparator();
+
+		@Override
+		public int compare(FragmentNode o1, FragmentNode o2) {
+			Location l1 = o1.provideElement().asDomNode().asLocation();
+			Location l2 = o2.provideElement().asDomNode().asLocation();
+			return l1.compareTo(l2);
+		}
 	}
 }

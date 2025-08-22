@@ -102,4 +102,12 @@ public class Url {
 		builder.populateFrom(this);
 		return builder;
 	}
+
+	public String lastPathSegment() {
+		return path.replaceFirst(".+/(.+)", "$1");
+	}
+
+	public String lastPathSegmentWithoutExtension() {
+		return lastPathSegment().replaceFirst("(.+)\\.(.+)", "$1");
+	}
 }

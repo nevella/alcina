@@ -55,6 +55,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -386,25 +387,36 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static String cssify(Object o) {
-		if (o == null) {
+	static volatile Map<String, String> cssifyCache;
+
+	public static String cssify(Object obj) {
+		if (obj == null) {
 			return null;
 		}
-		String s = o.toString();
-		if (CommonUtils.isNullOrEmpty(s)) {
-			return s;
+		if (cssifyCache == null) {
+			synchronized (CommonUtils.class) {
+				cssifyCache = Registry
+						.impl(CollectionCreators.ConcurrentMapCreator.class)
+						.create();
+			}
 		}
-		if (s.contains("_")) {
-			return s.toLowerCase().replace('_', '-');
-		}
-		StringBuilder builder = new StringBuilder();
-		builder.append(s.substring(0, 1).toLowerCase());
-		for (int i = 1; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			builder.append(c.toUpperCase().equals(c) ? "-" : "");
-			builder.append(c.toLowerCase());
-		}
-		return builder.toString();
+		String str = obj.toString();
+		return cssifyCache.computeIfAbsent(str, s -> {
+			if (CommonUtils.isNullOrEmpty(s)) {
+				return s;
+			}
+			if (s.contains("_")) {
+				return s.toLowerCase().replace('_', '-');
+			}
+			StringBuilder builder = new StringBuilder();
+			builder.append(s.substring(0, 1).toLowerCase());
+			for (int i = 1; i < s.length(); i++) {
+				String c = s.substring(i, i + 1);
+				builder.append(c.toUpperCase().equals(c) ? "-" : "");
+				builder.append(c.toLowerCase());
+			}
+			return builder.toString();
+		});
 	}
 
 	public static boolean currencyEquals(double d1, double d2) {

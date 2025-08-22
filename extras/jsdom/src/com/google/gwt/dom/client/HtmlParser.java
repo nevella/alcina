@@ -99,9 +99,7 @@ public class HtmlParser {
 	 *
 	 * FIXME - LDM2 - live test in the browser
 	 */
-	private boolean emitBrowserCompatibleDom = true;
-
-	StringBuilder markingBuilder2 = new StringBuilder();
+	boolean emitBrowserCompatibleDom = true;
 
 	/*
 	 * Similar API to stringbuilder
@@ -150,7 +148,7 @@ public class HtmlParser {
 			return toString;
 		}
 
-		public boolean textEquals(String string) {
+		boolean textEquals(String string) {
 			int length = length();
 			if (length != string.length()) {
 				return false;
@@ -163,15 +161,32 @@ public class HtmlParser {
 			return true;
 		}
 
-		public String toStringLowerCase() {
+		String toStringLowerCase() {
 			if (toString == null || toStringLowerCase == null) {
 				toStringLowerCase = lc.lc(toString());
 			}
 			return toStringLowerCase;
 		}
 
-		public char charAt(int idx) {
+		char charAt(int idx) {
 			return html.charAt(start + idx);
+		}
+
+		boolean endsWith(String test) {
+			int length = length();
+			int testLength = test.length();
+			if (length < testLength) {
+				return false;
+			}
+			for (int idx = testLength - 1; idx >= 0; idx--) {
+				char stringChar = test.charAt(idx);
+				int fromEnd = testLength - idx;
+				char builderChar = charAt(length - fromEnd);
+				if (stringChar != builderChar) {
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 
@@ -500,7 +515,7 @@ public class HtmlParser {
 				// FIXME - dirndl 1x1g - optimise end-of-builder checks (with
 				// some sort of buffering builder) - lowish priority since the
 				// node types that use this check are rare
-				if (c == '>' && markingBuilder.toString().endsWith("--")) {
+				if (c == '>' && markingBuilder.endsWith("--")) {
 					markingBuilder.setLength(markingBuilder.length() - 2);
 					emitComment(markingBuilder.toString());
 					resetBuilder();
@@ -510,7 +525,7 @@ public class HtmlParser {
 				}
 				break;
 			case EXPECTING_CDATA:
-				if (c == '>' && markingBuilder.toString().endsWith("]]")) {
+				if (c == '>' && markingBuilder.endsWith("]]")) {
 					markingBuilder.setLength(markingBuilder.length() - 2);
 					emitCData(markingBuilder.toString());
 					resetBuilder();
@@ -520,7 +535,7 @@ public class HtmlParser {
 				}
 				break;
 			case EXPECTING_PROCESSING_INSTRUCTION:
-				if (c == '>' && markingBuilder.toString().endsWith("?")) {
+				if (c == '>' && markingBuilder.endsWith("?")) {
 					markingBuilder.setLength(markingBuilder.length() - 1);
 					emitProcessingInstruction(markingBuilder.toString());
 					resetBuilder();
