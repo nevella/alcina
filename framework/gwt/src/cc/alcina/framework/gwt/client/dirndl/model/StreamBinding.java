@@ -507,6 +507,12 @@ public class StreamBinding<T> {
 		return Reflections.at(fromPropertyChangeSource).property(on);
 	}
 
+	public static <T> StreamBinding<T>
+			ofProperty(InstanceProperty<?, T> property) {
+		return new StreamBinding<>(null).from(property.source)
+				.on(property.property);
+	}
+
 	public <E> void emit(Class<? extends ModelEvent<E, ?>> modelEventClass) {
 		emit(modelEventClass, null);
 	}
