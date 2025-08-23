@@ -16,8 +16,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.Single.PropertyValues;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
@@ -136,7 +136,7 @@ public class EntitySelection extends AbstractSelection<Entity> {
 					this.selection = selection;
 					this.property = property;
 					Entity entity = selection.get();
-					Object v = property.get(entity);
+					Object v = property.safeGet(entity);
 					value = String.valueOf(v);
 					// trim done by the ui
 					// Ax.trim(String.valueOf(v), 300);

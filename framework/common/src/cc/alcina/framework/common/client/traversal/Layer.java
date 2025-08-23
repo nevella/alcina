@@ -147,8 +147,8 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		return NestedName.get(this);
 	}
 
-	public Collection<Selection> getSelections() {
-		return state.traversalState.selections.byLayer(this);
+	public <T extends Selection> Collection<T> getSelections() {
+		return (Collection<T>) state.traversalState.selections.byLayer(this);
 	}
 
 	public <S1 extends Selection> Stream<S1> getSelections(Class<S1> clazz) {

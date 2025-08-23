@@ -120,7 +120,7 @@ public class JMethod extends JAbstractMethod implements
 		public T apply(Object target, Object[] args) {
 			try {
 				return (T) reflectMethod.invoke(target, args);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				throw new WrappedRuntimeException(e);
 			}
 		}
