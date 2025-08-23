@@ -224,6 +224,13 @@ public class ClassReflector<T> implements HasAnnotations {
 		return this.genericBounds;
 	}
 
+	/**
+	 * Normally use provideAllImplementedInterfaces - unless you're sure this is
+	 * what you want
+	 * 
+	 * @return the interfaces implemented by this type, not including
+	 *         supertype/superinterface implementation types
+	 */
 	public List<Class> getInterfaces() {
 		return interfaces;
 	}

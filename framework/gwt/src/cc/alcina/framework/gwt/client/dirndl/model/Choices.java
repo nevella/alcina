@@ -61,6 +61,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSupplier;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.SelectResolver.OptionNameTransformer;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
 
 /**
  * <p>
@@ -82,7 +83,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices.SelectResolver.Option
  * getSelectedValue(s) - and changes are signallred by
  * {@link ModelEvents.SelectionChanged}
  * <p>
- * When the selectable model is large - often remote, use
+ * When the selectable model is large - often remote, use a {@link ChoiceEditor}
+ * subtype
  */
 @Directed(tag = "choices")
 /*
@@ -119,6 +121,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices.SelectResolver.Option
 
 @formatter:on
  * 
+ * 
+ * 
+ */
+/*
+ * Separators are not implemented, but don't really need to be here - just make
+ * the type parameter a supertype of the (choice-model|separator), reject
+ * separator selection (click, keyboard) and special-case the sass (generalised
+ * _support_ would be nice, sure)
  */
 public abstract class Choices<T> extends Model implements
 		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has,

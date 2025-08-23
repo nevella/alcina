@@ -242,9 +242,10 @@ public class ContextResolver extends AnnotationLocation.Resolver
 					(Class<? extends ContextService>) rootModel.getClass(),
 					(ContextService) rootModel);
 		}
-		Reflections.at(rootModel).getInterfaces().stream()
+		Reflections.at(rootModel).provideAllImplementedInterfaces()
 				.filter(intf -> Reflections
-						.isAssignableFrom(ContextService.Provider.class, intf))
+						.isAssignableFrom(ContextService.Provider.class, intf)
+						&& intf != ContextService.Provider.class)
 				.forEach(intf -> {
 					ProviderInvoker providerInvoker = Registry
 							.impl(ContextService.ProviderInvoker.class, intf);

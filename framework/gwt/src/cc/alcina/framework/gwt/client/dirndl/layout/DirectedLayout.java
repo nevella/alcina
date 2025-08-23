@@ -491,8 +491,9 @@ public class DirectedLayout implements AlcinaProcess {
 					// registry, but this works
 					String bindingTypeName = type.getName() + "$Binding";
 					boolean hasBinding = Reflections.at(modelType)
-							.getInterfaces().stream().anyMatch(intf -> Objects
-									.equals(intf.getName(), bindingTypeName));
+							.provideAllImplementedInterfaces()
+							.anyMatch(intf -> Objects.equals(intf.getName(),
+									bindingTypeName));
 					if (!hasBinding) {
 						throw new IllegalStateException(Ax.format(
 								"Type %s registers for event %s but does not implement the corresponding Binding class",
