@@ -57,8 +57,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -128,6 +128,11 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public CommonPersistenceBase(EntityManager em) {
 		this();
 		this.setEntityManager(em);
+	}
+
+	@Override
+	public final long log(String message, String componentKey) {
+		return log(message, componentKey, null);
 	}
 
 	/**
@@ -606,15 +611,19 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public long log(String message, String componentKey) {
-		// not required...useful but
-		return 0;
+	public final long log(String message, String componentKey, String data) {
+		if (ignoreLog(message)) {
+			return 0L;
+		} else {
+			return logImpl(message, componentKey, data);
+		}
 	}
 
-	@Override
-	public long log(String message, String componentKey, String data) {
-		// not required...useful but
-		return 0;
+	protected abstract long logImpl(String message, String componentKey,
+			String data);
+
+	protected boolean ignoreLog(String message) {
+		return false;
 	}
 
 	@Override
