@@ -64,7 +64,8 @@ public class ClientReflections {
 			if (ClassUtil.isEnumSubclass(clazz)) {
 				return getClassReflector(clazz.getSuperclass());
 			}
-			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()
+			String className = clazz.getName();
+			if (className.startsWith("java.") || clazz.isPrimitive()
 					|| (clazz.isArray()
 							&& clazz.getComponentType().isPrimitive())
 					|| emptyReflectorClasses.containsKey(clazz)) {
@@ -77,7 +78,7 @@ public class ClientReflections {
 				 * isImmutableJdkCollectionType()
 				 */
 				List<Class> interfaces = List.of();
-				switch (clazz.getName()) {
+				switch (className) {
 				case "java.util.ImmutableCollections$AbstractImmutableList":
 				case "java.util.Collections$UnmodifiableList":
 				case "java.util.Collections$SingletonList":
@@ -91,11 +92,15 @@ public class ClientReflections {
 					interfaces = List.of(Set.class);
 					break;
 				}
+				if (className
+						.startsWith("java.util.ImmutableCollections$List")) {
+					interfaces = List.of(List.class);
+				}
 				return ClassReflector.emptyReflector(clazz, interfaces);
 			}
 			throw new NoSuchElementException(Ax.format(
 					"No reflector for %s - check it or a superclass has the @Bean or @Reflected annotation",
-					clazz.getName()));
+					className));
 		}
 		return optional.get();
 	}

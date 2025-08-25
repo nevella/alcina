@@ -68,7 +68,8 @@ public class ClassUtil {
 	public static boolean isImmutableJdkCollectionType(Class<?> clazz) {
 		Class<?> cursor = clazz;
 		while (cursor != null) {
-			switch (cursor.getName()) {
+			String className = cursor.getName();
+			switch (className) {
 			case "java.util.ImmutableCollections$AbstractImmutableList":
 			case "java.util.Collections$UnmodifiableList":
 			case "java.util.Collections$SingletonList":
@@ -79,6 +80,9 @@ public class ClassUtil {
 			case "java.util.ImmutableCollections$AbstractImmutableSet":
 				return true;
 			case "java.util.Arrays$ArrayList":
+				return true;
+			}
+			if (className.startsWith("java.util.ImmutableCollections$")) {
 				return true;
 			}
 			cursor = cursor.getSuperclass();
