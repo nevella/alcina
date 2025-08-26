@@ -275,6 +275,10 @@ public class DirectedLayout implements AlcinaProcess {
 	 * <p>
 	 * It's assumed that the initial render is in the correct context,
 	 * mutationDispatch is only used for non-initial renders
+	 * 
+	 * <p>
+	 * FIXME - dirndl - remove, but document that this is handled (better) by
+	 * StreamBinding dispatch
 	 */
 	public Consumer<Runnable> mutationDispatch = Runnable::run;
 
