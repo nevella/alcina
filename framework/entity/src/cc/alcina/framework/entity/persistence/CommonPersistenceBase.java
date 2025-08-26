@@ -131,7 +131,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public final long log(String message, String componentKey) {
+	public long log(String message, String componentKey) {
 		return log(message, componentKey, null);
 	}
 
