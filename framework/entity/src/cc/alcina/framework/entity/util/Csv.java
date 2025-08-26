@@ -152,7 +152,8 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 			}
 			Class<?> commonType = CollectionUtil.getCommonType(collection);
 			List<Property> properties = Reflections.at(commonType).properties()
-					.stream().filter(Property::isReadable).toList();
+					.stream().filter(Property::isReadable)
+					.collect(Collectors.toList());
 			properties.stream().map(Property::getName).forEach(csv::addColumn);
 			collection.forEach(elem -> {
 				Row row = csv.addRow();

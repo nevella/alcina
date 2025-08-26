@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
 public class CollectionUtil {
 	public static <T> Class<T> getCommonType(Collection<?> collection) {
 		List<Class> types = (List) collection.stream().map(Object::getClass)
-				.distinct().toList();
+				.distinct().collect(Collectors.toList());
 		Preconditions.checkArgument(types.size() <= 1);
 		return Ax.first(types);
 	}
