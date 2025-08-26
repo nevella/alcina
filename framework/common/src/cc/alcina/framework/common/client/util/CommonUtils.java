@@ -845,22 +845,22 @@ public class CommonUtils {
 		if (enumValueLookup.asMapEnsure(false, enumClass,
 				withFriendlyNames) == null) {
 			for (E ev : enumClass.getEnumConstants()) {
-				enumValueLookup.put(enumClass, withFriendlyNames, ev.toString(),
-						ev);
+				String enumName = ev.name();
+				enumValueLookup.put(enumClass, withFriendlyNames, enumName, ev);
 				enumValueLookup.put(enumClass, withFriendlyNames,
-						ev.toString().toLowerCase(), ev);
+						enumName.toLowerCase(), ev);
 				if (withFriendlyNames) {
 					// handle double__ default
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							ev.toString().toLowerCase().replace('_', '-'), ev);
+							enumName.toLowerCase().replace('_', '-'), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, "-").toLowerCase(), ev);
+							friendlyConstant(enumName, "-").toLowerCase(), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, "-"), ev);
+							friendlyConstant(enumName, "-"), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, " "), ev);
+							friendlyConstant(enumName, " "), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, " ").toLowerCase(), ev);
+							friendlyConstant(enumName, " ").toLowerCase(), ev);
 				}
 			}
 		}
