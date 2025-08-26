@@ -11,17 +11,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 /**
  * <p>
  * This service emits events (they must be ModelEvent.DescendantEvent subtypes)
- * to the containing DecoratedContentArea - so provides the main intra-component
- * communication channel between DecoratedContentArea components
+ * to the peer model and its descendants - so provides the main intra-component
+ * communication channel between non-model peers of a model/node subtree
  * 
  * <p>
- * Note though that although the *effect* of this service is intra-component
- * communication, it's explicitly not modelled as such - rather as a broadcast
- * service (like say UDP) with typed listeners
- * 
- * <p>
- * Note the special handling by DirectedLayout descendant event emission
- * (they're routed to the EventService as well, if it exists)
+ * Most listening behavior will not use an EventService - since unbinding must
+ * be performed manually, it's normally easier to bind a model via the on()
+ * method (or by Handler implementation) - this class is for _non_-model peers
+ * such as load observers, etc
  */
 public interface EventService extends ContextService {
 	public interface Provider extends ContextService.Provider {

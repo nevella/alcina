@@ -125,15 +125,21 @@ class NodeEventBinding {
 			domBinding.bind(getBindingRendered().as(Element.class), node.model,
 					true);
 		} else {
-			// model event
+			/*
+			 * Check this is a (non-dom) ModelEvent
+			 */
 			Preconditions.checkState(Reflections
 					.isAssignableFrom(NodeEvent.WithoutDomBinding.class, type));
 			if (isDescendantBinding(type)) {
-				// find emitter attached to a parent node which emits events of
-				// Type type
+				/*
+				 * find the emitter attached to an ancestor-or-self node which
+				 * emits events of Type type
+				 */
 				ModelEvent.Emitter emitter = node.findEmitter(type);
 				if (emitter != null) {
-					((Model) emitter).provideNode().getEventBinding(type)
+					Node emitterNode = node.model == emitter ? node
+							: ((Model) emitter).provideNode();
+					emitterNode.getEventBinding(type)
 							.addDescendantBinding(this);
 				}
 			}

@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata;
 
 /**
  * <p>
@@ -32,7 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * 
  * <p>
  * An example: a link with text "Add" will emit a DOM click event when clicked,
- * this should be translated to a ModelEvent.Add (via @Directed.reemits()) model
+ * this should be translated to a ModelEvent.Add (via Directed.reemits()) model
  * event and *that* model event should be logically handled - possibly several
  * layers higher in the UI stack. FIXME give a demo app example
  * 
@@ -51,8 +52,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * <p>
  * Naming note. Use present/imperative when the event is "a command UI gesture
  * was made" - e.g. clicking on the 'x' button somewhere commands 'Close', so
- * emit a {@code CloseEvent}. But when a UI <i>change</i> event occurs - such as
- * 'the popup closed', use the past simple - {@code ClosedEvent}.
+ * emit a {@code CloseEvent}. But when a UI state <i>change</i> event occurs -
+ * such as 'the popup closed', use the past simple - {@code ClosedEvent}.
  *
  * <p>
  * Naming note: 'dispatch' - emit/enqueue an event. 'Fire' call an event handler
@@ -63,11 +64,19 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  * <p>
  * usage note: there are many ways to reemit or emit an event from code -
- * preferred are the fluent ones ({@code DirectedLayout.Node.dispatch_, {@code
+ * preferred are the fluent ones ({@code DirectedLayout.Node.dispatch}, {@code
  * NodeEvent.reemitAs})
  * 
  * <p>
- * TODO - descendant event
+ * For a 'componentn' - a large model/ui structures, such as an editor -
+ * {@link DescendantEvent} instances are key for intra-model communication. They
+ * act via "reflected broadcast" - they can be emitted by any model, they ascend
+ * until they encounter an emitter (most often the component root).
+ * 
+ * <p>
+ * THey are then fired on any descendants of that emitter that are handlers of
+ * the event. An example is the {@link TableColumnMetadata.Change} event
+ * 
  *
  *
  * @param <T>
