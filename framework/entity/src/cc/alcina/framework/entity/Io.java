@@ -31,6 +31,7 @@ import org.xml.sax.InputSource;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -476,6 +477,26 @@ public class Io {
 				return Optional.empty();
 			} else {
 				return Optional.of(asString());
+			}
+		}
+
+		public DomDocument asXmlOrHtmlDomDocument() {
+			resource.replayable = true;
+			String markup = asString();
+			try {
+				resource.stream.reset();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+			byte[] asBytes = asBytes();
+			try {
+				LooseContext
+						.pushWithTrue(XmlUtils.CONTEXT_MUTE_XML_SAX_EXCEPTIONS);
+				return asXmlDomDocument();
+			} catch (Exception e) {
+				return asDomDocument();
+			} finally {
+				LooseContext.pop();
 			}
 		}
 	}
