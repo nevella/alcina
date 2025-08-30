@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
@@ -540,8 +541,11 @@ public class Transaction implements Comparable<Transaction> {
 							"Ending transaction with uncommitted transforms: {} {}",
 							endPhase, transforms.size());
 					if (Ax.isTest()) {
-						throw new RuntimeException(Ax.format(
-								"Uncommitted transforms\n\n%s", transforms));
+						String message = DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG
+								.callWithTrue(() -> Ax.format(
+										"Uncommitted transforms\n\n%s",
+										transforms));
+						throw new RuntimeException(message);
 					}
 					break;
 				}

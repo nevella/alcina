@@ -588,7 +588,7 @@ public class DomainTransformEvent
 	}
 
 	public String toDebugString() {
-		return (String) DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG
+		return DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG
 				.callWithTrue(this::toString);
 	}
 

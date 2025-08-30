@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 
 @Registration.Singleton
 public class NestedName {
@@ -38,6 +39,13 @@ public class NestedName {
 
 	public String getNestedSimpleName(Class clazz) {
 		String name = clazz.getName();
+		return getNestedSimpleName(name);
+	}
+
+	String getNestedSimpleName(String name) {
+		if (name == null) {
+			return null;
+		}
 		int idx = name.lastIndexOf(".");
 		if (idx == -1) {
 			return name;
@@ -54,5 +62,16 @@ public class NestedName {
 			return ((Class) obj).getSimpleName();
 		}
 		return obj.getClass().getSimpleName();
+	}
+
+	/**
+	 * Transforms a full string classname to a nested name
+	 */
+	public static class StringTransformer
+			implements ModelTransform<String, String> {
+		@Override
+		public String apply(String t) {
+			return NestedName.get().getNestedSimpleName(t);
+		}
 	}
 }

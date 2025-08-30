@@ -411,14 +411,18 @@ public class TransformCommit {
 		}
 	}
 
+	public static boolean isTestSkipTransforms() {
+		return AppPersistenceBase.isTest()
+				&& !TransformCommit.isTestTransformCascade();
+	}
+
 	private static int commitTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (pendingTransformCount == 0) {
 			return 0;
 		}
-		if (AppPersistenceBase.isTest()
-				&& !TransformCommit.isTestTransformCascade()) {
+		if (isTestSkipTransforms()) {
 			if (!LooseContext
 					.is(TransformCommit.CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
 				TransformManager.get().clearTransforms();

@@ -17,8 +17,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer.HasDisplayNameRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TitleAttribute;
 
 // LeafModel itself is just a naming container
 public abstract class LeafModel {
@@ -234,6 +236,16 @@ public abstract class LeafModel {
 			public TextTitle apply(Object t) {
 				String text = CommonUtils.nullSafeToString(t);
 				return new TextTitle(text, text);
+			}
+		}
+
+		public static class WithTitleAttribute extends
+				AbstractContextSensitiveModelTransform<Object, TextTitle> {
+			@Override
+			public TextTitle apply(Object t) {
+				String text = CommonUtils.nullSafeToString(t);
+				String hint = node.annotation(TitleAttribute.class).value();
+				return new TextTitle(text, hint);
 			}
 		}
 	}

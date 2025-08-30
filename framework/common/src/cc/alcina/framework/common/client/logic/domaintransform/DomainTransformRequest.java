@@ -96,7 +96,7 @@ public class DomainTransformRequest implements Serializable {
 		}
 	}
 
-	public static final LooseContext.Key CONTEXT_EXCEPTION_DEBUG = LooseContext
+	public static final LooseContext.Key<?> CONTEXT_EXCEPTION_DEBUG = LooseContext
 			.key(DomainTransformRequest.class, "CONTEXT_EXCEPTION_DEBUG");
 
 	public static List<DomainTransformEvent>

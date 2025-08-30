@@ -54,6 +54,7 @@ import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -798,10 +799,11 @@ public class JobRegistry {
 			ExecutorService executorService) {
 		try {
 			if (environment.isInTransactionMultipleTxEnvironment()) {
-				logger.warn(
-						"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
-								+ " - {}\nuncommitted transforms:\n{}",
-						job, TransformManager.get().getTransforms());
+				DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG
+						.runWithTrue(() -> logger.warn(
+								"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
+										+ " - {}\nuncommitted transforms:\n{}",
+								job, TransformManager.get().getTransforms()));
 				try {
 					Transaction.commit();
 				} catch (Exception e) {
