@@ -68,6 +68,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ListenerReference;
@@ -171,6 +172,8 @@ public abstract class TransformManager
 		} else if (valueClass == Date.class) {
 			event.setNewStringValue(
 					SimpleStringParser.toString((((Date) value).getTime())));
+		} else if (valueClass == byte[].class) {
+			event.setNewStringValue(Base64.encodeBytes((byte[]) value));
 		}
 	}
 
@@ -1085,23 +1088,27 @@ public abstract class TransformManager
 			}
 			return evt.getNewValue();
 		}
+		String newStringValue = evt.getNewStringValue();
 		if (valueClass == String.class) {
-			return evt.getNewStringValue();
+			return newStringValue;
 		}
 		if (valueClass == Long.class || valueClass == long.class) {
-			return SimpleStringParser.toLong(evt.getNewStringValue());
+			return SimpleStringParser.toLong(newStringValue);
 		}
 		if (valueClass == Double.class || valueClass == double.class) {
-			return Double.valueOf(evt.getNewStringValue());
+			return Double.valueOf(newStringValue);
 		}
 		if (valueClass == Integer.class || valueClass == int.class) {
-			return Integer.valueOf(evt.getNewStringValue());
+			return Integer.valueOf(newStringValue);
 		}
 		if (valueClass == Boolean.class || valueClass == boolean.class) {
-			return Boolean.valueOf(evt.getNewStringValue());
+			return Boolean.valueOf(newStringValue);
 		}
 		if (valueClass == Date.class) {
-			return new Date(SimpleStringParser.toLong(evt.getNewStringValue()));
+			return new Date(SimpleStringParser.toLong(newStringValue));
+		}
+		if (valueClass == byte[].class) {
+			return Base64.decode(newStringValue);
 		}
 		Enum e = getTargetEnumValue(evt);
 		if (e != null) {

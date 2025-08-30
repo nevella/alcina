@@ -395,6 +395,11 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return ensurePopulated();
 		}
 
+		/*
+		 * SKY - this should always return the same object (just lazy populated)
+		 * - server-side, throw if this is not the graph object. Also, the
+		 * method should return void
+		 */
 		public T ensurePopulated() {
 			return (T) Domain.find(Entity.this);
 		}
