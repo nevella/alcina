@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
@@ -51,8 +50,8 @@ public class TransformPersister implements AlcinaProcess {
 	public DomainTransformLayerWrapper
 			transformExPersistenceContext(TransformPersistenceToken token) {
 		try {
-			LooseContext.pushWithTrue(
-					DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
+			LooseContext.push();
+			DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG.setTrue();
 			TransformPersisterInPersistenceContext.ThreadData.get()
 					.observingFlushData(true);
 			TransformPersisterPeer.get().setupCustomTransformContent();

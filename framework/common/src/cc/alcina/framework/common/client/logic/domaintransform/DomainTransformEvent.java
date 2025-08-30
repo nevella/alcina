@@ -588,13 +588,8 @@ public class DomainTransformEvent
 	}
 
 	public String toDebugString() {
-		try {
-			LooseContext.pushWithTrue(
-					DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
-			return toString();
-		} finally {
-			LooseContext.pop();
-		}
+		return (String) DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG
+				.callWithTrue(this::toString);
 	}
 
 	public EntityLocator toObjectLocator() {

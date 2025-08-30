@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
@@ -212,7 +213,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (transformMethod) {
 					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
 					Ax.sysLogHigh("Dev transforms");
-					Ax.out(token);
+					DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG
+							.runWithTrue(() -> Ax.out(token));
 					Ax.out("\n--------------------\n");
 				}
 			} finally {
