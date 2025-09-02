@@ -39,10 +39,10 @@ public class NestedName {
 
 	public String getNestedSimpleName(Class clazz) {
 		String name = clazz.getName();
-		return getNestedSimpleName(name);
+		return getNestedSimpleNameFromClassname(name);
 	}
 
-	String getNestedSimpleName(String name) {
+	public static String getNestedSimpleNameFromClassname(String name) {
 		if (name == null) {
 			return null;
 		}
@@ -71,7 +71,7 @@ public class NestedName {
 			implements ModelTransform<String, String> {
 		@Override
 		public String apply(String t) {
-			return NestedName.get().getNestedSimpleName(t);
+			return NestedName.getNestedSimpleNameFromClassname(t);
 		}
 	}
 }

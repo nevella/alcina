@@ -24,6 +24,10 @@ import cc.alcina.framework.common.client.util.Multimap;
  * ContextObservables will also be emitted as general ProcessObservables (for
  * testing, development essentially - such as attaching an appdebug observer to
  * a particular context observable)
+ * 
+ * Note that there's no specific ContextObserver type - a regular
+ * ProcessObserver is used, but the binding will be different (contextual) if
+ * the observable is a subtype of ContextObservers.Observable
  */
 public class ContextObservers {
 	private static ContextObservers baseObservers;
