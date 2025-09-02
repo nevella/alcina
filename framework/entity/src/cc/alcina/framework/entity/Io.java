@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FileLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Io.WriteOp.Contents;
 
 public class Io {
 	public static LogOp log() {
@@ -55,10 +56,21 @@ public class Io {
 	}
 
 	public static class LogOp {
-		private String content;
+		private String string;
 
-		public void toFile(String content) {
-			this.content = content;
+		private byte[] bytes;
+
+		public void toFile(byte[] bytes) {
+			this.bytes = bytes;
+			log();
+		}
+
+		public void toFile(String string) {
+			this.string = string;
+			log();
+		}
+
+		void log() {
 			writeFile("log.txt");
 			writeFile("log.html");
 			writeFile("log.xml");
@@ -68,7 +80,14 @@ public class Io {
 			try {
 				new File("/tmp/log").mkdirs();
 				String path = "/tmp/log/" + fileName;
-				write().string(content).toPath(path);
+				Contents contents = write();
+				WriteOp.Resource resource = null;
+				if (string != null) {
+					resource = contents.string(string);
+				} else {
+					resource = contents.bytes(bytes);
+				}
+				resource.toPath(path);
 				Ax.out("Logged to: %s ", path);
 				Ax.out("");
 			} catch (Exception e) {
