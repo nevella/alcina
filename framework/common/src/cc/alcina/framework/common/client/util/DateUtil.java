@@ -182,4 +182,18 @@ public class DateUtil {
 				Integer.parseInt(matchResult.getGroup(2)),
 				Integer.parseInt(matchResult.getGroup(1)));
 	}
+
+	/**
+	 * 
+	 * @param dayMonthnameYear
+	 *            e.g. 2 June 2025 or 01 Feb 1992
+	 * @return
+	 */
+	public static Date parseDdMmmYyyy(String dayMonthnameYear) {
+		RegExp regExp = RegExp.compile("(\\d{1,2}) (\\S+) (\\d{4})");
+		MatchResult matchResult = regExp.exec(dayMonthnameYear);
+		return Ax.date(Integer.parseInt(matchResult.getGroup(3)),
+				getMonth(matchResult.getGroup(2)),
+				Integer.parseInt(matchResult.getGroup(1)));
+	}
 }

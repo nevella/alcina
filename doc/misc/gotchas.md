@@ -110,3 +110,7 @@ turn off lombok
 ## gwt
 
 delete the gwt-unitCache every day, it (heuristically) incrementally slows page load
+
+## debugging hosted mode message-too-large
+
+check the code server thread - it'll probably be a ginormous rpc response - see what you can do...
