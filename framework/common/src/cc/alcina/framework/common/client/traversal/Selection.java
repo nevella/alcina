@@ -595,4 +595,18 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	default boolean hasNoReplacedBy() {
 		return !hasReplacedBy();
 	}
+
+	/**
+	 * Replace this selection with another in the traversal, mostly to preserve
+	 * layer immutability (i.e. a selection should be modified only in the
+	 * creating layer)
+	 * 
+	 * @param other
+	 *            - must be the same type as this selection
+	 */
+	default void replaceWith(Selection<?> other) {
+		Preconditions.checkArgument(getClass() == other.getClass());
+		getRelations().addRelation(Selection.Relations.Type.Replacement.class,
+				other);
+	}
 }
