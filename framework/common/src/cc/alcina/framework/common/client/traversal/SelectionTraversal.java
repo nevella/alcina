@@ -282,6 +282,10 @@ public class SelectionTraversal
 
 		public Map<Selection, Exception> exceptions = new ConcurrentHashMap<>();
 
+		public boolean hasExceptions() {
+			return exceptions.size() > 0;
+		}
+
 		/*
 		 * These selections are available as inputs to subsequent, type-specific
 		 * layers. So, the multiset is not populated by outputs which are
@@ -395,6 +399,11 @@ public class SelectionTraversal
 			List<T> selections = get(clazz, false);
 			Preconditions.checkState(selections.size() == 1);
 			return selections.get(0);
+		}
+
+		public <T extends Selection> boolean has(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			return selections.size() > 0;
 		}
 
 		public int size() {
@@ -903,6 +912,10 @@ public class SelectionTraversal
 			LooseContext.set(CONTEXT_TRAVERSAL, this);
 			new SuppressedExceptionObserver().bind();
 			traverse0();
+		} catch (Throwable t) {
+			t.printStackTrace();
+			// very unexpected
+			throw t;
 		} finally {
 			LooseContext.pop();
 		}
@@ -936,8 +949,8 @@ public class SelectionTraversal
 			topicBeforeLayerTraversal.publish(layer);
 			ProcessObservers.publish(LayerEntry.class, () -> new LayerEntry());
 			for (;;) {
-				layer.onBeforeIteration();
 				try {
+					layer.onBeforeIteration();
 					for (Selection selection : layer) {
 						if (!state.wasProcessed(selection)
 								&& untyped.submit(selection)) {
@@ -958,8 +971,11 @@ public class SelectionTraversal
 			}
 			state.onAfterTraversal();
 			ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
+			state.releaseLastLayerResources();
+			if (layer.state.traversalCancelled) {
+				break;
+			}
 		}
-		state.releaseLastLayerResources();
 		topicTraversalComplete.publish(this);
 		ProcessObservers.publish(TraversalComplete.class,
 				() -> new TraversalComplete());
