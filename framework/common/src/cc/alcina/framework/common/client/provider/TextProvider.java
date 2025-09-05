@@ -40,7 +40,7 @@ public class TextProvider {
 
 	public static TextProvider get() {
 		if (instance == null) {
-			synchronized (instance) {
+			synchronized (TextProvider.class) {
 				if (instance == null) {
 					instance = new TextProvider();
 				}
