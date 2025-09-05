@@ -251,26 +251,6 @@ public class Io {
 			return DomDocument.from(asXmlDocument());
 		}
 
-		private DOMParser createDOMParser() {
-			DOMParser parser = new DOMParser(new HTMLConfiguration());
-			try {
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
-						true);
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
-						true);
-				if (!uppercaseTags) {
-					parser.setProperty(
-							"http://cyberneko.org/html/properties/names/elems",
-							"lower");
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			return parser;
-		}
-
 		public boolean exists() {
 			try (InputStream stream = resource.getStream()) {
 				return stream != null;
@@ -290,7 +270,8 @@ public class Io {
 					isrc = new InputSource(
 							new InputStreamReader(stream, charset));
 				}
-				DOMParser parser = createDOMParser();
+				DOMParser parser = DomParserUtils
+						.createDOMParser(!uppercaseTags);
 				parser.parse(isrc);
 				return (Document) parser.getDocument();
 			} catch (Exception e) {
