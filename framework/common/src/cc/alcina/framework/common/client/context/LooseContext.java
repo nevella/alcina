@@ -200,7 +200,7 @@ public abstract class LooseContext {
 		return new Key(clazz, keyPart);
 	}
 
-	public static class Key<T> implements ScopeKey<T> {
+	public static class Key<T> implements ScopeKey {
 		Class clazz;
 
 		String keyPart;
