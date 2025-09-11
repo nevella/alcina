@@ -994,20 +994,17 @@ public class XmlUtils {
 
 	public static void logToFile(Node n) throws Exception {
 		new File("/tmp/log").mkdirs();
-		Io.write().string(streamXML(n)).toPath("/tmp/log/log.xml");
-		Io.write().string(streamXML(n)).toPath("/tmp/log/log.html");
+		Io.log().toFile(streamXML(n));
 	}
 
 	public static void logToFilePretty(Node n) throws Exception {
+		String markup = null;
 		if (n instanceof DocumentFragment) {
-			new File("/tmp/log").mkdirs();
-			Io.write().string(prettyPrintWithDOM3LS((DocumentFragment) n))
-					.toPath("/tmp/log/log.xml");
+			markup = prettyPrintWithDOM3LS((DocumentFragment) n);
 		} else {
-			new File("/tmp/log").mkdirs();
-			Io.write().string(prettyPrintWithDOM3LSNode(n))
-					.toPath("/tmp/log/log.xml");
+			markup = prettyPrintWithDOM3LSNode(n);
 		}
+		Io.log().toFile(markup);
 	}
 
 	public static void merge(Element to, Element from) {
