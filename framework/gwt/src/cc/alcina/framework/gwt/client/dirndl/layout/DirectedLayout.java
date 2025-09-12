@@ -303,19 +303,33 @@ public class DirectedLayout implements AlcinaProcess {
 		return input;
 	}
 
+	boolean exceptionLogged;
+
 	// The layout loop
 	void layout() {
+		RendererInput input = null;
 		try {
 			Preconditions.checkState(!inLayout);
 			inLayout = true;
 			do {
 				// depth-first traversal
-				RendererInput input = rendererInputs.next();
+				input = rendererInputs.next();
 				if (root == null) {
 					root = input.node;
 				}
 				input.render();
 			} while (rendererInputs.hasNext());
+		} catch (RuntimeException e) {
+			if (!exceptionLogged) {
+				exceptionLogged = true;
+				FormatBuilder format = new FormatBuilder();
+				format.line("Exception in render");
+				format.dashedLine();
+				format.line("Input:");
+				format.line(input);
+				format.out();
+			}
+			throw e;
 		} finally {
 			inLayout = false;
 			rendererInputs = null;
@@ -1040,11 +1054,19 @@ public class DirectedLayout implements AlcinaProcess {
 			String typeName = annotationLocation.classLocation.getSimpleName();
 			fb.appendPadRight(30, typeName);
 			fb.append(" ");
-			String rendererClassName = model == null
-					? "[no renderer/null model]"
-					: resolver.layout.resolveRenderer(directed,
-							annotationLocation, model).getClass()
-							.getSimpleName();
+			String rendererClassName = null;
+			if (model == null) {
+				rendererClassName = "[no renderer/null model]";
+			} else {
+				try {
+					rendererClassName = resolver.layout
+							.resolveRenderer(directed, annotationLocation,
+									model)
+							.getClass().getSimpleName();
+				} catch (Exception e) {
+					rendererClassName = "[exception computing renderer]";
+				}
+			}
 			fb.appendPadRight(30, rendererClassName);
 			fb.append(" ");
 			Impl impl = new Directed.Impl(directed);
