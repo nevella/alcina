@@ -754,12 +754,14 @@ public class TransformPersisterInPersistenceContext {
 					ps = (PreparedStatement) wrappedField.get(ps);
 				}
 				logger.warn("(Prepared) statement causing issue");
-				logger.warn(ps.toString());
-				lastFlushData.get(Thread
-						.currentThread()).preparedStatementCausingIssue = ps
-								.toString();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
+				logger.warn(Ax.trimForLogging(ps, 10000));
+				FlushData flushData = lastFlushData.get(Thread.currentThread());
+				if (flushData != null) {
+					flushData.preparedStatementCausingIssue = ps.toString();
+				}
+			} catch (Throwable e) {
+				logger.warn("DEVEX - exception in exception logging");
+				e.printStackTrace();
 			}
 		}
 
@@ -854,9 +856,13 @@ public class TransformPersisterInPersistenceContext {
 
 		String getAndClearLastFlushPreparedStatementCausingIssue() {
 			FlushData flushData = lastFlushData.get(Thread.currentThread());
-			String result = flushData.preparedStatementCausingIssue;
-			flushData.preparedStatementCausingIssue = null;
-			return result;
+			if (flushData != null) {
+				String result = flushData.preparedStatementCausingIssue;
+				flushData.preparedStatementCausingIssue = null;
+				return result;
+			} else {
+				return null;
+			}
 		}
 	}
 }
