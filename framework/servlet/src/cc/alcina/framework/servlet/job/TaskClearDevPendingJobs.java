@@ -29,7 +29,7 @@ public class TaskClearDevPendingJobs extends PerformerTask
 		Preconditions.checkState(Ax.isTest());
 		JobDomain.get().getAllJobs()
 				.filter(job -> !job.provideIsComplete()
-						&& job.provideTaskClass() == getClass())
+						&& !(job.provideTaskClass() == getClass()))
 				.forEach(Job::delete);
 		Transaction.commit();
 	}

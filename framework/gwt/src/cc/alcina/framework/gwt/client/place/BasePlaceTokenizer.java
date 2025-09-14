@@ -121,7 +121,7 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 			P place0 = getPlace0(token);
 			for (int idx = 1; idx < fragments.length; idx++) {
 				BasePlace fragmentPlace = (BasePlace) RegistryHistoryMapper
-						.get().parseAndReturnPlace(fragments[idx]);
+						.get().parseAndReturnPlace(fragments[idx], true);
 				place0.fragments.add(fragmentPlace);
 			}
 			return place0;

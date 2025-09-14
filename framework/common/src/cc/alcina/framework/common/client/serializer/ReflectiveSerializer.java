@@ -29,7 +29,6 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
@@ -40,7 +39,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
-import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
@@ -53,6 +51,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.js.json.JsJsonFactory;
 import elemental.json.Json;
@@ -132,6 +132,11 @@ import elemental.json.impl.JsonUtil;
  * FIXME - dirndl 1x1f - use a ringbuffer (and fix ringbuffer rotation)
  *
  *
+ */
+/**
+ * <b>Note, for serialization customisation, override Serializer for the type
+ * (rather than adding behaviour to the type). I should probably refactor
+ * FlatTree to do the same
  */
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
@@ -382,6 +387,7 @@ public class ReflectiveSerializer {
 					GraphNode next = itr.next();
 					state.pending.push(next);
 				} else {
+					node.serializationComplete();
 					state.pending.pop();
 				}
 			} catch (RuntimeException e) {
@@ -426,14 +432,28 @@ public class ReflectiveSerializer {
 		}
 	}
 
+	public static class SerializerState {
+		MultikeyMap<Object> state = new UnsortedMultikeyMap<>(2);
+
+		public void set(ReflectiveTypeSerializer serializer,
+				Object serializerTarget, Object value) {
+			state.put(serializer, serializerTarget, value);
+		}
+
+		public <V> V get(ReflectiveTypeSerializer serializer,
+				Object serializerTarget) {
+			return (V) state.get(serializer, serializerTarget);
+		}
+	}
+
 	/*
 	 * Models a java model node in the graph we're serializing + the
 	 * corresponding json node
 	 */
-	static class GraphNode {
+	public static class GraphNode {
 		boolean consumedName;
 
-		Object value;
+		public Object value;
 
 		SerialNode serialNode;
 
@@ -452,6 +472,20 @@ public class ReflectiveSerializer {
 			this.propertyNode = propertyNode;
 			if (parent != null) {
 				state = parent.state;
+			}
+		}
+
+		void serializationComplete() {
+			if (typeNode != null) {
+				typeNode.serializer.serializationComplete(this);
+			} else {
+				/*
+				 * when deserializing an object reference
+				 */
+				if (parent != null) {
+					parent.typeNode.serializer
+							.childSerializationComplete(parent, this);
+				}
 			}
 		}
 
@@ -601,6 +635,16 @@ public class ReflectiveSerializer {
 				state.identityIdx.put(value, state.identityIdx.size());
 			}
 			iterator = typeNode.serializer.writeIterator(this);
+		}
+
+		/**
+		 * This exposes a state object for custom serializers to record
+		 * entry/exit data, since serializers are singletons
+		 * 
+		 * @return the SerializerState for the current serialization
+		 */
+		public SerializerState serializerState() {
+			return state.serializerState;
 		}
 	}
 
@@ -881,10 +925,17 @@ public class ReflectiveSerializer {
 		}
 	}
 
+	/**
+	 * Acts as a marker for GWT reflection
+	 */
 	public interface ReflectiveSerializable {
 	}
 
 	public static class ReflectiveTypeSerializer extends TypeSerializer {
+		/**
+		 * Subclasses must call super#childDeserializationComplete at the end of
+		 * their body
+		 */
 		@Override
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
@@ -1048,7 +1099,7 @@ public class ReflectiveSerializer {
 		}
 	}
 
-	interface SerialNode {
+	public interface SerialNode {
 		boolean canWriteTypeName();
 
 		boolean isTypeInfoNode();
@@ -1101,6 +1152,8 @@ public class ReflectiveSerializer {
 
 		AnnotationLocation.Resolver resolver;
 
+		SerializerState serializerState = new SerializerState();
+
 		State(SerializerReflection serializationSupport, Resolver resolver) {
 			this.serializationSupport = serializationSupport;
 			this.resolver = resolver;
@@ -1118,6 +1171,17 @@ public class ReflectiveSerializer {
 	public static abstract class TypeSerializer implements Registration.Ensure {
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
+		}
+
+		public void childSerializationComplete(GraphNode parent,
+				GraphNode graphNode) {
+		}
+
+		public void serializationComplete(GraphNode graphNode) {
+			if (graphNode.parent != null) {
+				graphNode.parent.typeNode.serializer.childSerializationComplete(
+						graphNode.parent, graphNode);
+			}
 		}
 
 		public void deserializationComplete(GraphNode graphNode) {
