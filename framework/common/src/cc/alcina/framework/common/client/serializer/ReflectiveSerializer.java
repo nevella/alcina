@@ -1178,10 +1178,6 @@ public class ReflectiveSerializer {
 		}
 
 		public void serializationComplete(GraphNode graphNode) {
-			if (graphNode.parent != null) {
-				graphNode.parent.typeNode.serializer.childSerializationComplete(
-						graphNode.parent, graphNode);
-			}
 		}
 
 		public void deserializationComplete(GraphNode graphNode) {
