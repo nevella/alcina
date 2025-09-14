@@ -158,7 +158,10 @@ public class Document extends Node implements ClientDomDocument,
 
 	@Override
 	public Node cloneNode(boolean deep) {
-		return local.cloneNode(deep);
+		Preconditions.checkArgument(deep);
+		Document result = new Document(remoteType);
+		result.importNode(getDocumentElement(), true);
+		return result;
 	}
 
 	@Override
@@ -1038,8 +1041,7 @@ public class Document extends Node implements ClientDomDocument,
 
 	@Override
 	public void importNode(Node node, boolean deep) {
-		local.importNode(node, deep);
-		remote.importNode(node, deep);
+		importNode((org.w3c.dom.Node) node, deep);
 	}
 
 	@Override

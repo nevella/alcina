@@ -720,7 +720,6 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
 	public void importNode(Node node, boolean deep) {
 		throw new UnsupportedOperationException();
 	}
