@@ -2235,4 +2235,8 @@ public class CommonUtils {
 		}
 		return d0.after(d1) ? d0 : d1;
 	}
+
+	public static String toFileUrl(String name) {
+		return "file://" + name;
+	}
 }

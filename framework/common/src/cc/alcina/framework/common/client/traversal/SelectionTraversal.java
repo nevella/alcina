@@ -824,6 +824,12 @@ public class SelectionTraversal
 			return state.visitedLayers.keySet().stream()
 					.collect(Collectors.toList());
 		}
+
+		public <T extends Layer> T get(Class<T> clazz) {
+			return (T) state.visitedLayers.keySet().stream()
+					.filter(layer -> layer.getClass() == clazz).findFirst()
+					.get();
+		}
 	}
 
 	Layers layers = new Layers();
