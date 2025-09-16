@@ -72,7 +72,7 @@ public class TransformPersistenceToken implements Serializable {
 
 	Set<DomainTransformEvent> prepend = new LinkedHashSet<>();
 
-	public IntitialTransforms initialTransforms;
+	public transient IntitialTransforms initialTransforms;
 
 	public TransformPersistenceToken(DomainTransformRequest request,
 			EntityLocatorMap locatorMap, boolean requestorExternalToThisJvm,
