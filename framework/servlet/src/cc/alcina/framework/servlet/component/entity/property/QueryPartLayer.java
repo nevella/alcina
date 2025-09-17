@@ -68,8 +68,7 @@ class QueryPartLayer extends Layer<DocumentLayer.Document> {
 				Measure match = state.patternMatcher().match(this, pattern);
 				if (match != null) {
 					PropertyFilterParser.Query query = state.getDocument()
-							.ancestorSelection(
-									PropertyFilterParser.Query.class);
+							.ancestor(PropertyFilterParser.Query.class);
 					if (query.getMatchingProperties(match.text()).isEmpty()) {
 						match = null;
 					}

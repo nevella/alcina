@@ -825,7 +825,14 @@ public class SelectionTraversal
 					.collect(Collectors.toList());
 		}
 
-		public <T extends Layer> T get(Class<T> clazz) {
+		/**
+		 * Better - if in a layer, just use {@link Layer#layerContext(Class)}
+		 * 
+		 * @param <T>
+		 * @param clazz
+		 * @return
+		 */
+		public <T extends Layer> T ancestorLayer(Class<T> clazz) {
 			return (T) state.visitedLayers.keySet().stream()
 					.filter(layer -> layer.getClass() == clazz).findFirst()
 					.get();

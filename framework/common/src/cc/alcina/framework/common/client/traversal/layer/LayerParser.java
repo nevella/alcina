@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -253,7 +252,7 @@ public class LayerParser {
 		}
 
 		public String absoluteHref(String relativeHref) {
-			return selection.ancestorSelection(AbstractUrlSelection.class)
+			return selection.ancestor(AbstractUrlSelection.class)
 					.absoluteHref(relativeHref);
 		}
 
@@ -270,7 +269,7 @@ public class LayerParser {
 		}
 
 		public DocumentSelection getDocument() {
-			return selection.ancestorSelection(DocumentSelection.class);
+			return selection.ancestor(DocumentSelection.class);
 		}
 
 		public Location getLocation() {

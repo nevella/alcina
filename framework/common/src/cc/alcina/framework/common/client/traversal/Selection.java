@@ -303,13 +303,12 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return null;
 	};
 
-	default <V extends Selection> V ancestorSelection(Class<V> clazz) {
-		return ancestorSelection(cursor -> Reflections.isAssignableFrom(clazz,
+	default <V extends Selection> V ancestor(Class<V> clazz) {
+		return ancestor(cursor -> Reflections.isAssignableFrom(clazz,
 				cursor.getClass()));
 	}
 
-	default <V extends Selection> V
-			ancestorSelection(Predicate<Selection> predicate) {
+	default <V extends Selection> V ancestor(Predicate<Selection> predicate) {
 		Selection cursor = this;
 		while (cursor != null) {
 			if (predicate.test(cursor)) {

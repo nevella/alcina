@@ -51,8 +51,7 @@ public abstract class DocumentSelection extends MeasureSelection
 	public DomDocument ensureDocument() {
 		try {
 			if (document == null) {
-				document = loader
-						.load(ancestorSelection(loader.selectionClass()));
+				document = loader.load(ancestor(loader.selectionClass()));
 			}
 			return document;
 		} catch (Exception e) {
