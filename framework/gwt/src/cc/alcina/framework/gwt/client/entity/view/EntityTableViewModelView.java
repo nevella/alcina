@@ -226,7 +226,7 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 		model.dataProvider.setGroupedColumnsBuilder(builder);
 		// nope. no selection, no paging
 		// DataClientUtils.setupKeyboardPoliciesAndStyles(groupedTable);
-		groupedTable.setStyleName("data-grid");
+		groupedTable.setStyleName("data-grid grouped-grid");
 		groupedTable.getColumnSortList().setLimit(1);
 		for (ColumnSearchOrder order : groupingParameters.getColumnOrders()) {
 			Column<Row, ?> col = groupedTable.getColumn(
