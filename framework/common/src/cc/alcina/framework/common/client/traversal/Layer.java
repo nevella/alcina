@@ -306,11 +306,6 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 		public int iterationCount;
 
-		/**
-		 * Short-circuit the traversal (generally following an exception)
-		 */
-		public boolean traversalCancelled;
-
 		public boolean complete;
 
 		Set<S> submitted;

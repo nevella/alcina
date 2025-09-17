@@ -150,7 +150,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
-	/*
+	/**
 	 * An exception suppressed [to keep the traversal flow/logs clean], but
 	 * required for end-of-traversal exception wrangling
 	 */
@@ -160,6 +160,17 @@ public class SelectionTraversal
 
 		public SuppressedException(Exception e) {
 			this.e = e;
+		}
+	}
+
+	/**
+	 * A non-exception 'short-circuit traversal' message
+	 */
+	public static class ExitTraversal implements ContextObservers.Observable {
+		String reason;
+
+		public ExitTraversal(String reason) {
+			this.reason = reason;
 		}
 	}
 
@@ -591,6 +602,8 @@ public class SelectionTraversal
 
 		Map<Layer, SelectionLayers.LayerSelections> selectionsByLayer = new LinkedHashMap<>();
 
+		ExitTraversal exitTraversal;
+
 		public <T> T context(Class<T> clazz) {
 			return SelectionTraversal.this.context(clazz);
 		}
@@ -731,6 +744,13 @@ public class SelectionTraversal
 		@Override
 		public void topicPublished(SuppressedException message) {
 			selections().exceptions.put(contextSelection(), message.e);
+		}
+	}
+
+	class ExitTraversalObserver implements ProcessObserver<ExitTraversal> {
+		@Override
+		public void topicPublished(ExitTraversal message) {
+			SelectionTraversal.this.state.exitTraversal = message;
 		}
 	}
 
@@ -924,6 +944,7 @@ public class SelectionTraversal
 			LooseContext.push();
 			LooseContext.set(CONTEXT_TRAVERSAL, this);
 			new SuppressedExceptionObserver().bind();
+			new ExitTraversalObserver().bind();
 			traverse0();
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -977,7 +998,7 @@ public class SelectionTraversal
 				} finally {
 					layer.onAfterIteration();
 				}
-				if (layer.isComplete()) {
+				if (layer.isComplete() || isExit()) {
 					layer.onAfterInputsProcessed();
 					break;
 				}
@@ -985,13 +1006,17 @@ public class SelectionTraversal
 			state.onAfterTraversal();
 			ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
 			state.releaseLastLayerResources();
-			if (layer.state.traversalCancelled) {
+			if (isExit()) {
 				break;
 			}
 		}
 		topicTraversalComplete.publish(this);
 		ProcessObservers.publish(TraversalComplete.class,
 				() -> new TraversalComplete());
+	}
+
+	boolean isExit() {
+		return state.exitTraversal != null;
 	}
 
 	void enterSelectionContext(Selection<?> selection) {
@@ -1013,9 +1038,6 @@ public class SelectionTraversal
 			LooseContext.pushWithKey(CONTEXT_SELECTION, selection);
 			Layer layer = layers().getCurrent();
 			enterSelectionContext(selection);
-			if (layer.state.traversalCancelled) {
-				return;
-			}
 			selection.processNode().select(null, this);
 			if (!layer.testFilter(selection) || !testLayerFilter(selection)) {
 				// skip processing if, for instance, the traversal has hit max
