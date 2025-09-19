@@ -68,10 +68,15 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	}
 
 	/**
+	 * <p>
 	 * Returns a (Layer) context object implementing class T, resolved by
-	 * ascending the layer tree until a layer implementing T is found. This
-	 * context object is logically tied to the implementing layer and its
-	 * sublayers, so more specific than a traversal context
+	 * reverse traversing the layer tree *or* the prior layers until a layer
+	 * implementing T is found. This context object is logically tied to the
+	 * implementing layer and its sublayers, so more specific than a traversal
+	 * context
+	 * 
+	 * <p>
+	 * For systems with *lots* of layers, this is non-optimal
 	 * 
 	 * @param <T>
 	 *            the type required, and returned
@@ -80,13 +85,24 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	 * @return an instance, or null if it does not exist
 	 */
 	public <T> T layerContext(Class<T> clazz) {
-		Layer cursor = this;
+		Layer cursor = parent;
+		Set<Layer> validParents = new LinkedHashSet<>();
 		do {
-			if (Reflections.isAssignableFrom(clazz, cursor.getClass())) {
+			validParents.add(cursor);
+			cursor = cursor.parent;
+		} while (cursor != null);
+		cursor = this;
+		do {
+			/*
+			 * If parent is not in validParents, the cursor layer is not
+			 * tree-visibile to this layer (so don't use for the test)
+			 */
+			if (validParents.contains(cursor.parent)
+					&& Reflections.isAssignableFrom(clazz, cursor.getClass())) {
 				return (T) cursor;
 			}
-			cursor = cursor.parent;
-		} while (cursor.parent != null);
+			cursor = state.getTraversal().layers().getPrecedingLayer(cursor);
+		} while (cursor != null);
 		return null;
 	}
 

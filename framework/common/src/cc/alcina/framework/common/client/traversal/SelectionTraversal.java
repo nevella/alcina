@@ -594,7 +594,9 @@ public class SelectionTraversal
 
 		Layer rootLayer;
 
-		Map<Layer, Integer> visitedLayers = new LinkedHashMap<>();
+		Map<Layer, Integer> layerIndex = new LinkedHashMap<>();
+
+		Map<Integer, Layer> indexLayer = new LinkedHashMap<>();
 
 		public Selections selections = new Selections();
 
@@ -613,7 +615,7 @@ public class SelectionTraversal
 		}
 
 		void releaseLastLayerResources() {
-			Layer last = visitedLayers.keySet().stream().reduce(Ax.last())
+			Layer last = layerIndex.keySet().stream().reduce(Ax.last())
 					.orElse(null);
 			selections.byLayerCounts.getOrDefault(last, new LinkedHashMap<>())
 					.keySet().forEach(
@@ -634,8 +636,9 @@ public class SelectionTraversal
 		}
 
 		void onBeforeLayerTraversal() {
-			Integer index = state.visitedLayers.computeIfAbsent(currentLayer,
-					l -> state.visitedLayers.size());
+			Integer index = state.layerIndex.computeIfAbsent(currentLayer,
+					l -> state.layerIndex.size());
+			state.indexLayer.put(index, currentLayer);
 			currentLayer.index = index;
 			if (!(currentLayer instanceof InputsFromPreviousSibling)) {
 				Class<?> inputType = currentLayer.inputType;
@@ -841,7 +844,7 @@ public class SelectionTraversal
 		}
 
 		public List<Layer> getVisited() {
-			return state.visitedLayers.keySet().stream()
+			return state.layerIndex.keySet().stream()
 					.collect(Collectors.toList());
 		}
 
@@ -852,10 +855,15 @@ public class SelectionTraversal
 		 * @param clazz
 		 * @return
 		 */
-		public <T extends Layer> T ancestorLayer(Class<T> clazz) {
-			return (T) state.visitedLayers.keySet().stream()
+		public <T extends Layer> T visitedLayer(Class<T> clazz) {
+			return (T) state.layerIndex.keySet().stream()
 					.filter(layer -> layer.getClass() == clazz).findFirst()
 					.get();
+		}
+
+		Layer getPrecedingLayer(Layer relativeTo) {
+			int idx = state.layerIndex.get(relativeTo);
+			return idx > 0 ? state.indexLayer.get(idx - 1) : null;
 		}
 	}
 
