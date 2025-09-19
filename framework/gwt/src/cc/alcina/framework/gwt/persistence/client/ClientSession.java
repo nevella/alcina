@@ -104,7 +104,7 @@ public abstract class ClientSession implements ClosingHandler {
 	 */
 	public void checkSoleOpenTab(final AsyncCallback<Boolean> callback) {
 		if (isSoleOpenTab()) {
-			callback.onSuccess(true);
+			callback.onSuccess(Boolean.TRUE);
 			return;
 		}
 		new Timer() {
@@ -114,10 +114,10 @@ public abstract class ClientSession implements ClosingHandler {
 			public void run() {
 				if (retryCount-- == 0) {
 					cancel();
-					callback.onSuccess(false);
+					callback.onSuccess(Boolean.FALSE);
 				} else if (isSoleOpenTab()) {
 					cancel();
-					callback.onSuccess(true);
+					callback.onSuccess(Boolean.TRUE);
 				}
 			}
 		}.scheduleRepeating(1000);
