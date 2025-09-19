@@ -1466,7 +1466,7 @@ public class CommonUtils {
 
 	public static String padStringLeft(String input, int length, String pad) {
 		input = input == null ? "(null)" : input;
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < length - input.length(); i++) {
 			sb.append(pad);
 		}
@@ -1477,7 +1477,7 @@ public class CommonUtils {
 	public static String padStringRight(String input, int length,
 			char padChar) {
 		input = input == null ? "(null)" : input;
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append(input);
 		for (int i = 0; i < length - input.length(); i++) {
 			sb.append(padChar);
