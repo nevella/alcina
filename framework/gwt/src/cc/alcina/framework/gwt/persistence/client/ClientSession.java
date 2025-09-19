@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 
 /**
  *
@@ -48,8 +49,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * </ul>
  *
  */
-@Registration.Singleton
-public class ClientSession implements ClosingHandler {
+public abstract class ClientSession implements ClosingHandler {
+	@Registration.Singleton(ClientSession.class)
+	public class _Default extends ClientSession {
+	}
+
 	public static final int KEEP_ALIVE_TIMER = 1000;
 
 	public static final long EXPIRES_TIME = 2500;
@@ -100,7 +104,7 @@ public class ClientSession implements ClosingHandler {
 	 */
 	public void checkSoleOpenTab(final AsyncCallback<Boolean> callback) {
 		if (isSoleOpenTab()) {
-			callback.onSuccess(true);
+			callback.onSuccess(Boolean.TRUE);
 			return;
 		}
 		new Timer() {
@@ -110,10 +114,10 @@ public class ClientSession implements ClosingHandler {
 			public void run() {
 				if (retryCount-- == 0) {
 					cancel();
-					callback.onSuccess(false);
+					callback.onSuccess(Boolean.FALSE);
 				} else if (isSoleOpenTab()) {
 					cancel();
-					callback.onSuccess(true);
+					callback.onSuccess(Boolean.TRUE);
 				}
 			}
 		}.scheduleRepeating(1000);
@@ -181,7 +185,7 @@ public class ClientSession implements ClosingHandler {
 				String.valueOf(initialObjectsPersisted));
 	}
 
-	public static class ClientSessionSingleAccess extends ClientSession {
+	public static abstract class ClientSessionSingleAccess extends ClientSession {
 		private boolean initialObjectsPersisted;
 
 		@Override
