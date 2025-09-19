@@ -898,6 +898,22 @@ public abstract class Job extends VersionableEntity<Job>
 		return resolveState0(0);
 	}
 
+	public int depth() {
+		int result = 0;
+		Job cursor = domainIdentity();
+		for (;;) {
+			Optional<Job> parent = cursor.provideFirstInSequence()
+					.provideParent();
+			if (parent.isPresent()) {
+				result++;
+				cursor = parent.get();
+			} else {
+				break;
+			}
+		}
+		return result;
+	}
+
 	private JobState resolveState0(int depth) {
 		if (depth > 10) {
 			throw new RuntimeException("Invalid job depth - maybe a loop?");

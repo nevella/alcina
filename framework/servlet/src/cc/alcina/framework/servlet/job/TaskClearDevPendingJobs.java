@@ -1,10 +1,5 @@
 package cc.alcina.framework.servlet.job;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.job.Job;
@@ -29,7 +24,7 @@ public class TaskClearDevPendingJobs extends PerformerTask
 		Preconditions.checkState(Ax.isTest());
 		JobDomain.get().getAllJobs()
 				.filter(job -> !job.provideIsComplete()
-						&& !(job.provideTaskClass() == getClass()))
+						&& job.provideTaskClass() != getClass())
 				.forEach(Job::delete);
 		Transaction.commit();
 	}
