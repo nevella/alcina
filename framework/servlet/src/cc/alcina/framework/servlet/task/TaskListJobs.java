@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,10 +21,13 @@ import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.Ref;
@@ -57,11 +61,10 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 	private boolean showDateMillis;
 
 	protected void addActive(DomDocument doc, String sectionFilterName,
-			Predicate<Job> sectionFilter) {
+			Predicate<Job> sectionFilter, boolean descendantTree) {
 		{
 			doc.html().body().builder().tag("h2")
-					.text("Active and pending jobs (%s)", sectionFilterName)
-					.append();
+					.text("Active jobs (%s)", sectionFilterName).append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
 			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
@@ -73,41 +76,103 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
 					.filter(textFilter).filter(sectionFilter);
 			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
-			List<Job> jobs = query(streamRef, true);
+			List<Job> jobs = query(streamRef, true, descendantTree);
 			jobs.forEach(job -> {
+				long id = id(job);
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(String.valueOf(id(job))).cell(job.provideName())
+						.cell(String.valueOf(id == 0 ? "\u00a0" : id))
+						.cell(indentTree(job, descendantTree))
 						.accept(Utils::large)
 						.cell(timestamp(job.getStartTime()))
 						.cell(JobRegistry.get().getPerformerThreadName(job))
 						.accept(Utils::medium).cell(job.getPerformer())
 						.accept(Utils::instance);
 				DomNode td = cellBuilder.append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskLogJobDetails().withJobId(id(job)));
-					td.html().addLink("Details", href, "_blank");
-				}
-				td.builder().text(" - ").tag("span").append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskCancelJob().withJobId(id(job)));
-					td.html().addLink("Cancel", href, "_blank");
+				if (id == 0) {
+					cellBuilder.blank();
+					cellBuilder.blank();
+				} else {
+					{
+						String href = JobServlet.createTaskUrl(
+								new TaskLogJobDetails().withJobId(id(job)));
+						td.html().addLink("Details", href, "_blank");
+					}
+					td.builder().text(" - ").tag("span").append();
+					{
+						String href = JobServlet.createTaskUrl(
+								new TaskCancelJob().withJobId(id(job)));
+						td.html().addLink("Cancel", href, "_blank");
+					}
 				}
 			});
 		}
+	}
+
+	String indentTree(Job job, boolean descendantTree) {
+		String name = job.provideName();
+		if (!descendantTree) {
+			return name;
+		}
+		if (job.provideIsComplete()) {
+			name = "[C] " + name;
+		}
+		if (job.getState() == JobState.PENDING) {
+			name = "[P] " + name;
+		}
+		int indent = 0;
+		indent = job.depth() * 2;
+		if (indent == 0 && !job.provideIsProcessing()) {
+			indent++;
+		}
+		int lineLength = name.length() + indent * 2;
+		return CommonUtils.padStringLeft(name, lineLength, "\u00a0");
 	}
 
 	long id(Job job) {
 		return job.domain().getIdOrLocalIdIfZero();
 	}
 
-	List<Job> query(Ref<Stream<? extends Entity>> streamRef, boolean parallel) {
-		return DomainStore.hasStores()
+	List<Job> query(Ref<Stream<? extends Entity>> streamRef, boolean parallel,
+			boolean descendantTree) {
+		List<Job> directResults = DomainStore.hasStores()
 				? (List<Job>) DomainStore.queryPool().call(
 						() -> streamRef.get().collect(Collectors.toList()),
 						streamRef, parallel)
 				: (List<Job>) streamRef.get().collect(Collectors.toList());
+		if (!descendantTree) {
+			return directResults;
+		}
+		List<Job> treeResult = new ArrayList<>();
+		directResults.forEach(job -> {
+			treeResult.add(job);
+			int max = 100;
+			List<Job> descendants = job
+					.provideDescendantsAndSubsequentsAndAwaited().toList();
+			descendants.stream().limit(max)
+					.filter(j -> !j.provideIsComplete()
+							|| j == j.provideFirstInSequence())
+					.forEach(treeResult::add);
+			if (descendants.size() >= max) {
+				Job placeholderJob = PersistentImpl
+						.getNewImplementationInstance(Job.class);
+				placeholderJob.setTask(new PlaceholderTask(descendants.size()));
+				treeResult.add(placeholderJob);
+			}
+		});
+		return treeResult;
+	}
+
+	static class PlaceholderTask implements Task {
+		int treeDescendantCount;
+
+		PlaceholderTask(int treeDescendantCount) {
+			this.treeDescendantCount = treeDescendantCount;
+		}
+
+		@Override
+		public String getName() {
+			return Ax.format(" ... (%s jobs)", treeDescendantCount);
+		}
 	}
 
 	protected void addCompleted(DomDocument doc, String sectionFilterName,
@@ -145,7 +210,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 				parallel = true;
 			}
 			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
-			List<Job> jobs = query(streamRef, parallel);
+			List<Job> jobs = query(streamRef, parallel, false);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(id(job))).cell(job.provideName())
@@ -355,8 +420,9 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 				}
 			});
 		}
-		addActive(doc, "top-level - active", Job::provideIsTopLevel);
-		addActive(doc, "child - active", Job::provideIsNotTopLevel);
+		addActive(doc, "top-level - active", Job::provideIsTopLevel, false);
+		addActive(doc, "top-level - tree", Job::provideIsTopLevel, true);
+		addActive(doc, "child - active", Job::provideIsNotTopLevel, false);
 		limit = Math.max(limit, 20);
 		addCompleted(doc, "top-level", true, limit);
 		addCompleted(doc, "child", false, limit);
