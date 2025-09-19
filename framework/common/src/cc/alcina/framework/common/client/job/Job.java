@@ -564,7 +564,7 @@ public abstract class Job extends VersionableEntity<Job>
 				.anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
 	}
 
-	public boolean provideIsActive() {
+	public boolean provideIsProcessing() {
 		return resolveState() == JobState.PROCESSING;
 	}
 
