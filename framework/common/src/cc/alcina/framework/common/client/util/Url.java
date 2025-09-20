@@ -19,11 +19,21 @@ public class Url {
 		MatchResult match = regExp.exec(strUrl);
 		Preconditions.checkArgument(match != null,
 				Ax.format("Unparseable url: %s", strUrl));
-		return new Url(match.getGroup(1), match.getGroup(2),
-				match.getGroup(3) == null ? -1
-						: Integer.parseInt(match.getGroup(3)),
-				match.getGroup(4), match.getGroup(5), match.getGroup(6),
-				strUrl);
+		String protocol = match.getGroup(1);
+		String host = match.getGroup(2);
+		int port = match.getGroup(3) == null ? -1
+				: Integer.parseInt(match.getGroup(3));
+		String path = match.getGroup(4);
+		String queryString = match.getGroup(5);
+		String hash = match.getGroup(6);
+		switch (protocol) {
+		case "file":
+			return new Url(protocol, null, -1, path != null ? path : host,
+					queryString, hash, strUrl);
+		default:
+			return new Url(protocol, host, port, path, queryString, hash,
+					strUrl);
+		}
 	}
 
 	public static boolean areSameHostAndProtocol(Url url1, Url url2) {

@@ -24,7 +24,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.xerces.parsers.DOMParser;
-import org.cyberneko.html.HTMLConfiguration;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -728,5 +727,23 @@ public class Io {
 		public void logImpl(String text) {
 			Io.log().toFile(text);
 		}
+	}
+
+	public static void writeStreamToStream(InputStream in, OutputStream os,
+			boolean keepOutputOpen) throws IOException {
+		OutputStream bos = os instanceof ByteArrayOutputStream ? os
+				: new BufferedOutputStream(os);
+		int bufLength = in.available() <= 1024 ? 1024 * 64
+				: Math.min(1024 * 1024, in.available());
+		byte[] buffer = new byte[bufLength];
+		int result;
+		while ((result = in.read(buffer)) != -1) {
+			bos.write(buffer, 0, result);
+		}
+		bos.flush();
+		if (!keepOutputOpen) {
+			bos.close();
+		}
+		in.close();
 	}
 }
