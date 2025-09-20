@@ -43,7 +43,8 @@ public class DomTokenStream implements Iterator<DomNode> {
 			this.tw = documentTraversal.createTreeWalker(node.w3cNode(),
 					NodeFilter.SHOW_ALL, null, true);
 		} else {
-			this.tw = new SimpleTreeWalkerImpl(node.w3cNode());
+			this.tw = new SimpleTreeWalkerImpl(node.w3cNode(),
+					NodeFilter.SHOW_ALL, null);
 		}
 	}
 

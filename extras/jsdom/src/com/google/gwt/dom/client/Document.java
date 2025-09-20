@@ -749,7 +749,7 @@ public class Document extends Node implements ClientDomDocument,
 	public TreeWalker createTreeWalker(org.w3c.dom.Node root, int whatToShow,
 			NodeFilter filter, boolean entityReferenceExpansion)
 			throws DOMException {
-		return new SimpleTreeWalkerImpl(root);
+		return new SimpleTreeWalkerImpl(root, whatToShow, filter);
 	}
 
 	@Override

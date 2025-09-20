@@ -23,6 +23,10 @@ import cc.alcina.framework.gwt.client.util.DomUtils;
  * <p>
  * This began more or less as a toy, but now is a decent dropin for well-formed
  * DOM docs compared to say Xerces
+ * 
+ * <p>
+ * Note that it's really a general-ish SGML parser, non-html specific (although
+ * with some html quirks by default)
  */
 public class HtmlParser {
 	static final boolean debugCursor = false;
@@ -397,15 +401,17 @@ public class HtmlParser {
 		}
 	}
 
-	/*
-	 * Performance - markingbuilder should have a seenbuffer (char[]) which
-	 * handles startsWtih etc (implementing CharSequence?)
-	 */
 	private Element parse0(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
+		/*
+		 * minimal 'make invalid markup parseable'
+		 */
 		if (html.contains("\uFEFF")) {
-			html = html.replace("\uFEFF", "");
+			html = html.replace("\uFEFF", " ");
 		}
+		/*
+		 * sky - instead, improve parser (to retain exact source refs)
+		 */
 		if (html.contains("/>")) {
 			html = DomUtils.expandEmptyElements(html);
 		}

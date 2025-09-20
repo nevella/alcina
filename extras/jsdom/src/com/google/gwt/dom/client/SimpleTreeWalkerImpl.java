@@ -1,17 +1,27 @@
 package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
+import org.w3c.dom.Node;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
+
+import com.google.common.base.Preconditions;
 
 public class SimpleTreeWalkerImpl implements TreeWalker {
 	private org.w3c.dom.Node root;
 
 	org.w3c.dom.Node currentNode;
 
-	public SimpleTreeWalkerImpl(org.w3c.dom.Node root) {
+	private int whatToShow;
+
+	private NodeFilter filter;
+
+	public SimpleTreeWalkerImpl(org.w3c.dom.Node root, int whatToShow,
+			NodeFilter filter) {
 		this.root = root;
 		currentNode = root;
+		this.whatToShow = whatToShow;
+		this.filter = filter;
 	}
 
 	@Override
@@ -31,7 +41,7 @@ public class SimpleTreeWalkerImpl implements TreeWalker {
 
 	@Override
 	public NodeFilter getFilter() {
-		return null;
+		return filter;
 	}
 
 	@Override
@@ -41,11 +51,13 @@ public class SimpleTreeWalkerImpl implements TreeWalker {
 
 	@Override
 	public int getWhatToShow() {
-		return NodeFilter.SHOW_ALL;
+		return whatToShow;
 	}
 
 	@Override
 	public org.w3c.dom.Node lastChild() {
+		Preconditions.checkState(
+				whatToShow == NodeFilter.SHOW_ALL && filter == null);
 		return currentNode = currentNode.getLastChild();
 	}
 
@@ -64,17 +76,38 @@ public class SimpleTreeWalkerImpl implements TreeWalker {
 
 	@Override
 	public org.w3c.dom.Node nextNode() {
-		if (currentNode.getFirstChild() != null) {
-			return firstChild();
-		}
-		while (currentNode != root) {
-			org.w3c.dom.Node nextSibling = currentNode.getNextSibling();
-			if (nextSibling != null) {
-				return nextSibling();
+		while (true) {
+			Node node = nextNodePreFilter();
+			if (node == null) {
+				return null;
 			}
-			currentNode = currentNode.getParentNode();
+			currentNode = node;
+			if (test(node)) {
+				return node;
+			}
 		}
-		return null;
+	}
+
+	public org.w3c.dom.Node nextNodePreFilter() {
+		Node cursor = currentNode;
+		if (cursor.getFirstChild() != null) {
+			return cursor.getFirstChild();
+		}
+		if (cursor == root) {
+			return null;
+		}
+		for (;;) {
+			org.w3c.dom.Node nextSibling = cursor.getNextSibling();
+			if (nextSibling != null) {
+				return cursor.getNextSibling();
+			}
+			Node parentNode = cursor.getParentNode();
+			if (parentNode == root) {
+				return null;
+			} else {
+				cursor = parentNode;
+			}
+		}
 	}
 
 	@Override
@@ -88,15 +121,108 @@ public class SimpleTreeWalkerImpl implements TreeWalker {
 				: this.currentNode.getParentNode();
 	}
 
+	boolean test(Node node) {
+		switch (node.getNodeType()) {
+		case Node.ATTRIBUTE_NODE:
+			if ((whatToShow & NodeFilter.SHOW_ATTRIBUTE) == 0) {
+				return false;
+			}
+			break;
+		case Node.CDATA_SECTION_NODE:
+			if ((whatToShow & NodeFilter.SHOW_CDATA_SECTION) == 0) {
+				return false;
+			}
+			break;
+		case Node.COMMENT_NODE:
+			if ((whatToShow & NodeFilter.SHOW_COMMENT) == 0) {
+				return false;
+			}
+			break;
+		case Node.DOCUMENT_NODE:
+			if ((whatToShow & NodeFilter.SHOW_DOCUMENT) == 0) {
+				return false;
+			}
+			break;
+		case Node.DOCUMENT_FRAGMENT_NODE:
+			if ((whatToShow & NodeFilter.SHOW_DOCUMENT_FRAGMENT) == 0) {
+				return false;
+			}
+			break;
+		case Node.DOCUMENT_TYPE_NODE:
+			if ((whatToShow & NodeFilter.SHOW_DOCUMENT_TYPE) == 0) {
+				return false;
+			}
+			break;
+		case Node.ELEMENT_NODE:
+			if ((whatToShow & NodeFilter.SHOW_ELEMENT) == 0) {
+				return false;
+			}
+			break;
+		case Node.ENTITY_NODE:
+			if ((whatToShow & NodeFilter.SHOW_ENTITY) == 0) {
+				return false;
+			}
+			break;
+		case Node.ENTITY_REFERENCE_NODE:
+			if ((whatToShow & NodeFilter.SHOW_ENTITY_REFERENCE) == 0) {
+				return false;
+			}
+			break;
+		case Node.NOTATION_NODE:
+			if ((whatToShow & NodeFilter.SHOW_NOTATION) == 0) {
+				return false;
+			}
+			break;
+		case Node.PROCESSING_INSTRUCTION_NODE:
+			if ((whatToShow & NodeFilter.SHOW_PROCESSING_INSTRUCTION) == 0) {
+				return false;
+			}
+			break;
+		case Node.TEXT_NODE:
+			if ((whatToShow & NodeFilter.SHOW_TEXT) == 0) {
+				return false;
+			}
+			break;
+		}
+		if (filter != null) {
+			short filterResult = filter.acceptNode(node);
+			switch (filterResult) {
+			case NodeFilter.FILTER_ACCEPT:
+				return true;
+			case NodeFilter.FILTER_SKIP:
+				return false;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		} else {
+			return true;
+		}
+	}
+
 	@Override
 	public org.w3c.dom.Node previousNode() {
-		if (currentNode == root) {
-			return null;
+		for (;;) {
+			Node node = previousNodePreFilter();
+			if (node == null) {
+				return null;
+			}
+			currentNode = node;
+			if (test(node)) {
+				return node;
+			}
 		}
-		if (currentNode.getPreviousSibling() != null) {
-			return currentNode = lastChildBreadthFirst(previousSibling());
+	}
+
+	public org.w3c.dom.Node previousNodePreFilter() {
+		for (;;) {
+			if (currentNode == root) {
+				return null;
+			}
+			if (currentNode.getPreviousSibling() != null) {
+				return currentNode = lastChildBreadthFirst(previousSibling());
+			}
+			currentNode = currentNode.getParentNode();
 		}
-		return currentNode = currentNode.getParentNode();
 	}
 
 	@Override
