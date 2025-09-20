@@ -116,6 +116,8 @@ public class SqlUtils {
 					return (T) Integer.valueOf(rs.getInt(1));
 				} else if (clazz == Timestamp.class) {
 					return (T) rs.getTimestamp(1);
+				} else if (clazz == byte[].class) {
+					return (T) rs.getBytes(1);
 				} else {
 					throw new UnsupportedOperationException();
 				}
@@ -131,6 +133,8 @@ public class SqlUtils {
 			} else if (clazz == Integer.class) {
 				return null;
 			} else if (clazz == Timestamp.class) {
+				return null;
+			} else if (clazz == byte[].class) {
 				return null;
 			} else {
 				throw new UnsupportedOperationException();
