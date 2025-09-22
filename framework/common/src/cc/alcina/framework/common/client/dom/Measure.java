@@ -62,8 +62,6 @@ public class Measure extends Location.Range {
 	 */
 	private Object data;
 
-	private Measure aliasedFrom;
-
 	public Location.Range toRange() {
 		return new Location.Range(start, end);
 	}
@@ -72,13 +70,6 @@ public class Measure extends Location.Range {
 		super(start, end);
 		Preconditions.checkNotNull(token);
 		this.token = token;
-	}
-
-	public Measure alias() {
-		Measure alias = new Measure(start, end, token);
-		alias.data = data;
-		alias.aliasedFrom = this;
-		return alias;
 	}
 
 	public Selection asSelection(Selection parent) {
@@ -124,7 +115,7 @@ public class Measure extends Location.Range {
 		if (obj instanceof Measure) {
 			Measure o = (Measure) obj;
 			return Ax.equals(start, o.start, end, o.end, token, o.token, data,
-					o.data, aliasedFrom, o.aliasedFrom);
+					o.data);
 		} else {
 			return super.equals(obj);
 		}
@@ -140,8 +131,7 @@ public class Measure extends Location.Range {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(super.hashCode(), token.hashCode(), data,
-				aliasedFrom);
+		return Objects.hash(super.hashCode(), token.hashCode(), data);
 	}
 
 	public String log() {
@@ -177,7 +167,6 @@ public class Measure extends Location.Range {
 	}
 
 	public String toDebugString() {
-		String aliasMarker = aliasedFrom != null ? ":: (alias)" : "";
 		String tokenString = token.toString();
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
@@ -185,9 +174,9 @@ public class Measure extends Location.Range {
 		tokenString = CommonUtils.padStringRight(tokenString, 28, ' ');
 		String tokenData = getData() == null ? "" : getData().toString();
 		tokenData = CommonUtils.padStringRight(tokenData, 16, ' ');
-		return Ax.format("[%s,%s]%s :: %s :: %s :: %s",
+		return Ax.format("[%s,%s] :: %s :: %s :: %s",
 				Ax.padLeft(start.getIndex(), 8), Ax.padLeft(end.getIndex(), 8),
-				aliasMarker, tokenString, tokenData, Ax.trimForLogging(text()));
+				tokenString, tokenData, Ax.trimForLogging(text()));
 	}
 
 	public String toPathSegment() {
