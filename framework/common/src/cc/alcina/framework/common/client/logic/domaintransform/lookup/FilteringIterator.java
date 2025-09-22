@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
@@ -16,6 +17,10 @@ public class FilteringIterator<E> implements Iterator<E> {
 	protected E next;
 
 	protected boolean finished;
+
+	public boolean isFinished() {
+		return finished;
+	}
 
 	protected boolean peeked;
 
@@ -55,6 +60,9 @@ public class FilteringIterator<E> implements Iterator<E> {
 		return next;
 	}
 
+	/*
+	 * Guard calls to this method with a check to isFinished()
+	 */
 	public E peek() {
 		if (finished) {
 			throw new NoSuchElementException();
@@ -80,5 +88,16 @@ public class FilteringIterator<E> implements Iterator<E> {
 
 	protected void resetPeeked() {
 		peeked = false;
+	}
+
+	/**
+	 * 
+	 * @param <T>
+	 * @param collection
+	 * @return a filtering iterator across the collection that returns all
+	 *         elements (but provides a 'current' aka peek)
+	 */
+	public static <T> FilteringIterator<T> wrap(Collection<T> collection) {
+		return new FilteringIterator<>(collection.iterator(), e -> true);
 	}
 }

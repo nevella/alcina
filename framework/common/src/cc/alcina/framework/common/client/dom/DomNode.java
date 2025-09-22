@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
@@ -2376,5 +2377,33 @@ public class DomNode {
 		 */
 		return ancestors().orSelf(includingSelf).stream()
 				.filter(otherAncestors::contains).findFirst().orElse(null);
+	}
+
+	public boolean shallowEquals(DomNode other) {
+		if (w3cNode().getNodeType() != other.w3cNode().getNodeType()) {
+			return false;
+		}
+		if (!Objects.equals(w3cNode().getNodeName(),
+				other.w3cNode().getNodeName())) {
+			return false;
+		}
+		if (w3cNode() instanceof CharacterData) {
+			return Objects.equals(w3cNode().getNodeValue(),
+					other.w3cNode().getNodeValue());
+		} else if (w3cNode() instanceof ProcessingInstruction) {
+			ProcessingInstruction thisPi = (ProcessingInstruction) w3cNode();
+			ProcessingInstruction otherPi = (ProcessingInstruction) other
+					.w3cNode();
+			return Objects.equals(thisPi.getTarget(), otherPi.getTarget())
+					&& Objects.equals(thisPi.getData(), otherPi.getData());
+		} else if (w3cNode() instanceof Element) {
+			return areEqualAttributes(this, other);
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean areEqualAttributes(DomNode n1, DomNode n2) {
+		return Objects.equals(n1.attributes(), n2.attributes());
 	}
 }

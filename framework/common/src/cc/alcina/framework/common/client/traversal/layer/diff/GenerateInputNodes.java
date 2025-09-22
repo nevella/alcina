@@ -9,10 +9,10 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.layer.diff.MeasureDiff.Peer;
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
 
-class CreateInputNodes extends Layer<RootSelection> {
+class GenerateInputNodes extends Layer<RootSelection> {
 	Peer peer;
 
-	CreateInputNodes() {
+	GenerateInputNodes() {
 	}
 
 	@Override

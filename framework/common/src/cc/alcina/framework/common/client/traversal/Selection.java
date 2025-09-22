@@ -95,6 +95,13 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			 */
 			public interface Replacement extends Type {
 			}
+
+			/**
+			 * The selections are equivalent (for a domain-specific equivalence
+			 * relation)
+			 */
+			public interface Equivalent extends Type {
+			}
 		}
 
 		static class Entry {
@@ -138,6 +145,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		Stream<Selection> stream(Class<? extends Relations.Type> clazz) {
 			return entries.stream().filter(e -> e.type == clazz)
 					.map(e -> e.selection);
+		}
+
+		public boolean has(Class<? extends Relations.Type> clazz) {
+			return stream(clazz).anyMatch(s -> true);
 		}
 
 		public boolean hasReplacedBy() {

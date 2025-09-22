@@ -29,6 +29,10 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	public interface Intermediate {
 	}
 
+	public DomNode containingNode() {
+		return get().containingNode();
+	}
+
 	public static class View<M extends MeasureSelection>
 			extends AbstractSelection.View<M> {
 		@Override

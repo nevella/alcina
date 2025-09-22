@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
 import cc.alcina.framework.common.client.util.TextUtils;
-import cc.alcina.framework.servlet.job.JobContext;
 
 /**
  * <code><pre>
@@ -30,6 +29,9 @@ import cc.alcina.framework.servlet.job.JobContext;
    - then traverse match(es), generating [unchanged]
   - wrinkles:
     - filters - omit (for chain computation + match) diff markers + diff-removed
+
+  - more generally, how do you diff a tree? this answer implementation is "diff the leaves, and build the 
+    merged structure from the matching leaves". Intuitively, this seems better than top-down - but why? 
  
  * 
  * </pre></code>
@@ -43,10 +45,9 @@ public class MeasureDiff {
 		public DomNode union;
 	}
 
-	public Result diff() {
+	public Result diff(TreeProcess.Node parentNode) {
 		this.peer = new Peer();
 		SelectionTraversal traversal = new SelectionTraversal(peer);
-		TreeProcess.Node parentNode = JobContext.getSelectedProcessNode();
 		traversal.select(new RootLayer.RootSelection(parentNode, this));
 		traversal.layers().setRoot(new RootLayer());
 		traversal.traverse();

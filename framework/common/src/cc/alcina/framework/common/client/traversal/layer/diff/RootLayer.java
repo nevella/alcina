@@ -12,7 +12,9 @@ import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSele
  */
 class RootLayer extends Layer<RootSelection> {
 	RootLayer() {
-		addChild(new CreateInputNodes());
+		addChild(new GenerateInputNodes());
+		addChild(new DiffLeaves());
+		addChild(new GenerateOutputNodes());
 		addChild(new MergedOutput());
 	}
 
