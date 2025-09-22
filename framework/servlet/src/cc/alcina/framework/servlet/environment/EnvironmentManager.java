@@ -306,4 +306,15 @@ public class EnvironmentManager {
 		}
 		env.access().handleRequest(token);
 	}
+
+	public class Debug {
+		public void triggerDebugRomcomServerException() {
+			singletonEnvironment().access()
+					.dispatchDebugRomcomProcessingException();
+		}
+	}
+
+	public Debug debug() {
+		return new Debug();
+	}
 }

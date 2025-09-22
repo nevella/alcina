@@ -502,6 +502,12 @@ class Environment {
 				});
 			}
 		}
+
+		void dispatchDebugRomcomProcessingException() {
+			Message.ProcessingException processingException = new Message.ProcessingException();
+			processingException.exceptionMessage = "Triggering (dev/debug) exception";
+			queue.sendToClient(processingException);
+		}
 	}
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class
