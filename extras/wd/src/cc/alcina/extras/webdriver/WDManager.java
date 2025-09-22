@@ -57,9 +57,15 @@ public class WDManager {
 		return resultCache.get(config.topLevelClassName);
 	}
 
-	public synchronized WDToken runTest(WDConfiguration config,
-			HttpServletResponse response, boolean persist, boolean statsOnly)
-			throws Exception {
+	public WDToken runTest(WDConfiguration config, HttpServletResponse response,
+			boolean persist, boolean statsOnly) throws Exception {
+		synchronized (WDManager.class) {
+			return runTest0(config, response, persist, statsOnly);
+		}
+	}
+
+	WDToken runTest0(WDConfiguration config, HttpServletResponse response,
+			boolean persist, boolean statsOnly) throws Exception {
 		WDToken token = new WDToken();
 		// token = checkCache(config);
 		// if (token != null) {
