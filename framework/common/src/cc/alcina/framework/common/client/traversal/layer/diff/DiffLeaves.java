@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.traversal.layer.diff.MeasureDiff.Peer;
 import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Left;
 import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Right;
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Diff;
 import cc.alcina.framework.common.client.util.Diff.Change;
 
@@ -22,14 +23,12 @@ class DiffLeaves extends Layer<RootSelection> {
 
 	@Override
 	protected void onBeforeIteration() {
-		super.onBeforeIteration();
 		peer = state.traversalContext(MeasureDiff.Peer.class);
+		super.onBeforeIteration();
 	}
 
 	class DiffInput {
-		List<EqualsRelation> leaves;
-
-		EqualsRelation[] array;
+		EqualsRelation[] leaves;
 
 		class EqualsRelation {
 			MergeInputNode node;
@@ -40,16 +39,26 @@ class DiffLeaves extends Layer<RootSelection> {
 
 			@Override
 			public boolean equals(Object obj) {
-				// TODO Auto-generated method stub
-				return super.equals(obj);
+				return node.contentEquals(((EqualsRelation) obj).node);
+			}
+
+			@Override
+			public int hashCode() {
+				return node.contentHashCode();
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s :: %s", node.get().start,
+						node.contentString());
 			}
 		}
 
 		DiffInput(List<? extends MergeInputNode> inputNodes) {
-			this.leaves = inputNodes.stream().filter(MergeInputNode::isLeaf)
-					.map(EqualsRelation::new).toList();
-			this.array = inputNodes
-					.toArray(new EqualsRelation[inputNodes.size()]);
+			List<EqualsRelation> leaves = inputNodes.stream()
+					.filter(MergeInputNode::isLeaf).map(EqualsRelation::new)
+					.toList();
+			this.leaves = leaves.toArray(new EqualsRelation[leaves.size()]);
 		}
 	}
 
@@ -59,9 +68,37 @@ class DiffLeaves extends Layer<RootSelection> {
 				state.traversalState.selections.get(Left.class));
 		DiffInput right = new DiffInput(
 				state.traversalState.selections.get(Right.class));
-		Diff diff = new Diff(left.array, right.array);
+		Diff diff = new Diff(left.leaves, right.leaves);
 		diff.heuristic = false;
 		Change change = diff.diff(Diff.forwardScript);
+		int leftIdx = 0;
+		int rightIdx = 0;
+		Change cursor = change;
+		int changedLeaves = 0;
+		while (cursor != null) {
+			/*
+			 * the change models changes, what we really care about is
+			 * *non-changed*
+			 */
+			while (leftIdx < cursor.line0 && rightIdx < cursor.line1) {
+				MergeInputNode leftNode = left.leaves[leftIdx].node;
+				MergeInputNode rightNode = right.leaves[rightIdx].node;
+				leftNode.markEquivalentTo(rightNode);
+				leftIdx++;
+				rightIdx++;
+			}
+			leftIdx += cursor.deleted;
+			rightIdx += cursor.inserted;
+			changedLeaves += Math.max(cursor.deleted, cursor.inserted);
+			cursor = cursor.link;
+		}
+		while (leftIdx < left.leaves.length && rightIdx < right.leaves.length) {
+			MergeInputNode leftNode = left.leaves[leftIdx].node;
+			MergeInputNode rightNode = right.leaves[rightIdx].node;
+			leftNode.markEquivalentTo(rightNode);
+			leftIdx++;
+			rightIdx++;
+		}
 	}
 
 	Map<Measure, MergeInputNode> measureInputNode = new LinkedHashMap<>();

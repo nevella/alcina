@@ -18,7 +18,7 @@ class MergedOutput extends Layer<RootSelection> {
 	@Override
 	public void process(RootSelection selection) throws Exception {
 		DomNode resultNode = selection.ancestor(RootSelection.class)
-				.get().attributes.right;
+				.get().attributes.left;
 		select(new SelectionImpl(selection, resultNode));
 	}
 
