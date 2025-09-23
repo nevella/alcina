@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal.layer.diff;
 
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Measure;
@@ -46,6 +47,16 @@ public class MeasureDiff {
 
 	public static class Result {
 		public DomNode union;
+
+		public void applyMarkerCss() {
+			DomDocument htmlDoc = DomDocument.basicGwtHtmlDoc();
+			htmlDoc.html().appendStyleNode(
+					"diff[type=left-insert]{background-color: lightpink;}");
+			htmlDoc.html().appendStyleNode(
+					"diff[type=right-insert]{background-color: lightgreen;}");
+			htmlDoc.html().body().children.importFrom(union);
+			union = htmlDoc;
+		}
 	}
 
 	public Result diff(TreeProcess.Node parentNode) {
@@ -78,10 +89,13 @@ public class MeasureDiff {
 							return Measure.fromRange(range,
 									MergeInputNode.Word.TYPE);
 						});
-				return Stream.concat(nodeStream, wordStream);
+				return wordStream;
 			}
 		}
 
+		/*
+		 * TODO - also br, hr (html), #comment, #processing-instruction (xml)
+		 */
 		boolean isLeaf(MergeInputNode mergeInputNode) {
 			Measure measure = mergeInputNode.get();
 			DomNode containingNode = measure.containingNode();

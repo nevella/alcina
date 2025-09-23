@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.traversal.layer.diff;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -129,7 +130,8 @@ abstract class MergeInputNode extends MeasureSelection {
 					break;
 				}
 			}
-			branch = toRoot.reversed();
+			Collections.reverse(toRoot);
+			branch = toRoot;
 			itr = FilteringIterator.wrap(branch);
 		}
 

@@ -61,16 +61,15 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 
 	void advanceToMatchChange(FilteringIterator<? extends MergeInputNode> itr,
 			boolean generateOutput) {
-		if (itr.isFinished()) {
+		if (itr.isFinished() || !itr.hasNext()) {
 			return;
 		}
-		MergeInputNode first = itr.peek();
-		if (first == null) {
-			return;
-		}
+		MergeInputNode first = itr.next();
 		MergeInputNode cursor = first;
 		for (;;) {
-			ensureOutput(cursor);
+			if (generateOutput) {
+				ensureOutput(cursor);
+			}
 			if (!itr.hasNext()) {
 				break;
 			}
@@ -87,7 +86,7 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 			return;
 		}
 		cursor = cursor.ensureOutputParent(inputNode);
-		cursor = cursor.ensureDiffContainer();
-		cursor.appendContents();
+		cursor = cursor.ensureDiffContainer(inputNode);
+		cursor.appendContents(inputNode);
 	}
 }
