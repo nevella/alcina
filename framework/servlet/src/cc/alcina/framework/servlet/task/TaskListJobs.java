@@ -145,7 +145,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 		List<Job> treeResult = new ArrayList<>();
 		directResults.forEach(job -> {
 			treeResult.add(job);
-			int max = 100;
+			int max = 15;
 			List<Job> descendants = job
 					.provideDescendantsAndSubsequentsAndAwaited().toList();
 			descendants.stream().limit(max)
