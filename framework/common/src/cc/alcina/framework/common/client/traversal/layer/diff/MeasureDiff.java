@@ -33,6 +33,9 @@ import cc.alcina.framework.common.client.util.TextUtils;
   - more generally, how do you diff a tree? this answer implementation is "diff the leaves, and build the 
     merged structure from the matching leaves". Intuitively, this seems better than top-down - but why? 
  
+  - note that the left of the diff must be the only input (if any) to contain diff markers - this allows construction of 
+    multi-diffs
+
  * 
  * </pre></code>
  */
@@ -55,29 +58,35 @@ public class MeasureDiff {
 		MergedOutput.SelectionImpl outputSelection = traversal.selections()
 				.getSingleSelection(MergedOutput.SelectionImpl.class);
 		Result result = new Result();
-		result.union = outputSelection.get();
+		result.union = outputSelection.get().doc.getDocumentElementNode();
 		return result;
 	}
 
 	class Peer implements TraversalContext {
 		Stream<Measure> createMergeMeasures(DomNode node) {
-			Measure.Token token = Measure.Token.Generic.TYPE;
+			Stream<Measure> nodeStream = Stream
+					.of(Measure.fromNode(node, MergeInputNode.NodeToken.TYPE));
 			if (!node.isText()) {
-				return Stream.of(Measure.fromNode(node, token));
+				return nodeStream;
+			} else {
+				Stream<Measure> wordStream = TextUtils
+						.match(node.textContent(), "\\S+").stream()
+						.map(wordOffsets -> {
+							Range range = node.asRange();
+							range = range.truncateRelative(wordOffsets.i1,
+									wordOffsets.i2);
+							return Measure.fromRange(range,
+									MergeInputNode.Word.TYPE);
+						});
+				return Stream.concat(nodeStream, wordStream);
 			}
-			return TextUtils.match(node.textContent(), "\\S+").stream()
-					.map(wordOffsets -> {
-						Range range = node.asRange();
-						range = range.truncateRelative(wordOffsets.i1,
-								wordOffsets.i2);
-						return Measure.fromRange(range, token);
-					});
 		}
 
 		boolean isLeaf(MergeInputNode mergeInputNode) {
 			Measure measure = mergeInputNode.get();
 			DomNode containingNode = measure.containingNode();
-			return containingNode.isText() || containingNode.nameIs("img");
+			return measure.token == MergeInputNode.Word.TYPE
+					|| containingNode.nameIs("img");
 		}
 	}
 

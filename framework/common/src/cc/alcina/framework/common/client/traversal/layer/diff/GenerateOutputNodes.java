@@ -40,7 +40,9 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 
 	@Override
 	public void process(RootSelection selection) throws Exception {
-		root = new MergeOutputNode();
+		root = new MergeOutputNode(selection, null);
+		select(root);
+		root.layer = this;
 		cursor = root;
 		peer = state.traversalContext(MeasureDiff.Peer.class);
 		List<Left> lefts = state.traversalState.selections.get(Left.class);
@@ -85,7 +87,7 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 			return;
 		}
 		cursor = cursor.ensureOutputParent(inputNode);
-		cursor.ensureDiffContainer(inputNode);
-		cursor.appendContents(inputNode);
+		cursor = cursor.ensureDiffContainer();
+		cursor.appendContents();
 	}
 }

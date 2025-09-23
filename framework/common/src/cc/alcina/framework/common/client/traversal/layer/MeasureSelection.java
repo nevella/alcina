@@ -213,6 +213,13 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	}
 
 	@Override
+	public String toString() {
+		return Ax.format("%s :: %s :: %s :: %s :: %s", NestedName.get(this),
+				get().toIntPair(), get().containingNode().name(),
+				get().getData(), Ax.ntrim(get().text(), 40));
+	}
+
+	@Override
 	public String toDebugString() {
 		return Ax.format("%s :: %s :: %s", super.toString(), get().getData(),
 				Ax.ntrim(get().text(), 40));
