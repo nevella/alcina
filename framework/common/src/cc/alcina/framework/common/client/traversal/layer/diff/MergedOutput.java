@@ -17,13 +17,14 @@ class MergedOutput extends Layer<RootSelection> {
 
 	@Override
 	public void process(RootSelection selection) throws Exception {
-		DomNode resultNode = selection.ancestor(RootSelection.class)
-				.get().attributes.left;
+		MergeOutputNode resultNode = state.traversalState.selections
+				.get(MergeOutputNode.class).getFirst();
 		select(new SelectionImpl(selection, resultNode));
 	}
 
-	static class SelectionImpl extends AbstractSelection<DomNode> {
-		public SelectionImpl(Selection parentSelection, DomNode result) {
+	static class SelectionImpl extends AbstractSelection<MergeOutputNode> {
+		public SelectionImpl(Selection parentSelection,
+				MergeOutputNode result) {
 			super(parentSelection, result);
 		}
 	}

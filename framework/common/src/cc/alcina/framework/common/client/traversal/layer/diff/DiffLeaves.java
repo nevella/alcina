@@ -84,6 +84,7 @@ class DiffLeaves extends Layer<RootSelection> {
 				MergeInputNode leftNode = left.leaves[leftIdx].node;
 				MergeInputNode rightNode = right.leaves[rightIdx].node;
 				leftNode.markEquivalentTo(rightNode);
+				rightNode.markEquivalentTo(leftNode);
 				leftIdx++;
 				rightIdx++;
 			}
@@ -96,6 +97,7 @@ class DiffLeaves extends Layer<RootSelection> {
 			MergeInputNode leftNode = left.leaves[leftIdx].node;
 			MergeInputNode rightNode = right.leaves[rightIdx].node;
 			leftNode.markEquivalentTo(rightNode);
+			rightNode.markEquivalentTo(leftNode);
 			leftIdx++;
 			rightIdx++;
 		}
