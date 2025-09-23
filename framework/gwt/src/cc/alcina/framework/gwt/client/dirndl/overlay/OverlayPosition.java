@@ -145,8 +145,13 @@ public class OverlayPosition {
 			 */
 			int scrollLeft = Window.getScrollLeft();
 			int scrollTop = Window.getScrollTop();
-			toRect = DomRect.ofCoordinatePairs(-scrollLeft, -scrollTop,
-					-scrollLeft, -scrollTop);
+			/*
+			 * FIXME - dirndl - not if [from] is absolute - I think there's some
+			 * confusion here
+			 */
+			toRect = DomRect.ofCoordinatePairs(0, 0, 0, 0);
+			// DomRect.ofCoordinatePairs(-scrollLeft, -scrollTop,
+			// -scrollLeft, -scrollTop);
 		} else {
 			toRect = toElement.getBoundingClientRect();
 		}
