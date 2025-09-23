@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -147,7 +146,8 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 			treeResult.add(job);
 			int max = 100;
 			List<Job> descendants = job
-					.provideDescendantsAndSubsequentsAndAwaited().toList();
+					.provideDescendantsAndSubsequentsAndAwaited()
+					.collect(Collectors.toList());
 			descendants.stream().limit(max)
 					.filter(j -> !j.provideIsComplete()
 							|| j == j.provideFirstInSequence())
