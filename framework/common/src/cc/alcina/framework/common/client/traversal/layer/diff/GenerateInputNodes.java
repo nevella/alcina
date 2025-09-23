@@ -73,11 +73,7 @@ class GenerateInputNodes extends Layer<RootSelection> {
 		if (measure.containingNode() == root) {
 			return rootSelection;
 		} else {
-			if (measure.getToken() == Word.TYPE) {
-				return domNodeInputNode.get(measure.containingNode());
-			} else {
-				return domNodeInputNode.get(measure.containingNode().parent());
-			}
+			return domNodeInputNode.get(measure.containingNode().parent());
 		}
 	}
 }

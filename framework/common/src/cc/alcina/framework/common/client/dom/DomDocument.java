@@ -61,6 +61,11 @@ public class DomDocument extends DomNode implements Cloneable {
 		return DomDocument.from("<html><head></head><body></body></html>");
 	}
 
+	public static DomDocument basicGwtHtmlDoc() {
+		return DomDocument.from("<html><head></head><body></body></html>",
+				true);
+	}
+
 	public DomDocument clone() {
 		return clone(node -> true);
 		// DomDocument clone = DomDocument.from((Document) DomEnvironment.get()

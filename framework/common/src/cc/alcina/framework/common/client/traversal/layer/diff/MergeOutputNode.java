@@ -1,10 +1,14 @@
 package cc.alcina.framework.common.client.traversal.layer.diff;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -18,6 +22,8 @@ import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Models an output node of the diff process
+ * 
+ * TODO - should be type DomNode (in the output doc)
  */
 class MergeOutputNode extends AbstractSelection<Void>
 		implements AbstractSelection.AllowsNullValue {
@@ -67,10 +73,10 @@ class MergeOutputNode extends AbstractSelection<Void>
 				return DiffType.RIGHT_INSERT;
 			}
 		} else {
-			if (right == null) {
-				return DiffType.LEFT_INSERT;
-			} else {
+			if (left.hasEquivalent() || right != null) {
 				return DiffType.UNCHANGED;
+			} else {
+				return DiffType.LEFT_INSERT;
 			}
 		}
 	}
@@ -95,7 +101,8 @@ class MergeOutputNode extends AbstractSelection<Void>
 				toRoot.add(cursor);
 				cursor = cursor.parent;
 			}
-			branch = toRoot.reversed();
+			Collections.reverse(toRoot);
+			branch = toRoot;
 			itr = FilteringIterator.wrap(branch);
 		}
 
@@ -160,9 +167,6 @@ class MergeOutputNode extends AbstractSelection<Void>
 		} else {
 			DomNode shallowClone = domNode.children
 					.importFrom(inputNode.domNode(), false);
-			if (shallowClone.isText()) {
-				shallowClone.setText("");
-			}
 			child = new MergeOutputNode(inputNode, null);
 			child.domNode = shallowClone;
 		}
@@ -182,10 +186,10 @@ class MergeOutputNode extends AbstractSelection<Void>
 		return domNode != null && domNode.tagIs("diff");
 	}
 
-	MergeOutputNode ensureDiffContainer() {
-		switch (computeDiffType()) {
+	MergeOutputNode ensureDiffContainer(MergeInputNode input) {
+		DiffType diffType = input.getDiffType();
+		switch (diffType) {
 		case UNCHANGED:
-			return this;
 		case LEFT_INSERT:
 		case RIGHT_INSERT:
 			break;
@@ -193,38 +197,75 @@ class MergeOutputNode extends AbstractSelection<Void>
 		default:
 			throw new UnsupportedOperationException();
 		}
-		MergeOutputNode last = Ax.last(parent.children);
-		switch (computeDiffType()) {
+		if (diffType == DiffType.UNCHANGED
+				&& input.containingNode().isElement()) {
+			return this;
+		}
+		/*
+		 * if the current append container can accept the input, use it,
+		 * otherwise ensure a new one
+		 */
+		MergeOutputNode last = Ax.last(children);
+		DomNodeType inputType = input.containingNode().getDomNodeType();
+		switch (diffType) {
 		case LEFT_INSERT:
 			if (last != null && last.isDiff()
-					&& last.computeDiffType() == DiffType.LEFT_INSERT) {
+					&& last.computeDiffType() == DiffType.LEFT_INSERT
+					&& last.domNode.children.firstNode()
+							.getDomNodeType() == inputType) {
 				return last;
 			} else {
 				break;
 			}
 		case RIGHT_INSERT:
 			if (last != null && last.isDiff()
-					&& last.computeDiffType() == DiffType.RIGHT_INSERT) {
+					&& last.computeDiffType() == DiffType.RIGHT_INSERT
+					&& last.domNode.children.firstNode()
+							.getDomNodeType() == inputType) {
+				return last;
+			} else {
+				break;
+			}
+		case UNCHANGED:
+			if (last != null && last.domNode.getDomNodeType() == inputType) {
 				return last;
 			} else {
 				break;
 			}
 		}
-		MergeOutputNode container = new MergeOutputNode(firstInput(), null);
-		container.domNode = parent.domNode.builder().tag("diff")
-				.attr("type", Ax.cssify(computeDiffType())).append();
-		return parent.appendChild(firstInput(), container);
+		MergeOutputNode container = new MergeOutputNode(input, null);
+		switch (diffType) {
+		case UNCHANGED:
+			container.domNode = domNode.builder().text("").append();
+			break;
+		case LEFT_INSERT:
+		case RIGHT_INSERT:
+			container.domNode = domNode.builder().tag("diff")
+					.attr("type", Ax.cssify(diffType)).append();
+			break;
+		}
+		return appendChild(input, container);
 	}
 
-	void appendContents() {
-		Measure firstMeasure = firstMeasure();
-		if (firstMeasure.containingNode().isText()) {
+	void appendContents(MergeInputNode inputNode) {
+		MergeOutputNode container = null;
+		if (inputNode.containingNode().isText()) {
 			String text = domNode.textContent();
-			if (!firstMeasure.start.isAtNodeStart()) {
+			if (!inputNode.get().start.isAtNodeStart()) {
 				text += " ";
 			}
-			text += firstMeasure.text();
+			text += inputNode.text();
 			domNode.setText(text);
+			container = new MergeOutputNode(this, null);
+			container.domNode = domNode;
+		} else {
+			Preconditions.checkArgument(domNode.children.nodes().stream()
+					.noneMatch(DomNode::isText));
+			DomNode imported = domNode.children.importFrom(inputNode.domNode(),
+					false);
+			container = new MergeOutputNode(this, null);
+			container.domNode = imported;
 		}
+		appendChild(inputNode, container);
 	}
 }
