@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.objecttree;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -124,7 +123,7 @@ public class ObjectTreeRenderer {
 		if (renderable instanceof TreeRenderable.NotRendered) {
 			return;
 		}
-		TreeRenderer node = TreeRenderingInfoProvider.get()
+		TreeRenderer<?> node = TreeRenderingInfoProvider.get()
 				.getForRenderable(renderable, parent, renderContext);
 		node.setParentRenderer(parent);
 		if (parent != null) {
@@ -137,14 +136,14 @@ public class ObjectTreeRenderer {
 		}
 		node.parentBinding(op.binding);
 		boolean widgetsAdded = false;
-		Collection<? extends TreeRenderer> children = node.renderableChildren();
+		Collection<? extends TreeRenderer> children = (Collection) node
+				.renderableChildren();
 		// title
 		AbstractBoundWidget customiserWidget = null;
 		RenderInstruction renderInstruction = node.renderInstruction();
 		IsRenderableFilter renderableFilter = renderContext
 				.getRenderableFilter();
-		if (renderableFilter != null
-				&& !renderableFilter.isRenderable(renderable, node)) {
+		if (!renderableFilter.isRenderable(renderable)) {
 			renderInstruction = RenderInstruction.NO_RENDER;
 		}
 		if (renderInstruction != RenderInstruction.NO_RENDER) {
@@ -237,8 +236,9 @@ public class ObjectTreeRenderer {
 				level1ContentRendererMap.put(childPanel, node);
 				cp.add(childPanel);
 			}
-			List<? extends TreeRenderable> childRenderables = new ArrayList<TreeRenderable>(
-					node.renderableChildren());
+			List<? extends TreeRenderable> childRenderables = node
+					.renderableChildren().stream()
+					.filter(renderableFilter::isRenderable).toList();
 			maybeSortChildRenderables(childRenderables, node, renderContext);
 			for (TreeRenderable child : childRenderables) {
 				renderToPanel(child, childPanel, depth + 1,

@@ -21,8 +21,9 @@ import java.util.List;
  * @author Nick Reddel
  */
 public interface IsRenderableFilter {
-	public boolean isRenderable(TreeRenderable renderable,
-			TreeRenderer renderer);
+	static IsRenderableFilter ALLOW_ALL = renderable -> true;
+
+	public boolean isRenderable(TreeRenderable renderable);
 
 	public static class CompositeIsRenderableFilter
 			implements IsRenderableFilter {
@@ -34,10 +35,9 @@ public interface IsRenderableFilter {
 		}
 
 		@Override
-		public boolean isRenderable(TreeRenderable renderable,
-				TreeRenderer renderer) {
+		public boolean isRenderable(TreeRenderable renderable) {
 			for (IsRenderableFilter filter : filters) {
-				if (!filter.isRenderable(renderable, renderer)) {
+				if (!filter.isRenderable(renderable)) {
 					return false;
 				}
 			}
