@@ -69,7 +69,8 @@ abstract class MergeInputNode extends MeasureSelection {
 
 	MergeInputNode(Selection parentSelection, Measure measure) {
 		super(parentSelection, measure);
-		rootSelection = parentSelection().ancestor(RootSelection.class);
+		rootSelection = parentSelection()
+				.ancestorSelection(RootSelection.class);
 	}
 
 	static class Left extends MergeInputNode {
@@ -196,7 +197,7 @@ abstract class MergeInputNode extends MeasureSelection {
 	}
 
 	MeasureDiff.Peer peer() {
-		return ancestor(RootSelection.class).get().peer;
+		return ancestorSelection(RootSelection.class).get().peer;
 	}
 
 	@Override
