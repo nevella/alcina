@@ -41,12 +41,22 @@ public interface HasEquivalence<T> {
 		if (o1 == null) {
 			return o2 == null;
 		} else {
-			HasEquivalenceAdapter<T, E> a1 = Reflections
-					.newInstance(adapterClass).withReferent(o1);
-			HasEquivalenceAdapter<T, E> a2 = Reflections
-					.newInstance(adapterClass).withReferent(o2);
-			return a1.equivalentTo((E) a2);
+			E a1 = (E) Reflections.newInstance(adapterClass).withReferent(o1);
+			E a2 = (E) Reflections.newInstance(adapterClass).withReferent(o2);
+			return areEquivalent(a1, a2);
 		}
+	}
+
+	public static <T, E extends HasEquivalenceAdapter> boolean areEquivalent(
+			Class<? extends HasEquivalenceAdapter<T, E>> adapterClass,
+			Collection<T> c1, Collection<T> c2) {
+		Set<E> ce1 = (Set) c1.stream()
+				.map(o -> Reflections.newInstance(adapterClass).withReferent(o))
+				.collect(Collectors.toSet());
+		Set<E> ce2 = (Set) c2.stream()
+				.map(o -> Reflections.newInstance(adapterClass).withReferent(o))
+				.collect(Collectors.toSet());
+		return HasEquivalenceHelper.equivalent(ce1, ce2);
 	}
 
 	public int equivalenceHash();

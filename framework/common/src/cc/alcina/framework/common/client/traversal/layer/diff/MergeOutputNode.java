@@ -12,8 +12,8 @@ import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
-import cc.alcina.framework.common.client.traversal.AbstractSelection.AllowsNullValue;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.layer.diff.MeasureDiff.Peer;
 import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.DiffType;
 import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.InputBranch;
 import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Left;
@@ -27,6 +27,8 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 class MergeOutputNode extends AbstractSelection<Void>
 		implements AbstractSelection.AllowsNullValue {
+	static final String TAG_DIFF = "diff";
+
 	MergeOutputNode(Selection parent, Void value) {
 		super(parent, value);
 	}
@@ -43,7 +45,7 @@ class MergeOutputNode extends AbstractSelection<Void>
 
 	DomNode domNode;
 
-	public GenerateOutputNodes layer;
+	GenerateOutputNodes layer;
 
 	OutputBranch getBranch() {
 		return new OutputBranch();
@@ -183,7 +185,11 @@ class MergeOutputNode extends AbstractSelection<Void>
 	}
 
 	boolean isDiff() {
-		return domNode != null && domNode.tagIs("diff");
+		return peer().isDiff(domNode);
+	}
+
+	private Peer peer() {
+		return rootOutputNode().layer.peer;
 	}
 
 	MergeOutputNode ensureDiffContainer(MergeInputNode input) {
@@ -240,8 +246,7 @@ class MergeOutputNode extends AbstractSelection<Void>
 			break;
 		case LEFT_INSERT:
 		case RIGHT_INSERT:
-			container.domNode = domNode.builder().tag("diff")
-					.attr("type", Ax.cssify(diffType)).append();
+			container.domNode = peer().createDiff(domNode, diffType);
 			break;
 		}
 		return appendChild(input, container);

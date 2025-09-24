@@ -16,20 +16,7 @@ import cc.alcina.framework.common.client.util.Diff;
 import cc.alcina.framework.common.client.util.Diff.Change;
 
 class DiffLeaves extends Layer<RootSelection> {
-	Peer peer;
-
-	DiffLeaves() {
-	}
-
-	@Override
-	protected void onBeforeIteration() {
-		peer = state.traversalContext(MeasureDiff.Peer.class);
-		super.onBeforeIteration();
-	}
-
 	class DiffInput {
-		EqualsRelation[] leaves;
-
 		class EqualsRelation {
 			MergeInputNode node;
 
@@ -54,12 +41,21 @@ class DiffLeaves extends Layer<RootSelection> {
 			}
 		}
 
+		EqualsRelation[] leaves;
+
 		DiffInput(List<? extends MergeInputNode> inputNodes) {
 			List<EqualsRelation> leaves = inputNodes.stream()
 					.filter(MergeInputNode::isLeaf).map(EqualsRelation::new)
 					.toList();
 			this.leaves = leaves.toArray(new EqualsRelation[leaves.size()]);
 		}
+	}
+
+	Peer peer;
+
+	Map<Measure, MergeInputNode> measureInputNode = new LinkedHashMap<>();
+
+	DiffLeaves() {
 	}
 
 	@Override
@@ -83,8 +79,8 @@ class DiffLeaves extends Layer<RootSelection> {
 			while (leftIdx < cursor.line0 && rightIdx < cursor.line1) {
 				MergeInputNode leftNode = left.leaves[leftIdx].node;
 				MergeInputNode rightNode = right.leaves[rightIdx].node;
-				leftNode.markEquivalentTo(rightNode);
-				rightNode.markEquivalentTo(leftNode);
+				leftNode.markWordEquivalentTo(rightNode);
+				rightNode.markWordEquivalentTo(leftNode);
 				leftIdx++;
 				rightIdx++;
 			}
@@ -96,14 +92,18 @@ class DiffLeaves extends Layer<RootSelection> {
 		while (leftIdx < left.leaves.length && rightIdx < right.leaves.length) {
 			MergeInputNode leftNode = left.leaves[leftIdx].node;
 			MergeInputNode rightNode = right.leaves[rightIdx].node;
-			leftNode.markEquivalentTo(rightNode);
-			rightNode.markEquivalentTo(leftNode);
+			leftNode.markWordEquivalentTo(rightNode);
+			rightNode.markWordEquivalentTo(leftNode);
 			leftIdx++;
 			rightIdx++;
 		}
 	}
 
-	Map<Measure, MergeInputNode> measureInputNode = new LinkedHashMap<>();
+	@Override
+	protected void onBeforeIteration() {
+		peer = state.traversalContext(MeasureDiff.Peer.class);
+		super.onBeforeIteration();
+	}
 
 	void create(RootSelection selection, DomNode root, boolean left) {
 		root.stream().flatMap(peer::createMergeMeasures)

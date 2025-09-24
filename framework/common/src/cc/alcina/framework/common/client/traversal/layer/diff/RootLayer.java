@@ -14,6 +14,7 @@ class RootLayer extends Layer<RootSelection> {
 	RootLayer() {
 		addChild(new GenerateInputNodes());
 		addChild(new DiffLeaves());
+		addChild(new DiffBranches());
 		addChild(new GenerateOutputNodes());
 		addChild(new MergedOutput());
 	}

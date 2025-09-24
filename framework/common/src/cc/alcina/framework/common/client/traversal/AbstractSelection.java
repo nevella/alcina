@@ -28,7 +28,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	int segmentCounter = -1;
 
-	volatile Selection.Relations relations;
+	volatile Selection.Relation relations;
 
 	public boolean hasReplacedBy() {
 		return hasRelations() && relations.hasReplacedBy();
@@ -52,11 +52,11 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	}
 
 	@Override
-	public Relations getRelations() {
+	public Relation getRelations() {
 		if (relations == null) {
 			synchronized (this) {
 				if (relations == null) {
-					relations = new Relations(this);
+					relations = new Relation(this);
 				}
 			}
 		}

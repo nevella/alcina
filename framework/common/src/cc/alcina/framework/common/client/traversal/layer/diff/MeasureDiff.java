@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
+import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.DiffType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
@@ -65,7 +67,9 @@ public class MeasureDiff {
 		traversal.select(new RootLayer.RootSelection(parentNode, this));
 		traversal.layers().setRoot(new RootLayer());
 		traversal.traverse();
-		traversal.logTraversalStats();
+		if (attributes.logStats) {
+			traversal.logTraversalStats();
+		}
 		MergedOutput.SelectionImpl outputSelection = traversal.selections()
 				.getSingleSelection(MergedOutput.SelectionImpl.class);
 		Result result = new Result();
@@ -73,7 +77,7 @@ public class MeasureDiff {
 		return result;
 	}
 
-	class Peer implements TraversalContext {
+	public static class Peer implements TraversalContext {
 		Stream<Measure> createMergeMeasures(DomNode node) {
 			Stream<Measure> nodeStream = Stream
 					.of(Measure.fromNode(node, MergeInputNode.NodeToken.TYPE));
@@ -102,6 +106,28 @@ public class MeasureDiff {
 			return measure.token == MergeInputNode.Word.TYPE
 					|| containingNode.nameIs("img");
 		}
+
+		static final String TAG_DIFF = "diff";
+
+		boolean isDiff(DomNode domNode) {
+			return domNode != null && domNode.tagIs(TAG_DIFF);
+		}
+
+		DomNode createDiff(DomNode domNode, DiffType diffType) {
+			return domNode.builder().tag(TAG_DIFF)
+					.attr("type", Ax.cssify(diffType)).append();
+		}
+
+		public void stripRightInserts(DomNode node) {
+			node.stream().filter(this::isDiff)
+					.filter(n -> this.getDiffType(n) == DiffType.RIGHT_INSERT)
+					.toList().forEach(DomNode::removeFromParent);
+		}
+
+		DiffType getDiffType(DomNode node) {
+			String type = node.attr("type");
+			return DiffType.ofCssified(type);
+		}
 	}
 
 	public static class Attributes {
@@ -112,6 +138,8 @@ public class MeasureDiff {
 
 		DomNode right;
 
+		boolean logStats;
+
 		public Attributes withLeft(DomNode left) {
 			this.left = left;
 			return this;
@@ -119,6 +147,11 @@ public class MeasureDiff {
 
 		public Attributes withRight(DomNode right) {
 			this.right = right;
+			return this;
+		}
+
+		public Attributes withLogStats(boolean logStats) {
+			this.logStats = logStats;
 			return this;
 		}
 
