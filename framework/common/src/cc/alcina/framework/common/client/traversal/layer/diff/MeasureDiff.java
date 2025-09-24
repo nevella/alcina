@@ -128,6 +128,10 @@ public class MeasureDiff {
 			String type = node.attr("type");
 			return DiffType.ofCssified(type);
 		}
+
+		public boolean isDebug() {
+			return false;
+		}
 	}
 
 	public static class Attributes {

@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.traversal.layer.diff;
 
-import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
+import cc.alcina.framework.common.client.util.Ax;
 
 /*
  * Strategy: Emit 1 selection per section in the document's combined structure,
@@ -17,8 +17,8 @@ class MergedOutput extends Layer<RootSelection> {
 
 	@Override
 	public void process(RootSelection selection) throws Exception {
-		MergeOutputNode resultNode = state.traversalState.selections
-				.get(MergeOutputNode.class).getFirst();
+		MergeOutputNode resultNode = Ax.first(
+				state.traversalState.selections.get(MergeOutputNode.class));
 		select(new SelectionImpl(selection, resultNode));
 	}
 

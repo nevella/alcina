@@ -13,15 +13,12 @@ import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Rig
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.Configuration;
 
 /*
  * bi-traverse the input and output trees, generating a union tree of output
  * nodes
  */
 class GenerateOutputNodes extends Layer<RootSelection> {
-	static Configuration.Key debug = Configuration.key("debug");
-
 	Peer peer;
 
 	GenerateOutputNodes() {
@@ -57,7 +54,7 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 		FilteringIterator<Left> leftLeaf = FilteringIterator.wrap(leftLeaves);
 		FilteringIterator<Right> rightLeaf = FilteringIterator
 				.wrap(rightLeaves);
-		if (debug.is()) {
+		if (peer.isDebug()) {
 			leftLeaves.forEach(Ax::out);
 			rightLeaves.forEach(Ax::out);
 		}
@@ -92,12 +89,12 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 			 * now...do that thing!
 			 */
 			MergeInputNode node = itr.next();
-			if (debug.is()) {
+			if (peer.isDebug()) {
 				Ax.out("advanced: %s", node);
 			}
 			if (alsoAdvance != null) {
 				MergeInputNode next = alsoAdvance.next();
-				if (debug.is()) {
+				if (peer.isDebug()) {
 					Ax.out("advanced: %s", next);
 				}
 				MergeInputNode nodeRelated = node.getRelations()
@@ -111,7 +108,7 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 	}
 
 	void ensureOutput(MergeInputNode inputNode) {
-		if (debug.is()) {
+		if (peer.isDebug()) {
 			Ax.out("out: %s", inputNode);
 		}
 		cursor = cursor.ensureOutputParent(inputNode);
