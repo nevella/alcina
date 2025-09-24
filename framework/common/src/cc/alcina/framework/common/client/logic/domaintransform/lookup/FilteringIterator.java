@@ -100,4 +100,11 @@ public class FilteringIterator<E> implements Iterator<E> {
 	public static <T> FilteringIterator<T> wrap(Collection<T> collection) {
 		return new FilteringIterator<>(collection.iterator(), e -> true);
 	}
+
+	public E peekOrNull() {
+		if (finished) {
+			return null;
+		}
+		return peek();
+	}
 }

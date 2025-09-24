@@ -12,20 +12,20 @@ import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Lef
 import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Right;
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Configuration;
 
 /*
  * bi-traverse the input and output trees, generating a union tree of output
  * nodes
  */
 class GenerateOutputNodes extends Layer<RootSelection> {
+	static Configuration.Key debug = Configuration.key("debug");
+
 	Peer peer;
 
 	GenerateOutputNodes() {
 	}
-
-	FilteringIterator<Left> left;
-
-	FilteringIterator<Right> right;
 
 	/*
 	 * this models the current last descendant of the output tree. It begins as
@@ -45,45 +45,74 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 		root.layer = this;
 		cursor = root;
 		peer = state.traversalContext(MeasureDiff.Peer.class);
+		/* non-leaf output (structure) is ensured by leaves */
 		List<Left> lefts = state.traversalState.selections.get(Left.class);
 		List<Right> rights = state.traversalState.selections.get(Right.class);
+		List<Left> leftLeaves = lefts.stream().filter(MergeInputNode::isLeaf)
+				.toList();
+		List<Right> rightLeaves = rights.stream().filter(MergeInputNode::isLeaf)
+				.toList();
 		Preconditions.checkState(lefts.isEmpty() || rights.isEmpty()
 				|| lefts.get(0).shallowEquals(rights.get(0)));
-		left = FilteringIterator.wrap(lefts);
-		right = FilteringIterator.wrap(rights);
-		while (left.hasNext() || right.hasNext()) {
-			advanceToMatchChange(left, true);
-			advanceToMatchChange(right, true);
-			advanceToMatchChange(left, true);
-			advanceToMatchChange(right, false);
+		FilteringIterator<Left> leftLeaf = FilteringIterator.wrap(leftLeaves);
+		FilteringIterator<Right> rightLeaf = FilteringIterator
+				.wrap(rightLeaves);
+		if (debug.is()) {
+			leftLeaves.forEach(Ax::out);
+			rightLeaves.forEach(Ax::out);
+		}
+		while (leftLeaf.hasNext() || rightLeaf.hasNext()) {
+			advance(leftLeaf, true, false, null);
+			advance(rightLeaf, true, false, null);
+			advance(leftLeaf, true, true, rightLeaf);
 		}
 	}
 
-	void advanceToMatchChange(FilteringIterator<? extends MergeInputNode> itr,
-			boolean generateOutput) {
-		if (itr.isFinished() || !itr.hasNext()) {
-			return;
-		}
-		MergeInputNode first = itr.next();
-		MergeInputNode cursor = first;
+	/*
+	 * note that if advanceEquivalent is true, only enter if both iterators are
+	 * advanceEquivalent
+	 */
+	void advance(FilteringIterator<? extends MergeInputNode> itr,
+			boolean generateOutput, boolean advanceEquivalent,
+			FilteringIterator<? extends MergeInputNode> alsoAdvance) {
 		for (;;) {
-			if (generateOutput) {
-				ensureOutput(cursor);
+			/*
+			 * the loop continuation logic is complex enough to define outside
+			 * of a while condition
+			 */
+			boolean continueLoop = !itr.isFinished() && itr.hasNext()
+					&& itr.peek().hasEquivalent() == advanceEquivalent;
+			if (advanceEquivalent && continueLoop) {
+				continueLoop &= alsoAdvance.peek().hasEquivalent();
 			}
-			if (!itr.hasNext()) {
+			if (!continueLoop) {
 				break;
 			}
-			if (itr.peek().hasEquivalent() != first.hasEquivalent()) {
-				break;
+			/*
+			 * now...do that thing!
+			 */
+			MergeInputNode node = itr.next();
+			if (debug.is()) {
+				Ax.out("advanced: %s", node);
 			}
-			cursor = itr.next();
+			if (alsoAdvance != null) {
+				MergeInputNode next = alsoAdvance.next();
+				if (debug.is()) {
+					Ax.out("advanced: %s", next);
+				}
+				MergeInputNode nodeRelated = node.getRelations()
+						.get(MergeInputNode.RelationType.WordEquivalent.class);
+				Preconditions.checkState(next == nodeRelated);
+			}
+			if (generateOutput && node.isLeaf()) {
+				ensureOutput(node);
+			}
 		}
 	}
 
 	void ensureOutput(MergeInputNode inputNode) {
-		/* non-leaf output (structure) is ensured by leaves */
-		if (!inputNode.isLeaf()) {
-			return;
+		if (debug.is()) {
+			Ax.out("out: %s", inputNode);
 		}
 		cursor = cursor.ensureOutputParent(inputNode);
 		cursor = cursor.ensureDiffContainer(inputNode);

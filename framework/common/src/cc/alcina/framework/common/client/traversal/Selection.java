@@ -80,7 +80,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	/*
 	 * 
 	 */
-	public static class Relations {
+	public static class Relation {
 		public interface Type {
 			public interface SecondaryParent extends Type {
 			}
@@ -121,7 +121,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 		boolean hasReplacement;
 
-		Relations(Selection<?> selection) {
+		Relation(Selection<?> selection) {
 			this.selection = selection;
 		}
 
@@ -142,12 +142,18 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			}
 		}
 
-		Stream<Selection> stream(Class<? extends Relations.Type> clazz) {
+		public <T extends Selection> Stream<T>
+				stream(Class<? extends Relation.Type> clazz) {
 			return entries.stream().filter(e -> e.type == clazz)
-					.map(e -> e.selection);
+					.map(e -> (T) e.selection);
 		}
 
-		public boolean has(Class<? extends Relations.Type> clazz) {
+		public <T extends Selection> T
+				get(Class<? extends Relation.Type> clazz) {
+			return (T) stream(clazz).findFirst().get();
+		}
+
+		public boolean has(Class<? extends Relation.Type> clazz) {
 			return stream(clazz).anyMatch(s -> true);
 		}
 
@@ -493,7 +499,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 				pending.add(test.parentSelection());
 				if (test.hasRelations()) {
 					test.getRelations()
-							.stream(Relations.Type.SecondaryParent.class)
+							.stream(Relation.Type.SecondaryParent.class)
 							.forEach(pending::add);
 				}
 			}
@@ -549,7 +555,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		}
 	}
 
-	Relations getRelations();
+	Relation getRelations();
 
 	default boolean referencesAncestorResources() {
 		return true;
@@ -617,7 +623,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	 */
 	default void replaceWith(Selection<?> other) {
 		Preconditions.checkArgument(getClass() == other.getClass());
-		getRelations().addRelation(Selection.Relations.Type.Replacement.class,
+		getRelations().addRelation(Selection.Relation.Type.Replacement.class,
 				other);
 	}
 }

@@ -1,19 +1,35 @@
 package cc.alcina.framework.common.client.traversal.layer.diff;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.common.client.traversal.layer.diff.MeasureDiff.Peer;
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceAdapter;
 
 abstract class MergeInputNode extends MeasureSelection {
+	interface RelationType extends Selection.Relation.Type {
+		interface WordEquivalent extends RelationType {
+		}
+
+		interface StructureInequivalent extends RelationType {
+		}
+	}
+
 	static class NodeToken implements Measure.Token {
 		static final NodeToken TYPE = new NodeToken();
 
@@ -101,12 +117,20 @@ abstract class MergeInputNode extends MeasureSelection {
 		return contentString;
 	}
 
-	void markEquivalentTo(MergeInputNode rightNode) {
-		getRelations().addRelation(Relations.Type.Equivalent.class, rightNode);
+	void markWordEquivalentTo(MergeInputNode rightNode) {
+		getRelations().addRelation(RelationType.WordEquivalent.class,
+				rightNode);
+	}
+
+	void markStructureInequivalentTo(MergeInputNode rightNode) {
+		getRelations().addRelation(RelationType.StructureInequivalent.class,
+				rightNode);
 	}
 
 	boolean hasEquivalent() {
-		return getRelations().has(Relations.Type.Equivalent.class);
+		return getRelations().has(RelationType.WordEquivalent.class)
+				&& !getRelations()
+						.has(RelationType.StructureInequivalent.class);
 	}
 
 	InputBranch getBranch() {
@@ -139,6 +163,45 @@ abstract class MergeInputNode extends MeasureSelection {
 		public String toString() {
 			return Ax.newlineJoin(branch);
 		}
+
+		boolean structureEquivalentTo(InputBranch other) {
+			List<MergeInputNode> filtered = computeStructuralComparisonNodes();
+			List<MergeInputNode> otherFiltered = other
+					.computeStructuralComparisonNodes();
+			return HasEquivalence.areEquivalent(InputShallowEquivalence.class,
+					filtered, otherFiltered);
+		}
+
+		private List<MergeInputNode> computeStructuralComparisonNodes() {
+			Peer peer = peer();
+			return branch.stream()
+					.filter(mergeNode -> !mergeNode.domNode().isText()
+							&& !peer.isDiff(mergeNode.domNode()))
+					.toList();
+		}
+	}
+
+	@Reflected
+	static class InputShallowEquivalence extends
+			HasEquivalenceAdapter<MergeInputNode, InputShallowEquivalence> {
+		@Override
+		public int equivalenceHash() {
+			return getReferent().domNode().name().hashCode();
+		}
+
+		@Override
+		public boolean equivalentTo(InputShallowEquivalence other) {
+			return getReferent().shallowEquals(other.getReferent());
+		}
+	}
+
+	MeasureDiff.Peer peer() {
+		return ancestor(RootSelection.class).get().peer;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s - %s", getDiffType().pretty(), super.toString());
 	}
 
 	enum DiffType {
@@ -149,7 +212,7 @@ abstract class MergeInputNode extends MeasureSelection {
 			case LEFT_INSERT:
 				return "[L]";
 			case RIGHT_INSERT:
-				return "[L]";
+				return "[R]";
 			case UNCHANGED:
 				return "[LR]";
 			case NONE:
@@ -157,6 +220,37 @@ abstract class MergeInputNode extends MeasureSelection {
 			default:
 				throw new UnsupportedOperationException();
 			}
+		}
+
+		String cssified() {
+			ensureLookups();
+			return typeCssifiedName.get(this);
+		}
+
+		static Map<DiffType, String> typeCssifiedName;
+
+		static Map<String, DiffType> cssifiedNameType;
+
+		/*
+		 * written as it is - particularly final assignment order - to avoid
+		 * locking
+		 */
+		static void ensureLookups() {
+			if (typeCssifiedName == null) {
+				Map<String, DiffType> cssifiedNameType = new LinkedHashMap<>();
+				Map<DiffType, String> typeCssifiedName = new LinkedHashMap<>();
+				cssifiedNameType = Arrays.stream(DiffType.values())
+						.collect(AlcinaCollectors.toKeyMap(Ax::cssify));
+				typeCssifiedName = Arrays.stream(DiffType.values())
+						.collect(AlcinaCollectors.toValueMap(Ax::cssify));
+				DiffType.cssifiedNameType = cssifiedNameType;
+				DiffType.typeCssifiedName = typeCssifiedName;
+			}
+		}
+
+		static DiffType ofCssified(String type) {
+			ensureLookups();
+			return cssifiedNameType.get(type);
 		}
 	}
 

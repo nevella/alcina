@@ -1738,6 +1738,12 @@ public class DomNode {
 			wrapper.copyAttributesFrom(DomNode.this);
 			return wrapper;
 		}
+
+		public DomNode firstNonWhitespaceTextNode() {
+			return descendants()
+					.filter(n -> n.isText() && n.isNonWhitespaceTextContent())
+					.findFirst().get();
+		}
 	}
 
 	public class DomNodeStyle {
