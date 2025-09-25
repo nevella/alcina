@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -238,7 +239,8 @@ public class ObjectTreeRenderer {
 			}
 			List<? extends TreeRenderable> childRenderables = node
 					.renderableChildren().stream()
-					.filter(renderableFilter::isRenderable).toList();
+					.filter(renderableFilter::isRenderable)
+					.collect(Collectors.toList());
 			maybeSortChildRenderables(childRenderables, node, renderContext);
 			for (TreeRenderable child : childRenderables) {
 				renderToPanel(child, childPanel, depth + 1,
