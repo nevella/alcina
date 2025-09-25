@@ -69,7 +69,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	public DomDocument clone() {
 		return clone(node -> true);
 		// DomDocument clone = DomDocument.from((Document) DomEnvironment.get()
-		// .loadFromXml(fullToString(), isGwtNode()));
+		// .loadFromXml(toMarkup(), isGwtNode()));
 		// clone.setReadonly(isReadonly());
 		// return clone;
 	}
