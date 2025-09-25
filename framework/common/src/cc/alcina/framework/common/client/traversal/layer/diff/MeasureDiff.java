@@ -77,7 +77,8 @@ public class MeasureDiff {
 		return result;
 	}
 
-	public static class Peer implements TraversalContext {
+	public static class Peer
+			implements TraversalContext, TraversalContext.ShortTraversal {
 		Stream<Measure> createMergeMeasures(DomNode node) {
 			Stream<Measure> nodeStream = Stream
 					.of(Measure.fromNode(node, MergeInputNode.NodeToken.TYPE));
