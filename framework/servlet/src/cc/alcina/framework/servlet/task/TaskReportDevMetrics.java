@@ -111,7 +111,7 @@ public class TaskReportDevMetrics extends PerformerTask {
 					.text("Timestamp: %s", Ax.timestamp(first)).append();
 			metric.builder().tag("pre").text(string).append();
 		});
-		JobContext.get().getJob().setLargeResult(doc.prettyToString());
+		JobContext.get().getJob().setLargeResult(doc.toPrettyMarkup());
 		logger.info("Log output to job.largeResult");
 	}
 

@@ -19,10 +19,10 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
@@ -116,7 +116,9 @@ public class RenderContext extends LooseContextInstance {
 	}
 
 	public IsRenderableFilter getRenderableFilter() {
-		return get(IS_RENDERABLE_FILTER);
+		IsRenderableFilter isRenderableFilter = get(IS_RENDERABLE_FILTER);
+		return isRenderableFilter != null ? isRenderableFilter
+				: IsRenderableFilter.ALLOW_ALL;
 	}
 
 	public TreeRenderer getRootRenderer() {

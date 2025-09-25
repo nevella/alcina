@@ -197,7 +197,7 @@ public class EditArea extends Model.Fields
 			DecoratorEvent.MutationStrings mutationStrings = new MutationStrings();
 			mutationStrings.mutationRecords = Ax.newlineJoin(event.records);
 			mutationStrings.editorDom = provideElement().asDomNode()
-					.prettyToString();
+					.toPrettyMarkup();
 			decoratorEvent.mutationStrings = mutationStrings;
 			return decoratorEvent;
 		});

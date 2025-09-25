@@ -289,7 +289,7 @@ public class TaskLogJobDetails extends PerformerTask {
 			renderProcessData(threadData, body);
 			renderRelated(job, body);
 			fields(job, body);
-			JobContext.get().getJob().setLargeResult(doc.fullToString());
+			JobContext.get().getJob().setLargeResult(doc.toMarkup());
 			logger.info("Details output to job.largeResult");
 			// FIXME - localdomain.mvcc - remove
 			TransactionEnvironment.get().commit();

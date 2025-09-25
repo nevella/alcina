@@ -30,7 +30,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * <p>
@@ -111,7 +110,12 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	}
 
 	/**
+	 * <p>
 	 * Gets the mouse buttons that were depressed when the given event occurred.
+	 * 
+	 * <p>
+	 * <b>Note</b>These are NOT the standard DOM codes (0, 1, 2) - rather the IE
+	 * codes (1,2,4)
 	 *
 	 * @return a bit-field, defined by {@link NativeEvent#BUTTON_LEFT},
 	 *         {@link NativeEvent#BUTTON_MIDDLE}, and

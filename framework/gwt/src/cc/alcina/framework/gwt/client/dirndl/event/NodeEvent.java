@@ -163,6 +163,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		 * fire on ancestor handlers
 		 */
 		public void bubble() {
+			if (!(getNodeEvent() instanceof ModelEvent)) {
+				throw new IllegalArgumentException(
+						"Dom events bubble via DOM bubbling, and are not stopped at the first handler. Remove this bubble!");
+			}
 			((ModelEvent) getPrevious().getNodeEvent()).setHandled(false);
 		}
 

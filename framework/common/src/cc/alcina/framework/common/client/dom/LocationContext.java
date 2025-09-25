@@ -397,7 +397,7 @@ public interface LocationContext {
 		}
 		if (range.start.getContainingNode() == node
 				&& range.end.getContainingNode() == node) {
-			String markup = node.fullToString();
+			String markup = node.toMarkup();
 			// if namespaced, return full
 			// FIXME - selection - have a 'robust pretty' that uses a
 			// variant on Element.getOuterHtml()
@@ -405,7 +405,7 @@ public interface LocationContext {
 					.matches("(?s).*(</[a-zA-Z9-9]+:[a-zA-Z9-9]+>|&nbsp;).*")) {
 				return markup;
 			} else {
-				return node.prettyToString();
+				return node.toPrettyMarkup();
 			}
 		} else {
 			org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) w3cDoc())
@@ -426,7 +426,7 @@ public interface LocationContext {
 			Element fragmentContainer = w3cDoc()
 					.createElement("fragment-container");
 			fragmentContainer.appendChild(fragment);
-			return DomNode.from(fragmentContainer).fullToString();
+			return DomNode.from(fragmentContainer).toMarkup();
 		}
 	}
 

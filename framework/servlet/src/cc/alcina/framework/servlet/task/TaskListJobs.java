@@ -428,7 +428,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 		addCompleted(doc, "top-level", true, limit);
 		addCompleted(doc, "child", false, limit);
 		addConsistency(doc);
-		JobContext.get().getJob().setLargeResult(doc.prettyToString());
+		JobContext.get().getJob().setLargeResult(doc.toPrettyMarkup());
 		logger.info("Log output to job.largeResult");
 		// FIXME - localdomain.mvcc - remove
 		TransactionEnvironment.get().commit();

@@ -60,7 +60,7 @@ public class DevUtils {
 			DomNodeHtmlTableRowBuilder rowBuilder = tableBuilder.row();
 			row.values().forEach(rowBuilder::cell);
 		});
-		String tableMarkup = tableBuilder.domNode().prettyToString();
+		String tableMarkup = tableBuilder.domNode().toPrettyMarkup();
 		DevConsole.get().setClipboardContents(tableMarkup);
 		return tableMarkup;
 	}

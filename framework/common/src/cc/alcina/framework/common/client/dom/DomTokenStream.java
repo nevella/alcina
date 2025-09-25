@@ -58,7 +58,7 @@ public class DomTokenStream implements Iterator<DomNode> {
 		}
 		for (int idx = 0; idx < 200; idx++) {
 			DomNode xmlNode = doc.nodeFor(tw.nextNode());
-			System.out.format("%s: %s\n", idx - 100, xmlNode.fullToString());
+			System.out.format("%s: %s\n", idx - 100, xmlNode.toMarkup());
 		}
 		for (int idx = 0; idx < 100; idx++) {
 			tw.previousNode();
