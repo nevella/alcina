@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -440,12 +441,18 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.uuid;
 	}
 
-	public boolean hasSelfOrAncestorTask(Class<? extends Task> taskClass) {
-		if (provideIsTaskClass(taskClass)) {
+	public boolean hasSelfOrAncestorOrAwaiterTask(Predicate<Job> predicate) {
+		if (predicate.test(domainIdentity())) {
 			return true;
 		}
-		return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass))
+		return provideFirstInSequence().provideParentOrAwaiter()
+				.map(job -> job.hasSelfOrAncestorOrAwaiterTask(predicate))
 				.orElse(false);
+	}
+
+	public boolean hasSelfOrAncestorOrAwaiter(Class<? extends Task> taskClass) {
+		return hasSelfOrAncestorOrAwaiterTask(
+				j -> j.provideIsTaskClass(taskClass));
 	}
 
 	public boolean provideCanDeserializeTask() {

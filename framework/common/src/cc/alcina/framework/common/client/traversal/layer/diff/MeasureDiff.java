@@ -4,6 +4,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess;
@@ -43,10 +44,6 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * </pre></code>
  */
 public class MeasureDiff {
-	Attributes attributes;
-
-	Peer peer;
-
 	public static class Result {
 		public DomNode union;
 
@@ -61,24 +58,26 @@ public class MeasureDiff {
 		}
 	}
 
-	public Result diff(TreeProcess.Node parentNode) {
-		this.peer = new Peer();
-		SelectionTraversal traversal = new SelectionTraversal(peer);
-		traversal.select(new RootLayer.RootSelection(parentNode, this));
-		traversal.layers().setRoot(new RootLayer());
-		traversal.traverse();
-		if (attributes.logStats) {
-			traversal.logTraversalStats();
-		}
-		MergedOutput.SelectionImpl outputSelection = traversal.selections()
-				.getSingleSelection(MergedOutput.SelectionImpl.class);
-		Result result = new Result();
-		result.union = outputSelection.get().doc.getDocumentElementNode();
-		return result;
-	}
-
 	public static class Peer
 			implements TraversalContext, TraversalContext.ShortTraversal {
+		static final String TAG_DIFF = "diff";
+
+		MeasureDiff measureDiff;
+
+		public Peer(MeasureDiff measureDiff) {
+			this.measureDiff = measureDiff;
+		}
+
+		public void stripRightInserts(DomNode node) {
+			node.stream().filter(this::isDiff)
+					.filter(n -> this.getDiffType(n) == DiffType.RIGHT_INSERT)
+					.toList().forEach(DomNode::removeFromParent);
+		}
+
+		public boolean isDebug() {
+			return false;
+		}
+
 		Stream<Measure> createMergeMeasures(DomNode node) {
 			Stream<Measure> nodeStream = Stream
 					.of(Measure.fromNode(node, MergeInputNode.NodeToken.TYPE));
@@ -108,42 +107,49 @@ public class MeasureDiff {
 					|| containingNode.nameIs("img");
 		}
 
-		static final String TAG_DIFF = "diff";
-
 		boolean isDiff(DomNode domNode) {
 			return domNode != null && domNode.tagIs(TAG_DIFF);
 		}
 
 		DomNode createDiff(DomNode domNode, DiffType diffType) {
-			return domNode.builder().tag(TAG_DIFF)
-					.attr("type", Ax.cssify(diffType)).append();
-		}
-
-		public void stripRightInserts(DomNode node) {
-			node.stream().filter(this::isDiff)
-					.filter(n -> this.getDiffType(n) == DiffType.RIGHT_INSERT)
-					.toList().forEach(DomNode::removeFromParent);
+			DomNodeBuilder builder = domNode.builder().tag(TAG_DIFF)
+					.attr("type", Ax.cssify(diffType));
+			String marker = diffType == DiffType.LEFT_INSERT
+					? measureDiff.attributes.leftChangeMarker
+					: measureDiff.attributes.rightChangeMarker;
+			builder.attr("marker", marker);
+			return builder.append();
 		}
 
 		DiffType getDiffType(DomNode node) {
 			String type = node.attr("type");
 			return DiffType.ofCssified(type);
 		}
-
-		public boolean isDebug() {
-			return false;
-		}
 	}
 
 	public static class Attributes {
-		Attributes() {
-		}
-
 		DomNode left;
+
+		String leftChangeMarker;
 
 		DomNode right;
 
+		String rightChangeMarker;
+
 		boolean logStats;
+
+		Attributes() {
+		}
+
+		public Attributes withLeftChangeMarker(String leftChangeMarker) {
+			this.leftChangeMarker = leftChangeMarker;
+			return this;
+		}
+
+		public Attributes withRightChangeMarker(String rightChangeMarker) {
+			this.rightChangeMarker = rightChangeMarker;
+			return this;
+		}
 
 		public Attributes withLeft(DomNode left) {
 			this.left = left;
@@ -165,11 +171,31 @@ public class MeasureDiff {
 		}
 	}
 
+	public static Attributes attributes() {
+		return new Attributes();
+	}
+
+	Attributes attributes;
+
+	Peer peer;
+
 	MeasureDiff(Attributes attributes) {
 		this.attributes = attributes;
 	}
 
-	public static Attributes attributes() {
-		return new Attributes();
+	public Result diff(TreeProcess.Node parentNode) {
+		this.peer = new Peer(this);
+		SelectionTraversal traversal = new SelectionTraversal(peer);
+		traversal.select(new RootLayer.RootSelection(parentNode, this));
+		traversal.layers().setRoot(new RootLayer());
+		traversal.traverse();
+		if (attributes.logStats) {
+			traversal.logTraversalStats();
+		}
+		MergedOutput.SelectionImpl outputSelection = traversal.selections()
+				.getSingleSelection(MergedOutput.SelectionImpl.class);
+		Result result = new Result();
+		result.union = outputSelection.get().doc.getDocumentElementNode();
+		return result;
 	}
 }
