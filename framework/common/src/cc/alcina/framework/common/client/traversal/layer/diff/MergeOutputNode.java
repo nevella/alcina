@@ -160,8 +160,7 @@ class MergeOutputNode extends AbstractSelection<Void>
 	MergeOutputNode appendShallow(MergeInputNode inputNode) {
 		MergeOutputNode child = null;
 		if (domNode == null) {
-			String rootMarkup = inputNode.domNode().cloneNode(false)
-					.fullToString();
+			String rootMarkup = inputNode.domNode().cloneNode(false).toMarkup();
 			this.doc = DomDocument.from(rootMarkup, true);
 			domNode = doc;
 			child = new MergeOutputNode(inputNode, null);

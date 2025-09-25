@@ -107,7 +107,7 @@ public class StructuredTokenParserContext {
 		String depthInSpacer = CommonUtils.padStringLeft("",
 				(depthIn - initialDepthIn) * 2, " ");
 		Ax.out("=== === === problematic source node === === ===");
-		Ax.out(join.sourceNode.prettyToString());
+		Ax.out(join.sourceNode.toPrettyMarkup());
 		Ax.out("=== === === already matched token types === === ===");
 		Ax.out(matched.keySet().toString());
 		Ax.out("=== === ===\n");

@@ -434,8 +434,9 @@ public class DomNode {
 		return builder().tag(path).append();
 	}
 
-	public String fullToString() {
-		return DomEnvironment.get().toXml(node).replace(CommonUtils.XML_PI, "");
+	public String toMarkup() {
+		return DomEnvironment.get().toMarkup(node).replace(CommonUtils.XML_PI,
+				"");
 	}
 
 	public String getClassName() {
@@ -577,8 +578,8 @@ public class DomNode {
 		return document.nodeFor(node.getParentNode());
 	}
 
-	public String prettyToString() {
-		return DomEnvironment.get().prettyToString(this);
+	public String toPrettyMarkup() {
+		return DomEnvironment.get().toPrettyMarkup(this);
 	}
 
 	public DomRange domRange() {
@@ -751,7 +752,7 @@ public class DomNode {
 
 	@Override
 	public String toString() {
-		return CommonUtils.trimToWsChars(DomEnvironment.get().toXml(node)
+		return CommonUtils.trimToWsChars(DomEnvironment.get().toMarkup(node)
 				.replace(CommonUtils.XML_PI, ""), 255, true);
 	}
 
@@ -777,7 +778,7 @@ public class DomNode {
 	}
 
 	public String toXml() {
-		return DomEnvironment.get().toXml(node);
+		return DomEnvironment.get().toMarkup(node);
 	}
 
 	public DomNodeTree tree() {
@@ -1307,7 +1308,7 @@ public class DomNode {
 		}
 
 		public String toHtml(boolean pretty) {
-			return DomEnvironment.get().toHtml(document, pretty);
+			return DomEnvironment.get().toMarkup(document, pretty);
 		}
 
 		public List<DomNode> trs() {
@@ -2305,7 +2306,7 @@ public class DomNode {
 
 	public String getInnerMarkup() {
 		StringBuilder builder = new StringBuilder();
-		children.nodes().forEach(child -> builder.append(child.fullToString()));
+		children.nodes().forEach(child -> builder.append(child.toMarkup()));
 		return builder.toString();
 	}
 

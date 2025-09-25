@@ -230,7 +230,7 @@ public class UserStories {
 				}
 			}
 		}
-		html = doc.prettyToString();
+		html = doc.toPrettyMarkup();
 	}
 
 	private String getDelta(IUserStory incoming, IUserStory story) {

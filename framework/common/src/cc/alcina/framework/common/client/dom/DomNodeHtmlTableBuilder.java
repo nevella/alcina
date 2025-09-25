@@ -55,7 +55,7 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 				}
 			});
 		});
-		return doc.fullToString();
+		return doc.toMarkup();
 	}
 
 	private String rowClassName;

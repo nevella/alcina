@@ -119,7 +119,7 @@ public class JobHandler implements HttpWriteUtils {
 				doc.html().body().builder().tag("div")
 						.attr("style", "font-family:monospace").text(message)
 						.append();
-				writeHtmlResponse(response, doc.prettyToString());
+				writeHtmlResponse(response, doc.toPrettyMarkup());
 			} else {
 				writeTextResponse(response, message);
 			}
