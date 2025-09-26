@@ -320,11 +320,19 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return null;
 	};
 
+	/**
+	 * Note this includes self - to exclude, use
+	 * parentSelection().ancestorSelection()
+	 */
 	default <V extends Selection> V ancestor(Class<V> clazz) {
 		return ancestor(cursor -> Reflections.isAssignableFrom(clazz,
 				cursor.getClass()));
 	}
 
+	/**
+	 * Note this includes self - to exclude, use
+	 * parentSelection().ancestorSelection()
+	 */
 	default <V extends Selection> V ancestor(Predicate<Selection> predicate) {
 		Selection cursor = this;
 		while (cursor != null) {
