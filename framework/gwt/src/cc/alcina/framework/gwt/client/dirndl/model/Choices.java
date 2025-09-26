@@ -59,6 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSupplier;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices.SelectResolver.OptionNameTransformer;
 
 @Directed(tag = "choices")
 /*
@@ -463,7 +464,6 @@ public abstract class Choices<T> extends Model implements
 	 * ValueTransformer)
 	 */
 	@Directed(tag = "select")
-	@DirectedContextResolver(SelectResolver.class)
 	public static class Select<T> extends Single<T>
 			implements DomEvents.Change.Handler {
 		public static class To implements ModelTransform<Object, Single<?>> {
@@ -473,6 +473,15 @@ public abstract class Choices<T> extends Model implements
 				select.setValue(t);
 				return select;
 			}
+		}
+
+		@Override
+		@Property.Not
+		public ContextResolver getContextResolver(AnnotationLocation location) {
+			Class<? extends Function<?, String>> optionNameTransformerClass = location
+					.optional(OptionNameTransformer.class)
+					.map(ann -> ann.value()).orElse(null);
+			return new SelectResolver(optionNameTransformerClass);
 		}
 
 		@Override
@@ -519,11 +528,34 @@ public abstract class Choices<T> extends Model implements
 			}
 		}
 
+		Function<Object, String> optionNameTransformer;
+
+		public SelectResolver() {
+		}
+
+		protected SelectResolver(
+				Class<? extends Function<?, String>> optionNameTransformerClass) {
+			if (optionNameTransformerClass != null) {
+				this.optionNameTransformer = (Function) Reflections
+						.newInstance(optionNameTransformerClass);
+			}
+		}
+
 		/*
 		 * Override to customize the default
 		 */
 		protected String transformOptionName(Node node, Choice choice) {
-			return HasDisplayName.displayName(choice.getValue(), "");
+			return optionNameTransformer != null
+					? optionNameTransformer.apply(choice.getValue())
+					: HasDisplayName.displayName(choice.getValue(), "");
+		}
+
+		@ClientVisible
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.METHOD, ElementType.FIELD })
+		public @interface OptionNameTransformer {
+			Class<? extends Function<?, String>> value();
 		}
 
 		public static class Option extends Choices.Choice<String> {

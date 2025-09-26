@@ -212,7 +212,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public int getPropertyInt(String name) {
-		throw new UnsupportedOperationException();
+		String value = getPropertyString(name);
+		return Integer.parseInt(value);
 	}
 
 	@Override
@@ -244,6 +245,10 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 				}
 			}
 			return value;
+		} else if (Objects.equals(name, "selectedIndex")) {
+			String invokeSync = invokeSync("getPropertyString",
+					List.of(String.class), List.of(name));
+			return invokeSync;
 		} else {
 			return getAttribute(name);
 		}
@@ -421,7 +426,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void setPropertyInt(String name, int value) {
-		throw new UnsupportedOperationException();
+		setPropertyString(name, String.valueOf(value));
 	}
 
 	@Override

@@ -124,6 +124,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		public Context(Node node) {
 			this.node = node;
+			Preconditions.checkArgument(node != null);
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
