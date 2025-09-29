@@ -196,4 +196,8 @@ public class DateUtil {
 				getMonth(matchResult.getGroup(2)),
 				Integer.parseInt(matchResult.getGroup(1)));
 	}
+
+	public static int currentYear() {
+		return getYear(new Date());
+	}
 }
