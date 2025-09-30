@@ -68,6 +68,12 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	public class PreEndObservable implements ContextObservers.Observable {
+		public Transaction getTransaction() {
+			return Transaction.this;
+		}
+	}
+
 	public static boolean hasTransforms() {
 		return TransformManager.get().hasTransforms();
 	}
@@ -211,6 +217,7 @@ public class Transaction implements Comparable<Transaction> {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
+		current().new PreEndObservable().publish();
 		Transaction perThreadTransaction = getPerThreadTransaction();
 		if (perThreadTransaction == null) {
 			logger.error(

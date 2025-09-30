@@ -250,6 +250,7 @@ public class JobContext {
 				Ax.sysLogHigh("Large result is null");
 				return;
 			}
+			Ax.out("Logging large result (ex-job context)\n========================");
 			Io.log().toFile(largeResult.toString());
 		}
 	}

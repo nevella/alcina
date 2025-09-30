@@ -1307,10 +1307,44 @@ public class XmlUtils {
 	}
 
 	public static String streamNCleanForBrowserHtmlFragment(String markup) {
+		markup = fixProcessingElementTerminator(markup);
 		markup = expandEmptyElements(markup);
 		markup = cleanXmlHeaders(markup);
 		markup = EntityCleaner.get().htmlToUnicodeEntities(markup);
 		return markup;
+	}
+
+	static String fixProcessingElementTerminator(String markup) {
+		int scanStart = 0;
+		int copiedTo = 0;
+		StringBuilder result = null;
+		for (;;) {
+			int piStart = markup.indexOf("<?", scanStart);
+			if (piStart == -1) {
+				break;
+			}
+			int piEnd = markup.indexOf('>', piStart);
+			if (piEnd == -1) {
+				break;
+			}
+			if (markup.charAt(piEnd - 1) != '?') {
+				if (result == null) {
+					result = new StringBuilder();
+				}
+				result.append(markup.substring(copiedTo, piEnd - 1));
+				result.append("?>");
+				copiedTo = piEnd + 1;
+				scanStart = copiedTo;
+			}
+		}
+		if (result != null) {
+			result.append(markup.substring(copiedTo, markup.length()));
+		}
+		if (result != null) {
+			return result.toString();
+		} else {
+			return markup;
+		}
 	}
 
 	public static String streamXML(Node n) {
