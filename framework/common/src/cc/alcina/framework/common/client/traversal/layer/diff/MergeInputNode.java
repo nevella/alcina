@@ -46,6 +46,8 @@ abstract class MergeInputNode extends MeasureSelection {
 
 	private RootSelection rootSelection;
 
+	MergeInputNode priorLeaf;
+
 	static MergeInputNode create(Selection parent, Measure measure,
 			boolean left) {
 		if (left) {
@@ -191,7 +193,9 @@ abstract class MergeInputNode extends MeasureSelection {
 
 		@Override
 		public boolean equivalentTo(InputShallowEquivalence other) {
-			return getReferent().shallowEquals(other.getReferent());
+			Peer peer = getReferent().rootSelection.get().peer;
+			return peer.isStructuralMatch(getReferent().containingNode(),
+					other.getReferent().containingNode());
 		}
 	}
 

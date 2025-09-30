@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Rig
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Diff;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Diff.Change;
 
 class DiffLeaves extends Layer<RootSelection> {
@@ -103,6 +104,25 @@ class DiffLeaves extends Layer<RootSelection> {
 	protected void onBeforeIteration() {
 		peer = state.traversalContext(MeasureDiff.Peer.class);
 		super.onBeforeIteration();
+	}
+
+	@Override
+	protected void onAfterIteration() {
+		super.onAfterIteration();
+		{
+			Ref<Left> lastLeft = Ref.empty();
+			state.traversalState.selections.get(Left.class).stream()
+					.filter(MergeInputNode::isLeaf).forEach(left -> {
+						left.priorLeaf = lastLeft.set(left);
+					});
+		}
+		{
+			Ref<Right> lastRight = Ref.empty();
+			state.traversalState.selections.get(Right.class).stream()
+					.filter(MergeInputNode::isLeaf).forEach(right -> {
+						right.priorLeaf = lastRight.set(right);
+					});
+		}
 	}
 
 	void create(RootSelection selection, DomNode root, boolean left) {

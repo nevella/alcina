@@ -114,11 +114,31 @@ class MergeOutputNode extends AbstractSelection<Void>
 		}
 	}
 
+	/*
+	 * Note the use of priorInputBranch - this is to ensure not just that the
+	 * input and output ancestor chains are identical dom nodes, but that
+	 * they're distinct from prior outputs if the inputs ancestor chains are
+	 * distinct (non identity equals)
+	 */
 	MergeOutputNode ensureOutputParent(MergeInputNode inputNode) {
 		InputBranch inputBranch = inputNode.getBranch();
 		OutputBranch outputBranch = getBranch();
+		InputBranch priorInputBranch = null;
+		MergeInputNode priorLeafSameSide = inputNode.priorLeaf;
+		int maxMatchedDepth = 0;
+		if (priorLeafSameSide != null) {
+			priorInputBranch = priorLeafSameSide.getBranch();
+			InputBranch testInputBranch = inputNode.getBranch();
+			while (priorInputBranch.itr.hasNext()
+					&& testInputBranch.itr.hasNext()) {
+				if (priorInputBranch.itr.next() == testInputBranch.itr.next()) {
+					maxMatchedDepth++;
+				}
+			}
+		}
 		boolean matched = true;
 		MergeOutputNode outputCursor = outputBranch.itr.next();
+		int matchedDepth = 0;
 		for (;;) {
 			MergeInputNode inputCursor = inputBranch.itr.next();
 			if (inputCursor.isLeaf()) {
@@ -128,10 +148,12 @@ class MergeOutputNode extends AbstractSelection<Void>
 				// TODO.- skip wrappers if input is a diff wrapper
 				if (outputBranch.itr.hasNext()) {
 					MergeOutputNode outputNode = outputBranch.itr.next();
-					if (inputCursor.containingNode()
-							.shallowEquals(outputNode.domNode)) {
+					if (matchedDepth < maxMatchedDepth && peer()
+							.isStructuralMatch(inputCursor.containingNode(),
+									outputNode.domNode)) {
 						outputNode.associateInput(inputNode);
 						outputCursor = outputNode;
+						matchedDepth++;
 						continue;
 					}
 				}
@@ -141,12 +163,17 @@ class MergeOutputNode extends AbstractSelection<Void>
 		}
 	}
 
+	MergeOutputNode getPriorLeafSameSide(MergeInputNode inputNode) {
+		return layer.getOutputNode(inputNode);
+	}
+
 	void associateInput(MergeInputNode inputNode) {
 		if (inputNode instanceof Left) {
 			left = (Left) inputNode;
 		} else {
 			right = (Right) inputNode;
 		}
+		layer.associateInput(inputNode, this);
 	}
 
 	MergeOutputNode rootOutputNode() {
@@ -176,10 +203,11 @@ class MergeOutputNode extends AbstractSelection<Void>
 
 	MergeOutputNode appendChild(MergeInputNode inputNode,
 			MergeOutputNode child) {
+		child.layer = layer;
 		child.associateInput(inputNode);
 		child.parent = this;
 		children.add(child);
-		rootOutputNode().layer.select(child);
+		layer.select(child);
 		return child;
 	}
 
@@ -188,7 +216,7 @@ class MergeOutputNode extends AbstractSelection<Void>
 	}
 
 	private Peer peer() {
-		return rootOutputNode().layer.peer;
+		return layer.peer;
 	}
 
 	MergeOutputNode ensureDiffContainer(MergeInputNode input) {

@@ -115,4 +115,13 @@ class GenerateOutputNodes extends Layer<RootSelection> {
 		cursor = cursor.ensureDiffContainer(inputNode);
 		cursor.appendContents(inputNode);
 	}
+
+	MergeOutputNode getOutputNode(MergeInputNode inputNode) {
+		return inputToOutput.get(inputNode);
+	}
+
+	void associateInput(MergeInputNode inputNode,
+			MergeOutputNode mergeOutputNode) {
+		inputToOutput.put(inputNode, mergeOutputNode);
+	}
 }

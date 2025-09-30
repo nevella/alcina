@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.traversal.layer.diff;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
@@ -33,6 +34,14 @@ import cc.alcina.framework.common.client.util.TextUtils;
    - then traverse match(es), generating [unchanged]
   - wrinkles:
     - filters - omit (for chain computation + match) diff markers + diff-removed
+	- merged text nodes must preserve not just ancestor structure but anccestor structure relative to each other - so:
+	  p.a1 .. #text[..].a2 p.a3 .. #text[..].a3 must preserve the p/#text/p/#text stucture
+	- also, content in structured cells (grid, flex, table, list) can't match content in different columns (TODO)
+	- ditto structured cells can't be inserted/deleted - if they would be, invalidate all matches for the row 
+	  [note that rows definitely *can* be inserted/deleted  (TODO)
+	- sequential counters (footnotes, list items) must be noramlised for left + right docs (1, 2, 3) to #footnote say - and then 
+	  denormalised post diff (TODO)
+	- where possible, swap matches so they're contiguous within grid levels (TODO)
 
   - more generally, how do you diff a tree? this answer implementation is "diff the leaves, and build the 
     merged structure from the matching leaves". Intuitively, this seems better than top-down - but why? 
@@ -124,6 +133,18 @@ public class MeasureDiff {
 		DiffType getDiffType(DomNode node) {
 			String type = node.attr("type");
 			return DiffType.ofCssified(type);
+		}
+
+		public boolean isStructuralMatch(DomNode leftDomNode,
+				DomNode rightDomNode) {
+			if (leftDomNode.tagIsOneOf("td", "tr", "table", "tbody")) {
+				/*
+				 * ignore style changes etc - structure wins
+				 */
+				return Objects.equals(leftDomNode.name(), rightDomNode.name());
+			} else {
+				return leftDomNode.shallowEquals(rightDomNode);
+			}
 		}
 	}
 
