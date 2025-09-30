@@ -74,6 +74,9 @@ import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
  * transaction, the cancelled check is run off-thread (in a shared executor )
  */
 public class JobContext {
+	public static final LooseContext.Key CONTEXT_LOG_EX_JOB_RESULT = LooseContext
+			.key(JobContext.class, "CONTEXT_LOG_EX_JOB_RESULT");
+
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
 			+ ".CONTEXT_CURRENT";
 
@@ -250,8 +253,12 @@ public class JobContext {
 				Ax.sysLogHigh("Large result is null");
 				return;
 			}
-			Ax.out("Logging large result (ex-job context)\n========================");
-			Io.log().toFile(largeResult.toString());
+			if (CONTEXT_LOG_EX_JOB_RESULT.is()) {
+				Ax.out("Logging large result (ex-job context)\n========================");
+				Io.log().toFile(largeResult.toString());
+			} else {
+				//
+			}
 		}
 	}
 
