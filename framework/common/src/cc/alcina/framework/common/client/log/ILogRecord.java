@@ -47,4 +47,8 @@ public interface ILogRecord extends HasId {
 	void setUserId(Long userId);
 
 	void setUserName(String userName);
+
+	Integer getTextLength();
+
+	void setTextLength(Integer textLength);
 }
