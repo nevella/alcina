@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
@@ -1068,7 +1069,7 @@ public class DevConsoleDebugCommands {
 				String sqlFromEtc = String.format(
 						"from logging l inner join users u on l.user_id=u.id "
 								+ "where  l.created_on>? %s %s and "
-								+ " not (l.component_key in %s) and length(l.text)<%s"
+								+ " not (l.component_key in %s) and (l.textLength IS NULL OR l.textLength<%s)"
 								+ " order by %s %s",
 						exceptionFilter, gtOnlyFilter, ckFilter,
 						maxRecordLength, orderClause, limitClause);
@@ -1078,9 +1079,8 @@ public class DevConsoleDebugCommands {
 				Date d = c.getTime();
 				java.sql.Date cutoffSqlDate = new java.sql.Date(d.getTime());
 				{
-					String sql = "select count(l.id) " + sqlFromEtc
-							.replaceFirst("(.+) order .+", "private");
-					Ax.out(sql);
+					String sql = "select count(l.id) "
+							+ sqlFromEtc.replaceFirst("(.+) order .+", "$1");
 					PreparedStatement ps = conn.prepareStatement(sql);
 					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();
