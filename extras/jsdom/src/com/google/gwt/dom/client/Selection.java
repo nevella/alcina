@@ -195,21 +195,29 @@ public class Selection implements ClientDomSelection {
 		}
 
 		Location asLocation(Node node, int offset) {
-			if (node == null) {
-				return null;
-			}
-			DomNode domNode = node.asDomNode();
-			if (domNode.isText()) {
-				return domNode.asLocation().textRelativeLocation(offset, false);
-			} else {
-				// note that - for node.class == Element - offset can be after
-				// all
-				// children
-				if (offset == node.getChildCount()) {
-					return domNode.asRange().end;
-				} else {
-					return node.getChild(offset).asDomNode().asLocation();
+			try {
+				if (node == null) {
+					return null;
 				}
+				DomNode domNode = node.asDomNode();
+				if (domNode.isText()) {
+					return domNode.asLocation().textRelativeLocation(offset,
+							false);
+				} else {
+					// note that - for node.class == Element - offset can be
+					// after
+					// all
+					// children
+					if (offset == node.getChildCount()) {
+						return domNode.asRange().end;
+					} else {
+						return node.getChild(offset).asDomNode().asLocation();
+					}
+				}
+			} catch (Exception e) {
+				// DEVEX - 1.client - edge-case resolution issues?
+				e.printStackTrace();
+				return null;
 			}
 		}
 	}

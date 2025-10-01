@@ -523,8 +523,20 @@ public class DOM {
 		dispatchInfo.queue(elem, listener);
 		dispatchInfo.dispatch();
 		if (Element.is(event.getCurrentEventTarget())) {
-			windowResources.eventCurrentTarget = event.getCurrentEventTarget()
-					.cast();
+			try {
+				windowResources.eventCurrentTarget = event
+						.getCurrentEventTarget().cast();
+			} catch (Exception e) {
+				/*
+				 * DEVEX - 1.client - this is probably dom rewriting during an
+				 * event call, so the element is now removed from DOM
+				 * 
+				 * An exception here is harmless (it must mean removed from DOM)
+				 * - but the rule is 'don't rewrite dom during event
+				 * propagation' - defer
+				 */
+				windowResources.eventCurrentTarget = null;
+			}
 		} else {
 			windowResources.eventCurrentTarget = null;
 		}

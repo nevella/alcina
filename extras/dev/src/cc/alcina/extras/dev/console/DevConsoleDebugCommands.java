@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
@@ -660,8 +661,7 @@ public class DevConsoleDebugCommands {
 				throws Exception {
 			DevConsoleDebugPaths paths = getPeer().getPaths(console.getProps());
 			File devFolder = console.getDevHelper().getDevFolder();
-			File gwtSymbols = FileUtils.child(devFolder,
-					"gwt-symbols");
+			File gwtSymbols = FileUtils.child(devFolder, "gwt-symbols");
 			gwtSymbols.mkdir();
 			module = new File(String.format("%s/%s.cache.js",
 					gwtSymbols.getPath(), moduleStrongName));
@@ -955,6 +955,8 @@ public class DevConsoleDebugCommands {
 
 		int maxRecordLength = 100000;
 
+		private SystemoutCounter counter;
+
 		public void addLogRecords(ResultSet rs, List<IL> logRecords)
 				throws SQLException {
 			Optional<Pattern> ignorePattern = Optional.ofNullable(
@@ -975,6 +977,7 @@ public class DevConsoleDebugCommands {
 				} else {
 					logRecords.add(l);
 				}
+				counter.tick();
 			}
 			logRecords.sort(Entity.EntityComparator.INSTANCE);
 		}
@@ -1075,8 +1078,9 @@ public class DevConsoleDebugCommands {
 				Date d = c.getTime();
 				java.sql.Date cutoffSqlDate = new java.sql.Date(d.getTime());
 				{
-					String sql = "select count(l.id) "
-							+ sqlFromEtc.replaceFirst("(.+) order .+", "$1");
+					String sql = "select count(l.id) " + sqlFromEtc
+							.replaceFirst("(.+) order .+", "private");
+					Ax.out(sql);
 					PreparedStatement ps = conn.prepareStatement(sql);
 					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();
@@ -1090,11 +1094,14 @@ public class DevConsoleDebugCommands {
 				{
 					String sql = "select l.*,u.username " + sqlFromEtc;
 					PreparedStatement ps = conn.prepareStatement(sql);
+					Ax.out(sql);
 					ps.setDate(1, cutoffSqlDate);
 					ResultSet rs = ps.executeQuery();
-					console.getState().logRecords = new ArrayList<ILogRecord>();
+					console.getState().logRecords = new ArrayList<>();
 					List<IL> logRecords = (List<IL>) (List<?>) console
 							.getState().logRecords;
+					counter = SystemoutCounter.standardJobCounter(size,
+							"records");
 					addLogRecords(rs, logRecords);
 					ps.close();
 				}
