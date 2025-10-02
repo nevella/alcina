@@ -804,6 +804,18 @@ public abstract class Job extends VersionableEntity<Job>
 		return rel.map(JobRelation::getFrom);
 	}
 
+	public boolean provideHasIncompletePrior() {
+		Optional<Job> previous = providePrevious();
+		if (previous.isPresent()) {
+			return previous.get().provideIsNotComplete();
+		}
+		Optional<Job> parentOrAwaiter = provideParentOrAwaiter();
+		if (parentOrAwaiter.isPresent()) {
+			return parentOrAwaiter.get().provideIsNotComplete();
+		}
+		return false;
+	}
+
 	public String provideShortName() {
 		return provideName().replaceFirst(".+\\.", "");
 	}

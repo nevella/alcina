@@ -73,8 +73,16 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 					.accept(Utils::instance).cell("Links").accept(Utils::links);
 			Predicate<Job> textFilter = job -> filter.test(job)
 					&& filter(job.getTaskClassName(), job.getTaskSerialized());
-			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
-					.filter(textFilter).filter(sectionFilter);
+			Stream<? extends Job> stream = JobDomain.get().getActiveJobs();
+			if (descendantTree) {
+				/*
+				 * add (possibly incorrectly) pending nodes - no incomplete
+				 * prior, so
+				 */
+				stream = Stream.concat(JobDomain.get().getUnallocatedJobs()
+						.filter(j -> !j.provideHasIncompletePrior()), stream);
+			}
+			stream = stream.filter(textFilter).filter(sectionFilter);
 			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
 			List<Job> jobs = query(streamRef, true, descendantTree);
 			jobs.forEach(job -> {
