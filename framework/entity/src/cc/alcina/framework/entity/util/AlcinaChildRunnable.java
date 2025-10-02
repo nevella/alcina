@@ -2,22 +2,24 @@ package cc.alcina.framework.entity.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 public abstract class AlcinaChildRunnable implements Runnable {
@@ -332,5 +334,51 @@ public abstract class AlcinaChildRunnable implements Runnable {
 				}
 			}
 		}.start();
+	}
+
+	static class AwaitingExecutor<T> implements ThrowingRunnable {
+		String threadName;
+
+		Callable<T> callable;
+
+		Ref<T> result = Ref.empty();
+
+		Ref<Throwable> exception = Ref.empty();
+
+		CountDownLatch latch = new CountDownLatch(1);
+
+		public AwaitingExecutor(String threadName, Callable<T> callable) {
+			this.threadName = threadName;
+			this.callable = callable;
+		}
+
+		public T get() {
+			runInTransaction(threadName, this, false, false, true);
+			try {
+				latch.await();
+			} catch (Exception e) {
+				exception.set(e);
+			}
+			if (exception.isPresent()) {
+				throw WrappedRuntimeException.wrap(exception.get());
+			}
+			return result.get();
+		}
+
+		@Override
+		public void run() throws Exception {
+			try {
+				result.set(callable.call());
+			} catch (Throwable e) {
+				e.printStackTrace();
+				exception.set(e);
+			}
+			latch.countDown();
+		}
+	}
+
+	public static <T> T callInNewThread(String threadName,
+			Callable<T> callable) {
+		return new AwaitingExecutor<>(threadName, callable).get();
 	}
 }
