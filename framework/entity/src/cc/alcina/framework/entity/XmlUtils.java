@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -1335,6 +1336,8 @@ public class XmlUtils {
 				result.append("?>");
 				copiedTo = piEnd + 1;
 				scanStart = copiedTo;
+			} else {
+				scanStart = piEnd + 1;
 			}
 		}
 		if (result != null) {
@@ -1766,8 +1769,11 @@ public class XmlUtils {
 				if (configurator != null) {
 					configurator.configure(transformerFactory);
 				}
-				return xsltSource == null ? transformerFactory.newTransformer()
+				Transformer transformer = xsltSource == null
+						? transformerFactory.newTransformer()
 						: transformerFactory.newTransformer(xsltSource);
+				transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+				return transformer;
 			}
 
 			@Override
