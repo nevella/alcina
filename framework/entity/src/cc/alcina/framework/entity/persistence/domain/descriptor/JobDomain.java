@@ -338,6 +338,11 @@ public class JobDomain {
 				.flatMap(AllocationQueue::getAllocatedOrProcessingJobs);
 	}
 
+	public Stream<Job> getUnallocatedJobs() {
+		cleanupQueues();
+		return getVisibleQueues().flatMap(AllocationQueue::getUnallocatedJobs);
+	}
+
 	public Optional<AllocationQueue> getIncompleteQueueContaining(Job job) {
 		cleanupQueues();
 		return getVisibleQueues()
