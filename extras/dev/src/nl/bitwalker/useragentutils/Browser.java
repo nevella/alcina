@@ -258,7 +258,8 @@ public enum Browser {
 																// Engine
 	BOT(Manufacturer.OTHER, null, 12, "Robot/Spider",
 			new String[] { "Googlebot", "bot", "spider", "crawler",
-					"Feedfetcher", "Slurp", "Twiceler", "Nutch", "BecomeBot" },
+					"Feedfetcher", "Slurp", "Twiceler", "Nutch", "BecomeBot",
+					"DuckAssistBot" },
 			null, BrowserType.ROBOT, RenderingEngine.OTHER, null),
 	MOZILLA(Manufacturer.MOZILLA, null, 1, "Mozilla",
 			new String[] { "Mozilla", "Moozilla" }, null,
