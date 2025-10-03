@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceAdapter;
 
-abstract class MergeInputNode extends MeasureSelection {
+public abstract class MergeInputNode extends MeasureSelection {
 	interface RelationType extends Selection.Relation.Type {
 		interface WordEquivalent extends RelationType {
 		}

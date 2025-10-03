@@ -125,8 +125,9 @@ class MergeOutputNode extends AbstractSelection<Void>
 		OutputBranch outputBranch = getBranch();
 		InputBranch priorInputBranch = null;
 		MergeInputNode priorLeafSameSide = inputNode.priorLeaf;
-		int maxMatchedDepth = 0;
+		int maxMatchedDepth = Integer.MAX_VALUE;
 		if (priorLeafSameSide != null) {
+			maxMatchedDepth = 0;
 			priorInputBranch = priorLeafSameSide.getBranch();
 			InputBranch testInputBranch = inputNode.getBranch();
 			while (priorInputBranch.itr.hasNext()
