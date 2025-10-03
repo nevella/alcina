@@ -73,10 +73,6 @@ public class MeasureDiff {
 
 		MeasureDiff measureDiff;
 
-		public Peer(MeasureDiff measureDiff) {
-			this.measureDiff = measureDiff;
-		}
-
 		public void stripRightInserts(DomNode node) {
 			node.stream().filter(this::isDiff)
 					.filter(n -> this.getDiffType(n) == DiffType.RIGHT_INSERT)
@@ -93,8 +89,16 @@ public class MeasureDiff {
 			if (!node.isText()) {
 				return nodeStream;
 			} else {
+				String textContent = node.textContent();
+				/*
+				 * Preserve standalone whiespace nodes
+				 */
+				if (textContent.matches("\\s+")) {
+					return Stream.of(
+							Measure.fromNode(node, MergeInputNode.Word.TYPE));
+				}
 				Stream<Measure> wordStream = TextUtils
-						.match(node.textContent(), "\\S+").stream()
+						.match(textContent, "\\S+").stream()
 						.map(wordOffsets -> {
 							Range range = node.asRange();
 							range = range.truncateRelative(wordOffsets.i1,
@@ -109,7 +113,7 @@ public class MeasureDiff {
 		/*
 		 * TODO - also br, hr (html), #comment, #processing-instruction (xml)
 		 */
-		boolean isLeaf(MergeInputNode mergeInputNode) {
+		protected boolean isLeaf(MergeInputNode mergeInputNode) {
 			Measure measure = mergeInputNode.get();
 			DomNode containingNode = measure.containingNode();
 			return measure.token == MergeInputNode.Word.TYPE
@@ -159,6 +163,8 @@ public class MeasureDiff {
 
 		boolean logStats;
 
+		Peer peer = new Peer();
+
 		Attributes() {
 		}
 
@@ -187,6 +193,11 @@ public class MeasureDiff {
 			return this;
 		}
 
+		public Attributes withPeer(Peer peer) {
+			this.peer = peer;
+			return this;
+		}
+
 		public MeasureDiff construct() {
 			return new MeasureDiff(this);
 		}
@@ -205,7 +216,8 @@ public class MeasureDiff {
 	}
 
 	public Result diff(TreeProcess.Node parentNode) {
-		this.peer = new Peer(this);
+		this.peer = attributes.peer;
+		peer.measureDiff = this;
 		SelectionTraversal traversal = new SelectionTraversal(peer);
 		traversal.select(new RootLayer.RootSelection(parentNode, this));
 		traversal.layers().setRoot(new RootLayer());
