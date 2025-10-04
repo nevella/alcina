@@ -958,6 +958,11 @@ public abstract class Job extends VersionableEntity<Job>
 				.orElse(domainIdentity());
 	}
 
+	public boolean hasTaskInTree(Class<? extends Task> taskClass) {
+		return rootAwaiter().provideDescendantsAndSubsequentsAndAwaited()
+				.anyMatch(job -> job.provideIsTaskClass(taskClass));
+	}
+
 	public Job rootAwaiter() {
 		Job firstInSequence = provideFirstInSequence();
 		Optional<Job> awaiting = firstInSequence.provideAwaiting();
