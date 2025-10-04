@@ -226,6 +226,9 @@ public class DomNode {
 
 	public DomNodeChildren children;
 
+	/*
+	 * A regen-on-write cache of the underlying w3c node's attributes
+	 */
 	private StringMap attributes;
 
 	private DomNodeXpath xpath;
@@ -323,6 +326,14 @@ public class DomNode {
 			}
 		}
 		return attributes;
+	}
+
+	public boolean hasAttributes() {
+		if (isElement()) {
+			return node.getAttributes().getLength() > 0;
+		} else {
+			return false;
+		}
 	}
 
 	public boolean attrIs(String key, String value) {
@@ -592,7 +603,8 @@ public class DomNode {
 
 	public void removeAttribute(String key) {
 		if (node.getAttributes().getNamedItem(key) != null) {
-			node.getAttributes().removeNamedItem(key);
+			Node removeNamedItem = node.getAttributes().removeNamedItem(key);
+			attributes = null;
 		}
 	}
 
@@ -612,6 +624,7 @@ public class DomNode {
 
 	public DomNode setAttr(String key, String value) {
 		((Element) node).setAttribute(key, value);
+		attributes = null;
 		return this;
 	}
 
@@ -1291,8 +1304,13 @@ public class DomNode {
 		}
 
 		public DomNode body() {
-			return xpath("//body").optionalNode()
+			DomNode byXpath = xpath("//body").optionalNode()
 					.orElse(xpath("//BODY").node());
+			if (byXpath != null) {
+				return byXpath;
+			}
+			return stream().filter(n -> n.tagIs("body")).findFirst()
+					.orElse(null);
 		}
 
 		public DomNode head() {
