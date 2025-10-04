@@ -14,6 +14,7 @@ import com.google.gwt.dev.util.log.PrintWriterTreeLogger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ClassUtilEntity;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilterPeer;
@@ -46,6 +47,7 @@ public class JdkReflectionGenerator {
 		ClientReflectionGenerator generator = new ClientReflectionGenerator();
 		generator.attributes.guaranteedSinglePermutationBuild = true;
 		generator.attributes.simpleExcludes = attributes.exclude;
+		generator.attributes.mapInterfaces = attributes.mapInterfaces;
 		generator.attributes.useJdkForName = true;
 		generator.providesTypeBounds = generatorContext.typeOracle;
 		try {
@@ -97,6 +99,11 @@ public class JdkReflectionGenerator {
 		 * Another (simple) filter atop filterPeerClass
 		 */
 		public String exclude;
+
+		/*
+		 * Map interfaces (for say java 21 -> 17 compatibility)
+		 */
+		public StringMap mapInterfaces;
 
 		Attributes() {
 		}
