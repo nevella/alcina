@@ -208,8 +208,12 @@ public abstract class MergeInputNode extends MeasureSelection {
 		return Ax.format("%s - %s", getDiffType().pretty(), super.toString());
 	}
 
-	enum DiffType {
-		LEFT_INSERT, RIGHT_INSERT, UNCHANGED, NONE;
+	public enum DiffType {
+		LEFT_INSERT, RIGHT_INSERT, UNCHANGED, NONE,
+		/*
+		 * applies to tree only (not single node)
+		 */
+		MIXED;
 
 		String pretty() {
 			switch (this) {
@@ -221,6 +225,8 @@ public abstract class MergeInputNode extends MeasureSelection {
 				return "[LR]";
 			case NONE:
 				return "[--]";
+			case MIXED:
+				return "[**]";
 			default:
 				throw new UnsupportedOperationException();
 			}
