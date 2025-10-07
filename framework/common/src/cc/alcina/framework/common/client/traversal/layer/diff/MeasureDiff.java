@@ -1,7 +1,10 @@
 package cc.alcina.framework.common.client.traversal.layer.diff;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -125,18 +128,53 @@ public class MeasureDiff {
 		}
 
 		DomNode createDiff(DomNode domNode, DiffType diffType) {
-			DomNodeBuilder builder = domNode.builder().tag(TAG_DIFF)
-					.attr("type", Ax.cssify(diffType));
 			String marker = diffType == DiffType.LEFT_INSERT
 					? measureDiff.attributes.leftChangeMarker
 					: measureDiff.attributes.rightChangeMarker;
-			builder.attr("marker", marker);
+			DomNodeBuilder builder = createMarkerBuilder(domNode, diffType,
+					marker);
 			return builder.append();
+		}
+
+		DomNodeBuilder createMarkerBuilder(DomNode domNode, DiffType diffType,
+				String marker) {
+			DomNodeBuilder builder = domNode.builder().tag(TAG_DIFF)
+					.attr("type", Ax.cssify(diffType));
+			builder.attr("marker", marker);
+			return builder;
 		}
 
 		DiffType getDiffType(DomNode node) {
 			String type = node.attr("type");
 			return DiffType.ofCssified(type);
+		}
+
+		public DiffType getDiffTypeTree(DomNode node) {
+			List<DiffType> types = node.stream().filter(this::isDiff)
+					.map(this::getDiffType).distinct().toList();
+			if (types.size() == 1) {
+				return types.getFirst();
+			} else {
+				return DiffType.MIXED;
+			}
+		}
+
+		public String getFirstChangeMarker(DomNode domNode) {
+			return domNode.stream().filter(this::isDiff)
+					.map(n -> n.attr("marker")).findFirst().get();
+		}
+
+		/*
+		 * 
+		 */
+		public void setDiffTypeTree(DomNode node, DiffType diffType,
+				String changeMarker) {
+			Preconditions.checkArgument(node.stream().noneMatch(this::isDiff));
+			node.stream().filter(DomNode::isText).toList().forEach(text -> {
+				DomNodeBuilder builder = createMarkerBuilder(text, diffType,
+						changeMarker);
+				builder.wrap();
+			});
 		}
 
 		public boolean isStructuralMatch(DomNode leftDomNode,
