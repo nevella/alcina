@@ -153,7 +153,7 @@ public class MeasureDiff {
 			List<DiffType> types = node.stream().filter(this::isDiff)
 					.map(this::getDiffType).distinct().toList();
 			if (types.size() == 1) {
-				return types.getFirst();
+				return Ax.first(types);
 			} else {
 				return DiffType.MIXED;
 			}
