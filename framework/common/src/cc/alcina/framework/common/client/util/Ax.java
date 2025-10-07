@@ -300,8 +300,8 @@ public class Ax {
 		if (object == null) {
 			return null;
 		}
-		return trim(object.toString().replace("\n", "\\n").replace("\r", "\\r")
-				.replace("\t", "\\t").replace("\u200B", "&zerowidthspace;"),
+		return trim(object.toString().replace("\n", "\n").replace("\r", "\r")
+				.replace("\t", "\t").replace("\u200B", "&zerowidthspace;"),
 				charCount);
 	}
 
@@ -365,5 +365,9 @@ public class Ax {
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
+	}
+
+	public static String toString(Object obj) {
+		return CommonUtils.nullSafeToString(obj);
 	}
 }
