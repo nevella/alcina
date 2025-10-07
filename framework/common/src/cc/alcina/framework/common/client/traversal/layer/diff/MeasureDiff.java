@@ -92,6 +92,13 @@ public class MeasureDiff {
 			if (!node.isText()) {
 				return nodeStream;
 			} else {
+				/*
+				 * really, we're validating arbitrary element insert - but it's
+				 * effectively the same
+				 */
+				if (!canContainPcData(node.parent())) {
+					return Stream.of();
+				}
 				String textContent = node.textContent();
 				/*
 				 * Preserve standalone whiespace nodes
@@ -111,6 +118,10 @@ public class MeasureDiff {
 						});
 				return wordStream;
 			}
+		}
+
+		boolean canContainPcData(DomNode node) {
+			return node.html().validation().canContainPcData();
 		}
 
 		/*

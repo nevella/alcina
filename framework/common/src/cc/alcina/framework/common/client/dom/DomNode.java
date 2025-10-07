@@ -1353,6 +1353,18 @@ public class DomNode {
 				return Objects.equals(boundary, "\u00a0");
 			}
 		}
+
+		public Validation validation() {
+			return new Validation();
+		}
+
+		public class Validation {
+			public boolean canContainPcData() {
+				return !tagIsOneOf(HtmlConstants.TABLE, HtmlConstants.TBODY,
+						HtmlConstants.TFOOT, HtmlConstants.THEAD,
+						HtmlConstants.TR);
+			}
+		}
 	}
 
 	static class DomNodeReadonlyLookup {
