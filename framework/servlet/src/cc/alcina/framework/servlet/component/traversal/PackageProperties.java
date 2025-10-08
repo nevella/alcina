@@ -46,6 +46,7 @@ public class PackageProperties {
     static _LayerSelections layerSelections = new _LayerSelections();
     static _LayerSelections_NameArea layerSelections_nameArea = new _LayerSelections_NameArea();
     static _LayerSelections_SelectionsArea layerSelections_selectionsArea = new _LayerSelections_SelectionsArea();
+    static _LayerSelections_SelectionsArea_SelectionArea layerSelections_selectionsArea_selectionArea = new _LayerSelections_SelectionsArea_SelectionArea();
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
     static _RenderedSelections renderedSelections = new _RenderedSelections();
@@ -178,6 +179,31 @@ public class PackageProperties {
       }
       
        InstanceProperties instance(LayerSelections.SelectionsArea instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _LayerSelections_SelectionsArea_SelectionArea implements TypedProperty.Container {
+      TypedProperty<LayerSelections.SelectionsArea.SelectionArea, Boolean> ancestorOfSelected = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "ancestorOfSelected");
+      TypedProperty<LayerSelections.SelectionsArea.SelectionArea, String> pathSegment = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "pathSegment");
+      TypedProperty<LayerSelections.SelectionsArea.SelectionArea, Boolean> secondaryDescendantRelation = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "secondaryDescendantRelation");
+      TypedProperty<LayerSelections.SelectionsArea.SelectionArea, Boolean> selected = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "selected");
+      TypedProperty<LayerSelections.SelectionsArea.SelectionArea, TraversalPlace.SelectionType> selectionType = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "selectionType");
+      TypedProperty<LayerSelections.SelectionsArea.SelectionArea, String> text = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "text");
+      TypedProperty<LayerSelections.SelectionsArea.SelectionArea, String> type = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "type");
+      static class InstanceProperties extends InstanceProperty.Container<LayerSelections.SelectionsArea.SelectionArea> {
+         InstanceProperties(LayerSelections.SelectionsArea.SelectionArea source){super(source);}
+        InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, Boolean> ancestorOfSelected(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.ancestorOfSelected);}
+        InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, String> pathSegment(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.pathSegment);}
+        InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, Boolean> secondaryDescendantRelation(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.secondaryDescendantRelation);}
+        InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.selected);}
+        InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, TraversalPlace.SelectionType> selectionType(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.selectionType);}
+        InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, String> text(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.text);}
+        InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, String> type(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.type);}
+      }
+      
+       InstanceProperties instance(LayerSelections.SelectionsArea.SelectionArea instance) {
         return new InstanceProperties( instance);
       }
       

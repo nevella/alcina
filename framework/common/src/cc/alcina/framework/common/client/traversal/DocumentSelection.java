@@ -17,6 +17,8 @@ public abstract class DocumentSelection extends MeasureSelection
 
 	protected Loader loader;
 
+	public Exception loadException;
+
 	public DocumentSelection(Selection parent,
 			DocumentSelection.Loader loader) {
 		super(parent, null, Ax.format("url2doc:%s", parent.getPathSegment()));
@@ -52,6 +54,9 @@ public abstract class DocumentSelection extends MeasureSelection
 		try {
 			if (document == null) {
 				document = loader.load(ancestor(loader.selectionClass()));
+				if (document == null) {
+					loadException = new Exception("loader returned null");
+				}
 			}
 			return document;
 		} catch (Exception e) {

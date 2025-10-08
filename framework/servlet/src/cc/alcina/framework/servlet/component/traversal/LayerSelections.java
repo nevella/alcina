@@ -37,6 +37,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.LayerSelections.SelectionsArea;
+import cc.alcina.framework.servlet.component.traversal.PackageProperties._LayerSelections_SelectionsArea_SelectionArea.InstanceProperties;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
@@ -200,6 +202,7 @@ class LayerSelections extends Model.All implements IfNotEqual {
 			}
 		}
 
+		@TypedProperties
 		@Directed(className = "bordered")
 		class SelectionArea extends Model.All
 				implements DomEvents.Click.Handler {
@@ -223,6 +226,12 @@ class LayerSelections extends Model.All implements IfNotEqual {
 			@Binding(type = Type.PROPERTY)
 			boolean ancestorOfSelected;
 
+			PackageProperties._LayerSelections_SelectionsArea_SelectionArea.InstanceProperties
+					properties() {
+				return PackageProperties.layerSelections_selectionsArea_selectionArea
+						.instance(this);
+			}
+
 			SelectionArea(Selection selection) {
 				this.selection = selection;
 				View view = selection.view();
@@ -232,12 +241,6 @@ class LayerSelections extends Model.All implements IfNotEqual {
 				} else {
 					render();
 				}
-			}
-
-			public void setAncestorOfSelected(boolean ancestorOfSelected) {
-				set("ancestorOfSelected", this.ancestorOfSelected,
-						ancestorOfSelected,
-						() -> this.ancestorOfSelected = ancestorOfSelected);
 			}
 
 			@Override
@@ -256,26 +259,24 @@ class LayerSelections extends Model.All implements IfNotEqual {
 						selectionPath);
 			}
 
-			void setSelected(boolean selected) {
-				set("selected", this.selected, selected,
-						() -> this.selected = selected);
-			}
-
 			void render() {
 				View view = selection.view();
-				pathSegment = view.getPathSegment(selection);
-				text = view.getText(selection);
+				InstanceProperties properties = properties();
+				properties.pathSegment().set(view.getPathSegment(selection));
+				String text = view.getText(selection);
 				text = text == null ? "[gc]" : Ax.ntrim(Ax.trim(text, 100));
-				selectionType = Ui.place().selectionType(selection);
-				secondaryDescendantRelation = Ui.place()
-						.isSecondaryDescendantRelation(selection);
+				properties.text().set(text);
+				properties.selectionType()
+						.set(Ui.place().selectionType(selection));
+				properties.secondaryDescendantRelation().set(
+						Ui.place().isSecondaryDescendantRelation(selection));
 				updateSelected();
 			}
 
 			void updateSelected() {
-				setSelected(Ui.place().isSelected(selection));
-				setAncestorOfSelected(
-						Ui.place().isAncestorOfSelected(selection));
+				properties().selected().set(Ui.place().isSelected(selection));
+				properties().ancestorOfSelected()
+						.set(Ui.place().isAncestorOfSelected(selection));
 			}
 		}
 
