@@ -652,7 +652,7 @@ body > page > layers > spacer {
 body > page > layers > layers {
   display: grid;
   gap: 1rem;
-  grid-template-columns: 18rem repeat(250, 200px);
+  grid-template-columns: 22rem repeat(250, 200px);
   margin-top: 1rem;
   box-sizing: border-box;
   margin-bottom: 1rem;
@@ -899,7 +899,7 @@ body > page > selections > selection-table > table td > value.nowrap {
 }
 body > page > selections > selection-table > table td > * {
   white-space: nowrap;
-  overflow-x: scroll;
+  overflow-x: auto;
   display: inline-block;
   max-width: 14rem;
 }
