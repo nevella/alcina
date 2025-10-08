@@ -35,4 +35,32 @@ public class DomParserUtils {
 		}
 		return parser;
 	}
+
+	public static org.apache.xerces.parsers.DOMParser
+			createXercesDOMParser(boolean lowercaseTags) {
+		org.apache.xerces.parsers.DOMParser parser = new org.apache.xerces.parsers.DOMParser(
+				new HTMLConfiguration());
+		boolean balanceTags = !CONTEXT_DO_NOT_BALANCE_TAGS.is();
+		try {
+			parser.setFeature(
+					"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
+					true);
+			parser.setFeature(
+					"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
+					true);
+			if (lowercaseTags) {
+				parser.setProperty(
+						"http://cyberneko.org/html/properties/names/elems",
+						"lower");
+			}
+			if (!balanceTags) {
+				parser.setFeature(
+						"http://cyberneko.org/html/features/balance-tags",
+						false);
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return parser;
+	}
 }

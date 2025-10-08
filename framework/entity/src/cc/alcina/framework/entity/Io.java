@@ -270,7 +270,7 @@ public class Io {
 							new InputStreamReader(stream, charset));
 				}
 				DOMParser parser = DomParserUtils
-						.createDOMParser(!uppercaseTags);
+						.createXercesDOMParser(!uppercaseTags);
 				parser.parse(isrc);
 				return (Document) parser.getDocument();
 			} catch (Exception e) {
