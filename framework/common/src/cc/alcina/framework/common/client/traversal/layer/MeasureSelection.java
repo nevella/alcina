@@ -33,10 +33,15 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		return get().containingNode();
 	}
 
+	/*
+	 * The null checks exist because the link between the MeasureSelection and
+	 * the DomDocument may have been removed to minimise heap usage during
+	 * traversal
+	 */
 	public static class View<M extends MeasureSelection>
 			extends AbstractSelection.View<M> {
 		@Override
-		public String getDiscriminator(MeasureSelection selection) {
+		public String getDiscriminator(M selection) {
 			FormatBuilder format = new FormatBuilder().separator(" - ");
 			format.appendIfNotBlank(selection.get().token,
 					selection.get().getData());
@@ -44,9 +49,14 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		}
 
 		@Override
-		public String getMarkup(MeasureSelection selection) {
+		public String getMarkup(M selection) {
 			try {
-				return selection.get().markup();
+				if (selection.get().containingNode() == null) {
+					// a document selection, possibly
+					return super.getMarkup(selection);
+				} else {
+					return selection.get().markup();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				return "Unable to parse markup (possibly namespace issue)";
@@ -54,13 +64,23 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		}
 
 		@Override
-		public String getPathSegment(MeasureSelection selection) {
-			return selection.get().toIntPair().toString();
+		public String getPathSegment(M selection) {
+			if (selection.get().containingNode() == null) {
+				// a document selection, possibly
+				return super.getPathSegment(selection);
+			} else {
+				return selection.get().toIntPair().toString();
+			}
 		}
 
 		@Override
-		public String computeText(MeasureSelection selection) {
-			return selection.get().ntc();
+		public String computeText(M selection) {
+			if (selection.get().containingNode() == null) {
+				// a document selection, possibly
+				return super.computeText(selection);
+			} else {
+				return selection.get().ntc();
+			}
 		}
 	}
 

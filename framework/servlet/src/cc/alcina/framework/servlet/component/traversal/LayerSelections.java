@@ -42,6 +42,11 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
+/**
+ * A row in the ui - a {@link NameArea} modelling the metadata of the layer, a
+ * {@link SelectionsArea} containing multiple
+ * {@link SelectionsArea.SelectionArea} cells
+ */
 @TypedProperties
 class LayerSelections extends Model.All implements IfNotEqual {
 	/*
