@@ -194,6 +194,9 @@ public class Measure extends Location.Range {
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
+		if (containingNode() == null) {
+			return tokenString;
+		}
 		if (start.getTreeIndex() == end.getTreeIndex()
 				&& start.getContainingNode() != null
 				&& start.getContainingNode().isText()) {
