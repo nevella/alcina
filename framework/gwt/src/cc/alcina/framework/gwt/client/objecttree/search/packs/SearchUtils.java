@@ -285,7 +285,7 @@ public class SearchUtils {
 			extends SearchUtilsRegExpHelper {
 		private CachingMap<String, RegExp> stringRegexpLookup = new CachingMap<>(
 				s -> s == null || !s.matches(REGEX_REGEX) ? null
-						: RegExp.compile(s.replaceFirst(REGEX_REGEX, "public"),
+						: RegExp.compile(s.replaceFirst(REGEX_REGEX, "$1"),
 								"i"),
 				getMap());
 

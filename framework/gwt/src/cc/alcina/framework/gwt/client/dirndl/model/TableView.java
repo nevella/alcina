@@ -9,7 +9,6 @@ import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -39,7 +38,8 @@ public class TableView extends
 			List<Field> fields = BeanFields.query()
 					.forMultipleWidgetContainer(true).forBean(first)
 					.withAllowNullWidgetProviders(true)
-					.withResolver(node.getResolver()).listFields();
+					.withIgnoreCustomiser(true).withResolver(node.getResolver())
+					.listFields();
 			fields.removeIf(field -> {
 				return new AnnotationLocation(null, field.getProperty(),
 						node.getResolver())

@@ -269,8 +269,13 @@ public class Io {
 					isrc = new InputSource(
 							new InputStreamReader(stream, charset));
 				}
-				DOMParser parser = DomParserUtils
-						.createXercesDOMParser(!uppercaseTags);
+				/*
+				 * if upper-case tags are specified, use Neko
+				 * (case-insensitive?)
+				 */
+				DOMParser parser = uppercaseTags
+						? DomParserUtils.createDOMParser(!uppercaseTags)
+						: DomParserUtils.createXercesDOMParser(!uppercaseTags);
 				parser.parse(isrc);
 				return (Document) parser.getDocument();
 			} catch (Exception e) {
@@ -304,6 +309,14 @@ public class Io {
 			return this;
 		}
 
+		/**
+		 * Note that uppercaseTags will return a Neko HtmlDocument (uppercase
+		 * tags, case-insensitive), lower-case will return a standard Xerces doc
+		 * (cas-sensitive)
+		 * 
+		 * @param uppercaseTags
+		 * @return
+		 */
 		public ReadOp withUppercaseTags(boolean uppercaseTags) {
 			this.uppercaseTags = uppercaseTags;
 			return this;
