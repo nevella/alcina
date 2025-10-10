@@ -144,10 +144,13 @@ public class TowardsAMoreDesirableSituation {
 		}
 		boolean delta = false;
 		AtomicInteger skipCount = filter.getSkipCount();
-		while (canAllocate()) {
+		for (;;) {
 			synchronized (activeJobs) {
 				activeJobs.removeIf(j -> j.domain().wasRemoved()
 						|| j.provideIsSequenceComplete());
+			}
+			if (!canAllocate()) {
+				break;
 			}
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
