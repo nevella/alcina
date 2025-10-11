@@ -805,6 +805,16 @@ public class LocalDom implements ContextFrame {
 		element.resolvePendingSync();
 	}
 
+	public static class RemoteNotRegisteredException
+			extends IllegalStateException {
+		public NodeJso remote;
+
+		public RemoteNotRegisteredException(NodeJso remote) {
+			super("Remote should always be registered");
+			this.remote = remote;
+		}
+	}
+
 	private <T extends Node> T nodeFor0(NodeJso remote) {
 		if (remote == null) {
 			return null;
@@ -814,8 +824,7 @@ public class LocalDom implements ContextFrame {
 		} else {
 			int attachId = remote.getAttachId();
 			if (attachId == 0) {
-				throw new IllegalStateException(
-						"Remote should always be registered");
+				throw new RemoteNotRegisteredException(remote);
 			} else {
 				Node node = attachIds.getNode(new AttachId(attachId));
 				if (node == null) {
