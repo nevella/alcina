@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.dom.Location;
@@ -50,6 +51,9 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  * @param <T>
  */
 public interface Selection<T> extends HasProcessNode<Selection> {
+	public static LooseContext.Key CONTEXT_FULL_DUPLICATE_PATH_DEBUG = LooseContext
+			.key(Selection.class, "CONTEXT_FULL_DUPLICATE_PATH_DEBUG");
+
 	public static class OnetimeStack<T> extends LinkedList<T> {
 		Set<T> tested = new LinkedHashSet<>();
 
@@ -433,7 +437,8 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		Selection cursor = this;
 		List<String> segments = new ArrayList<>();
 		while (cursor != null) {
-			segments.add(0, cursor.getPathSegment());
+			segments.add(0, Ax.format("%s - %s", NestedName.get(cursor),
+					cursor.getPathSegment()));
 			cursor = cursor.parentSelection();
 		}
 		return Ax.format("[\n%s\n]\n",
@@ -532,22 +537,21 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	}
 
 	default void onDuplicatePathSelection(Layer layer, Selection selection) {
-		LoggerFactory.getLogger(Selection.class).warn(
-				"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}\nPath: {}",
+		String message = Ax.format(
+				"Duplicate path selection - index paths:\nExisting: %s\nIncoming: %s\nPath: %s\nType: %s",
 				processNode().treePath(), selection.processNode().treePath(),
-				selection.getPathSegment());
+				selection.getPathSegment(), NestedName.get(selection));
 		/*
-		 * This wants a client/server-friendly config system
+		 * This wants a client/server-friendly config system - LooseContext is a
+		 * decent second-best
 		 */
-		boolean fullDebug = false;
+		boolean fullDebug = CONTEXT_FULL_DUPLICATE_PATH_DEBUG.is();
 		if (fullDebug) {
 			LoggerFactory.getLogger(Selection.class).warn(
 					"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}",
-					selection.fullDebugPath(), selection.fullDebugPath());
+					selection.fullDebugPath(), fullDebugPath());
 		}
-		throw new DuplicateSelectionException(
-				Ax.format("Duplicate selection path: %s :: %s",
-						selection.getPathSegment(), layer));
+		throw new DuplicateSelectionException(message);
 	}
 
 	default Selection<?> parentSelection() {

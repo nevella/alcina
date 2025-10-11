@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.Selection.DuplicateSelectionException;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal.State.SelectionLayers.LayerSelections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -510,6 +511,10 @@ public class SelectionTraversal
 		public Collection<Selection> byLayer(Layer layer) {
 			return byLayerCounts(layer).keySet();
 		}
+
+		void addException(Selection selection, Exception exception) {
+			exceptions.put(selection, exception);
+		}
 	}
 
 	/*
@@ -726,19 +731,24 @@ public class SelectionTraversal
 	public class TraversalComplete implements ProcessObservable {
 	}
 
+	/*
+	 * publishes an exception, but does not break code flow
+	 */
 	class SuppressedExceptionObserver
 			implements ProcessObserver<SuppressedException> {
+		int observed = 0;
+
 		@Override
 		public void topicPublished(SuppressedException message) {
 			selections().exceptions.put(contextSelection(), message.e);
 		}
 	}
 
-	static final String CONTEXT_TRAVERSAL = SelectionTraversal.class.getName()
-			+ ".CONTEXT_TRAVERSAL";
+	static LooseContext.Key<SelectionTraversal> CONTEXT_TRAVERSAL = LooseContext
+			.key(SelectionTraversal.class, "CONTEXT_TRAVERSAL");
 
-	static final String CONTEXT_SELECTION = SelectionTraversal.class.getName()
-			+ ".CONTEXT_SELECTION";
+	static LooseContext.Key<Selection> CONTEXT_SELECTION = LooseContext
+			.key(SelectionTraversal.class, "CONTEXT_SELECTION");
 
 	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
 			.create();
@@ -749,11 +759,11 @@ public class SelectionTraversal
 	static IdCounter counter = new IdCounter();
 
 	public static <S extends Selection> S contextSelection() {
-		return LooseContext.get(CONTEXT_SELECTION);
+		return (S) CONTEXT_SELECTION.getTyped();
 	}
 
 	public static SelectionTraversal contextTraversal() {
-		return LooseContext.get(CONTEXT_TRAVERSAL);
+		return CONTEXT_TRAVERSAL.getTyped();
 	}
 
 	public Topic<Layer> topicBeforeLayerTraversal = Topic.create();
@@ -876,16 +886,24 @@ public class SelectionTraversal
 	}
 
 	public SelectionFilter provideExceptionSelectionFilter() {
-		return SelectionFilter.ofSelections(selections().exceptions.keySet());
+		List<Selection> exceptionKeys = selections().exceptions.keySet()
+				.stream().toList();
+		int skip = Math.max(0, exceptionKeys.size() - 10);
+		List<Selection> last5 = exceptionKeys.stream().skip(skip).toList();
+		return SelectionFilter.ofSelections(last5);
 	}
 
 	public void select(Selection selection) {
-		if (!state.selections.add(selection)) {
-			/*
-			 * this will never be processed, so mark as released
-			 */
-			selection.processNode().setReleasedResources(true);
+		boolean added = false;
+		try {
+			added = state.selections.add(selection);
+		} catch (DuplicateSelectionException e) {
+			new SuppressedException(e).publish();
 		}
+		/*
+		 * this will never be processed, so mark as released
+		 */
+		selection.processNode().setReleasedResources(true);
 	}
 
 	public void setExecutor(Executor executor) {
@@ -909,7 +927,7 @@ public class SelectionTraversal
 	public void traverse() {
 		try {
 			LooseContext.push();
-			LooseContext.set(CONTEXT_TRAVERSAL, this);
+			CONTEXT_TRAVERSAL.set(this);
 			new SuppressedExceptionObserver().bind();
 			traverse0();
 		} catch (Throwable t) {
@@ -995,9 +1013,21 @@ public class SelectionTraversal
 		}
 	}
 
+	void publishException(Exception e) {
+		Selection selection = CONTEXT_SELECTION.getTyped();
+		selections().addException(selection, e);
+		selection.processNode().onException(e);
+		selections().topicException
+				.publish(new SelectionException(selection, e));
+		if (context(TraversalContext.ThrowOnException.class) != null) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
 	void processSelection(Selection selection) {
 		try {
-			LooseContext.pushWithKey(CONTEXT_SELECTION, selection);
+			LooseContext.push();
+			CONTEXT_SELECTION.set(selection);
 			Layer layer = layers().getCurrent();
 			enterSelectionContext(selection);
 			if (layer.state.traversalCancelled) {
@@ -1015,15 +1045,9 @@ public class SelectionTraversal
 						() -> new BeforeLayerSelection(layer, selection));
 				layer.process(selection);
 			} catch (Exception e) {
-				selections().exceptions.put(selection, e);
-				selection.processNode().onException(e);
-				selections().topicException
-						.publish(new SelectionException(selection, e));
 				logger.warn(Ax.format("Selection exception :: %s",
 						Ax.trimForLogging(selection)), e);
-				if (context(TraversalContext.ThrowOnException.class) != null) {
-					throw WrappedRuntimeException.wrap(e);
-				}
+				publishException(e);
 			} finally {
 				layer.onAfterProcess(selection);
 			}

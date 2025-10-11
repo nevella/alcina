@@ -1,10 +1,12 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.dirndl.event.Action.Nested;
 
 @Registration.Singleton
 public class NestedName {
@@ -54,5 +56,11 @@ public class NestedName {
 			return ((Class) obj).getSimpleName();
 		}
 		return obj.getClass().getSimpleName();
+	}
+
+	public static CountingMap<String> count(Collection<?> objects) {
+		CountingMap<String> result = new CountingMap<>();
+		objects.stream().map(NestedName::get).forEach(result::add);
+		return result;
 	}
 }
