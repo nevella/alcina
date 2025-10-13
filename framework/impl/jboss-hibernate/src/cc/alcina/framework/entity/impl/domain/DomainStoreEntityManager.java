@@ -48,6 +48,10 @@ public class DomainStoreEntityManager implements EntityManager {
 				+ FlatTreeSerializer.serializeElided(orderCriterion);
 	}
 
+	public static boolean is(EntityManager em) {
+		return em instanceof DomainStoreEntityManager;
+	}
+
 	private EntityManager delegate;
 
 	private DomainStoreQuery lastQuery;
