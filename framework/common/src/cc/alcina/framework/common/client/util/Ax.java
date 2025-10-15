@@ -367,6 +367,14 @@ public class Ax {
 		}
 	}
 
+	public static byte[] utf8Bytes(String string) {
+		try {
+			return string.getBytes("UTF-8");
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
 	public static String toString(Object obj) {
 		return CommonUtils.nullSafeToString(obj);
 	}

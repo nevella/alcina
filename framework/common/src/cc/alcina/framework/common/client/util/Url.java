@@ -120,4 +120,11 @@ public class Url {
 	public String lastPathSegmentWithoutExtension() {
 		return lastPathSegment().replaceFirst("(.+)\\.(.+)", "$1");
 	}
+
+	/*
+	 * simplistic - non-absolute path and no protocol
+	 */
+	public static boolean isRelative(String url) {
+		return url.matches("[^/:][^:]+");
+	}
 }
