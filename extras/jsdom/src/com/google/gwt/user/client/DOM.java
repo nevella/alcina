@@ -25,6 +25,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.LocalDom.RemoteNotRegisteredException;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.OptionElement;
@@ -38,6 +39,7 @@ import com.google.gwt.user.client.impl.DOMImpl;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * This class provides a set of static methods that allow you to manipulate the
@@ -472,6 +474,28 @@ public class DOM {
 
 	private static void dispatchEventImpl(Event event, Element elem,
 			EventListener listener) {
+		try {
+			dispatchEventImpl0(event, elem, listener);
+		} catch (RuntimeException e) {
+			if (CommonUtils.hasCauseOfClass(e,
+					RemoteNotRegisteredException.class)) {
+				/*
+				 * DEVEX - 1.client - this is probably dom rewriting during an
+				 * event call, so the element is now removed from DOM
+				 * 
+				 * An exception here is harmless (it must mean removed from DOM)
+				 * - but the rule is 'don't rewrite dom during event
+				 * propagation' - defer
+				 */
+				e.printStackTrace();
+				return;
+			}
+			throw e;
+		}
+	}
+
+	private static void dispatchEventImpl0(Event event, Element elem,
+			EventListener listener) {
 		Resources windowResources = Window.Resources.get();
 		// If this element has capture...
 		if (elem == windowResources.sCaptureElem) {
@@ -482,9 +506,6 @@ public class DOM {
 		}
 		EventTarget eventTarget = event.getEventTarget();
 		String lcType = event.getType().toLowerCase();
-		if (lcType.equals("click")) {
-			int debugh = 3;
-		}
 		int eventTypeInt = Event.getTypeInt(lcType);
 		DispatchInfo dispatchInfo = null;
 		Optional<DispatchInfo> first = windowResources.recentDispatches.stream()
