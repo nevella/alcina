@@ -783,7 +783,7 @@ public class DocumentAttachId extends NodeAttachId
 	}
 
 	@Override
-	public void importNode(Node node, boolean deep) {
+	public Node importNode(Node node, boolean deep) {
 		throw new UnsupportedOperationException();
 	}
 

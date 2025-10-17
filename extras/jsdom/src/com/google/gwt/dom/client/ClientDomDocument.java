@@ -1164,7 +1164,7 @@ public interface ClientDomDocument extends ClientDomNode {
 
 	boolean hasFocus();
 
-	void importNode(Node node, boolean deep);
+	Node importNode(Node node, boolean deep);
 
 	boolean isCSS1Compat();
 
