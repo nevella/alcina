@@ -302,10 +302,15 @@ public abstract class LooseContext {
 		}
 
 		public void put(StringMap properties, T value) {
+			String path = getPath();
 			if (value instanceof Boolean) {
-				properties.setBooleanOrRemove(getPath(), (Boolean) value);
+				properties.setBooleanOrRemove(path, (Boolean) value);
 			} else {
-				properties.put(getPath(), String.valueOf(value));
+				if (value == null) {
+					properties.remove(path);
+				} else {
+					properties.put(path, String.valueOf(value));
+				}
 			}
 		}
 	}

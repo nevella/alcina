@@ -603,7 +603,10 @@ public class HtmlParser {
 					resetBuilder();
 					break;
 				}
-				if (c == attrDelim) {
+				boolean matchesAttrDelim = c == attrDelim;
+				matchesAttrDelim |= attrDelim == ' '
+						&& (c == '\n' || c == '\t' || c == '\r');
+				if (matchesAttrDelim) {
 					// fix for quotes in attributes
 					attrValue = markingBuilder.toString();
 					emitAttribute();
