@@ -413,6 +413,13 @@ public class SelectionTraversal
 			return selections.get(0);
 		}
 
+		public <T extends Selection> Optional<T>
+				optionalSingleSelection(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			Preconditions.checkState(selections.size() <= 1);
+			return selections.stream().findFirst();
+		}
+
 		public <T extends Selection> boolean has(Class<T> clazz) {
 			List<T> selections = get(clazz, false);
 			return selections.size() > 0;
