@@ -868,7 +868,6 @@ body > page > selections > selection[selected] {
 body > page > selections > selection-table {
   display: block;
   width: 100%;
-  overflow-x: scroll;
 }
 body > page > selections > selection-table > table {
   border-spacing: 0;
