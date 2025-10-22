@@ -44,7 +44,10 @@ public abstract class NodeJso extends JavaScriptObject
 		case Node.COMMENT_NODE:
 			return CommentJso.toNode0((CommentJso) nodeJso);
 		case Node.ELEMENT_NODE:
-			return LocalDom.toNode((ElementJso) nodeJso);
+			ElementJso elemJso = (ElementJso) nodeJso;
+			String string = elemJso.toString();
+			MarkupJso.normaliseBrowserDomTextNodes(elemJso);
+			return LocalDom.toNode(elemJso);
 		case Node.PROCESSING_INSTRUCTION_NODE:
 			return ProcessingInstructionJso
 					.toNode0((ProcessingInstructionJso) nodeJso);
