@@ -33,6 +33,7 @@ public final class InstanceQuery implements TreeSerializable {
 
 	@Bean(PropertySource.FIELDS)
 	@Registration.Self
+	@ReflectiveSerializer.Checks(ignore = true)
 	public abstract static class Parameter<V>
 			implements TreeSerializable, Registration.AllSubtypes {
 		public V value;
