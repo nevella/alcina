@@ -53,6 +53,12 @@ public class SequenceBrowser {
 		}
 	}
 
+	@Registration.Self
+	public static class UiCustomiser {
+		public void beforeRender(AbstractUi ui) {
+		}
+	}
+
 	@TypedProperties
 	static class Ui extends AbstractUi<SequencePlace> implements DomainUi {
 		static PackageProperties._SequenceBrowser_Ui properties = PackageProperties.sequenceBrowser_ui;
@@ -104,6 +110,7 @@ public class SequenceBrowser {
 		@Override
 		protected DirectedLayout render0() {
 			injectCss("res/css/styles.css");
+			Registry.impl(UiCustomiser.class).beforeRender(this);
 			//
 			Client.get().initAppHistory();
 			DirectedLayout layout = new DirectedLayout();

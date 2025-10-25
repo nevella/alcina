@@ -50,8 +50,12 @@ public interface RemoteUi {
 	void init();
 
 	default void injectCss(String relativePath) {
-		StyleInjector.injectNow(Io.read().relativeTo(getClass())
-				.resource(relativePath).asString());
+		injectCssText(Io.read().relativeTo(getClass()).resource(relativePath)
+				.asString());
+	}
+
+	default void injectCssText(String css) {
+		StyleInjector.injectNow(css);
 	}
 
 	void render();
