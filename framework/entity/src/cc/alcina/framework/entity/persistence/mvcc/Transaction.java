@@ -103,7 +103,7 @@ public class Transaction implements Comparable<Transaction> {
 	private static Map<Thread, Transaction> perThreadTransaction = new ConcurrentHashMap<>(
 			1000);
 
-	static CachedPerThreadTransaction cachedPerThreadTransaction;
+	static volatile CachedPerThreadTransaction cachedPerThreadTransaction;
 
 	private static transient long defaultMaxAge = -1;
 
@@ -206,10 +206,9 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static Transaction current() {
-		Transaction transaction = provideCurrentThreadTransaction();
-		if (transaction == null
-				|| (transaction.getPhase() == TransactionPhase.TO_DB_ABORTED
-						&& !LooseContext.is(CONTEXT_ALLOW_ABORTED_TX_ACCESS))) {
+		Transaction transaction = currentNoThrow();
+		if (transaction == null) {
+			debugCurrentThreadTransaction();
 			throw new MvccException("No current transaction");
 		} else {
 			return transaction;
@@ -233,16 +232,16 @@ public class Transaction implements Comparable<Transaction> {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
-		current().new PreEndObservable().publish();
 		Transaction perThreadTransaction = getPerThreadTransaction();
 		if (perThreadTransaction == null) {
 			logger.error(
 					"Attempting to end transaction when one is not present");
 		} else {
+			perThreadTransaction.new PreEndObservable().publish();
 			perThreadTransaction.endTransaction();
 			logger.debug("Removing tx - {} {} {}", perThreadTransaction,
 					Thread.currentThread().getName(),
-					Thread.currentThread().getId());
+					Thread.currentThread().threadId());
 		}
 		removeThreadLocalTransaction();
 	}
