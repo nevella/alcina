@@ -152,8 +152,24 @@ public class Transaction implements Comparable<Transaction> {
 				if (hasTransforms) {
 					current().new PreCommitObservable().publish();
 				}
-				int transformCount = TransformCommit.commitTransformsAsRoot();
-				return transformCount;
+				try {
+					int transformCount = TransformCommit
+							.commitTransformsAsRoot();
+					return transformCount;
+				} catch (Throwable e) {
+					Ax.simpleExceptionOut(e);
+					logger.info("Switching to aborted - tx: {}", transaction);
+					transaction.toDbAborted();
+					try {
+						Transaction.endAndBeginNew();
+					} catch (Throwable e2) {
+						logger.warn("DEVEX-0 - exception aborting tx");
+						removeThreadLocalTransaction();
+						e2.printStackTrace();
+						Transaction.ensureBegun();
+					}
+					throw WrappedRuntimeException.wrap(e);
+				}
 			}
 		} catch (IllegalStateException e) {
 			logger.info("Uncommitted transforms:");
@@ -222,11 +238,12 @@ public class Transaction implements Comparable<Transaction> {
 		if (perThreadTransaction == null) {
 			logger.error(
 					"Attempting to end transaction when one is not present");
+		} else {
+			perThreadTransaction.endTransaction();
+			logger.debug("Removing tx - {} {} {}", perThreadTransaction,
+					Thread.currentThread().getName(),
+					Thread.currentThread().getId());
 		}
-		perThreadTransaction.endTransaction();
-		logger.debug("Removing tx - {} {} {}", perThreadTransaction,
-				Thread.currentThread().getName(),
-				Thread.currentThread().getId());
 		removeThreadLocalTransaction();
 	}
 
