@@ -29,7 +29,7 @@ public class FocusImplSafari extends FocusImplStandard {
 											// be unsuccessful, so we invoke blur() from outside of the callback.
 											$wnd.setTimeout(function() {
 											var remote=elem.@com.google.gwt.dom.client.Element::jsoRemote()();
-											if(remote.nodeType){
+											if(remote!=null&&remote.nodeType){
 											remote.blur();
 											}
 											}, 0);
@@ -41,7 +41,7 @@ public class FocusImplSafari extends FocusImplStandard {
 											// be unsuccessful, so we invoke focus() from outside of the callback.
 											$wnd.setTimeout(function() {
 											var remote=elem.@com.google.gwt.dom.client.Element::jsoRemote()();
-											if(remote.nodeType){
+											if(remote!=null&&remote.nodeType){
 											remote.focus();
 											}
 											}, 0);
