@@ -68,8 +68,9 @@ public class ClientExceptionHandler
 				.getClientInstance();
 		long clientInstanceId = EntityHelper.getIdOrZero(clientInstance);
 		String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
-				+ "\nHistory token: " + History.getToken()
-				+ "\nPermutation name: " + GWT.getPermutationStrongName()
+				+ "\nHistory token: " + History.getToken() + "\nUrl: "
+				+ Window.Location.getHref() + "\nPermutation name: "
+				+ GWT.getPermutationStrongName()
 				+ Ax.format("\nUser name/id/cli: [%s/%s/%s]",
 						PermissionsManager.get().getUserName(),
 						PermissionsManager.get().getUserId(), clientInstanceId);
