@@ -41,4 +41,8 @@ public class RemoteObjectModelComponentClient implements EntryPoint {
 		Client.Init.init();
 		Scheduler.get().scheduleDeferred(() -> init0());
 	}
+
+	public static native void markWindowAsErrorState() /*-{
+      $doc.documentElement.setAttribute("romcom-error-state","true");
+	}-*/;
 }

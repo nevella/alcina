@@ -31,15 +31,20 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
  *
  */
 public class TextProvider {
-	public static final String DISPLAY_NAME = "displayName";
+	public static final String DISPLAY_NAME = TextProvider.class.getName()
+			+ ".DISPLAY_NAME";
 
 	protected static final int TRIMMED_LENGTH = 60;
 
-	private static TextProvider instance;
+	private static volatile TextProvider instance;
 
 	public static TextProvider get() {
 		if (instance == null) {
-			instance = new TextProvider();
+			synchronized (TextProvider.class) {
+				if (instance == null) {
+					instance = new TextProvider();
+				}
+			}
 		}
 		TextProvider tp = instance.getT();
 		if (tp != null) {

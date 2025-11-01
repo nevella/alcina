@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ClassSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -112,12 +113,15 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public static String staticDisplayName(Class<? extends ModelEvent> clazz) {
 		Optional<ClassDisplayName> classDisplayName = Registry
 				.optional(HasDisplayName.ClassDisplayName.class, clazz);
+		String value = null;
 		if (classDisplayName.isPresent()) {
-			return classDisplayName.get().displayName();
+			value = classDisplayName.get().displayName();
 		} else {
-			return CommonUtils
+			value = CommonUtils
 					.deInfix(clazz.getSimpleName().replaceFirst("Event$", ""));
 		}
+		return TextProvider.get().getUiObjectText(clazz,
+				TextProvider.DISPLAY_NAME, value);
 	}
 
 	private boolean handled;

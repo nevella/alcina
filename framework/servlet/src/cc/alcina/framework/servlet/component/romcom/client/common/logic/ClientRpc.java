@@ -21,8 +21,10 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
+import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
@@ -136,7 +138,12 @@ public class ClientRpc implements HandlerContext {
 		try {
 			handler.handle(this, message);
 		} catch (Throwable e) {
+			RemoteObjectModelComponentClient.markWindowAsErrorState();
 			ui.messageStateRouter.onMessageHandlingException(message, e);
+			// FIXME - ask the context to log
+			Ax.out("Exception handling message %s\n"
+					+ "================\nSerialized form:\n%s", message, "??");
+			e.printStackTrace();
 		}
 	}
 

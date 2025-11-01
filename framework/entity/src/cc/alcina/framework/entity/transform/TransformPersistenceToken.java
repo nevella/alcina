@@ -17,10 +17,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -97,50 +95,6 @@ public class TransformPersistenceToken implements Serializable {
 				.getPolicy(this, forOfflineTransforms);
 		this.transformPropagationPolicy = Registry
 				.impl(TransformPropagationPolicy.class);
-		this.initialTransforms = new IntitialTransforms();
-	}
-
-	/**
-	 * Used to ensure that only transforms of the incoming objects (not
-	 * cascaded) are returned to the client
-	 */
-	public class IntitialTransforms {
-		AdjunctTransformCollation initialCollation;
-
-		IntitialTransforms() {
-			initialCollation = new AdjunctTransformCollation(
-					TransformPersistenceToken.this);
-			initialLocators = initialCollation.allEntityCollations()
-					.map(coll -> coll.getLocator())
-					.collect(AlcinaCollectors.toLinkedHashSet());
-		}
-
-		public void filter(List<DomainTransformEvent> returnEvents) {
-			returnEvents.forEach(evt -> {
-				if (evt.provideIsCreationTransform()) {
-					EntityLocator preCreationLocator = new EntityLocator(
-							evt.getObjectClass(), 0, evt.getObjectLocalId());
-					EntityLocator postCreationLocator = new EntityLocator(
-							evt.getObjectClass(), evt.getObjectId(), 0);
-					if (initialLocators.contains(preCreationLocator)) {
-						initialLocators.add(postCreationLocator);
-					}
-				}
-			});
-			returnEvents.removeIf(
-					evt -> !initialLocators.contains(evt.toObjectLocator()));
-		}
-
-		Set<EntityLocator> initialLocators;
-	}
-
-	public PersistenceLayerTransformRetryPolicy getTransformRetryPolicy() {
-		return transformRetryPolicy;
-	}
-
-	public void setTransformRetryPolicy(
-			PersistenceLayerTransformRetryPolicy transformRetryPolicy) {
-		this.transformRetryPolicy = transformRetryPolicy;
 	}
 
 	public boolean addCascadedEvents() {
