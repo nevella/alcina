@@ -103,9 +103,9 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public static DomDocument createTextContainer(String text) {
-		DomDocument document = DomDocument.from("<container/>");
+		DomDocument document = DomDocument.from("<container/>", true);
 		document.getDocumentElementNode().setText(text);
-		document.setReadonly(true);
+		document.useLocations2 = true;
 		return document;
 	}
 
