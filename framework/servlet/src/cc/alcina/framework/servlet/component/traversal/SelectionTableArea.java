@@ -135,8 +135,12 @@ public class SelectionTableArea extends Model.Fields
 	public void onRowClicked(TableEvents.RowClicked event) {
 		Selection selection = hasTable
 				.selectionFor(event.getModel().getOriginalRowModel());
+		/**
+		 * this is hacky - it tries to combine layer + url/place selection
+		 * models. it works...but...
+		 */
 		if (Ui.get().isAppendTableSelections()) {
-			appendRowSelectionTo.appendSelections(List.of(selection)).go();
+			appendRowSelectionTo.appendOrReplaceLastSelection(selection).go();
 		} else {
 			TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
 			SelectionPath selectionPath = new TraversalPlace.SelectionPath();
