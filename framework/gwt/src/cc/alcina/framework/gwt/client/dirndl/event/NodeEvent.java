@@ -88,10 +88,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return new Util();
 		}
 
-		public Util util() {
-			return new Util();
-		}
-
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return node.annotation(clazz);
 		}
