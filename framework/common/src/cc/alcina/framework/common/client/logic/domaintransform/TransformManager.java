@@ -1949,22 +1949,22 @@ public abstract class TransformManager
 	}
 
 	public void removeTransformsFor(Object object) {
-		removeTransformsForObjects(Arrays.asList(object));
+		removeTransformsForObjects(List.of(object));
 	}
 
-	public void removeTransformsForObjects(Collection c) {
-		Set<DomainTransformEvent> transforms = new LinkedHashSet<>(
-				getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
-		if (!(c instanceof Set)) {
-			c = new HashSet(c);
-		}
-		for (DomainTransformEvent transform : transforms) {
-			if (c.contains(transform.provideSourceOrMarker())
-					|| c.contains(transform.getNewValue())
-					|| c.contains(transform.provideTargetMarkerForRemoval())) {
-				removeTransform(transform);
-			}
-		}
+	public void removeTransformsForObjects(Collection coll) {
+		getTransformsForObjects(coll).forEach(this::removeTransform);
+	}
+
+	public List<DomainTransformEvent> getTransformsForObjects(Collection coll) {
+		Set set = coll instanceof Set ? (Set) coll : new HashSet(coll);
+		return getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).stream()
+				.filter(transform -> coll
+						.contains(transform.provideSourceOrMarker())
+						|| coll.contains(transform.getNewValue())
+						|| coll.contains(
+								transform.provideTargetMarkerForRemoval()))
+				.toList();
 	}
 
 	/*

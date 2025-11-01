@@ -433,8 +433,8 @@ class JobAllocator {
 			}
 			boolean deleted = false;
 			try {
-				LooseContext.pushWithTrue(
-						LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED);
+				LooseContext.push();
+				LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED.setTrue();
 				if (job.domain().wasRemoved()) {
 					// production issue -- revisit
 					Thread.sleep(1000);

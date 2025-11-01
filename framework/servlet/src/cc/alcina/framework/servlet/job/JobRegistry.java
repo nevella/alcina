@@ -575,27 +575,36 @@ public class JobRegistry {
 		// track why not removed in this-vm process (i.e. finally of performJob0
 		// not completing).
 		// How to track: put logging here (DEVEX)
-		activeJobs.keySet().removeIf(job -> {
-			try {
-				// this is more a guard against exceptions rather than logically
-				// correct - correctness would be a txview
-				if (Mvcc.isVisible(job) && job.getState() == JobState.ABORTED) {
-					return true;
-				} else if (job.domain().wasPersisted()
-						&& Domain.find(job) == null) {
-					/*
-					 * Deleted, but with issues during persistence propagation
-					 */
-					return true;
-				} else {
+		try {
+			LooseContext.push();
+			LazyPropertyLoadTask.CONTEXT_LAZY_LOAD_DISABLED.setTrue();
+			activeJobs.keySet().removeIf(job -> {
+				try {
+					// this is more a guard against exceptions rather than
+					// logically
+					// correct - correctness would be a txview
+					if (Mvcc.isVisible(job)
+							&& job.getState() == JobState.ABORTED) {
+						return true;
+					}
+					if (job.domain().wasPersisted()
+							&& Domain.find(job) == null) {
+						/*
+						 * Deleted, but with issues during persistence
+						 * propagation
+						 */
+						return true;
+					}
+					return false;
+				} catch (Exception e) {
+					// FIXME - devex - presumably mvcc-deleted
+					e.printStackTrace();
 					return false;
 				}
-			} catch (Exception e) {
-				// FIXME - devex - presumably mvcc-deleted
-				e.printStackTrace();
-				return false;
-			}
-		});
+			});
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {

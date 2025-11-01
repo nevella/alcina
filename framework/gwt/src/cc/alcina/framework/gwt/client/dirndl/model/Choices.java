@@ -610,19 +610,6 @@ public abstract class Choices<T> extends Model implements
 			}
 		}
 
-		Function<Object, String> optionNameTransformer;
-
-		public SelectResolver() {
-		}
-
-		protected SelectResolver(
-				Class<? extends Function<?, String>> optionNameTransformerClass) {
-			if (optionNameTransformerClass != null) {
-				this.optionNameTransformer = (Function) Reflections
-						.newInstance(optionNameTransformerClass);
-			}
-		}
-
 		/*
 		 * Override to customize the default
 		 */

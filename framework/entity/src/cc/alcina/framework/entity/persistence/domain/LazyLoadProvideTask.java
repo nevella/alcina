@@ -18,7 +18,10 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.Loader;
 
@@ -28,8 +31,8 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.L
  */
 public abstract class LazyLoadProvideTask<T extends Entity>
 		implements PreProvideTask<T> {
-	public static final String CONTEXT_LAZY_LOAD_DISABLED = LazyLoadProvideTask.class
-			.getName() + ".CONTEXT_LAZY_LOAD_DISABLED";
+	public static final LooseContext.Key CONTEXT_LAZY_LOAD_DISABLED = LooseContext
+			.key(LazyLoadProvideTask.class, ".CONTEXT_LAZY_LOAD_DISABLED");
 
 	final static Logger logger = LoggerFactory
 			.getLogger(MethodHandles.lookup().lookupClass());
@@ -123,13 +126,25 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	}
 
 	@Override
+	public boolean filter(T t) {
+		return !LazyPropertyLoadTask.CONTEXT_LAZY_LOAD_DISABLED.is();
+	}
+
+	@Override
 	public void run(Class clazz, Collection<T> objects, boolean topLevel)
 			throws Exception {
 		if (clazz != this.clazz) {
 			return;
 		}
-		if (LooseContext.is(CONTEXT_LAZY_LOAD_DISABLED)) {
+		if (CONTEXT_LAZY_LOAD_DISABLED.is()) {
 			return;
+		}
+		List<DomainTransformEvent> transforms = TransformManager.get()
+				.getTransformsForObjects(objects);
+		if (transforms.size() > 0) {
+			throw new IllegalStateException(Ax.format(
+					"Cannot lazy load objects with current-tx transforms:\n%s\n%s",
+					objects, transforms));
 		}
 		List<T> requireLoad = requireLazyLoad(objects);
 		if (!requireLoad.isEmpty()) {
