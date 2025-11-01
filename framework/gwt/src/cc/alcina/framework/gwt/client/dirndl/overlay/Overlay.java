@@ -14,6 +14,7 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -42,7 +43,6 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents.RefreshPositi
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * <p>
@@ -81,6 +81,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 @Directed(
 	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class,
 			ModelEvents.Opened.class })
+@PropertyOrder({ "contents", "actions" })
 public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
