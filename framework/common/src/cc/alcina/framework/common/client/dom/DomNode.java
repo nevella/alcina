@@ -1770,8 +1770,6 @@ public class DomNode {
 				parent.children.append(other);
 			}
 		}
-<<<<<<< HEAD
-=======
 
 		public DomNode wrap(String tag) {
 			DomNode wrapper = document
@@ -1787,7 +1785,6 @@ public class DomNode {
 					.filter(n -> n.isText() && n.isNonWhitespaceTextContent())
 					.findFirst().get();
 		}
->>>>>>> dev
 	}
 
 	public class DomNodeStyle {
