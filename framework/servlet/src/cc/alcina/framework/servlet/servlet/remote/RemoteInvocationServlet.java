@@ -156,6 +156,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (transformMethod) {
 					Transaction.endAndBeginNew();
 					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
+					token.ensureInitialTransforms();
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
 							.getHighestPersistedRequestIdForClientInstance(

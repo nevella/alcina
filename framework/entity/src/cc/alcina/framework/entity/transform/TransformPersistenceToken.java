@@ -100,6 +100,15 @@ public class TransformPersistenceToken implements Serializable {
 		this.initialTransforms = new IntitialTransforms();
 	}
 
+	/*
+	 * dev-only, when transferring from a console
+	 */
+	public void ensureInitialTransforms() {
+		if (initialTransforms == null) {
+			initialTransforms = new IntitialTransforms();
+		}
+	}
+
 	/**
 	 * Used to ensure that only transforms of the incoming objects (not
 	 * cascaded) are returned to the client
