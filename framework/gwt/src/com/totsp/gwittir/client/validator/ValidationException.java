@@ -25,6 +25,9 @@ package com.totsp.gwittir.client.validator;
  *         Cooper</a>
  */
 public class ValidationException extends Exception {
+	public static final String MESSAGE = ValidationException.class.getName()
+			+ ".MESSAGE";
+
 	private Class validatorClass = null;
 
 	/** Creates a new instance of ValidationException */

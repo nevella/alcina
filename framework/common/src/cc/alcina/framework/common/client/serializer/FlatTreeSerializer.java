@@ -141,6 +141,9 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * ContactSearcDefinition.groupingParameters)
  *
  * >>>>>>> origin/apdm.2022.3
+ * <li>Objects - particularly generic objects such as InstanceQuery.Parameter
+ * with a complex type parameter - must have en empty value set in the
+ * constructor for deserialization to work
  * </ul>
  *
  *

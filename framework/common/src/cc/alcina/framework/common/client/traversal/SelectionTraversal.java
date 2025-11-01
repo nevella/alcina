@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.Selection.DuplicateSelectionException;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal.State.SelectionLayers.LayerSelections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -150,7 +151,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
-	/*
+	/**
 	 * An exception suppressed [to keep the traversal flow/logs clean], but
 	 * required for end-of-traversal exception wrangling
 	 */
@@ -160,6 +161,17 @@ public class SelectionTraversal
 
 		public SuppressedException(Exception e) {
 			this.e = e;
+		}
+	}
+
+	/**
+	 * A non-exception 'short-circuit traversal' message
+	 */
+	public static class ExitTraversal implements ContextObservers.Observable {
+		String reason;
+
+		public ExitTraversal(String reason) {
+			this.reason = reason;
 		}
 	}
 
@@ -282,6 +294,10 @@ public class SelectionTraversal
 
 		public Map<Selection, Exception> exceptions = new ConcurrentHashMap<>();
 
+		public boolean hasExceptions() {
+			return exceptions.size() > 0;
+		}
+
 		/*
 		 * These selections are available as inputs to subsequent, type-specific
 		 * layers. So, the multiset is not populated by outputs which are
@@ -397,6 +413,18 @@ public class SelectionTraversal
 			return selections.get(0);
 		}
 
+		public <T extends Selection> Optional<T>
+				optionalSingleSelection(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			Preconditions.checkState(selections.size() <= 1);
+			return selections.stream().findFirst();
+		}
+
+		public <T extends Selection> boolean has(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			return selections.size() > 0;
+		}
+
 		public int size() {
 			return size;
 		}
@@ -501,6 +529,10 @@ public class SelectionTraversal
 		public Collection<Selection> byLayer(Layer layer) {
 			return byLayerCounts(layer).keySet();
 		}
+
+		void addException(Selection selection, Exception exception) {
+			exceptions.put(selection, exception);
+		}
 	}
 
 	/*
@@ -574,13 +606,17 @@ public class SelectionTraversal
 
 		Layer rootLayer;
 
-		Map<Layer, Integer> visitedLayers = new LinkedHashMap<>();
+		Map<Layer, Integer> layerIndex = new LinkedHashMap<>();
+
+		Map<Integer, Layer> indexLayer = new LinkedHashMap<>();
 
 		public Selections selections = new Selections();
 
 		Map<Class<? extends Selection>, SelectionLayers> layersByInput = new LinkedHashMap<>();
 
 		Map<Layer, SelectionLayers.LayerSelections> selectionsByLayer = new LinkedHashMap<>();
+
+		ExitTraversal exitTraversal;
 
 		public <T> T context(Class<T> clazz) {
 			return SelectionTraversal.this.context(clazz);
@@ -591,7 +627,7 @@ public class SelectionTraversal
 		}
 
 		void releaseLastLayerResources() {
-			Layer last = visitedLayers.keySet().stream().reduce(Ax.last())
+			Layer last = layerIndex.keySet().stream().reduce(Ax.last())
 					.orElse(null);
 			selections.byLayerCounts.getOrDefault(last, new LinkedHashMap<>())
 					.keySet().forEach(
@@ -612,8 +648,9 @@ public class SelectionTraversal
 		}
 
 		void onBeforeLayerTraversal() {
-			Integer index = state.visitedLayers.computeIfAbsent(currentLayer,
-					l -> state.visitedLayers.size());
+			Integer index = state.layerIndex.computeIfAbsent(currentLayer,
+					l -> state.layerIndex.size());
+			state.indexLayer.put(index, currentLayer);
 			currentLayer.index = index;
 			if (!(currentLayer instanceof InputsFromPreviousSibling)) {
 				Class<?> inputType = currentLayer.inputType;
@@ -717,19 +754,39 @@ public class SelectionTraversal
 	public class TraversalComplete implements ProcessObservable {
 	}
 
+	/*
+	 * publishes an exception, but does not break code flow
+	 */
 	class SuppressedExceptionObserver
 			implements ProcessObserver<SuppressedException> {
+		int observed = 0;
+
 		@Override
 		public void topicPublished(SuppressedException message) {
-			selections().exceptions.put(contextSelection(), message.e);
+			if (observed++ < 100) {
+				/*
+				 * Duplicate selections are quite possibly an issue with
+				 * external data rather than traversal logic - so don't
+				 * interrupt traversal
+				 */
+				Ax.simpleExceptionOut(message.e);
+			}
+			publishException(message.e);
 		}
 	}
 
-	static final String CONTEXT_TRAVERSAL = SelectionTraversal.class.getName()
-			+ ".CONTEXT_TRAVERSAL";
+	class ExitTraversalObserver implements ProcessObserver<ExitTraversal> {
+		@Override
+		public void topicPublished(ExitTraversal message) {
+			SelectionTraversal.this.state.exitTraversal = message;
+		}
+	}
 
-	static final String CONTEXT_SELECTION = SelectionTraversal.class.getName()
-			+ ".CONTEXT_SELECTION";
+	static LooseContext.Key<SelectionTraversal> CONTEXT_TRAVERSAL = LooseContext
+			.key(SelectionTraversal.class, "CONTEXT_TRAVERSAL");
+
+	static LooseContext.Key<Selection> CONTEXT_SELECTION = LooseContext
+			.key(SelectionTraversal.class, "CONTEXT_SELECTION");
 
 	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
 			.create();
@@ -740,11 +797,11 @@ public class SelectionTraversal
 	static IdCounter counter = new IdCounter();
 
 	public static <S extends Selection> S contextSelection() {
-		return LooseContext.get(CONTEXT_SELECTION);
+		return (S) CONTEXT_SELECTION.getTyped();
 	}
 
 	public static SelectionTraversal contextTraversal() {
-		return LooseContext.get(CONTEXT_TRAVERSAL);
+		return CONTEXT_TRAVERSAL.getTyped();
 	}
 
 	public Topic<Layer> topicBeforeLayerTraversal = Topic.create();
@@ -812,8 +869,26 @@ public class SelectionTraversal
 		}
 
 		public List<Layer> getVisited() {
-			return state.visitedLayers.keySet().stream()
+			return state.layerIndex.keySet().stream()
 					.collect(Collectors.toList());
+		}
+
+		/**
+		 * Better - if in a layer, just use {@link Layer#layerContext(Class)}
+		 * 
+		 * @param <T>
+		 * @param clazz
+		 * @return
+		 */
+		public <T extends Layer> T visitedLayer(Class<T> clazz) {
+			return (T) state.layerIndex.keySet().stream()
+					.filter(layer -> layer.getClass() == clazz).findFirst()
+					.get();
+		}
+
+		Layer getPrecedingLayer(Layer relativeTo) {
+			int idx = state.layerIndex.get(relativeTo);
+			return idx > 0 ? state.indexLayer.get(idx - 1) : null;
 		}
 	}
 
@@ -867,16 +942,24 @@ public class SelectionTraversal
 	}
 
 	public SelectionFilter provideExceptionSelectionFilter() {
-		return SelectionFilter.ofSelections(selections().exceptions.keySet());
+		List<Selection> exceptionKeys = selections().exceptions.keySet()
+				.stream().toList();
+		int skip = Math.max(0, exceptionKeys.size() - 10);
+		List<Selection> last5 = exceptionKeys.stream().skip(skip).toList();
+		return SelectionFilter.ofSelections(last5);
 	}
 
 	public void select(Selection selection) {
-		if (!state.selections.add(selection)) {
-			/*
-			 * this will never be processed, so mark as released
-			 */
-			selection.processNode().setReleasedResources(true);
+		boolean added = false;
+		try {
+			added = state.selections.add(selection);
+		} catch (DuplicateSelectionException e) {
+			new SuppressedException(e).publish();
 		}
+		/*
+		 * this will never be processed, so mark as released
+		 */
+		selection.processNode().setReleasedResources(true);
 	}
 
 	public void setExecutor(Executor executor) {
@@ -900,9 +983,14 @@ public class SelectionTraversal
 	public void traverse() {
 		try {
 			LooseContext.push();
-			LooseContext.set(CONTEXT_TRAVERSAL, this);
+			CONTEXT_TRAVERSAL.set(this);
 			new SuppressedExceptionObserver().bind();
+			new ExitTraversalObserver().bind();
 			traverse0();
+		} catch (Throwable t) {
+			t.printStackTrace();
+			// very unexpected
+			throw t;
 		} finally {
 			LooseContext.pop();
 		}
@@ -936,8 +1024,8 @@ public class SelectionTraversal
 			topicBeforeLayerTraversal.publish(layer);
 			ProcessObservers.publish(LayerEntry.class, () -> new LayerEntry());
 			for (;;) {
-				layer.onBeforeIteration();
 				try {
+					layer.onBeforeIteration();
 					for (Selection selection : layer) {
 						if (!state.wasProcessed(selection)
 								&& untyped.submit(selection)) {
@@ -951,18 +1039,25 @@ public class SelectionTraversal
 				} finally {
 					layer.onAfterIteration();
 				}
-				if (layer.isComplete()) {
+				if (layer.isComplete() || isExit()) {
 					layer.onAfterInputsProcessed();
 					break;
 				}
 			}
 			state.onAfterTraversal();
 			ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
+			state.releaseLastLayerResources();
+			if (isExit()) {
+				break;
+			}
 		}
-		state.releaseLastLayerResources();
 		topicTraversalComplete.publish(this);
 		ProcessObservers.publish(TraversalComplete.class,
 				() -> new TraversalComplete());
+	}
+
+	boolean isExit() {
+		return state.exitTraversal != null;
 	}
 
 	void enterSelectionContext(Selection<?> selection) {
@@ -979,14 +1074,23 @@ public class SelectionTraversal
 		}
 	}
 
+	void publishException(Exception e) {
+		Selection selection = CONTEXT_SELECTION.getTyped();
+		selections().addException(selection, e);
+		selection.processNode().onException(e);
+		selections().topicException
+				.publish(new SelectionException(selection, e));
+		if (context(TraversalContext.ThrowOnException.class) != null) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
 	void processSelection(Selection selection) {
 		try {
-			LooseContext.pushWithKey(CONTEXT_SELECTION, selection);
+			LooseContext.push();
+			CONTEXT_SELECTION.set(selection);
 			Layer layer = layers().getCurrent();
 			enterSelectionContext(selection);
-			if (layer.state.traversalCancelled) {
-				return;
-			}
 			selection.processNode().select(null, this);
 			if (!layer.testFilter(selection) || !testLayerFilter(selection)) {
 				// skip processing if, for instance, the traversal has hit max
@@ -999,15 +1103,9 @@ public class SelectionTraversal
 						() -> new BeforeLayerSelection(layer, selection));
 				layer.process(selection);
 			} catch (Exception e) {
-				selections().exceptions.put(selection, e);
-				selection.processNode().onException(e);
-				selections().topicException
-						.publish(new SelectionException(selection, e));
 				logger.warn(Ax.format("Selection exception :: %s",
 						Ax.trimForLogging(selection)), e);
-				if (context(TraversalContext.ThrowOnException.class) != null) {
-					throw WrappedRuntimeException.wrap(e);
-				}
+				publishException(e);
 			} finally {
 				layer.onAfterProcess(selection);
 			}

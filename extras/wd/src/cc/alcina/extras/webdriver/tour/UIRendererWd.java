@@ -308,7 +308,7 @@ public class UIRendererWd extends UIRenderer {
 					: "";
 			wdJsInvoke("renderRelative('%s','%s', '%s')",
 					JacksonUtils.serializeNoTypes(popupInfo), soleSelector,
-					root.fullToString());
+					root.toMarkup());
 		}
 
 		public boolean textMatches(String string) {

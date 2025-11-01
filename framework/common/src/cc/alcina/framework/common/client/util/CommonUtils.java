@@ -857,22 +857,22 @@ public class CommonUtils {
 		if (enumValueLookup.asMapEnsure(false, enumClass,
 				withFriendlyNames) == null) {
 			for (E ev : enumClass.getEnumConstants()) {
-				enumValueLookup.put(enumClass, withFriendlyNames, ev.toString(),
-						ev);
+				String enumName = ev.name();
+				enumValueLookup.put(enumClass, withFriendlyNames, enumName, ev);
 				enumValueLookup.put(enumClass, withFriendlyNames,
-						ev.toString().toLowerCase(), ev);
+						enumName.toLowerCase(), ev);
 				if (withFriendlyNames) {
 					// handle double__ default
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							ev.toString().toLowerCase().replace('_', '-'), ev);
+							enumName.toLowerCase().replace('_', '-'), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, "-").toLowerCase(), ev);
+							friendlyConstant(enumName, "-").toLowerCase(), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, "-"), ev);
+							friendlyConstant(enumName, "-"), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, " "), ev);
+							friendlyConstant(enumName, " "), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
-							friendlyConstant(ev, " ").toLowerCase(), ev);
+							friendlyConstant(enumName, " ").toLowerCase(), ev);
 				}
 			}
 		}
@@ -1466,7 +1466,7 @@ public class CommonUtils {
 
 	public static String padStringLeft(String input, int length, String pad) {
 		input = input == null ? "(null)" : input;
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < length - input.length(); i++) {
 			sb.append(pad);
 		}
@@ -1477,7 +1477,7 @@ public class CommonUtils {
 	public static String padStringRight(String input, int length,
 			char padChar) {
 		input = input == null ? "(null)" : input;
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append(input);
 		for (int i = 0; i < length - input.length(); i++) {
 			sb.append(padChar);
@@ -2234,5 +2234,9 @@ public class CommonUtils {
 			return d0;
 		}
 		return d0.after(d1) ? d0 : d1;
+	}
+
+	public static String toFileUrl(String name) {
+		return "file://" + name;
 	}
 }

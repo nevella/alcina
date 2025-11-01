@@ -10,9 +10,6 @@ import cc.alcina.framework.common.client.util.CachingMap;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DTRProtocolSerializer {
-	public static final String CONTEXT_EXCEPTION_DEBUG = DTRProtocolSerializer.class
-			.getName() + ".CONTEXT_EXCEPTION_DEBUG";
-
 	static CachingMap<String, Class> protocolHandlerLookup = new CachingMap<>(
 			protocolVersion -> Registry.query(DTRProtocolHandler.class)
 					.implementations()

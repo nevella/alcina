@@ -73,7 +73,7 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 
 	public abstract String[] tagStrings();
 
-	protected String writeTempFile(Class clazz, String extension,
+	public static String writeTempFile(Class clazz, String extension,
 			String content) throws IOException {
 		File dir = console.getDevHelper().getDevFolder();
 		String outPath = String.format("%s/%s.%s", dir.getPath(),

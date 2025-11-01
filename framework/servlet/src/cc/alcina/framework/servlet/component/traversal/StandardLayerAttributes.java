@@ -77,8 +77,7 @@ public class StandardLayerAttributes {
 		}
 
 		public String normalisedValue() {
-			return value == null ? null
-					: value.replaceFirst("^'(.+)'$", "public");
+			return value == null ? null : value.replaceFirst("^'(.+)'$", "$1");
 		}
 
 		public DomainFilter toDomainFilter(Class<?> filteredClass) {

@@ -87,7 +87,7 @@ class EntityTraversalQueryLayer extends Layer
 
 	void processPropertySelection(PropertySelection selection) {
 		EntitySelection entitySelection = selection
-				.ancestorSelection(EntitySelection.class);
+				.ancestor(EntitySelection.class);
 		Entity entity = entitySelection.get();
 		Object value = selection.get().get(entity);
 		if (value instanceof Entity) {

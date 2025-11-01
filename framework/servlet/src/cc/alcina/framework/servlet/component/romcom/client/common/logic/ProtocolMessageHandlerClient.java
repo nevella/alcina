@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -234,6 +235,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 					return;
 				}
 			}
+			RemoteObjectModelComponentClient.markWindowAsErrorState();
 			// FIXME - remcon - prettier?
 			Window.alert(clientMessage);
 		}

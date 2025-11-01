@@ -46,6 +46,14 @@ public class HtmlConstants {
 
 	public static final String TABLE = "TABLE";
 
+	public static final String TR = "TR";
+
+	public static final String THEAD = "THEAD";
+
+	public static final String TBODY = "TBODY";
+
+	public static final String TFOOT = "TFOOT";
+
 	public static final String CSS_BACKGROUND_COLOR = "backgroundColor";
 
 	public static final String CSS_BORDER_BOTTOM = "borderBottom";

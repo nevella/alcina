@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -64,8 +65,8 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
-		boolean full = GWT.isClient() || !LooseContext
-				.is(DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
+		boolean full = GWT.isClient()
+				|| !DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG.is();
 		String newStringValue = domainTransformEvent.getNewStringValue();
 		if (!full && newStringValue != null && newStringValue.length() > 1000) {
 			newStringValue = Ax.format("Truncated - %s chars - %s",

@@ -40,7 +40,7 @@ public class PlainTextDocumentSelection extends TextSelection
 	public String getText() {
 		if (text == null) {
 			try {
-				text = loader.load(ancestorSelection(loader.selectionClass()));
+				text = loader.load(ancestor(loader.selectionClass()));
 				if (text == null) {
 					loadException = new Exception("loader returned null");
 				}

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.dom.Location;
@@ -50,6 +51,9 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  * @param <T>
  */
 public interface Selection<T> extends HasProcessNode<Selection> {
+	public static LooseContext.Key CONTEXT_FULL_DUPLICATE_PATH_DEBUG = LooseContext
+			.key(Selection.class, "CONTEXT_FULL_DUPLICATE_PATH_DEBUG");
+
 	public static class OnetimeStack<T> extends LinkedList<T> {
 		Set<T> tested = new LinkedHashSet<>();
 
@@ -80,7 +84,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	/*
 	 * 
 	 */
-	public static class Relations {
+	public static class Relation {
 		public interface Type {
 			public interface SecondaryParent extends Type {
 			}
@@ -94,6 +98,13 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			 * copy-on-write model
 			 */
 			public interface Replacement extends Type {
+			}
+
+			/**
+			 * The selections are equivalent (for a domain-specific equivalence
+			 * relation)
+			 */
+			public interface Equivalent extends Type {
 			}
 		}
 
@@ -114,7 +125,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 		boolean hasReplacement;
 
-		Relations(Selection<?> selection) {
+		Relation(Selection<?> selection) {
 			this.selection = selection;
 		}
 
@@ -135,9 +146,19 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			}
 		}
 
-		Stream<Selection> stream(Class<? extends Relations.Type> clazz) {
+		public <T extends Selection> Stream<T>
+				stream(Class<? extends Relation.Type> clazz) {
 			return entries.stream().filter(e -> e.type == clazz)
-					.map(e -> e.selection);
+					.map(e -> (T) e.selection);
+		}
+
+		public <T extends Selection> T
+				get(Class<? extends Relation.Type> clazz) {
+			return (T) stream(clazz).findFirst().get();
+		}
+
+		public boolean has(Class<? extends Relation.Type> clazz) {
+			return stream(clazz).anyMatch(s -> true);
 		}
 
 		public boolean hasReplacedBy() {
@@ -303,13 +324,20 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return null;
 	};
 
-	default <V extends Selection> V ancestorSelection(Class<V> clazz) {
-		return ancestorSelection(cursor -> Reflections.isAssignableFrom(clazz,
+	/**
+	 * Note this includes self - to exclude, use
+	 * parentSelection().ancestorSelection()
+	 */
+	default <V extends Selection> V ancestor(Class<V> clazz) {
+		return ancestor(cursor -> Reflections.isAssignableFrom(clazz,
 				cursor.getClass()));
 	}
 
-	default <V extends Selection> V
-			ancestorSelection(Predicate<Selection> predicate) {
+	/**
+	 * Note this includes self - to exclude, use
+	 * parentSelection().ancestorSelection()
+	 */
+	default <V extends Selection> V ancestor(Predicate<Selection> predicate) {
 		Selection cursor = this;
 		while (cursor != null) {
 			if (predicate.test(cursor)) {
@@ -408,7 +436,8 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		Selection cursor = this;
 		List<String> segments = new ArrayList<>();
 		while (cursor != null) {
-			segments.add(0, cursor.getPathSegment());
+			segments.add(0, Ax.format("%s - %s", NestedName.get(cursor),
+					cursor.getPathSegment()));
 			cursor = cursor.parentSelection();
 		}
 		return Ax.format("[\n%s\n]\n",
@@ -482,7 +511,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 				pending.add(test.parentSelection());
 				if (test.hasRelations()) {
 					test.getRelations()
-							.stream(Relations.Type.SecondaryParent.class)
+							.stream(Relation.Type.SecondaryParent.class)
 							.forEach(pending::add);
 				}
 			}
@@ -507,22 +536,21 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	}
 
 	default void onDuplicatePathSelection(Layer layer, Selection selection) {
-		LoggerFactory.getLogger(Selection.class).warn(
-				"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}\nPath: {}",
+		String message = Ax.format(
+				"Duplicate path selection - index paths:\nExisting: %s\nIncoming: %s\nPath: %s\nType: %s",
 				processNode().treePath(), selection.processNode().treePath(),
-				selection.getPathSegment());
+				selection.getPathSegment(), NestedName.get(selection));
 		/*
-		 * This wants a client/server-friendly config system
+		 * This wants a client/server-friendly config system - LooseContext is a
+		 * decent second-best
 		 */
-		boolean fullDebug = false;
+		boolean fullDebug = CONTEXT_FULL_DUPLICATE_PATH_DEBUG.is();
 		if (fullDebug) {
 			LoggerFactory.getLogger(Selection.class).warn(
 					"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}",
-					selection.fullDebugPath(), selection.fullDebugPath());
+					selection.fullDebugPath(), fullDebugPath());
 		}
-		throw new DuplicateSelectionException(
-				Ax.format("Duplicate selection path: %s :: %s",
-						selection.getPathSegment(), layer));
+		throw new DuplicateSelectionException(message);
 	}
 
 	default Selection<?> parentSelection() {
@@ -538,7 +566,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		}
 	}
 
-	Relations getRelations();
+	Relation getRelations();
 
 	default boolean referencesAncestorResources() {
 		return true;
@@ -594,5 +622,19 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 	default boolean hasNoReplacedBy() {
 		return !hasReplacedBy();
+	}
+
+	/**
+	 * Replace this selection with another in the traversal, mostly to preserve
+	 * layer immutability (i.e. a selection should be modified only in the
+	 * creating layer)
+	 * 
+	 * @param other
+	 *            - must be the same type as this selection
+	 */
+	default void replaceWith(Selection<?> other) {
+		Preconditions.checkArgument(getClass() == other.getClass());
+		getRelations().addRelation(Selection.Relation.Type.Replacement.class,
+				other);
 	}
 }

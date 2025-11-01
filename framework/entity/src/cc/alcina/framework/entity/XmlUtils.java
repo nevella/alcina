@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -994,20 +995,17 @@ public class XmlUtils {
 
 	public static void logToFile(Node n) throws Exception {
 		new File("/tmp/log").mkdirs();
-		Io.write().string(streamXML(n)).toPath("/tmp/log/log.xml");
-		Io.write().string(streamXML(n)).toPath("/tmp/log/log.html");
+		Io.log().toFile(streamXML(n));
 	}
 
 	public static void logToFilePretty(Node n) throws Exception {
+		String markup = null;
 		if (n instanceof DocumentFragment) {
-			new File("/tmp/log").mkdirs();
-			Io.write().string(prettyPrintWithDOM3LS((DocumentFragment) n))
-					.toPath("/tmp/log/log.xml");
+			markup = prettyPrintWithDOM3LS((DocumentFragment) n);
 		} else {
-			new File("/tmp/log").mkdirs();
-			Io.write().string(prettyPrintWithDOM3LSNode(n))
-					.toPath("/tmp/log/log.xml");
+			markup = prettyPrintWithDOM3LSNode(n);
 		}
+		Io.log().toFile(markup);
 	}
 
 	public static void merge(Element to, Element from) {
@@ -1310,10 +1308,46 @@ public class XmlUtils {
 	}
 
 	public static String streamNCleanForBrowserHtmlFragment(String markup) {
+		markup = fixProcessingElementTerminator(markup);
 		markup = expandEmptyElements(markup);
 		markup = cleanXmlHeaders(markup);
 		markup = EntityCleaner.get().htmlToUnicodeEntities(markup);
 		return markup;
+	}
+
+	static String fixProcessingElementTerminator(String markup) {
+		int scanStart = 0;
+		int copiedTo = 0;
+		StringBuilder result = null;
+		for (;;) {
+			int piStart = markup.indexOf("<?", scanStart);
+			if (piStart == -1) {
+				break;
+			}
+			int piEnd = markup.indexOf('>', piStart);
+			if (piEnd == -1) {
+				break;
+			}
+			if (markup.charAt(piEnd - 1) != '?') {
+				if (result == null) {
+					result = new StringBuilder();
+				}
+				result.append(markup.substring(copiedTo, piEnd - 1));
+				result.append("?>");
+				copiedTo = piEnd + 1;
+				scanStart = copiedTo;
+			} else {
+				scanStart = piEnd + 1;
+			}
+		}
+		if (result != null) {
+			result.append(markup.substring(copiedTo, markup.length()));
+		}
+		if (result != null) {
+			return result.toString();
+		} else {
+			return markup;
+		}
 	}
 
 	public static String streamXML(Node n) {
@@ -1735,8 +1769,11 @@ public class XmlUtils {
 				if (configurator != null) {
 					configurator.configure(transformerFactory);
 				}
-				return xsltSource == null ? transformerFactory.newTransformer()
+				Transformer transformer = xsltSource == null
+						? transformerFactory.newTransformer()
 						: transformerFactory.newTransformer(xsltSource);
+				transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+				return transformer;
 			}
 
 			@Override

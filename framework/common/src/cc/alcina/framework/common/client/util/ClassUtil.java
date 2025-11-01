@@ -70,12 +70,12 @@ public class ClassUtil {
 		Class<?> cursor = clazz;
 		while (cursor != null) {
 			String className = cursor.getName();
-			switch (className) {
+			switch (cursor.getName()) {
+			case "java.util.ImmutableCollections$AbstractImmutableList":
 			case "java.util.Collections$UnmodifiableList":
 			case "java.util.Collections$SingletonList":
 			case "java.util.Collections$EmptyList":
 			case "java.util.Collections$UnmodifiableRandomAccessList":
-				return true;
 			case "java.util.Arrays$ArrayList":
 				return true;
 			}

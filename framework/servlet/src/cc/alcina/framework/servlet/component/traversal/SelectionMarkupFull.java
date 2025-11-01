@@ -98,7 +98,7 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				DomNode body = containingNode.document.html().body();
 				contentsNode = body != null ? body
 						: containingNode.document.getDocumentElementNode();
-				String markup = contentsNode.fullToString();
+				String markup = contentsNode.toMarkup();
 				markup = XmlUtils.removeNamespaceInfo(markup);
 				markup = markup.replaceAll("(</?body)([^>]+>)", "$1-sub$2");
 				this.markupHighlights = new MarkupHighlights(markup,

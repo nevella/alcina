@@ -77,7 +77,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
-		if (LooseContext.is(LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)) {
+		if (CONTEXT_LAZY_LOAD_DISABLED.is()) {
 			return stream;
 		}
 		if (LooseContext

@@ -81,6 +81,11 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		public Context(Node node) {
 			this.node = node;
+			Preconditions.checkArgument(node != null);
+		}
+
+		public Util util() {
+			return new Util();
 		}
 
 		public Util util() {
@@ -96,6 +101,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		 * fire on ancestor handlers
 		 */
 		public void bubble() {
+			if (!(getNodeEvent() instanceof ModelEvent)) {
+				throw new IllegalArgumentException(
+						"Dom events bubble via DOM bubbling, and are not stopped at the first handler. Remove this bubble!");
+			}
 			((ModelEvent) getPrevious().getNodeEvent()).setHandled(false);
 		}
 

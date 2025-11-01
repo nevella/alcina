@@ -44,7 +44,7 @@ public class TaskRunJob extends PerformerTask {
 			String id = String.valueOf(job.getId());
 			Task task = new TaskLogJobDetails().withJobId(jobId);
 			p.html().addLink(id, JobServlet.createTaskUrl(task), null);
-			JobContext.setLargeResult(doc.prettyToString());
+			JobContext.setLargeResult(doc.toPrettyMarkup());
 			Transaction.commit();
 		}
 	}

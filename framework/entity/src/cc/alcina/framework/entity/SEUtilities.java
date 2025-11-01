@@ -855,6 +855,11 @@ public class SEUtilities {
 		return generateId(ranges, length);
 	}
 
+	public static String generateNumericId() {
+		char[][] ranges = { { '0', '9' } };
+		return generateId(ranges, 32);
+	}
+
 	public static String generatePrettyUuid() {
 		char[][] ranges = { { 'a', 'k' }, { 'm', 'n' }, { 'p', 'z' } };
 		return Ax.format("%s-%s", generateId(ranges, 4), generateId(ranges, 7));

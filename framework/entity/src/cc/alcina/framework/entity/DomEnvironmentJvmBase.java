@@ -116,7 +116,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	}
 
 	@Override
-	public String prettyPrint(Document w3cDoc) {
+	public String toPrettyMarkup(Document w3cDoc) {
 		if (isGwtDocument(w3cDoc)) {
 			return asGwtDocument(w3cDoc).getDocumentElement().getOuterHtml(true,
 					false);
@@ -126,7 +126,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	}
 
 	@Override
-	public String prettyToString(DomNode xmlNode) {
+	public String toPrettyMarkup(DomNode xmlNode) {
 		if (isGwtDocument(xmlNode.document.w3cDoc())) {
 			return getGwtNodeMarkup(xmlNode, true, true);
 		} else {
@@ -149,7 +149,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public NamespaceResult removeNamespaces(DomDocument xmlDoc) {
 		NamespaceResult result = new NamespaceResult();
-		String xml = xmlDoc.fullToString();
+		String xml = xmlDoc.toMarkup();
 		Pattern p = Pattern.compile("(?s)<([A-Za-z]\\S+) .+?>");
 		Matcher m = p.matcher(xml);
 		m.find();
@@ -163,7 +163,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	public NamespaceResult restoreNamespaces(DomDocument xmlDoc,
 			String firstTag) {
 		NamespaceResult result = new NamespaceResult();
-		result.xml = xmlDoc.fullToString();
+		result.xml = xmlDoc.toMarkup();
 		Pattern p = Pattern.compile("(?s)<[A-Za-z]\\S+>");
 		Matcher m = p.matcher(result.xml);
 		result.xml = m.replaceFirst(CommonUtils.escapeRegex(firstTag));
@@ -176,18 +176,18 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	}
 
 	@Override
-	public String toHtml(DomDocument doc, boolean pretty) {
+	public String toMarkup(DomDocument doc, boolean pretty) {
 		if (isGwtDocument(doc.w3cDoc())) {
 			return getGwtNodeMarkup(doc, pretty, false);
 		} else {
-			String xml = pretty ? doc.prettyToString() : doc.fullToString();
+			String xml = pretty ? doc.toPrettyMarkup() : doc.toMarkup();
 			xml = XmlUtils.expandEmptyElements(xml);
 			return XmlUtils.fixStyleNodeContents(xml);
 		}
 	}
 
 	@Override
-	public String toXml(Node node) {
+	public String toMarkup(Node node) {
 		if (isGwtDocument(node.getOwnerDocument())) {
 			return getGwtNodeMarkup(DomNode.from(node), false, true);
 		} else {

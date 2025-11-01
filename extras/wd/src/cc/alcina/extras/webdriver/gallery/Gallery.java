@@ -239,7 +239,7 @@ public class Gallery {
 					node.removeFromParent();
 				}
 			}
-			Io.write().string(doc.fullToString()).toFile(toFileHtml);
+			Io.write().string(doc.toMarkup()).toFile(toFileHtml);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

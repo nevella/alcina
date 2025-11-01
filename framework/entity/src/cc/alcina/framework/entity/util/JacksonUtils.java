@@ -192,4 +192,9 @@ public class JacksonUtils {
 	public static JacksonJsonObjectSerializer wsSerializer() {
 		return new JacksonJsonObjectSerializer();
 	}
+
+	public static void logPretty(JsonNode node) {
+		Io.write().string(prettyJson(node)).withEnsureParents(true)
+				.toPath("/tmp/log/log.json");
+	}
 }

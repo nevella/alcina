@@ -24,13 +24,13 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.xerces.parsers.DOMParser;
-import org.cyberneko.html.HTMLConfiguration;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FileLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Io.WriteOp.Contents;
 
 public class Io {
 	public static LogOp log() {
@@ -54,10 +55,21 @@ public class Io {
 	}
 
 	public static class LogOp {
-		private String content;
+		private String string;
 
-		public void toFile(String content) {
-			this.content = content;
+		private byte[] bytes;
+
+		public void toFile(byte[] bytes) {
+			this.bytes = bytes;
+			log();
+		}
+
+		public void toFile(String string) {
+			this.string = string;
+			log();
+		}
+
+		void log() {
 			writeFile("log.txt");
 			writeFile("log.html");
 			writeFile("log.xml");
@@ -67,7 +79,14 @@ public class Io {
 			try {
 				new File("/tmp/log").mkdirs();
 				String path = "/tmp/log/" + fileName;
-				write().string(content).toPath(path);
+				Contents contents = write();
+				WriteOp.Resource resource = null;
+				if (string != null) {
+					resource = contents.string(string);
+				} else {
+					resource = contents.bytes(bytes);
+				}
+				resource.toPath(path);
 				Ax.out("Logged to: %s ", path);
 				Ax.out("");
 			} catch (Exception e) {
@@ -231,26 +250,6 @@ public class Io {
 			return DomDocument.from(asXmlDocument());
 		}
 
-		private DOMParser createDOMParser() {
-			DOMParser parser = new DOMParser(new HTMLConfiguration());
-			try {
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
-						true);
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
-						true);
-				if (!uppercaseTags) {
-					parser.setProperty(
-							"http://cyberneko.org/html/properties/names/elems",
-							"lower");
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			return parser;
-		}
-
 		public boolean exists() {
 			try (InputStream stream = resource.getStream()) {
 				return stream != null;
@@ -270,7 +269,13 @@ public class Io {
 					isrc = new InputSource(
 							new InputStreamReader(stream, charset));
 				}
-				DOMParser parser = createDOMParser();
+				/*
+				 * if upper-case tags are specified, use Neko
+				 * (case-insensitive?)
+				 */
+				DOMParser parser = uppercaseTags
+						? DomParserUtils.createDOMParser(!uppercaseTags)
+						: DomParserUtils.createXercesDOMParser(!uppercaseTags);
 				parser.parse(isrc);
 				return (Document) parser.getDocument();
 			} catch (Exception e) {
@@ -304,6 +309,14 @@ public class Io {
 			return this;
 		}
 
+		/**
+		 * Note that uppercaseTags will return a Neko HtmlDocument (uppercase
+		 * tags, case-insensitive), lower-case will return a standard Xerces doc
+		 * (cas-sensitive)
+		 * 
+		 * @param uppercaseTags
+		 * @return
+		 */
 		public ReadOp withUppercaseTags(boolean uppercaseTags) {
 			this.uppercaseTags = uppercaseTags;
 			return this;
@@ -476,6 +489,26 @@ public class Io {
 				return Optional.empty();
 			} else {
 				return Optional.of(asString());
+			}
+		}
+
+		public DomDocument asXmlOrHtmlDomDocument() {
+			resource.replayable = true;
+			String markup = asString();
+			try {
+				resource.stream.reset();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+			byte[] asBytes = asBytes();
+			try {
+				LooseContext
+						.pushWithTrue(XmlUtils.CONTEXT_MUTE_XML_SAX_EXCEPTIONS);
+				return asXmlDomDocument();
+			} catch (Exception e) {
+				return asDomDocument();
+			} finally {
+				LooseContext.pop();
 			}
 		}
 	}
@@ -728,5 +761,23 @@ public class Io {
 		public void logImpl(String text) {
 			Io.log().toFile(text);
 		}
+	}
+
+	public static void writeStreamToStream(InputStream in, OutputStream os,
+			boolean keepOutputOpen) throws IOException {
+		OutputStream bos = os instanceof ByteArrayOutputStream ? os
+				: new BufferedOutputStream(os);
+		int bufLength = in.available() <= 1024 ? 1024 * 64
+				: Math.min(1024 * 1024, in.available());
+		byte[] buffer = new byte[bufLength];
+		int result;
+		while ((result = in.read(buffer)) != -1) {
+			bos.write(buffer, 0, result);
+		}
+		bos.flush();
+		if (!keepOutputOpen) {
+			bos.close();
+		}
+		in.close();
 	}
 }

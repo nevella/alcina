@@ -40,12 +40,12 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String prettyPrint(Document domDoc) {
+	public String toPrettyMarkup(Document domDoc) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public String prettyToString(DomNode xmlNode) {
+	public String toPrettyMarkup(DomNode xmlNode) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -66,12 +66,12 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toHtml(DomDocument doc, boolean pretty) {
+	public String toMarkup(DomDocument doc, boolean pretty) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public String toXml(Node node) {
+	public String toMarkup(Node node) {
 		com.google.gwt.dom.client.Node clientNode = (com.google.gwt.dom.client.Node) node;
 		short nodeType = clientNode.getNodeType();
 		switch (nodeType) {

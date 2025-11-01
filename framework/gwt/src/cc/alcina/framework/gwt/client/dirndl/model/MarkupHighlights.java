@@ -62,7 +62,7 @@ public class MarkupHighlights extends Model.Fields {
 			DomDocument doc = DomDocument.from("<pre><code/></pre>");
 			doc.getDocumentElementNode().children.firstElement()
 					.setText(content);
-			content = doc.fullToString();
+			content = doc.toMarkup();
 		}
 		highlitMarkup = new HighlitMarkup(content, classNames);
 	}

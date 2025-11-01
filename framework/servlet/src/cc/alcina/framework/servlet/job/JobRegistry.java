@@ -54,6 +54,7 @@ import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -574,27 +575,36 @@ public class JobRegistry {
 		// track why not removed in this-vm process (i.e. finally of performJob0
 		// not completing).
 		// How to track: put logging here (DEVEX)
-		activeJobs.keySet().removeIf(job -> {
-			try {
-				// this is more a guard against exceptions rather than logically
-				// correct - correctness would be a txview
-				if (Mvcc.isVisible(job) && job.getState() == JobState.ABORTED) {
-					return true;
-				} else if (job.domain().wasPersisted()
-						&& Domain.find(job) == null) {
-					/*
-					 * Deleted, but with issues during persistence propagation
-					 */
-					return true;
-				} else {
+		try {
+			LooseContext.push();
+			LazyPropertyLoadTask.CONTEXT_LAZY_LOAD_DISABLED.setTrue();
+			activeJobs.keySet().removeIf(job -> {
+				try {
+					// this is more a guard against exceptions rather than
+					// logically
+					// correct - correctness would be a txview
+					if (Mvcc.isVisible(job)
+							&& job.getState() == JobState.ABORTED) {
+						return true;
+					}
+					if (job.domain().wasPersisted()
+							&& Domain.find(job) == null) {
+						/*
+						 * Deleted, but with issues during persistence
+						 * propagation
+						 */
+						return true;
+					}
+					return false;
+				} catch (Exception e) {
+					// FIXME - devex - presumably mvcc-deleted
+					e.printStackTrace();
 					return false;
 				}
-			} catch (Exception e) {
-				// FIXME - devex - presumably mvcc-deleted
-				e.printStackTrace();
-				return false;
-			}
-		});
+			});
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {
@@ -798,10 +808,11 @@ public class JobRegistry {
 			ExecutorService executorService) {
 		try {
 			if (environment.isInTransactionMultipleTxEnvironment()) {
-				logger.warn(
-						"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
-								+ " - {}\nuncommitted transforms:\n{}",
-						job, TransformManager.get().getTransforms());
+				DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG
+						.runWithTrue(() -> logger.warn(
+								"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
+										+ " - {}\nuncommitted transforms:\n{}",
+								job, TransformManager.get().getTransforms()));
 				try {
 					Transaction.commit();
 				} catch (Exception e) {

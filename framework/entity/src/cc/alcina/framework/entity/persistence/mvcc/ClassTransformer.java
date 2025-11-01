@@ -1315,15 +1315,22 @@ class ClassTransformer {
 			}
 
 			private boolean matches(CtClass ctClass, Class<?> clazz) {
-				String ctClassName = getClassName(ctClass);
-				String altFormCtClassName = ctClassName;
-				if (ctClassName.endsWith("[]")) {
-					altFormCtClassName = Ax.format("[L%s;",
-							ctClassName.replaceFirst("(.+)\\[\\]", "$1"));
-				}
 				String className = clazz.getName();
-				return ctClassName.equals(className)
-						|| altFormCtClassName.equals(className);
+				String ctClassName = getClassName(ctClass);
+				if (Objects.equals(className, ctClassName)) {
+					return true;
+				}
+				if (ctClassName.equals("byte[]") && className.equals("[B")) {
+					return true;
+				}
+				if (ctClassName.endsWith("[]")) {
+					String altFormCtClassName = Ax.format("[L%s;",
+							ctClassName.replaceFirst("(.+)\\[\\]", "$1"));
+					if (Objects.equals(className, altFormCtClassName)) {
+						return true;
+					}
+				}
+				return false;
 			}
 
 			private class MethodNameArgTypes {

@@ -18,12 +18,14 @@ import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsC
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
+import cc.alcina.framework.gwt.client.dirndl.model.HasClassNames;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel.RowMeta;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightModelChanged;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SelectedIndexChanged;
@@ -48,7 +50,7 @@ class SequenceArea extends Model.Fields
 
 	@Directed.Transform(TableView.class)
 	@TableModel.RowTransformer(RowTransformer.class)
-	@BeanViewModifiers(detached = true, nodeEditors = true)
+	@BeanViewModifiers(detached = true, nodeEditors = true, editable = false)
 	@DirectedContextResolver(ColumnResolver.class)
 	List<?> filteredElements;
 
@@ -144,7 +146,13 @@ class SequenceArea extends Model.Fields
 				Object filteredElement = filteredElements.get(idx);
 				boolean hasMatch = page.highlightModel
 						.hasMatch(filteredElement);
-				rowsModel.meta.get(idx).setFlag("matches", hasMatch);
+				RowMeta rowMeta = rowsModel.meta.get(idx);
+				rowMeta.setFlag("matches", hasMatch);
+				if (filteredElement instanceof HasClassNames) {
+					((HasClassNames) filteredElement).provideClassNames()
+							.forEach(className -> rowMeta.setFlag(className,
+									true));
+				}
 			}
 			selectAndScroll(page.ui.place.selectedElementIdx, filteredElements);
 		}

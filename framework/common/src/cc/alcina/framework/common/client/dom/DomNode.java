@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
@@ -225,6 +226,9 @@ public class DomNode {
 
 	public DomNodeChildren children;
 
+	/*
+	 * A regen-on-write cache of the underlying w3c node's attributes
+	 */
 	private StringMap attributes;
 
 	private DomNodeXpath xpath;
@@ -322,6 +326,14 @@ public class DomNode {
 			}
 		}
 		return attributes;
+	}
+
+	public boolean hasAttributes() {
+		if (isElement()) {
+			return node.getAttributes().getLength() > 0;
+		} else {
+			return false;
+		}
 	}
 
 	public boolean attrIs(String key, String value) {
@@ -433,8 +445,9 @@ public class DomNode {
 		return builder().tag(path).append();
 	}
 
-	public String fullToString() {
-		return DomEnvironment.get().toXml(node).replace(CommonUtils.XML_PI, "");
+	public String toMarkup() {
+		return DomEnvironment.get().toMarkup(node).replace(CommonUtils.XML_PI,
+				"");
 	}
 
 	public String getClassName() {
@@ -576,8 +589,8 @@ public class DomNode {
 		return document.nodeFor(node.getParentNode());
 	}
 
-	public String prettyToString() {
-		return DomEnvironment.get().prettyToString(this);
+	public String toPrettyMarkup() {
+		return DomEnvironment.get().toPrettyMarkup(this);
 	}
 
 	public DomRange domRange() {
@@ -590,7 +603,8 @@ public class DomNode {
 
 	public void removeAttribute(String key) {
 		if (node.getAttributes().getNamedItem(key) != null) {
-			node.getAttributes().removeNamedItem(key);
+			Node removeNamedItem = node.getAttributes().removeNamedItem(key);
+			attributes = null;
 		}
 	}
 
@@ -610,6 +624,7 @@ public class DomNode {
 
 	public DomNode setAttr(String key, String value) {
 		((Element) node).setAttribute(key, value);
+		attributes = null;
 		return this;
 	}
 
@@ -760,7 +775,7 @@ public class DomNode {
 
 	@Override
 	public String toString() {
-		return CommonUtils.trimToWsChars(DomEnvironment.get().toXml(node)
+		return CommonUtils.trimToWsChars(DomEnvironment.get().toMarkup(node)
 				.replace(CommonUtils.XML_PI, ""), 255, true);
 	}
 
@@ -786,7 +801,7 @@ public class DomNode {
 	}
 
 	public String toXml() {
-		return DomEnvironment.get().toXml(node);
+		return DomEnvironment.get().toMarkup(node);
 	}
 
 	public DomNodeTree tree() {
@@ -1299,8 +1314,13 @@ public class DomNode {
 		}
 
 		public DomNode body() {
-			return xpath("//body").optionalNode()
+			DomNode byXpath = xpath("//body").optionalNode()
 					.orElse(xpath("//BODY").node());
+			if (byXpath != null) {
+				return byXpath;
+			}
+			return stream().filter(n -> n.tagIs("body")).findFirst()
+					.orElse(null);
 		}
 
 		public DomNode head() {
@@ -1316,7 +1336,7 @@ public class DomNode {
 		}
 
 		public String toHtml(boolean pretty) {
-			return DomEnvironment.get().toHtml(document, pretty);
+			return DomEnvironment.get().toMarkup(document, pretty);
 		}
 
 		public List<DomNode> trs() {
@@ -1341,6 +1361,18 @@ public class DomNode {
 				return TextUtils.isEmptyHardOrSoftWhitespace(boundary);
 			} else {
 				return Objects.equals(boundary, "\u00a0");
+			}
+		}
+
+		public Validation validation() {
+			return new Validation();
+		}
+
+		public class Validation {
+			public boolean canContainPcData() {
+				return !tagIsOneOf(HtmlConstants.TABLE, HtmlConstants.TBODY,
+						HtmlConstants.TFOOT, HtmlConstants.THEAD,
+						HtmlConstants.TR);
 			}
 		}
 	}
@@ -1738,6 +1770,24 @@ public class DomNode {
 				parent.children.append(other);
 			}
 		}
+<<<<<<< HEAD
+=======
+
+		public DomNode wrap(String tag) {
+			DomNode wrapper = document
+					.nodeFor(document.w3cDoc().createElement(tag));
+			replaceWith(wrapper);
+			wrapper.children.append(DomNode.this);
+			wrapper.copyAttributesFrom(DomNode.this);
+			return wrapper;
+		}
+
+		public DomNode firstNonWhitespaceTextNode() {
+			return descendants()
+					.filter(n -> n.isText() && n.isNonWhitespaceTextContent())
+					.findFirst().get();
+		}
+>>>>>>> dev
 	}
 
 	public class DomNodeStyle {
@@ -2306,7 +2356,7 @@ public class DomNode {
 
 	public String getInnerMarkup() {
 		StringBuilder builder = new StringBuilder();
-		children.nodes().forEach(child -> builder.append(child.fullToString()));
+		children.nodes().forEach(child -> builder.append(child.toMarkup()));
 		return builder.toString();
 	}
 
@@ -2384,5 +2434,33 @@ public class DomNode {
 		 */
 		return ancestors().orSelf(includingSelf).stream()
 				.filter(otherAncestors::contains).findFirst().orElse(null);
+	}
+
+	public boolean shallowEquals(DomNode other) {
+		if (w3cNode().getNodeType() != other.w3cNode().getNodeType()) {
+			return false;
+		}
+		if (!Objects.equals(w3cNode().getNodeName(),
+				other.w3cNode().getNodeName())) {
+			return false;
+		}
+		if (w3cNode() instanceof CharacterData) {
+			return Objects.equals(w3cNode().getNodeValue(),
+					other.w3cNode().getNodeValue());
+		} else if (w3cNode() instanceof ProcessingInstruction) {
+			ProcessingInstruction thisPi = (ProcessingInstruction) w3cNode();
+			ProcessingInstruction otherPi = (ProcessingInstruction) other
+					.w3cNode();
+			return Objects.equals(thisPi.getTarget(), otherPi.getTarget())
+					&& Objects.equals(thisPi.getData(), otherPi.getData());
+		} else if (w3cNode() instanceof Element) {
+			return areEqualAttributes(this, other);
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean areEqualAttributes(DomNode n1, DomNode n2) {
+		return Objects.equals(n1.attributes(), n2.attributes());
 	}
 }

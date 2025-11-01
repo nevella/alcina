@@ -412,6 +412,9 @@ public class BeanFields {
 			Custom customiserInfo = propertyLocation
 					.getAnnotation(Custom.class);
 			if (customiserInfo != null) {
+				if (query.ignoreCustomiser) {
+					return null;
+				}
 				Customiser customiser = Reflections
 						.newInstance(customiserInfo.customiserClass());
 				bwp = customiser.getProvider(fieldEditable, domainType,
@@ -591,8 +594,10 @@ public class BeanFields {
 			boolean editableField = query.editable
 					&& query.editableNamePredicate.test(propertyName);
 			FieldQuery perFieldQuery = query.clone().withEditable(editableField)
-					.forPropertyName(propertyName).withAllowNullWidgetProviders(
-							query.allowNullWidgetProviders);
+					.forPropertyName(propertyName)
+					.withAllowNullWidgetProviders(
+							query.allowNullWidgetProviders)
+					.withIgnoreCustomiser(query.ignoreCustomiser);
 			return getField(perFieldQuery);
 		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector))
 				.collect(Collectors.toList());
@@ -693,7 +698,9 @@ public class BeanFields {
 
 		ValidationFeedback.Provider validationFeedbackProvider;
 
-		private boolean allowNullWidgetProviders;
+		boolean allowNullWidgetProviders;
+
+		boolean ignoreCustomiser;
 
 		public FieldQuery withAdjunctEditor(boolean adjunct) {
 			this.adjunct = adjunct;
@@ -776,6 +783,11 @@ public class BeanFields {
 		public FieldQuery withValidationFeedbackProvider(
 				ValidationFeedback.Provider validationFeedbackProvider) {
 			this.validationFeedbackProvider = validationFeedbackProvider;
+			return this;
+		}
+
+		public FieldQuery withIgnoreCustomiser(boolean ignoreCustomiser) {
+			this.ignoreCustomiser = ignoreCustomiser;
 			return this;
 		}
 	}

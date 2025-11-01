@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -46,7 +47,7 @@ public class DomainStoreCriteria implements Criteria {
 
 	Projection projection;
 
-	int maxResults;
+	int maxResults = Integer.MAX_VALUE;
 
 	int firstResult;
 
@@ -242,7 +243,8 @@ public class DomainStoreCriteria implements Criteria {
 	public List list() throws HibernateException {
 		try {
 			DomainStoreQueryTranslator translator = new DomainStoreQueryTranslator();
-			List list = translator.list(this);
+			List list = (List) translator.stream(this).skip(firstResult)
+					.limit(maxResults).collect(Collectors.toList());
 			domainStoreSession.getDomainStoreEntityManager()
 					.setLastQuery(translator.query);
 			return list;

@@ -468,6 +468,18 @@ public class TraversalPlace extends BasePlace {
 		return place;
 	}
 
+	public TraversalPlace appendOrReplaceLastSelection(Selection selection) {
+		TraversalPlace place = copy();
+		SelectionPath path = place.viewPath();
+		Selection viewPathSelection = viewPath().selection();
+		if (Objects.equals(viewPathSelection.parentSelection(),
+				selection.parentSelection())) {
+			path.truncateTo(path.segmentCount() - 1);
+		}
+		path.appendSegment(selection.getPathSegment());
+		return place;
+	}
+
 	public boolean isAncestorOfSelected(Selection selection) {
 		Selection viewSelection = viewPath().selection();
 		return viewSelection != null && viewSelection != selection

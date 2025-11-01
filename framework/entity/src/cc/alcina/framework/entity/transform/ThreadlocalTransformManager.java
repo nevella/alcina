@@ -1110,7 +1110,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()
 				&& emitWarnings) {
 			Ax.out("**WARNING ** TLTM - cleared (but still pending) transforms [%s]:\n %s",
-					pendingTransforms.size(), pendingTransforms.stream()
+					pendingTransforms.size(),
+					pendingTransforms.stream()
+							.map(DomainTransformEvent::toDebugString)
 							.limit(1000).collect(Collectors.toList()));
 			new Exception().printStackTrace();
 			try {

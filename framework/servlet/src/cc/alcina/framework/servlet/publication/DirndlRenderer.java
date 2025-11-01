@@ -154,7 +154,7 @@ public class DirndlRenderer {
 	}
 
 	public String asMarkup() {
-		String markup = asDocument().prettyToString();
+		String markup = asDocument().toPrettyMarkup();
 		if (wrapStyleInCdata) {
 			markup = markup.replace("<![CDATA[", "");
 			markup = markup.replace("]]", "");

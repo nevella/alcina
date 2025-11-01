@@ -65,6 +65,7 @@ import cc.alcina.framework.common.client.util.CachingToStringComparator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
@@ -212,6 +213,17 @@ public class ClientReflectionGenerator extends IncrementalGenerator
 		if (!type.isPrimitive()) {
 			factory.addImport(type.getCanonicalName().replace("[]", ""));
 		}
+	}
+
+	JClassType mapInterface(JClassType intf) {
+		if (attributes.mapInterfaces != null) {
+			String mappedName = attributes.mapInterfaces
+					.get(intf.getQualifiedSourceName());
+			if (mappedName != null) {
+				return getType(mappedName);
+			}
+		}
+		return intf;
 	}
 
 	boolean checkSimpleFilter(JClassType type) {
@@ -639,6 +651,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator
 		public String simpleExcludes;
 
 		public boolean useJdkForName;
+
+		public StringMap mapInterfaces;
 	}
 
 	class ClassReflectorGenerator extends UnitGenerator
@@ -774,11 +788,19 @@ public class ClientReflectionGenerator extends IncrementalGenerator
 			}
 			sourceWriter.println(
 					"Predicate<Class> assignableTo = c -> ClientReflections.isAssignableFrom(c,clazz);");
-			Arrays.stream(reflection.type.getImplementedInterfaces())
-					.filter(ClientReflectionGenerator.this::checkSimpleFilter)
-					.forEach(i -> {
+			Stream<JClassType> filteredInterfaces = Arrays
+					.stream(reflection.type.getImplementedInterfaces())
+					.map(ClientReflectionGenerator.this::mapInterface)
+					.filter(ClientReflectionGenerator.this::checkSimpleFilter);
+			filteredInterfaces
+					/*
+					 * mapping may cause duplication (but types may be
+					 * parameterized vs generic, so normalise on classname
+					 */
+					.map(JClassType::getQualifiedSourceName).distinct()
+					.forEach(intfName -> {
 						sourceWriter.println("interfaces.add(%s.class);",
-								i.getQualifiedSourceName());
+								intfName);
 					});
 			Arrays.stream(reflection.type.getNestedTypes()).filter(
 					ClientReflectionGenerator.this.moduleGenerator::isReflectable)

@@ -117,6 +117,10 @@ public class Diff {
 
 	private Map<Object, Object> revLookup = new HashMap<Object, Object>();
 
+	private Object[] a;
+
+	private Object[] b;
+
 	/**
 	 * Prepare to find differences between two arrays. Each element of the
 	 * arrays is translated to an "equivalence number" based on the result of
@@ -125,6 +129,8 @@ public class Diff {
 	 * results of the comparison as an edit script, if desired.
 	 */
 	public Diff(Object[] a, Object[] b) {
+		this.a = a;
+		this.b = b;
 		HashMap h = new HashMap(a.length + b.length);
 		filevec[0] = new FileData(a, h);
 		filevec[1] = new FileData(b, h);
@@ -439,6 +445,8 @@ public class Diff {
 		filevec[1].shift_boundaries(filevec[0]);
 	}
 
+	public boolean showInsertDeleteDeltas = true;
+
 	/**
 	 * The result of comparison is an "edit script": a chain of change objects.
 	 * Each change represents one place where some lines are deleted and some
@@ -484,6 +492,43 @@ public class Diff {
 			this.deleted = deleted;
 			this.link = old;
 			// System.err.println(line0+","+line1+","+inserted+","+deleted);
+		}
+
+		public String toString(Diff diff) {
+			FormatBuilder format = new FormatBuilder();
+			Change change = this;
+			while (change != null) {
+				format.format("(%s, %s): -%s, +%s\n", change.line0 + 1,
+						change.line1 + 1, change.deleted, change.inserted);
+				String deleted = "";
+				String inserted = "";
+				for (int idx = 0; idx < change.deleted; idx++) {
+					String deleteLine = diff.a[change.line0 + idx].toString();
+					deleted += deleteLine;
+					if (diff.showInsertDeleteDeltas) {
+						format.format("\t---%s: %s\n",
+								CommonUtils.padStringRight(
+										String.valueOf(change.line0 + idx + 1),
+										8, ' '),
+								CommonUtils.hangingIndent(deleteLine, true, 2));
+					}
+				}
+				for (int idx = 0; idx < change.inserted; idx++) {
+					String insertLine = diff.b[change.line1 + idx].toString();
+					inserted += insertLine;
+					if (diff.showInsertDeleteDeltas) {
+						format.format("\t+++%s: %s\n",
+								CommonUtils.padStringRight(
+										String.valueOf(change.line1 + idx + 1),
+										8, ' '),
+								CommonUtils.hangingIndent(insertLine, true, 2));
+					}
+				}
+				deleted = Ax.ntrim(deleted);
+				inserted = Ax.ntrim(inserted);
+				change = change.link;
+			}
+			return format.toString();
 		}
 	}
 

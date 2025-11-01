@@ -211,7 +211,7 @@ public class GalleryPersister {
 					.attr("onclick", "toggleFull()")
 					.attr("onload", "this.className='loaded';").append();
 		}
-		String prettyToString = doc.prettyToString();
+		String prettyToString = doc.toPrettyMarkup();
 		prettyToString = prettyToString.replaceFirst("(<script/>)",
 				Matcher.quoteReplacement(Ax.format("<script>%s</script>", js)));
 		prettyToString = prettyToString.replaceFirst("(<script/>)",

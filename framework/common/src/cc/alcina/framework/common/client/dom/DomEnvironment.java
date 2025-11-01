@@ -49,9 +49,9 @@ public interface DomEnvironment {
 
 	public String log(DomNode xmlNode, boolean pretty);
 
-	public String prettyPrint(Document domDoc);
+	public String toPrettyMarkup(Document domDoc);
 
-	public String prettyToString(DomNode xmlNode);
+	public String toPrettyMarkup(DomNode xmlNode);
 
 	public NamespaceResult removeNamespaces(DomDocument xmlDoc);
 
@@ -60,9 +60,9 @@ public interface DomEnvironment {
 
 	public String streamNCleanForBrowserHtmlFragment(Node node);
 
-	public String toHtml(DomDocument doc, boolean pretty);
+	public String toMarkup(DomDocument doc, boolean pretty);
 
-	public String toXml(Node node);
+	public String toMarkup(Node node);
 
 	public static class NamespaceResult {
 		public String firstTag;

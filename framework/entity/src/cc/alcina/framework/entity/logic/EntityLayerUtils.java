@@ -46,7 +46,7 @@ public class EntityLayerUtils {
 							+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
 							+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
 							+ "|python-requests|FlipboardProxy"
-							+ "|BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot)",
+							+ "|BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot|DuckAssistBot)",
 					Pattern.CASE_INSENSITIVE);
 			String botExtraRegex = Configuration.get("botUserAgentExtra");
 			EntityLayerUtils.botExtraUa = botExtraRegex.isEmpty() ? null

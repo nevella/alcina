@@ -15,12 +15,12 @@ import cc.alcina.framework.common.client.dom.DomNode;
 
 public class DomEnvironmentAndroidImpl extends DomEnvironmentJvmBase {
 	@Override
-	public String prettyPrint(Document doc) {
+	public String toPrettyMarkup(Document doc) {
 		return streamXml(doc);
 	}
 
 	@Override
-	public String prettyToString(DomNode xmlNode) {
+	public String toPrettyMarkup(DomNode xmlNode) {
 		Node node = xmlNode.w3cNode();
 		return streamXml(node);
 	}
@@ -40,7 +40,7 @@ public class DomEnvironmentAndroidImpl extends DomEnvironmentJvmBase {
 	}
 
 	@Override
-	public String toXml(Node node) {
+	public String toMarkup(Node node) {
 		return streamXml(node);
 	}
 }

@@ -202,7 +202,7 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
-	public List list(DomainStoreCriteria criteria) throws Exception {
+	public Stream stream(DomainStoreCriteria criteria) throws Exception {
 		this.root = criteria;
 		query = DomainStore.stores().query(root.clazz);
 		addRestrictions(criteria);
@@ -217,7 +217,7 @@ public class DomainStoreQueryTranslator {
 					.transformTuple((Object[]) tp, null));
 			results = (List) stream.collect(Collectors.toList());
 		}
-		return results;
+		return results.stream();
 	}
 
 	private void setupProjectionHelpers() throws Exception {

@@ -61,17 +61,22 @@ public class DomDocument extends DomNode implements Cloneable {
 		return DomDocument.from("<html><head></head><body></body></html>");
 	}
 
+	public static DomDocument basicGwtHtmlDoc() {
+		return DomDocument.from("<html><head></head><body></body></html>",
+				true);
+	}
+
 	public DomDocument clone() {
 		return clone(node -> true);
 		// DomDocument clone = DomDocument.from((Document) DomEnvironment.get()
-		// .loadFromXml(fullToString(), isGwtNode()));
+		// .loadFromXml(toMarkup(), isGwtNode()));
 		// clone.setReadonly(isReadonly());
 		// return clone;
 	}
 
 	public DomDocument clone(Predicate<DomNode> sourceFilter) {
 		String topLevelMarkup = getDocumentElementNode().cloneNode(false)
-				.fullToString();
+				.toMarkup();
 		DomDocument clone = DomDocument.from((Document) DomEnvironment.get()
 				.loadFromXml(topLevelMarkup, isGwtNode()));
 		clone.setReadonly(isReadonly());
@@ -306,9 +311,9 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	@Override
-	public String prettyToString() {
+	public String toPrettyMarkup() {
 		try {
-			return DomEnvironment.get().prettyPrint(w3cDoc());
+			return DomEnvironment.get().toPrettyMarkup(w3cDoc());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -693,7 +698,7 @@ public class DomDocument extends DomNode implements Cloneable {
 					nonGwtDoc.getDocumentElementNode().w3cNode(), true);
 			// rewrite again -
 			Document secondPhaseDoc = (Document) DomEnvironment.get()
-					.loadFromXml(DomNode.from(intermediateNode).fullToString(),
+					.loadFromXml(DomNode.from(intermediateNode).toMarkup(),
 							true);
 			return DomDocument.from(secondPhaseDoc);
 		} catch (Exception e) {

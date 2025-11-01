@@ -561,9 +561,6 @@ public class DomainStore implements IDomainStore {
 
 	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
-		if (Thread.currentThread().getName().contains("romcom-exec")) {
-			int debug = 3;
-		}
 		if (t == null) {
 			if (domainDescriptor.perClass.containsKey(clazz)
 					&& domainDescriptor.perClass.get(clazz)

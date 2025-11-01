@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
@@ -244,6 +245,7 @@ public class EnvironmentManager {
 		}
 	}
 
+	@Reflected
 	class RemoteComponentEventObserver
 			implements ProcessObserver<RemoteComponentEvent> {
 		@Override
@@ -433,5 +435,16 @@ public class EnvironmentManager {
 					token.request.session.componentClassName);
 		}
 		env.access().handleRequest(token);
+	}
+
+	public class Debug {
+		public void triggerDebugRomcomServerException() {
+			singletonEnvironment().access()
+					.dispatchDebugRomcomProcessingException();
+		}
+	}
+
+	public Debug debug() {
+		return new Debug();
 	}
 }

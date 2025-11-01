@@ -126,7 +126,30 @@ public class Range implements org.w3c.dom.ranges.Range {
 	@Override
 	public short compareBoundaryPoints(short how,
 			org.w3c.dom.ranges.Range sourceRange) throws DOMException {
-		throw new UnsupportedOperationException();
+		Range oRange = (Range) sourceRange;
+		Location firstLocation = null;
+		Location secondLocation = null;
+		switch (how) {
+		case START_TO_START:
+			firstLocation = start.getLocation();
+			secondLocation = oRange.start.getLocation();
+			break;
+		case START_TO_END:
+			firstLocation = start.getLocation();
+			secondLocation = oRange.end.getLocation();
+			break;
+		case END_TO_START:
+			firstLocation = end.getLocation();
+			secondLocation = oRange.start.getLocation();
+			break;
+		case END_TO_END:
+			firstLocation = end.getLocation();
+			secondLocation = oRange.end.getLocation();
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		return (short) firstLocation.compareTo(secondLocation);
 	}
 
 	@Override

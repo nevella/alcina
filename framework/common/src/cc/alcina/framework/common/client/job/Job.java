@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -440,12 +441,18 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.uuid;
 	}
 
-	public boolean hasSelfOrAncestorTask(Class<? extends Task> taskClass) {
-		if (provideIsTaskClass(taskClass)) {
+	public boolean hasSelfOrAncestorOrAwaiterTask(Predicate<Job> predicate) {
+		if (predicate.test(domainIdentity())) {
 			return true;
 		}
-		return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass))
+		return provideFirstInSequence().provideParentOrAwaiter()
+				.map(job -> job.hasSelfOrAncestorOrAwaiterTask(predicate))
 				.orElse(false);
+	}
+
+	public boolean hasSelfOrAncestorOrAwaiter(Class<? extends Task> taskClass) {
+		return hasSelfOrAncestorOrAwaiterTask(
+				j -> j.provideIsTaskClass(taskClass));
 	}
 
 	public boolean provideCanDeserializeTask() {
@@ -797,6 +804,18 @@ public abstract class Job extends VersionableEntity<Job>
 		return rel.map(JobRelation::getFrom);
 	}
 
+	public boolean provideHasIncompletePrior() {
+		Optional<Job> previous = providePrevious();
+		if (previous.isPresent()) {
+			return previous.get().provideIsNotComplete();
+		}
+		Optional<Job> parentOrAwaiter = provideParentOrAwaiter();
+		if (parentOrAwaiter.isPresent()) {
+			return parentOrAwaiter.get().provideIsNotComplete();
+		}
+		return false;
+	}
+
 	public String provideShortName() {
 		return provideName().replaceFirst(".+\\.", "");
 	}
@@ -898,6 +917,22 @@ public abstract class Job extends VersionableEntity<Job>
 		return resolveState0(0);
 	}
 
+	public int depth() {
+		int result = 0;
+		Job cursor = domainIdentity();
+		for (;;) {
+			Optional<Job> parent = cursor.provideFirstInSequence()
+					.provideParent();
+			if (parent.isPresent()) {
+				result++;
+				cursor = parent.get();
+			} else {
+				break;
+			}
+		}
+		return result;
+	}
+
 	private JobState resolveState0(int depth) {
 		if (depth > 10) {
 			throw new RuntimeException("Invalid job depth - maybe a loop?");
@@ -921,6 +956,11 @@ public abstract class Job extends VersionableEntity<Job>
 	public Job root() {
 		return provideFirstInSequence().provideParent().map(Job::root)
 				.orElse(domainIdentity());
+	}
+
+	public boolean hasTaskInTree(Class<? extends Task> taskClass) {
+		return rootAwaiter().provideDescendantsAndSubsequentsAndAwaited()
+				.anyMatch(job -> job.provideIsTaskClass(taskClass));
 	}
 
 	public Job rootAwaiter() {

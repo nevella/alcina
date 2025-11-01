@@ -303,7 +303,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		persistableClasses = new LinkedHashSet<Class>();
 		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
 				Double.class, Float.class, Integer.class, Short.class,
-				String.class, Date.class, Boolean.class }));
+				String.class, Date.class, Boolean.class, byte[].class }));
 		scan(cache, cachePath);
 		commit(entityManager);
 		if (reachabilityCheck) {

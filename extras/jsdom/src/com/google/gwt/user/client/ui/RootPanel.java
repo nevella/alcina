@@ -15,11 +15,6 @@
  */
 package com.google.gwt.user.client.ui;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
@@ -31,10 +26,6 @@ import com.google.gwt.i18n.client.HasDirection;
 import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
-
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  * The panel to which all other widgets must ultimately be added. RootPanels are
@@ -58,19 +49,6 @@ public class RootPanel extends AbsolutePanel {
 			}
 		}
 	};
-
-	@Registration.Singleton
-	@Registration.EnvironmentSingleton
-	@Reflected
-	public static class EnvironmentPanels {
-		public static EnvironmentPanels get() {
-			return Registry.impl(EnvironmentPanels.class);
-		}
-
-		private Map<String, RootPanel> rootPanels = new HashMap<String, RootPanel>();
-
-		private Set<Widget> widgetsToDetach = new HashSet<Widget>();
-	}
 
 	// FIXME - dirndl - support for external attach/detach
 	public static void attachNow(Widget widget) {

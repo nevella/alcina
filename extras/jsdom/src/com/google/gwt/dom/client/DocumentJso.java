@@ -958,8 +958,9 @@ public final class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *            itself, as explained above
 	 */
 	@Override
-	public native void importNode(Node node, boolean deep) /*-{
-    this.importNode(node, deep);
+	public native Node importNode(Node node, boolean deep) /*-{
+    throw "not suppored";
+
 	}-*/;
 
 	/**

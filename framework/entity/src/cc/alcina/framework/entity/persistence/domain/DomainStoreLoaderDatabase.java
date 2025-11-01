@@ -1207,6 +1207,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				valueContainer.o = intern(v);
 				return;
 			}
+			if (type == byte[].class) {
+				byte[] bytes = rs.getBytes(idx);
+				valueContainer.o = bytes;
+				return;
+			}
 			if (Enum.class.isAssignableFrom(type)) {
 				valueContainer.o = null;
 				switch (enumType) {
@@ -1493,7 +1498,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		String rsSql;
 
-		private boolean lazyProperties;
+		private boolean populateLazyPropertyValues;
 
 		private Statement stmt;
 
@@ -1513,7 +1518,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			this.rsReuse = hasSegmentLoader
 					? segmentLoader.getConnResultsReuse()
 					: new ConnResultsReusePassthrough();
-			this.lazyProperties = builder.populateLazyPropertyValues;
+			this.populateLazyPropertyValues = builder.populateLazyPropertyValues;
 			itr = new ConnResultsIterator(hasSegmentLoader);
 		}
 
@@ -1533,7 +1538,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						String template = "select %s from %s";
 						List<String> columnNames = new ArrayList<String>();
 						for (ColumnDescriptor descr : columnDescriptors) {
-							columnNames.add(descr.getColumnSql(lazyProperties));
+							columnNames.add(descr
+									.getColumnSql(populateLazyPropertyValues));
 						}
 						Table table = (Table) clazz.getAnnotation(Table.class);
 						String tableName = table.name();

@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
@@ -534,6 +533,8 @@ public class TransformPersisterInPersistenceContext {
 						.addAll(token.getClientUpdateEvents());
 				response.getEventsToUseForClientUpdate()
 						.addAll(tlTransformManager.getModificationEvents());
+				token.initialTransforms
+						.filter(response.getEventsToUseForClientUpdate());
 				response.setRequestId(request.getRequestId());
 				response.setTransformsProcessed(transformCount);
 				wrapper.response = response;
@@ -754,12 +755,14 @@ public class TransformPersisterInPersistenceContext {
 					ps = (PreparedStatement) wrappedField.get(ps);
 				}
 				logger.warn("(Prepared) statement causing issue");
-				logger.warn(ps.toString());
-				lastFlushData.get(Thread
-						.currentThread()).preparedStatementCausingIssue = ps
-								.toString();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
+				logger.warn(Ax.trimForLogging(ps, 10000));
+				FlushData flushData = lastFlushData.get(Thread.currentThread());
+				if (flushData != null) {
+					flushData.preparedStatementCausingIssue = ps.toString();
+				}
+			} catch (Throwable e) {
+				logger.warn("DEVEX - exception in exception logging");
+				e.printStackTrace();
 			}
 		}
 
@@ -854,9 +857,13 @@ public class TransformPersisterInPersistenceContext {
 
 		String getAndClearLastFlushPreparedStatementCausingIssue() {
 			FlushData flushData = lastFlushData.get(Thread.currentThread());
-			String result = flushData.preparedStatementCausingIssue;
-			flushData.preparedStatementCausingIssue = null;
-			return result;
+			if (flushData != null) {
+				String result = flushData.preparedStatementCausingIssue;
+				flushData.preparedStatementCausingIssue = null;
+				return result;
+			} else {
+				return null;
+			}
 		}
 	}
 }

@@ -39,6 +39,7 @@ import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -48,6 +49,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRe
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -621,6 +623,16 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
+	class DevWarningObserver implements ProcessObserver<DevWarning> {
+		@Override
+		public void topicPublished(DevWarning message) {
+			BackendTransformQueue.get()
+					.enqueue(() -> EntityLayerLogging.persistentLog(
+							LogMessageType.SERVER_WARNING, message.toString()),
+							null);
+		}
+	}
+
 	protected void postInitEntityLayer() {
 		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
 			JobScheduler.onBeforeAppStartup();
@@ -629,6 +641,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.addDomainTransformPersistenceListener(
 							serializationSignatureListener);
+			new DevWarningObserver().bind();
 		}
 	}
 

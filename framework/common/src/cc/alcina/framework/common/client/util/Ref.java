@@ -25,8 +25,15 @@ public class Ref<T> {
 		return t != null;
 	}
 
-	public void set(T t) {
+	/**
+	 * 
+	 * @param t
+	 * @return the prior value (can be nul)
+	 */
+	public T set(T t) {
+		T prior = this.t;
 		this.t = t;
+		return prior;
 	}
 
 	@Override

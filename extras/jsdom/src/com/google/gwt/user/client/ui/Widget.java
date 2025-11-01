@@ -17,6 +17,7 @@ package com.google.gwt.user.client.ui;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.LocalDom.RemoteNotRegisteredException;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
@@ -312,13 +313,18 @@ public class Widget extends UIObject
 		case Event.ONMOUSEOUT:
 			// Only fire the mouse out event if it's leaving this
 			// widget.
-			EventTarget relatedEventTarget = event.getRelatedEventTarget();
-			if (relatedEventTarget != null
-					&& relatedEventTarget.isAttachedElement()) {
-				Element related = relatedEventTarget.cast();
-				if (related != null && getElement().isOrHasChild(related)) {
-					return;
+			try {
+				EventTarget relatedEventTarget = event.getRelatedEventTarget();
+				if (relatedEventTarget != null
+						&& relatedEventTarget.isAttachedElement()) {
+					Element related = relatedEventTarget.cast();
+					if (related != null && getElement().isOrHasChild(related)) {
+						return;
+					}
 				}
+			} catch (RemoteNotRegisteredException e) {
+				// DEVEX - 1 - invalidates mutation constraint, but very
+				// possibly caused by an extension
 			}
 			break;
 		}

@@ -5,12 +5,14 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Button;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TitleAttribute;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
@@ -55,8 +57,12 @@ class Dotburger extends Model.Fields {
 
 		Heading section5 = new Heading("Other");
 
+		@Directed.Transform(LeafModel.TextTitle.WithTitleAttribute.class)
+		@TitleAttribute("To set :: set rows [table row count]")
 		String rows;
 
+		@Directed.Transform(LeafModel.TextTitle.WithTitleAttribute.class)
+		@TitleAttribute("To set :: set selectionAreaHeight [pixels]")
 		String selectionAreaHeight;
 
 		Menu() {

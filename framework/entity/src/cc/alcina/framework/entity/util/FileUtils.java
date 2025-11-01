@@ -53,4 +53,8 @@ public class FileUtils {
 		m.matches();
 		return m.group(1);
 	}
+
+	public static String getExtension(String url) {
+		return url.replaceFirst("(.+)\\.(.+)", "$2");
+	}
 }

@@ -11,6 +11,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
@@ -117,7 +118,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	 */
 	@Override
 	public Place getPlace(String token) throws UnparseablePlaceException {
-		return parseAndReturnPlace(token);
+		return parseAndReturnPlace(token, true);
 	}
 
 	public synchronized Place getPlaceByModelClass(Class<?> clazz) {
@@ -132,7 +133,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	public Optional<Place> getPlaceIfParseable(String token) {
 		try {
-			return Optional.ofNullable(parseAndReturnPlace(token));
+			return Optional.ofNullable(parseAndReturnPlace(token, false));
 		} catch (UnparseablePlaceException e) {
 			new ClientTopics.DevMessage("unparesable place", token).publish();
 			return Optional.empty();
@@ -210,8 +211,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	 *
 	 * @throws UnparseablePlaceException
 	 */
-	protected synchronized Place parseAndReturnPlace(String token0)
-			throws UnparseablePlaceException {
+	protected synchronized Place parseAndReturnPlace(String token0,
+			boolean logExceptions) throws UnparseablePlaceException {
 		String token1 = token0;
 		if (token1.matches(".+[^/]\\?.*")) {
 			token1 = token1.replace("?", "/?");
@@ -238,7 +239,9 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 					? o_tokenizer.get().mutableInstance().getPlace(token)
 					: null;
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (logExceptions) {
+				e.printStackTrace();
+			}
 			// emit as null
 		}
 		if (place == null) {

@@ -179,8 +179,10 @@ class JobAllocator {
 					logger.info("await spinlock - {} -  job {}",
 							queue.currentPhase,
 							awaitJobExistenceBeforeContinueToExit.toLocator());
-					Job domainVisible = awaitJobExistenceBeforeContinueToExit
-							.toLocator().find();
+					Job domainVisible = LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED
+							.callWithTrue(
+									() -> awaitJobExistenceBeforeContinueToExit
+											.toLocator().find());
 					/*
 					 * a spinlock is incorrect if in a single-threaded tx
 					 * environment
@@ -433,8 +435,8 @@ class JobAllocator {
 			}
 			boolean deleted = false;
 			try {
-				LooseContext.pushWithTrue(
-						LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED);
+				LooseContext.push();
+				LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED.setTrue();
 				if (job.domain().wasRemoved()) {
 					// production issue -- revisit
 					Thread.sleep(1000);

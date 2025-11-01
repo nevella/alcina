@@ -159,7 +159,11 @@ public class Document extends Node implements ClientDomDocument,
 
 	@Override
 	public Node cloneNode(boolean deep) {
-		return local.cloneNode(deep);
+		Preconditions.checkArgument(deep);
+		Document result = new Document(remoteType);
+		Node documentElement = result.importNode(getDocumentElement(), true);
+		result.documentElement = (Element) documentElement;
+		return result;
 	}
 
 	@Override
@@ -747,7 +751,7 @@ public class Document extends Node implements ClientDomDocument,
 	public TreeWalker createTreeWalker(org.w3c.dom.Node root, int whatToShow,
 			NodeFilter filter, boolean entityReferenceExpansion)
 			throws DOMException {
-		return new SimpleTreeWalkerImpl(root);
+		return new SimpleTreeWalkerImpl(root, whatToShow, filter);
 	}
 
 	@Override
@@ -1038,9 +1042,8 @@ public class Document extends Node implements ClientDomDocument,
 	}
 
 	@Override
-	public void importNode(Node node, boolean deep) {
-		local.importNode(node, deep);
-		remote.importNode(node, deep);
+	public Node importNode(Node node, boolean deep) {
+		return importNode((org.w3c.dom.Node) node, deep);
 	}
 
 	@Override

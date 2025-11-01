@@ -70,7 +70,7 @@
  * should signal that the server-side structure is invalid, with the correct
  * markup - and the server-side DOM should emit some sort of synthetic NodeEvent
  * <p>
- * TODO - basically, in If there's a difference in node childcount/type between
+ * TODO - basically, if there's a difference in node childcount/type between
  * local and remote correspondents, assume that the we're in html supplied via
  * setHTML that was invalid, and reparse. Use
  * com.google.gwt.dom.client.ElementJso.buildOuterHtml() if in IE (see its 'text

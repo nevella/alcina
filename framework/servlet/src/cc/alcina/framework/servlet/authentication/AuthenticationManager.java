@@ -333,6 +333,12 @@ public class AuthenticationManager {
 		return response;
 	}
 
+	public void createClientInstanceForStandaloneServlet() {
+		AuthenticationContext context = ensureContext();
+		createClientInstance(context);
+		Transaction.commit();
+	}
+
 	public void initialiseContext(AuthenticationTokenStore tokenStore) {
 		AuthenticationContext context = ensureContext();
 		context.tokenStore = tokenStore;

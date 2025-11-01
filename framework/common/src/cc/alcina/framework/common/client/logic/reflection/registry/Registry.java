@@ -990,6 +990,13 @@ public class Registry {
 	}
 
 	class Singletons {
+		/*
+		 * note that this is _implementation_ class -> implementation, not
+		 * registryKey -> implementation
+		 * 
+		 * [wheras multikeyImplementations is key/key - right? possibly an
+		 * issue/logic mismatch]
+		 */
 		private Map<Class, Object> byClass = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
 

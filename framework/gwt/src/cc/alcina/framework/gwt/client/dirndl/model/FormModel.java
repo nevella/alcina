@@ -57,6 +57,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.Environme
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -533,7 +534,11 @@ public class FormModel extends Model
 		@Override
 		public void handleException(Object source,
 				ValidationException exception) {
-			model.setMessage(exception.getMessage());
+			Class keyClass = exception.getValidatorClass() != null
+					? exception.getValidatorClass()
+					: exception.getClass();
+			model.setMessage(TextProvider.get().getUiObjectText(keyClass,
+					ValidationException.MESSAGE, exception.getMessage()));
 			topicValidationChange
 					.publish(ValidationResult.invalid(exception.getMessage()));
 		}

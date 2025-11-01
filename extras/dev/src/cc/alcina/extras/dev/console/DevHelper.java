@@ -12,8 +12,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -118,12 +116,6 @@ public abstract class DevHelper {
 	}
 
 	private MessagingWriter messagingWriter;
-
-	private Connection connLocal;
-
-	private Connection connDev;
-
-	private Connection connProduction;
 
 	private TopicListener<JobTracker> jobCompletionLister = message -> System.out
 			.format("Job complete:\n%s\n", message);
@@ -284,33 +276,6 @@ public abstract class DevHelper {
 	}
 
 	protected abstract String getConfigFilePath();
-
-	public Connection getConnDev() throws Exception {
-		if (connDev == null) {
-			Class.forName("org.postgresql.Driver");
-			connDev = DriverManager.getConnection(
-					"jdbc:postgresql://127.0.0.1:5433/jade", "jade", "jade");
-		}
-		return connDev;
-	}
-
-	public Connection getConnLocal() throws Exception {
-		if (connLocal == null) {
-			Class.forName("org.postgresql.Driver");
-			connLocal = DriverManager.getConnection(
-					"jdbc:postgresql://127.0.0.1:5432/jade", "jade", "jade");
-		}
-		return connLocal;
-	}
-
-	public Connection getConnProduction() throws Exception {
-		if (connProduction == null) {
-			Class.forName("org.postgresql.Driver");
-			connProduction = DriverManager.getConnection(
-					"jdbc:postgresql://127.0.0.1:5434/jade", "jade", "jade");
-		}
-		return connProduction;
-	}
 
 	public abstract File getDataFolder();
 

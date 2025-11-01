@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -72,7 +73,12 @@ public interface ValueChange {
 				if (bind) {
 					ValueChange valueChange = (ValueChange) event;
 					Object newValue = valueChange.getNewValue();
-					property.set(container, newValue);
+					/*
+					 * Because this property may be bound, enqueue the change
+					 */
+					Client.eventBus().queued()
+							.lambda(() -> property.set(container, newValue))
+							.dispatch();
 				} else {
 					event.bubble();
 				}

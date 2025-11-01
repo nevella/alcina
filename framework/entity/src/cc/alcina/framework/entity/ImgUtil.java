@@ -46,15 +46,21 @@ import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Topic;
 
 /**
  *
  * @author Nick Reddel
  */
 public class ImgUtil {
-	public static final Topic<Boolean> topicMonochromeImages = Topic.create();
+	/**
+	 * Models "a monochrome image was converted"
+	 * 
+	 */
+	public static class MonochromeImageObservable
+			implements ContextObservers.Observable {
+	}
 
 	public static final String CONTEXT_JPEG_COMPRESSION_RATIO = ImgUtil.class
 			.getName() + "." + "CONTEXT_PDF_JPEG_COMPRESSION_RATIO";
@@ -68,7 +74,7 @@ public class ImgUtil {
 				}
 			}
 		}
-		topicMonochromeImages.publish(true);
+		new MonochromeImageObservable().publish();
 	}
 
 	public static void compressJpeg(BufferedImage img, File outfile,

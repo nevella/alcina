@@ -45,7 +45,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @ObjectPermissions(
 	read = @Permission(access = AccessLevel.EVERYONE),
 	write = @Permission(access = AccessLevel.EVERYONE))
-@Registrations({ @Registration(JaxbContextRegistration.class), })
+@Registration(JaxbContextRegistration.class)
 public abstract class SearchCriterion extends Bindable
 		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
 		HasEquivalence<SearchCriterion>, TreeSerializable {
