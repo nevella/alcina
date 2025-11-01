@@ -127,7 +127,7 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 
 	@Override
 	public boolean filter(T t) {
-		return !LazyPropertyLoadTask.CONTEXT_LAZY_LOAD_DISABLED.is();
+		return true;
 	}
 
 	@Override
@@ -144,7 +144,9 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		if (transforms.size() > 0) {
 			throw new IllegalStateException(Ax.format(
 					"Cannot lazy load objects with current-tx transforms:\n%s\n%s",
-					objects, transforms));
+					objects.stream().map(Entity::toStringId)
+							.collect(Collectors.toList()),
+					transforms));
 		}
 		List<T> requireLoad = requireLazyLoad(objects);
 		if (!requireLoad.isEmpty()) {
