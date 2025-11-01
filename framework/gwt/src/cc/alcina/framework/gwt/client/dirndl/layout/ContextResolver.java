@@ -207,19 +207,18 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return (T) this.rootModel;
 	}
 
-	public <T extends ContextService> Optional<T>
-			getService(Class<T> serviceType) {
+	public <T extends ContextService> T getService(Class<T> serviceType) {
 		Optional<T> service = (Optional<T>) services.get(serviceType);
 		if (service != null) {
 		} else {
 			if (parent != null) {
-				service = parent.getService(serviceType);
+				service = Optional.ofNullable(parent.getService(serviceType));
 			} else {
 				service = Optional.empty();
 			}
 			services.put(serviceType, service);
 		}
-		return service;
+		return service.orElse(null);
 	}
 
 	public <T> T impl(Class<T> clazz) {

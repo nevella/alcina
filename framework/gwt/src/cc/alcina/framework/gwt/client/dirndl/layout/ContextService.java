@@ -43,6 +43,6 @@ public interface ContextService {
 	}
 
 	public interface Source {
-		<T extends ContextService> Optional<T> getService(Class<T> serviceType);
+		<T extends ContextService> T getService(Class<T> serviceType);
 	}
 }
