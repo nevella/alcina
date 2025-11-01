@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.L
  */
 public abstract class LazyLoadProvideTask<T extends Entity>
 		implements PreProvideTask<T> {
-	public static final LooseContext.Key CONTEXT_LAZY_LOAD_DISABLED = LooseContext
+	public static final LooseContext.Key<?> CONTEXT_LAZY_LOAD_DISABLED = LooseContext
 			.key(LazyLoadProvideTask.class, ".CONTEXT_LAZY_LOAD_DISABLED");
 
 	final static Logger logger = LoggerFactory
