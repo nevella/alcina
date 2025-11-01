@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -76,10 +76,9 @@ public class FileInput extends Model.Value<FileData>
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		event.node.optional(Accept.class)
 				.ifPresent(accept -> this.accept = accept.value());
-		super.onBeforeRender(event);
 	}
 
 	@Override

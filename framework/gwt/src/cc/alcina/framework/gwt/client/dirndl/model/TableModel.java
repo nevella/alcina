@@ -56,8 +56,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
@@ -848,11 +848,10 @@ public class TableModel extends Model
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			if (originalRowModel instanceof Model) {
-				((Model) originalRowModel).onBeforeRender(event);
+				((Model) originalRowModel).onNodeContext(event);
 			}
-			super.onBeforeRender(event);
 		}
 
 		@Override

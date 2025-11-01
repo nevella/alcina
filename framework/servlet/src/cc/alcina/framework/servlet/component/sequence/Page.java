@@ -31,8 +31,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
@@ -101,9 +101,8 @@ class Page extends Model.Fields
 		Page page;
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			page = new Page();
-			super.onBeforeRender(event);
 		}
 
 		@Override

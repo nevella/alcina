@@ -48,7 +48,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
@@ -274,9 +274,8 @@ public abstract class Choices<T> extends Model implements
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		populateFromNodeContext(event.node, null);
-		super.onBeforeRender(event);
 	}
 
 	public List<T> getValues() {
@@ -937,12 +936,11 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			select = new MultipleSelect<>();
 			// populate the delegate values from this node's AnnotationLocation
 			select.populateFromNodeContext(event.node, null);
 			value = select.getSelectedValues();
-			super.onBeforeRender(event);
 		}
 
 		@Override

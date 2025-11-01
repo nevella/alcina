@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
@@ -53,9 +53,8 @@ class GalleryPage extends Model.Fields
 		GalleryPage page;
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			page = new GalleryPage();
-			super.onBeforeRender(event);
 		}
 
 		@Override

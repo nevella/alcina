@@ -13,8 +13,8 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Delegating;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -103,12 +103,11 @@ public class RootArea extends Model.Fields
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		DirectedActivity.Topics.get().topicActivityStarted
 				.addWithPublishedCheck(onActivityStartedRef);
 		DirectedActivity.Topics.get().topicChannelStopped
 				.addWithPublishedCheck(onChannelStoppedRef);
-		super.onBeforeRender(event);
 	}
 
 	@Override

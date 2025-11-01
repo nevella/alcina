@@ -10,10 +10,9 @@ import com.google.gwt.dom.client.Style.Unit;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
@@ -23,7 +22,6 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Positioned;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayContainer;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 // emits ModelEvents.Change events
 @Directed.Delegating
@@ -68,8 +66,7 @@ public class ChoicesDropdown<T> extends Model.Value<T>
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		super.onBeforeRender(event);
+	public void onNodeContext(NodeContext event) {
 	}
 
 	@Override

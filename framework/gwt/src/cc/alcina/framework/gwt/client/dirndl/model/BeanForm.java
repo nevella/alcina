@@ -18,7 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Submit;
@@ -336,13 +336,12 @@ public class BeanForm extends Model {
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		Classes classes = event.getContext().node.annotation(Classes.class);
 		if (classes != null) {
 			className = Arrays.stream(classes.value()).map(Ax::cssify)
 					.collect(Collectors.joining(" "));
 		}
-		super.onBeforeRender(event);
 	}
 
 	public void setBindable(Bindable bindable) {

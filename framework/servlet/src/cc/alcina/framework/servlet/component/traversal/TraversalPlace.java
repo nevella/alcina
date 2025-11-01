@@ -474,7 +474,7 @@ public class TraversalPlace extends BasePlace {
 		Selection viewPathSelection = viewPath().selection();
 		if (Objects.equals(viewPathSelection.parentSelection(),
 				selection.parentSelection())) {
-			path.truncateTo(path.segmentCount() - 1);
+			path.truncateTo(path.segmentCount() - 2);
 		}
 		path.appendSegment(selection.getPathSegment());
 		return place;

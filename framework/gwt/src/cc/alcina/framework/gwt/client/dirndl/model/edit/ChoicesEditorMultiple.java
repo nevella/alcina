@@ -6,7 +6,7 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValues;
@@ -51,12 +51,11 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			editor = new ChoicesEditorMultiple<>();
 			// populate the delegate values from this node's AnnotationLocation
 			editor.populateFromNodeContext(event.node, null);
 			value = editor.getSelectedValues();
-			super.onBeforeRender(event);
 		}
 
 		@Override

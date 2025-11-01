@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnWidth;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.CellClicked;
@@ -61,7 +61,7 @@ public class TreeTable extends Model.Fields
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		BindableClassTransformer transformer = new TableModel.BindableClassTransformer();
 		transformer.withContextNode(event.node);
 		tableModel = transformer.apply(bindableClass);
@@ -70,7 +70,6 @@ public class TreeTable extends Model.Fields
 				.collect(Collectors.toList());
 		columns.add(0, new TableColumn("\u00A0"));
 		populateGridTemplateColumns();
-		super.onBeforeRender(event);
 	}
 
 	void populateGridTemplateColumns() {

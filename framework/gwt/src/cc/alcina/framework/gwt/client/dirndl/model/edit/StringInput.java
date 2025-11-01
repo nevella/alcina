@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Blur;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
@@ -43,8 +42,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyPress;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
@@ -247,7 +246,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		event.node.optional(Placeholder.class)
 				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
 		event.node.optional(Autocomplete.class).ifPresent(
@@ -258,7 +257,6 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 				.ifPresent(ann -> setFocusOnBind(true));
 		event.node.optional(TextArea.class)
 				.ifPresent(ann -> setTag("textarea"));
-		super.onBeforeRender(event);
 	}
 
 	@Override

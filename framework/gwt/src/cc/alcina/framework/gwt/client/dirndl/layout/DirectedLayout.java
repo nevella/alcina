@@ -2182,6 +2182,12 @@ public class DirectedLayout implements AlcinaProcess {
 			LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
 					node, model);
 			resolver.onBeforeRender(beforeRender);
+			if (model instanceof LayoutEvents.NodeContext.Handler) {
+				LayoutEvents.NodeContext nodeContextEvent = new LayoutEvents.NodeContext(
+						node, model);
+				((LayoutEvents.NodeContext.Handler) model)
+						.onNodeContext(nodeContextEvent);
+			}
 			if (model instanceof LayoutEvents.BeforeRender.Handler) {
 				((LayoutEvents.BeforeRender.Handler) model)
 						.onBeforeRender(beforeRender);

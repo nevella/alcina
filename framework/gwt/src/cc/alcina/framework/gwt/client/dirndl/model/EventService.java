@@ -19,6 +19,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
  * be performed manually, it's normally easier to bind a model via the on()
  * method (or by Handler implementation) - this class is for _non_-model peers
  * such as load observers, etc
+ * 
+ * <p>
+ * An EventService <i>can</i> be used by a descendant model as an elision of
+ * 'notify ancestor which will then notify all descendants' - something along
+ * the lines of a multicast packet - if it's an event that 'my subtree' might be
+ * interested in, such as a re-render due to change
  */
 public interface EventService extends ContextService {
 	public interface Provider extends ContextService.Provider {

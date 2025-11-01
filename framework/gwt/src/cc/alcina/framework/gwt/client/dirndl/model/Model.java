@@ -110,8 +110,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 @ObjectPermissions(
 	read = @Permission(access = AccessLevel.EVERYONE),
 	write = @Permission(access = AccessLevel.EVERYONE))
-public abstract class Model extends Bindable implements
-		LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler, HasNode {
+public abstract class Model extends Bindable
+		implements LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler,
+		LayoutEvents.NodeContext.Handler, HasNode {
 	private transient DirectedLayout.Node node;
 
 	private transient Bindings bindings;
@@ -154,15 +155,20 @@ public abstract class Model extends Bindable implements
 		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, value);
 	}
 
-	/**
-	 * Subclasses should call super.onBeforeRender at the *end* of their binding
-	 * setup (generally at the end of the method)
-	 */
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public final void onBeforeRender(BeforeRender event) {
 		if (bindings != null) {
 			bindings.setLeft();
 		}
+	}
+
+	/**
+	 * Subclasses with context-sensitive bindings should configure their
+	 * bindings here, not in the constructor, since they'll have access to the
+	 * node.
+	 */
+	@Override
+	public void onNodeContext(LayoutEvents.NodeContext event) {
 	}
 
 	@Override

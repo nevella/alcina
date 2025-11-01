@@ -32,14 +32,13 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
@@ -68,7 +67,6 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.Selection
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingSelectionAreaHeight;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
-import cc.alcina.framework.servlet.component.traversal.TraversalPlace.ListSource;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
@@ -132,10 +130,9 @@ class Page extends Model.All
 		Model eventHandlerCustomisation;
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			page = new Page();
 			eventHandlerCustomisation = Ui.get().getEventHandlerCustomisation();
-			super.onBeforeRender(event);
 		}
 
 		@Override

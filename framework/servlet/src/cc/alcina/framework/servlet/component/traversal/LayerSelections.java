@@ -29,15 +29,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.traversal.LayerSelections.SelectionsArea;
 import cc.alcina.framework.servlet.component.traversal.PackageProperties._LayerSelections_SelectionsArea_SelectionArea.InstanceProperties;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
@@ -100,11 +99,10 @@ class LayerSelections extends Model.All implements IfNotEqual {
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			bindings().from(LayerSelections.this.selectionsArea)
 					.on(_SelectionsArea_properties.selections).nonNull()
 					.signal(this::render);
-			super.onBeforeRender(event);
 		}
 
 		public void onClick(Click event) {
@@ -440,10 +438,9 @@ class LayerSelections extends Model.All implements IfNotEqual {
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		nameArea = new NameArea();
 		selectionsArea = new SelectionsArea();
-		super.onBeforeRender(event);
 	}
 
 	String computeOutputs() {

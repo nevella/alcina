@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
@@ -47,7 +47,7 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		Node node = event.getContext().node;
 		ContextResolver resolver = node.getResolver();
 		NodeEditorContext context = NodeEditorContext.get(resolver);
@@ -62,7 +62,6 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 		}
 		select.setValues(values);
 		bindings().from(this).on("value").to(select).on("selectedValue").bidi();
-		super.onBeforeRender(event);
 	}
 
 	@Override

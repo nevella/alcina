@@ -44,6 +44,30 @@ public class LayoutEvents {
 	 *
 	 *
 	 */
+	public static class NodeContext extends LayoutEvent<NodeContext.Handler> {
+		public Object model;
+
+		public Node node;
+
+		public NodeContext(DirectedLayout.Node node, Object model) {
+			this.model = model;
+			this.node = node;
+			setContext(Context.fromNode(node));
+		}
+
+		@Override
+		public void dispatch(NodeContext.Handler handler) {
+			handler.onNodeContext(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onNodeContext(NodeContext event);
+		}
+	}
+
+	/*
+	 * Fired to instruct the model to apply its initial bindings
+	 */
 	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
 		public Object model;
 
