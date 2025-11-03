@@ -195,6 +195,13 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onClose(Close event);
 		}
+
+		public interface Binding extends Handler, NodeEvent.Binding {
+			@Override
+			default void onClose(Close event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
 	}
 
 	public static class Closed extends ModelEvent<Object, Closed.Handler>
