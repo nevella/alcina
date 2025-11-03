@@ -12,6 +12,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.environment.DomainUi;
@@ -99,6 +100,8 @@ public class SequenceBrowser {
 			FmsForm.registerImplementations();
 			EnvironmentRegistry.registerEnvironmentOptionals(
 					SequenceBrowserCommand.ReloadApp.HandlerImpl.class);
+			Registry.register().singleton(BasePlace.HrefProvider.class,
+					new BasePlace.HrefProvider());
 		}
 
 		@Override

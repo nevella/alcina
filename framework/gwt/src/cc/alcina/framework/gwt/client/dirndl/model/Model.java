@@ -172,6 +172,14 @@ public abstract class Model extends Bindable implements
 	 * {@code model.node}). Bindings should be set up prior to this call
 	 */
 	public void onBind(Bind event) {
+		if (this instanceof MultiNodeModel) {
+			/*
+			 * MultiNodeModel instances - as the name suggests - are the backing
+			 * models for potentially multiple nodes, so can't be bound (since
+			 * node/model binding binding currently requires 1-1)
+			 */
+			return;
+		}
 		if (event.isBound()) {
 			if (node != null) {
 				Ax.err("binding a model to multiple nodes.\n"
@@ -599,6 +607,13 @@ public abstract class Model extends Bindable implements
 
 	public interface RerouteBubbledEvents {
 		Model rerouteBubbledEventsTo();
+	}
+
+	/**
+	 * Models implementing this type will not be bound to the node - so must be
+	 * pure data containers
+	 */
+	public interface MultiNodeModel {
 	}
 
 	public abstract static class Value<T> extends Model implements HasValue<T> {
