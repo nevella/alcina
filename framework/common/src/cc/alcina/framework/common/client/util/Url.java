@@ -20,6 +20,9 @@ public class Url {
 		Preconditions.checkArgument(match != null,
 				Ax.format("Unparseable url: %s", strUrl));
 		String protocol = match.getGroup(1);
+		if (protocol == null) {
+			protocol = "http";
+		}
 		String host = match.getGroup(2);
 		int port = match.getGroup(3) == null ? -1
 				: Integer.parseInt(match.getGroup(3));
