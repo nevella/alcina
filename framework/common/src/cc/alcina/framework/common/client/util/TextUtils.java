@@ -451,4 +451,13 @@ public class TextUtils {
 	public static boolean isEmptyHardOrSoftWhitespace(String string) {
 		return isWhitespaceOrEmpty(string.replace('\u00a0', ' '));
 	}
+
+	public static String elideMiddle(String text, int initialChars,
+			int maxChars) {
+		if (text.length() < maxChars) {
+			return text;
+		}
+		return Ax.format("%s...%s", text.substring(0, initialChars),
+				text.substring(text.length() - maxChars + 13));
+	}
 }

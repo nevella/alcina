@@ -219,7 +219,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	void emitMutationEvent() {
-		if (currentModelMutation != null) {
+		/*
+		 * don't emit a mutation event if there's no attached node (it's
+		 * illegal, and there's no way for it to be received)
+		 */
+		if (currentModelMutation != null && rootModel.provideNode() != null) {
 			NodeEvent.Context.fromNode(rootModel.provideNode()).dispatch(
 					ModelMutation.class, currentModelMutation.getData());
 		}

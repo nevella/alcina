@@ -9,6 +9,7 @@ import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -47,6 +48,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			}
 		}
 
+		public static LooseContext.Key<?> CONTEXT_ALLOW_NULL_NODE = LooseContext
+				.key(Context.class, "CONTEXT_ALLOW_NULL_NODE");
+
 		public static Context fromContext(Context previous, Node node) {
 			Context context = new Context(node == null ? previous.node : node);
 			context.previous = previous;
@@ -81,7 +85,8 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		public Context(Node node) {
 			this.node = node;
-			Preconditions.checkArgument(node != null);
+			Preconditions.checkArgument(
+					node != null || CONTEXT_ALLOW_NULL_NODE.is());
 		}
 
 		public Util util() {
