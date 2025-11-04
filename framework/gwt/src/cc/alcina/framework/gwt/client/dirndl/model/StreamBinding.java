@@ -354,14 +354,14 @@ public class StreamBinding<T> {
 		return value(() -> replaceWith);
 	}
 
-	public StreamBinding<?> withDeferredDispatch() {
+	public StreamBinding<T> withDeferredDispatch() {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
 		return this;
 	}
 
-	public StreamBinding<?> withFinalDispatch() {
+	public StreamBinding<T> withFinalDispatch() {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleFinally(() -> r.run()));

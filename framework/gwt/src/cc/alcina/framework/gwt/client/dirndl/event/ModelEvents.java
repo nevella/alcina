@@ -113,6 +113,14 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onBeforeSelectionChanged(BeforeSelectionChangedDispatch event);
 		}
+
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
+			@Override
+			default void onBeforeSelectionChanged(
+					BeforeSelectionChangedDispatch event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
 	}
 
 	/**
@@ -666,6 +674,13 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onSelected(Selected event);
 		}
+
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
+			@Override
+			default void onSelected(Selected event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
 	}
 
 	/**
@@ -693,6 +708,13 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
+		}
+
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
+			@Override
+			default void onSelectionChanged(SelectionChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 
