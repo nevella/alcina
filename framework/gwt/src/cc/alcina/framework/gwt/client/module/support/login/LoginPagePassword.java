@@ -16,7 +16,7 @@ public class LoginPagePassword extends LoginPage {
 		input.setType("password");
 		input.setAutocomplete("current-password");
 		input.setPlaceholder("Password");
-		setContents(input);
+		formArea.setContents(input);
 		// TODO
 		// loginConsort.topicCallingRemote.add(calling -> {
 		// if (!calling && isAttached()) {
