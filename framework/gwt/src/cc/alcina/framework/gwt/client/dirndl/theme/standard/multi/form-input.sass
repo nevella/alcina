@@ -33,6 +33,8 @@
       top: theme.$placeholder-top
       left: theme.$placeholder-left
       font-size: theme.$placeholder-font-size
+      color: theme.$placeholder-shown-color
+      background-color: transparent
 
     > label:not(:has(+value>input:placeholder-shown)), > label:has(+value>input:focus) 
       transform: translate(0, 0) scale(1)
@@ -41,6 +43,6 @@
       top: theme.$placeholder-not-shown-top
       font-size: theme.$placeholder-not-shown-font-size
 
-    > label, > value>input 
+    > label, > value > input 
       transition: all 0.2s
       touch-action: manipulation
