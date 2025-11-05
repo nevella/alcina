@@ -84,7 +84,22 @@ public abstract class LeafModel {
 		}
 	}
 
-	@Directed(bindings = @Binding(from = "src", type = Type.PROPERTY))
+	public static class Svg extends Model.Fields {
+		@Binding(type = Type.PROPERTY)
+		String viewBox;
+
+		@Binding(type = Type.INNER_HTML)
+		String markup;
+
+		public Svg() {
+		}
+
+		public Svg(String viewBox, String markup) {
+			this.viewBox = viewBox;
+			this.markup = markup;
+		}
+	}
+
 	public static class Img extends Model {
 		private String src;
 
@@ -95,6 +110,7 @@ public abstract class LeafModel {
 			this.src = src;
 		}
 
+		@Binding(type = Type.PROPERTY)
 		public String getSrc() {
 			return this.src;
 		}
@@ -106,7 +122,6 @@ public abstract class LeafModel {
 		}
 	}
 
-	@Directed
 	public static class StringListModel extends Model {
 		private List<String> strings;
 
@@ -124,6 +139,20 @@ public abstract class LeafModel {
 
 		public void setList(List<String> strings) {
 			this.strings = strings;
+		}
+	}
+
+	public static class Pair extends Model.All {
+		public Object left;
+
+		public Object right;
+
+		public Pair() {
+		}
+
+		public Pair(Object left, Object right) {
+			this.left = left;
+			this.right = right;
 		}
 	}
 
