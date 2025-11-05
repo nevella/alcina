@@ -23,7 +23,7 @@ public class LoginPageUsername extends LoginPage
 		input.setFocusOnBind(true);
 		input.setAutocomplete("username");
 		input.setPlaceholder(getEmailAddress());
-		setContents(input);
+		formArea.setContents(input);
 	}
 
 	protected String getEmailAddress() {
