@@ -30,6 +30,7 @@ public abstract class LoginPage extends Model
 
 	protected Model headingArea;
 
+	@TypeSerialization(reflectiveSerializable = false)
 	public static class FormArea extends Model.All {
 		private Object contents;
 

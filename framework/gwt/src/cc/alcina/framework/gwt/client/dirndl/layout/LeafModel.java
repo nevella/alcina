@@ -142,6 +142,7 @@ public abstract class LeafModel {
 		}
 	}
 
+	@TypeSerialization(reflectiveSerializable = false)
 	public static class Pair extends Model.All {
 		public Object left;
 
