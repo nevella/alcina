@@ -354,14 +354,14 @@ public class ModelBinding<T> {
 		return value(() -> replaceWith);
 	}
 
-	public ModelBinding<?> withDeferredDispatch() {
+	public ModelBinding<T> withDeferredDispatch() {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
 		return this;
 	}
 
-	public ModelBinding<?> withFinalDispatch() {
+	public ModelBinding<T> withFinalDispatch() {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleFinally(() -> r.run()));
