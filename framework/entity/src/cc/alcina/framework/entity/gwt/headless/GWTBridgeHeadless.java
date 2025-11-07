@@ -267,7 +267,8 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public void assign(String newURL) {
-			throw new UnsupportedOperationException();
+			Document.get().invoke(() -> Window.assign0(newURL), Window.class,
+					"assign0", null, List.of(newURL), false);
 		}
 
 		@Override

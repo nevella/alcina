@@ -272,6 +272,10 @@ public class Window {
     $wnd.alert(msg);
 	}-*/;
 
+	public static native void assign0(String newURL) /*-{
+      $wnd.location.assign(newURL);
+	}-*/;
+
 	/*
 	 * Hack - fix would really be to get rid of the Location/LocationImpl split
 	 */
