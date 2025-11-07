@@ -7,7 +7,6 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
-import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
@@ -28,40 +27,15 @@ public abstract class LoginPage extends Model
 		ModelEvents.Commit.Handler {
 	protected LoginConsort loginConsort;
 
-	protected Model headingArea;
+	private final HeadingArea headingArea;
 
-	@TypeSerialization(reflectiveSerializable = false)
-	public static class FormArea extends Model.All {
-		private Object contents;
+	private Object contents;
 
-		// reemit an enter on a form field as a Commit. Equivalent to "next"
-		// since
-		// single-input
-		@Directed(
-			reemits = { InferredDomEvents.InputEnterCommit.class,
-					ModelEvents.Commit.class })
-		public Object getContents() {
-			return this.contents;
-		}
+	protected final Navigation navigation = new Navigation();
 
-		public void setContents(Object contents) {
-			this.contents = contents;
-		}
+	private final ProcessStatus processStatus = new ProcessStatus();
 
-		public Navigation navigation = new Navigation();
-
-		public ProcessStatus processStatus = new ProcessStatus();
-
-		@Property.Not
-		Link defaultButton;
-	}
-
-	protected FormArea formArea = new FormArea();
-
-	@Directed
-	public FormArea getFormArea() {
-		return formArea;
-	}
+	private Link defaultButton;
 
 	public LoginPage(LoginConsort loginConsort) {
 		super();
@@ -73,14 +47,23 @@ public abstract class LoginPage extends Model
 	}
 
 	protected void connectStatusPanel() {
-		formArea.processStatus.connectToTopics(loginConsort.topicCallingRemote,
+		processStatus.connectToTopics(loginConsort.topicCallingRemote,
 				loginConsort.topicMessage);
+	}
+
+	// reemit an enter on a form field as a Commit. Equivalent to "next" since
+	// single-input
+	@Directed(
+		reemits = { InferredDomEvents.InputEnterCommit.class,
+				ModelEvents.Commit.class })
+	public Object getContents() {
+		return this.contents;
 	}
 
 	protected abstract String getEnteredText();
 
 	@Directed
-	public Model getHeadingArea() {
+	public HeadingArea getHeadingArea() {
 		return this.headingArea;
 	}
 
@@ -92,13 +75,23 @@ public abstract class LoginPage extends Model
 		return e.getMessage();
 	}
 
+	@Directed
+	public Navigation getNavigation() {
+		return this.navigation;
+	}
+
+	@Directed
+	public ProcessStatus getProcessStatus() {
+		return this.processStatus;
+	}
+
 	protected abstract String getSubtitleText();
 
 	protected abstract Validator getValidator();
 
 	@Override
 	public void onInput(Input event) {
-		formArea.processStatus.clear();
+		processStatus.clear();
 	}
 
 	@Override
@@ -121,11 +114,15 @@ public abstract class LoginPage extends Model
 	}
 
 	protected void populateNavigation() {
-		formArea.defaultButton = new Link().withClassName("primary")
+		defaultButton = new Link().withClassName("primary")
 				.withModelEvent(Next.class).withTextFromModelEvent();
 		// FIXME - ui2 1x0 - definitely want progress here
 		// .withAsyncTopic(controller.topicCallingRemote);
-		formArea.navigation.put(formArea.defaultButton, NavArea.NEXT);
+		navigation.put(defaultButton, NavArea.NEXT);
+	}
+
+	public void setContents(Object contents) {
+		this.contents = contents;
 	}
 
 	protected boolean validate() {
@@ -134,7 +131,7 @@ public abstract class LoginPage extends Model
 			validator.validate(getEnteredText());
 			return true;
 		} catch (ValidationException e) {
-			formArea.processStatus.addMessage(getMessage(e), "validation");
+			processStatus.addMessage(getMessage(e), "validation");
 			return false;
 		}
 	}

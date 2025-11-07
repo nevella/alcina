@@ -9,12 +9,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 public class LoginPage2FA extends LoginPage {
 	public LoginPage2FA(LoginConsort loginConsort) {
 		super(loginConsort);
-		formArea.setContents(new UiModel(loginConsort));
+		setContents(new UiModel(loginConsort));
 	}
 
 	@Override
 	protected String getEnteredText() {
-		return ((UiModel) formArea.getContents()).input.getValue();
+		return ((UiModel) getContents()).input.getValue();
 	}
 
 	@Override
