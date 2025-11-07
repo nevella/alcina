@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import java.util.Collections;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.ConsortWithSignals;
@@ -75,8 +73,7 @@ public class HandshakeConsort
 	public void restartFromServices() {
 		HandshakeConsortModel.get().clearObjects();
 		Registry.impl(HandshakeConsortModel.class).setLoginResponse(null);
-		removeStates(Collections.singleton(
-				UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED));
+		removeState(UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED);
 		signal(HandshakeSignal.OBJECTS_INVALIDATED);
 	}
 }

@@ -114,6 +114,18 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	private Boolean draggable;
 
+	private boolean disabled;
+
+	@Binding(type = Type.PROPERTY)
+	public boolean isDisabled() {
+		return disabled;
+	}
+
+	public void setDisabled(boolean disabled) {
+		set("disabled", this.disabled, disabled,
+				() -> this.disabled = disabled);
+	}
+
 	public Link() {
 	}
 
@@ -283,7 +295,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	}
 
 	public void setText(String text) {
-		this.text = text;
+		set("text", this.text, text, () -> this.text = text);
 	}
 
 	public void setTitle(String title) {

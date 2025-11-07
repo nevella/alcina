@@ -134,9 +134,6 @@ public class Binding {
 					}
 				}
 			}
-			if (this.instance.feedback != null) {
-				this.instance.feedback.resolve(propertyChangeEvent.getSource());
-			}
 			this.lastException = null;
 			// Adding this to simplify simple toString conversions.
 			// TODO add a nice way to register global converter defaults
@@ -150,6 +147,10 @@ public class Binding {
 			}
 			try {
 				target.property.set(target.object, value);
+				if (this.instance.feedback != null) {
+					this.instance.feedback
+							.resolve(propertyChangeEvent.getSource());
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new RuntimeException("Exception setting property: "

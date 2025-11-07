@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.module.login;
 
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,49 +53,46 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	}
 
 	protected void handle0() {
+		Set<LoginResponseState> states = loginResponse.getStates();
 		try {
 			if (!validateLoginAttempt()) {
-				loginResponse.getStates()
-						.add(LoginResponseState.Account_locked_out);
+				states.add(LoginResponseState.Account_locked_out);
 				return;
 			}
 			if (!validateUserName()) {
-				loginResponse.getStates()
-						.add(LoginResponseState.Username_not_found);
+				states.add(LoginResponseState.Username_not_found);
 				return;
+			} else {
+				states.add(LoginResponseState.Username_found);
 			}
 			if (loginRequest.getPassword() == null) {
 				return;
 			}
 			if (!validatePassword()) {
-				loginResponse.getStates()
-						.add(LoginResponseState.Password_incorrect);
+				states.add(LoginResponseState.Password_incorrect);
 				return;
 			}
 			if (!validateAccount()) {
-				loginResponse.getStates()
-						.add(LoginResponseState.Account_cannot_login);
+				states.add(LoginResponseState.Account_cannot_login);
 				return;
 			}
 			TwoFactorAuthResult twoFactorAuthResult = validateTwoFactorAuth();
 			if (twoFactorAuthResult.requiresTwoFactorAuth) {
-				loginResponse.getStates()
-						.add(LoginResponseState.Two_factor_code_required);
+				states.add(LoginResponseState.Two_factor_code_required);
 				loginResponse
 						.setTwoFactorAuthQRCode(twoFactorAuthResult.qrCode);
 				if (twoFactorAuthResult.requiresTwoFactorQrCode) {
-					loginResponse.getStates().add(
-							LoginResponseState.Two_factor_qr_code_required);
+					states.add(LoginResponseState.Two_factor_qr_code_required);
 				}
 				return;
 			}
 			processLogin();
-			loginResponse.getStates().add(LoginResponseState.Login_complete);
+			states.add(LoginResponseState.Login_complete);
 			return;
 		} catch (Exception e) {
 			e.printStackTrace();
 			loginResponse.setErrorMsg(CommonUtils.toSimpleExceptionMessage(e));
-			loginResponse.getStates().add(LoginResponseState.Unknown_exception);
+			states.add(LoginResponseState.Unknown_exception);
 		}
 	}
 
