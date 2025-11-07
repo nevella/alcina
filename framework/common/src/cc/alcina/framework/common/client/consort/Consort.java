@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.consort;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -144,8 +143,11 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	protected void addState(D state) {
-		// only do on startup - no logging
-		modifyStates(Collections.singletonList(state), true);
+		addStates(List.of(state));
+	}
+
+	protected void addStates(Collection<D> states) {
+		modifyStates(states, true);
 	}
 
 	public StateListenerWrapper addStateListener(TopicListener listener,
@@ -155,13 +157,6 @@ public class Consort<D> implements AlcinaProcess {
 		topics.listenerDelta(TopicChannel.STATES, wrapper, true);
 		wrapper.fireIfExisting();
 		return wrapper;
-	}
-
-	protected void addStates(Collection<D> states) {
-		logger.info(Ax.format("%s add:[%s]",
-				CommonUtils.padStringLeft("", depth(), '\t'),
-				CommonUtils.join(states, ", ")));
-		modifyStates(states, true);
 	}
 
 	boolean canAddPlayers() {
@@ -193,7 +188,7 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	public void clearReachedStates() {
-		removeStates(new ArrayList<D>(reachedStates));
+		reachedStates.forEach(this::removeState);
 	}
 
 	protected void consumeQueue() {
@@ -387,6 +382,9 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	private void modifyStates(Collection<D> states, boolean add) {
+		logger.info(Ax.format("%s %s:[%s]",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				add ? "add" : "rmv", CommonUtils.join(states, ", ")));
 		LightSet<D> reachedCopy = new LightSet<D>(reachedStates);
 		boolean mod = add ? reachedStates.addAll(states)
 				: reachedStates.removeAll(states);
@@ -511,13 +509,11 @@ public class Consort<D> implements AlcinaProcess {
 		}
 	}
 
+	public void removeState(D state) {
+		removeStates(List.of(state));
+	}
+
 	public void removeStates(Collection<D> states) {
-		if (states.isEmpty()) {
-			return;
-		}
-		logger.info(Ax.format("%s rmv:[%s]",
-				CommonUtils.padStringLeft("", depth(), '\t'),
-				CommonUtils.join(states, ", ")));
 		modifyStates(states, false);
 	}
 

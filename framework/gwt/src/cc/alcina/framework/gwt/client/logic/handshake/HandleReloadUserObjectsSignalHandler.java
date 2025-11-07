@@ -1,8 +1,5 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Consort;
@@ -20,13 +17,11 @@ public class HandleReloadUserObjectsSignalHandler
 	@Override
 	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
 		consort.addOneTimeFinishedCallback(signalHandledCallback);
-		List<ExtensibleEnum> statesToRemove = new ArrayList<ExtensibleEnum>(
-				ExtensibleEnum.forClassAndTag(HandshakeState.class,
-						HandshakeState.TAG_POST_OBJECT_DATA_LOAD));
 		// actually, we have to invalidate the layout anyway - rely on those
 		// history tokens...(alcina rox)
 		// statesToRemove.remove(HandshakeState.MAIN_LAYOUT_INITIALISED);
-		consort.removeStates(statesToRemove);
+		consort.removeStates(ExtensibleEnum.forClassAndTag(HandshakeState.class,
+				HandshakeState.TAG_POST_OBJECT_DATA_LOAD));
 		consort.addIfNotMember(Registry.impl(StartAppPlayer.class));
 		consort.nudge();
 	}
