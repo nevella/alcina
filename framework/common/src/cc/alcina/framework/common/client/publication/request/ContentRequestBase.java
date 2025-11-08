@@ -24,7 +24,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -449,8 +448,12 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 				outputFormat);
 	}
 
-	public PublicationResult publish() throws WebException {
-		return PublicationRequestHandler.get().publish(this);
+	public PublicationResult publish() {
+		try {
+			return PublicationRequestHandler.get().publish(this);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	public PublicationResult publishUnchecked() {
@@ -669,5 +672,24 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@Override
 	public TreeSerializable.Customiser treeSerializationCustomiser() {
 		return new Customiser(this);
+	}
+
+	public static class Generic<CD extends ContentDefinition>
+			extends ContentRequestBase<CD> {
+		@Override
+		public CD getContentDefinition() {
+			return contentDefinition;
+		}
+
+		@Override
+		public void setContentDefinition(CD contentDefinition) {
+			this.contentDefinition = contentDefinition;
+		}
+
+		public <S extends Generic<CD>> S
+				withContentDefinition(CD contentDefinition) {
+			setContentDefinition(contentDefinition);
+			return (S) this;
+		}
 	}
 }
