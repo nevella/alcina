@@ -62,4 +62,8 @@ public class TimeConstants {
 	public static long age(long time) {
 		return System.currentTimeMillis() - time;
 	}
+
+	public static Date relativeDate(long msDelta) {
+		return new Date(System.currentTimeMillis() + msDelta);
+	}
 }

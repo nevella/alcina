@@ -110,6 +110,11 @@ public abstract class Authenticator<U extends Entity & IUser> {
 
 	public void processValidLogin(LoginResponse loginResponse, String userName,
 			boolean rememberMe) throws AuthenticationException {
+		processValidLogin(loginResponse, userName, rememberMe, "password");
+	}
+
+	public void processValidLogin(LoginResponse loginResponse, String userName,
+			boolean rememberMe, String reason) throws AuthenticationException {
 		if (loginModel == null) {
 			LoginBean loginBean = new LoginBean();
 			loginBean.setUserName(userName);
@@ -120,8 +125,8 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		U user = validateAccount(loginResponse, userName);
 		if (loginResponse.isOk()) {
 			AuthenticationSession authenticationSession = AuthenticationManager
-					.get().createAuthenticationSession(new Date(), user,
-							"password", true);
+					.get().createAuthenticationSession(new Date(), user, reason,
+							true);
 			if (!rememberMe) {
 				authenticationSession.setMaxInstances(1);
 			}
