@@ -663,7 +663,8 @@ public abstract class Model extends Bindable
 	}
 
 	/*
-	 * Sugary execution support. Will only execute if the model is bound
+	 * Sugary finally/deferred execution support. Will only execute if the model
+	 * is bound
 	 */
 	public class Exec {
 		Runnable lambda;
