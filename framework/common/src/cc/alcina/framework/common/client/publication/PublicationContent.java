@@ -22,7 +22,7 @@ import java.util.List;
  * 
  *
  * Note - these will want to be xmlroot elt, jaxb registered, because they will
- * be jaxb-serialised for transform
+ * be jaxb-serialised for transform (at least, the v1/non-dirndl models will)
  */
 public interface PublicationContent extends Serializable {
 	default String getCss() {
@@ -31,5 +31,8 @@ public interface PublicationContent extends Serializable {
 
 	default List getGridRows() {
 		return null;
+	}
+
+	public static class Blank implements PublicationContent {
 	}
 }

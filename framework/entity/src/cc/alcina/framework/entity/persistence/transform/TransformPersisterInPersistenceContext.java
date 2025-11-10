@@ -533,8 +533,11 @@ public class TransformPersisterInPersistenceContext {
 						.addAll(token.getClientUpdateEvents());
 				response.getEventsToUseForClientUpdate()
 						.addAll(tlTransformManager.getModificationEvents());
-				token.initialTransforms
-						.filter(response.getEventsToUseForClientUpdate());
+				if (!LooseContext
+						.is(CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM)) {
+					token.initialTransforms
+							.filter(response.getEventsToUseForClientUpdate());
+				}
 				response.setRequestId(request.getRequestId());
 				response.setTransformsProcessed(transformCount);
 				wrapper.response = response;

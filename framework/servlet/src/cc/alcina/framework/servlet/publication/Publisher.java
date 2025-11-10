@@ -62,6 +62,12 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  * 
  */
 public class Publisher {
+	/*
+	 * A marker for a class which contains the elements of a Publisher peer
+	 */
+	public interface Elements {
+	}
+
 	public static final String CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT = Publisher.class
 			.getName() + ".CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT";
 
