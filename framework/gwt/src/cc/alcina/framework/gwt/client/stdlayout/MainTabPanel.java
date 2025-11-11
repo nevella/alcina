@@ -206,7 +206,7 @@ public class MainTabPanel extends TabPanel implements IMainTabPanel {
 	private void refreshButtonPanelVis() {
 		int index = 0;
 		boolean visBefore = false;
-		LoginState state = Permissions.get().getLoginState();
+		LoginState state = Permissions.getLoginState();
 		for (IsWidget button : buttons) {
 			boolean curVis = true;
 			if (button instanceof LoginStateVisibleWithWidget) {

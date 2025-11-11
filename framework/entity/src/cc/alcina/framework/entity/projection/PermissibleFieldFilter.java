@@ -68,7 +68,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 				if (ap.rule().length() > 0) {
 					return null;
 				}
-				if (!Permissions.get().isLoggedIn()) {
+				if (!Permissions.isLoggedIn()) {
 					return false;
 				}
 				if (!HasOwner.class.isAssignableFrom(clazz)) {

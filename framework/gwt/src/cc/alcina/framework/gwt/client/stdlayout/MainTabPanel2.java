@@ -106,7 +106,7 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 				nonTabButtons.stream().filter(b -> {
 					if (b instanceof LoginStateVisible) {
 						return ((LoginStateVisible) b).visibleForLoginState(
-								Permissions.get().getLoginState());
+								Permissions.getLoginState());
 					} else {
 						return true;
 					}

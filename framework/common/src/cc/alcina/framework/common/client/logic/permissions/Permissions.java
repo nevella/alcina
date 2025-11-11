@@ -684,8 +684,8 @@ public class Permissions implements DomainTransformListener {
 		return defaultPropertyPermissions;
 	}
 
-	public LoginState getLoginState() {
-		return this.loginState;
+	public static LoginState getLoginState() {
+		return get().loginState;
 	}
 
 	public AccessLevel getMaxPropertyAccessLevel() {
@@ -758,7 +758,7 @@ public class Permissions implements DomainTransformListener {
 		return getUser() == null || Names.ANONYMOUS_USER.equals(getUserName());
 	}
 
-	public boolean isLoggedIn() {
+	public static boolean isLoggedIn() {
 		return getLoginState() != LoginState.NOT_LOGGED_IN;
 	}
 

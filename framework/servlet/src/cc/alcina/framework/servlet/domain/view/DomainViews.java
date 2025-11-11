@@ -503,7 +503,7 @@ public abstract class DomainViews {
 		CountDownLatch latch = new CountDownLatch(1);
 
 		public ViewsTask() {
-			loginState = Permissions.get().getLoginState();
+			loginState = Permissions.getLoginState();
 			user = Permissions.get().getUser();
 		}
 
