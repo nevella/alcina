@@ -34,7 +34,7 @@ class PersistentEventPopulator {
 		try {
 			if (originatingUser != null) {
 				Permissions.pushUser(originatingUser,
-						Permissions.get().getLoginState());
+						Permissions.getLoginState());
 				pushed = true;
 			}
 			populate0(persistentEvents, tltm, eventsPersisted,

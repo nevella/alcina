@@ -44,7 +44,7 @@ public class EntityClientUtils {
 	}
 
 	public static boolean isLoggedIn() {
-		return Permissions.get().isLoggedIn();
+		return Permissions.isLoggedIn();
 	}
 
 	public static boolean isTestServer() {
