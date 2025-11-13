@@ -21,11 +21,19 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TitleAttribute;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 
 // LeafModel itself is just a naming container
 public abstract class LeafModel {
 	@Directed(tag = "div")
 	public static class HtmlBlock extends Model implements HasValue<String> {
+		public static class To implements ModelTransform<String, HtmlBlock> {
+			@Override
+			public HtmlBlock apply(String t) {
+				return new HtmlBlock(t);
+			}
+		}
+
 		public String value;
 
 		public HtmlBlock() {
@@ -48,13 +56,6 @@ public abstract class LeafModel {
 		@Override
 		public void setValue(String value) {
 			set("value", this.value, value, () -> this.value = value);
-		}
-
-		public static class To implements ModelTransform<String, HtmlBlock> {
-			@Override
-			public HtmlBlock apply(String t) {
-				return new HtmlBlock(t);
-			}
 		}
 	}
 
@@ -199,10 +200,6 @@ public abstract class LeafModel {
 	 */
 	@Directed
 	public static class PreText extends Model.All {
-		Heading heading;
-
-		Inner inner;
-
 		class Inner extends Model.All {
 			@Binding(type = Type.INNER_TEXT)
 			final String text;
@@ -212,9 +209,40 @@ public abstract class LeafModel {
 			}
 		}
 
+		Heading heading;
+
+		Inner inner;
+
 		public PreText(String caption, String text) {
 			heading = new Heading(caption);
 			this.inner = new Inner(text);
+		}
+	}
+
+	@Directed(renderer = LeafRenderer.Text.class)
+	public static class Text extends Model {
+		public static class To implements ModelTransform<String, TextNode> {
+			@Override
+			public TextNode apply(String t) {
+				return new TextNode(t);
+			}
+		}
+
+		String text;
+
+		public Text() {
+		}
+
+		public Text(String text) {
+			this.text = text;
+		}
+
+		/*
+		 * used by the renderer
+		 */
+		@Override
+		public String toString() {
+			return text;
 		}
 	}
 
@@ -246,21 +274,6 @@ public abstract class LeafModel {
 
 	@Directed
 	public static class TextTitle extends Model.Fields {
-		@Binding(type = Type.INNER_TEXT)
-		public final String text;
-
-		@Binding(type = Type.PROPERTY)
-		public String title;
-
-		public TextTitle(String text) {
-			this(text, text);
-		}
-
-		public TextTitle(String text, String title) {
-			this.text = text;
-			this.title = title;
-		}
-
 		public static class To implements ModelTransform<Object, TextTitle> {
 			@Override
 			public TextTitle apply(Object t) {
@@ -277,6 +290,21 @@ public abstract class LeafModel {
 				String hint = node.annotation(TitleAttribute.class).value();
 				return new TextTitle(text, hint);
 			}
+		}
+
+		@Binding(type = Type.INNER_TEXT)
+		public final String text;
+
+		@Binding(type = Type.PROPERTY)
+		public String title;
+
+		public TextTitle(String text) {
+			this(text, text);
+		}
+
+		public TextTitle(String text, String title) {
+			this.text = text;
+			this.title = title;
 		}
 	}
 
@@ -312,6 +340,15 @@ public abstract class LeafModel {
 
 	@Directed
 	public static class Button extends Model.Fields {
+		public static class To<T> implements ModelTransform<T, Button> {
+			@Override
+			public Button apply(T t) {
+				Button button = new Button();
+				button.text = new HasDisplayNameRenderer().getModelText(t);
+				return button;
+			}
+		}
+
 		@Binding(type = Type.PROPERTY)
 		public String title;
 
@@ -326,27 +363,18 @@ public abstract class LeafModel {
 
 		public Button() {
 		}
-
-		public static class To<T> implements ModelTransform<T, Button> {
-			@Override
-			public Button apply(T t) {
-				Button button = new Button();
-				button.text = new HasDisplayNameRenderer().getModelText(t);
-				return button;
-			}
-		}
 	}
 
 	public static class EditableDateModel extends Bindable.Fields.All {
+		@Display
+		@Validator(ShortIso8601DateValidator.class)
+		public Date date;
+
 		public EditableDateModel() {
 		}
 
 		public EditableDateModel(Date date) {
 			this.date = date;
 		}
-
-		@Display
-		@Validator(ShortIso8601DateValidator.class)
-		public Date date;
 	}
 }
