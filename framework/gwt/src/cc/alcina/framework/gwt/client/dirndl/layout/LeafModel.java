@@ -1,5 +1,10 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Date;
 import java.util.List;
 
@@ -10,6 +15,7 @@ import cc.alcina.framework.common.client.gwittir.validator.ShortIso8601DateValid
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Validator;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -21,7 +27,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TitleAttribute;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 
 // LeafModel itself is just a naming container
 public abstract class LeafModel {
@@ -219,8 +224,8 @@ public abstract class LeafModel {
 		}
 	}
 
-	@Directed(renderer = LeafRenderer.Text.class)
-	public static class Text extends Model {
+	@Directed(renderer = LeafRenderer.TextNode.class)
+	public static class TextNode extends Model {
 		public static class To implements ModelTransform<String, TextNode> {
 			@Override
 			public TextNode apply(String t) {
@@ -228,6 +233,27 @@ public abstract class LeafModel {
 			}
 		}
 
+		private String value;
+
+		public TextNode() {
+		}
+
+		public TextNode(String value) {
+			this.value = value;
+		}
+
+		@Binding(type = Type.INNER_TEXT)
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setValue(String value) {
+			set("value", this.value, value, () -> this.value = value);
+		}
+	}
+
+	@Directed(renderer = LeafRenderer.Text.class)
+	public static class Text extends Model {
 		String text;
 
 		public Text() {
@@ -248,6 +274,23 @@ public abstract class LeafModel {
 
 	@Directed
 	public static class TagText extends Model.Fields implements HasTag {
+		@ClientVisible
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.METHOD, ElementType.FIELD })
+		public @interface Tag {
+			String value();
+		}
+
+		public static class To extends
+				AbstractContextSensitiveModelTransform<String, TagText> {
+			@Override
+			public TagText apply(String text) {
+				Tag tag = node.annotation(Tag.class);
+				return new TagText(tag.value(), text);
+			}
+		}
+
 		@Binding(type = Type.INNER_TEXT)
 		public final String text;
 
