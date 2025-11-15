@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.dev.protobuf.Message;
 import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
@@ -107,6 +108,12 @@ public class RemoteComponentProtocol {
 			protected String provideMessageData() {
 				return events.stream().map(e -> e.event.getType()).distinct()
 						.collect(Collectors.joining(", "));
+			}
+
+			/* utility method for end-of-app inspection */
+			public boolean provideIsPageHide() {
+				return events.stream().anyMatch(evt -> Objects
+						.equals(evt.event.getType(), BrowserEvents.PAGEHIDE));
 			}
 		}
 

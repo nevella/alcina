@@ -12,6 +12,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
+import cc.alcina.framework.servlet.environment.Environment.InvokeException;
 
 /*
  * Note :: explain -why- a DOM needs single-threaded access (it's a case of
@@ -127,8 +128,13 @@ class ClientExecutionQueue implements Runnable {
 	void onLoopException(Exception e) {
 		transportLayer.sendMessage(ProcessingException.wrap(e,
 				environment.access().isSendFullExceptionMessage()));
-		logger.warn("loop exception:\n=====================================",
-				e);
+		if (e instanceof InvokeException.PageHide) {
+			// unavoidable
+		} else {
+			logger.warn(
+					"loop exception:\n=====================================",
+					e);
+		}
 	}
 
 	/*
@@ -261,5 +267,13 @@ class ClientExecutionQueue implements Runnable {
 		synchronized (this) {
 			notifyAll();
 		}
+	}
+
+	public boolean hasPageHideEvent() {
+		return asyncDispatchQueue.stream()
+				.anyMatch(m -> m.fromClientMessage != null
+						&& m.fromClientMessage.message instanceof Message.DomEventMessage
+						&& ((Message.DomEventMessage) m.fromClientMessage.message)
+								.provideIsPageHide());
 	}
 }

@@ -8,6 +8,7 @@ import com.google.gwt.user.client.Cookies;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
@@ -187,7 +188,7 @@ public class ClientProperties {
 	 * Initialise ClientProperties from GWT client stores
 	 */
 	public ClientProperties() {
-		if (GWT.isClient()) {
+		if (Al.isBrowser()) {
 			// Get properties stored on the ClientProperties cookie
 			String cookie = Cookies.getCookie(ClientProperties.class.getName());
 			if (Ax.notBlank(cookie)) {

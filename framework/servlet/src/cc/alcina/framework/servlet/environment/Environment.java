@@ -202,6 +202,11 @@ class Environment {
 					Ax.simpleExceptionOut(e);
 				}
 				if (timedOut) {
+					if (queue.hasPageHideEvent()) {
+						access().end("pagehide during invokesync");
+						throw new InvokeException.PageHide(
+								"pagehide during invokesync");
+					}
 					hadTimeOut = true;
 					Ax.out("invokesync - [retry]");
 				}
@@ -268,6 +273,12 @@ class Environment {
 		InvokeException(String context, ExceptionTransport exception) {
 			super(Ax.format("%s\n======================\n%s", context,
 					exception.toExceptionString()));
+		}
+
+		static class PageHide extends InvokeException {
+			PageHide(String message) {
+				super(message);
+			}
 		}
 
 		InvokeException(String message) {
