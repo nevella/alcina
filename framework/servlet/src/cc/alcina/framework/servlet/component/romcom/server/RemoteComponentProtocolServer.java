@@ -48,6 +48,12 @@ public class RemoteComponentProtocolServer {
 			this.message = message;
 			this.latch = new CountDownLatch(1);
 		}
+
+		public boolean provideIsPageHideEvent() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'provideIsPageHideEvent'");
+		}
 	}
 
 	/**
