@@ -725,6 +725,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Skip extends ModelEvent<Object, Skip.Handler> {
+		@Override
+		public void dispatch(Skip.Handler handler) {
+			handler.onSkip(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSkip(Skip event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSkip(Skip event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Submit extends ModelEvent<Object, Submit.Handler> {
 		@Override
 		public void dispatch(Submit.Handler handler) {

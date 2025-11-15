@@ -48,6 +48,21 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * the current environment. So this is the annotation to use for a situation
  * (say TraversalBrowser vs EntityBrowser) where the implementation would be
  * different, depending on the initial context
+ * <p>
+ * Cookbook: if there's a class that you'd like as a Registration.Singleton AND
+ * as an EnvironmentRegistration, it's probably easiest to indirect and cast -
+ * say: <code>
+ * public static FooResolver get() {
+			if (Al.isRomcom()) {
+				return (FooResolver) Registry
+						.impl(FooResolver.RomcomImpl.class);
+			}
+			return Registry.impl(FooResolver.class);
+		}
+ * </code>
+ * <p>
+ * I'm sure there's a more elegant bridging solution, it's just around the
+ * corner...
  */
 public class EnvironmentRegistry extends Registry {
 	static final String CONTEXT_REGISTRY = EnvironmentRegistry.class.getName()
@@ -285,6 +300,10 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public void singleton(Class type, Object implementation) {
+			if (type.toString().contains("CeresModelResolver")) {
+				Ax.out("registering %s for %s", type,
+						EnvironmentRegister.this.hashCode());
+			}
 			Object existingImplementation = environmentImplementations
 					.get(type);
 			if (existingImplementation != null) {
