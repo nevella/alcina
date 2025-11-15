@@ -46,6 +46,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -2238,5 +2239,22 @@ public class CommonUtils {
 
 	public static String toFileUrl(String name) {
 		return "file://" + name;
+	}
+
+	public static int occurrenceIndexIn(String occurenceIndexOf,
+			String occurenceIndexIn) {
+		Preconditions.checkArgument(occurenceIndexOf.length() > 0);
+		int fromIndex = 0;
+		int matchIdx = -1;
+		for (;;) {
+			int nextIndex = occurenceIndexIn.indexOf(occurenceIndexOf,
+					fromIndex);
+			if (nextIndex == -1) {
+				break;
+			}
+			fromIndex = nextIndex + occurenceIndexOf.length();
+			matchIdx++;
+		}
+		return matchIdx;
 	}
 }

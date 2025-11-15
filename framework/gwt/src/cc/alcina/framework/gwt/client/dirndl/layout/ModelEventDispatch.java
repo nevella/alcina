@@ -8,7 +8,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.model.EventService;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -71,9 +70,5 @@ class ModelEventDispatch {
 			modelEvent.setModel(model);
 		}
 		emitterNode.getEventBinding(eventType).dispatchDescent(modelEvent);
-		if (emitterNode.getModel() instanceof EventService.Provider) {
-			((EventService.Provider) emitterNode.getModel()).getEventService()
-					.publishEvent(modelEvent);
-		}
 	}
 }

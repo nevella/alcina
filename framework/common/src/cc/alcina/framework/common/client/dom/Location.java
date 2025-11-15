@@ -508,10 +508,13 @@ public class Location implements Comparable<Location> {
 		}
 
 		public Range truncateAbsolute(int startIndex, int endIndex) {
-			Location modifiedStart = start
-					.textRelativeLocation(startIndex - start.getIndex(), true);
-			Location modifiedEnd = end
-					.textRelativeLocation(endIndex - end.getIndex(), false);
+			Location modifiedStart = startIndex > start.getIndex()
+					? start.textRelativeLocation(startIndex - start.getIndex(),
+							true)
+					: start;
+			Location modifiedEnd = endIndex < end.getIndex()
+					? end.textRelativeLocation(endIndex - end.getIndex(), false)
+					: end;
 			return new Range(modifiedStart, modifiedEnd);
 		}
 
