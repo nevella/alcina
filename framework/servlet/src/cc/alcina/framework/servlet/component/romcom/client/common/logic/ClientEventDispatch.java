@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.gwt.core.client.Scheduler;
@@ -140,6 +142,15 @@ class ClientEventDispatch {
 				if (eventTargetDomNode.nameIs("select")) {
 					eventData.selectedIndex = elem
 							.getPropertyInt("selectedIndex");
+					eventData.selectedIndicies = new ArrayList<>();
+					List<DomNode> childElements = elem.asDomNode().children
+							.elements();
+					for (int idx = 0; idx < childElements.size(); idx++) {
+						DomNode node = childElements.get(idx);
+						if (node.gwtElement().getPropertyBoolean("selected")) {
+							eventData.selectedIndicies.add(idx);
+						}
+					}
 				}
 			}
 			if (Objects.equals(eventType, "input")) {

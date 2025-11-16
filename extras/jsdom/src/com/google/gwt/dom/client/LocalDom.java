@@ -1068,6 +1068,10 @@ public class LocalDom implements ContextFrame {
 				if (eventData.selectedIndex != null) {
 					target.attachIdRemote().selectedIndex = eventData.selectedIndex;
 				}
+				if (eventData.selectedIndicies != null) {
+					target.attachIdRemote().updateChildSelectedIndicies(
+							eventData.selectedIndicies);
+				}
 				// FIXME - romcom - attach probably not being called.
 				// This can probably be removed
 				Preconditions.checkState(firstReceiver.eventListener != null);

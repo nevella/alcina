@@ -1,15 +1,18 @@
 package com.google.gwt.dom.client;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 
@@ -27,6 +30,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	String value;
 
 	Integer selectedIndex = -1;
+
+	boolean selected;
 
 	ElementAttachId(Node node) {
 		super(node);
@@ -262,8 +267,23 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 			}
 			return value;
 		}
+		case "checked": {
+			// FIXME - dirndl - see CheckboxInput
+			if (value == null) {
+				Element elem = elementFor();
+				switch (elem.getNodeName()) {
+				case "input":
+					value = elem.getAttribute("checked");
+					break;
+				}
+			}
+			return value;
+		}
 		case "selectedIndex": {
 			return selectedIndex == null ? null : String.valueOf(selectedIndex);
+		}
+		case "selected": {
+			return String.valueOf(selected);
 		}
 		default: {
 			return getAttribute(name);
@@ -328,7 +348,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public final boolean hasTagName(String tagName) {
-		throw new UnsupportedOperationException();
+		return elementFor().hasTagName(tagName);
 	}
 
 	@Override
@@ -428,12 +448,12 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		throw new UnsupportedOperationException();
+		setPropertyString(name, String.valueOf(value));
 	}
 
 	@Override
 	public void setPropertyDouble(String name, double value) {
-		throw new UnsupportedOperationException();
+		setPropertyString(name, String.valueOf(value));
 	}
 
 	@Override
@@ -564,5 +584,18 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	public String getComputedStyleValue(String key) {
 		return invokeSync("getComputedStyleValue", List.of(String.class),
 				List.of(key));
+	}
+
+	public void updateChildSelectedIndicies(List<Integer> selectedIndicies) {
+		if (hasTagName("select")) {
+			Set<Integer> indexSet = new HashSet<>(selectedIndicies);
+			List<DomNode> childElements = elementFor().asDomNode().children
+					.elements();
+			for (int idx = 0; idx < childElements.size(); idx++) {
+				DomNode node = childElements.get(idx);
+				ElementAttachId typed = node.gwtElement().attachIdRemote();
+				typed.selected = indexSet.contains(idx);
+			}
+		}
 	}
 }
