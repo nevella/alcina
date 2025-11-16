@@ -107,7 +107,7 @@ public abstract class StandaloneObjectStore implements ObjectStore {
 
 	@Override
 	public Entity getObject(Entity bean) {
-		return (Entity) getObject(bean.getClass(), bean.getId(),
+		return (Entity) getObject(bean.entityClass(), bean.getId(),
 				bean.getLocalId());
 	}
 

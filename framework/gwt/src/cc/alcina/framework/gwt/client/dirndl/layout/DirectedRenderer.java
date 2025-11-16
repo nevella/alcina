@@ -299,7 +299,7 @@ public abstract class DirectedRenderer {
 					// null output
 					return null;
 				}
-				ModelTransform modelTransform = (ModelTransform) Reflections
+				Function modelTransform = (Function) Reflections
 						.newInstance(transformElements.value());
 				if (modelTransform instanceof ContextSensitiveTransform) {
 					((ContextSensitiveTransform) modelTransform)

@@ -16,12 +16,16 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Validator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer.HasDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
@@ -29,7 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TitleAttribute;
 
 // LeafModel itself is just a naming container
-public abstract class LeafModel {
+public interface LeafModel {
 	@Directed(tag = "div")
 	public static class HtmlBlock extends Model implements HasValue<String> {
 		public static class To implements ModelTransform<String, HtmlBlock> {
@@ -418,6 +422,45 @@ public abstract class LeafModel {
 
 		public EditableDateModel(Date date) {
 			this.date = date;
+		}
+	}
+
+	@TypedProperties
+	@TypeSerialization(reflectiveSerializable = false)
+	public static class Toggle extends Model.All
+			implements DomEvents.Click.Handler {
+		public PackageProperties._LeafModel_Toggle.InstanceProperties
+				properties() {
+			return PackageProperties.leafModel_toggle.instance(this);
+		}
+
+		@Binding(type = Type.CSS_CLASS)
+		public boolean selected;
+
+		public Object model;
+
+		public Toggle(Object model) {
+			this.model = model;
+		}
+
+		@Override
+		public void onClick(Click event) {
+			properties().selected().set(!selected);
+			event.reemitAs(this, ModelEvents.Toggle.class);
+		}
+	}
+
+	@TypeSerialization(reflectiveSerializable = false)
+	public static class ToggleDown extends Model.All {
+		public Object model;
+
+		public Svg chevron = new Svg("0 0 24 24",
+				"<polyline points=\"6 9 12 15 18 9\"></polyline>");
+
+		public static Toggle of(Object model) {
+			ToggleDown body = new ToggleDown();
+			body.model = model;
+			return new Toggle(body);
 		}
 	}
 }

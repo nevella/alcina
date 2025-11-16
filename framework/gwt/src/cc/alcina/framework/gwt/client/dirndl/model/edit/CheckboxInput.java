@@ -1,6 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -20,6 +23,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * <p>
  * It fires the <code>&lt;Change&gt;</code> model event , wrapping the
  * corresponding DOM event
+ * 
+ * <p>
+ * FIXME - dirndl - this doesn't follow spec around the checked value (which
+ * should only apply on initial render, subsequently value should apply)
  *
  *
  *
@@ -48,7 +55,8 @@ public class CheckboxInput extends Model.Value<Boolean>
 	}
 
 	private boolean elementValue() {
-		return provideElement().getPropertyBoolean("checked");
+		return provideElement().getPropertyBoolean("value") || Objects
+				.equals(provideElement().getPropertyString("value"), "on");
 	}
 
 	@Override
@@ -59,7 +67,7 @@ public class CheckboxInput extends Model.Value<Boolean>
 
 	@Override
 	public void onChange(Change event) {
-		setValue(elementValue());
+		setValue(!CommonUtils.bv(getValue()));
 		event.reemitAs(this, ModelEvents.Change.class, getValue());
 	}
 

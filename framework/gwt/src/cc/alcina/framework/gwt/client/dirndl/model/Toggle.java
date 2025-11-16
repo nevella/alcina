@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -10,6 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
+// FIXME - dirndl - does this duplciate LeafModel.Toggle?
 @TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 @TypedProperties
 public class Toggle extends Model.Fields implements ModelEvents.Toggle.Handler {
