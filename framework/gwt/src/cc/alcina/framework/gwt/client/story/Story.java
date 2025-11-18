@@ -452,7 +452,7 @@ public interface Story {
 				 * A (send) keys action
 				 * <p>
 				 * To send a control code, use
-				 * KeyConstant(org.openqa.selenium.Keys.RETURN) etc
+				 * Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN) etc
 				 */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
