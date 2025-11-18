@@ -48,6 +48,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -471,6 +472,16 @@ public abstract class Choices<T> extends Model implements
 	@Directed(emits = ModelEvents.SelectionChanged.class)
 	public static class Multiple<T> extends Choices<T>
 			implements HasSelectedValues<T> {
+		public static class To<E>
+				implements ModelTransform<List<E>, Multiple<E>> {
+			@Override
+			public Multiple<E> apply(List<E> t) {
+				Multiple<E> result = new Multiple<>();
+				result.setSelectedValues(t);
+				return result;
+			}
+		}
+
 		public Multiple() {
 		}
 
@@ -504,11 +515,22 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		@Override
+		public void onBind(Bind event) {
+			unboundSelectedValues = null;
+			super.onBind(event);
+		}
+
+		@Override
 		public Object provideSelectedValue() {
 			return getSelectedValues();
 		}
 
+		List<T> unboundSelectedValues;
+
 		public void setSelectedValues(List<T> values) {
+			if (provideIsUnbound()) {
+				unboundSelectedValues = values;
+			}
 			List<T> oldValues = getSelectedValues();
 			updateSelectedValuesInternal(values);
 			List<T> newValues = getSelectedValues();
@@ -523,6 +545,14 @@ public abstract class Choices<T> extends Model implements
 		protected void updateSelectedValuesInternal(List<T> values) {
 			Set valuesSet = new HashSet(values);
 			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
+		}
+
+		@Override
+		public void setValues(List<T> values) {
+			super.setValues(values);
+			if (unboundSelectedValues != null) {
+				updateSelectedValuesInternal(unboundSelectedValues);
+			}
 		}
 
 		protected void emitChangeModelEvents(List<T> newValues) {

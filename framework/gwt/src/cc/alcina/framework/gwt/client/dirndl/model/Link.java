@@ -399,4 +399,14 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	public Link withText(Object textSource) {
 		return withText(textSource.toString());
 	}
+
+	public Link withPrimary() {
+		setClassName("primary");
+		return this;
+	}
+
+	public Link withSecondary() {
+		setClassName("secondary");
+		return this;
+	}
 }

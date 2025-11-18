@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
+
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -36,6 +38,11 @@ public final class DomEventData {
 	 * updated element value, to avoid round-tripping
 	 */
 	public Integer selectedIndex;
+
+	/*
+	 * updated element value, to avoid round-tripping
+	 */
+	public List<Integer> selectedIndicies;
 
 	@Override
 	public String toString() {

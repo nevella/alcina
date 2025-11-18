@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 
 /**
  * <p>
@@ -618,12 +617,12 @@ public @interface Directed {
 	@interface TransformElements {
 		boolean transformsNull() default false;
 
-		Class<? extends ModelTransform> value();
+		Class<? extends Function> value();
 
 		public static class Impl implements Directed.TransformElements {
 			private boolean transformsNull;
 
-			private Class<? extends ModelTransform> value;
+			private Class<? extends Function> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
@@ -636,7 +635,7 @@ public @interface Directed {
 			}
 
 			@Override
-			public Class<? extends ModelTransform> value() {
+			public Class<? extends Function> value() {
 				return value;
 			}
 
@@ -645,7 +644,7 @@ public @interface Directed {
 				return this;
 			}
 
-			public Impl withValue(Class<? extends ModelTransform> value) {
+			public Impl withValue(Class<? extends Function> value) {
 				this.value = value;
 				return this;
 			}
