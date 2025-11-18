@@ -318,7 +318,17 @@ public abstract class Client implements ContextFrame {
 			runnable.run();
 		} else {
 			// FIXME - romcom - rather, this should wait for mutation post-state
-			Timer.scheduleDelayed(runnable, 2000);
+			/*
+			 * hmmm...I think we always have *some* windowstate - the
+			 * browser->server handshake gives us that
+			 * 
+			 * so not sure this is necessary as a general call. what state?
+			 * 
+			 * ahhh gotcha - essentially need a localdom.flush and await that
+			 * response. 200 is fine for local, and this should have an impl
+			 * involving the MessageProtocol bus for production
+			 */
+			Timer.scheduleDelayed(runnable, 200);
 		}
 	}
 }
