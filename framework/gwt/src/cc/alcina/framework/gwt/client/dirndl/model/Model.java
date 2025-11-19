@@ -663,13 +663,13 @@ public abstract class Model extends Bindable
 	}
 
 	/*
-	 * Sugary finally/deferred execution support. Will only execute if the model
-	 * is bound
+	 * Sugary finally/deferred execution support. The lambda will only be
+	 * executed if the model is bound (unless bindingAgnostic() is called)
 	 */
 	public class Exec {
 		Runnable lambda;
 
-		boolean ifBound;
+		boolean ifBound = true;
 
 		boolean deferred;
 
@@ -682,12 +682,11 @@ public abstract class Model extends Bindable
 			return this;
 		}
 
-		public void ifBound() {
-			this.ifBound = true;
-			bindingAgnostic();
-		}
-
-		public void bindingAgnostic() {
+		/**
+		 * The lambda will only be executed if the model is bound (unless
+		 * bindingAgnostic() was called)
+		 */
+		public void dispatch() {
 			QueuedEvent event = Client.eventBus().queued().lambda(() -> {
 				if (!ifBound || provideIsBound()) {
 					lambda.run();
@@ -697,6 +696,11 @@ public abstract class Model extends Bindable
 				event.deferred();
 			}
 			event.dispatch();
+		}
+
+		public Exec bindingAgnostic() {
+			this.ifBound = false;
+			return this;
 		}
 	}
 
