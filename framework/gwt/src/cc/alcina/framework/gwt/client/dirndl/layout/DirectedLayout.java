@@ -652,16 +652,6 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		private void bindEvents() {
-			if (model == null) {
-				return;
-			}
-			ReceivesEmitsEvents.ClassData classData = ReceivesEmitsEvents
-					.get(ClassUtil.resolveEnumSubclassAndSynthetic(model));
-			if (classData.receives.isEmpty()
-					&& classData.emitsDescendant.isEmpty()
-					&& directed.reemits().length == 0) {
-				return;
-			}
 			/*
 			 * Directed.Wrap (or equivalents) should not bind, only the last
 			 * directed derived from a model
@@ -669,22 +659,43 @@ public class DirectedLayout implements AlcinaProcess {
 			if (!lastForModel) {
 				return;
 			}
+			boolean receivesOrEmits = false;
+			boolean reemits = directed.reemits().length != 0;
+			ReceivesEmitsEvents.ClassData classData = null;
+			if (model != null) {
+				classData = ReceivesEmitsEvents
+						.get(ClassUtil.resolveEnumSubclassAndSynthetic(model));
+				if (classData.receives.isEmpty()
+						&& classData.emitsDescendant.isEmpty()) {
+				} else {
+					receivesOrEmits = true;
+				}
+			}
+			if (!receivesOrEmits && !reemits) {
+				return;
+			}
 			eventBindings = new ArrayList<>();
-			classData.receives.forEach(clazz -> eventBindings
-					.add(new NodeEventBinding(this, clazz)));
-			for (int idx = 0; idx < directed.reemits().length; idx += 2) {
-				Class<? extends NodeEvent> clazz = directed.reemits()[idx];
-				NodeEventBinding reemitBinding = new NodeEventBinding(this,
-						clazz);
-				reemitBinding.reemitAs = (Class<? extends ModelEvent>) directed
-						.reemits()[idx + 1];
-				eventBindings.add(reemitBinding);
+			if (receivesOrEmits) {
+				classData.receives.forEach(clazz -> eventBindings
+						.add(new NodeEventBinding(this, clazz)));
+			}
+			if (reemits) {
+				for (int idx = 0; idx < directed.reemits().length; idx += 2) {
+					Class<? extends NodeEvent> clazz = directed.reemits()[idx];
+					NodeEventBinding reemitBinding = new NodeEventBinding(this,
+							clazz);
+					reemitBinding.reemitAs = (Class<? extends ModelEvent>) directed
+							.reemits()[idx + 1];
+					eventBindings.add(reemitBinding);
+				}
 			}
 			if (!directed.bindDomEvents()) {
 				eventBindings.removeIf(NodeEventBinding::isDomBinding);
 			}
 			eventBindings.forEach(NodeEventBinding::bind);
-			classData.emitsDescendant.forEach(this::addDescentEventBinding);
+			if (receivesOrEmits) {
+				classData.emitsDescendant.forEach(this::addDescentEventBinding);
+			}
 		}
 
 		private void bindModel(boolean modelToRendered) {

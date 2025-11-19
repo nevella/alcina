@@ -133,7 +133,15 @@ class NodeEventBinding {
 				// Type type
 				ModelEvent.Emitter emitter = node.findEmitter(type);
 				if (emitter != null) {
-					((Model) emitter).provideNode().getEventBinding(type)
+					Node emitterNode = null;
+					if (node.model == emitter) {
+						// node.model will not have been bound yet (emitter ==
+						// listener/handler)
+						emitterNode = node;
+					} else {
+						emitterNode = ((Model) emitter).provideNode();
+					}
+					emitterNode.getEventBinding(type)
 							.addDescendantBinding(this);
 				}
 			}

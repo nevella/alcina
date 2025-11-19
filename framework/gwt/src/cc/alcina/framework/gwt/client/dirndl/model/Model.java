@@ -670,8 +670,12 @@ public abstract class Model extends Bindable implements
 
 		public QueuedEvent ifBound() {
 			this.ifBound = true;
+			return bindingAgnostic();
+		}
+
+		public QueuedEvent bindingAgnostic() {
 			return Client.eventBus().queued().lambda(() -> {
-				if (provideIsBound()) {
+				if (!ifBound || provideIsBound()) {
 					lambda.run();
 				}
 			});

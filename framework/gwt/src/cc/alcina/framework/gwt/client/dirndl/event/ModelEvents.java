@@ -4,9 +4,6 @@ import com.google.gwt.place.shared.Place;
 
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -305,22 +302,15 @@ public class ModelEvents {
 		}
 	}
 
-	public static class Filter extends ModelEvent<Object, Filter.Handler> {
+	public static class Filter
+			extends DescendantEvent<Object, Filter.Handler, Filter.Emitter> {
 		@Override
 		public void dispatch(Filter.Handler handler) {
 			handler.onFilter(this);
 		}
 
-		public interface Handler extends NodeEvent.Handler {
-			void onFilter(Filter event);
-		}
-	}
-
-	public static class FilterContents extends
-			DescendantEvent<Object, FilterContents.Handler, FilterContents.Emitter> {
-		@Override
-		public void dispatch(FilterContents.Handler handler) {
-			handler.onFilterContents(this);
+		public Filter() {
+			int debug = 3;
 		}
 
 		public String provideFilterValue() {
@@ -333,57 +323,7 @@ public class ModelEvents {
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onFilterContents(FilterContents event);
-		}
-
-		/**
-		 * A common pattern with a simple filter - receive the filter event, and
-		 * bounce it to descendants which are self-filtering (e.g.
-		 * {@link FilterContentsFilterable} subtypes)
-		 */
-		@Directed(
-			/*
-			 * bounce ancestor Filter events back as descendant FilterContent
-			 * events
-			 */
-			reemits = { ModelEvents.Filter.class,
-					ModelEvents.FilterContents.class })
-		public interface ReflectFiltering
-				extends ModelEvents.FilterContents.Emitter {
-		}
-	}
-
-	public interface FilterContentsElement {
-		boolean matchesFilter(String filterString);
-	}
-
-	public interface FilterContentsFilterable extends FilterContents.Handler {
-		boolean matchesFilter(String filterString);
-
-		@Override
-		default void onFilterContents(FilterContents event) {
-			String filterValue = event.provideFilterValue();
-			setVisible(matchesFilter(filterValue));
-		}
-
-		void setVisible(boolean visible);
-
-		public static abstract class Abstract extends Model.All
-				implements FilterContentsFilterable {
-			private boolean visible = true;
-
-			@Binding(
-				to = "display",
-				transform = Binding.DisplayBlankNone.class,
-				type = Type.STYLE_ATTRIBUTE)
-			public boolean isVisible() {
-				return visible;
-			}
-
-			public void setVisible(boolean visible) {
-				set("visible", this.visible, visible,
-						() -> this.visible = visible);
-			}
+			void onFilter(Filter event);
 		}
 	}
 

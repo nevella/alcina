@@ -18,14 +18,18 @@ import java.lang.Object;
 import java.lang.String;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    public static _Choices_Multiple choices_multiple = new _Choices_Multiple();
+    public static _Choices_MultipleSelect choices_multipleSelect = new _Choices_MultipleSelect();
     public static _CollectionDeltaModel collectionDeltaModel = new _CollectionDeltaModel();
     static _CollectionDeltaModel_RelativeInsert collectionDeltaModel_relativeInsert = new _CollectionDeltaModel_RelativeInsert();
     public static _DomainViewTree_DomainViewNode domainViewTree_domainViewNode = new _DomainViewTree_DomainViewNode();
+    public static _FilteredChoices filteredChoices = new _FilteredChoices();
     public static _HeadingActions headingActions = new _HeadingActions();
     public static _StandardModels_Panel standardModels_panel = new _StandardModels_Panel();
     public static _TableModel_TableColumn tableModel_tableColumn = new _TableModel_TableColumn();
@@ -35,6 +39,56 @@ public class PackageProperties {
     public static _Tree_PathNode tree_pathNode = new _Tree_PathNode();
     public static _Tree_TreeNode tree_treeNode = new _Tree_TreeNode();
     public static _Tree_TreeNode_BasicNode tree_treeNode_basicNode = new _Tree_TreeNode_BasicNode();
+    
+    public static class _Choices_Multiple implements TypedProperty.Container {
+      public TypedProperty<Choices.Multiple, List> choices = new TypedProperty<>(Choices.Multiple.class, "choices");
+      public TypedProperty<Choices.Multiple, List> elements = new TypedProperty<>(Choices.Multiple.class, "elements");
+      public TypedProperty<Choices.Multiple, Boolean> repeatableChoices = new TypedProperty<>(Choices.Multiple.class, "repeatableChoices");
+      public TypedProperty<Choices.Multiple, List> selectedValues = new TypedProperty<>(Choices.Multiple.class, "selectedValues");
+      public TypedProperty<Choices.Multiple, List> values = new TypedProperty<>(Choices.Multiple.class, "values");
+      public static class InstanceProperties extends InstanceProperty.Container<Choices.Multiple> {
+        public  InstanceProperties(Choices.Multiple source){super(source);}
+        public InstanceProperty<Choices.Multiple, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.choices);}
+        public InstanceProperty<Choices.Multiple, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.elements);}
+        public InstanceProperty<Choices.Multiple, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.repeatableChoices);}
+        public InstanceProperty<Choices.Multiple, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.selectedValues);}
+        public InstanceProperty<Choices.Multiple, List> values(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.values);}
+      }
+      
+      public  InstanceProperties instance(Choices.Multiple instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Choices_MultipleSelect implements TypedProperty.Container {
+      public TypedProperty<Choices.MultipleSelect, Function> categoriser = new TypedProperty<>(Choices.MultipleSelect.class, "categoriser");
+      public TypedProperty<Choices.MultipleSelect, List> choices = new TypedProperty<>(Choices.MultipleSelect.class, "choices");
+      public TypedProperty<Choices.MultipleSelect, List> elements = new TypedProperty<>(Choices.MultipleSelect.class, "elements");
+      public TypedProperty<Choices.MultipleSelect, Boolean> multiple = new TypedProperty<>(Choices.MultipleSelect.class, "multiple");
+      public TypedProperty<Choices.MultipleSelect, Boolean> repeatableChoices = new TypedProperty<>(Choices.MultipleSelect.class, "repeatableChoices");
+      public TypedProperty<Choices.MultipleSelect, List> selectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "selectedValues");
+      public TypedProperty<Choices.MultipleSelect, List> unboundSelectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "unboundSelectedValues");
+      public TypedProperty<Choices.MultipleSelect, Class> valueTransformer = new TypedProperty<>(Choices.MultipleSelect.class, "valueTransformer");
+      public TypedProperty<Choices.MultipleSelect, List> values = new TypedProperty<>(Choices.MultipleSelect.class, "values");
+      public static class InstanceProperties extends InstanceProperty.Container<Choices.MultipleSelect> {
+        public  InstanceProperties(Choices.MultipleSelect source){super(source);}
+        public InstanceProperty<Choices.MultipleSelect, Function> categoriser(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.categoriser);}
+        public InstanceProperty<Choices.MultipleSelect, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.choices);}
+        public InstanceProperty<Choices.MultipleSelect, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.elements);}
+        public InstanceProperty<Choices.MultipleSelect, Boolean> multiple(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.multiple);}
+        public InstanceProperty<Choices.MultipleSelect, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.repeatableChoices);}
+        public InstanceProperty<Choices.MultipleSelect, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.selectedValues);}
+        public InstanceProperty<Choices.MultipleSelect, List> unboundSelectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.unboundSelectedValues);}
+        public InstanceProperty<Choices.MultipleSelect, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.valueTransformer);}
+        public InstanceProperty<Choices.MultipleSelect, List> values(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.values);}
+      }
+      
+      public  InstanceProperties instance(Choices.MultipleSelect instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
     
     public static class _CollectionDeltaModel implements TypedProperty.Container {
       public TypedProperty<CollectionDeltaModel, Collection> collection = new TypedProperty<>(CollectionDeltaModel.class, "collection");
@@ -100,6 +154,21 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(DomainViewTree.DomainViewNode instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _FilteredChoices implements TypedProperty.Container {
+      public TypedProperty<FilteredChoices, String> filter = new TypedProperty<>(FilteredChoices.class, "filter");
+      public TypedProperty<FilteredChoices, List> value = new TypedProperty<>(FilteredChoices.class, "value");
+      public static class InstanceProperties extends InstanceProperty.Container<FilteredChoices> {
+        public  InstanceProperties(FilteredChoices source){super(source);}
+        public InstanceProperty<FilteredChoices, String> filter(){return new InstanceProperty<>(source,PackageProperties.filteredChoices.filter);}
+        public InstanceProperty<FilteredChoices, List> value(){return new InstanceProperty<>(source,PackageProperties.filteredChoices.value);}
+      }
+      
+      public  InstanceProperties instance(FilteredChoices instance) {
         return new InstanceProperties( instance);
       }
       
