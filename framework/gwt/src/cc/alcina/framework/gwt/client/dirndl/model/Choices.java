@@ -90,7 +90,11 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  * getSelectedValue(s) - and changes are signallred by
  * {@link ModelEvents.SelectionChanged}
  * <p>
- * When the selectable model is large - often remote, use
+ * When the selectable model is large - often remote, use by preference a
+ * ChoiceSuggestor
+ * <p>
+ * To allow pre-selection validation, use the changeOnSelectionEvent
+ * property/annotation
  */
 @Directed(tag = "choices")
 /*
@@ -127,6 +131,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 @formatter:on
  * 
+ *
  */
 public abstract class Choices<T> extends Model implements
 		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has,
@@ -165,6 +170,14 @@ public abstract class Choices<T> extends Model implements
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface Categoriser {
 		Class<? extends Function<?, String>> value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface ChangeOnSelectEvent {
+		boolean value();
 	}
 
 	/**
@@ -417,12 +430,6 @@ public abstract class Choices<T> extends Model implements
 			}
 		}
 
-		@Override
-		public boolean handlesModelChange(PropertyChangeEvent evt) {
-			setSelectedValues((List<T>) evt.getNewValue());
-			return true;
-		}
-
 		List<T> unboundSelectedValues;
 
 		public Multiple() {
@@ -430,6 +437,12 @@ public abstract class Choices<T> extends Model implements
 
 		public Multiple(List<T> values) {
 			super(values);
+		}
+
+		@Override
+		public boolean handlesModelChange(PropertyChangeEvent evt) {
+			setSelectedValues((List<T>) evt.getNewValue());
+			return true;
 		}
 
 		public List<T> getSelectedValues() {
@@ -664,7 +677,8 @@ public abstract class Choices<T> extends Model implements
 		emits = { ModelEvents.SelectionChanged.class,
 				ModelEvents.Selected.class })
 	public static class Single<T> extends Choices<T>
-			implements KeyboardNavigation.Navigation.Handler, HasValue<T> {
+			implements KeyboardNavigation.Navigation.Handler, HasValue<T>,
+			HandlesModelChange {
 		/**
 		 * TODO - dirndl - add inner classes Enumeration and
 		 * Enumeration.WithNull - to change
@@ -708,11 +722,9 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		protected boolean deselectIfSelectedClicked = false;
-
 		/*
 		 * set to false to allow more complex selection logic
 		 */
-		protected boolean changeOnSelectionEvent = true;
 
 		private T provisionalValue;
 
@@ -756,10 +768,6 @@ public abstract class Choices<T> extends Model implements
 		public T getSelectedValue() {
 			return choices.stream().filter(Choice::isSelected).findFirst()
 					.map(Choice::getValue).orElse(null);
-		}
-
-		public boolean isChangeOnSelectionEvent() {
-			return this.changeOnSelectionEvent;
 		}
 
 		public boolean isDeselectIfSelectedClicked() {
@@ -811,10 +819,6 @@ public abstract class Choices<T> extends Model implements
 		@Override
 		public Object provideSelectedValue() {
 			return getSelectedValue();
-		}
-
-		public void setChangeOnSelectionEvent(boolean changeOnSelectionEvent) {
-			this.changeOnSelectionEvent = changeOnSelectionEvent;
 		}
 
 		public void setDeselectIfSelectedClicked(
@@ -887,6 +891,12 @@ public abstract class Choices<T> extends Model implements
 				choices.get(index).setIndexSelected(indexSelected);
 			}
 		}
+
+		@Override
+		public boolean handlesModelChange(PropertyChangeEvent evt) {
+			setSelectedValue((T) evt.getNewValue());
+			return true;
+		}
 	}
 
 	/*
@@ -939,6 +949,56 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
+	class CategoryEmitter {
+		List<Model> elements = new ArrayList<>();
+
+		List<Category> categories = new ArrayList<>();
+
+		public void accept(Choice choice) {
+			if (categoriser != null) {
+				String category = categoriser.apply(choice.getValue());
+				Category categoryModel = Ax.last(categories);
+				String lastCategoryText = categoryModel == null ? null
+						: categoryModel.category;
+				if (!Objects.equals(category, lastCategoryText)) {
+					categoryModel = new Category(category);
+					categories.add(categoryModel);
+					elements.add(categoryModel);
+				}
+				if (categoryModel != null) {
+					categoryModel.choices.add(choice);
+				}
+			}
+			elements.add(choice);
+		}
+	}
+
+	@TypedProperties
+	class Category extends Model.Fields implements Filterable {
+		List<Choice> choices = new ArrayList<>();
+
+		@Binding(type = Type.PROPERTY)
+		boolean filtered;
+
+		@Binding(type = Type.INNER_TEXT)
+		String category;
+
+		Category(String category) {
+			this.category = category;
+		}
+
+		@Override
+		public boolean matchesFilter(String filterString) {
+			properties().filtered()
+					.set(choices.stream().allMatch(c -> c.filtered));
+			return filtered;
+		}
+
+		PackageProperties._Choices_Category.InstanceProperties properties() {
+			return PackageProperties.choices_category.instance(this);
+		}
+	}
+
 	protected List<Choices.Choice<T>> choices;
 
 	protected List<Model> elements;
@@ -952,6 +1012,8 @@ public abstract class Choices<T> extends Model implements
 	private Function<Object, String> categoriser;
 
 	private CategoryEmitter categoryEmitter;
+
+	protected boolean changeOnSelectionEvent = true;
 
 	public Choices() {
 		this(new ArrayList<>());
@@ -1012,56 +1074,6 @@ public abstract class Choices<T> extends Model implements
 				choices);
 	}
 
-	class CategoryEmitter {
-		List<Model> elements = new ArrayList<>();
-
-		List<Category> categories = new ArrayList<>();
-
-		public void accept(Choice choice) {
-			if (categoriser != null) {
-				String category = categoriser.apply(choice.getValue());
-				Category categoryModel = Ax.last(categories);
-				String lastCategoryText = categoryModel == null ? null
-						: categoryModel.category;
-				if (!Objects.equals(category, lastCategoryText)) {
-					categoryModel = new Category(category);
-					categories.add(categoryModel);
-					elements.add(categoryModel);
-				}
-				if (categoryModel != null) {
-					categoryModel.choices.add(choice);
-				}
-			}
-			elements.add(choice);
-		}
-	}
-
-	@TypedProperties
-	class Category extends Model.Fields implements Filterable {
-		PackageProperties._Choices_Category.InstanceProperties properties() {
-			return PackageProperties.choices_category.instance(this);
-		}
-
-		Category(String category) {
-			this.category = category;
-		}
-
-		List<Choice> choices = new ArrayList<>();
-
-		@Binding(type = Type.PROPERTY)
-		boolean filtered;
-
-		@Binding(type = Type.INNER_TEXT)
-		String category;
-
-		@Override
-		public boolean matchesFilter(String filterString) {
-			properties().filtered()
-					.set(choices.stream().allMatch(c -> c.filtered));
-			return filtered;
-		}
-	}
-
 	public void setValues(List<T> values) {
 		this.values = values;
 		List<Choice<T>> choices = new ArrayList<>();
@@ -1090,6 +1102,14 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
+	public void setChangeOnSelectionEvent(boolean changeOnSelectionEvent) {
+		this.changeOnSelectionEvent = changeOnSelectionEvent;
+	}
+
+	public boolean isChangeOnSelectionEvent() {
+		return this.changeOnSelectionEvent;
+	}
+
 	protected void populateFromNodeContext(Node node,
 			Predicate<T> valueFilter) {
 		if (node == null) {
@@ -1104,6 +1124,8 @@ public abstract class Choices<T> extends Model implements
 		node.optional(EnumValues.class).ifPresent(ann -> setValues(
 				filter((List<T>) new EnumSupplier().apply(ann), valueFilter)));
 		repeatableChoices = node.has(RepeatableChoices.class);
+		node.optional(ChangeOnSelectEvent.class)
+				.ifPresent(ann -> setChangeOnSelectionEvent(ann.value()));
 	}
 
 	List<T> filter(List<T> list, Predicate<T> valueFilter) {

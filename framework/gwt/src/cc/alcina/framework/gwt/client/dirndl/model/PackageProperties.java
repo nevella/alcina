@@ -59,6 +59,7 @@ public class PackageProperties {
     }
     
     public static class _Choices_Multiple implements TypedProperty.Container {
+      public TypedProperty<Choices.Multiple, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.Multiple.class, "changeOnSelectionEvent");
       public TypedProperty<Choices.Multiple, List> choices = new TypedProperty<>(Choices.Multiple.class, "choices");
       public TypedProperty<Choices.Multiple, List> elements = new TypedProperty<>(Choices.Multiple.class, "elements");
       public TypedProperty<Choices.Multiple, Boolean> repeatableChoices = new TypedProperty<>(Choices.Multiple.class, "repeatableChoices");
@@ -66,6 +67,7 @@ public class PackageProperties {
       public TypedProperty<Choices.Multiple, List> values = new TypedProperty<>(Choices.Multiple.class, "values");
       public static class InstanceProperties extends InstanceProperty.Container<Choices.Multiple> {
         public  InstanceProperties(Choices.Multiple source){super(source);}
+        public InstanceProperty<Choices.Multiple, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.changeOnSelectionEvent);}
         public InstanceProperty<Choices.Multiple, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.choices);}
         public InstanceProperty<Choices.Multiple, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.elements);}
         public InstanceProperty<Choices.Multiple, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.repeatableChoices);}
@@ -80,6 +82,7 @@ public class PackageProperties {
     }
     
     public static class _Choices_MultipleSelect implements TypedProperty.Container {
+      public TypedProperty<Choices.MultipleSelect, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.MultipleSelect.class, "changeOnSelectionEvent");
       public TypedProperty<Choices.MultipleSelect, List> choices = new TypedProperty<>(Choices.MultipleSelect.class, "choices");
       public TypedProperty<Choices.MultipleSelect, List> elements = new TypedProperty<>(Choices.MultipleSelect.class, "elements");
       public TypedProperty<Choices.MultipleSelect, Boolean> multiple = new TypedProperty<>(Choices.MultipleSelect.class, "multiple");
@@ -90,6 +93,7 @@ public class PackageProperties {
       public TypedProperty<Choices.MultipleSelect, List> values = new TypedProperty<>(Choices.MultipleSelect.class, "values");
       public static class InstanceProperties extends InstanceProperty.Container<Choices.MultipleSelect> {
         public  InstanceProperties(Choices.MultipleSelect source){super(source);}
+        public InstanceProperty<Choices.MultipleSelect, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.changeOnSelectionEvent);}
         public InstanceProperty<Choices.MultipleSelect, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.choices);}
         public InstanceProperty<Choices.MultipleSelect, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.elements);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> multiple(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.multiple);}

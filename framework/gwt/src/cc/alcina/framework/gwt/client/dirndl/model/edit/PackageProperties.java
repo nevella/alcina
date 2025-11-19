@@ -31,6 +31,7 @@ public class PackageProperties {
     public static _StringInput_Editor stringInput_editor = new _StringInput_Editor();
     
     public static class _ChoiceEditor implements TypedProperty.Container {
+      public TypedProperty<ChoiceEditor, Boolean> changeOnSelectionEvent = new TypedProperty<>(ChoiceEditor.class, "changeOnSelectionEvent");
       public TypedProperty<ChoiceEditor, List> choices = new TypedProperty<>(ChoiceEditor.class, "choices");
       public TypedProperty<ChoiceEditor, List> decorators = new TypedProperty<>(ChoiceEditor.class, "decorators");
       public TypedProperty<ChoiceEditor, EditArea> editArea = new TypedProperty<>(ChoiceEditor.class, "editArea");
@@ -42,6 +43,7 @@ public class PackageProperties {
       public TypedProperty<ChoiceEditor, List> values = new TypedProperty<>(ChoiceEditor.class, "values");
       public static class InstanceProperties extends InstanceProperty.Container<ChoiceEditor> {
         public  InstanceProperties(ChoiceEditor source){super(source);}
+        public InstanceProperty<ChoiceEditor, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.changeOnSelectionEvent);}
         public InstanceProperty<ChoiceEditor, List> choices(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.choices);}
         public InstanceProperty<ChoiceEditor, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.decorators);}
         public InstanceProperty<ChoiceEditor, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.editArea);}
@@ -87,6 +89,7 @@ public class PackageProperties {
     }
     
     public static class _ChoicesEditorMultiple implements TypedProperty.Container {
+      public TypedProperty<ChoicesEditorMultiple, Boolean> changeOnSelectionEvent = new TypedProperty<>(ChoicesEditorMultiple.class, "changeOnSelectionEvent");
       public TypedProperty<ChoicesEditorMultiple, List> choices = new TypedProperty<>(ChoicesEditorMultiple.class, "choices");
       public TypedProperty<ChoicesEditorMultiple, List> decorators = new TypedProperty<>(ChoicesEditorMultiple.class, "decorators");
       public TypedProperty<ChoicesEditorMultiple, EditArea> editArea = new TypedProperty<>(ChoicesEditorMultiple.class, "editArea");
@@ -99,6 +102,7 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorMultiple, List> values = new TypedProperty<>(ChoicesEditorMultiple.class, "values");
       public static class InstanceProperties extends InstanceProperty.Container<ChoicesEditorMultiple> {
         public  InstanceProperties(ChoicesEditorMultiple source){super(source);}
+        public InstanceProperty<ChoicesEditorMultiple, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.changeOnSelectionEvent);}
         public InstanceProperty<ChoicesEditorMultiple, List> choices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.choices);}
         public InstanceProperty<ChoicesEditorMultiple, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.decorators);}
         public InstanceProperty<ChoicesEditorMultiple, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.editArea);}
@@ -118,6 +122,7 @@ public class PackageProperties {
     }
     
     public static class _ChoicesEditorSingle implements TypedProperty.Container {
+      public TypedProperty<ChoicesEditorSingle, Boolean> changeOnSelectionEvent = new TypedProperty<>(ChoicesEditorSingle.class, "changeOnSelectionEvent");
       public TypedProperty<ChoicesEditorSingle, List> choices = new TypedProperty<>(ChoicesEditorSingle.class, "choices");
       public TypedProperty<ChoicesEditorSingle, List> decorators = new TypedProperty<>(ChoicesEditorSingle.class, "decorators");
       public TypedProperty<ChoicesEditorSingle, EditArea> editArea = new TypedProperty<>(ChoicesEditorSingle.class, "editArea");
@@ -131,6 +136,7 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorSingle, List> values = new TypedProperty<>(ChoicesEditorSingle.class, "values");
       public static class InstanceProperties extends InstanceProperty.Container<ChoicesEditorSingle> {
         public  InstanceProperties(ChoicesEditorSingle source){super(source);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.changeOnSelectionEvent);}
         public InstanceProperty<ChoicesEditorSingle, List> choices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.choices);}
         public InstanceProperty<ChoicesEditorSingle, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.decorators);}
         public InstanceProperty<ChoicesEditorSingle, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.editArea);}
