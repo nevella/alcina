@@ -443,6 +443,11 @@ public interface LeafModel {
 			this.model = model;
 		}
 
+		public void setSelected(boolean selected) {
+			set("selected", this.selected, selected,
+					() -> this.selected = selected);
+		}
+
 		@Override
 		public void onClick(Click event) {
 			properties().selected().set(!selected);

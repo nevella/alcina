@@ -309,10 +309,6 @@ public class ModelEvents {
 			handler.onFilter(this);
 		}
 
-		public Filter() {
-			int debug = 3;
-		}
-
 		public String provideFilterValue() {
 			ModelEvents.Input triggeringInput = getContext()
 					.getPreviousEvent(ModelEvents.Input.class);

@@ -50,6 +50,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
+import cc.alcina.framework.gwt.client.dirndl.event.Filterable;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
@@ -128,7 +129,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 public abstract class Choices<T> extends Model implements
 		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has,
 		ModelEvents.BeforeSelectionChangedDispatchDescent.Emitter,
-		ModelEvents.Filter.Emitter, ModelEvents.Filter.Handler {
+		ModelEvents.Filter.Handler {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -253,7 +254,7 @@ public abstract class Choices<T> extends Model implements
 		emits = { ModelEvents.Selected.class, ChoiceSelectedDescent.class })
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler,
-			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter {
+			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter, Filterable {
 		private boolean selected;
 
 		private boolean indexSelected;
@@ -328,10 +329,14 @@ public abstract class Choices<T> extends Model implements
 			return CommonUtils.nullSafeToString(value);
 		}
 
-		public void filter(String filterValue) {
+		@Override
+		public boolean matchesFilter(String filterValue) {
+			String text = provideIsBound() ? provideElement().getTextContent()
+					: CommonUtils.nullSafeToString(value);
 			boolean matched = Ax.isBlank(filterValue)
-					|| SearchUtils.matches(filterValue, toString());
+					|| SearchUtils.matches(filterValue, text);
 			setFiltered(!matched);
+			return matched;
 		}
 	}
 
@@ -936,7 +941,9 @@ public abstract class Choices<T> extends Model implements
 
 	private boolean repeatableChoices;
 
-	Function<Object, String> categoriser;
+	private Function<Object, String> categoriser;
+
+	private CategoryEmitter categoryEmitter;
 
 	public Choices() {
 		this(new ArrayList<>());
@@ -1000,36 +1007,57 @@ public abstract class Choices<T> extends Model implements
 	class CategoryEmitter {
 		List<Model> elements = new ArrayList<>();
 
-		String lastCategory = null;
+		List<Category> categories = new ArrayList<>();
 
 		public void accept(Choice choice) {
 			if (categoriser != null) {
 				String category = categoriser.apply(choice.getValue());
-				if (!Objects.equals(category, lastCategory)) {
-					elements.add(new Category(category));
-					lastCategory = category;
+				Category categoryModel = Ax.last(categories);
+				String lastCategoryText = categoryModel == null ? null
+						: categoryModel.category;
+				if (!Objects.equals(category, lastCategoryText)) {
+					categoryModel = new Category(category);
+					categories.add(categoryModel);
+					elements.add(categoryModel);
+				}
+				if (categoryModel != null) {
+					categoryModel.choices.add(choice);
 				}
 			}
 			elements.add(choice);
 		}
 	}
 
-	public class Category extends Model.Fields {
+	@TypedProperties
+	class Category extends Model.Fields implements Filterable {
+		PackageProperties._Choices_Category.InstanceProperties properties() {
+			return PackageProperties.choices_category.instance(this);
+		}
+
 		Category(String category) {
 			this.category = category;
 		}
+
+		List<Choice> choices = new ArrayList<>();
 
 		@Binding(type = Type.PROPERTY)
 		boolean filtered;
 
 		@Binding(type = Type.INNER_TEXT)
 		String category;
+
+		@Override
+		public boolean matchesFilter(String filterString) {
+			properties().filtered()
+					.set(choices.stream().allMatch(c -> c.filtered));
+			return filtered;
+		}
 	}
 
 	public void setValues(List<T> values) {
 		this.values = values;
 		List<Choice<T>> choices = new ArrayList<>();
-		CategoryEmitter categoryEmitter = new CategoryEmitter();
+		categoryEmitter = new CategoryEmitter();
 		values.stream().forEach(value -> {
 			Choice choice = new Choice(value);
 			categoryEmitter.accept(choice);
@@ -1046,7 +1074,12 @@ public abstract class Choices<T> extends Model implements
 
 	@Override
 	public void onFilter(Filter event) {
-		choices.forEach(choice -> choice.filter(event.provideFilterValue()));
+		choices.forEach(
+				choice -> choice.matchesFilter(event.provideFilterValue()));
+		if (categoryEmitter != null) {
+			categoryEmitter.categories.forEach(category -> category
+					.matchesFilter(event.provideFilterValue()));
+		}
 	}
 
 	protected void populateFromNodeContext(Node node,

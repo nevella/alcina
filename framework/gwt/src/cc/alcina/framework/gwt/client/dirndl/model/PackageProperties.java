@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree;
+import cc.alcina.framework.gwt.client.dirndl.model.FilteredChoices;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
@@ -18,12 +19,12 @@ import java.lang.Object;
 import java.lang.String;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    static _Choices_Category choices_category = new _Choices_Category();
     public static _Choices_Multiple choices_multiple = new _Choices_Multiple();
     public static _Choices_MultipleSelect choices_multipleSelect = new _Choices_MultipleSelect();
     public static _CollectionDeltaModel collectionDeltaModel = new _CollectionDeltaModel();
@@ -39,6 +40,23 @@ public class PackageProperties {
     public static _Tree_PathNode tree_pathNode = new _Tree_PathNode();
     public static _Tree_TreeNode tree_treeNode = new _Tree_TreeNode();
     public static _Tree_TreeNode_BasicNode tree_treeNode_basicNode = new _Tree_TreeNode_BasicNode();
+    
+    static class _Choices_Category implements TypedProperty.Container {
+      TypedProperty<Choices.Category, String> category = new TypedProperty<>(Choices.Category.class, "category");
+      TypedProperty<Choices.Category, List> choices = new TypedProperty<>(Choices.Category.class, "choices");
+      TypedProperty<Choices.Category, Boolean> filtered = new TypedProperty<>(Choices.Category.class, "filtered");
+      static class InstanceProperties extends InstanceProperty.Container<Choices.Category> {
+         InstanceProperties(Choices.Category source){super(source);}
+        InstanceProperty<Choices.Category, String> category(){return new InstanceProperty<>(source,PackageProperties.choices_category.category);}
+        InstanceProperty<Choices.Category, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_category.choices);}
+        InstanceProperty<Choices.Category, Boolean> filtered(){return new InstanceProperty<>(source,PackageProperties.choices_category.filtered);}
+      }
+      
+       InstanceProperties instance(Choices.Category instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
     
     public static class _Choices_Multiple implements TypedProperty.Container {
       public TypedProperty<Choices.Multiple, List> choices = new TypedProperty<>(Choices.Multiple.class, "choices");
@@ -62,7 +80,6 @@ public class PackageProperties {
     }
     
     public static class _Choices_MultipleSelect implements TypedProperty.Container {
-      public TypedProperty<Choices.MultipleSelect, Function> categoriser = new TypedProperty<>(Choices.MultipleSelect.class, "categoriser");
       public TypedProperty<Choices.MultipleSelect, List> choices = new TypedProperty<>(Choices.MultipleSelect.class, "choices");
       public TypedProperty<Choices.MultipleSelect, List> elements = new TypedProperty<>(Choices.MultipleSelect.class, "elements");
       public TypedProperty<Choices.MultipleSelect, Boolean> multiple = new TypedProperty<>(Choices.MultipleSelect.class, "multiple");
@@ -73,7 +90,6 @@ public class PackageProperties {
       public TypedProperty<Choices.MultipleSelect, List> values = new TypedProperty<>(Choices.MultipleSelect.class, "values");
       public static class InstanceProperties extends InstanceProperty.Container<Choices.MultipleSelect> {
         public  InstanceProperties(Choices.MultipleSelect source){super(source);}
-        public InstanceProperty<Choices.MultipleSelect, Function> categoriser(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.categoriser);}
         public InstanceProperty<Choices.MultipleSelect, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.choices);}
         public InstanceProperty<Choices.MultipleSelect, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.elements);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> multiple(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.multiple);}
@@ -160,11 +176,11 @@ public class PackageProperties {
     }
     
     public static class _FilteredChoices implements TypedProperty.Container {
-      public TypedProperty<FilteredChoices, String> filter = new TypedProperty<>(FilteredChoices.class, "filter");
+      public TypedProperty<FilteredChoices, FilteredChoices.Filter> filter = new TypedProperty<>(FilteredChoices.class, "filter");
       public TypedProperty<FilteredChoices, List> value = new TypedProperty<>(FilteredChoices.class, "value");
       public static class InstanceProperties extends InstanceProperty.Container<FilteredChoices> {
         public  InstanceProperties(FilteredChoices source){super(source);}
-        public InstanceProperty<FilteredChoices, String> filter(){return new InstanceProperty<>(source,PackageProperties.filteredChoices.filter);}
+        public InstanceProperty<FilteredChoices, FilteredChoices.Filter> filter(){return new InstanceProperty<>(source,PackageProperties.filteredChoices.filter);}
         public InstanceProperty<FilteredChoices, List> value(){return new InstanceProperty<>(source,PackageProperties.filteredChoices.value);}
       }
       

@@ -278,7 +278,9 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public String getHost() {
-			return Ax.isBlank(port) ? host : Ax.format("%s:%s", host, port);
+			return Ax.isBlank(port) || Ax.blankToEmpty(host).contains(":")
+					? host
+					: Ax.format("%s:%s", host, port);
 		}
 
 		@Override

@@ -34,6 +34,7 @@ public class PackageProperties {
       public TypedProperty<ChoiceEditor, List> choices = new TypedProperty<>(ChoiceEditor.class, "choices");
       public TypedProperty<ChoiceEditor, List> decorators = new TypedProperty<>(ChoiceEditor.class, "decorators");
       public TypedProperty<ChoiceEditor, EditArea> editArea = new TypedProperty<>(ChoiceEditor.class, "editArea");
+      public TypedProperty<ChoiceEditor, List> elements = new TypedProperty<>(ChoiceEditor.class, "elements");
       public TypedProperty<ChoiceEditor, Boolean> magicName = new TypedProperty<>(ChoiceEditor.class, "magicName");
       public TypedProperty<ChoiceEditor, Boolean> magicName2 = new TypedProperty<>(ChoiceEditor.class, "magicName2");
       public TypedProperty<ChoiceEditor, Boolean> repeatableChoices = new TypedProperty<>(ChoiceEditor.class, "repeatableChoices");
@@ -44,6 +45,7 @@ public class PackageProperties {
         public InstanceProperty<ChoiceEditor, List> choices(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.choices);}
         public InstanceProperty<ChoiceEditor, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.decorators);}
         public InstanceProperty<ChoiceEditor, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.editArea);}
+        public InstanceProperty<ChoiceEditor, List> elements(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.elements);}
         public InstanceProperty<ChoiceEditor, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.magicName);}
         public InstanceProperty<ChoiceEditor, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.magicName2);}
         public InstanceProperty<ChoiceEditor, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.repeatableChoices);}
@@ -88,6 +90,7 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorMultiple, List> choices = new TypedProperty<>(ChoicesEditorMultiple.class, "choices");
       public TypedProperty<ChoicesEditorMultiple, List> decorators = new TypedProperty<>(ChoicesEditorMultiple.class, "decorators");
       public TypedProperty<ChoicesEditorMultiple, EditArea> editArea = new TypedProperty<>(ChoicesEditorMultiple.class, "editArea");
+      public TypedProperty<ChoicesEditorMultiple, List> elements = new TypedProperty<>(ChoicesEditorMultiple.class, "elements");
       public TypedProperty<ChoicesEditorMultiple, Boolean> magicName = new TypedProperty<>(ChoicesEditorMultiple.class, "magicName");
       public TypedProperty<ChoicesEditorMultiple, Boolean> magicName2 = new TypedProperty<>(ChoicesEditorMultiple.class, "magicName2");
       public TypedProperty<ChoicesEditorMultiple, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorMultiple.class, "repeatableChoices");
@@ -99,6 +102,7 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorMultiple, List> choices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.choices);}
         public InstanceProperty<ChoicesEditorMultiple, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.decorators);}
         public InstanceProperty<ChoicesEditorMultiple, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.editArea);}
+        public InstanceProperty<ChoicesEditorMultiple, List> elements(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.elements);}
         public InstanceProperty<ChoicesEditorMultiple, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.magicName);}
         public InstanceProperty<ChoicesEditorMultiple, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.magicName2);}
         public InstanceProperty<ChoicesEditorMultiple, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.repeatableChoices);}
@@ -117,6 +121,7 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorSingle, List> choices = new TypedProperty<>(ChoicesEditorSingle.class, "choices");
       public TypedProperty<ChoicesEditorSingle, List> decorators = new TypedProperty<>(ChoicesEditorSingle.class, "decorators");
       public TypedProperty<ChoicesEditorSingle, EditArea> editArea = new TypedProperty<>(ChoicesEditorSingle.class, "editArea");
+      public TypedProperty<ChoicesEditorSingle, List> elements = new TypedProperty<>(ChoicesEditorSingle.class, "elements");
       public TypedProperty<ChoicesEditorSingle, Boolean> magicName = new TypedProperty<>(ChoicesEditorSingle.class, "magicName");
       public TypedProperty<ChoicesEditorSingle, Boolean> magicName2 = new TypedProperty<>(ChoicesEditorSingle.class, "magicName2");
       public TypedProperty<ChoicesEditorSingle, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorSingle.class, "repeatableChoices");
@@ -129,6 +134,7 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorSingle, List> choices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.choices);}
         public InstanceProperty<ChoicesEditorSingle, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.decorators);}
         public InstanceProperty<ChoicesEditorSingle, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.editArea);}
+        public InstanceProperty<ChoicesEditorSingle, List> elements(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.elements);}
         public InstanceProperty<ChoicesEditorSingle, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName);}
         public InstanceProperty<ChoicesEditorSingle, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName2);}
         public InstanceProperty<ChoicesEditorSingle, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.repeatableChoices);}

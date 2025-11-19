@@ -8,13 +8,24 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @TypedProperties
-public class FilteredChoices<T> extends Model.Fields
-		implements ModelEvents.Filter.Emitter, ContextResolver.Has {
+public class FilteredChoices<T> extends Model.Fields implements
+		ModelEvents.Filter.Emitter, ContextResolver.Has, ValueChange.Container {
+	public static class To implements ModelTransform<List, FilteredChoices<?>> {
+		@Override
+		public FilteredChoices<?> apply(List value) {
+			FilteredChoices<List> filteredChoices = new FilteredChoices<>();
+			filteredChoices.value = value;
+			// filteredChoices.setSelectedValues(t);
+			return filteredChoices;
+		}
+	}
+
 	static class Resolver extends ContextResolver {
 		AnnotationLocation rootLocation;
 
@@ -39,39 +50,36 @@ public class FilteredChoices<T> extends Model.Fields
 		}
 	}
 
-	public static class To implements ModelTransform<List, FilteredChoices<?>> {
-		@Override
-		public FilteredChoices<?> apply(List value) {
-			FilteredChoices<List> filteredChoices = new FilteredChoices<>();
-			filteredChoices.value = value;
-			// filteredChoices.setSelectedValues(t);
-			return filteredChoices;
-		}
+	class Filter extends Model.All {
+		@Directed(
+			reemits = { ModelEvents.Input.class, ModelEvents.Filter.class })
+		@Directed.Transform(value = StringInput.To.class, transformsNull = true)
+		@StringInput.FocusOnBind
+		String filter;
 	}
 
-	PackageProperties._FilteredChoices.InstanceProperties properties() {
-		return PackageProperties.filteredChoices.instance(this);
-	}
-
-	@StringInput.FocusOnBind
-	@Directed(reemits = { ModelEvents.Input.class, ModelEvents.Filter.class })
-	@Directed.Transform(value = StringInput.To.class, transformsNull = true)
-	String filter;
+	@Directed
+	Filter filter = new Filter();
 
 	@Directed.Transform(Choices.Multiple.To.class)
 	List<T> value;
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		from(properties().filter()).signal(this::updateChoiceFilters);
+		/*
+		 * must reemit selectionchanged events for parent container update
+		 */
+		from(properties().value())
+				.emitStreamElement(ModelEvents.SelectionChanged.class);
 		super.onBeforeRender(event);
-	}
-
-	void updateChoiceFilters() {
 	}
 
 	@Override
 	public ContextResolver getContextResolver(AnnotationLocation location) {
 		return new Resolver(location);
+	}
+
+	PackageProperties._FilteredChoices.InstanceProperties properties() {
+		return PackageProperties.filteredChoices.instance(this);
 	}
 }
