@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.util.List;
 
@@ -10,12 +11,14 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.HandlesModelChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @TypedProperties
-public class FilteredChoices<T> extends Model.Fields implements
-		ModelEvents.Filter.Emitter, ContextResolver.Has, ValueChange.Container {
+public class FilteredChoices<T> extends Model.Fields
+		implements ModelEvents.Filter.Emitter, ContextResolver.Has,
+		ValueChange.Container, HandlesModelChange {
 	public static class To implements ModelTransform<List, FilteredChoices<?>> {
 		@Override
 		public FilteredChoices<?> apply(List value) {
@@ -81,5 +84,11 @@ public class FilteredChoices<T> extends Model.Fields implements
 
 	PackageProperties._FilteredChoices.InstanceProperties properties() {
 		return PackageProperties.filteredChoices.instance(this);
+	}
+
+	@Override
+	public boolean handlesModelChange(PropertyChangeEvent evt) {
+		properties().value().set((List) evt.getNewValue());
+		return true;
 	}
 }

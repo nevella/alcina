@@ -73,6 +73,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.RendersNull;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -1466,6 +1467,9 @@ public class DirectedLayout implements AlcinaProcess {
 				// model differs)
 				Object newValue = evt.getNewValue();
 				mutationDispatch.accept(() -> {
+					if (vetoReplaceChild(evt)) {
+						return;
+					}
 					RendererInput input = getResolver().layout
 							.enqueueInput(getResolver(), newValue,
 									getProperty(), annotationLocation
@@ -1475,6 +1479,23 @@ public class DirectedLayout implements AlcinaProcess {
 					getResolver().layout.layout();
 				});
 			}
+		}
+
+		boolean vetoReplaceChild(PropertyChangeEvent evt) {
+			if (model instanceof HandlesModelChange) {
+				if (((HandlesModelChange) model).handlesModelChange(evt)) {
+					return true;
+				}
+			}
+			DirectedRenderer renderer = DirectedLayout.this
+					.resolveRenderer(directed, annotationLocation, model);
+			if (renderer instanceof TransformRenderer) {
+				NotifyingList<Node> children = ensureChildren();
+				if (children.size() == 1) {
+					return children.get(0).vetoReplaceChild(evt);
+				}
+			}
+			return false;
 		}
 
 		/*

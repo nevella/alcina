@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -62,6 +63,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.HandlesModelChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSupplier;
@@ -404,7 +406,7 @@ public abstract class Choices<T> extends Model implements
 	@Directed(emits = ModelEvents.SelectionChanged.class)
 	@TypedProperties
 	public static class Multiple<T> extends Choices<T>
-			implements HasSelectedValues<T> {
+			implements HasSelectedValues<T>, HandlesModelChange {
 		public static class To<E>
 				implements ModelTransform<List<E>, Multiple<E>> {
 			@Override
@@ -413,6 +415,12 @@ public abstract class Choices<T> extends Model implements
 				result.setSelectedValues(t);
 				return result;
 			}
+		}
+
+		@Override
+		public boolean handlesModelChange(PropertyChangeEvent evt) {
+			setSelectedValues((List<T>) evt.getNewValue());
+			return true;
 		}
 
 		List<T> unboundSelectedValues;
