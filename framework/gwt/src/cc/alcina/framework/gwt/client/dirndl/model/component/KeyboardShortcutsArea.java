@@ -9,8 +9,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding.MatchData;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.event.Filterable;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FilterContentsFilterable;
 import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl_Documentation;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  */
 @Feature.Ref(Feature_Dirndl_Documentation.DesignNotes.class)
 public class KeyboardShortcutsArea extends Model.All
-		implements ModelEvents.FilterContents.ReflectFiltering {
+		implements ModelEvents.Filter.Emitter {
 	public Heading heading = new Heading("Keyboard Shortcuts");
 
 	@StringInput.FocusOnBind
@@ -55,7 +55,7 @@ public class KeyboardShortcutsArea extends Model.All
 				.sorted().collect(Collectors.toList());
 	}
 
-	class Shortcut extends FilterContentsFilterable.Abstract
+	class Shortcut extends Filterable.FilterFilterable.Abstract
 			implements Comparable<Shortcut> {
 		@Directed.Wrap("modifier-cell")
 		String modifier;

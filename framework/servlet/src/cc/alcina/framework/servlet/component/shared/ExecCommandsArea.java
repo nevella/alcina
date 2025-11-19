@@ -7,8 +7,8 @@ import java.util.stream.Stream;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.Filterable;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FilterContentsFilterable;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
@@ -22,7 +22,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  * @see KeyboardShortcutsArea
  */
 public class ExecCommandsArea extends Model.All
-		implements ModelEvents.FilterContents.ReflectFiltering {
+		implements ModelEvents.Filter.Emitter {
 	public Heading heading = new Heading("Exec commands");
 
 	@StringInput.FocusOnBind
@@ -41,7 +41,7 @@ public class ExecCommandsArea extends Model.All
 	}
 
 	@Directed(tag = "command-area")
-	class CommandArea extends FilterContentsFilterable.Abstract
+	class CommandArea extends Filterable.FilterFilterable.Abstract
 			implements Comparable<CommandArea>, DomEvents.Click.Handler {
 		String name;
 

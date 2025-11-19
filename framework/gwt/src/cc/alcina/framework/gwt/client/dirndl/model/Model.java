@@ -669,6 +669,8 @@ public abstract class Model extends Bindable
 	public class Exec {
 		Runnable lambda;
 
+		boolean ifBound;
+
 		boolean deferred;
 
 		Exec(Runnable lambda) {
@@ -681,8 +683,13 @@ public abstract class Model extends Bindable
 		}
 
 		public void ifBound() {
+			this.ifBound = true;
+			bindingAgnostic();
+		}
+
+		public void bindingAgnostic() {
 			QueuedEvent event = Client.eventBus().queued().lambda(() -> {
-				if (provideIsBound()) {
+				if (!ifBound || provideIsBound()) {
 					lambda.run();
 				}
 			});
