@@ -195,6 +195,7 @@ public abstract class Choices<T> extends Model implements
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface Values {
+		@Reflected
 		public interface ValueSupplier
 				extends Supplier<List<?>>, Function<Values, List<?>> {
 			public interface ContextSensitive extends ValueSupplier {
