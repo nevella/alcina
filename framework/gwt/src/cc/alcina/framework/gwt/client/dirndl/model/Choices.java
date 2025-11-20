@@ -176,8 +176,7 @@ public abstract class Choices<T> extends Model implements
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface ChangeOnSelectEvent {
-		boolean value();
+	public @interface NoChangeOnSelectEvent {
 	}
 
 	/**
@@ -1124,8 +1123,8 @@ public abstract class Choices<T> extends Model implements
 		node.optional(EnumValues.class).ifPresent(ann -> setValues(
 				filter((List<T>) new EnumSupplier().apply(ann), valueFilter)));
 		repeatableChoices = node.has(RepeatableChoices.class);
-		node.optional(ChangeOnSelectEvent.class)
-				.ifPresent(ann -> setChangeOnSelectionEvent(ann.value()));
+		node.optional(NoChangeOnSelectEvent.class)
+				.ifPresent(ann -> setChangeOnSelectionEvent(false));
 	}
 
 	List<T> filter(List<T> list, Predicate<T> valueFilter) {
