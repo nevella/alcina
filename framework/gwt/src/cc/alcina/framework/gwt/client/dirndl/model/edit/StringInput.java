@@ -288,8 +288,8 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		event.node.optional(Autocomplete.class).ifPresent(
 				autocomplete -> setAutocomplete(autocomplete.value()));
 		event.node.optional(Validation.class).ifPresent(validation -> {
-			if (validation.maxLength() != 0) {
-				setMaxLength(validation.maxLength());
+			if (validation.maxLength().length() > 0) {
+				setMaxLength(Integer.parseInt(validation.maxLength()));
 			}
 			setInputMode(validation.inputMode());
 			setPattern(validation.pattern());
@@ -557,7 +557,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 		String inputMode();
 
-		int maxLength();
+		String maxLength();
 	}
 
 	@ClientVisible
