@@ -633,7 +633,7 @@ public abstract class Choices<T> extends Model implements
 		@Bean
 		public static class SelectTemplate {
 			@Directed.TransformElements(Option.Transform.class)
-			public List<Choices.Choice> getChoices() {
+			public List<Model> getElements() {
 				return null;
 			}
 		}
@@ -654,7 +654,7 @@ public abstract class Choices<T> extends Model implements
 		@Override
 		protected Property resolveDirectedProperty0(Property property) {
 			if (property.getDeclaringType() == Choices.class
-					&& property.getName().equals("choices")) {
+					&& property.getName().equals("elements")) {
 				return Reflections.at(SelectTemplate.class)
 						.property(property.getName());
 			} else {
