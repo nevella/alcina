@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import java.lang.Boolean;
 import java.lang.Class;
+import java.lang.Integer;
 import java.lang.Object;
 import java.lang.String;
 import java.util.Date;
@@ -251,7 +252,10 @@ public class PackageProperties {
       public TypedProperty<StringInput, Boolean> disabled = new TypedProperty<>(StringInput.class, "disabled");
       public TypedProperty<StringInput, Boolean> ensureContentVisible = new TypedProperty<>(StringInput.class, "ensureContentVisible");
       public TypedProperty<StringInput, Boolean> focusOnBind = new TypedProperty<>(StringInput.class, "focusOnBind");
+      public TypedProperty<StringInput, String> inputMode = new TypedProperty<>(StringInput.class, "inputMode");
+      public TypedProperty<StringInput, Integer> maxLength = new TypedProperty<>(StringInput.class, "maxLength");
       public TypedProperty<StringInput, Boolean> moveCaretToEndOnFocus = new TypedProperty<>(StringInput.class, "moveCaretToEndOnFocus");
+      public TypedProperty<StringInput, String> pattern = new TypedProperty<>(StringInput.class, "pattern");
       public TypedProperty<StringInput, String> placeholder = new TypedProperty<>(StringInput.class, "placeholder");
       public TypedProperty<StringInput, Boolean> preserveSelectionOverFocusChange = new TypedProperty<>(StringInput.class, "preserveSelectionOverFocusChange");
       public TypedProperty<StringInput, String> rows = new TypedProperty<>(StringInput.class, "rows");
@@ -270,7 +274,10 @@ public class PackageProperties {
         public InstanceProperty<StringInput, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput.disabled);}
         public InstanceProperty<StringInput, Boolean> ensureContentVisible(){return new InstanceProperty<>(source,PackageProperties.stringInput.ensureContentVisible);}
         public InstanceProperty<StringInput, Boolean> focusOnBind(){return new InstanceProperty<>(source,PackageProperties.stringInput.focusOnBind);}
+        public InstanceProperty<StringInput, String> inputMode(){return new InstanceProperty<>(source,PackageProperties.stringInput.inputMode);}
+        public InstanceProperty<StringInput, Integer> maxLength(){return new InstanceProperty<>(source,PackageProperties.stringInput.maxLength);}
         public InstanceProperty<StringInput, Boolean> moveCaretToEndOnFocus(){return new InstanceProperty<>(source,PackageProperties.stringInput.moveCaretToEndOnFocus);}
+        public InstanceProperty<StringInput, String> pattern(){return new InstanceProperty<>(source,PackageProperties.stringInput.pattern);}
         public InstanceProperty<StringInput, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.stringInput.placeholder);}
         public InstanceProperty<StringInput, Boolean> preserveSelectionOverFocusChange(){return new InstanceProperty<>(source,PackageProperties.stringInput.preserveSelectionOverFocusChange);}
         public InstanceProperty<StringInput, String> rows(){return new InstanceProperty<>(source,PackageProperties.stringInput.rows);}
@@ -311,7 +318,10 @@ public class PackageProperties {
       public TypedProperty<StringInput.DateInput, Boolean> disabled = new TypedProperty<>(StringInput.DateInput.class, "disabled");
       public TypedProperty<StringInput.DateInput, Boolean> ensureContentVisible = new TypedProperty<>(StringInput.DateInput.class, "ensureContentVisible");
       public TypedProperty<StringInput.DateInput, Boolean> focusOnBind = new TypedProperty<>(StringInput.DateInput.class, "focusOnBind");
+      public TypedProperty<StringInput.DateInput, String> inputMode = new TypedProperty<>(StringInput.DateInput.class, "inputMode");
+      public TypedProperty<StringInput.DateInput, Integer> maxLength = new TypedProperty<>(StringInput.DateInput.class, "maxLength");
       public TypedProperty<StringInput.DateInput, Boolean> moveCaretToEndOnFocus = new TypedProperty<>(StringInput.DateInput.class, "moveCaretToEndOnFocus");
+      public TypedProperty<StringInput.DateInput, String> pattern = new TypedProperty<>(StringInput.DateInput.class, "pattern");
       public TypedProperty<StringInput.DateInput, String> placeholder = new TypedProperty<>(StringInput.DateInput.class, "placeholder");
       public TypedProperty<StringInput.DateInput, Boolean> preserveSelectionOverFocusChange = new TypedProperty<>(StringInput.DateInput.class, "preserveSelectionOverFocusChange");
       public TypedProperty<StringInput.DateInput, String> rows = new TypedProperty<>(StringInput.DateInput.class, "rows");
@@ -330,7 +340,10 @@ public class PackageProperties {
         public InstanceProperty<StringInput.DateInput, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.disabled);}
         public InstanceProperty<StringInput.DateInput, Boolean> ensureContentVisible(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.ensureContentVisible);}
         public InstanceProperty<StringInput.DateInput, Boolean> focusOnBind(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.focusOnBind);}
+        public InstanceProperty<StringInput.DateInput, String> inputMode(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.inputMode);}
+        public InstanceProperty<StringInput.DateInput, Integer> maxLength(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.maxLength);}
         public InstanceProperty<StringInput.DateInput, Boolean> moveCaretToEndOnFocus(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.moveCaretToEndOnFocus);}
+        public InstanceProperty<StringInput.DateInput, String> pattern(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.pattern);}
         public InstanceProperty<StringInput.DateInput, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.placeholder);}
         public InstanceProperty<StringInput.DateInput, Boolean> preserveSelectionOverFocusChange(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.preserveSelectionOverFocusChange);}
         public InstanceProperty<StringInput.DateInput, String> rows(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateInput.rows);}
@@ -356,7 +369,10 @@ public class PackageProperties {
       public TypedProperty<StringInput.Editor, Boolean> disabled = new TypedProperty<>(StringInput.Editor.class, "disabled");
       public TypedProperty<StringInput.Editor, Boolean> ensureContentVisible = new TypedProperty<>(StringInput.Editor.class, "ensureContentVisible");
       public TypedProperty<StringInput.Editor, Boolean> focusOnBind = new TypedProperty<>(StringInput.Editor.class, "focusOnBind");
+      public TypedProperty<StringInput.Editor, String> inputMode = new TypedProperty<>(StringInput.Editor.class, "inputMode");
+      public TypedProperty<StringInput.Editor, Integer> maxLength = new TypedProperty<>(StringInput.Editor.class, "maxLength");
       public TypedProperty<StringInput.Editor, Boolean> moveCaretToEndOnFocus = new TypedProperty<>(StringInput.Editor.class, "moveCaretToEndOnFocus");
+      public TypedProperty<StringInput.Editor, String> pattern = new TypedProperty<>(StringInput.Editor.class, "pattern");
       public TypedProperty<StringInput.Editor, String> placeholder = new TypedProperty<>(StringInput.Editor.class, "placeholder");
       public TypedProperty<StringInput.Editor, Boolean> preserveSelectionOverFocusChange = new TypedProperty<>(StringInput.Editor.class, "preserveSelectionOverFocusChange");
       public TypedProperty<StringInput.Editor, String> rows = new TypedProperty<>(StringInput.Editor.class, "rows");
@@ -375,7 +391,10 @@ public class PackageProperties {
         public InstanceProperty<StringInput.Editor, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.disabled);}
         public InstanceProperty<StringInput.Editor, Boolean> ensureContentVisible(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.ensureContentVisible);}
         public InstanceProperty<StringInput.Editor, Boolean> focusOnBind(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.focusOnBind);}
+        public InstanceProperty<StringInput.Editor, String> inputMode(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.inputMode);}
+        public InstanceProperty<StringInput.Editor, Integer> maxLength(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.maxLength);}
         public InstanceProperty<StringInput.Editor, Boolean> moveCaretToEndOnFocus(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.moveCaretToEndOnFocus);}
+        public InstanceProperty<StringInput.Editor, String> pattern(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.pattern);}
         public InstanceProperty<StringInput.Editor, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.placeholder);}
         public InstanceProperty<StringInput.Editor, Boolean> preserveSelectionOverFocusChange(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.preserveSelectionOverFocusChange);}
         public InstanceProperty<StringInput.Editor, String> rows(){return new InstanceProperty<>(source,PackageProperties.stringInput_editor.rows);}

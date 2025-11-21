@@ -33,9 +33,9 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Blur;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
@@ -136,6 +136,41 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	private boolean disabled;
 
 	private String title;
+
+	private Integer maxLength;
+
+	@Binding(type = Type.PROPERTY, to = "maxlength")
+	public Integer getMaxLength() {
+		return maxLength;
+	}
+
+	public void setMaxLength(Integer maxLength) {
+		set("maxLength", this.maxLength, maxLength,
+				() -> this.maxLength = maxLength);
+	}
+
+	private String pattern;
+
+	@Binding(type = Type.PROPERTY)
+	public String getPattern() {
+		return pattern;
+	}
+
+	public void setPattern(String pattern) {
+		set("pattern", this.pattern, pattern, () -> this.pattern = pattern);
+	}
+
+	private String inputMode;
+
+	@Binding(type = Type.PROPERTY, to = "inputmode")
+	public String getInputMode() {
+		return inputMode;
+	}
+
+	public void setInputMode(String inputMode) {
+		set("inputMode", this.inputMode, inputMode,
+				() -> this.inputMode = inputMode);
+	}
 
 	public String getTitle() {
 		return title;
@@ -252,7 +287,14 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
 		event.node.optional(Autocomplete.class).ifPresent(
 				autocomplete -> setAutocomplete(autocomplete.value()));
-		event.node.optional(Type.class)
+		event.node.optional(Validation.class).ifPresent(validation -> {
+			if (validation.maxLength() != 0) {
+				setMaxLength(validation.maxLength());
+			}
+			setInputMode(validation.inputMode());
+			setPattern(validation.pattern());
+		});
+		event.node.optional(InputType.class)
 				.ifPresent(type -> setType(type.value()));
 		event.node.optional(FocusOnBind.class)
 				.ifPresent(ann -> setFocusOnBind(true));
@@ -510,7 +552,19 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface Type {
+	public @interface Validation {
+		String pattern();
+
+		String inputMode();
+
+		int maxLength();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface InputType {
 		String value();
 	}
 
