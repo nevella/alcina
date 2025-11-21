@@ -15,6 +15,7 @@ $selected-editor-choice: #77e
   > choice
     display: block
     cursor: pointer
+    user-select: none
 
     &:hover
       background-color: #f7f7f7
@@ -97,8 +98,16 @@ $selected-editor-choice: #77e
       > suggestor
         @include context-menu.dropdown-choices
 
+@mixin filterable-choice
+  & > choice[filtered], category[filtered]
+    display: none
+
 @mixin filtered-choices
+  width: 100%
   display: flex
   flex-direction: column
-  width: 100%
-  
+
+  > choices
+    @include vertical
+    @include filterable-choice
+    

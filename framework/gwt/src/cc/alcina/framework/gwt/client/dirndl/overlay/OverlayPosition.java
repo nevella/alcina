@@ -50,6 +50,9 @@ public class OverlayPosition {
 
 	Element rectSourceElement;
 
+	// FIXME - dirndl - another constraint?
+	public boolean equalWidths = false;
+
 	@Reflected
 	public enum ViewportConstraint {
 		ATTEMPT_VISIBLE {
@@ -137,6 +140,9 @@ public class OverlayPosition {
 			return;
 		}
 		Preconditions.checkState(fromRect != null);
+		if (equalWidths) {
+			toElement.getStyle().setWidth(fromRect.width, Unit.PX);
+		}
 		if (constraints.stream().noneMatch(Constraint::requiresActualToRect)) {
 			// will return a [0,0,0,0] domRect - which is fine if positioning
 			// all-start constraints
@@ -304,7 +310,7 @@ public class OverlayPosition {
 		}
 	}
 
-	enum Direction {
+	public enum Direction {
 		X_AXIS, Y_AXIS
 	}
 

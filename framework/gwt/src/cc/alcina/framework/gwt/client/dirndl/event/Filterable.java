@@ -4,6 +4,9 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * TODO - is matchesFilter correct API? 'filter?' Two different apis?
+ */
 public interface Filterable {
 	public interface FilterFilterable
 			extends Filterable, ModelEvents.Filter.Handler {

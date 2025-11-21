@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 
 /**
  * A marker interface UI-binding events (events for which the change value could
@@ -48,11 +49,19 @@ public interface ValueChange {
 			ModelEvents.Change.Handler {
 		@Override
 		default void onSelectionChanged(SelectionChanged event) {
+			if (event.checkReemitted((HasNode) this)) {
+				event.bubble();
+				return;
+			}
 			Support.propagateChange(this, event);
 		}
 
 		@Override
 		default void onChange(Change event) {
+			if (event.checkReemitted((HasNode) this)) {
+				event.bubble();
+				return;
+			}
 			Support.propagateChange(this, event);
 		}
 

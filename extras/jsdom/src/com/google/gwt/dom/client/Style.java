@@ -2021,6 +2021,18 @@ public class Style implements ClientDomStyle {
 							(Unit) arguments.get(1));
 					return null;
 				}
+			case "setWidth":
+				if (argumentTypes.size() == 2) {
+					style.setWidth((double) arguments.get(0),
+							(Unit) arguments.get(1));
+					return null;
+				}
+			case "setHeight":
+				if (argumentTypes.size() == 2) {
+					style.setHeight((double) arguments.get(0),
+							(Unit) arguments.get(1));
+					return null;
+				}
 			case "setProperty":
 				if (argumentTypes.size() == 2) {
 					style.setProperty((String) arguments.get(0),

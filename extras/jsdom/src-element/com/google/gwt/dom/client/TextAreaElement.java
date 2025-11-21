@@ -286,7 +286,7 @@ public class TextAreaElement extends Element implements HasSelectionRange {
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		if ("value".equals(name)) {
+		if ("value".equals(name) && !isAttached()) {
 			local().setInnerText(value);
 		} else {
 			local().setPropertyString(name, value);

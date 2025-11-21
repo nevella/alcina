@@ -813,7 +813,8 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setWidth(double value, Unit unit) {
-		throw new UnsupportedOperationException();
+		element.invokeStyleAsync("setWidth", List.of(double.class, Unit.class),
+				List.of(value, unit));
 	}
 
 	@Override
