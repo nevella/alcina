@@ -1086,8 +1086,10 @@ public class DirectedLayout implements AlcinaProcess {
 			return fb.toString();
 		}
 
-		void postRender() {
-			bindEvents();
+		void postRender(boolean hasRenderer) {
+			if (hasRenderer) {
+				bindEvents();
+			}
 		}
 
 		void postDomAttach() {
@@ -2146,9 +2148,9 @@ public class DirectedLayout implements AlcinaProcess {
 		private RendererInput() {
 		}
 
-		void afterRender() {
+		void afterRender(boolean hasRenderer) {
 			// must occur after insertion (onBind expects dom attach)
-			node.postRender();
+			node.postRender(hasRenderer);
 			if (node.hasRendered()) {
 				Optional<Rendered> firstAncestorRendered = firstAncestorRendered();
 				if (firstAncestorRendered.isPresent()) {
@@ -2345,10 +2347,11 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 			beforeRender();
-			if (model != null
+			boolean hasRenderer = model != null
 					|| Reflections.isAssignableFrom(RendersNull.class,
 							node.directed.renderer())
-					|| node.has(Directed.RenderNull.class)) {
+					|| node.has(Directed.RenderNull.class);
+			if (hasRenderer) {
 				if (rendered != null) {
 					// preserve domNode/model identity. Note relationship with
 					// #moveChildren()
@@ -2358,7 +2361,7 @@ public class DirectedLayout implements AlcinaProcess {
 					renderer.render(this);
 				}
 			}
-			afterRender();
+			afterRender(hasRenderer);
 		}
 
 		DirectedRenderer resolveRenderer() {

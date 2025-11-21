@@ -441,8 +441,12 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public boolean handlesModelChange(PropertyChangeEvent evt) {
-			setSelectedValues((List<T>) evt.getNewValue());
-			return true;
+			if (hasValueSupplier) {
+				setSelectedValues((List<T>) evt.getNewValue());
+				return true;
+			} else {
+				return false;
+			}
 		}
 
 		public List<T> getSelectedValues() {
@@ -894,8 +898,12 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public boolean handlesModelChange(PropertyChangeEvent evt) {
-			setSelectedValue((T) evt.getNewValue());
-			return true;
+			if (hasValueSupplier) {
+				setSelectedValue((T) evt.getNewValue());
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
@@ -1015,6 +1023,8 @@ public abstract class Choices<T> extends Model implements
 
 	protected boolean changeOnSelectionEvent = true;
 
+	boolean hasValueSupplier;
+
 	public Choices() {
 		this(new ArrayList<>());
 	}
@@ -1074,6 +1084,11 @@ public abstract class Choices<T> extends Model implements
 				choices);
 	}
 
+	public void putSupplierValues(List<T> values) {
+		this.hasValueSupplier = true;
+		setValues(values);
+	}
+
 	public void setValues(List<T> values) {
 		this.values = values;
 		List<Choice<T>> choices = new ArrayList<>();
@@ -1118,10 +1133,10 @@ public abstract class Choices<T> extends Model implements
 		node.optional(Categoriser.class)
 				.ifPresent(ann -> this.categoriser = (Function) Reflections
 						.newInstance(ann.value()));
-		node.optional(Values.class).ifPresent(ann -> setValues(filter(
+		node.optional(Values.class).ifPresent(ann -> putSupplierValues(filter(
 				(List<T>) Reflections.newInstance(ann.value()).apply(node, ann),
 				valueFilter)));
-		node.optional(EnumValues.class).ifPresent(ann -> setValues(
+		node.optional(EnumValues.class).ifPresent(ann -> putSupplierValues(
 				filter((List<T>) new EnumSupplier().apply(ann), valueFilter)));
 		repeatableChoices = node.has(RepeatableChoices.class);
 		node.optional(NoChangeOnSelectEvent.class)
