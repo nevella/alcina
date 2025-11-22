@@ -85,7 +85,13 @@ public class AuthenticationManager {
 					context.session.getUser(), user);
 			invalidateSession(context.session, "Replaced by new session");
 		}
-		String sessionId = SEUtilities.generateId();
+		String sessionId = null;
+		if (context.cookies.preopulatedSessionId != null) {
+			sessionId = context.cookies.preopulatedSessionId;
+			context.cookies.preopulatedSessionId = null;
+		} else {
+			sessionId = SEUtilities.generateId();
+		}
 		AuthenticationSession session = persistence.createAuthenticationSession(
 				context.iid, startDate, sessionId, user, authenticationType);
 		context.session = session;
@@ -241,6 +247,25 @@ public class AuthenticationManager {
 	 */
 	public static ContextRef getContextRef() {
 		return new ContextRef(get().ensureContext());
+	}
+
+	/*
+	 * This allowsd emission of content (loading message) before authentication
+	 * data is processed
+	 */
+	public static void preopulateAuthenticationCookies() {
+		get().ensureContext().cookies.prepopulate();
+	}
+
+	static class AuthenticationCookies {
+		String preopulatedSessionId;
+
+		void prepopulate() {
+			AuthenticationContext context = get().ensureContext();
+			preopulatedSessionId = SEUtilities.generateId();
+			context.tokenStore.setCookieValue(COOKIE_NAME_SESSIONID,
+					preopulatedSessionId);
+		}
 	}
 
 	private void ensureIid(AuthenticationContext context) {
@@ -440,6 +465,8 @@ public class AuthenticationManager {
 		Authenticator<?> authenticator = Registry.impl(Authenticator.class);
 
 		PermissionsContext authenticatedPermissionsContext = new PermissionsContext();
+
+		AuthenticationCookies cookies = new AuthenticationCookies();
 
 		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
 			return (Authenticator<U>) authenticator;

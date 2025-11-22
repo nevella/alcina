@@ -116,6 +116,18 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	private boolean disabled;
 
+	private boolean inFlight;
+
+	@Binding(type = Type.PROPERTY)
+	public boolean isInFlight() {
+		return inFlight;
+	}
+
+	public void setInFlight(boolean inFlight) {
+		set("inFlight", this.inFlight, inFlight,
+				() -> this.inFlight = inFlight);
+	}
+
 	@Binding(type = Type.PROPERTY)
 	public boolean isDisabled() {
 		return disabled;
