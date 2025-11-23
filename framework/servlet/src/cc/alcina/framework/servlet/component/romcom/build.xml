@@ -24,6 +24,7 @@
 				<pathelement location="${gwt.sdk.dir}/gwt-dev-patch.jar" />
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
 			</classpath>
+
 			<jvmarg value="-Xmx${framework.gwt.jvm.maxHeapSizeMb}M" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />

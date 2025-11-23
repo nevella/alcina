@@ -42,7 +42,7 @@ public class PackageProperties {
       public TypedProperty<EntityBrowser.Ui, String> traversalId = new TypedProperty<>(EntityBrowser.Ui.class, "traversalId");
       public TypedProperty<EntityBrowser.Ui, String> traversalPath = new TypedProperty<>(EntityBrowser.Ui.class, "traversalPath");
       public TypedProperty<EntityBrowser.Ui, Boolean> useSelectionSegmentPath = new TypedProperty<>(EntityBrowser.Ui.class, "useSelectionSegmentPath");
-      public static class InstanceProperties extends InstanceProperty.Container<EntityBrowser.Ui> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<EntityBrowser.Ui> {
         public  InstanceProperties(EntityBrowser.Ui source){super(source);}
         public InstanceProperty<EntityBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.appCommandContexts);}
         public InstanceProperty<EntityBrowser.Ui, Boolean> appendTableSelections(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.appendTableSelections);}
@@ -71,7 +71,7 @@ public class PackageProperties {
     
     static class _NonOptimisedQueryCache_EntrySummary implements TypedProperty.Container {
       TypedProperty<NonOptimisedQueryCache.EntrySummary, Object> message = new TypedProperty<>(NonOptimisedQueryCache.EntrySummary.class, "message");
-      static class InstanceProperties extends InstanceProperty.Container<NonOptimisedQueryCache.EntrySummary> {
+      static class InstanceProperties extends 	InstanceProperty.Container<NonOptimisedQueryCache.EntrySummary> {
          InstanceProperties(NonOptimisedQueryCache.EntrySummary source){super(source);}
         InstanceProperty<NonOptimisedQueryCache.EntrySummary, Object> message(){return new InstanceProperty<>(source,PackageProperties.nonOptimisedQueryCache_entrySummary.message);}
       }

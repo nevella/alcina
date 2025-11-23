@@ -18,7 +18,7 @@ public class PackageProperties {
       TypedProperty<TestChubbyTree.TestContainer, CollectionDeltaModel> collectionRepresentation = new TypedProperty<>(TestChubbyTree.TestContainer.class, "collectionRepresentation");
       TypedProperty<TestChubbyTree.TestContainer, String> heading = new TypedProperty<>(TestChubbyTree.TestContainer.class, "heading");
       TypedProperty<TestChubbyTree.TestContainer, TestChubbyTree.TestContainer.Style> style = new TypedProperty<>(TestChubbyTree.TestContainer.class, "style");
-      static class InstanceProperties extends InstanceProperty.Container<TestChubbyTree.TestContainer> {
+      static class InstanceProperties extends 	InstanceProperty.Container<TestChubbyTree.TestContainer> {
          InstanceProperties(TestChubbyTree.TestContainer source){super(source);}
         InstanceProperty<TestChubbyTree.TestContainer, List> collection(){return new InstanceProperty<>(source,PackageProperties.testChubbyTree_testContainer.collection);}
         InstanceProperty<TestChubbyTree.TestContainer, CollectionDeltaModel> collectionRepresentation(){return new InstanceProperty<>(source,PackageProperties.testChubbyTree_testContainer.collectionRepresentation);}

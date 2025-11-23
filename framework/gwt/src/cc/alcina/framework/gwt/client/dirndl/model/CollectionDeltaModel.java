@@ -45,12 +45,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 @TypedProperties
 @Directed.Delegating
 public class CollectionDeltaModel extends Model.Fields {
-	public static transient PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
-
-	/*
-	 * FIXME - jdk16 - move to static member of inner class
-	 */
-	static PackageProperties._CollectionDeltaModel_RelativeInsert RelativeInsert_properties = PackageProperties.collectionDeltaModel_relativeInsert;
+	public PackageProperties._CollectionDeltaModel.InstanceProperties
+			properties() {
+		return PackageProperties.collectionDeltaModel.instance(this);
+	}
 
 	enum InsertDirection {
 		/*
@@ -74,6 +72,12 @@ public class CollectionDeltaModel extends Model.Fields {
 	@TypedProperties
 	@Directed.Delegating
 	class RelativeInsert extends Model.All {
+		PackageProperties._CollectionDeltaModel_RelativeInsert.InstanceProperties
+				properties() {
+			return PackageProperties.collectionDeltaModel_relativeInsert
+					.instance(this);
+		}
+
 		RelativeInsert(RelativeInsert parent) {
 			this.parent = parent;
 		}
@@ -129,7 +133,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		RelativeInsert validatingNext() {
 			RelativeInsert next = next();
 			if (element != null && !Objects.equals(element, update.current)) {
-				RelativeInsert_properties.element.set(this, null);
+				properties().element().set(null);
 			}
 			/*
 			 * in the future, could *possibly* simplify the RelativeInsert
@@ -173,7 +177,7 @@ public class CollectionDeltaModel extends Model.Fields {
 						if (after == null) {
 							RelativeInsert child = new RelativeInsert(this);
 							RelativeInsert grand = child.append(object);
-							RelativeInsert_properties.after.set(this, child);
+							properties().after().set(child);
 							return grand;
 						} else {
 							RelativeInsert firstDescendantOrSelfOfAfter = after
@@ -186,8 +190,8 @@ public class CollectionDeltaModel extends Model.Fields {
 							RelativeInsert child = new RelativeInsert(
 									firstDescendantOrSelfOfAfter);
 							RelativeInsert grand = child.append(object);
-							RelativeInsert_properties.before
-									.set(firstDescendantOrSelfOfAfter, child);
+							firstDescendantOrSelfOfAfter.properties().before()
+									.set(child);
 							return grand;
 						}
 					}
@@ -196,7 +200,7 @@ public class CollectionDeltaModel extends Model.Fields {
 				if (before == null) {
 					RelativeInsert child = new RelativeInsert(this);
 					RelativeInsert grand = child.append(object);
-					RelativeInsert_properties.before.set(this, child);
+					properties().before().set(child);
 					return grand;
 				} else {
 					RelativeInsert lastDescendantOrSelfOfBefore = after
@@ -208,8 +212,8 @@ public class CollectionDeltaModel extends Model.Fields {
 					RelativeInsert child = new RelativeInsert(
 							lastDescendantOrSelfOfBefore);
 					RelativeInsert grand = child.append(object);
-					RelativeInsert_properties.after
-							.set(lastDescendantOrSelfOfBefore, child);
+					lastDescendantOrSelfOfBefore.properties().after()
+							.set(child);
 					return grand;
 				}
 			}
@@ -287,7 +291,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		}
 
 		void flushPending() {
-			RelativeInsert_properties.flushedContents.set(this, contents);
+			properties().flushedContents().set(contents);
 		}
 
 		boolean canAppend() {
@@ -401,7 +405,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		}
 
 		void setCollectionElement(Object current) {
-			RelativeInsert_properties.element.set(this, current);
+			properties().element().set(current);
 		}
 	}
 
@@ -411,8 +415,7 @@ public class CollectionDeltaModel extends Model.Fields {
 	public Collection collection;
 
 	public CollectionDeltaModel() {
-		bindings().from(this).on(properties.collection)
-				.signal(this::updateElements);
+		from(properties().collection()).signal(this::updateElements);
 	}
 
 	/*
@@ -536,11 +539,11 @@ public class CollectionDeltaModel extends Model.Fields {
 
 	void updateElements() {
 		if (collection == null || collection.isEmpty()) {
-			properties.root.set(this, null);
+			properties().root().set(null);
 			return;
 		}
 		if (root == null) {
-			properties.root.set(this, new RelativeInsert(null));
+			properties().root().set(new RelativeInsert(null));
 		}
 		update = new Update();
 		update.update();

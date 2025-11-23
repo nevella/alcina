@@ -518,6 +518,11 @@ public abstract class Model extends Bindable
 		}
 	}
 
+	public <T extends SourcesPropertyChangeEvents> StreamBinding<T>
+			from(T source) {
+		return bindings().from(source);
+	}
+
 	public <T> StreamBinding<T> from(InstanceProperty<?, T> instanceProperty) {
 		return bindings().from(instanceProperty);
 	}
@@ -673,6 +678,8 @@ public abstract class Model extends Bindable
 
 		boolean deferred;
 
+		private boolean distinct;
+
 		Exec(Runnable lambda) {
 			this.lambda = lambda;
 		}
@@ -695,11 +702,19 @@ public abstract class Model extends Bindable
 			if (deferred) {
 				event.deferred();
 			}
+			if (distinct) {
+				event.distinct();
+			}
 			event.dispatch();
 		}
 
 		public Exec bindingAgnostic() {
 			this.ifBound = false;
+			return this;
+		}
+
+		public Exec distinct() {
+			this.distinct = true;
 			return this;
 		}
 	}

@@ -5,7 +5,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
-import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Button;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
@@ -30,7 +29,9 @@ class Dotburger extends Model.Fields {
 
 	@TypedProperties
 	static class Menu extends Model.All implements ValueChange.Container {
-		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_menu;
+		PackageProperties._Dotburger_Menu.InstanceProperties properties() {
+			return PackageProperties.dotburger_menu.instance(this);
+		}
 
 		Heading section1 = new Heading("Selection type");
 
@@ -66,21 +67,18 @@ class Dotburger extends Model.Fields {
 		String selectionAreaHeight;
 
 		Menu() {
-			bindings().from(TraversalSettings.get())
-					.on(TraversalSettings.properties.secondaryAreaDisplayMode)
-					.to(this).on(properties.secondaryAreaDisplayMode).bidi();
-			bindings().from(TraversalSettings.get())
-					.on(TraversalSettings.properties.propertyDisplayMode)
-					.to(this).on(properties.propertyDisplayMode).bidi();
-			bindings().from(TraversalSettings.get())
-					.on(TraversalSettings.properties.tableRows)
+			from(TraversalSettings.get().properties()
+					.secondaryAreaDisplayMode())
+							.to(properties().secondaryAreaDisplayMode()).bidi();
+			from(TraversalSettings.get().properties().propertyDisplayMode())
+					.to(properties().propertyDisplayMode()).bidi();
+			from(TraversalSettings.get().properties().tableRows())
 					.map(rowCount -> Ax.format("Table rows: %s", rowCount))
-					.to(this).on(properties.rows).oneWay();
-			bindings().from(TraversalSettings.get())
-					.on(TraversalSettings.properties.selectionAreaHeight)
+					.to(properties().rows()).oneWay();
+			from(TraversalSettings.get().properties().selectionAreaHeight())
 					.map(rowCount -> Ax.format("Sel. area height: %s",
 							rowCount))
-					.to(this).on(properties.selectionAreaHeight).oneWay();
+					.to(properties().selectionAreaHeight()).oneWay();
 		}
 	}
 

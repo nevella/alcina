@@ -88,15 +88,12 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 		this.page = page;
 		this.variant = variant;
 		this.heading = new Heading(Ax.friendly(variant));
-		bindings().from(page.ui).on(Ui.properties.place)
+		from(page.ui.properties().place()).signal(this::populateViewSelection);
+		from(page.ui.properties().place()).signal(this::conditionallyPopulate);
+		from(page.ui.subclassProperties().traversal())
 				.signal(this::populateViewSelection);
-		bindings().from(page.ui).on(Ui.properties.place)
-				.signal(this::conditionallyPopulate);
-		bindings().from(page.ui).on(Ui.properties.traversal)
-				.signal(this::populateViewSelection);
-		bindings().from(this).on(properties.selection)
-				.signal(this::onSelectionChange);
-		bindings().from(this).on(properties.selectionTable)
+		from(this).on(properties.selection).signal(this::onSelectionChange);
+		from(this).on(properties.selectionTable)
 				.signal(this::updateTableHeader);
 	}
 

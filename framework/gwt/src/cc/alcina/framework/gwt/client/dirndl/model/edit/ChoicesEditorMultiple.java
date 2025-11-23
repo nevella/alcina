@@ -21,7 +21,7 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 	static PackageProperties._ChoicesEditorMultiple properties = PackageProperties.choicesEditorMultiple;
 
 	public ChoicesEditorMultiple() {
-		bindings().from(this).on(properties.selectedValues)
+		from(this).on(properties.selectedValues)
 				.accept(this::updateAreaFromSelectedValues);
 	}
 

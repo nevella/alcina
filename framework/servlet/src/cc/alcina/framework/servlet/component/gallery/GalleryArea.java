@@ -17,7 +17,7 @@ class GalleryArea extends Model.Fields {
 
 	GalleryArea(GalleryPage page) {
 		this.page = page;
-		bindings().from(page.ui).on(GalleryBrowser.Ui.properties.place)
+		from(page.ui).on(GalleryBrowser.Ui.properties.place)
 				.map(GalleryContents::forPlace).to(this).on(properties.contents)
 				.oneWay();
 	}

@@ -4,8 +4,10 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree;
+import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.FilteredChoices;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
@@ -27,6 +29,7 @@ public class PackageProperties {
     static _Choices_Category choices_category = new _Choices_Category();
     public static _Choices_Multiple choices_multiple = new _Choices_Multiple();
     public static _Choices_MultipleSelect choices_multipleSelect = new _Choices_MultipleSelect();
+    public static _ChoicesDropdown choicesDropdown = new _ChoicesDropdown();
     public static _CollectionDeltaModel collectionDeltaModel = new _CollectionDeltaModel();
     static _CollectionDeltaModel_RelativeInsert collectionDeltaModel_relativeInsert = new _CollectionDeltaModel_RelativeInsert();
     public static _DomainViewTree_DomainViewNode domainViewTree_domainViewNode = new _DomainViewTree_DomainViewNode();
@@ -45,7 +48,7 @@ public class PackageProperties {
       TypedProperty<Choices.Category, String> category = new TypedProperty<>(Choices.Category.class, "category");
       TypedProperty<Choices.Category, List> choices = new TypedProperty<>(Choices.Category.class, "choices");
       TypedProperty<Choices.Category, Boolean> filtered = new TypedProperty<>(Choices.Category.class, "filtered");
-      static class InstanceProperties extends InstanceProperty.Container<Choices.Category> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Choices.Category> {
          InstanceProperties(Choices.Category source){super(source);}
         InstanceProperty<Choices.Category, String> category(){return new InstanceProperty<>(source,PackageProperties.choices_category.category);}
         InstanceProperty<Choices.Category, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_category.choices);}
@@ -65,7 +68,7 @@ public class PackageProperties {
       public TypedProperty<Choices.Multiple, Boolean> repeatableChoices = new TypedProperty<>(Choices.Multiple.class, "repeatableChoices");
       public TypedProperty<Choices.Multiple, List> selectedValues = new TypedProperty<>(Choices.Multiple.class, "selectedValues");
       public TypedProperty<Choices.Multiple, List> values = new TypedProperty<>(Choices.Multiple.class, "values");
-      public static class InstanceProperties extends InstanceProperty.Container<Choices.Multiple> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices.Multiple> {
         public  InstanceProperties(Choices.Multiple source){super(source);}
         public InstanceProperty<Choices.Multiple, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.changeOnSelectionEvent);}
         public InstanceProperty<Choices.Multiple, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multiple.choices);}
@@ -85,17 +88,19 @@ public class PackageProperties {
       public TypedProperty<Choices.MultipleSelect, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.MultipleSelect.class, "changeOnSelectionEvent");
       public TypedProperty<Choices.MultipleSelect, List> choices = new TypedProperty<>(Choices.MultipleSelect.class, "choices");
       public TypedProperty<Choices.MultipleSelect, List> elements = new TypedProperty<>(Choices.MultipleSelect.class, "elements");
+      public TypedProperty<Choices.MultipleSelect, Boolean> hasValueSupplier = new TypedProperty<>(Choices.MultipleSelect.class, "hasValueSupplier");
       public TypedProperty<Choices.MultipleSelect, Boolean> multiple = new TypedProperty<>(Choices.MultipleSelect.class, "multiple");
       public TypedProperty<Choices.MultipleSelect, Boolean> repeatableChoices = new TypedProperty<>(Choices.MultipleSelect.class, "repeatableChoices");
       public TypedProperty<Choices.MultipleSelect, List> selectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "selectedValues");
       public TypedProperty<Choices.MultipleSelect, List> unboundSelectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "unboundSelectedValues");
       public TypedProperty<Choices.MultipleSelect, Class> valueTransformer = new TypedProperty<>(Choices.MultipleSelect.class, "valueTransformer");
       public TypedProperty<Choices.MultipleSelect, List> values = new TypedProperty<>(Choices.MultipleSelect.class, "values");
-      public static class InstanceProperties extends InstanceProperty.Container<Choices.MultipleSelect> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices.MultipleSelect> {
         public  InstanceProperties(Choices.MultipleSelect source){super(source);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.changeOnSelectionEvent);}
         public InstanceProperty<Choices.MultipleSelect, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.choices);}
         public InstanceProperty<Choices.MultipleSelect, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.elements);}
+        public InstanceProperty<Choices.MultipleSelect, Boolean> hasValueSupplier(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.hasValueSupplier);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> multiple(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.multiple);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.repeatableChoices);}
         public InstanceProperty<Choices.MultipleSelect, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.selectedValues);}
@@ -110,10 +115,29 @@ public class PackageProperties {
       
     }
     
+    public static class _ChoicesDropdown implements TypedProperty.Container {
+      public TypedProperty<ChoicesDropdown, Choices.Single> choices = new TypedProperty<>(ChoicesDropdown.class, "choices");
+      public TypedProperty<ChoicesDropdown, Dropdown> dropdown = new TypedProperty<>(ChoicesDropdown.class, "dropdown");
+      public TypedProperty<ChoicesDropdown, Dropdown.LabelArrow> labelArrow = new TypedProperty<>(ChoicesDropdown.class, "labelArrow");
+      public TypedProperty<ChoicesDropdown, Object> value = new TypedProperty<>(ChoicesDropdown.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<ChoicesDropdown> {
+        public  InstanceProperties(ChoicesDropdown source){super(source);}
+        public InstanceProperty<ChoicesDropdown, Choices.Single> choices(){return new InstanceProperty<>(source,PackageProperties.choicesDropdown.choices);}
+        public InstanceProperty<ChoicesDropdown, Dropdown> dropdown(){return new InstanceProperty<>(source,PackageProperties.choicesDropdown.dropdown);}
+        public InstanceProperty<ChoicesDropdown, Dropdown.LabelArrow> labelArrow(){return new InstanceProperty<>(source,PackageProperties.choicesDropdown.labelArrow);}
+        public InstanceProperty<ChoicesDropdown, Object> value(){return new InstanceProperty<>(source,PackageProperties.choicesDropdown.value);}
+      }
+      
+      public  InstanceProperties instance(ChoicesDropdown instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
     public static class _CollectionDeltaModel implements TypedProperty.Container {
       public TypedProperty<CollectionDeltaModel, Collection> collection = new TypedProperty<>(CollectionDeltaModel.class, "collection");
       public TypedProperty<CollectionDeltaModel, CollectionDeltaModel.RelativeInsert> root = new TypedProperty<>(CollectionDeltaModel.class, "root");
-      public static class InstanceProperties extends InstanceProperty.Container<CollectionDeltaModel> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<CollectionDeltaModel> {
         public  InstanceProperties(CollectionDeltaModel source){super(source);}
         public InstanceProperty<CollectionDeltaModel, Collection> collection(){return new InstanceProperty<>(source,PackageProperties.collectionDeltaModel.collection);}
         public InstanceProperty<CollectionDeltaModel, CollectionDeltaModel.RelativeInsert> root(){return new InstanceProperty<>(source,PackageProperties.collectionDeltaModel.root);}
@@ -131,7 +155,7 @@ public class PackageProperties {
       TypedProperty<CollectionDeltaModel.RelativeInsert, Object> collectionElement = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "collectionElement");
       TypedProperty<CollectionDeltaModel.RelativeInsert, Object> element = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "element");
       TypedProperty<CollectionDeltaModel.RelativeInsert, List> flushedContents = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "flushedContents");
-      static class InstanceProperties extends InstanceProperty.Container<CollectionDeltaModel.RelativeInsert> {
+      static class InstanceProperties extends 	InstanceProperty.Container<CollectionDeltaModel.RelativeInsert> {
          InstanceProperties(CollectionDeltaModel.RelativeInsert source){super(source);}
         InstanceProperty<CollectionDeltaModel.RelativeInsert, CollectionDeltaModel.RelativeInsert> after(){return new InstanceProperty<>(source,PackageProperties.collectionDeltaModel_relativeInsert.after);}
         InstanceProperty<CollectionDeltaModel.RelativeInsert, CollectionDeltaModel.RelativeInsert> before(){return new InstanceProperty<>(source,PackageProperties.collectionDeltaModel_relativeInsert.before);}
@@ -158,7 +182,7 @@ public class PackageProperties {
       public TypedProperty<DomainViewTree.DomainViewNode, String> pathSegment = new TypedProperty<>(DomainViewTree.DomainViewNode.class, "pathSegment");
       public TypedProperty<DomainViewTree.DomainViewNode, Boolean> selected = new TypedProperty<>(DomainViewTree.DomainViewNode.class, "selected");
       public TypedProperty<DomainViewTree.DomainViewNode, TreePath> treePath = new TypedProperty<>(DomainViewTree.DomainViewNode.class, "treePath");
-      public static class InstanceProperties extends InstanceProperty.Container<DomainViewTree.DomainViewNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DomainViewTree.DomainViewNode> {
         public  InstanceProperties(DomainViewTree.DomainViewNode source){super(source);}
         public InstanceProperty<DomainViewTree.DomainViewNode, List> children(){return new InstanceProperty<>(source,PackageProperties.domainViewTree_domainViewNode.children);}
         public InstanceProperty<DomainViewTree.DomainViewNode, Bindable> contents(){return new InstanceProperty<>(source,PackageProperties.domainViewTree_domainViewNode.contents);}
@@ -182,7 +206,7 @@ public class PackageProperties {
     public static class _FilteredChoices implements TypedProperty.Container {
       public TypedProperty<FilteredChoices, FilteredChoices.Filter> filter = new TypedProperty<>(FilteredChoices.class, "filter");
       public TypedProperty<FilteredChoices, List> value = new TypedProperty<>(FilteredChoices.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<FilteredChoices> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<FilteredChoices> {
         public  InstanceProperties(FilteredChoices source){super(source);}
         public InstanceProperty<FilteredChoices, FilteredChoices.Filter> filter(){return new InstanceProperty<>(source,PackageProperties.filteredChoices.filter);}
         public InstanceProperty<FilteredChoices, List> value(){return new InstanceProperty<>(source,PackageProperties.filteredChoices.value);}
@@ -197,7 +221,7 @@ public class PackageProperties {
     public static class _HeadingActions implements TypedProperty.Container {
       public TypedProperty<HeadingActions, List> actions = new TypedProperty<>(HeadingActions.class, "actions");
       public TypedProperty<HeadingActions, Object> heading = new TypedProperty<>(HeadingActions.class, "heading");
-      public static class InstanceProperties extends InstanceProperty.Container<HeadingActions> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<HeadingActions> {
         public  InstanceProperties(HeadingActions source){super(source);}
         public InstanceProperty<HeadingActions, List> actions(){return new InstanceProperty<>(source,PackageProperties.headingActions.actions);}
         public InstanceProperty<HeadingActions, Object> heading(){return new InstanceProperty<>(source,PackageProperties.headingActions.heading);}
@@ -211,7 +235,7 @@ public class PackageProperties {
     
     public static class _StandardModels_Panel implements TypedProperty.Container {
       public TypedProperty<StandardModels.Panel, HeadingActions> header = new TypedProperty<>(StandardModels.Panel.class, "header");
-      public static class InstanceProperties extends InstanceProperty.Container<StandardModels.Panel> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<StandardModels.Panel> {
         public  InstanceProperties(StandardModels.Panel source){super(source);}
         public InstanceProperty<StandardModels.Panel, HeadingActions> header(){return new InstanceProperty<>(source,PackageProperties.standardModels_panel.header);}
       }
@@ -229,7 +253,7 @@ public class PackageProperties {
       public TypedProperty<TableModel.TableColumn, TableModel.SortDirection> sortDirection = new TypedProperty<>(TableModel.TableColumn.class, "sortDirection");
       public TypedProperty<TableModel.TableColumn, String> title = new TypedProperty<>(TableModel.TableColumn.class, "title");
       public TypedProperty<TableModel.TableColumn, Class> valueClass = new TypedProperty<>(TableModel.TableColumn.class, "valueClass");
-      public static class InstanceProperties extends InstanceProperty.Container<TableModel.TableColumn> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<TableModel.TableColumn> {
         public  InstanceProperties(TableModel.TableColumn source){super(source);}
         public InstanceProperty<TableModel.TableColumn, String> caption(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn.caption);}
         public InstanceProperty<TableModel.TableColumn, TableModel.TableColumn.ColumnFilter> columnFilter(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn.columnFilter);}
@@ -248,7 +272,7 @@ public class PackageProperties {
     public static class _TableModel_TableColumn_ColumnFilter implements TypedProperty.Container {
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filterOpen = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filterOpen");
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filtered");
-      public static class InstanceProperties extends InstanceProperty.Container<TableModel.TableColumn.ColumnFilter> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<TableModel.TableColumn.ColumnFilter> {
         public  InstanceProperties(TableModel.TableColumn.ColumnFilter source){super(source);}
         public InstanceProperty<TableModel.TableColumn.ColumnFilter, Boolean> filterOpen(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_columnFilter.filterOpen);}
         public InstanceProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_columnFilter.filtered);}
@@ -265,7 +289,7 @@ public class PackageProperties {
       public TypedProperty<Toggle, Object> displayed = new TypedProperty<>(Toggle.class, "displayed");
       public TypedProperty<Toggle, Integer> displayedIndex = new TypedProperty<>(Toggle.class, "displayedIndex");
       public TypedProperty<Toggle, List> values = new TypedProperty<>(Toggle.class, "values");
-      public static class InstanceProperties extends InstanceProperty.Container<Toggle> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Toggle> {
         public  InstanceProperties(Toggle source){super(source);}
         public InstanceProperty<Toggle, Object> active(){return new InstanceProperty<>(source,PackageProperties.toggle.active);}
         public InstanceProperty<Toggle, Object> displayed(){return new InstanceProperty<>(source,PackageProperties.toggle.displayed);}
@@ -289,7 +313,7 @@ public class PackageProperties {
       public TypedProperty<Tree.AbstractPathNode, Tree.AbstractPathNode> parent = new TypedProperty<>(Tree.AbstractPathNode.class, "parent");
       public TypedProperty<Tree.AbstractPathNode, Boolean> selected = new TypedProperty<>(Tree.AbstractPathNode.class, "selected");
       public TypedProperty<Tree.AbstractPathNode, TreePath> treePath = new TypedProperty<>(Tree.AbstractPathNode.class, "treePath");
-      public static class InstanceProperties extends InstanceProperty.Container<Tree.AbstractPathNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Tree.AbstractPathNode> {
         public  InstanceProperties(Tree.AbstractPathNode source){super(source);}
         public InstanceProperty<Tree.AbstractPathNode, List> children(){return new InstanceProperty<>(source,PackageProperties.tree_abstractPathNode.children);}
         public InstanceProperty<Tree.AbstractPathNode, Bindable> contents(){return new InstanceProperty<>(source,PackageProperties.tree_abstractPathNode.contents);}
@@ -318,7 +342,7 @@ public class PackageProperties {
       public TypedProperty<Tree.PathNode, Tree.PathNode> parent = new TypedProperty<>(Tree.PathNode.class, "parent");
       public TypedProperty<Tree.PathNode, Boolean> selected = new TypedProperty<>(Tree.PathNode.class, "selected");
       public TypedProperty<Tree.PathNode, TreePath> treePath = new TypedProperty<>(Tree.PathNode.class, "treePath");
-      public static class InstanceProperties extends InstanceProperty.Container<Tree.PathNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Tree.PathNode> {
         public  InstanceProperties(Tree.PathNode source){super(source);}
         public InstanceProperty<Tree.PathNode, List> children(){return new InstanceProperty<>(source,PackageProperties.tree_pathNode.children);}
         public InstanceProperty<Tree.PathNode, Bindable> contents(){return new InstanceProperty<>(source,PackageProperties.tree_pathNode.contents);}
@@ -346,7 +370,7 @@ public class PackageProperties {
       public TypedProperty<Tree.TreeNode, Boolean> open = new TypedProperty<>(Tree.TreeNode.class, "open");
       public TypedProperty<Tree.TreeNode, Tree.TreeNode> parent = new TypedProperty<>(Tree.TreeNode.class, "parent");
       public TypedProperty<Tree.TreeNode, Boolean> selected = new TypedProperty<>(Tree.TreeNode.class, "selected");
-      public static class InstanceProperties extends InstanceProperty.Container<Tree.TreeNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Tree.TreeNode> {
         public  InstanceProperties(Tree.TreeNode source){super(source);}
         public InstanceProperty<Tree.TreeNode, List> children(){return new InstanceProperty<>(source,PackageProperties.tree_treeNode.children);}
         public InstanceProperty<Tree.TreeNode, Bindable> contents(){return new InstanceProperty<>(source,PackageProperties.tree_treeNode.contents);}
@@ -373,7 +397,7 @@ public class PackageProperties {
       public TypedProperty<Tree.TreeNode.BasicNode, Boolean> open = new TypedProperty<>(Tree.TreeNode.BasicNode.class, "open");
       public TypedProperty<Tree.TreeNode.BasicNode, Tree.TreeNode.BasicNode> parent = new TypedProperty<>(Tree.TreeNode.BasicNode.class, "parent");
       public TypedProperty<Tree.TreeNode.BasicNode, Boolean> selected = new TypedProperty<>(Tree.TreeNode.BasicNode.class, "selected");
-      public static class InstanceProperties extends InstanceProperty.Container<Tree.TreeNode.BasicNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Tree.TreeNode.BasicNode> {
         public  InstanceProperties(Tree.TreeNode.BasicNode source){super(source);}
         public InstanceProperty<Tree.TreeNode.BasicNode, List> children(){return new InstanceProperty<>(source,PackageProperties.tree_treeNode_basicNode.children);}
         public InstanceProperty<Tree.TreeNode.BasicNode, Bindable> contents(){return new InstanceProperty<>(source,PackageProperties.tree_treeNode_basicNode.contents);}

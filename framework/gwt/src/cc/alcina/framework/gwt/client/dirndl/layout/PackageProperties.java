@@ -14,7 +14,7 @@ public class PackageProperties {
     public static class _LeafModel_Toggle implements TypedProperty.Container {
       public TypedProperty<LeafModel.Toggle, Object> model = new TypedProperty<>(LeafModel.Toggle.class, "model");
       public TypedProperty<LeafModel.Toggle, Boolean> selected = new TypedProperty<>(LeafModel.Toggle.class, "selected");
-      public static class InstanceProperties extends InstanceProperty.Container<LeafModel.Toggle> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<LeafModel.Toggle> {
         public  InstanceProperties(LeafModel.Toggle source){super(source);}
         public InstanceProperty<LeafModel.Toggle, Object> model(){return new InstanceProperty<>(source,PackageProperties.leafModel_toggle.model);}
         public InstanceProperty<LeafModel.Toggle, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.leafModel_toggle.selected);}

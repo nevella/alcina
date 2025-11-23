@@ -30,7 +30,7 @@ public class PackageProperties {
       public TypedProperty<AbstractUi, Place> place = new TypedProperty<>(AbstractUi.class, "place");
       public TypedProperty<AbstractUi, Boolean> reloading = new TypedProperty<>(AbstractUi.class, "reloading");
       public TypedProperty<AbstractUi, RemoteComponentProtocol.Session> session = new TypedProperty<>(AbstractUi.class, "session");
-      public static class InstanceProperties extends InstanceProperty.Container<AbstractUi> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AbstractUi> {
         public  InstanceProperties(AbstractUi source){super(source);}
         public InstanceProperty<AbstractUi, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.abstractUi.appCommandContexts);}
         public InstanceProperty<AbstractUi, AuthenticationTokenStore> authenticationTokenStore(){return new InstanceProperty<>(source,PackageProperties.abstractUi.authenticationTokenStore);}

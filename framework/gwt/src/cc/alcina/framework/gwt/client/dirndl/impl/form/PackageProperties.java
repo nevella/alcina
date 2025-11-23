@@ -20,7 +20,7 @@ public class PackageProperties {
       public TypedProperty<FmsTable.FmsTreeTableColumn, TableModel.SortDirection> sortDirection = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "sortDirection");
       public TypedProperty<FmsTable.FmsTreeTableColumn, String> title = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "title");
       public TypedProperty<FmsTable.FmsTreeTableColumn, Class> valueClass = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "valueClass");
-      public static class InstanceProperties extends InstanceProperty.Container<FmsTable.FmsTreeTableColumn> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<FmsTable.FmsTreeTableColumn> {
         public  InstanceProperties(FmsTable.FmsTreeTableColumn source){super(source);}
         public InstanceProperty<FmsTable.FmsTreeTableColumn, String> caption(){return new InstanceProperty<>(source,PackageProperties.fmsTable_fmsTreeTableColumn.caption);}
         public InstanceProperty<FmsTable.FmsTreeTableColumn, TableModel.TableColumn.ColumnFilter> columnFilter(){return new InstanceProperty<>(source,PackageProperties.fmsTable_fmsTreeTableColumn.columnFilter);}

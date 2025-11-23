@@ -55,7 +55,7 @@ public class PackageProperties {
       public TypedProperty<Job, Set> toRelations = new TypedProperty<>(Job.class, "toRelations");
       public TypedProperty<Job, String> uuid = new TypedProperty<>(Job.class, "uuid");
       public TypedProperty<Job, Integer> versionNumber = new TypedProperty<>(Job.class, "versionNumber");
-      public static class InstanceProperties extends InstanceProperty.Container<Job> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Job> {
         public  InstanceProperties(Job source){super(source);}
         public InstanceProperty<Job, String> cause(){return new InstanceProperty<>(source,PackageProperties.job.cause);}
         public InstanceProperty<Job, Double> completion(){return new InstanceProperty<>(source,PackageProperties.job.completion);}

@@ -208,8 +208,25 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 				/*
 				 * write instanceProperties container
 				 */
+				String superclassName = Ax.format(
+						"InstanceProperty.Container<%s>", containingTypeName);
+				if (clazz.getSuperclass()
+						.isAnnotationPresent(TypedProperties.class)) {
+					String parentTypedName = getContainerTypeName(
+							clazz.getSuperclass());
+					superclassName = Ax.format(
+							"%s.PackageProperties.%s.InstanceProperties",
+							clazz.getSuperclass().getPackage().getName(),
+							parentTypedName);
+				}
+				// sourceWriter.println(
+				// "%sstatic class InstanceProperties extends %s {",
+				// modifier, superclassName);
+				/*
+				 * for the moment, use 'subtypeProperties' in the subtype
+				 */
 				sourceWriter.println(
-						"%sstatic class InstanceProperties extends InstanceProperty.Container<%s> {",
+						"%sstatic class InstanceProperties extends 	InstanceProperty.Container<%s> {",
 						modifier, containingTypeName);
 				sourceWriter.indent();
 				sourceWriter.println(
@@ -237,7 +254,11 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			}
 
 			String getContainerTypeName() {
-				return "_" + NestedName.get(clazz).replace(".", "_");
+				return getContainerTypeName(clazz);
+			}
+
+			String getContainerTypeName(Class forType) {
+				return "_" + NestedName.get(forType).replace(".", "_");
 			}
 
 			void writeField() {

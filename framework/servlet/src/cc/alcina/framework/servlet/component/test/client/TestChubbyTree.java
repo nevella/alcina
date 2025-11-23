@@ -18,23 +18,27 @@ class TestChubbyTree {
 		TestContainer cont = new TestContainer();
 		Rendered rendered = new DirectedLayout().render(cont).getRendered();
 		rendered.appendToRoot();
-		TestContainer.properties.collection.set(cont, List.of("bruce", "was"));
-		TestContainer.properties.collection.set(cont,
-				List.of("bruce", "was", "here", "fully"));
-		TestContainer.properties.collection.set(cont,
-				List.of("bruce", "there", "was", "here", "fully"));
-		TestContainer.properties.collection.set(cont,
-				List.of("bruce", "there", "was", "here", "committed"));
-		TestContainer.properties.collection.set(cont,
-				List.of("bruce", "there", "was", "here", "luckily"));
-		TestContainer.properties.collection.set(cont,
-				List.of("bruce", "there", "was", "beer", "luckily"));
+		cont.properties().collection().set(List.of("bruce", "was"));
+		cont.properties().collection()
+				.set(List.of("bruce", "was", "here", "fully"));
+		cont.properties().collection()
+				.set(List.of("bruce", "there", "was", "here", "fully"));
+		cont.properties().collection()
+				.set(List.of("bruce", "there", "was", "here", "committed"));
+		cont.properties().collection()
+				.set(List.of("bruce", "there", "was", "here", "luckily"));
+		cont.properties().collection()
+				.set(List.of("bruce", "there", "was", "beer", "luckily"));
 	}
 
 	@Directed
 	@TypedProperties
 	static class TestContainer extends Model.Fields {
-		static PackageProperties._TestChubbyTree_TestContainer properties = PackageProperties.testChubbyTree_testContainer;
+		PackageProperties._TestChubbyTree_TestContainer.InstanceProperties
+				properties() {
+			return PackageProperties.testChubbyTree_testContainer
+					.instance(this);
+		}
 
 		static class Style extends Model.All implements RestrictedHtmlTag {
 			@Binding(type = Type.INNER_TEXT)
@@ -53,9 +57,9 @@ class TestChubbyTree {
 		CollectionDeltaModel collectionRepresentation = new CollectionDeltaModel();
 
 		TestContainer() {
-			bindings().from(this).on(properties.collection)
-					.to(collectionRepresentation)
-					.on(CollectionDeltaModel.properties.collection).oneWay();
+			from(properties().collection())
+					.to(collectionRepresentation.properties().collection())
+					.oneWay();
 		}
 	}
 }

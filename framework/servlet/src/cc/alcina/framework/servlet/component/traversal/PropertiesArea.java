@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.traversal;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.TreePathModel;
 import cc.alcina.framework.common.client.traversal.Selection.View;
@@ -21,9 +22,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.component.StringArea.StringAr
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
+@TypedProperties
 @Directed(tag = "properties")
 @DirectedContextResolver(StringArea.StringAreaResolver.class)
 class PropertiesArea extends Model.Fields {
+	PackageProperties._PropertiesArea.InstanceProperties properties() {
+		return PackageProperties.propertiesArea.instance(this);
+	}
+
 	@Directed
 	Heading header = new Heading("Properties");
 
@@ -42,19 +48,12 @@ class PropertiesArea extends Model.Fields {
 		this.page = page;
 		this.filter = new Choices.Single<>(
 				TraversalPlace.SelectionType.values());
-		bindings().from(page.ui).on(Ui.properties.place)
-				.typed(TraversalPlace.class)
+		from(page.ui.properties().place()).typed(TraversalPlace.class)
 				.map(p -> p.provideSelection(SelectionType.VIEW))
-				.accept(this::setSelection);
-		bindings().from(page.ui).on(Ui.properties.place)
-				.typed(TraversalPlace.class)
+				.to(properties().selection()).oneWay();
+		from(page.ui.properties().place()).typed(TraversalPlace.class)
 				.map(TraversalPlace::firstSelectionType)
 				.accept(filter::setSelectedValue);
-	}
-
-	public void setSelection(Selection selection) {
-		set("selection", this.selection, selection,
-				() -> this.selection = selection);
 	}
 
 	@Directed(className = "", bindToModel = false)

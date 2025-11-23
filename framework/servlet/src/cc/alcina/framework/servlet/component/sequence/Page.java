@@ -171,30 +171,28 @@ class Page extends Model.Fields
 		this.ui.page = this;
 		header = new Header(this);
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
-		bindings().from(ui.settings).on(SequenceSettings.properties.sequenceKey)
+		from(ui.settings).on(SequenceSettings.properties.sequenceKey)
 				.signal(this::reloadSequence);
-		bindings().from(ui).on(Ui.properties.place)
+		from(ui).on(Ui.properties.place)
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedSequencePlaceChange)
 				.signal(this::reloadSequence);
-		bindings().from(this).on(properties.filteredSequenceElements)
+		from(this).on(properties.filteredSequenceElements)
 				.signal(this::computeHighlightModel);
-		bindings().from(ui).on(Ui.properties.place)
+		from(ui).on(Ui.properties.place)
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedHighlightPlaceChange)
 				.signal(this::computeHighlightModel);
-		bindings().from(this).on(properties.filteredSequenceElements)
-				.value(this).debug().map(SequenceArea::new).to(this)
-				.on(properties.sequenceArea).oneWay();
-		bindings().from(this).on(properties.filteredSequenceElements)
-				.value(this).map(DetailArea::new).to(this)
-				.on(properties.detailArea).oneWay();
-		bindings().from(ui).on(Ui.properties.place)
-				.filter(this::filterSelectedIndexChange)
+		from(this).on(properties.filteredSequenceElements).value(this).debug()
+				.map(SequenceArea::new).to(this).on(properties.sequenceArea)
+				.oneWay();
+		from(this).on(properties.filteredSequenceElements).value(this)
+				.map(DetailArea::new).to(this).on(properties.detailArea)
+				.oneWay();
+		from(ui).on(Ui.properties.place).filter(this::filterSelectedIndexChange)
 				.signal(this::onSelectedIndexChange);
-		bindings().from(ui.settings).signal(this::updateStyles);
-		bindings().from(this).on(properties.sequence)
-				.signal(this::updateStyles);
+		from(ui.settings).signal(this::updateStyles);
+		from(this).on(properties.sequence).signal(this::updateStyles);
 		/*
 		 * Initialise with an empty sequence, it's easier than adding null
 		 * checks throughout

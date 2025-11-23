@@ -118,9 +118,8 @@ class SequenceArea extends Model.Fields
 		filteredElements = page.filteredSequenceElements;
 		header = new Heading(
 				Ax.format("Sequence elements [%s]", filteredElements.size()));
-		bindings().from(SequenceSettings.get())
-				.on(SequenceSettings.properties.columnSet).to(this)
-				.on(properties.columnSet).oneWay();
+		from(SequenceSettings.get()).on(SequenceSettings.properties.columnSet)
+				.to(this).on(properties.columnSet).oneWay();
 	}
 
 	public void onRowClicked(RowClicked event) {

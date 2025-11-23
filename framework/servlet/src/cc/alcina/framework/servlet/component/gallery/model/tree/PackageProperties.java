@@ -14,7 +14,7 @@ public class PackageProperties {
     static class _TreeArea implements TypedProperty.Container {
       TypedProperty<TreeArea, GalleryPlace> place = new TypedProperty<>(TreeArea.class, "place");
       TypedProperty<TreeArea, Tree> tree = new TypedProperty<>(TreeArea.class, "tree");
-      static class InstanceProperties extends InstanceProperty.Container<TreeArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<TreeArea> {
          InstanceProperties(TreeArea source){super(source);}
         InstanceProperty<TreeArea, GalleryPlace> place(){return new InstanceProperty<>(source,PackageProperties.treeArea.place);}
         InstanceProperty<TreeArea, Tree> tree(){return new InstanceProperty<>(source,PackageProperties.treeArea.tree);}

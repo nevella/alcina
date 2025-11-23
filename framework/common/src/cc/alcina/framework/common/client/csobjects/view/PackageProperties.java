@@ -26,7 +26,7 @@ public class PackageProperties {
       public TypedProperty<DomainView, Long> localId = new TypedProperty<>(DomainView.class, "localId");
       public TypedProperty<DomainView, String> name = new TypedProperty<>(DomainView.class, "name");
       public TypedProperty<DomainView, Integer> versionNumber = new TypedProperty<>(DomainView.class, "versionNumber");
-      public static class InstanceProperties extends InstanceProperty.Container<DomainView> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DomainView> {
         public  InstanceProperties(DomainView source){super(source);}
         public InstanceProperty<DomainView, Date> creationDate(){return new InstanceProperty<>(source,PackageProperties.domainView.creationDate);}
         public InstanceProperty<DomainView, ContentDefinition> entityDefinition(){return new InstanceProperty<>(source,PackageProperties.domainView.entityDefinition);}

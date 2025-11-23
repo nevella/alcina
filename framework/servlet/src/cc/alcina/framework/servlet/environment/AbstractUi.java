@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
@@ -40,7 +41,9 @@ import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		implements RemoteUi {
-	public static transient PackageProperties._AbstractUi properties = PackageProperties.abstractUi;
+	public PackageProperties._AbstractUi.InstanceProperties properties() {
+		return PackageProperties.abstractUi.instance(this);
+	}
 
 	DirectedLayout layout;
 
@@ -160,7 +163,7 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 	@Override
 	public final void render() {
 		PlaceChangeEvent.Handler placeChangeHandler = evt -> {
-			properties.place.set(this, (P) evt.getNewPlace());
+			properties().place().set((P) evt.getNewPlace());
 		};
 		keybindingsHandler = new KeybindingsHandler(eventType -> {
 			layout.layoutResult.getRoot().dispatch(eventType, null);

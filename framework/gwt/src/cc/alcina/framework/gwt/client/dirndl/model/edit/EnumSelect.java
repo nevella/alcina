@@ -61,7 +61,7 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 			values.add(0, null);
 		}
 		select.setValues(values);
-		bindings().from(this).on("value").to(select).on("selectedValue").bidi();
+		from(this).on("value").to(select).on("selectedValue").bidi();
 	}
 
 	@Override

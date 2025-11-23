@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
@@ -147,7 +146,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	}
 
 	public DecoratorNode() {
-		bindings().from(this).on(properties.contentEditable)
+		from(this).on(properties.contentEditable)
 				.accept(this::notifyContentEditableDelta);
 	}
 

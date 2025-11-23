@@ -22,8 +22,8 @@ public abstract class GalleryContents<RP extends GalleryPlace> extends Model.All
 	}
 
 	public GalleryContents() {
-		bindings().from(Ui.get()).on(Ui.properties.place).to(this)
-				.on(properties.place).oneWay();
+		from(Ui.get()).on(Ui.properties.place).to(this).on(properties.place)
+				.oneWay();
 	}
 
 	/*

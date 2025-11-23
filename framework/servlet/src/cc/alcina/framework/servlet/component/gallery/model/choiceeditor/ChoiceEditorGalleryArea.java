@@ -44,12 +44,10 @@ class ChoiceEditorGalleryArea extends GalleryContents<ChoiceEditorGalleryPlace>
 	InfoModel model;
 
 	ChoiceEditorGalleryArea() {
-		bindings().from(this).on(properties.place)
-				.typed(ChoiceEditorGalleryPlace.class)
+		from(this).on(properties.place).typed(ChoiceEditorGalleryPlace.class)
 				.map(place -> place.copy().definition).to(this)
 				.on(properties.definition).oneWay();
-		bindings().from(this).on(properties.place)
-				.typed(ChoiceEditorGalleryPlace.class)
+		from(this).on(properties.place).typed(ChoiceEditorGalleryPlace.class)
 				.filter(place -> place.definition.isRenderable())
 				.map(InfoModel::new).to(this).on(properties.model).oneWay();
 	}

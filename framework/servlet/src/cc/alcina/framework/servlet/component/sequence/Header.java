@@ -37,15 +37,14 @@ class Header extends Model.All {
 
 		Left(Header header) {
 			Page page = header.page;
-			bindings().from(page.ui.settings)
-					.on(SequenceSettings.properties.sequenceKey)
+			from(page.ui.settings).on(SequenceSettings.properties.sequenceKey)
 					.map(key -> Ax.format("Sequence: %s", key)).to(this)
 					.on(properties.name).oneWay();
-			bindings().from(page.ui).on(Ui.properties.place)
+			from(page.ui).on(Ui.properties.place)
 					.map(place -> Ax.isBlank(place.filter) ? ""
 							: Ax.format("Filter: '%s'", place.filter))
 					.to(this).on(properties.filter).oneWay();
-			bindings().from(page.ui).on(Ui.properties.place)
+			from(page.ui).on(Ui.properties.place)
 					.map(place -> Ax.isBlank(place.highlight) ? ""
 							: Ax.format("Highlight: '%s' [%s/%s]",
 									place.highlight,
@@ -82,7 +81,7 @@ class Header extends Model.All {
 		this.page = page;
 		mid = new Mid();
 		right = new Right();
-		bindings().from(page).on(Page.properties.sequence).nonNull().value(this)
+		from(page).on(Page.properties.sequence).nonNull().value(this)
 				.map(Left::new).to(this).on(properties.left).oneWay();
 	}
 }

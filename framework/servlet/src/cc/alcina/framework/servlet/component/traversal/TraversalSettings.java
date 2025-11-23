@@ -13,7 +13,9 @@ public class TraversalSettings extends Bindable.Fields {
 		return TraversalBrowser.Ui.get().settings;
 	}
 
-	static PackageProperties._TraversalSettings properties = PackageProperties.traversalSettings;
+	PackageProperties._TraversalSettings.InstanceProperties properties() {
+		return PackageProperties.traversalSettings.instance(this);
+	}
 
 	public boolean descentSelectionIncludesSecondaryRelations = true;
 
@@ -59,7 +61,7 @@ public class TraversalSettings extends Bindable.Fields {
 		PropertyDisplayMode next = PropertyDisplayMode
 				.values()[(propertyDisplayMode.ordinal() + 1)
 						% PropertyDisplayMode.values().length];
-		properties.propertyDisplayMode.set(this, next);
+		properties().propertyDisplayMode().set(next);
 		return next;
 	}
 
@@ -68,16 +70,16 @@ public class TraversalSettings extends Bindable.Fields {
 				.getValidSecondaryAreadModes();
 		SecondaryAreaDisplayMode next = values[(Arrays.asList(values)
 				.indexOf(secondaryAreaDisplayMode) + 1) % values.length];
-		properties.secondaryAreaDisplayMode.set(this, next);
+		properties().secondaryAreaDisplayMode().set(next);
 		return next;
 	}
 
 	public void putTableRows(String tableRowsStr) {
-		properties.tableRows.set(this, Integer.parseInt(tableRowsStr));
+		properties().tableRows().set(Integer.parseInt(tableRowsStr));
 	}
 
 	public void putSelectionAreaHeight(String selectionAreaHeightStr) {
-		properties.selectionAreaHeight.set(this,
-				Integer.parseInt(selectionAreaHeightStr));
+		properties().selectionAreaHeight()
+				.set(Integer.parseInt(selectionAreaHeightStr));
 	}
 }

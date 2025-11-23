@@ -12,7 +12,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
-import cc.alcina.framework.servlet.component.traversal.TraversalCommand;
 
 /*
  * The main dropdown navigation/options menu
@@ -40,7 +39,7 @@ class Dotburger extends Model.Fields {
 				.of(SequenceBrowserCommand.ShowKeyboardShortcuts.class);
 
 		Menu() {
-			bindings().from(SequenceSettings.get())
+			from(SequenceSettings.get())
 					.on(SequenceSettings.properties.detailDisplayMode).to(this)
 					.on(properties.detailDisplayMode).bidi();
 		}

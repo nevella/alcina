@@ -26,6 +26,10 @@ public class Intersection<T> {
 		return firstOnly.isEmpty() && secondOnly.isEmpty();
 	}
 
+	public boolean hasDelta() {
+		return !isIntersectionOnly();
+	}
+
 	public boolean hasIntersection() {
 		return intersection.size() > 0;
 	}

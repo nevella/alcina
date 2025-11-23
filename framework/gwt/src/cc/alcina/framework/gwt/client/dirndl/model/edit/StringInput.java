@@ -661,11 +661,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
 					.inverseValidator();
 			Function<String, Date> typedValidator = (Function<String, Date>) validator;
-			bindings().from(this).on(properties.value).map(revTypedValidator)
-					.to(input).on(DateInput.properties.value)
-					.map(typedValidator).bidi();
-			bindings().from(this).on(properties.value)
-					.withSetOnInitialise(false).signal(this::emitValueChange);
+			from(this).on(properties.value).map(revTypedValidator).to(input)
+					.on(DateInput.properties.value).map(typedValidator).bidi();
+			from(this).on(properties.value).withSetOnInitialise(false)
+					.signal(this::emitValueChange);
 		}
 
 		void emitValueChange() {

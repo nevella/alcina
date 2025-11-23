@@ -19,10 +19,10 @@ class Header extends Model.All {
 		List<?> additional;
 
 		Left() {
-			bindings().from(Header.this.page).on(Page.properties.history)
+			from(Header.this.page.properties().history())
 					.value(this::computeName).to(this)
 					.on(_Header_Leftproperties.name).oneWay();
-			bindings().from(Header.this.page.ui).on(Ui.properties.place)
+			from(Header.this.page.ui.properties().place())
 					.value(this::computeName).to(this)
 					.on(_Header_Leftproperties.name).oneWay();
 			additional = Ui.get().createAdditionalLeftHeader();

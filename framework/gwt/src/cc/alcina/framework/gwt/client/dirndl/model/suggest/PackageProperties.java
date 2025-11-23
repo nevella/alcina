@@ -18,7 +18,7 @@ public class PackageProperties {
       public TypedProperty<Suggestor, Object> nonOverlaySuggestionResults = new TypedProperty<>(Suggestor.class, "nonOverlaySuggestionResults");
       public TypedProperty<Suggestor, Suggestor.Suggestions> suggestions = new TypedProperty<>(Suggestor.class, "suggestions");
       public TypedProperty<Suggestor, Object> value = new TypedProperty<>(Suggestor.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<Suggestor> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Suggestor> {
         public  InstanceProperties(Suggestor source){super(source);}
         public InstanceProperty<Suggestor, Suggestor.Attributes> attributes(){return new InstanceProperty<>(source,PackageProperties.suggestor.attributes);}
         public InstanceProperty<Suggestor, Object> chosenSuggestions(){return new InstanceProperty<>(source,PackageProperties.suggestor.chosenSuggestions);}

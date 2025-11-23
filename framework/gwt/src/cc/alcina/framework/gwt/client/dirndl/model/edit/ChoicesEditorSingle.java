@@ -34,7 +34,7 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 	static PackageProperties._ChoicesEditorSingle properties = PackageProperties.choicesEditorSingle;
 
 	public ChoicesEditorSingle() {
-		bindings().from(this).on(properties.selectedValue)
+		from(this).on(properties.selectedValue)
 				.accept(value -> this.updateAreaFromSelectedValue((T) value));
 	}
 

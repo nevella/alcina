@@ -45,7 +45,7 @@ public class PackageProperties {
       public TypedProperty<AppSuggestorSequence, String> acceptedFilterText = new TypedProperty<>(AppSuggestorSequence.class, "acceptedFilterText");
       public TypedProperty<AppSuggestorSequence, String> filterText = new TypedProperty<>(AppSuggestorSequence.class, "filterText");
       public TypedProperty<AppSuggestorSequence, Suggestor> suggestor = new TypedProperty<>(AppSuggestorSequence.class, "suggestor");
-      public static class InstanceProperties extends InstanceProperty.Container<AppSuggestorSequence> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AppSuggestorSequence> {
         public  InstanceProperties(AppSuggestorSequence source){super(source);}
         public InstanceProperty<AppSuggestorSequence, String> acceptedFilterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorSequence.acceptedFilterText);}
         public InstanceProperty<AppSuggestorSequence, String> filterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorSequence.filterText);}
@@ -63,7 +63,7 @@ public class PackageProperties {
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");
       TypedProperty<Dotburger.Menu, Heading> section2 = new TypedProperty<>(Dotburger.Menu.class, "section2");
       TypedProperty<Dotburger.Menu, Heading> section4 = new TypedProperty<>(Dotburger.Menu.class, "section4");
-      static class InstanceProperties extends InstanceProperty.Container<Dotburger.Menu> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Dotburger.Menu> {
          InstanceProperties(Dotburger.Menu source){super(source);}
         InstanceProperty<Dotburger.Menu, SequenceSettings.DetailDisplayMode> detailDisplayMode(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.detailDisplayMode);}
         InstanceProperty<Dotburger.Menu, Link> keyboardShortcuts(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.keyboardShortcuts);}
@@ -81,7 +81,7 @@ public class PackageProperties {
       TypedProperty<Header, Header.Left> left = new TypedProperty<>(Header.class, "left");
       TypedProperty<Header, Header.Mid> mid = new TypedProperty<>(Header.class, "mid");
       TypedProperty<Header, Header.Right> right = new TypedProperty<>(Header.class, "right");
-      static class InstanceProperties extends InstanceProperty.Container<Header> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Header> {
          InstanceProperties(Header source){super(source);}
         InstanceProperty<Header, Header.Left> left(){return new InstanceProperty<>(source,PackageProperties.header.left);}
         InstanceProperty<Header, Header.Mid> mid(){return new InstanceProperty<>(source,PackageProperties.header.mid);}
@@ -98,7 +98,7 @@ public class PackageProperties {
       TypedProperty<Header.Left, String> filter = new TypedProperty<>(Header.Left.class, "filter");
       TypedProperty<Header.Left, String> highlight = new TypedProperty<>(Header.Left.class, "highlight");
       TypedProperty<Header.Left, String> name = new TypedProperty<>(Header.Left.class, "name");
-      static class InstanceProperties extends InstanceProperty.Container<Header.Left> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Header.Left> {
          InstanceProperties(Header.Left source){super(source);}
         InstanceProperty<Header.Left, String> filter(){return new InstanceProperty<>(source,PackageProperties.header_left.filter);}
         InstanceProperty<Header.Left, String> highlight(){return new InstanceProperty<>(source,PackageProperties.header_left.highlight);}
@@ -125,7 +125,7 @@ public class PackageProperties {
       TypedProperty<Page, SequenceArea> sequenceArea = new TypedProperty<>(Page.class, "sequenceArea");
       TypedProperty<Page, StyleElement> styleElement = new TypedProperty<>(Page.class, "styleElement");
       TypedProperty<Page, SequenceBrowser.Ui> ui = new TypedProperty<>(Page.class, "ui");
-      static class InstanceProperties extends InstanceProperty.Container<Page> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Page> {
          InstanceProperties(Page source){super(source);}
         InstanceProperty<Page, DetailArea> detailArea(){return new InstanceProperty<>(source,PackageProperties.page.detailArea);}
         InstanceProperty<Page, List> filteredSequenceElements(){return new InstanceProperty<>(source,PackageProperties.page.filteredSequenceElements);}
@@ -152,7 +152,7 @@ public class PackageProperties {
       TypedProperty<Page.ActivityRoute, Class> channel = new TypedProperty<>(Page.ActivityRoute.class, "channel");
       TypedProperty<Page.ActivityRoute, Page> page = new TypedProperty<>(Page.ActivityRoute.class, "page");
       TypedProperty<Page.ActivityRoute, BasePlace> place = new TypedProperty<>(Page.ActivityRoute.class, "place");
-      static class InstanceProperties extends InstanceProperty.Container<Page.ActivityRoute> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Page.ActivityRoute> {
          InstanceProperties(Page.ActivityRoute source){super(source);}
         InstanceProperty<Page.ActivityRoute, Class> channel(){return new InstanceProperty<>(source,PackageProperties.page_activityRoute.channel);}
         InstanceProperty<Page.ActivityRoute, Page> page(){return new InstanceProperty<>(source,PackageProperties.page_activityRoute.page);}
@@ -171,7 +171,7 @@ public class PackageProperties {
       TypedProperty<SequenceArea, Heading> header = new TypedProperty<>(SequenceArea.class, "header");
       TypedProperty<SequenceArea, Page> page = new TypedProperty<>(SequenceArea.class, "page");
       TypedProperty<SequenceArea, SequenceArea.RowsModelSupport> selectionSupport = new TypedProperty<>(SequenceArea.class, "selectionSupport");
-      static class InstanceProperties extends InstanceProperty.Container<SequenceArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<SequenceArea> {
          InstanceProperties(SequenceArea source){super(source);}
         InstanceProperty<SequenceArea, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.columnSet);}
         InstanceProperty<SequenceArea, List> filteredElements(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.filteredElements);}
@@ -196,7 +196,7 @@ public class PackageProperties {
       TypedProperty<SequenceBrowser.Ui, Page> page = new TypedProperty<>(SequenceBrowser.Ui.class, "page");
       TypedProperty<SequenceBrowser.Ui, SequencePlace> place = new TypedProperty<>(SequenceBrowser.Ui.class, "place");
       TypedProperty<SequenceBrowser.Ui, SequenceSettings> settings = new TypedProperty<>(SequenceBrowser.Ui.class, "settings");
-      static class InstanceProperties extends InstanceProperty.Container<SequenceBrowser.Ui> {
+      static class InstanceProperties extends 	InstanceProperty.Container<SequenceBrowser.Ui> {
          InstanceProperties(SequenceBrowser.Ui source){super(source);}
         InstanceProperty<SequenceBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.appCommandContexts);}
         InstanceProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.commandContextProvider);}
@@ -220,7 +220,7 @@ public class PackageProperties {
       public TypedProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(SequenceSettings.class, "detailDisplayMode");
       public TypedProperty<SequenceSettings, Integer> maxElementRows = new TypedProperty<>(SequenceSettings.class, "maxElementRows");
       public TypedProperty<SequenceSettings, String> sequenceKey = new TypedProperty<>(SequenceSettings.class, "sequenceKey");
-      public static class InstanceProperties extends InstanceProperty.Container<SequenceSettings> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SequenceSettings> {
         public  InstanceProperties(SequenceSettings source){super(source);}
         public InstanceProperty<SequenceSettings, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.columnSet);}
         public InstanceProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.detailDisplayMode);}

@@ -26,6 +26,7 @@ import javax.persistence.Transient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
@@ -396,6 +397,18 @@ public class DomainTransformEvent
 
 	public boolean provideIsIdEvent(Class clazz) {
 		return objectClass == clazz && "id".equals(propertyName);
+	}
+
+	public boolean provideIsType(Class clazz) {
+		if (objectClass != null
+				&& Domain.resolveEntityClass(objectClass) == clazz) {
+			return true;
+		}
+		if (valueClass != null
+				&& Domain.resolveEntityClass(valueClass) == clazz) {
+			return true;
+		}
+		return false;
 	}
 
 	public boolean provideIsPropertyName(PropertyEnum property) {

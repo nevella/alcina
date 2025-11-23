@@ -55,7 +55,7 @@ class DetailArea extends Model.Fields {
 				markupHighlights = new MarkupHighlights(rep, "", false,
 						page.getSelectedElementHighlights(),
 						page.getSelectedElementHighlightIndex());
-				bindings().from(page.ui).on(Ui.properties.place)
+				from(page.ui).on(Ui.properties.place)
 						.accept(place -> markupHighlights.goToRange(
 								page.getSelectedElementHighlightIndex()));
 			}

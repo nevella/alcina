@@ -16,7 +16,7 @@ public class PackageProperties {
       TypedProperty<GalleryHomeArea, List> cards = new TypedProperty<>(GalleryHomeArea.class, "cards");
       TypedProperty<GalleryHomeArea, Heading> heading = new TypedProperty<>(GalleryHomeArea.class, "heading");
       TypedProperty<GalleryHomeArea, GalleryPlace> place = new TypedProperty<>(GalleryHomeArea.class, "place");
-      static class InstanceProperties extends InstanceProperty.Container<GalleryHomeArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<GalleryHomeArea> {
          InstanceProperties(GalleryHomeArea source){super(source);}
         InstanceProperty<GalleryHomeArea, List> cards(){return new InstanceProperty<>(source,PackageProperties.galleryHomeArea.cards);}
         InstanceProperty<GalleryHomeArea, Heading> heading(){return new InstanceProperty<>(source,PackageProperties.galleryHomeArea.heading);}

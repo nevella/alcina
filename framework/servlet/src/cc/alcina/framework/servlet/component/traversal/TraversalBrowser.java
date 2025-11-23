@@ -94,7 +94,10 @@ public class TraversalBrowser {
 	@TypedProperties
 	public static class Ui extends AbstractUi<TraversalPlace>
 			implements HasPage {
-		static PackageProperties._TraversalBrowser_Ui properties = PackageProperties.traversalBrowser_ui;
+		public PackageProperties._TraversalBrowser_Ui.InstanceProperties
+				subclassProperties() {
+			return PackageProperties.traversalBrowser_ui.instance(this);
+		}
 
 		public static Ui get() {
 			return (Ui) RemoteUi.get();
