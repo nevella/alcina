@@ -92,8 +92,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		}
 	}
 
-	static PackageProperties._ChoiceEditor properties = PackageProperties.choiceEditor;
-
 	static String choiceToString(Choice choice) {
 		return CommonUtils.nullSafeToString(choice.getValue());
 	}

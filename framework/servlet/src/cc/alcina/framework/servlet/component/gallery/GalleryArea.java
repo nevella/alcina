@@ -8,7 +8,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @TypedProperties
 @Directed(tag = "gallery-area")
 class GalleryArea extends Model.Fields {
-	static PackageProperties._GalleryArea properties = PackageProperties.galleryArea;
+	PackageProperties._GalleryArea.InstanceProperties properties() {
+		return PackageProperties.galleryArea.instance(this);
+	}
 
 	@Directed(className = "gallery")
 	GalleryContents contents;
@@ -17,8 +19,7 @@ class GalleryArea extends Model.Fields {
 
 	GalleryArea(GalleryPage page) {
 		this.page = page;
-		from(page.ui).on(GalleryBrowser.Ui.properties.place)
-				.map(GalleryContents::forPlace).to(this).on(properties.contents)
-				.oneWay();
+		from(page.ui.subtypeProperties().place()).map(GalleryContents::forPlace)
+				.to(properties().contents()).oneWay();
 	}
 }

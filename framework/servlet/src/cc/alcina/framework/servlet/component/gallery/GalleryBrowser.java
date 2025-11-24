@@ -47,7 +47,10 @@ public class GalleryBrowser {
 
 	@TypedProperties
 	static class Ui extends AbstractUi<GalleryPlace> {
-		static PackageProperties._GalleryBrowser_Ui properties = PackageProperties.galleryBrowser_ui;
+		PackageProperties._GalleryBrowser_Ui.InstanceProperties
+				subtypeProperties() {
+			return PackageProperties.galleryBrowser_ui.instance(this);
+		}
 
 		public static Ui get() {
 			return (Ui) RemoteUi.get();

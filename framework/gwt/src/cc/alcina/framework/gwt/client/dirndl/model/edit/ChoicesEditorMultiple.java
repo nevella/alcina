@@ -18,10 +18,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 		implements HasSelectedValues<T> {
-	static PackageProperties._ChoicesEditorMultiple properties = PackageProperties.choicesEditorMultiple;
+	PackageProperties._ChoicesEditorMultiple.InstanceProperties properties() {
+		return PackageProperties.choicesEditorMultiple.instance(this);
+	}
 
 	public ChoicesEditorMultiple() {
-		from(this).on(properties.selectedValues)
+		from(properties().selectedValues())
 				.accept(this::updateAreaFromSelectedValues);
 	}
 

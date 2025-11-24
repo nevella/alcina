@@ -101,7 +101,9 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
 		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
 		ModelEvents.FormElementLabelClicked.Handler, HasElementBehaviors {
-	static PackageProperties._StringInput properties = PackageProperties.stringInput;
+	PackageProperties._StringInput.InstanceProperties properties() {
+		return PackageProperties.stringInput.instance(this);
+	}
 
 	private String value;
 
@@ -640,7 +642,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	@TypedProperties
 	public static class DateEditor extends Model.Value<Date>
 			implements ModelEvents.Change.Handler {
-		static PackageProperties._StringInput_DateEditor properties = PackageProperties.stringInput_dateEditor;
+		PackageProperties._StringInput_DateEditor.InstanceProperties
+				properties() {
+			return PackageProperties.stringInput_dateEditor.instance(this);
+		}
 
 		private Date value;
 
@@ -661,9 +666,9 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
 					.inverseValidator();
 			Function<String, Date> typedValidator = (Function<String, Date>) validator;
-			from(this).on(properties.value).map(revTypedValidator).to(input)
-					.on(DateInput.properties.value).map(typedValidator).bidi();
-			from(this).on(properties.value).withSetOnInitialise(false)
+			from(properties().value()).map(revTypedValidator)
+					.to(input.properties().value()).map(typedValidator).bidi();
+			from(properties().value()).withSetOnInitialise(false)
 					.signal(this::emitValueChange);
 		}
 

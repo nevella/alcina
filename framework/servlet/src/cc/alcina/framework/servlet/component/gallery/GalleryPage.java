@@ -36,8 +36,6 @@ class GalleryPage extends Model.Fields
 		GalleryBrowserCommand.ShowKeyboardShortcuts.Handler,
 		ModelEvents.ApplicationHelp.Handler,
 		GalleryBrowserCommand.ToggleHelp.Handler, Binding.TabIndexZero {
-	static PackageProperties._GalleryPage properties = PackageProperties.galleryPage;
-
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)

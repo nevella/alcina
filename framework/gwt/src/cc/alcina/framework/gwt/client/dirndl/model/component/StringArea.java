@@ -77,13 +77,15 @@ public class StringArea extends Model.Fields
 		}
 	}
 
-	static PackageProperties._StringArea_Expanded _StringArea_Expanded_properties = PackageProperties.stringArea_expanded;
-
 	@Directed(tag = "string-area-expanded")
 	@DirectedContextResolver(InnerResolver.class)
 	@TypedProperties
 	class Expanded extends Model.All
 			implements ModelEvents.Copy.Handler, PreWrap.Handler {
+		PackageProperties._StringArea_Expanded.InstanceProperties properties() {
+			return PackageProperties.stringArea_expanded.instance(this);
+		}
+
 		HeadingActions headingActions;
 
 		String value;
@@ -134,7 +136,7 @@ public class StringArea extends Model.Fields
 
 		@Override
 		public void onPreWrap(PreWrap event) {
-			_StringArea_Expanded_properties.preWrap.set(this, !preWrap);
+			properties().preWrap().set(!preWrap);
 		}
 	}
 

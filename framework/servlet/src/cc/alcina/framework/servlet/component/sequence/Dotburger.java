@@ -25,7 +25,9 @@ class Dotburger extends Model.Fields {
 
 	@TypedProperties
 	static class Menu extends Model.All implements ValueChange.Container {
-		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_menu;
+		PackageProperties._Dotburger_Menu.InstanceProperties properties() {
+			return PackageProperties.dotburger_menu.instance(this);
+		}
 
 		Heading section2 = new Heading("Detail display mode");
 
@@ -39,9 +41,8 @@ class Dotburger extends Model.Fields {
 				.of(SequenceBrowserCommand.ShowKeyboardShortcuts.class);
 
 		Menu() {
-			from(SequenceSettings.get())
-					.on(SequenceSettings.properties.detailDisplayMode).to(this)
-					.on(properties.detailDisplayMode).bidi();
+			from(SequenceSettings.get().properties().detailDisplayMode())
+					.to(properties().detailDisplayMode()).bidi();
 		}
 	}
 

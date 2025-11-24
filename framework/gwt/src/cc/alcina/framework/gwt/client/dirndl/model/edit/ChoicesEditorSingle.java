@@ -31,10 +31,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 		implements HasValue<T> {
-	static PackageProperties._ChoicesEditorSingle properties = PackageProperties.choicesEditorSingle;
+	PackageProperties._ChoicesEditorSingle.InstanceProperties properties() {
+		return PackageProperties.choicesEditorSingle.instance(this);
+	}
 
 	public ChoicesEditorSingle() {
-		from(this).on(properties.selectedValue)
+		from(properties().selectedValue())
 				.accept(value -> this.updateAreaFromSelectedValue((T) value));
 	}
 

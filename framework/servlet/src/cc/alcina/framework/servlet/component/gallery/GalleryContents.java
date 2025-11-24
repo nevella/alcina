@@ -11,7 +11,9 @@ import cc.alcina.framework.servlet.component.gallery.GalleryBrowser.Ui;
 @TypedProperties
 public abstract class GalleryContents<RP extends GalleryPlace> extends Model.All
 		implements Registration.AllSubtypes, IfNotEqual {
-	static PackageProperties._GalleryContents properties = PackageProperties.galleryContents;
+	PackageProperties._GalleryContents.InstanceProperties properties() {
+		return PackageProperties.galleryContents.instance(this);
+	}
 
 	@Directed.Exclude
 	public RP place;
@@ -22,7 +24,7 @@ public abstract class GalleryContents<RP extends GalleryPlace> extends Model.All
 	}
 
 	public GalleryContents() {
-		from(Ui.get()).on(Ui.properties.place).to(this).on(properties.place)
+		from(Ui.get().subtypeProperties().place()).to(properties().place())
 				.oneWay();
 	}
 

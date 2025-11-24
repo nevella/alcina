@@ -30,8 +30,6 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings.Seconda
 @Directed(tag = "selections")
 @TypedProperties
 class RenderedSelections extends Model.Fields implements IfNotEqual {
-	static PackageProperties._RenderedSelections properties = PackageProperties.renderedSelections;
-
 	class SelectionMarkupArea extends Model.Fields
 			implements MarkupHighlights.MarkupClick.Handler {
 		Query query;
@@ -84,6 +82,10 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 
 	StyleElement styleElement;
 
+	PackageProperties._RenderedSelections.InstanceProperties properties() {
+		return PackageProperties.renderedSelections.instance(this);
+	}
+
 	RenderedSelections(Page page, SecondaryArea variant) {
 		this.page = page;
 		this.variant = variant;
@@ -92,9 +94,8 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 		from(page.ui.properties().place()).signal(this::conditionallyPopulate);
 		from(page.ui.subclassProperties().traversal())
 				.signal(this::populateViewSelection);
-		from(this).on(properties.selection).signal(this::onSelectionChange);
-		from(this).on(properties.selectionTable)
-				.signal(this::updateTableHeader);
+		from(properties().selection()).signal(this::onSelectionChange);
+		from(properties().selectionTable()).signal(this::updateTableHeader);
 	}
 
 	void updateTableHeader() {
@@ -104,7 +105,7 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 				headingText = Ax.format("%s [%s]", headingText,
 						selectionTable.selectionBindables.size());
 			}
-			properties.heading.set(this, new Heading(headingText));
+			properties().heading().set(new Heading(headingText));
 		}
 	}
 
@@ -120,7 +121,7 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 	void populateViewSelection() {
 		page.place().clearSelections();
 		Selection selection = page.place().provideSelection(SelectionType.VIEW);
-		properties.selection.set(this, selection);
+		properties().selection().set(selection);
 	}
 
 	void onSelectionChange() {
@@ -144,7 +145,7 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 
 	void conditionallyPopulateTable(SelectionTraversal traversal) {
 		if (variant != SecondaryArea.TABLE) {
-			properties.selectionTable.set(this, null);
+			properties().selectionTable().set(null);
 			return;
 		}
 		ListSource listSource = Ui.activePlace().listSource;
@@ -156,21 +157,21 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 				listSourceSelection = listSource.path.selection();
 			}
 			if (listSourceSelection != null) {
-				boolean fired = properties.selectionTable.setIfNotEqual(this,
-						new SelectionTableArea(
+				properties().selectionTable()
+						.setIfNotEqual(new SelectionTableArea(
 								traversal.layers().get(listSourceSelection),
 								listSourceSelection));
 			} else if (listSourceLayer != null) {
 				List<? extends Selection> filteredLayerSelections = page
 						.getFilteredSelections(listSourceLayer);
-				properties.selectionTable.setIfNotEqual(this,
-						new SelectionTableArea(listSourceLayer,
+				properties().selectionTable()
+						.setIfNotEqual(new SelectionTableArea(listSourceLayer,
 								filteredLayerSelections));
 			} else {
-				properties.selectionTable.set(this, null);
+				properties().selectionTable().set(null);
 			}
 		} else {
-			properties.selectionTable.set(this, null);
+			properties().selectionTable().set(null);
 		}
 	}
 
@@ -180,7 +181,7 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 		}
 		SelectionMarkup markup = page.getSelectionMarkup();
 		if (markup == null) {
-			properties.selectionMarkupArea.set(this, null);
+			properties().selectionMarkupArea().set(null);
 			return;
 		}
 		String styleScope = Ax
@@ -196,7 +197,7 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 			Model model = query.getModel();
 			SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(
 					query, model);
-			properties.selectionMarkupArea.set(this, selectionMarkupArea);
+			properties().selectionMarkupArea().set(selectionMarkupArea);
 		}
 		if (Ax.isBlank(query.getCss())) {
 			if (styleElement != null) {

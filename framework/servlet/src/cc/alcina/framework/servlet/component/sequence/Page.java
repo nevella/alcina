@@ -137,7 +137,9 @@ class Page extends Model.Fields
 		}
 	}
 
-	static PackageProperties._Page properties = PackageProperties.page;
+	PackageProperties._Page.InstanceProperties properties() {
+		return PackageProperties.page.instance(this);
+	}
 
 	@Directed
 	Header header;
@@ -171,28 +173,28 @@ class Page extends Model.Fields
 		this.ui.page = this;
 		header = new Header(this);
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
-		from(ui.settings).on(SequenceSettings.properties.sequenceKey)
+		from(ui.settings.properties().sequenceKey())
 				.signal(this::reloadSequence);
-		from(ui).on(Ui.properties.place)
+		from(ui.subtypeProperties().place())
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedSequencePlaceChange)
 				.signal(this::reloadSequence);
-		from(this).on(properties.filteredSequenceElements)
+		from(properties().filteredSequenceElements())
 				.signal(this::computeHighlightModel);
-		from(ui).on(Ui.properties.place)
+		from(ui.subtypeProperties().place())
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedHighlightPlaceChange)
 				.signal(this::computeHighlightModel);
-		from(this).on(properties.filteredSequenceElements).value(this).debug()
-				.map(SequenceArea::new).to(this).on(properties.sequenceArea)
+		from(properties().filteredSequenceElements()).value(this).debug()
+				.map(SequenceArea::new).to(properties().sequenceArea())
 				.oneWay();
-		from(this).on(properties.filteredSequenceElements).value(this)
-				.map(DetailArea::new).to(this).on(properties.detailArea)
-				.oneWay();
-		from(ui).on(Ui.properties.place).filter(this::filterSelectedIndexChange)
+		from(properties().filteredSequenceElements()).value(this)
+				.map(DetailArea::new).to(properties().detailArea()).oneWay();
+		from(ui.subtypeProperties().place())
+				.filter(this::filterSelectedIndexChange)
 				.signal(this::onSelectedIndexChange);
 		from(ui.settings).signal(this::updateStyles);
-		from(this).on(properties.sequence).signal(this::updateStyles);
+		from(properties().sequence()).signal(this::updateStyles);
 		/*
 		 * Initialise with an empty sequence, it's easier than adding null
 		 * checks throughout
@@ -201,7 +203,7 @@ class Page extends Model.Fields
 	}
 
 	void onSelectedIndexChange() {
-		properties.detailArea.set(this, new DetailArea(this));
+		properties().detailArea().set(new DetailArea(this));
 		emitEvent(SequenceEvents.SelectedIndexChanged.class);
 	}
 
@@ -231,8 +233,7 @@ class Page extends Model.Fields
 
 	@Override
 	public void onLoadSequence(LoadSequence event) {
-		SequenceSettings.properties.sequenceKey.set(ui.settings,
-				event.getModel());
+		ui.settings.properties().sequenceKey().set(event.getModel());
 	}
 
 	@Override
@@ -355,9 +356,9 @@ class Page extends Model.Fields
 	}
 
 	void putSequence(Sequence sequence) {
-		properties.sequence.set(this, sequence);
+		properties().sequence().set(sequence);
 		List<?> filteredSequenceElements = filteredSequenceElements(sequence);
-		properties.filteredSequenceElements.set(this, filteredSequenceElements);
+		properties().filteredSequenceElements().set(filteredSequenceElements);
 	}
 
 	void derefOracleQuery() {
