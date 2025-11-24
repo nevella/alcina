@@ -85,6 +85,7 @@ public class PackageProperties {
       public TypedProperty<Choices.MultipleSelect, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.MultipleSelect.class, "changeOnSelectionEvent");
       public TypedProperty<Choices.MultipleSelect, List> choices = new TypedProperty<>(Choices.MultipleSelect.class, "choices");
       public TypedProperty<Choices.MultipleSelect, List> elements = new TypedProperty<>(Choices.MultipleSelect.class, "elements");
+      public TypedProperty<Choices.MultipleSelect, Boolean> hasValueSupplier = new TypedProperty<>(Choices.MultipleSelect.class, "hasValueSupplier");
       public TypedProperty<Choices.MultipleSelect, Boolean> multiple = new TypedProperty<>(Choices.MultipleSelect.class, "multiple");
       public TypedProperty<Choices.MultipleSelect, Boolean> repeatableChoices = new TypedProperty<>(Choices.MultipleSelect.class, "repeatableChoices");
       public TypedProperty<Choices.MultipleSelect, List> selectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "selectedValues");
@@ -96,6 +97,7 @@ public class PackageProperties {
         public InstanceProperty<Choices.MultipleSelect, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.changeOnSelectionEvent);}
         public InstanceProperty<Choices.MultipleSelect, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.choices);}
         public InstanceProperty<Choices.MultipleSelect, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.elements);}
+        public InstanceProperty<Choices.MultipleSelect, Boolean> hasValueSupplier(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.hasValueSupplier);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> multiple(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.multiple);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.repeatableChoices);}
         public InstanceProperty<Choices.MultipleSelect, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.selectedValues);}
