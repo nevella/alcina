@@ -3,6 +3,8 @@ package cc.alcina.framework.common.client.traversal.layer.overlay;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.dom.client.Element;
+
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
@@ -45,6 +47,10 @@ Api weakness:
  * @formatter:on
  */
 public class MeasureOverlay {
+	public interface Has {
+		MeasureOverlay provideMeasureOverlay();
+	}
+
 	public static class HighlightToken
 			implements Measure.Token.Typed<Highlighter> {
 		public static HighlightToken TYPE = new HighlightToken();
@@ -213,5 +219,14 @@ public class MeasureOverlay {
 					TextTraversal.EXIT_NODE);
 		}
 		return result;
+	}
+
+	Element getElement() {
+		return initialRange.start.getContainingNode().ancestors()
+				.selfOrContainingElement().gwtElement();
+	}
+
+	public int getTop() {
+		return getElement().getAbsoluteTop();
 	}
 }

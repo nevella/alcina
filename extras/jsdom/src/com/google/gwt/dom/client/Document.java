@@ -32,7 +32,6 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.dom.client.mutations.MutationGroup;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
@@ -41,6 +40,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
@@ -1353,5 +1353,24 @@ public class Document extends Node implements ClientDomDocument,
 	public DomNode nodeForAttachId(Integer attachId) {
 		Node node = localDom.attachIds.getNode(attachId);
 		return node == null ? null : node.asDomNode();
+	}
+
+	/*
+	 * Invokes RPC messages on the browser client document
+	 */
+	@Registration({ TypeInvoker.class, Document.class })
+	public static class TypeInvokerImpl extends TypeInvoker<Document> {
+		@Override
+		public Object invoke(Document doc, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			switch (methodName) {
+			case "hasFocus":
+				return doc.hasFocus();
+			default:
+				break;
+			}
+			return invokeReflective(doc, methodName, argumentTypes, arguments,
+					flags);
+		}
 	}
 }
