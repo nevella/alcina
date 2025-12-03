@@ -227,7 +227,7 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
 				DeclarationVisitor::new, refresh);
-		compUnits.declarations.values().stream().filter(dec -> dec.hasFlags())
+		compUnits.unitTypes.values().stream().filter(dec -> dec.hasFlags())
 				.filter(this::filter).forEach(type -> {
 					switch (action) {
 					case LIST_INTERESTING: {

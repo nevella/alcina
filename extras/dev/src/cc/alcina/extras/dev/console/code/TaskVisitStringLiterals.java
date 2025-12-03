@@ -3,7 +3,6 @@ package cc.alcina.extras.dev.console.code;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -58,11 +57,11 @@ public class TaskVisitStringLiterals extends PerformerTask.Fields {
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, List.of(classPath),
 				DeclarationVisitor::new, refresh);
-		long count = compUnits.declarations.values().stream()
+		long count = compUnits.unitTypes.values().stream()
 				.filter(dec -> dec.hasFlag(Type.HasLiterals)).count();
 		Ax.out("count with literals: %s", count);
 		sourceHandler = new SourceHandler();
-		compUnits.declarations.values().stream().filter(UnitType::exists)
+		compUnits.unitTypes.values().stream().filter(UnitType::exists)
 				.forEach(dec -> sourceHandler.visitLiterals(dec));
 		if (dirtyWriteLimit != 0) {
 			sourceHandler.transformLiterals();

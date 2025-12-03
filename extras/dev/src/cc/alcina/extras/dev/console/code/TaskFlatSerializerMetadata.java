@@ -85,7 +85,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 	private String criterionNameRemovalRegex;
 
 	private void createTaskHierarchy() {
-		List<Class<? extends Task>> taskClasses = (List) compUnits.declarations
+		List<Class<? extends Task>> taskClasses = (List) compUnits.unitTypes
 				.values().stream()
 				.filter(dec -> Task.class.isAssignableFrom(dec.clazz())
 						&& !Modifier.isAbstract(dec.clazz().getModifiers())
@@ -99,7 +99,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 	}
 
 	private void ensureAnnotations() {
-		List<DomainCriterionHandler> criterionHandlers = compUnits.declarations
+		List<DomainCriterionHandler> criterionHandlers = compUnits.unitTypes
 				.values().stream()
 				.filter(dec -> DomainCriterionHandler.class
 						.isAssignableFrom(dec.clazz())
@@ -204,7 +204,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			if (!EntitySearchDefinition.class.isAssignableFrom(clazz)) {
 				return;
 			}
-			UnitType type = compUnits.declarations.get(clazz.getName());
+			UnitType type = compUnits.unitTypes.get(clazz.getName());
 			new SearchDefinitionModifier(type)
 					.withCriterionHandlers(criterionHandlers)
 					.withSearchDefinitionClass(clazz).modify();
@@ -212,7 +212,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 	}
 
 	private void enumerateSearchDefinitions() {
-		compUnits.declarations.values().stream().filter(
+		compUnits.unitTypes.values().stream().filter(
 				dec -> SearchDefinition.class.isAssignableFrom(dec.clazz()))
 				.forEach(dec -> {
 					Ax.out(dec.qualifiedSourceName);
@@ -274,7 +274,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 				DeclarationVisitor::new, isRefresh());
 		switch (getAction()) {
 		case LIST_INTERESTING: {
-			compUnits.declarations.values().forEach(dec -> Ax.out("%s - %s",
+			compUnits.unitTypes.values().forEach(dec -> Ax.out("%s - %s",
 					dec.clazz().getSimpleName(), dec.typeFlags));
 			break;
 		}

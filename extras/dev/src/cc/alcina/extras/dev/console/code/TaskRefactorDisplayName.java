@@ -43,7 +43,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 	private boolean test;
 
 	private void ensureAnnotations() {
-		compUnits.declarations.values().stream()
+		compUnits.unitTypes.values().stream()
 				.filter(dec -> dec.hasFlag(Type.DisplayAnnotations))
 				.forEach(dec -> SourceMods.cleanDisplayAnnotations(dec));
 		compUnits.writeDirty(isTest());
@@ -79,7 +79,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 				DeclarationVisitor::new, isRefresh());
 		switch (getAction()) {
 		case LIST_INTERESTING: {
-			compUnits.declarations.values().stream()
+			compUnits.unitTypes.values().stream()
 					.filter(dec -> dec.hasFlag(Type.DisplayAnnotations))
 					.forEach(dec -> Ax.out("%s - %s",
 							dec.clazz().getSimpleName(), dec.typeFlags));

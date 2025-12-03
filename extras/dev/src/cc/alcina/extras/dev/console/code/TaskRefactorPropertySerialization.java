@@ -40,7 +40,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 	private boolean test;
 
 	private void ensureAnnotations() {
-		compUnits.declarations.values().stream().filter(
+		compUnits.unitTypes.values().stream().filter(
 				dec -> dec.hasFlag(Type.PropertySerializationAnnotation))
 				.forEach(dec -> SourceMods
 						.removeRedundantPropertySerializationAnnotations(dec));
@@ -77,7 +77,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 				DeclarationVisitor::new, isRefresh());
 		switch (getAction()) {
 		case LIST_INTERESTING: {
-			compUnits.declarations.values().stream().filter(
+			compUnits.unitTypes.values().stream().filter(
 					dec -> dec.hasFlag(Type.PropertySerializationAnnotation))
 					.forEach(dec -> Ax.out("%s - %s",
 							dec.clazz().getSimpleName(), dec.typeFlags));

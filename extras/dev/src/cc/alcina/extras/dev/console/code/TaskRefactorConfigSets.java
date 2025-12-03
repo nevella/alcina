@@ -198,11 +198,11 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, classpathEntries,
 				DeclarationVisitor::new, isRefresh());
-		long count = compUnits.declarations.values().stream()
+		long count = compUnits.unitTypes.values().stream()
 				.filter(dec -> dec.hasFlag(Type.HasConfiguration)).count();
 		Ax.out("count with config: %s", count);
 		SourceHandler sourceHandler = new SourceHandler();
-		compUnits.declarations.values().stream().filter(UnitType::exists)
+		compUnits.unitTypes.values().stream().filter(UnitType::exists)
 				.forEach(dec -> sourceHandler.listConfigurationCalls(dec));
 		this.seenKeys = sourceHandler.refs.stream()
 				.flatMap(ref -> ref.keys.stream()).map(key -> key.toString())
@@ -443,7 +443,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			}
 
 			UnitType declarationByName(String name) {
-				List<UnitType> types = compUnits.declarationByName(name);
+				List<UnitType> types = compUnits.unitTypeByName(name);
 				if (types == null) {
 					switch (name) {
 					case "RemoteServiceServlet":
