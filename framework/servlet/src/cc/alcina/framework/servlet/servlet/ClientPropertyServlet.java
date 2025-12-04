@@ -46,6 +46,15 @@ public class ClientPropertyServlet extends HttpServlet {
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String[] parts = request.getPathInfo().substring(1).split("/");
+		String key = Ax.format("%s.%s", parts[0], parts[1]);
+		String value = parts[2];
+		String message = processRequest(request, response, key, value);
+		response.setContentType("text/plain");
+		response.getWriter().write(message);
+	}
+
+	public String processRequest(HttpServletRequest request,
+			HttpServletResponse response, String key, String value) {
 		String cookieName = ClientProperties.class.getName();
 		String existing = CookieUtils.getCookieValueByName(request, cookieName);
 		StringMap map = new StringMap();
@@ -57,8 +66,7 @@ public class ClientPropertyServlet extends HttpServlet {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		String key = Ax.format("%s.%s", parts[0], parts[1]);
-		map.put(key, parts[2]);
+		map.put(key, value);
 		Cookie cookie = new Cookie(cookieName,
 				UrlComponentEncoder.get().encode(map.toPropertyString()));
 		cookie.setPath("/");
@@ -68,7 +76,6 @@ public class ClientPropertyServlet extends HttpServlet {
 		String message = Ax.format("Map :: =>\n%s", map.entrySet().stream()
 				.map(Object::toString).collect(Collectors.joining("\n")));
 		logger.info(message);
-		response.setContentType("text/plain");
-		response.getWriter().write(message);
+		return message;
 	}
 }
