@@ -41,10 +41,17 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
  * 
  * <p>
  * FIXME - pruneredundant - if setnull, remove parent?
+ * 
+ * <p>
+ * Note that an alternative would be to update DirectedLayout/CollectionRenderer
+ * to be more discerning with collection updates. But that's deeper work, and in
+ * some cases will be actually more CPU intensive since there are more DOM
+ * updates (as opposed to a single setInnertHTML). This approach allows the dev
+ * to choose incremental updates
  */
 @TypedProperties
 @Directed.Delegating
-public class CollectionDeltaModel extends Model.Fields {
+public class CollectionDeltaModel<T> extends Model.Fields {
 	public PackageProperties._CollectionDeltaModel.InstanceProperties
 			properties() {
 		return PackageProperties.collectionDeltaModel.instance(this);
@@ -412,7 +419,7 @@ public class CollectionDeltaModel extends Model.Fields {
 	@Directed
 	RelativeInsert root;
 
-	public Collection collection;
+	public Collection<T> collection;
 
 	public CollectionDeltaModel() {
 		from(properties().collection()).signal(this::updateElements);

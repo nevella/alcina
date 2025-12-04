@@ -2257,4 +2257,16 @@ public class CommonUtils {
 		}
 		return matchIdx;
 	}
+
+	public static <T> List<T> replaceWithExisting(Collection<T> newCollection,
+			Collection<T> existingCollection) {
+		List<T> result = new ArrayList<>();
+		Map<T, T> existingMap = existingCollection.stream()
+				.collect(Collectors.toMap(t -> t, t -> t));
+		newCollection.forEach(elem -> {
+			T orDefault = existingMap.getOrDefault(elem, elem);
+			result.add(orDefault);
+		});
+		return result;
+	}
 }
