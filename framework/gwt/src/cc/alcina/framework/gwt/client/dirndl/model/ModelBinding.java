@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -171,6 +172,8 @@ public class ModelBinding<T> {
 
 	Consumer<?> consumer;
 
+	BiConsumer<?, ?> changeConsumer;
+
 	ListenerBinding listener;
 
 	boolean setOnInitialise = true;
@@ -206,6 +209,8 @@ public class ModelBinding<T> {
 
 	public Class<? extends NodeEvent> fromNodeEventClass;
 
+	Object oldValue;
+
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
@@ -221,6 +226,13 @@ public class ModelBinding<T> {
 	 */
 	public void accept(Consumer<T> consumer) {
 		this.consumer = consumer;
+	}
+
+	/**
+	 * add a terminal property change consumer
+	 */
+	public void acceptChange(BiConsumer<T, T> changeConsumer) {
+		this.changeConsumer = changeConsumer;
 	}
 
 	/**
@@ -437,18 +449,32 @@ public class ModelBinding<T> {
 				}
 			}
 		}
-		Preconditions.checkState(consumer != null,
+		Preconditions.checkState(consumer != null || changeConsumer != null,
 				"No consumer - possibly you forgot to call bind(), "
 						+ "or  onewWay()/bidi() if this is a property binding");
-		((Consumer) consumer).accept(o2);
+		if (consumer != null) {
+			((Consumer) consumer).accept(o2);
+		} else {
+			((BiConsumer) changeConsumer).accept(oldValue, o2);
+		}
 	}
 
 	void bind() {
 		if (fromPropertyChangeSource != null) {
 			listener = bindings.addPropertyChangeListener(
-					fromPropertyChangeSource, on,
-					evt -> acceptStreamElement(on != null ? evt.getNewValue()
-							: fromPropertyChangeSource));
+					fromPropertyChangeSource, on, evt -> {
+						if (on == null) {
+							acceptStreamElement(fromPropertyChangeSource);
+						} else {
+							try {
+								this.oldValue = evt.getOldValue();
+								acceptStreamElement(evt.getNewValue());
+							} finally {
+								// finally body
+								this.oldValue = null;
+							}
+						}
+					});
 		} else if (fromTopic != null) {
 			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
 					.asBinding();
