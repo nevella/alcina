@@ -9,13 +9,21 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.TransformElements;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 
 /**
  * <p>
@@ -51,7 +59,28 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
  */
 @TypedProperties
 @Directed.Delegating
+@DirectedContextResolver(CollectionDeltaModel.Resolver.class)
 public class CollectionDeltaModel<T> extends Model.Fields {
+	@Reflected
+	static class Resolver extends ContextResolver implements DeltaModelService {
+		@Override
+		protected void init(ContextResolver parent, DirectedLayout layout,
+				Object rootModel) {
+			super.init(parent, layout, rootModel);
+			registerService(DeltaModelService.class, this);
+		}
+
+		@Override
+		public TransformElements getTransformElements() {
+			return ((Model) getRootModel()).provideNode()
+					.annotation(TransformElements.class);
+		}
+	}
+
+	interface DeltaModelService extends ContextService {
+		Directed.TransformElements getTransformElements();
+	}
+
 	public PackageProperties._CollectionDeltaModel.InstanceProperties
 			properties() {
 		return PackageProperties.collectionDeltaModel.instance(this);
@@ -68,6 +97,21 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 		 * == null, to after, otherwise to most-before-after
 		 */
 		after
+	}
+
+	static class ElementTransform
+			extends AbstractContextSensitiveModelTransform<Object, Object> {
+		@Override
+		public Object apply(Object t) {
+			TransformElements transformElements = node
+					.service(DeltaModelService.class).getTransformElements();
+			if (transformElements != null) {
+				return Reflections.newInstance(transformElements.value())
+						.apply(t);
+			} else {
+				return t;
+			}
+		}
 	}
 
 	/**
@@ -94,6 +138,7 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 		/*
 		 * Note that only one of {element, contents} can be non-null.
 		 */
+		@Directed.Transform(ElementTransform.class)
 		Object element;
 
 		/*
@@ -110,7 +155,7 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 		RelativeInsert after;
 
 		/*
-		 * a node is the parent of before, the {elements of contents/contnets}
+		 * a node is the parent of before, the {elements of contents/contents}
 		 * and after
 		 */
 		@Property.Not
@@ -210,10 +255,10 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 					properties().before().set(child);
 					return grand;
 				} else {
-					RelativeInsert lastDescendantOrSelfOfBefore = after
+					RelativeInsert lastDescendantOrSelfOfBefore = before
 							.lastDescendantOrSelf();
 					/*
-					 * it's guaranteed that lastDescendantOrSelfOfBefore.after
+					 * it's guaranteed that lastDescendantOrSelfOfBefore.before
 					 * is null, since all leaves are null
 					 */
 					RelativeInsert child = new RelativeInsert(
@@ -422,7 +467,8 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 	public Collection<T> collection;
 
 	public CollectionDeltaModel() {
-		from(properties().collection()).signal(this::updateElements);
+		from(properties().collection()).ifNotEqual()
+				.signal(this::updateElements);
 	}
 
 	/*
@@ -492,7 +538,8 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 					} else if (willMatch(cursor)) {
 						insertDirection = InsertDirection.before;
 						renderAt = cursor;
-					} else if (cursor.canSetCollectionElement()) {
+					} else if (cursor.canSetCollectionElement()
+							&& !remainingRendered.containsKey(current)) {
 						/*
 						 * The cursor is a leaf without before/after branches,
 						 * so is a valid position for the collection element

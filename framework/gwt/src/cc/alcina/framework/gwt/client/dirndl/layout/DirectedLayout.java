@@ -2353,7 +2353,9 @@ public class DirectedLayout implements AlcinaProcess {
 					}
 				}
 			}
-			beforeRender();
+			if (node.lastForModel) {
+				beforeRender();
+			}
 			boolean hasRenderer = model != null
 					|| Reflections.isAssignableFrom(RendersNull.class,
 							node.directed.renderer())
