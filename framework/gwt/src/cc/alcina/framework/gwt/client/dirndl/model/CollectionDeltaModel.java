@@ -139,6 +139,7 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 		 * Note that only one of {element, contents} can be non-null.
 		 */
 		@Directed.Transform(ElementTransform.class)
+		@Directed(bindToModel = false, bindDomEvents = false)
 		Object element;
 
 		/*

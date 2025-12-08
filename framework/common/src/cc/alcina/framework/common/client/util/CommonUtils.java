@@ -1086,6 +1086,14 @@ public class CommonUtils {
 						+ (s.length() == 1 ? "" : s.substring(1));
 	}
 
+	/**
+	 * 
+	 * @param c1
+	 * @param c2
+	 * @return the intersection of the two collections. Note that whether equal
+	 *         elements will be returned from c1 or c2 depends on the respective
+	 *         sizes (due to optimisation)
+	 */
 	public static Set intersection(Collection c1, Collection c2) {
 		Set result = setSupplier.get();
 		if (c1.size() > c2.size()) {

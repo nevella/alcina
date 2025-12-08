@@ -85,6 +85,10 @@ public class Intersection<T> {
 		return result;
 	}
 
+	public static <T> Intersection<T> of(Collection<T> c1, Collection<T> c2) {
+		return of(c1, c2, false);
+	}
+
 	/**
 	 * Create an {@link Intersction}, using Object.equals to determine the
 	 * intersection
@@ -94,18 +98,41 @@ public class Intersection<T> {
 	 * @param c1
 	 *            the first collection
 	 * @param c2
-	 *            the second collection
+	 *            the second collection * @param retainFirst if an element is
+	 *            contained in c1 and c2, return that contained in c1
 	 * @return an Intersection structure
 	 * 
 	 */
-	public static <T> Intersection<T> of(Collection<T> c1, Collection<T> c2) {
+	public static <T> Intersection<T> of(Collection<T> c1, Collection<T> c2,
+			boolean retainFirst) {
 		Intersection<T> result = new Intersection<T>();
-		Set intersection = CommonUtils.intersection(c1, c2);
-		result.intersection = intersection;
-		result.firstOnly = new LinkedHashSet<T>(c1);
-		result.secondOnly = new LinkedHashSet<T>(c2);
-		result.firstOnly.removeAll(intersection);
-		result.secondOnly.removeAll(intersection);
+		if (retainFirst) {
+			Set<T> s1 = (Set<T>) CommonUtils.wrapInSet(c1);
+			Set<T> s2 = (Set<T>) CommonUtils.wrapInSet(c2);
+			result.firstOnly = AlcinaCollections.newLinkedHashSet();
+			result.intersection = AlcinaCollections.newLinkedHashSet();
+			result.secondOnly = AlcinaCollections.newLinkedHashSet();
+			c1.forEach(e -> {
+				if (s2.contains(e)) {
+					result.intersection.add(e);
+				} else {
+					result.firstOnly.add(e);
+				}
+			});
+			c2.forEach(e -> {
+				if (s1.contains(e)) {
+				} else {
+					result.secondOnly.add(e);
+				}
+			});
+		} else {
+			Set intersection = CommonUtils.intersection(c1, c2);
+			result.intersection = intersection;
+			result.firstOnly = new LinkedHashSet<T>(c1);
+			result.secondOnly = new LinkedHashSet<T>(c2);
+			result.firstOnly.removeAll(intersection);
+			result.secondOnly.removeAll(intersection);
+		}
 		return result;
 	}
 }
