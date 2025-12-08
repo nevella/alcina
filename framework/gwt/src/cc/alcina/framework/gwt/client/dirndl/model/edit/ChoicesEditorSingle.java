@@ -9,11 +9,9 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValues;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /*
