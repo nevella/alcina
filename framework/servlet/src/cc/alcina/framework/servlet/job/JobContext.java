@@ -74,6 +74,99 @@ import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
  * transaction, the cancelled check is run off-thread (in a shared executor )
  */
 public class JobContext {
+	public class ProgressBuilder {
+		private String message;
+
+		private int delta;
+
+		private int total = 1;
+
+		private boolean log;
+
+		public void publish() {
+			setItemCount(total);
+			updateJob(message, delta);
+			if (log) {
+				getLogger().info(message);
+			}
+		}
+
+		public ProgressBuilder withDelta(int delta) {
+			this.delta = delta;
+			return this;
+		}
+
+		public ProgressBuilder withLog(boolean log) {
+			this.log = log;
+			return this;
+		}
+
+		public ProgressBuilder withMessage(String template, Object... args) {
+			this.message = Ax.format(template, args);
+			return this;
+		}
+
+		public ProgressBuilder withTotal(int total) {
+			this.total = total;
+			return this;
+		}
+	}
+
+	@Registration(TreeProcess.SelectedProcessNodeProvider.class)
+	public static class SelectedProcessNodeProviderImpl
+			implements TreeProcess.SelectedProcessNodeProvider {
+		@Override
+		public Node getSelectedProcessNode() {
+			return JobContext.getSelectedProcessNode();
+		}
+	}
+
+	class UpdateStatusDebouncer {
+		EventCollator<Runnable> debouncer = new EventCollator<Runnable>(200,
+				JobContext.this::updateStatus).withMaxDelayFromFirstEvent(1)
+						.withMaxDelayFromFirstCollatedEvent(1000);
+
+		long lastMessageTime;
+
+		Supplier<String> debouncedSupplier;
+
+		void cancel() {
+			if (debouncedSupplier != null) {
+				debounceMessage(debouncedSupplier.get());
+				debouncedSupplier = null;
+			}
+			debouncer.cancel();
+		}
+
+		void fireUpdateStatus(Supplier<String> messageSupplier,
+				boolean debounceable) {
+			/*
+			 * see note in the class doc - the threading issues are just too
+			 * dangerous to put this supplier on another thread. But we can by
+			 * fiat say 'just replicate any message in the last 5ms *on* thread'
+			 * - good enough
+			 * 
+			 * 
+			 */
+			if (TimeConstants.within(lastMessageTime, 5) && debounceable) {
+				debouncedSupplier = messageSupplier;
+				return;
+			}
+			debouncedSupplier = null;
+			lastMessageTime = System.currentTimeMillis();
+			debounceMessage(messageSupplier.get());
+		}
+
+		void debounceMessage(String message) {
+			debouncer.eventOccurred(() -> {
+				updateJobStatusDebounced(message);
+				MethodContext.instance().withThreadName(thread.getName())
+						.run(() -> LoggerFactory.getLogger(JobContext.class)
+								.info("status message: {}", message));
+			});
+		}
+	}
+
 	public static final LooseContext.Key CONTEXT_LOG_EX_JOB_RESULT = LooseContext
 			.key(JobContext.class, "CONTEXT_LOG_EX_JOB_RESULT");
 
@@ -183,29 +276,8 @@ public class JobContext {
 		return get() != null;
 	}
 
-	static boolean ignoreResource(JobResource resource) {
-		return LooseContext.is(CONTEXT_IGNORE_RESOURCES);
-	}
-
 	public static void info(String template, Object... args) {
 		info0(false, template, args);
-	}
-
-	static void info0(boolean once, String template, Object... args) {
-		String message = Ax.format(template.replace("{}", "%s"), args);
-		if (has()) {
-			if (once && !get().isFirstTimeMessage(message)) {
-				// duplicate
-			} else {
-				get().getLogger().info(template, args);
-			}
-		} else {
-			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
-				Ax.out(message);
-			} else {
-				Ax.out("Called JobContext.info() outside job - %s", message);
-			}
-		}
 	}
 
 	public static void infoOnce(String template, Object... args) {
@@ -311,85 +383,59 @@ public class JobContext {
 		}
 	}
 
+	public static String getJobTreeContextAsString() {
+		FormatBuilder format = new FormatBuilder();
+		String prelude = Ax.format("Job tree - thread %s",
+				Thread.currentThread().getName());
+		format.line(prelude);
+		if (!JobContext.has()) {
+			format.append("[no job context]");
+		} else {
+			List<String> jobStrings = new ArrayList<>();
+			Job jobCursor = JobContext.get().getJob();
+			while (jobCursor != null) {
+				jobStrings.add(0, jobCursor.toString());
+				Set<? extends JobRelation> toRelations = jobCursor
+						.getToRelations();
+				Optional<? extends JobRelation> awaiter = toRelations.stream()
+						.filter(t -> t.getType() == JobRelationType.AWAITED)
+						.findFirst();
+				if (awaiter.isPresent()) {
+					jobCursor = awaiter.get().getFrom();
+					continue;
+				}
+				jobCursor = jobCursor.provideParent().orElse(null);
+			}
+			jobStrings.forEach(js -> format.line("job - %s", js));
+		}
+		return format.toString();
+	}
+
+	static boolean ignoreResource(JobResource resource) {
+		return LooseContext.is(CONTEXT_IGNORE_RESOURCES);
+	}
+
+	static void info0(boolean once, String template, Object... args) {
+		String message = Ax.format(template.replace("{}", "%s"), args);
+		if (has()) {
+			if (once && !get().isFirstTimeMessage(message)) {
+				// duplicate
+			} else {
+				get().getLogger().info(template, args);
+			}
+		} else {
+			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
+				Ax.out(message);
+			} else {
+				Ax.out("Called JobContext.info() outside job - %s", message);
+			}
+		}
+	}
+
 	Set<String> publishedMessages = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
-	class UpdateStatusDebouncer {
-		EventCollator<Runnable> debouncer = new EventCollator<Runnable>(200,
-				JobContext.this::updateStatus).withMaxDelayFromFirstEvent(1)
-						.withMaxDelayFromFirstCollatedEvent(1000);
-
-		long lastMessageTime;
-
-		Supplier<String> debouncedSupplier;
-
-		void cancel() {
-			if (debouncedSupplier != null) {
-				debounceMessage(debouncedSupplier.get());
-				debouncedSupplier = null;
-			}
-			debouncer.cancel();
-		}
-
-		void fireUpdateStatus(Supplier<String> messageSupplier,
-				boolean debounceable) {
-			/*
-			 * see note in the class doc - the threading issues are just too
-			 * dangerous to put this supplier on another thread. But we can by
-			 * fiat say 'just replicate any message in the last 5ms *on* thread'
-			 * - good enough
-			 * 
-			 * 
-			 */
-			if (TimeConstants.within(lastMessageTime, 5) && debounceable) {
-				debouncedSupplier = messageSupplier;
-				return;
-			}
-			debouncedSupplier = null;
-			lastMessageTime = System.currentTimeMillis();
-			debounceMessage(messageSupplier.get());
-		}
-
-		void debounceMessage(String message) {
-			debouncer.eventOccurred(() -> {
-				updateJobStatusDebounced(message);
-				MethodContext.instance().withThreadName(thread.getName())
-						.run(() -> LoggerFactory.getLogger(JobContext.class)
-								.info("status message: {}", message));
-			});
-		}
-	}
-
-	void updateJobStatusDebounced(String message) {
-		Job job = getJob();
-		job.setStatusMessage(message);
-		if (itemCount > 0 && itemsCompleted > 0) {
-			setCompletion(((double) itemsCompleted) / ((double) itemCount));
-		}
-	}
-
 	UpdateStatusDebouncer updateStatusDebouncer = new UpdateStatusDebouncer();
-
-	void updateStatus(EventCollator<Runnable> collator) {
-		/*
-		 * updateStatusDebouncer.cancel() will execute the collator task on the
-		 * main job thread
-		 */
-		if (JobContext.has()) {
-			collator.getLastObject().run();
-		} else {
-			try {
-				JobContext.adopt(this, true);
-				// FIXME - this duplicates some of the other debounce routing
-				JobRegistry.get().environment.updateJobStatus(this,
-						collator.getLastObject());
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				JobContext.adopt(this, false);
-			}
-		}
-	}
 
 	private TaskPerformer performer;
 
@@ -419,9 +465,9 @@ public class JobContext {
 
 	public Object typedResult;
 
-	public <V> V typedResult() {
-		return (V) typedResult;
-	}
+	Timeout lastCheckCancelled = new Timeout(200).withTimeoutOnNextCheck();
+
+	private boolean hadEnd0Exception;
 
 	public JobContext(Job job, TaskPerformer performer,
 			LauncherThreadState launcherThreadState, JobAllocator allocator) {
@@ -434,6 +480,14 @@ public class JobContext {
 		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
 		noHttpContext = AlcinaServletContext.httpContext() == null;
+	}
+
+	public int getItemsCompleted() {
+		return itemsCompleted;
+	}
+
+	public <V> V typedResult() {
+		return (V) typedResult;
 	}
 
 	/*
@@ -451,6 +505,134 @@ public class JobContext {
 	public void awaitChildCompletion() {
 		Preconditions.checkArgument(thread == Thread.currentThread());
 		allocator.awaitChildCompletion(this);
+	}
+
+	public void endLogBuffer() {
+		if (job.provideIsNotComplete()) {
+			log = Registry.impl(PerThreadLogging.class).endBuffer();
+		}
+	}
+
+	public ExecutionConstraints getExecutionConstraints() {
+		return allocator.getExecutionConstraints();
+	}
+
+	public Job getJob() {
+		return this.job;
+	}
+
+	public String getLog() {
+		return this.log;
+	}
+
+	public Logger getLogger() {
+		return this.logger;
+	}
+
+	public TaskPerformer getPerformer() {
+		return this.performer;
+	}
+
+	public TreeProcess getTreeProcess() {
+		return this.treeProcess;
+	}
+
+	public void incrementItemCount(int delta) {
+		itemCount += delta;
+	}
+
+	public void jobOk(String resultMessage) {
+		job.setResultMessage(resultMessage);
+		job.setStatusMessage(resultMessage);
+		job.setResultType(JobResultType.OK);
+	}
+
+	public void jobProgress(String message, double completion) {
+		setStatusMessage(message);
+		getJob().setCompletion(completion);
+	}
+
+	public void onJobException(Exception e) {
+		Transaction.ensureEnded();
+		Transaction.begin();
+		job.setResultType(JobResultType.EXCEPTION);
+		String simpleExceptionMessage = CommonUtils.toSimpleExceptionMessage(e);
+		job.setStatusMessage(simpleExceptionMessage);
+		job.setResultMessage(simpleExceptionMessage);
+		TransactionEnvironment.get().commit();
+		logger.warn("Unexpected job exception - job {}", e, job.getId());
+		e.printStackTrace();
+	}
+
+	public void recordLargeInMemoryResult(String largeSerializedResult) {
+		new JobRegistry.InMemoryResult(largeSerializedResult, getJob())
+				.record();
+	}
+
+	public void remove() {
+		LooseContext.remove(CONTEXT_CURRENT);
+	}
+
+	public void setItemCount(int itemCount) {
+		this.itemCount = itemCount;
+	}
+
+	public void setItemsCompleted(int itemsCompleted) {
+		this.itemsCompleted = itemsCompleted;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("JobContext :: Thread - %s; Job - %s", thread, job);
+	}
+
+	public void updateJob(String message, int delta) {
+		itemsCompleted += delta;
+		setStatusMessage("%s (%s/%s)", message, itemsCompleted, itemCount);
+		if (itemCount != 0) {
+			setCompletion(Ax
+					.fourPlaces((double) itemsCompleted / (double) itemCount));
+		}
+	}
+
+	protected void persistMetadata() {
+		if (performer.deferMetadataPersistence(job)) {
+			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
+		} else {
+			/*
+			 * Because of possible collisions with stacktrace?
+			 */
+			TransactionEnvironment.get().commitWithBackoff();
+		}
+	}
+
+	void updateJobStatusDebounced(String message) {
+		Job job = getJob();
+		job.setStatusMessage(message);
+		if (itemCount > 0 && itemsCompleted > 0) {
+			setCompletion(((double) itemsCompleted) / ((double) itemCount));
+		}
+	}
+
+	void updateStatus(EventCollator<Runnable> collator) {
+		/*
+		 * updateStatusDebouncer.cancel() will execute the collator task on the
+		 * main job thread
+		 */
+		if (JobContext.has()) {
+			collator.getLastObject().run();
+		} else {
+			try {
+				JobContext.adopt(this, true);
+				// FIXME - this duplicates some of the other debounce routing
+				JobRegistry.get().environment.updateJobStatus(this,
+						collator.getLastObject());
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				JobContext.adopt(this, false);
+			}
+		}
 	}
 
 	void awaitSequenceCompletion() {
@@ -472,10 +654,6 @@ public class JobContext {
 	void beginLogBuffer() {
 		Registry.impl(PerThreadLogging.class).beginBuffer();
 	}
-
-	Timeout lastCheckCancelled = new Timeout(200).withTimeoutOnNextCheck();
-
-	private boolean hadEnd0Exception;
 
 	void checkCancelled0(boolean ignoreSelf) {
 		if (lastCheckCancelled.checkAndReset()) {
@@ -524,10 +702,6 @@ public class JobContext {
 		thread = null;
 	}
 
-	private ProgressBuilder createProgressBuilder() {
-		return new ProgressBuilder();
-	}
-
 	String describeTask(Task task, String msg) {
 		msg += "Clazz: " + task.getClass().getName() + "\n";
 		msg += "User: " + Permissions.get().getUserString() + "\n";
@@ -564,6 +738,75 @@ public class JobContext {
 			log = CommonUtils.trimToWsChars(log, maxChars, true);
 			job.setLog(log);
 		}
+	}
+
+	boolean isFirstTimeMessage(String message) {
+		return publishedMessages.add(message);
+	}
+
+	void enqueue(Runnable runnable) {
+		TransformCommit.get().enqueueBackendTransform(runnable,
+				JobRegistry.TRANSFORM_QUEUE_NAME);
+	}
+
+	void persistStart() {
+		if (job.provideIsNotComplete()) {
+			// Threading - guaranteed that this is sole mutating thread (for
+			// job)
+			job.setStartTime(new Date());
+			job.setState(JobState.PROCESSING);
+			job.setPerformerVersionNumber(performer.getVersionNumber());
+			new JobObservable.ToProcessing(job).publish();
+			persistMetadata();
+		}
+	}
+
+	void restoreThreadName() {
+		if (threadStartName != null) {
+			Thread.currentThread().setName(threadStartName);
+		}
+	}
+
+	void start() {
+		LooseContext.set(CONTEXT_CURRENT, this);
+		thread = Thread.currentThread();
+		threadStartName = thread.getName();
+		if (job.provideIsNotComplete()) {
+			String contextThreadName = Ax.format("%s::%s::%s",
+					job.provideTaskClass().getSimpleName(),
+					job.toLocator().toIdOrNegativeLocalIdString(),
+					threadStartName);
+			thread.setName(contextThreadName);
+		}
+		if (noHttpContext) {
+			ActionPerformerTrackMetrics filter = Registry
+					.impl(ActionPerformerTrackMetrics.class);
+			if (JobRegistry.get().environment.isTrackMetrics()) {
+				InternalMetrics.get().startTracker(performer,
+						() -> describeTask(job.getTask(), ""),
+						InternalMetricTypeAlcina.service,
+						performer.getClass().getSimpleName(), filter);
+			}
+		}
+	}
+
+	void toAwaitingChildren() {
+		TransactionEnvironment.get().commit();
+		allocator.toAwaitingChildren(this);
+	}
+
+	void updateProcessState(ProcessState processState) {
+		if (allocator.thread != null) {
+			processState.setAllocatorThreadName(allocator.thread.getName());
+		}
+		if (thread != null) {
+			processState.setThreadName(thread.getName());
+			processState.setStackTrace(SEUtilities.getFullStacktrace(thread));
+		}
+	}
+
+	private ProgressBuilder createProgressBuilder() {
+		return new ProgressBuilder();
 	}
 
 	private void end0() {
@@ -604,240 +847,5 @@ public class JobContext {
 		} finally {
 			endedLatch.countDown();
 		}
-	}
-
-	public void endLogBuffer() {
-		if (job.provideIsNotComplete()) {
-			log = Registry.impl(PerThreadLogging.class).endBuffer();
-		}
-	}
-
-	public ExecutionConstraints getExecutionConstraints() {
-		return allocator.getExecutionConstraints();
-	}
-
-	public Job getJob() {
-		return this.job;
-	}
-
-	public String getLog() {
-		return this.log;
-	}
-
-	public Logger getLogger() {
-		return this.logger;
-	}
-
-	public TaskPerformer getPerformer() {
-		return this.performer;
-	}
-
-	public TreeProcess getTreeProcess() {
-		return this.treeProcess;
-	}
-
-	public void incrementItemCount(int delta) {
-		itemCount += delta;
-	}
-
-	boolean isFirstTimeMessage(String message) {
-		return publishedMessages.add(message);
-	}
-
-	public void jobOk(String resultMessage) {
-		job.setResultMessage(resultMessage);
-		job.setStatusMessage(resultMessage);
-		job.setResultType(JobResultType.OK);
-	}
-
-	public void jobProgress(String message, double completion) {
-		setStatusMessage(message);
-		getJob().setCompletion(completion);
-	}
-
-	void enqueue(Runnable runnable) {
-		TransformCommit.get().enqueueBackendTransform(runnable,
-				JobRegistry.TRANSFORM_QUEUE_NAME);
-	}
-
-	public void onJobException(Exception e) {
-		Transaction.ensureEnded();
-		Transaction.begin();
-		job.setResultType(JobResultType.EXCEPTION);
-		String simpleExceptionMessage = CommonUtils.toSimpleExceptionMessage(e);
-		job.setStatusMessage(simpleExceptionMessage);
-		job.setResultMessage(simpleExceptionMessage);
-		TransactionEnvironment.get().commit();
-		logger.warn("Unexpected job exception - job {}", e, job.getId());
-		e.printStackTrace();
-	}
-
-	protected void persistMetadata() {
-		if (performer.deferMetadataPersistence(job)) {
-			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
-		} else {
-			/*
-			 * Because of possible collisions with stacktrace?
-			 */
-			TransactionEnvironment.get().commitWithBackoff();
-		}
-	}
-
-	void persistStart() {
-		if (job.provideIsNotComplete()) {
-			// Threading - guaranteed that this is sole mutating thread (for
-			// job)
-			job.setStartTime(new Date());
-			job.setState(JobState.PROCESSING);
-			job.setPerformerVersionNumber(performer.getVersionNumber());
-			new JobObservable.ToProcessing(job).publish();
-			persistMetadata();
-		}
-	}
-
-	public void recordLargeInMemoryResult(String largeSerializedResult) {
-		new JobRegistry.InMemoryResult(largeSerializedResult, getJob())
-				.record();
-	}
-
-	public void remove() {
-		LooseContext.remove(CONTEXT_CURRENT);
-	}
-
-	void restoreThreadName() {
-		if (threadStartName != null) {
-			Thread.currentThread().setName(threadStartName);
-		}
-	}
-
-	public void setItemCount(int itemCount) {
-		this.itemCount = itemCount;
-	}
-
-	public void setItemsCompleted(int itemsCompleted) {
-		this.itemsCompleted = itemsCompleted;
-	}
-
-	void start() {
-		LooseContext.set(CONTEXT_CURRENT, this);
-		thread = Thread.currentThread();
-		threadStartName = thread.getName();
-		if (job.provideIsNotComplete()) {
-			String contextThreadName = Ax.format("%s::%s::%s",
-					job.provideTaskClass().getSimpleName(),
-					job.toLocator().toIdOrNegativeLocalIdString(),
-					threadStartName);
-			thread.setName(contextThreadName);
-		}
-		if (noHttpContext) {
-			ActionPerformerTrackMetrics filter = Registry
-					.impl(ActionPerformerTrackMetrics.class);
-			if (JobRegistry.get().environment.isTrackMetrics()) {
-				InternalMetrics.get().startTracker(performer,
-						() -> describeTask(job.getTask(), ""),
-						InternalMetricTypeAlcina.service,
-						performer.getClass().getSimpleName(), filter);
-			}
-		}
-	}
-
-	void toAwaitingChildren() {
-		TransactionEnvironment.get().commit();
-		allocator.toAwaitingChildren(this);
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("JobContext :: Thread - %s; Job - %s", thread, job);
-	}
-
-	public void updateJob(String message, int delta) {
-		itemsCompleted += delta;
-		setStatusMessage("%s (%s/%s)", message, itemsCompleted, itemCount);
-	}
-
-	void updateProcessState(ProcessState processState) {
-		if (allocator.thread != null) {
-			processState.setAllocatorThreadName(allocator.thread.getName());
-		}
-		if (thread != null) {
-			processState.setThreadName(thread.getName());
-			processState.setStackTrace(SEUtilities.getFullStacktrace(thread));
-		}
-	}
-
-	public class ProgressBuilder {
-		private String message;
-
-		private int delta;
-
-		private int total = 1;
-
-		private boolean log;
-
-		public void publish() {
-			setItemCount(total);
-			updateJob(message, delta);
-			if (log) {
-				getLogger().info(message);
-			}
-		}
-
-		public ProgressBuilder withDelta(int delta) {
-			this.delta = delta;
-			return this;
-		}
-
-		public ProgressBuilder withLog(boolean log) {
-			this.log = log;
-			return this;
-		}
-
-		public ProgressBuilder withMessage(String template, Object... args) {
-			this.message = Ax.format(template, args);
-			return this;
-		}
-
-		public ProgressBuilder withTotal(int total) {
-			this.total = total;
-			return this;
-		}
-	}
-
-	@Registration(TreeProcess.SelectedProcessNodeProvider.class)
-	public static class SelectedProcessNodeProviderImpl
-			implements TreeProcess.SelectedProcessNodeProvider {
-		@Override
-		public Node getSelectedProcessNode() {
-			return JobContext.getSelectedProcessNode();
-		}
-	}
-
-	public static String getJobTreeContextAsString() {
-		FormatBuilder format = new FormatBuilder();
-		String prelude = Ax.format("Job tree - thread %s",
-				Thread.currentThread().getName());
-		format.line(prelude);
-		if (!JobContext.has()) {
-			format.append("[no job context]");
-		} else {
-			List<String> jobStrings = new ArrayList<>();
-			Job jobCursor = JobContext.get().getJob();
-			while (jobCursor != null) {
-				jobStrings.add(0, jobCursor.toString());
-				Set<? extends JobRelation> toRelations = jobCursor
-						.getToRelations();
-				Optional<? extends JobRelation> awaiter = toRelations.stream()
-						.filter(t -> t.getType() == JobRelationType.AWAITED)
-						.findFirst();
-				if (awaiter.isPresent()) {
-					jobCursor = awaiter.get().getFrom();
-					continue;
-				}
-				jobCursor = jobCursor.provideParent().orElse(null);
-			}
-			jobStrings.forEach(js -> format.line("job - %s", js));
-		}
-		return format.toString();
 	}
 }
