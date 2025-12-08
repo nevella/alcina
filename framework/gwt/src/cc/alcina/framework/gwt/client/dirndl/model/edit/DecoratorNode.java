@@ -126,7 +126,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		transform = Binding.DisplayFalseTrueBidi.class)
 	public boolean contentEditable;
 
-	@Binding(type = Type.CSS_CLASS)
+	@Binding(type = Type.PROPERTY)
 	public boolean selected;
 
 	@Binding(type = Type.INNER_TEXT)
@@ -235,18 +235,15 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		// current:
 		// try positioning cursor immediately after the decorator
 		// guaranteed non-null (due to zws insertion)
-		TextNode cursorTarget = nextSibling instanceof TextNode
-				? (TextNode) nextSibling
-				: nextSibling.fragmentTree().nextTextNode(true).orElse(null);
-		/*
-		 * well - what's the dispatch model for ZWS insertion? Maybe it is
-		 * null...maybe we've lost focus...
-		 */
-		if (cursorTarget == null) {
-			// Client.eventBus().queued()
-			// .lambda(this::positionCursorPostReferencedSelection)
-			// .deferred().dispatch();
-			return;
+		TextNode cursorTarget = null;
+		if (nextSibling != null) {
+			cursorTarget = nextSibling instanceof TextNode
+					? (TextNode) nextSibling
+					: nextSibling.fragmentTree().nextTextNode(true)
+							.orElse(null);
+		} else {
+			cursorTarget = new TextNode("");
+			nodes().insertAfterThis(cursorTarget);
 		}
 		Node cursorNode = cursorTarget.domNode().gwtNode();
 		Selection selection = Document.get().getSelection();

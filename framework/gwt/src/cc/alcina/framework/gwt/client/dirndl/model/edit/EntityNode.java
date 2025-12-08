@@ -70,10 +70,10 @@ public abstract class EntityNode<E extends Entity>
 	 * contenteditable init), so isValid is logically correct
 	 */
 	public void validate() {
-		if (!isValid()) {
+		if (!isValid() && provideIsBound()) {
 			DomNode firstNode = domNode().children.firstNode();
 			domNode().strip();
-			if (firstNode.isText()) {
+			if (firstNode != null && firstNode.isText()) {
 				// undo split
 				firstNode.text().mergeWithAdjacentTexts();
 			}

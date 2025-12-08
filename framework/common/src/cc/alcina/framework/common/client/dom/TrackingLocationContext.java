@@ -214,11 +214,13 @@ class TrackingLocationContext implements LocationContext {
 			 * current), removed is being removed so its location is undefined
 			 * after this mutation -
 			 * 
-			 * - but that'd be wrong because - when removing - location is
-			 * needed to determine if the DomMutation is an extension of the
-			 * current IndexMutation
+			 * - but that'd be wrong because - when removing - location, if it
+			 * exists, is needed to determine if the DomMutation is an extension
+			 * of the current IndexMutation
 			 */
-			context.ensureCurrent(result);
+			if (result != null) {
+				context.ensureCurrent(result);
+			}
 			return result;
 		}
 

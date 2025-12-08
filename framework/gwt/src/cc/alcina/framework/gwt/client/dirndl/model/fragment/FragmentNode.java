@@ -6,6 +6,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -229,7 +230,8 @@ public abstract class FragmentNode extends Model.Fields
 	 * FIXME - remove
 	 */
 	public NotifyingList<Node> provideChildNodes() {
-		return FragmentNodeAccess.ensureChildren(provideNode());
+		return isDetached() ? new NotifyingList<>(new ArrayList<>())
+				: FragmentNodeAccess.ensureChildren(provideNode());
 	}
 
 	Node provideParentNode() {
@@ -315,7 +317,7 @@ public abstract class FragmentNode extends Model.Fields
 
 			@Override
 			public boolean hasNext() {
-				return cursor != null;
+				return cursor != null && !cursor.isDetached();
 			}
 
 			@Override
