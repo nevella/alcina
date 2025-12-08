@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
@@ -163,8 +164,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	@Override
 	@Directed.Exclude
-	public List<Choice<T>> getChoices() {
-		return super.getChoices();
+	public List<Model> getElements() {
+		return super.getElements();
 	}
 
 	@Override
