@@ -484,6 +484,7 @@ public class CompilationUnits {
 					unit = StaticJavaParser.parse(getFile());
 				}
 			} catch (Exception e) {
+				Ax.out("Exception processing file: %s", getFile());
 				throw new WrappedRuntimeException(e);
 			}
 			return unit;
