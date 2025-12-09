@@ -5,7 +5,6 @@ import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 
@@ -52,9 +51,12 @@ public class EntityLayerUtils {
 			EntityLayerUtils.botExtraUa = botExtraRegex.isEmpty() ? null
 					: Pattern.compile(botExtraRegex);
 		}
-		return CommonUtils.isNullOrEmpty(userAgent)
-				|| EntityLayerUtils.botUa.matcher(userAgent).find()
-				|| EntityLayerUtils.isBotExtraUserAgent(userAgent);
+		if (Ax.isBlank(userAgent)) {
+			return false;
+		} else {
+			return EntityLayerUtils.botUa.matcher(userAgent).find()
+					|| EntityLayerUtils.isBotExtraUserAgent(userAgent);
+		}
 	}
 
 	public static boolean isProduction() {
