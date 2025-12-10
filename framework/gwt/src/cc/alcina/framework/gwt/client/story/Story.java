@@ -1227,13 +1227,13 @@ public interface Story {
 			}
 
 			public static class SelectArea implements Ui {
-				int fromX;
+				public int fromX;
 
-				int fromY;
+				public int fromY;
 
-				int toX;
+				public int toX;
 
-				int toY;
+				public int toY;
 
 				public SelectArea() {
 				}

@@ -326,9 +326,10 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				Actions actions = exec.actions();
 				// there's something weird about these moves...but this combo
 				// works
-				actions.moveToElement(elem, -60, -5).clickAndHold()
-						.moveToElement(elem, 50, 10).release().build()
-						.perform();
+				actions.moveToElement(elem, action.fromX, action.fromY)
+						.clickAndHold()
+						.moveToElement(elem, action.toX, action.toY).release()
+						.build().perform();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
