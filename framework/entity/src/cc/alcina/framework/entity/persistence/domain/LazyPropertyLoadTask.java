@@ -14,14 +14,15 @@ import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class LazyPropertyLoadTask<T extends Entity>
 		extends LazyLoadProvideTask<T> {
-	private static final String CONTEXT_IN_LAZY_PROPERTY_LOAD = LazyLoadProvideTask.class
-			.getName() + ".CONTEXT_IN_LAZY_PROPERTY_LOAD";
+	public static final LooseContext.Key<?> CONTEXT_POPULATE_LAZY_PROPERTIES = LooseContext
+			.key(LazyLoadProvideTask.class,
+					".CONTEXT_POPULATE_LAZY_PROPERTIES");
 
-	public static final String CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES = LazyLoadProvideTask.class
-			.getName() + ".CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES";
+	private static final LooseContext.Key<?> CONTEXT_IN_LAZY_PROPERTY_LOAD = LooseContext
+			.key(LazyLoadProvideTask.class, ".CONTEXT_IN_LAZY_PROPERTY_LOAD");
 
 	public static boolean inLazyPropertyLoad() {
-		return LooseContext.is(CONTEXT_IN_LAZY_PROPERTY_LOAD);
+		return CONTEXT_IN_LAZY_PROPERTY_LOAD.is();
 	}
 
 	public LazyPropertyLoadTask(Class<T> clazz, DomainStore domainStore) {
@@ -41,16 +42,24 @@ public class LazyPropertyLoadTask<T extends Entity>
 	}
 
 	@Override
-	protected void lazyLoad(Collection objects) {
-		if (inLazyPropertyLoad()) {
+	public void run(Class clazz, Collection<T> objects, boolean topLevel) {
+		if (!checkContext()) {
 			return;
 		}
-		if (LooseContext
-				.is(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)) {
+		super.run(clazz, objects, topLevel);
+	}
+
+	boolean checkContext() {
+		return CONTEXT_POPULATE_LAZY_PROPERTIES.is() && !inLazyPropertyLoad();
+	}
+
+	@Override
+	protected void lazyLoad(Collection objects) {
+		if (!checkContext()) {
 			return;
 		}
 		try {
-			LooseContext.pushWithTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD);
+			LooseContext.pushWithTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD.getPath());
 			String inClause = EntityPersistenceHelper.toInClause(objects);
 			String sqlFilter = String.format(" id in %s", inClause);
 			String key = Ax.format("load :: %s (%s) (%s)",
@@ -67,7 +76,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 	}
 
 	@Override
-	protected void loadDependents(List requireLoad) throws Exception {
+	protected void loadDependents(List requireLoad) {
 	}
 
 	@Override
@@ -77,15 +86,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
-		if (CONTEXT_LAZY_LOAD_DISABLED.is()) {
-			return stream;
-		}
-		if (LooseContext
-				.is(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)) {
-			return stream;
-		}
-		if (!LooseContext.is(
-				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)) {
+		if (!checkContext()) {
 			return stream;
 		}
 		return super.wrap(stream);

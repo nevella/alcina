@@ -226,8 +226,9 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 				TreeSerializableSignatures.class.getName(), sha1);
 		if (DomainStore.hasStores()) {
 			MethodContext.instance().withRootPermissions(true).run(() -> {
-				UserProperty.ensure(key).domain().ensurePopulated()
-						.setValue(signaturesBytes);
+				UserProperty<?> property = UserProperty.ensure(key);
+				property.domain().ensurePopulated();
+				property.setValue(signaturesBytes);
 				Transaction.commit();
 			});
 		}

@@ -92,7 +92,6 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
@@ -1325,8 +1324,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 						return DomainStore.writableStore().getCache().get(clazz,
 								id);
 					} else {
-						return MethodContext.instance().withContextTrue(
-								LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
+						return MethodContext.instance()
+								// .withContextFalse(
+								// LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES.getPath())
 								.withContextTrue(
 										ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
 								.call(() -> Domain.find(clazz, f_id));

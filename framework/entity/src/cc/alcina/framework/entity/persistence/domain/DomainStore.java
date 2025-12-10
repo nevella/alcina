@@ -179,9 +179,6 @@ public class DomainStore implements IDomainStore {
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
 
-	public static final String CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
-			.getName() + ".CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES";
-
 	public static final String CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_POPULATE_LOCAL_ID_LOCATORS";
 	static {
@@ -591,14 +588,10 @@ public class DomainStore implements IDomainStore {
 		if (t != null) {
 			for (PreProvideTask task : domainDescriptor
 					.getPreProvideTasks(clazz)) {
-				try {
-					if (!task.filter(t)) {
-						return null;
-					}
-					task.run(clazz, Collections.singletonList(t), true);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+				if (!task.filter(t)) {
+					return null;
 				}
+				task.run(clazz, Collections.singletonList(t), true);
 			}
 		}
 		return t;
@@ -1494,6 +1487,19 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
+		public void ensurePopulated(Entity<?> entity) {
+			LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES
+					.runWithTrue(() -> {
+						Class<? extends Entity> clazz = entity.entityClass();
+						for (PreProvideTask task : domainDescriptor
+								.getPreProvideTasks(clazz)) {
+							task.run(clazz, Collections.singletonList(entity),
+									true);
+						}
+					});
+		}
+
+		@Override
 		public <V extends Entity> V find(EntityLocator locator) {
 			if (locator.id != 0) {
 				return find(locator.clazz, locator.id);
@@ -1943,6 +1949,12 @@ public class DomainStore implements IDomainStore {
 			public boolean wasRemoved(Entity entity) {
 				Class clazz = entity.entityClass();
 				return storeHandler(clazz).wasRemoved(entity);
+			}
+
+			@Override
+			public void ensurePopulated(Entity<?> entity) {
+				Class clazz = entity.entityClass();
+				storeHandler(clazz).ensurePopulated(entity);
 			}
 		}
 

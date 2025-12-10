@@ -1059,7 +1059,8 @@ public abstract class DevConsoleCommand {
 			TaskDomainQuery task = new TaskDomainQuery().withFrom(entity)
 					.withResultPaths(pathsArray);
 			Job job = task.perform();
-			Ax.out(job.domain().ensurePopulated().getLog());
+			job.domain().ensurePopulated();
+			Ax.out(job.getLog());
 			return "";
 		}
 	}

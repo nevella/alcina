@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -25,15 +24,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.Loader;
 
-/*
- * With mvcc and lazy properties, some of the motivation for this has left. Left
- * in the codebase for reference rather than the expectation it'll ever be used
- */
 public abstract class LazyLoadProvideTask<T extends Entity>
 		implements PreProvideTask<T> {
-	public static final LooseContext.Key<?> CONTEXT_LAZY_LOAD_DISABLED = LooseContext
-			.key(LazyLoadProvideTask.class, ".CONTEXT_LAZY_LOAD_DISABLED");
-
 	final static Logger logger = LoggerFactory
 			.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -65,22 +57,20 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		return this;
 	}
 
-	protected abstract void lazyLoad(Collection<T> objects) throws Exception;
+	protected abstract void lazyLoad(Collection<T> objects);
 
 	protected void lllog(String template, Object... args) {
 		logger.debug(template.replace("%s", "{}"), args);
 	}
 
-	protected abstract void loadDependents(List<T> requireLoad)
-			throws Exception;
+	protected abstract void loadDependents(List<T> requireLoad);
 
-	protected List<T> loadTable(Class clazz, String sqlFilter)
-			throws Exception {
+	protected List<T> loadTable(Class clazz, String sqlFilter) {
 		return loadTable(clazz, sqlFilter, false);
 	}
 
 	protected List<T> loadTable(Class clazz, String sqlFilter,
-			boolean populateLazyPropertyValues) throws Exception {
+			boolean populateLazyPropertyValues) {
 		Preconditions.checkState(
 				domainStore.loader instanceof DomainStoreLoaderDatabase);
 		Loader loader = ((DomainStoreLoaderDatabase) domainStore.loader)
@@ -88,7 +78,11 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		loader.withClazz(clazz).withSqlFilter(sqlFilter)
 				.withPopulateLazyPropertyValues(populateLazyPropertyValues)
 				.withResolveRefs(true).withReturnResults(true);
-		return loader.loadEntities();
+		try {
+			return loader.loadEntities();
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	protected void log(String template, Object... args) {
@@ -131,12 +125,8 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	}
 
 	@Override
-	public void run(Class clazz, Collection<T> objects, boolean topLevel)
-			throws Exception {
+	public void run(Class clazz, Collection<T> objects, boolean topLevel) {
 		if (clazz != this.clazz) {
-			return;
-		}
-		if (CONTEXT_LAZY_LOAD_DISABLED.is()) {
 			return;
 		}
 		List<DomainTransformEvent> transforms = TransformManager.get()
@@ -182,12 +172,8 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		List<T> list = stream.collect(Collectors.toList());
 		Preconditions.checkArgument(list.size() < 100000,
 				"Max length of lazyload task is 100000");
-		try {
-			lazyLoad(list);
-			return list.stream();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		lazyLoad(list);
+		return list.stream();
 	}
 
 	public static class SimpleLoaderTask extends LazyLoadProvideTask<Entity> {
@@ -197,20 +183,22 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		}
 
 		@Override
-		protected void lazyLoad(Collection<Entity> objects) throws Exception {
+		protected void lazyLoad(Collection<Entity> objects) {
 		}
 
 		@Override
-		protected void loadDependents(List<Entity> requireLoad)
-				throws Exception {
+		protected void loadDependents(List<Entity> requireLoad) {
 			throw new UnsupportedOperationException();
 		}
 
 		public <V extends Entity> List<V> loadTableTyped(Class clazz,
-				String sqlFilter, boolean populateLazyPropertyValues)
-				throws Exception {
-			return (List) super.loadTable(clazz, sqlFilter,
-					populateLazyPropertyValues);
+				String sqlFilter, boolean populateLazyPropertyValues) {
+			try {
+				return (List) super.loadTable(clazz, sqlFilter,
+						populateLazyPropertyValues);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
 		}
 	}
 }

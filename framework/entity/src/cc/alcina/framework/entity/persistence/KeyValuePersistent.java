@@ -63,7 +63,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 				.query(implementation());
 		if (populate) {
 			query.contextTrue(
-					LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES);
+					LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES);
 		}
 		return (Optional<KVP>) query.filter("key", keyMapper.apply(key))
 				.optional();
@@ -72,8 +72,9 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public static <KVP extends KeyValuePersistent> List<KVP>
 			byParentKey(String parentKey) {
-		return (List<KVP>) Domain.query(implementation()).contextTrue(
-				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+		return (List<KVP>) Domain.query(implementation())
+				.contextTrue(
+						LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES)
 				.filter("parentKey", keyMapper.apply(parentKey)).list();
 	}
 

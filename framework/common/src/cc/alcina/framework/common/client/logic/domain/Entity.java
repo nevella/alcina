@@ -358,7 +358,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return (V) rule.checkPermission(Entity.this);
 		}
 
-		/*
+		/**
 		 * Copies properties from 'this' (detached/projected copy of the entity)
 		 * to the domain graph entity
 		 */
@@ -366,7 +366,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return (T) Domain.detachedToDomain(Entity.this);
 		}
 
-		/*
+		/**
 		 * A disconnected projection of an entity. Useful for things like
 		 * speculative writes and serialization. Normally generated using
 		 * projection
@@ -376,7 +376,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return (T) Domain.detachedVersion(Entity.this);
 		}
 
-		/*
+		/**
 		 * Remove transform manager listeners - this is appropriate when using a
 		 * 'faux' object (negative id), or when simply muting transforms for a
 		 * given object/mvcc objectversion
@@ -385,23 +385,23 @@ public abstract class Entity<T extends Entity> extends Bindable
 			TransformManager.get().deregisterDomainObject(Entity.this);
 		}
 
-		/*
+		/**
 		 *
-		 * No-op if client-side, returns the domain store *lazy fields
-		 * populated* version if server-side
+		 * Returns the transform graph version of the entity - does *not*
+		 * populate lazy properties
 		 *
 		 */
 		public T domainVersion() {
-			return ensurePopulated();
+			return (T) Domain.find(Entity.this);
 		}
 
-		/*
-		 * SKY - this should always return the same object (just lazy populated)
-		 * - server-side, throw if this is not the graph object. Also, the
-		 * method should return void
+		/**
+		 * Populate the lazy properties of this entity (current tx only). See
+		 * {@link Domain#ensurePopulated(Entity)}
+		 * 
 		 */
-		public T ensurePopulated() {
-			return (T) Domain.find(Entity.this);
+		public void ensurePopulated() {
+			Domain.ensurePopulated(Entity.this);
 		}
 
 		public long getIdOrLocalIdIfZero() {

@@ -276,8 +276,9 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				ReflectiveSerializableSignatures.class.getName(), sha1);
 		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
 			MethodContext.instance().withRootPermissions(true).run(() -> {
-				UserProperty.ensure(key).domain().ensurePopulated()
-						.setValue(signaturesBytes);
+				UserProperty<?> property = UserProperty.ensure(key);
+				property.domain().ensurePopulated();
+				property.setValue(signaturesBytes);
 				Transaction.commit();
 			});
 		}
