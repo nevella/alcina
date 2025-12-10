@@ -233,6 +233,11 @@ public class EnvironmentManager {
 			return handler().wasRemoved(entity);
 		}
 
+		@Override
+		public void ensurePopulated(Entity<?> entity) {
+			handler().ensurePopulated(entity);
+		}
+
 		EnvironmentHandler() {
 			storesHandler = DomainStore.stores().storesHandler;
 		}
