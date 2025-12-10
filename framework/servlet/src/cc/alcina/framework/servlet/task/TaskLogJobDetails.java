@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
-import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -192,9 +191,10 @@ public class TaskLogJobDetails extends PerformerTask {
 			ProcessState processState = active.getProcessState();
 			ProcessState messageState = active.getStateMessages().stream()
 					.sorted(EntityComparator.REVERSED_INSTANCE).findFirst()
-					.map(m -> ((JobStateMessage) m.domain().ensurePopulated())
-							.getProcessState())
-					.orElse(null);
+					.map(m -> {
+						m.domain().ensurePopulated();
+						return m.getProcessState();
+					}).orElse(null);
 			DomNode threadDiv = body.builder().tag("div")
 					.className("thread-data").append();
 			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();

@@ -11,8 +11,8 @@ import cc.alcina.framework.entity.Io;
 	priority = Registration.Priority.PREFERRED_LIBRARY)
 public class DebugLogWriterImpl extends Job.DebugLogWriter {
 	public void write(Job job) {
-		Io.log().toFile(
-				job.domain().ensurePopulated().getLargeResult().toString());
+		job.domain().ensurePopulated();
+		Io.log().toFile(job.getLargeResult().toString());
 		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
 	}
 }

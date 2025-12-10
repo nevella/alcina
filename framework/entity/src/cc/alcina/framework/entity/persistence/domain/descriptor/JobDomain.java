@@ -360,7 +360,7 @@ public class JobDomain {
 		DomainQuery query = Domain.query(jobImplClass);
 		if (loadAllProperties) {
 			query.contextTrue(
-					LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES);
+					LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES);
 		}
 		return query.filter("taskClassName", taskClass.getName()).stream();
 	}

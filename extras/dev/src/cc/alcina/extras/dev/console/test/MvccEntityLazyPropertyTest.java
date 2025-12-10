@@ -43,19 +43,18 @@ public class MvccEntityLazyPropertyTest<IU extends Entity & IUser, IG extends En
 					}
 					return false;
 				}).collect(Collectors.toList());
-		Domain.stream(clazz).limit(2).map(e -> e.domain().ensurePopulated())
-				.forEach(e -> {
-					try {
-						for (PropertyDescriptor pd : withLazy) {
-							Object invoke = pd.getReadMethod().invoke(e,
-									new Object[0]);
-							Preconditions.checkNotNull(invoke);
-							Ax.out("%s - %s - %s chars", e.toStringEntity(),
-									pd.getName(), invoke.toString().length());
-						}
-					} catch (Exception e2) {
-						throw new WrappedRuntimeException(e2);
-					}
-				});
+		Domain.stream(clazz).limit(2).forEach(e -> {
+			try {
+				e.domain().ensurePopulated();
+				for (PropertyDescriptor pd : withLazy) {
+					Object invoke = pd.getReadMethod().invoke(e, new Object[0]);
+					Preconditions.checkNotNull(invoke);
+					Ax.out("%s - %s - %s chars", e.toStringEntity(),
+							pd.getName(), invoke.toString().length());
+				}
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
+			}
+		});
 	}
 }

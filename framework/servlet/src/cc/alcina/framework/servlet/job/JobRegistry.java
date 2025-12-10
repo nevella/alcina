@@ -312,8 +312,8 @@ public class JobRegistry {
 	}
 
 	public static void logLargeResult(Job job) {
-		Job populated = job.domain().ensurePopulated();
-		Io.log().toFile(populated.getLargeResult().toString());
+		job.domain().ensurePopulated();
+		Io.log().toFile(job.getLargeResult().toString());
 	}
 
 	public static Job scheduleConsistency(Task task) {
@@ -381,7 +381,7 @@ public class JobRegistry {
 						.run(resource::acquire);
 				try {
 					// ensure lazy (process state) field.
-					forJob = forJob.domain().ensurePopulated();
+					forJob.domain().ensurePopulated();
 					processState = forJob.getProcessState().clone();
 					processState.provideRecord(record).setAcquired(true);
 					forJob.setProcessState(processState);
@@ -462,8 +462,8 @@ public class JobRegistry {
 			jobContext.awaitSequenceCompletion();
 		}
 		DomainStore.waitUntilCurrentRequestsProcessed();
-		return TransactionEnvironment
-				.withDomain(() -> job.domain().ensurePopulated());
+		TransactionEnvironment.withDomain(() -> job.domain().ensurePopulated());
+		return job;
 	}
 
 	public String dumpActiveJobsThisInstance() {
@@ -575,36 +575,27 @@ public class JobRegistry {
 		// track why not removed in this-vm process (i.e. finally of performJob0
 		// not completing).
 		// How to track: put logging here (DEVEX)
-		try {
-			LooseContext.push();
-			LazyPropertyLoadTask.CONTEXT_LAZY_LOAD_DISABLED.setTrue();
-			activeJobs.keySet().removeIf(job -> {
-				try {
-					// this is more a guard against exceptions rather than
-					// logically
-					// correct - correctness would be a txview
-					if (Mvcc.isVisible(job)
-							&& job.getState() == JobState.ABORTED) {
-						return true;
-					}
-					if (job.domain().wasPersisted()
-							&& Domain.find(job) == null) {
-						/*
-						 * Deleted, but with issues during persistence
-						 * propagation
-						 */
-						return true;
-					}
-					return false;
-				} catch (Exception e) {
-					// FIXME - devex - presumably mvcc-deleted
-					e.printStackTrace();
-					return false;
+		activeJobs.keySet().removeIf(job -> {
+			try {
+				// this is more a guard against exceptions rather than
+				// logically
+				// correct - correctness would be a txview
+				if (Mvcc.isVisible(job) && job.getState() == JobState.ABORTED) {
+					return true;
 				}
-			});
-		} finally {
-			LooseContext.pop();
-		}
+				if (job.domain().wasPersisted() && Domain.find(job) == null) {
+					/*
+					 * Deleted, but with issues during persistence propagation
+					 */
+					return true;
+				}
+				return false;
+			} catch (Exception e) {
+				// FIXME - devex - presumably mvcc-deleted
+				e.printStackTrace();
+				return false;
+			}
+		});
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {
@@ -653,7 +644,7 @@ public class JobRegistry {
 				.collect(EntityHelper.toIdSet());
 		return Domain.query(PersistentImpl.getImplementation(Job.class))
 				.contextTrue(
-						LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+						LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES)
 				.filterByIds(ids).stream().map(Job::asJobTracker)
 				.collect(Collectors.toList());
 	}
@@ -684,9 +675,10 @@ public class JobRegistry {
 	}
 
 	public Job getJobHoldingResource(JobResource resource) {
-		return JobDomain.get().getActiveJobs().filter(
-				j -> j.domain().ensurePopulated().getProcessState() != null && j
-						.getProcessState().getResources().stream()
+		return JobDomain.get().getActiveJobs()
+				.peek(j -> j.domain().ensurePopulated())
+				.filter(j -> j.getProcessState() != null && j.getProcessState()
+						.getResources().stream()
 						.anyMatch(rr -> rr.isAcquired()
 								&& rr.getPath().equals(resource.getPath())))
 				.findFirst().orElse(null);

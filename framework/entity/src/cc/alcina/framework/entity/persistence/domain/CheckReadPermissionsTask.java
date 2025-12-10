@@ -33,7 +33,7 @@ public class CheckReadPermissionsTask<T extends Entity>
 	}
 
 	@Override
-	protected void loadDependents(List<T> requireLoad) throws Exception {
+	protected void loadDependents(List<T> requireLoad) {
 	}
 
 	@Override

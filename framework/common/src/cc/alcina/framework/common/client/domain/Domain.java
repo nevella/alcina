@@ -270,6 +270,10 @@ public class Domain {
 		default boolean wasRemoved(Entity entity) {
 			return false;
 		}
+
+		default void ensurePopulated(Entity<?> entity) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public static class DomainHandlerNonTransactional implements DomainHandler {
@@ -320,5 +324,21 @@ public class Domain {
 		}
 
 		public void log(Entity entity, String... paths);
+	}
+
+	/**
+	 * <p>
+	 * Populate the lazy properties of this entity (current tx only - so will
+	 * not cause long-term memory consumption).
+	 * 
+	 * <p>
+	 * Throws if not in a transactional context, or if the current tx contains
+	 * transforms of the entity
+	 * 
+	 * @param entity
+	 *            the entity to populate
+	 */
+	public static void ensurePopulated(Entity<?> entity) {
+		handler.ensurePopulated(entity);
 	}
 }

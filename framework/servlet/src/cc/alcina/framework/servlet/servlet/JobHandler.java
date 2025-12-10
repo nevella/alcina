@@ -104,7 +104,7 @@ public class JobHandler implements HttpWriteUtils {
 			break;
 		}
 		Job f_job = job;
-		job = TransactionEnvironment
+		TransactionEnvironment
 				.withDomain(() -> f_job.domain().ensurePopulated());
 		if (job.getResultType().isFail() || job.getLargeResult() == null) {
 			String message = Ax.blankTo(job.getLog(),

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -52,6 +53,11 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public DomainQuery<E> contextTrue(String contextProperty) {
 		contextProperties.put(contextProperty, Boolean.TRUE);
+		return this;
+	}
+
+	public DomainQuery<E> contextTrue(LooseContext.Key<?> contextKey) {
+		contextProperties.put(contextKey.getPath(), Boolean.TRUE);
 		return this;
 	}
 

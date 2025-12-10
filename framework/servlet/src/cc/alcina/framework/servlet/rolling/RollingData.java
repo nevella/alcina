@@ -47,7 +47,7 @@ public abstract class RollingData<K extends Comparable, V> {
 		Function<String, K> keyDeserializer = keyDeserializer();
 		List<? extends RollingDataItem> list = Domain.query(rdImplClass)
 				.contextTrue(
-						LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+						LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES)
 				.filter("typeKey", typeKey).list();
 		List<K> existingKeys = list.stream().map(RollingDataItem::getMaxKey)
 				.map(k -> keyDeserializer.apply(k))
@@ -74,8 +74,9 @@ public abstract class RollingData<K extends Comparable, V> {
 				Transaction.commit();
 			}
 		}
-		list = Domain.query(rdImplClass).contextTrue(
-				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+		list = Domain.query(rdImplClass)
+				.contextTrue(
+						LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES)
 				.filter("typeKey", typeKey).list();
 		TreeMap<K, V> map = new TreeMap<K, V>();
 		Function<String, List<V>> deserializer = deserializer();

@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 public class MethodContext {
@@ -147,9 +146,27 @@ public class MethodContext {
 		return this;
 	}
 
+	public MethodContext withContextFalse(String key) {
+		context.put(key, Boolean.FALSE);
+		return this;
+	}
+
+	public MethodContext withContextTrue(LooseContext.Key<?> key) {
+		return withContextTrue(key.getPath());
+	}
+
+	public MethodContext withContextFalse(LooseContext.Key<?> key) {
+		return withContextFalse(key.getPath());
+	}
+
 	public MethodContext withContextValue(String key, Object value) {
 		context.put(key, value);
 		return this;
+	}
+
+	public MethodContext withContextValue(LooseContext.Key<?> key,
+			Object value) {
+		return withContextValue(key.getPath(), value);
 	}
 
 	public MethodContext
@@ -193,9 +210,5 @@ public class MethodContext {
 	public MethodContext withThreadName(String threadName) {
 		this.threadName = threadName;
 		return this;
-	}
-
-	public MethodContext withContextTrue(LooseContext.Key contextKey) {
-		return withContextTrue(contextKey.getPath());
 	}
 }

@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
@@ -29,7 +28,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
@@ -179,10 +177,8 @@ class JobAllocator {
 					logger.info("await spinlock - {} -  job {}",
 							queue.currentPhase,
 							awaitJobExistenceBeforeContinueToExit.toLocator());
-					Job domainVisible = LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED
-							.callWithTrue(
-									() -> awaitJobExistenceBeforeContinueToExit
-											.toLocator().find());
+					Job domainVisible = awaitJobExistenceBeforeContinueToExit
+							.toLocator().find();
 					/*
 					 * a spinlock is incorrect if in a single-threaded tx
 					 * environment
@@ -434,26 +430,20 @@ class JobAllocator {
 				}
 			}
 			boolean deleted = false;
-			try {
-				LooseContext.push();
-				LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED.setTrue();
-				if (job.domain().wasRemoved()) {
-					// production issue -- revisit
-					Thread.sleep(1000);
-					DomainStore.waitUntilCurrentRequestsProcessed();
-					if (!job.domain().wasRemoved()) {
-						logger.debug(
-								"DEVEX-12 ::  event with incomplete domain tx -  job {}",
-								job.toDisplayName());
-					} else {
-						deleted = true;
-						// was deleted - FIXME - mvcc.jobs.2 - remove this -
-						// improve upstream
-						// (AllocationQueue insert/remove)
-					}
+			if (job.domain().wasRemoved()) {
+				// production issue -- revisit
+				Thread.sleep(1000);
+				DomainStore.waitUntilCurrentRequestsProcessed();
+				if (!job.domain().wasRemoved()) {
+					logger.debug(
+							"DEVEX-12 ::  event with incomplete domain tx -  job {}",
+							job.toDisplayName());
+				} else {
+					deleted = true;
+					// was deleted - FIXME - mvcc.jobs.2 - remove this -
+					// improve upstream
+					// (AllocationQueue insert/remove)
 				}
-			} finally {
-				LooseContext.pop();
 			}
 			if (!deleted) {
 				new StatusMessage().checkPublish();

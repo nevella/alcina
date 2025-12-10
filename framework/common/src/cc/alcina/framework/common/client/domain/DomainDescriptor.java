@@ -108,6 +108,13 @@ public abstract class DomainDescriptor {
 	}
 
 	public static interface PreProvideTask<T> {
+		/**
+		 * 
+		 * @param t
+		 *            the entity to test
+		 * @return false if the entity should not be returned (e.g. simulated
+		 *         deletion)
+		 */
 		default boolean filter(T t) {
 			return true;
 		}
@@ -117,11 +124,7 @@ public abstract class DomainDescriptor {
 		default void registerStore(IDomainStore domainStore) {
 		}
 
-		/**
-		 * @return true if cached data was modified
-		 */
-		public void run(Class clazz, Collection<T> objects, boolean topLevel)
-				throws Exception;
+		public void run(Class clazz, Collection<T> objects, boolean topLevel);
 
 		Stream<T> wrap(Stream<T> stream);
 	}

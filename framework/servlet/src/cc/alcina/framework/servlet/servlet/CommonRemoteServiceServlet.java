@@ -113,7 +113,6 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
-import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 import cc.alcina.framework.gwt.client.logic.process.ProcessMetric;
@@ -415,7 +414,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		readonlyPermitted = true,
 		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public String getJobLog(long jobId) {
-		Job job = Job.byId(jobId).domain().ensurePopulated();
+		Job job = Job.byId(jobId);
+		job.domain().ensurePopulated();
 		Preconditions.checkState(
 				Permissions.get().isAdmin() || IUser.current() == job.getUser(),
 				"Illegal access to job " + jobId);
@@ -669,10 +669,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	public JobTracker.Response pollJobStatus(JobTracker.Request request) {
-		List<Job> jobs = MethodContext.instance().withContextTrue(
-				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
-				.call(() -> request.getIds().stream().map(Job::byId)
-						.filter(Objects::nonNull).collect(Collectors.toList()));
+		List<Job> jobs = request.getIds().stream().map(Job::byId)
+				.filter(Objects::nonNull).collect(Collectors.toList());
 		JobTracker.Response response = new JobTracker.Response();
 		response.setTrackers(jobs.stream().map(Job::asJobTracker)
 				.peek(jt -> jt.setLog(null)).collect(Collectors.toList()));
@@ -681,26 +679,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	public JobTracker pollJobStatus(String id, boolean cancel) {
-		Job job0 = MethodContext.instance().withContextTrue(
-				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
-				.call(() -> {
-					Job job = Job.byId(Long.parseLong(id));
-					if (job == null) {
-						return null;
-					}
-					if (cancel) {
-						job.cancel();
-						Transaction.commit();
-					}
-					return job;
-				});
-		if (job0 == null) {
+		Job job = Job.byId(Long.parseLong(id));
+		if (job == null) {
 			return null;
-		} else {
-			JobTracker tracker = job0.asJobTracker();
-			tracker.setLog(null);
-			return tracker;
 		}
+		if (cancel) {
+			job.cancel();
+			Transaction.commit();
+		}
+		JobTracker tracker = job.asJobTracker();
+		tracker.setLog(null);
+		return tracker;
 	}
 
 	@Override
