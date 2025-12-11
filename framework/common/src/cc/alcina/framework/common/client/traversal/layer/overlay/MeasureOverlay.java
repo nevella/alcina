@@ -222,6 +222,14 @@ public class MeasureOverlay {
 	}
 
 	Element getElement() {
+		return getPositioningElement().gwtElement();
+	}
+
+	public int getTop() {
+		return getElement().getAbsoluteTop();
+	}
+
+	public DomNode getPositioningElement() {
 		/*
 		 * wip - location - TrackingLocationContext should mean this is not
 		 * required
@@ -230,11 +238,6 @@ public class MeasureOverlay {
 		if (loc.isAtNodeEnd()) {
 			loc = loc.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
 		}
-		return loc.getContainingNode().ancestors().selfOrContainingElement()
-				.gwtElement();
-	}
-
-	public int getTop() {
-		return getElement().getAbsoluteTop();
+		return loc.getContainingNode().ancestors().selfOrContainingElement();
 	}
 }
