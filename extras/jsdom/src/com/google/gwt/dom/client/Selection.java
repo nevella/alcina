@@ -23,7 +23,6 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.DomLocation;
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Models the browser selection object. Normally use the exposed Location
@@ -184,10 +183,16 @@ public class Selection implements ClientDomSelection {
 					anchorLocation = null;
 					focusLocation = null;
 				} else {
-					anchorLocation = asLocation(getAnchorNode(),
-							getAnchorOffset());
-					focusLocation = asLocation(getFocusNode(),
-							getFocusOffset());
+					Node anchorNode = getAnchorNode();
+					if (anchorNode == null || anchorNode.isDetached()) {
+						anchorLocation = null;
+						focusLocation = null;
+					} else {
+						anchorLocation = asLocation(anchorNode,
+								getAnchorOffset());
+						focusLocation = asLocation(getFocusNode(),
+								getFocusOffset());
+					}
 				}
 				lastSelectionRecord = currenSelectionRecord;
 			}

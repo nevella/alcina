@@ -124,6 +124,10 @@ public abstract class Node
 		return attached;
 	}
 
+	public boolean isDetached() {
+		return !attached;
+	}
+
 	@Override
 	public org.w3c.dom.Node appendChild(org.w3c.dom.Node arg0)
 			throws DOMException {
