@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -56,6 +57,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
  * some cases will be actually more CPU intensive since there are more DOM
  * updates (as opposed to a single setInnertHTML). This approach allows the dev
  * to choose incremental updates
+ * <p>
+ * You normally want to use {@link #updatePreserveExistingEqual} rather than
+ * just setting the collection property - this is deliberately not done as a
+ * cascade from a {@link #collection} property change because quite possibly the
+ * caller should update its collection to preserve the pre-existing elements in
+ * the delta model - but that's a per-caller decision
  */
 @TypedProperties
 @Directed.Delegating
@@ -602,5 +609,14 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 		}
 		update = new Update();
 		update.update();
+	}
+
+	public List<T> updatePreserveExistingEqual(List<T> preservedExistingEqual) {
+		if (collection != null) {
+			preservedExistingEqual = CommonUtils
+					.replaceWithExisting(preservedExistingEqual, collection);
+		}
+		properties().collection().set(preservedExistingEqual);
+		return preservedExistingEqual;
 	}
 }
