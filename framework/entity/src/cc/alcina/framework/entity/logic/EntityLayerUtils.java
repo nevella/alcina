@@ -40,7 +40,7 @@ public class EntityLayerUtils {
 	public static Boolean isBotUserAgent(String userAgent) {
 		if (EntityLayerUtils.botUa == null) {
 			EntityLayerUtils.botUa = Pattern.compile(
-					"(AdsBot-Google|AhrefsBot|bingbot|googlebot"
+					"(AdsBot-Google|AhrefsBot|bingbot|googlebot|Google-InspectionTool"
 							+ "|ArchiveTeam|curl|facebookexternalhit|HggH"
 							+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
 							+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
