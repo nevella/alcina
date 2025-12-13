@@ -45,6 +45,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
 public class ClientRpc implements HandlerContext {
 	int awaitDelay = 0;
 
+	int highestProcessedMutationMessageId;
+
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
 			@Override
@@ -90,13 +92,19 @@ public class ClientRpc implements HandlerContext {
 			WindowStateUpdate windowStateUpdate = new WindowStateUpdate();
 			/*
 			 * mutations sends the selection delta itself (not prepended)
+			 * 
+			 * (FIMXE - why? ordering? probably, since mutation will require
+			 * exec before selection. Probably WindowStateUpdate should come
+			 * *after* mutations)
 			 */
 			if (!(message instanceof Mutations)) {
 				windowStateUpdate.selectionRecord = generateSelectionMutation();
 			}
 			send(windowStateUpdate);
 		} else if (message instanceof Message.WindowStateUpdate) {
-			((WindowStateUpdate) message).windowState = generateWindowState();
+			WindowStateUpdate windowStateUpdate = (WindowStateUpdate) message;
+			windowStateUpdate.windowState = generateWindowState();
+			windowStateUpdate.highestProcessedMutationMessageId = highestProcessedMutationMessageId;
 		}
 	}
 
@@ -137,6 +145,9 @@ public class ClientRpc implements HandlerContext {
 				.impl(ProtocolMessageHandlerClient.class, message.getClass());
 		try {
 			handler.handle(this, message);
+			if (message instanceof Message.Mutations) {
+				highestProcessedMutationMessageId = message.messageId;
+			}
 		} catch (Throwable e) {
 			RemoteObjectModelComponentClient.markWindowAsErrorState();
 			ui.messageStateRouter.onMessageHandlingException(message, e);

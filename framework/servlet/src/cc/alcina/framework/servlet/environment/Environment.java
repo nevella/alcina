@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +34,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.service.DispatchRefProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -781,6 +783,8 @@ class Environment {
 		Document.get().onDocumentEventSystemInit();
 		DispatchRefProvider.context.set(new DispatchRefProviderImpl());
 		GWTBridgeHeadless.inClient.set(true);
+		Registry.register().singleton(Client.RenderState.RomcomImpl.class,
+				queue.renderStateImpl);
 	}
 
 	private void exitContext() {

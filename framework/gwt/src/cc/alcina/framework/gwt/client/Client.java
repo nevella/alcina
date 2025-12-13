@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistry
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ContextObservers;
@@ -313,22 +314,32 @@ public abstract class Client implements ContextFrame {
 		return (P) get().pendingPlace;
 	}
 
-	public static void runWithWindowState(Runnable runnable) {
-		if (Al.isBrowser()) {
-			runnable.run();
-		} else {
-			// FIXME - romcom - rather, this should wait for mutation post-state
-			/*
-			 * hmmm...I think we always have *some* windowstate - the
-			 * browser->server handshake gives us that
-			 * 
-			 * so not sure this is necessary as a general call. what state?
-			 * 
-			 * ahhh gotcha - essentially need a localdom.flush and await that
-			 * response. 200 is fine for local, and this should have an impl
-			 * involving the MessageProtocol bus for production
-			 */
-			Timer.scheduleDelayed(runnable, 200);
+	public static class RenderState {
+		public static void runWithRenderedState(Runnable runnable) {
+			if (Al.isBrowser()) {
+				runnable.run();
+			} else {
+				Registry.impl(RomcomImpl.class).enqueue(runnable);
+			}
+		}
+
+		// FIXME - romcom - rather, this should wait for mutation
+		// post-state
+		/*
+		 * hmmm...I think we always have *some* windowstate - the
+		 * browser->server handshake gives us that
+		 * 
+		 * so not sure this is necessary as a general call. what state?
+		 * 
+		 * ahhh gotcha - essentially need a localdom.flush and await that
+		 * response. 200 is fine for local, and this should have an impl
+		 * involving the MessageProtocol bus for production
+		 * 
+		 * wip - ds
+		 */
+		@EnvironmentRegistration
+		public interface RomcomImpl {
+			void enqueue(Runnable runnable);
 		}
 	}
 }

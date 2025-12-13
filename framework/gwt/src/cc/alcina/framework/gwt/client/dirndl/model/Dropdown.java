@@ -307,8 +307,12 @@ public class Dropdown extends Model
 		return this;
 	}
 
-	/*
-	 * Rare - when you want a dropdown overlay to stay visible , and the
+	/**
+	 * <p>
+	 * Normally leave blank (the dropdown should be the logical ancestor of the
+	 * overlay)
+	 * <p>
+	 * Rarely - when you want a dropdown overlay to stay visible , and the
 	 * originating dropdown may disappear due to a rerender, set this somewhere
 	 * higher in the node/model ancestor chain
 	 */

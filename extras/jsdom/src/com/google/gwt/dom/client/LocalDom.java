@@ -1191,4 +1191,8 @@ public class LocalDom implements ContextFrame {
 	static Node toNode(ElementJso elemJso) {
 		return get().parse(elemJso, false);
 	}
+
+	public static boolean hasPending() {
+		return get().pendingSync.size() > 0;
+	}
 }

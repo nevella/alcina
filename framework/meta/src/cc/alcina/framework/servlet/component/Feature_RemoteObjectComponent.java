@@ -5,8 +5,6 @@ import cc.alcina.framework.common.client.meta.Feature_Ui_support;
 
 /**
  * <h4>Documentation of general ROMCOM features, such as the manager</h4>
- *
- *
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Parent(Feature_Ui_support.class)

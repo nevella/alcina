@@ -525,15 +525,16 @@ public abstract class MessageTransportLayer {
 
 		abstract String channelName();
 
-		void bufferMessage(MessageToken message) {
+		void bufferMessage(MessageToken messageToken) {
 			synchronized (activeMessages) {
 				logger.debug("Message added to active [{}] ::  {}",
 						channelName(),
-						message.transportHistory.toTransportDebugString());
-				activeMessages.add(message);
+						messageToken.transportHistory.toTransportDebugString());
+				activeMessages.add(messageToken);
+				topicMessageBuffered.publish(messageToken.message);
 				new ActiveMessagesChanged().publish();
-				messageIdActiveMessage.put(message.transportHistory.messageId,
-						message);
+				messageIdActiveMessage.put(
+						messageToken.transportHistory.messageId, messageToken);
 			}
 		}
 
@@ -632,6 +633,13 @@ public abstract class MessageTransportLayer {
 					}
 				}
 				receiptVerifier.verify();
+			}
+		}
+
+		public boolean hasMessagesPendingDispatch() {
+			synchronized (activeMessages) {
+				return activeMessages.stream()
+						.anyMatch(token -> !token.transportHistory.wasSent());
 			}
 		}
 
@@ -1013,6 +1021,9 @@ public abstract class MessageTransportLayer {
 	SequentialIdGenerator envelopeIdGenerator = new SequentialIdGenerator();
 
 	public Topic<RemoteComponentProtocol.Message> topicMessageReceived = Topic
+			.create();
+
+	public Topic<RemoteComponentProtocol.Message> topicMessageBuffered = Topic
 			.create();
 
 	/*

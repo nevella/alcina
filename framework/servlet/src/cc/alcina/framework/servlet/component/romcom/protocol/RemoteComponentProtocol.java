@@ -338,6 +338,14 @@ public class RemoteComponentProtocol {
 
 			public ElementSelectionRangeRecord elementSelectionRangeRecord;
 
+			/*
+			 * Another way to handle this would be to track (on the server)
+			 * which ids have been processed when this was emitted, using the
+			 * transporthistory. Even though this has a bit of doubling-up
+			 * though - it's a *lot* clearer/simpler to understand
+			 */
+			public int highestProcessedMutationMessageId;
+
 			@Override
 			protected String provideMessageData() {
 				FormatBuilder format = new FormatBuilder().separator(" - ");

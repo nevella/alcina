@@ -1,15 +1,23 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gwt.dom.client.LocalDom;
+
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.WindowStateUpdate;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.environment.Environment.InvokeException;
@@ -49,6 +57,113 @@ class ClientExecutionQueue implements Runnable {
 		}
 	}
 
+	/*
+	 * Used to track mutation send/return, for client optimisation
+	 */
+	class MutationMessageData {
+		int lastMutationIdBuffered;
+
+		int lastMutationIdUpdateHandled;
+
+		synchronized void onMessageBuffered(Message message) {
+			if (message instanceof Message.Mutations) {
+				lastMutationIdBuffered = message.messageId;
+			}
+		}
+
+		synchronized void onMessageHandled(Message message) {
+			if (message instanceof Message.WindowStateUpdate) {
+				WindowStateUpdate update = (WindowStateUpdate) message;
+				if (lastMutationIdUpdateHandled < update.highestProcessedMutationMessageId) {
+					lastMutationIdUpdateHandled = update.highestProcessedMutationMessageId;
+				}
+			}
+		}
+
+		MutationMessageData() {
+			transportLayer.topicMessageBuffered.add(this::onMessageBuffered);
+			topicMessageHandled.add(this::onMessageHandled);
+		}
+
+		synchronized MutationMessageData snapshot() {
+			MutationMessageData result = new MutationMessageData();
+			result.lastMutationIdBuffered = lastMutationIdBuffered;
+			result.lastMutationIdUpdateHandled = lastMutationIdUpdateHandled;
+			return result;
+		}
+	}
+
+	/**
+	 * <p>
+	 * This class executes runnables any dom mutations have been flushed to the
+	 * remote *and* the corresponding browser nodes (and eagerly-synced offsets,
+	 * if any) have been returned
+	 * 
+	 * <p>
+	 * If there are no pending mutations, this just amounts to waiting on the
+	 * return of the last {@link LocalDom#flush()}
+	 */
+	class RenderStateImpl implements Client.RenderState.RomcomImpl {
+		class QueuedRunnable {
+			int messageId;
+
+			Runnable runnable;
+
+			boolean awaitNextMutationId;
+
+			QueuedRunnable(int messageId, boolean awaitNextMutationId,
+					Runnable runnable) {
+				this.messageId = messageId;
+				this.awaitNextMutationId = awaitNextMutationId;
+				this.runnable = runnable;
+			}
+		}
+
+		List<QueuedRunnable> pending = new ArrayList<>();
+
+		@Override
+		public void enqueue(Runnable runnable) {
+			int awaitId = mutationMessageData.lastMutationIdBuffered;
+			boolean awaitNextMutationId = false;
+			if (LocalDom.hasPending() && !transportLayer.sendChannel
+					.hasMessagesPendingDispatch()) {
+				// await return of the *next* message (which will include
+				// mutations)
+				awaitNextMutationId = true;
+			}
+			QueuedRunnable queuedRunnable = new QueuedRunnable(awaitId,
+					awaitNextMutationId, runnable);
+			pending.add(queuedRunnable);
+		}
+
+		/*
+		 * queue + remove from pending any runnables which have rendered offset
+		 * data available
+		 */
+		void flush() {
+			if (pending.isEmpty()) {
+				return;
+			}
+			MutationMessageData messageDataSnapshot = mutationMessageData
+					.snapshot();
+			pending.stream().filter(p -> p.awaitNextMutationId == true)
+					.forEach(p -> {
+						if (p.messageId < messageDataSnapshot.lastMutationIdBuffered) {
+							p.messageId = messageDataSnapshot.lastMutationIdBuffered;
+							p.awaitNextMutationId = false;
+						}
+					});
+			Iterator<QueuedRunnable> itr = pending.iterator();
+			while (itr.hasNext()) {
+				QueuedRunnable next = itr.next();
+				if (next.messageId <= messageDataSnapshot.lastMutationIdUpdateHandled) {
+					addDispatchable(new AsyncDispatchable(next.runnable));
+					itr.remove();
+				}
+			}
+		}
+	}
+
 	// server-generated runnables or from-client messages to process in order,
 	// while not awaiting a synchronous client response
 	BlockingQueue<AsyncDispatchable> asyncDispatchQueue = new LinkedBlockingQueue<>();
@@ -63,10 +178,21 @@ class ClientExecutionQueue implements Runnable {
 
 	MessageTransportLayerServer transportLayer;
 
+	/*
+	 * not thread-safe (i.e. not necessarily fired from the dispatch thread)
+	 */
+	Topic<Message> topicMessageHandled = Topic.create();
+
+	MutationMessageData mutationMessageData;
+
+	RenderStateImpl renderStateImpl;
+
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
 		transportLayer = new MessageTransportLayerServer();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
+		mutationMessageData = new MutationMessageData();
+		renderStateImpl = new RenderStateImpl();
 	}
 
 	@Override
@@ -116,6 +242,7 @@ class ClientExecutionQueue implements Runnable {
 		MessageProcessingToken token = new MessageProcessingToken(message);
 		if (handler.isSynchronous()) {
 			handler.handle(token, environment.access(), message);
+			topicMessageHandled.publish(message);
 		} else {
 			addDispatchable(new AsyncDispatchable(token));
 		}
@@ -173,6 +300,7 @@ class ClientExecutionQueue implements Runnable {
 		} finally {
 			LooseContext.pop();
 		}
+		renderStateImpl.flush();
 		if (!dispatched) {
 			try {
 				// make sure we're waiting on an empty queue
@@ -253,6 +381,7 @@ class ClientExecutionQueue implements Runnable {
 			MessageHandlerServer messageHandler = MessageHandlerServer
 					.forMessage(token.message);
 			messageHandler.handle(token, environment.access(), token.message);
+			topicMessageHandled.publish(token.message);
 		} catch (Exception e) {
 			logger.warn(
 					"Exception in server queue (in response to invokesync)");

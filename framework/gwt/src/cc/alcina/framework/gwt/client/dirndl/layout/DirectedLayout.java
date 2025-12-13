@@ -855,7 +855,7 @@ public class DirectedLayout implements AlcinaProcess {
 						emitterType, cursor.model.getClass())) {
 					return (Emitter) cursor.model;
 				}
-				cursor = cursor.parent;
+				cursor = ModelEventDispatch.getParentOrReroutedAncestor(cursor);
 			}
 			return null;
 		}

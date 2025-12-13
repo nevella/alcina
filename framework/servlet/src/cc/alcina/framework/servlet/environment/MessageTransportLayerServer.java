@@ -54,7 +54,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 
 		/*
-		 * re-implement to allow MessageBatcherServer to access this method
+		 * future - re-implement to allow MessageBatcherServer to access this
+		 * method
 		 */
 		protected void send(List<Message> messages) {
 			super.send(messages);
