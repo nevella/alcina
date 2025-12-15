@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
@@ -254,6 +255,49 @@ public class HtmlParser {
 		cursor.appendChild(comment);
 	}
 
+	boolean isSelfClosingTagLcRead(String lcTag) {
+		if (!Objects.equals(lcTag, "a")) {
+			return isSelfClosingTagLc(lcTag);
+		} else {
+			int scanIdx = idx;
+			int length = html.length();
+			/*
+			 * the constant '4' makes sense if you think about how ends could
+			 * influence this (minimal case, markup ends with </a> - length 4 -
+			 * anything else and there's no possibility of the last 4 chars only
+			 * affecting the result)
+			 */
+			while (scanIdx < length - 4) {
+				char c = html.charAt(scanIdx++);
+				if (c == '<') {
+					char c1 = html.charAt(scanIdx++);
+					if (c1 == '/') {
+						/*
+						 * check if this closes an A tag branch
+						 */
+						char c2 = html.charAt(scanIdx++);
+						if (c2 == 'a' || c2 == 'A') {
+							char c3 = html.charAt(scanIdx++);
+							if (c3 == '>') {
+								return false;
+							}
+						}
+					} else {
+						if (c1 == 'a' || c1 == 'A') {
+							char c2 = html.charAt(scanIdx++);
+							// if either end of (start) tag or start of
+							// attributes, it's another <A>
+							if (c2 == '>' || c2 == ' ') {
+								return true;
+							}
+						}
+					}
+				}
+			}
+			return true;
+		}
+	}
+
 	private void emitElement() {
 		boolean closeTag = false;
 		if (tag == null) {
@@ -266,7 +310,9 @@ public class HtmlParser {
 		if (!closeTag) {
 			emitStartElement(tag);
 		}
-		selfCloseTag |= isSelfClosingTagLc(tag);
+		// selfCloseTag |= !closeTag && isSelfClosingTagLcRead(tag);
+		selfCloseTag = closeTag ? isSelfClosingTagLc(tag)
+				: isSelfClosingTagLcRead(tag);
 		if (closeTag && selfCloseTag) {
 			// exclusive or really. we'll have already emitted the close here,
 			// so ignore
