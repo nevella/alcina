@@ -408,10 +408,10 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 
 		@Override
-		public Location createTextRelativeLocation(Location location,
+		public Location createIndexRelativeLocation(Location location,
 				int offset, boolean after) {
 			ensureLookups();
-			return LocationContext.super.createTextRelativeLocation(location,
+			return LocationContext.super.createIndexRelativeLocation(location,
 					offset, after);
 		}
 

@@ -76,7 +76,7 @@ public interface LocationContext {
 		return l1.getIndex() - l2.getIndex();
 	}
 
-	default Location createTextRelativeLocation(Location location, int offset,
+	default Location createIndexRelativeLocation(Location location, int offset,
 			boolean start) {
 		int index = location.getIndex() + offset;
 		/*
@@ -86,7 +86,6 @@ public interface LocationContext {
 		int contentLength = getContentLength(containingNode);
 		int relativeIndex = location.getIndex() + offset
 				- containingNode.asLocation().getIndex();
-		start = true;
 		if (relativeIndex > 0 && relativeIndex <= contentLength) {
 			return new Location(location.getTreeIndex(), index, start,
 					location.getContainingNode(), this);
@@ -186,7 +185,7 @@ public interface LocationContext {
 	 * <p>
 	 * Note - don't use this for purely text traversal (e.g. mimicking actions
 	 * of a keyevent), instead just increment/decrement location.index, and use
-	 * {@link #createTextRelativeLocation(Location, int, boolean)}
+	 * {@link #createIndexRelativeLocation(Location, int, boolean)}
 	 */
 	default Location getRelativeLocation(Location location,
 			RelativeDirection direction, TextTraversal textTraversal) {

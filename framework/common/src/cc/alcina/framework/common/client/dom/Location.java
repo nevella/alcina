@@ -1030,7 +1030,7 @@ public class Location implements Comparable<Location> {
 	 *
 	 */
 	public Location textRelativeLocation(int offset, boolean start) {
-		return locationContext.createTextRelativeLocation(this, offset, start);
+		return locationContext.createIndexRelativeLocation(this, offset, start);
 	}
 
 	public void detach() {

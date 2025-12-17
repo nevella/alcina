@@ -527,21 +527,27 @@ class TrackingLocationContext implements LocationContext {
 		DomNodeTree tree = startAt.getContainingNode().tree();
 		tree.forwards = forwards;
 		DomNode node = null;
-		/*
-		 * This uses a linear search up to an iteration threshold, then switches
-		 * to binary
-		 */
-		while ((node = tree.currentNode()) != null && itrCount++ < 10) {
-			itrCount++;
-			Location.Range nodeRange = node.asRange();
-			IntPair nodePair = nodeRange.toIntPair();
-			if (node.isText()) {
-				if (nodeRange.containsIndexUnlessLocationStartAndAtEnd(test)) {
-					return nodeRange.start;
+		int maxIterationsForLinearTest = 10;
+		if (forwards) {
+			/*
+			 * This uses a linear search up to an iteration threshold, then
+			 * switches to binary
+			 */
+			while ((node = tree.currentNode()) != null
+					&& itrCount++ < maxIterationsForLinearTest) {
+				itrCount++;
+				Location.Range nodeRange = node.asRange();
+				IntPair nodePair = nodeRange.toIntPair();
+				if (node.isText()) {
+					if (nodeRange
+							.containsIndexUnlessLocationStartAndAtEnd(test)) {
+						return nodeRange.start;
+					}
 				}
+				tree.next();
 			}
-			tree.next();
 		}
+		node = startAt.getContainingNode();
 		/*
 		 * binary search
 		 */
@@ -574,14 +580,29 @@ class TrackingLocationContext implements LocationContext {
 				DomNode child = nodes.get(binaryIdx);
 				Location.Range childRange = child.asRange();
 				IntPair childPair = childRange.toIntPair();
-				if (!childPair.isPoint() && childRange
-						.containsIndexUnlessLocationStartAndAtEnd(test)) {
-					if (child.isText()) {
-						return childRange.start;
+				if (childRange.containsIndexUnlessLocationStartAndAtEnd(test)) {
+					if (childPair.isPoint()) {
+						/*
+						 * traverse forwards/backwards, looking for the most
+						 * distant point at test.index()
+						 */
+						DomNode cursor = child;
+						DomNode result = null;
+						while (cursor.asRange().provideIsPoint()) {
+							result = cursor;
+							cursor = test.isStart()
+									? cursor.relative().treePreviousNode()
+									: cursor.relative().treeSubsequentNode();
+						}
+						return result.asLocation();
 					} else {
-						child.asRange();
-						node = child;
-						break;
+						if (child.isText()) {
+							return childRange.start;
+						} else {
+							child.asRange();
+							node = child;
+							break;
+						}
 					}
 				}
 				boolean binaryTowardsUpper = index >= childPair.i1;
