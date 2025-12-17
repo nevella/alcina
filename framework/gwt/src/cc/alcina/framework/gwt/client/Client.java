@@ -38,7 +38,6 @@ import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Al.Context;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
@@ -315,9 +314,15 @@ public abstract class Client implements ContextFrame {
 	}
 
 	public static class RenderState {
-		public static void runWithRenderedState(Runnable runnable) {
+		/**
+		 * 
+		 * @param runnable
+		 *            A distinct runnable (equal runnables will only be queued
+		 *            once per dispatch cycle)
+		 */
+		public static void queueWithRenderedState(Runnable runnable) {
 			if (Al.isBrowser()) {
-				runnable.run();
+				LocalDom.onFlush(runnable);
 			} else {
 				Registry.impl(RomcomImpl.class).enqueue(runnable);
 			}

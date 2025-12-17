@@ -39,6 +39,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
+import cc.alcina.framework.entity.gwt.headless.SchedulerFrame.Priority;
 
 /**
  * <p>
@@ -434,7 +436,7 @@ public class LocalDom implements ContextFrame {
 
 	List<Node> pendingSync = new ArrayList<>();
 
-	ScheduledCommand flushCommand = null;
+	FlushCommand flushCommand = null;
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
@@ -490,8 +492,21 @@ public class LocalDom implements ContextFrame {
 
 	private void ensureFlush() {
 		if (flushCommand == null && GWT.isClient()) {
-			flushCommand = () -> flush();
+			flushCommand = new FlushCommand();
 			Scheduler.get().scheduleFinally(flushCommand);
+		}
+	}
+
+	class FlushCommand
+			implements ScheduledCommand, SchedulerFrame.HasTaskPriority.Typed {
+		@Override
+		public Priority getTaskPriorityTyped() {
+			return SchedulerFrame.Priority.AFTER_DEFAULT;
+		}
+
+		@Override
+		public void execute() {
+			flush();
 		}
 	}
 
@@ -597,6 +612,8 @@ public class LocalDom implements ContextFrame {
 			!n.hasRemote());
 			List<Node> toSync = new ArrayList<>(pendingSync);
 			toSync.stream().forEach(this::ensurePendingSynced);
+			onFlushRunnables.forEach(Runnable::run);
+			onFlushRunnables.clear();
 		} catch (RuntimeException re) {
 			topicReportException.publish(re);
 			throw re;
@@ -1194,5 +1211,19 @@ public class LocalDom implements ContextFrame {
 
 	public static boolean hasPending() {
 		return get().pendingSync.size() > 0;
+	}
+
+	public static void onFlush(Runnable runnable) {
+		get().onFlush0(runnable);
+	}
+
+	LinkedHashSet<Runnable> onFlushRunnables = new LinkedHashSet<>();
+
+	void onFlush0(Runnable runnable) {
+		if (pendingSync.isEmpty()) {
+			runnable.run();
+		} else {
+			onFlushRunnables.add(runnable);
+		}
 	}
 }

@@ -32,6 +32,31 @@ import cc.alcina.framework.entity.util.TimerJvm;
  */
 public class SchedulerFrame extends Scheduler implements ContextFrame {
 	public static ContextProvider<Void, SchedulerFrame> contextProvider;
+	/*
+	 * Currently only to push LocalDom.flush() to the end of finally
+	 */
+
+	public static enum Priority {
+		_DEFAULT(10), AFTER_DEFAULT(20);
+
+		int value;
+
+		private Priority(int value) {
+			this.value = value;
+		}
+	}
+
+	public interface HasTaskPriority {
+		int getTaskPriority();
+
+		public interface Typed extends HasTaskPriority {
+			Priority getTaskPriorityTyped();
+
+			default int getTaskPriority() {
+				return getTaskPriorityTyped().value;
+			}
+		}
+	}
 
 	public static class Task implements Comparable<Task> {
 		static IdCounter counter = new IdCounter();
@@ -49,12 +74,16 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		SchedulerFrame frame;
 
-		Task(ScheduledCommand scheduledCommand) {
+		int taskId;
+
+		Task(ScheduledCommand scheduledCommand, int taskId) {
 			this.scheduledCommand = scheduledCommand;
+			this.taskId = taskId;
 		}
 
-		Task(RepeatingCommand repeatingCommand) {
+		Task(RepeatingCommand repeatingCommand, int taskId) {
 			this.repeatingCommand = repeatingCommand;
+			this.taskId = taskId;
 		}
 
 		long scheduledFor;
@@ -63,15 +92,33 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		Queue queue;
 
+		int priority = Priority._DEFAULT.value;
+
 		Task withDelayMs(long delayMs) {
 			this.delayMs = delayMs;
 			scheduledFor = System.currentTimeMillis() + delayMs;
 			return this;
 		}
 
+		Task withPriority(int priority) {
+			this.priority = priority;
+			return this;
+		}
+
+		Task withPriority(Priority priority) {
+			return withPriority(priority.value);
+		}
+
 		@Override
 		public int compareTo(Task o) {
-			return CommonUtils.compareLongs(scheduledFor, o.scheduledFor);
+			{
+				int cmp = CommonUtils.compareLongs(scheduledFor,
+						o.scheduledFor);
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
+			return taskId - o.taskId;
 		}
 
 		public Command command() {
@@ -103,6 +150,8 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		String name;
 
+		int taskIdCounter;
+
 		Queue(String name, boolean sorted) {
 			this.name = name;
 			if (sorted) {
@@ -117,20 +166,28 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 			return Ax.format("%s :: %s tasks", name, tasks.size());
 		}
 
+		int nextTaskId() {
+			return ++taskIdCounter;
+		}
+
 		void add(ScheduledCommand cmd) {
-			Task task = new Task(cmd);
+			Task task = new Task(cmd, nextTaskId());
+			if (cmd instanceof HasTaskPriority) {
+				int taskPriority = ((HasTaskPriority) cmd).getTaskPriority();
+				task.withPriority(taskPriority);
+			}
 			tasks.add(task);
 			task.queue = this;
 		}
 
 		void add(RepeatingCommand cmd, int delayMs) {
-			Task task = new Task(cmd).withDelayMs(delayMs);
+			Task task = new Task(cmd, nextTaskId()).withDelayMs(delayMs);
 			tasks.add(task);
 			task.queue = this;
 		}
 
 		void add(ScheduledCommand cmd, int delayMs) {
-			Task task = new Task(cmd).withDelayMs(delayMs);
+			Task task = new Task(cmd, nextTaskId()).withDelayMs(delayMs);
 			tasks.add(task);
 			task.queue = this;
 		}
@@ -138,7 +195,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	Queue entry = new Queue("entry", false);
 
-	Queue _finally = new Queue("_finally", false);
+	Queue _finally = new Queue("_finally", true);
 
 	/*
 	 * Because all client-side execution is async, this queue is just treated as

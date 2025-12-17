@@ -1,8 +1,7 @@
 package cc.alcina.framework.servlet.environment;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -13,6 +12,7 @@ import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -102,6 +102,10 @@ class ClientExecutionQueue implements Runnable {
 	 * <p>
 	 * If there are no pending mutations, this just amounts to waiting on the
 	 * return of the last {@link LocalDom#flush()}
+	 * 
+	 * <p>
+	 * Multiple enqueues of the same Runnable (modulo equals) in a given
+	 * dispatch cycle will result in only one runnable being queued
 	 */
 	class RenderStateImpl implements Client.RenderState.RomcomImpl {
 		class QueuedRunnable {
@@ -117,19 +121,45 @@ class ClientExecutionQueue implements Runnable {
 				this.awaitNextMutationId = awaitNextMutationId;
 				this.runnable = runnable;
 			}
+
+			@Override
+			public int hashCode() {
+				return messageId ^ runnable.hashCode();
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof QueuedRunnable) {
+					QueuedRunnable o = (QueuedRunnable) obj;
+					return CommonUtils.equals(messageId, o.messageId, runnable,
+							o.runnable);
+				} else {
+					return false;
+				}
+			}
 		}
 
-		List<QueuedRunnable> pending = new ArrayList<>();
+		Runnable flushLambda = this::flush;
+
+		LinkedHashSet<QueuedRunnable> pending = new LinkedHashSet<>();
 
 		@Override
 		public void enqueue(Runnable runnable) {
 			int awaitId = mutationMessageData.lastMutationIdBuffered;
 			boolean awaitNextMutationId = false;
-			if (LocalDom.hasPending() && !transportLayer.sendChannel
-					.hasMessagesPendingDispatch()) {
-				// await return of the *next* message (which will include
-				// mutations)
-				awaitNextMutationId = true;
+			if (LocalDom.hasPending()) {
+				if (!transportLayer.sendChannel.hasMessagesPendingDispatch()) {
+					// await return of the *next* message (which will include
+					// mutations)
+					awaitNextMutationId = true;
+				}
+			} else {
+				/*
+				 * if no intervening mutations occur, the condition (all ofsets
+				 * available) will be met during finally()
+				 */
+				Client.eventBus().queued().lambda(flushLambda).distinct()
+						.dispatch();
 			}
 			QueuedRunnable queuedRunnable = new QueuedRunnable(awaitId,
 					awaitNextMutationId, runnable);

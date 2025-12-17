@@ -142,9 +142,16 @@ public class LayoutEvents {
 		}
 	}
 
-	/*
+	/**
+	 * <p>
+	 * CAVEAT - don't currently use this to change directed properties - changes
+	 * will be ignored (since the layout is rendering). Instead, override onBind
+	 * with a test of event.isBound
+	 * <p>
 	 * Note that this will be called with a null context (it doesn't propagate
 	 * etc)
+	 * 
+	 * 
 	 */
 	public static class Bound extends ModelEvent<Object, Bound.Handler> {
 		@Override
