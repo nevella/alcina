@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -315,7 +316,8 @@ class NodeEventBinding {
 			 * it's guaranteed that the handler NodeEventBinding is the right
 			 * type
 			 */
-			handlers.forEach(h -> h.fireEventIfType(modelEvent));
+			new ArrayList<>(handlers)
+					.forEach(h -> h.fireEventIfType(modelEvent));
 		}
 
 		public void removeHandler(NodeEventBinding descendantBinding) {
