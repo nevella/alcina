@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.SchedulerTaskPriority;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
@@ -35,28 +36,6 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 	/*
 	 * Currently only to push LocalDom.flush() to the end of finally
 	 */
-
-	public static enum Priority {
-		_DEFAULT(10), AFTER_DEFAULT(20);
-
-		int value;
-
-		private Priority(int value) {
-			this.value = value;
-		}
-	}
-
-	public interface HasTaskPriority {
-		int getTaskPriority();
-
-		public interface Typed extends HasTaskPriority {
-			Priority getTaskPriorityTyped();
-
-			default int getTaskPriority() {
-				return getTaskPriorityTyped().value;
-			}
-		}
-	}
 
 	public static class Task implements Comparable<Task> {
 		static IdCounter counter = new IdCounter();
@@ -92,7 +71,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		Queue queue;
 
-		int priority = Priority._DEFAULT.value;
+		int priority = SchedulerTaskPriority._DEFAULT.value;
 
 		Task withDelayMs(long delayMs) {
 			this.delayMs = delayMs;
@@ -105,7 +84,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 			return this;
 		}
 
-		Task withPriority(Priority priority) {
+		Task withPriority(SchedulerTaskPriority priority) {
 			return withPriority(priority.value);
 		}
 
@@ -172,8 +151,9 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		void add(ScheduledCommand cmd) {
 			Task task = new Task(cmd, nextTaskId());
-			if (cmd instanceof HasTaskPriority) {
-				int taskPriority = ((HasTaskPriority) cmd).getTaskPriority();
+			if (cmd instanceof SchedulerTaskPriority.HasTaskPriority) {
+				int taskPriority = ((SchedulerTaskPriority.HasTaskPriority) cmd)
+						.getTaskPriority();
 				task.withPriority(taskPriority);
 			}
 			tasks.add(task);

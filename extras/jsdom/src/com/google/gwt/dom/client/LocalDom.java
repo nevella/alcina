@@ -16,6 +16,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.core.client.SchedulerTaskPriority;
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document.RemoteType;
@@ -39,8 +40,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
-import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
-import cc.alcina.framework.entity.gwt.headless.SchedulerFrame.Priority;
 
 /**
  * <p>
@@ -497,11 +496,11 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	class FlushCommand
-			implements ScheduledCommand, SchedulerFrame.HasTaskPriority.Typed {
+	class FlushCommand implements ScheduledCommand,
+			SchedulerTaskPriority.HasTaskPriority.Typed {
 		@Override
-		public Priority getTaskPriorityTyped() {
-			return SchedulerFrame.Priority.AFTER_DEFAULT;
+		public SchedulerTaskPriority getTaskPriorityTyped() {
+			return SchedulerTaskPriority.AFTER_DEFAULT;
 		}
 
 		@Override

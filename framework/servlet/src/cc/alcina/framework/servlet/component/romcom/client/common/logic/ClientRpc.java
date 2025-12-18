@@ -145,9 +145,6 @@ public class ClientRpc implements HandlerContext {
 				.impl(ProtocolMessageHandlerClient.class, message.getClass());
 		try {
 			handler.handle(this, message);
-			if (message instanceof Message.Mutations) {
-				highestProcessedMutationMessageId = message.messageId;
-			}
 		} catch (Throwable e) {
 			RemoteObjectModelComponentClient.markWindowAsErrorState();
 			ui.messageStateRouter.onMessageHandlingException(message, e);
@@ -282,5 +279,10 @@ public class ClientRpc implements HandlerContext {
 		if (ui.environmentSettings.attachRpcDebugMethod) {
 			transportLayer.attachRpcDebugMethod();
 		}
+	}
+
+	@Override
+	public void setHighestProcessedMutationMessageId(int messageId) {
+		this.highestProcessedMutationMessageId = messageId;
 	}
 }

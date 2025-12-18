@@ -40,6 +40,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public abstract void handle(HandlerContext handlerContext, PM message);
 
 	public interface HandlerContext {
+		void setHighestProcessedMutationMessageId(int messageId);
 	}
 
 	public static class EnvironmentInitCompleteHandler extends
@@ -193,6 +194,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 			/*
 			 * state changed, emit an update
 			 */
+			handlerContext
+					.setHighestProcessedMutationMessageId(message.messageId);
 			ClientRpc.send(new Message.WindowStateUpdate());
 		}
 
