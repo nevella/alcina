@@ -10,9 +10,10 @@ public class SequenceSettings extends Bindable.Fields {
 	public static SequenceSettings get() {
 		return SequenceBrowser.Ui.get().settings;
 	}
-	//
 
-	static PackageProperties._SequenceSettings properties = PackageProperties.sequenceSettings;
+	PackageProperties._SequenceSettings.InstanceProperties properties() {
+		return PackageProperties.sequenceSettings.instance(this);
+	}
 
 	public DetailDisplayMode detailDisplayMode = DetailDisplayMode.QUARTER_WIDTH;
 
@@ -34,19 +35,18 @@ public class SequenceSettings extends Bindable.Fields {
 		DetailDisplayMode next = DetailDisplayMode
 				.values()[(detailDisplayMode.ordinal() + 1)
 						% DetailDisplayMode.values().length];
-		properties.detailDisplayMode.set(this, next);
+		properties().detailDisplayMode().set(next);
 		return next;
 	}
 
 	public ColumnSet nextColumnSet() {
 		ColumnSet next = ColumnSet.values()[(columnSet.ordinal() + 1)
 				% ColumnSet.values().length];
-		properties.columnSet.set(this, next);
+		properties().columnSet().set(next);
 		return next;
 	}
 
 	public void putMaxElementRows(String maxElementRowsStr) {
-		properties.maxElementRows.set(this,
-				Integer.parseInt(maxElementRowsStr));
+		properties().maxElementRows().set(Integer.parseInt(maxElementRowsStr));
 	}
 }

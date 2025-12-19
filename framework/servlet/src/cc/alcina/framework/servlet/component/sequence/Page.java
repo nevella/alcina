@@ -31,8 +31,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
@@ -101,9 +101,8 @@ class Page extends Model.Fields
 		Page page;
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			page = new Page();
-			super.onBeforeRender(event);
 		}
 
 		@Override
@@ -138,7 +137,9 @@ class Page extends Model.Fields
 		}
 	}
 
-	static PackageProperties._Page properties = PackageProperties.page;
+	PackageProperties._Page.InstanceProperties properties() {
+		return PackageProperties.page.instance(this);
+	}
 
 	@Directed
 	Header header;
@@ -172,30 +173,28 @@ class Page extends Model.Fields
 		this.ui.page = this;
 		header = new Header(this);
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
-		bindings().from(ui.settings).on(SequenceSettings.properties.sequenceKey)
+		from(ui.settings.properties().sequenceKey())
 				.signal(this::reloadSequence);
-		bindings().from(ui).on(Ui.properties.place)
+		from(ui.subtypeProperties().place())
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedSequencePlaceChange)
 				.signal(this::reloadSequence);
-		bindings().from(this).on(properties.filteredSequenceElements)
+		from(properties().filteredSequenceElements())
 				.signal(this::computeHighlightModel);
-		bindings().from(ui).on(Ui.properties.place)
+		from(ui.subtypeProperties().place())
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedHighlightPlaceChange)
 				.signal(this::computeHighlightModel);
-		bindings().from(this).on(properties.filteredSequenceElements)
-				.value(this).debug().map(SequenceArea::new).to(this)
-				.on(properties.sequenceArea).oneWay();
-		bindings().from(this).on(properties.filteredSequenceElements)
-				.value(this).map(DetailArea::new).to(this)
-				.on(properties.detailArea).oneWay();
-		bindings().from(ui).on(Ui.properties.place)
+		from(properties().filteredSequenceElements()).value(this).debug()
+				.map(SequenceArea::new).to(properties().sequenceArea())
+				.oneWay();
+		from(properties().filteredSequenceElements()).value(this)
+				.map(DetailArea::new).to(properties().detailArea()).oneWay();
+		from(ui.subtypeProperties().place())
 				.filter(this::filterSelectedIndexChange)
 				.signal(this::onSelectedIndexChange);
-		bindings().from(ui.settings).signal(this::updateStyles);
-		bindings().from(this).on(properties.sequence)
-				.signal(this::updateStyles);
+		from(ui.settings).signal(this::updateStyles);
+		from(properties().sequence()).signal(this::updateStyles);
 		/*
 		 * Initialise with an empty sequence, it's easier than adding null
 		 * checks throughout
@@ -204,7 +203,7 @@ class Page extends Model.Fields
 	}
 
 	void onSelectedIndexChange() {
-		properties.detailArea.set(this, new DetailArea(this));
+		properties().detailArea().set(new DetailArea(this));
 		emitEvent(SequenceEvents.SelectedIndexChanged.class);
 	}
 
@@ -234,8 +233,7 @@ class Page extends Model.Fields
 
 	@Override
 	public void onLoadSequence(LoadSequence event) {
-		SequenceSettings.properties.sequenceKey.set(ui.settings,
-				event.getModel());
+		ui.settings.properties().sequenceKey().set(event.getModel());
 	}
 
 	@Override
@@ -358,9 +356,9 @@ class Page extends Model.Fields
 	}
 
 	void putSequence(Sequence sequence) {
-		properties.sequence.set(this, sequence);
+		properties().sequence().set(sequence);
 		List<?> filteredSequenceElements = filteredSequenceElements(sequence);
-		properties.filteredSequenceElements.set(this, filteredSequenceElements);
+		properties().filteredSequenceElements().set(filteredSequenceElements);
 	}
 
 	void derefOracleQuery() {

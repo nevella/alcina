@@ -62,7 +62,10 @@ public class SequenceBrowser {
 
 	@TypedProperties
 	static class Ui extends AbstractUi<SequencePlace> implements DomainUi {
-		static PackageProperties._SequenceBrowser_Ui properties = PackageProperties.sequenceBrowser_ui;
+		PackageProperties._SequenceBrowser_Ui.InstanceProperties
+				subtypeProperties() {
+			return PackageProperties.sequenceBrowser_ui.instance(this);
+		}
 
 		boolean isDomain;
 

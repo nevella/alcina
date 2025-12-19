@@ -40,7 +40,9 @@ class SequenceArea extends Model.Fields
 		implements TableEvents.RowsModelAttached.Handler,
 		SequenceEvents.HighlightModelChanged.Handler,
 		SequenceEvents.SelectedIndexChanged.Handler {
-	static PackageProperties._SequenceArea properties = PackageProperties.sequenceArea;
+	PackageProperties._SequenceArea.InstanceProperties properties() {
+		return PackageProperties.sequenceArea.instance(this);
+	}
 
 	@Directed
 	Heading header;
@@ -118,9 +120,8 @@ class SequenceArea extends Model.Fields
 		filteredElements = page.filteredSequenceElements;
 		header = new Heading(
 				Ax.format("Sequence elements [%s]", filteredElements.size()));
-		bindings().from(SequenceSettings.get())
-				.on(SequenceSettings.properties.columnSet).to(this)
-				.on(properties.columnSet).oneWay();
+		from(SequenceSettings.get().properties().columnSet())
+				.to(properties().columnSet()).oneWay();
 	}
 
 	public void onRowClicked(RowClicked event) {
