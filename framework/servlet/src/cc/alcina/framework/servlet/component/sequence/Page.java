@@ -31,8 +31,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
@@ -101,8 +101,9 @@ class Page extends Model.Fields
 		Page page;
 
 		@Override
-		public void onNodeContext(NodeContext event) {
+		public void onBeforeRender(BeforeRender event) {
 			page = new Page();
+			super.onBeforeRender(event);
 		}
 
 		@Override
@@ -193,7 +194,7 @@ class Page extends Model.Fields
 		from(ui.subtypeProperties().place())
 				.filter(this::filterSelectedIndexChange)
 				.signal(this::onSelectedIndexChange);
-		from(ui.settings).signal(this::updateStyles);
+		bindings().from(ui.settings).signal(this::updateStyles);
 		from(properties().sequence()).signal(this::updateStyles);
 		/*
 		 * Initialise with an empty sequence, it's easier than adding null
