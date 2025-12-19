@@ -15,7 +15,11 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  * <p>
  * Models can register services (if they have a defined ContextResolver - say by
  * annotating with DelegatingContextResolver) that descendant models can consume
- * - basically to provide cross-layer 'props' - aka immutable state
+ * - basically to provide cross-layer 'props' - aka immutable state.
+ * <p>
+ * A more general and sometimes better analaogy is an RPC service - the
+ * (directed) descendants interact with each other and the ancestor via rpc-like
+ * invocations of the ancestor service(s)
  */
 public interface ContextService {
 	/*

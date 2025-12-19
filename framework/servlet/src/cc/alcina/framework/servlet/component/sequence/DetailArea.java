@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
@@ -11,7 +12,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.StringArea;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 
 @Directed(tag = "detail")
 @DirectedContextResolver(StringArea.StringAreaResolver.class)
@@ -30,35 +30,40 @@ class DetailArea extends Model.Fields {
 	@Directed(tag = "string-representation")
 	MarkupHighlights markupHighlights;
 
-	Page page;
+	SequenceArea sequenceArea;
 
-	DetailArea(Page page) {
-		this.page = page;
-		Object sequenceElement = page.getSelectedSequenceElement();
+	DetailArea(SequenceArea sequenceArea) {
+		this.sequenceArea = sequenceArea;
+	}
+
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		Object sequenceElement = sequenceArea.getSelectedSequenceElement();
 		if (sequenceElement == null) {
 			return;
 		}
 		// todo - use a declarative transform on DetailArea.sequenceElement
-		transformedSequenceElement = ((ModelTransform) page.sequence
+		transformedSequenceElement = ((ModelTransform) sequenceArea.sequence
 				.getDetailTransform()).apply(sequenceElement);
 		if (transformedSequenceElement instanceof PublicCloneable) {
 			// need to clone, cos may be bound
 			transformedSequenceElement = ((PublicCloneable) transformedSequenceElement)
 					.clone();
 		}
-		transformedAdditional = ((ModelTransform) page.sequence
+		transformedAdditional = ((ModelTransform) sequenceArea.sequence
 				.getDetailTransformAdditional()).apply(sequenceElement);
 		if (transformedSequenceElement instanceof HasStringRepresentation) {
 			String rep = ((HasStringRepresentation) transformedSequenceElement)
 					.provideStringRepresentation();
 			if (rep != null) {
 				markupHighlights = new MarkupHighlights(rep, "", false,
-						page.getSelectedElementHighlights(),
-						page.getSelectedElementHighlightIndex());
-				from(page.ui.subtypeProperties().place())
-						.signal(() -> markupHighlights.goToRange(
-								page.getSelectedElementHighlightIndex()));
+						sequenceArea.getSelectedElementHighlights(),
+						sequenceArea.getSelectedElementHighlightIndex());
+				from(sequenceArea.service.getPlaceProperty())
+						.signal(() -> markupHighlights.goToRange(sequenceArea
+								.getSelectedElementHighlightIndex()));
 			}
 		}
+		super.onBeforeRender(event);
 	}
 }

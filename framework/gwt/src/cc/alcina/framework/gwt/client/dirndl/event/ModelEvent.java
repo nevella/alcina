@@ -270,6 +270,11 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 			extends EventHandler, ModelEvent.Handler {
 	}
 
+	/**
+	 * A useful interface for top-level general/framework models, allowing event
+	 * receiver composition (normally the 'main' directed property will be the
+	 * dispatch delegate)
+	 */
 	public interface DelegatesDispatch {
 		Model provideDispatchDelegate();
 	}

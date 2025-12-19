@@ -32,9 +32,9 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  * fragmentActivities as overlays - *however* that's actually correct. If a
  * top-level activity could render fragments, they should be modelled as
  * properties somewhere inside the model's descendant objects top-level (and
- * hooked up to the main Topic with a filter). So rendering the fragments is
- * logically correct - and in the first use case (a help UI), it's the correct
- * modality
+ * hooked up to the main activity Topic with a filter). So rendering the
+ * fragments is logically correct - and in the first use case (a help UI), it's
+ * the correct modality
  */
 @Delegating
 @TypedProperties

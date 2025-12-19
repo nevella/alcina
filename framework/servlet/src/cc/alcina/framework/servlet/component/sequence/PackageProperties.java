@@ -8,6 +8,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.sequence.DetailArea;
@@ -19,10 +20,12 @@ import cc.alcina.framework.servlet.component.sequence.SequenceArea;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
 import cc.alcina.framework.servlet.component.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings;
+import cc.alcina.framework.servlet.component.sequence.SequenceTable;
 import com.google.gwt.dom.client.StyleElement;
 import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Integer;
+import java.lang.Runnable;
 import java.lang.String;
 import java.util.List;
 import java.util.Set;
@@ -37,15 +40,16 @@ public class PackageProperties {
     static _Header_Left header_left = new _Header_Left();
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
-    static _SequenceArea sequenceArea = new _SequenceArea();
+    public static _SequenceArea sequenceArea = new _SequenceArea();
     static _SequenceBrowser_Ui sequenceBrowser_ui = new _SequenceBrowser_Ui();
     public static _SequenceSettings sequenceSettings = new _SequenceSettings();
+    static _SequenceTable sequenceTable = new _SequenceTable();
     
     public static class _AppSuggestorSequence implements TypedProperty.Container {
       public TypedProperty<AppSuggestorSequence, String> acceptedFilterText = new TypedProperty<>(AppSuggestorSequence.class, "acceptedFilterText");
       public TypedProperty<AppSuggestorSequence, String> filterText = new TypedProperty<>(AppSuggestorSequence.class, "filterText");
       public TypedProperty<AppSuggestorSequence, Suggestor> suggestor = new TypedProperty<>(AppSuggestorSequence.class, "suggestor");
-      public static class InstanceProperties extends 	InstanceProperty.Container<AppSuggestorSequence> {
+      public static class InstanceProperties extends InstanceProperty.Container<AppSuggestorSequence> {
         public  InstanceProperties(AppSuggestorSequence source){super(source);}
         public InstanceProperty<AppSuggestorSequence, String> acceptedFilterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorSequence.acceptedFilterText);}
         public InstanceProperty<AppSuggestorSequence, String> filterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorSequence.filterText);}
@@ -63,7 +67,7 @@ public class PackageProperties {
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");
       TypedProperty<Dotburger.Menu, Heading> section2 = new TypedProperty<>(Dotburger.Menu.class, "section2");
       TypedProperty<Dotburger.Menu, Heading> section4 = new TypedProperty<>(Dotburger.Menu.class, "section4");
-      static class InstanceProperties extends 	InstanceProperty.Container<Dotburger.Menu> {
+      static class InstanceProperties extends InstanceProperty.Container<Dotburger.Menu> {
          InstanceProperties(Dotburger.Menu source){super(source);}
         InstanceProperty<Dotburger.Menu, SequenceSettings.DetailDisplayMode> detailDisplayMode(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.detailDisplayMode);}
         InstanceProperty<Dotburger.Menu, Link> keyboardShortcuts(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.keyboardShortcuts);}
@@ -81,7 +85,7 @@ public class PackageProperties {
       TypedProperty<Header, Header.Left> left = new TypedProperty<>(Header.class, "left");
       TypedProperty<Header, Header.Mid> mid = new TypedProperty<>(Header.class, "mid");
       TypedProperty<Header, Header.Right> right = new TypedProperty<>(Header.class, "right");
-      static class InstanceProperties extends 	InstanceProperty.Container<Header> {
+      static class InstanceProperties extends InstanceProperty.Container<Header> {
          InstanceProperties(Header source){super(source);}
         InstanceProperty<Header, Header.Left> left(){return new InstanceProperty<>(source,PackageProperties.header.left);}
         InstanceProperty<Header, Header.Mid> mid(){return new InstanceProperty<>(source,PackageProperties.header.mid);}
@@ -98,7 +102,7 @@ public class PackageProperties {
       TypedProperty<Header.Left, String> filter = new TypedProperty<>(Header.Left.class, "filter");
       TypedProperty<Header.Left, String> highlight = new TypedProperty<>(Header.Left.class, "highlight");
       TypedProperty<Header.Left, String> name = new TypedProperty<>(Header.Left.class, "name");
-      static class InstanceProperties extends 	InstanceProperty.Container<Header.Left> {
+      static class InstanceProperties extends InstanceProperty.Container<Header.Left> {
          InstanceProperties(Header.Left source){super(source);}
         InstanceProperty<Header.Left, String> filter(){return new InstanceProperty<>(source,PackageProperties.header_left.filter);}
         InstanceProperty<Header.Left, String> highlight(){return new InstanceProperty<>(source,PackageProperties.header_left.highlight);}
@@ -112,33 +116,15 @@ public class PackageProperties {
     }
     
     static class _Page implements TypedProperty.Container {
-      TypedProperty<Page, DetailArea> detailArea = new TypedProperty<>(Page.class, "detailArea");
-      TypedProperty<Page, List> filteredSequenceElements = new TypedProperty<>(Page.class, "filteredSequenceElements");
-      TypedProperty<Page, Header> header = new TypedProperty<>(Page.class, "header");
-      TypedProperty<Page, HighlightModel> highlightModel = new TypedProperty<>(Page.class, "highlightModel");
-      TypedProperty<Page, SequencePlace> lastFilterTestPlace = new TypedProperty<>(Page.class, "lastFilterTestPlace");
-      TypedProperty<Page, SequencePlace> lastHighlightTestPlace = new TypedProperty<>(Page.class, "lastHighlightTestPlace");
-      TypedProperty<Page, SequencePlace> lastSelectedIndexChangePlace = new TypedProperty<>(Page.class, "lastSelectedIndexChangePlace");
-      TypedProperty<Page, Timer> observableObservedTimer = new TypedProperty<>(Page.class, "observableObservedTimer");
-      TypedProperty<Page, InstanceOracle.Query> oracleQuery = new TypedProperty<>(Page.class, "oracleQuery");
-      TypedProperty<Page, Sequence> sequence = new TypedProperty<>(Page.class, "sequence");
       TypedProperty<Page, SequenceArea> sequenceArea = new TypedProperty<>(Page.class, "sequenceArea");
-      TypedProperty<Page, StyleElement> styleElement = new TypedProperty<>(Page.class, "styleElement");
+      TypedProperty<Page, SequenceArea.Service> sequenceAreaService = new TypedProperty<>(Page.class, "sequenceAreaService");
+      TypedProperty<Page, Page.SequenceAreaServiceImpl> serviceImpl = new TypedProperty<>(Page.class, "serviceImpl");
       TypedProperty<Page, SequenceBrowser.Ui> ui = new TypedProperty<>(Page.class, "ui");
-      static class InstanceProperties extends 	InstanceProperty.Container<Page> {
+      static class InstanceProperties extends InstanceProperty.Container<Page> {
          InstanceProperties(Page source){super(source);}
-        InstanceProperty<Page, DetailArea> detailArea(){return new InstanceProperty<>(source,PackageProperties.page.detailArea);}
-        InstanceProperty<Page, List> filteredSequenceElements(){return new InstanceProperty<>(source,PackageProperties.page.filteredSequenceElements);}
-        InstanceProperty<Page, Header> header(){return new InstanceProperty<>(source,PackageProperties.page.header);}
-        InstanceProperty<Page, HighlightModel> highlightModel(){return new InstanceProperty<>(source,PackageProperties.page.highlightModel);}
-        InstanceProperty<Page, SequencePlace> lastFilterTestPlace(){return new InstanceProperty<>(source,PackageProperties.page.lastFilterTestPlace);}
-        InstanceProperty<Page, SequencePlace> lastHighlightTestPlace(){return new InstanceProperty<>(source,PackageProperties.page.lastHighlightTestPlace);}
-        InstanceProperty<Page, SequencePlace> lastSelectedIndexChangePlace(){return new InstanceProperty<>(source,PackageProperties.page.lastSelectedIndexChangePlace);}
-        InstanceProperty<Page, Timer> observableObservedTimer(){return new InstanceProperty<>(source,PackageProperties.page.observableObservedTimer);}
-        InstanceProperty<Page, InstanceOracle.Query> oracleQuery(){return new InstanceProperty<>(source,PackageProperties.page.oracleQuery);}
-        InstanceProperty<Page, Sequence> sequence(){return new InstanceProperty<>(source,PackageProperties.page.sequence);}
         InstanceProperty<Page, SequenceArea> sequenceArea(){return new InstanceProperty<>(source,PackageProperties.page.sequenceArea);}
-        InstanceProperty<Page, StyleElement> styleElement(){return new InstanceProperty<>(source,PackageProperties.page.styleElement);}
+        InstanceProperty<Page, SequenceArea.Service> sequenceAreaService(){return new InstanceProperty<>(source,PackageProperties.page.sequenceAreaService);}
+        InstanceProperty<Page, Page.SequenceAreaServiceImpl> serviceImpl(){return new InstanceProperty<>(source,PackageProperties.page.serviceImpl);}
         InstanceProperty<Page, SequenceBrowser.Ui> ui(){return new InstanceProperty<>(source,PackageProperties.page.ui);}
       }
       
@@ -152,7 +138,7 @@ public class PackageProperties {
       TypedProperty<Page.ActivityRoute, Class> channel = new TypedProperty<>(Page.ActivityRoute.class, "channel");
       TypedProperty<Page.ActivityRoute, Page> page = new TypedProperty<>(Page.ActivityRoute.class, "page");
       TypedProperty<Page.ActivityRoute, BasePlace> place = new TypedProperty<>(Page.ActivityRoute.class, "place");
-      static class InstanceProperties extends 	InstanceProperty.Container<Page.ActivityRoute> {
+      static class InstanceProperties extends InstanceProperty.Container<Page.ActivityRoute> {
          InstanceProperties(Page.ActivityRoute source){super(source);}
         InstanceProperty<Page.ActivityRoute, Class> channel(){return new InstanceProperty<>(source,PackageProperties.page_activityRoute.channel);}
         InstanceProperty<Page.ActivityRoute, Page> page(){return new InstanceProperty<>(source,PackageProperties.page_activityRoute.page);}
@@ -165,22 +151,42 @@ public class PackageProperties {
       
     }
     
-    static class _SequenceArea implements TypedProperty.Container {
-      TypedProperty<SequenceArea, SequenceSettings.ColumnSet> columnSet = new TypedProperty<>(SequenceArea.class, "columnSet");
-      TypedProperty<SequenceArea, List> filteredElements = new TypedProperty<>(SequenceArea.class, "filteredElements");
-      TypedProperty<SequenceArea, Heading> header = new TypedProperty<>(SequenceArea.class, "header");
-      TypedProperty<SequenceArea, Page> page = new TypedProperty<>(SequenceArea.class, "page");
-      TypedProperty<SequenceArea, SequenceArea.RowsModelSupport> selectionSupport = new TypedProperty<>(SequenceArea.class, "selectionSupport");
-      static class InstanceProperties extends 	InstanceProperty.Container<SequenceArea> {
-         InstanceProperties(SequenceArea source){super(source);}
-        InstanceProperty<SequenceArea, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.columnSet);}
-        InstanceProperty<SequenceArea, List> filteredElements(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.filteredElements);}
-        InstanceProperty<SequenceArea, Heading> header(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.header);}
-        InstanceProperty<SequenceArea, Page> page(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.page);}
-        InstanceProperty<SequenceArea, SequenceArea.RowsModelSupport> selectionSupport(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.selectionSupport);}
+    public static class _SequenceArea implements TypedProperty.Container {
+      public TypedProperty<SequenceArea, Model> definitionHeader = new TypedProperty<>(SequenceArea.class, "definitionHeader");
+      public TypedProperty<SequenceArea, DetailArea> detailArea = new TypedProperty<>(SequenceArea.class, "detailArea");
+      public TypedProperty<SequenceArea, List> filteredSequenceElements = new TypedProperty<>(SequenceArea.class, "filteredSequenceElements");
+      public TypedProperty<SequenceArea, HighlightModel> highlightModel = new TypedProperty<>(SequenceArea.class, "highlightModel");
+      public TypedProperty<SequenceArea, SequencePlace> lastFilterTestPlace = new TypedProperty<>(SequenceArea.class, "lastFilterTestPlace");
+      public TypedProperty<SequenceArea, SequencePlace> lastHighlightTestPlace = new TypedProperty<>(SequenceArea.class, "lastHighlightTestPlace");
+      public TypedProperty<SequenceArea, SequencePlace> lastSelectedIndexChangePlace = new TypedProperty<>(SequenceArea.class, "lastSelectedIndexChangePlace");
+      public TypedProperty<SequenceArea, Timer> observableObservedTimer = new TypedProperty<>(SequenceArea.class, "observableObservedTimer");
+      public TypedProperty<SequenceArea, InstanceOracle.Query> oracleQuery = new TypedProperty<>(SequenceArea.class, "oracleQuery");
+      public TypedProperty<SequenceArea, Runnable> reloadSequenceLambda = new TypedProperty<>(SequenceArea.class, "reloadSequenceLambda");
+      public TypedProperty<SequenceArea, Sequence> sequence = new TypedProperty<>(SequenceArea.class, "sequence");
+      public TypedProperty<SequenceArea, SequenceTable> sequenceTable = new TypedProperty<>(SequenceArea.class, "sequenceTable");
+      public TypedProperty<SequenceArea, SequenceArea.Service> service = new TypedProperty<>(SequenceArea.class, "service");
+      public TypedProperty<SequenceArea, StyleElement> styleElement = new TypedProperty<>(SequenceArea.class, "styleElement");
+      public TypedProperty<SequenceArea, Runnable> updateStylesLambda = new TypedProperty<>(SequenceArea.class, "updateStylesLambda");
+      public static class InstanceProperties extends InstanceProperty.Container<SequenceArea> {
+        public  InstanceProperties(SequenceArea source){super(source);}
+        public InstanceProperty<SequenceArea, Model> definitionHeader(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.definitionHeader);}
+        public InstanceProperty<SequenceArea, DetailArea> detailArea(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.detailArea);}
+        public InstanceProperty<SequenceArea, List> filteredSequenceElements(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.filteredSequenceElements);}
+        public InstanceProperty<SequenceArea, HighlightModel> highlightModel(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.highlightModel);}
+        public InstanceProperty<SequenceArea, SequencePlace> lastFilterTestPlace(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.lastFilterTestPlace);}
+        public InstanceProperty<SequenceArea, SequencePlace> lastHighlightTestPlace(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.lastHighlightTestPlace);}
+        public InstanceProperty<SequenceArea, SequencePlace> lastSelectedIndexChangePlace(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.lastSelectedIndexChangePlace);}
+        public InstanceProperty<SequenceArea, Timer> observableObservedTimer(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.observableObservedTimer);}
+        public InstanceProperty<SequenceArea, InstanceOracle.Query> oracleQuery(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.oracleQuery);}
+        public InstanceProperty<SequenceArea, Runnable> reloadSequenceLambda(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.reloadSequenceLambda);}
+        public InstanceProperty<SequenceArea, Sequence> sequence(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.sequence);}
+        public InstanceProperty<SequenceArea, SequenceTable> sequenceTable(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.sequenceTable);}
+        public InstanceProperty<SequenceArea, SequenceArea.Service> service(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.service);}
+        public InstanceProperty<SequenceArea, StyleElement> styleElement(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.styleElement);}
+        public InstanceProperty<SequenceArea, Runnable> updateStylesLambda(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.updateStylesLambda);}
       }
       
-       InstanceProperties instance(SequenceArea instance) {
+      public  InstanceProperties instance(SequenceArea instance) {
         return new InstanceProperties( instance);
       }
       
@@ -196,7 +202,7 @@ public class PackageProperties {
       TypedProperty<SequenceBrowser.Ui, Page> page = new TypedProperty<>(SequenceBrowser.Ui.class, "page");
       TypedProperty<SequenceBrowser.Ui, SequencePlace> place = new TypedProperty<>(SequenceBrowser.Ui.class, "place");
       TypedProperty<SequenceBrowser.Ui, SequenceSettings> settings = new TypedProperty<>(SequenceBrowser.Ui.class, "settings");
-      static class InstanceProperties extends 	InstanceProperty.Container<SequenceBrowser.Ui> {
+      static class InstanceProperties extends InstanceProperty.Container<SequenceBrowser.Ui> {
          InstanceProperties(SequenceBrowser.Ui source){super(source);}
         InstanceProperty<SequenceBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.appCommandContexts);}
         InstanceProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.commandContextProvider);}
@@ -220,7 +226,7 @@ public class PackageProperties {
       public TypedProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(SequenceSettings.class, "detailDisplayMode");
       public TypedProperty<SequenceSettings, Integer> maxElementRows = new TypedProperty<>(SequenceSettings.class, "maxElementRows");
       public TypedProperty<SequenceSettings, String> sequenceKey = new TypedProperty<>(SequenceSettings.class, "sequenceKey");
-      public static class InstanceProperties extends 	InstanceProperty.Container<SequenceSettings> {
+      public static class InstanceProperties extends InstanceProperty.Container<SequenceSettings> {
         public  InstanceProperties(SequenceSettings source){super(source);}
         public InstanceProperty<SequenceSettings, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.columnSet);}
         public InstanceProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.detailDisplayMode);}
@@ -229,6 +235,27 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(SequenceSettings instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _SequenceTable implements TypedProperty.Container {
+      TypedProperty<SequenceTable, SequenceSettings.ColumnSet> columnSet = new TypedProperty<>(SequenceTable.class, "columnSet");
+      TypedProperty<SequenceTable, List> filteredElements = new TypedProperty<>(SequenceTable.class, "filteredElements");
+      TypedProperty<SequenceTable, Heading> header = new TypedProperty<>(SequenceTable.class, "header");
+      TypedProperty<SequenceTable, SequenceArea> page = new TypedProperty<>(SequenceTable.class, "page");
+      TypedProperty<SequenceTable, SequenceTable.RowsModelSupport> selectionSupport = new TypedProperty<>(SequenceTable.class, "selectionSupport");
+      static class InstanceProperties extends InstanceProperty.Container<SequenceTable> {
+         InstanceProperties(SequenceTable source){super(source);}
+        InstanceProperty<SequenceTable, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceTable.columnSet);}
+        InstanceProperty<SequenceTable, List> filteredElements(){return new InstanceProperty<>(source,PackageProperties.sequenceTable.filteredElements);}
+        InstanceProperty<SequenceTable, Heading> header(){return new InstanceProperty<>(source,PackageProperties.sequenceTable.header);}
+        InstanceProperty<SequenceTable, SequenceArea> page(){return new InstanceProperty<>(source,PackageProperties.sequenceTable.page);}
+        InstanceProperty<SequenceTable, SequenceTable.RowsModelSupport> selectionSupport(){return new InstanceProperty<>(source,PackageProperties.sequenceTable.selectionSupport);}
+      }
+      
+       InstanceProperties instance(SequenceTable instance) {
         return new InstanceProperties( instance);
       }
       

@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
@@ -328,6 +329,23 @@ public class ModelBinding<T> {
 	 */
 	public void signal(Runnable runnable) {
 		this.consumer = t -> runnable.run();
+	}
+
+	public void dispatch(Runnable runnable) {
+		this.consumer = t -> Client.eventBus().queued().lambda(runnable)
+				.dispatch();
+	}
+
+	/**
+	 * Enqueue at most one handler lambda - very useful if multiple signals can
+	 * produce a given result, and you only want to process once in a given
+	 * event cycle
+	 * 
+	 * @param runnable
+	 */
+	public void dispatchDistinct(Runnable runnable) {
+		this.consumer = t -> Client.eventBus().queued().lambda(runnable)
+				.distinct().dispatch();
 	}
 
 	public <BSP extends SourcesPropertyChangeEvents> TargetBinding<BSP, T>

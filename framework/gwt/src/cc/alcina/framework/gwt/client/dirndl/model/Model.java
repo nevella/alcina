@@ -659,26 +659,55 @@ public abstract class Model extends Bindable implements
 	/*
 	 * sugary execution support (such as deferred-if-bound)
 	 */
+	/*
+	 * Sugary finally/deferred execution support. The lambda will only be
+	 * executed if the model is bound (unless bindingAgnostic() is called)
+	 */
 	public class Exec {
 		Runnable lambda;
 
-		boolean ifBound;
+		boolean ifBound = true;
+
+		boolean deferred;
+
+		boolean distinct;
 
 		Exec(Runnable lambda) {
 			this.lambda = lambda;
 		}
 
-		public QueuedEvent ifBound() {
-			this.ifBound = true;
-			return bindingAgnostic();
+		public Exec deferred() {
+			this.deferred = true;
+			return this;
 		}
 
-		public QueuedEvent bindingAgnostic() {
-			return Client.eventBus().queued().lambda(() -> {
+		/**
+		 * The lambda will only be executed if the model is bound (unless
+		 * bindingAgnostic() was called)
+		 */
+		public void dispatch() {
+			QueuedEvent event = Client.eventBus().queued().lambda(() -> {
 				if (!ifBound || provideIsBound()) {
 					lambda.run();
 				}
 			});
+			if (deferred) {
+				event.deferred();
+			}
+			if (distinct) {
+				event.distinct();
+			}
+			event.dispatch();
+		}
+
+		public Exec bindingAgnostic() {
+			this.ifBound = false;
+			return this;
+		}
+
+		public Exec distinct() {
+			this.distinct = true;
+			return this;
 		}
 	}
 
