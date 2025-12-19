@@ -19,6 +19,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView.TableContainer;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
+/**
+ * <p>
+ * Render a collection as a table
+ * 
+ * <p>
+ * Gotchas - this uses property permissions, so if you see nothing, try adding a
+ * DisplayAllMixin resovler - e.g.
+ * {@code &#064;DirectedContextResolver(DisplayAllMixin.class)}
+ */
 @Directed
 public class TableView extends
 		AbstractContextSensitiveModelTransform<Collection<?>, TableContainer> {

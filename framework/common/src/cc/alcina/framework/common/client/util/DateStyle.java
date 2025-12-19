@@ -11,7 +11,7 @@ public enum DateStyle {
 	TIMESTAMP, NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, SHORT_MONTH_SLASH,
 	SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, MD_DATE_SLASH, TIMESTAMP_NO_DAY,
 	DATE_MONTH_NO_PAD_DAY, DATE_TIME_SHORT, DATESTAMP_HUMAN, DATE_TIME_TZ,
-	DATESTAMP_DASHED, DATE_MONTH_YEAR_TIME;
+	DATESTAMP_DASHED, DATE_MONTH_YEAR_TIME, SQL_DATE_YMD;
 
 	public String format(Date date) {
 		return formatDate(date, this);
@@ -206,6 +206,10 @@ public enum DateStyle {
 					CommonUtils.padTwo((date.getHours() - 1) % 12 + 1),
 					CommonUtils.padTwo(date.getMinutes()),
 					date.getHours() < 12 ? "AM" : "PM");
+		case SQL_DATE_YMD:
+			return Ax.format("%s-%s-%s",
+					CommonUtils.padTwo(date.getYear() + 1900),
+					date.getMonth() + 1, CommonUtils.padTwo(date.getDate()));
 		}
 		return date.toString();
 	}
