@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.util.ArrayList;
 import java.util.List;

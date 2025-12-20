@@ -69,20 +69,28 @@
     width: 16rem
     
 @mixin single-line
-  display: inline-block
+  display: block
   flex: 1
   min-width: auto
   width: 100%
-  form 
+  padding: 0
+
+  > form 
     display: flex
-    section 
+    > section 
       display: inline-block
       flex: 1
-      form-element,
-      select 
+
+      > form-element, select 
         display: inline-block
-      form-element 
+
+      > form-element 
         padding-right: 1rem
+        
+        > label
+          display: inline-block
+          padding-right: 0.5rem
+
     actions
       display: inline-block
       margin: 0

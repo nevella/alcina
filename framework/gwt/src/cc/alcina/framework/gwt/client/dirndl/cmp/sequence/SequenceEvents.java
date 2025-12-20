@@ -1,9 +1,10 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
 
 public class SequenceEvents {
 	public static class FilterElements

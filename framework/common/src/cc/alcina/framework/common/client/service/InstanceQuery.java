@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * Specifies an instance that will be produced by an InstanceProvider - this can
@@ -45,13 +46,6 @@ public final class InstanceQuery implements TreeSerializable {
 	@ReflectiveSerializer.Checks(ignore = true)
 	public abstract static class Parameter<V>
 			implements TreeSerializable, Registration.AllSubtypes {
-		public V value;
-
-		@PropertySerialization(defaultProperty = true)
-		public V getValue() {
-			return value;
-		}
-
 		public static class Support {
 			static volatile Map<Class<?>, Class<? extends Parameter>> valueTypeParameterType;
 
@@ -73,11 +67,22 @@ public final class InstanceQuery implements TreeSerializable {
 			}
 		}
 
-		public void setValue(V value) {
+		public V value;
+
+		public Parameter() {
+		}
+
+		public Parameter(V value) {
 			this.value = value;
 		}
 
-		public Parameter() {
+		@PropertySerialization(defaultProperty = true)
+		public V getValue() {
+			return value;
+		}
+
+		public void setValue(V value) {
+			this.value = value;
 		}
 
 		@Override
@@ -92,10 +97,6 @@ public final class InstanceQuery implements TreeSerializable {
 			} else {
 				return false;
 			}
-		}
-
-		public Parameter(V value) {
-			this.value = value;
 		}
 
 		public Parameter<V> withValue(V value) {
@@ -130,6 +131,11 @@ public final class InstanceQuery implements TreeSerializable {
 		return new InstanceOracle.Query<>(type).addParameters(parameters);
 	}
 
+	public <T extends Parameter> T typedParameter(Class<T> clazz) {
+		return (T) parameters.stream().filter(p -> p.getClass() == clazz)
+				.findFirst().orElse(null);
+	}
+
 	public InstanceQuery withType(Class type) {
 		this.type = type;
 		return this;
@@ -138,5 +144,20 @@ public final class InstanceQuery implements TreeSerializable {
 	public InstanceQuery addParameters(Parameter<?>... parameters) {
 		Arrays.stream(parameters).forEach(this.parameters::add);
 		return this;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof InstanceQuery) {
+			InstanceQuery o = (InstanceQuery) obj;
+			return CommonUtils.equals(type, o.type, parameters, o.parameters);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return type.hashCode() ^ parameters.hashCode();
 	}
 }

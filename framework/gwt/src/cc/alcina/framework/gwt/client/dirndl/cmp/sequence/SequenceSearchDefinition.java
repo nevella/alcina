@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;

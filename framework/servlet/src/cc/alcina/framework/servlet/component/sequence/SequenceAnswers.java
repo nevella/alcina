@@ -14,10 +14,9 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorComman
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.CommandNode;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.MatchStyle;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.servlet.component.shared.ExecCommand;
-import cc.alcina.framework.servlet.component.traversal.TraversalEvents;
-import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 
 class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 	public SequenceAnswers() {
@@ -40,7 +39,8 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 		List<AppSuggestion> suggestions = new ArrayList<>();
 		addLoadSuggestion(query, suggestions);
 		addHighlightSuggestion(query, suggestions);
-		addSetSuggestion(query, suggestions);
+		addSetSuggestion(query, invocation.ask.getResultRange().length(),
+				suggestions);
 		addExecSuggestion(query, suggestions);
 		{
 			// add filter selection
@@ -86,14 +86,15 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 		}
 	}
 
-	void addSetSuggestion(String query, List<AppSuggestion> suggestions) {
+	void addSetSuggestion(String query, int resultCount,
+			List<AppSuggestion> suggestions) {
 		{
 			Pattern pattern = Pattern.compile("set rows (\\d+)");
 			Matcher matcher = pattern.matcher(query);
 			if (matcher.matches()) {
 				AppSuggestionEntry suggestion = new AppSuggestionEntry();
 				suggestion.eventData = matcher.group(1);
-				int tableRows = SequenceSettings.get().maxElementRows;
+				int tableRows = resultCount <= 0 ? 50 : resultCount;
 				suggestion.match = Ax.format("Set rows: '%s' (current=%s)",
 						suggestion.eventData, tableRows);
 				suggestion.modelEvent = SequenceEvents.SetSettingMaxElementRows.class;

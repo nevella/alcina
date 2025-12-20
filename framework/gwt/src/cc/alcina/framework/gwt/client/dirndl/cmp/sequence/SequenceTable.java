@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -13,6 +13,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea.Service;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.HighlightModelChanged;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SelectedIndexChanged;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -22,15 +26,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasClassNames;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
-import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel.RowMeta;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
-import cc.alcina.framework.servlet.component.sequence.SequenceArea.Service;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightModelChanged;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SelectedIndexChanged;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 
 @TypedProperties
 // this is just to force the SequenceArea to be accessible from RowTransformer
@@ -158,22 +157,6 @@ class SequenceTable extends Model.Fields
 				Ax.format("Sequence elements [%s]", filteredElements.size()));
 		from(sequenceArea.service.getSettings().properties().columnSet())
 				.to(properties().columnSet()).oneWay();
-	}
-
-	public void onRowClicked(RowClicked event) {
-		Object rowModel = event.getModel().getOriginalRowModel();
-		int index = sequenceArea.sequence.getElements().indexOf(rowModel);
-		if (event.getContext().getOriginatingNativeEvent().getShiftKey()) {
-			if (sequenceArea.getPlace().selectedElementIdx != -1) {
-				IntPair absolutePair = IntPair
-						.of(sequenceArea.getPlace().selectedElementIdx, index)
-						.toLowestFirst();
-				sequenceArea.getPlace().copy().withSelectedRange(absolutePair)
-						.go();
-			}
-		} else {
-			sequenceArea.getPlace().copy().withSelectedElementIdx(index).go();
-		}
 	}
 
 	@Override

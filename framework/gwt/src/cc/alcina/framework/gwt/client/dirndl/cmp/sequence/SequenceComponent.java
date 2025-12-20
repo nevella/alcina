@@ -1,4 +1,6 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
+
+import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -6,10 +8,9 @@ import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea.Service;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NavigateToNewSequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.sequence.SequenceArea.Service;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NavigateToNewSequencePlace;
 
 /*
  */
@@ -17,10 +18,9 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NavigateToN
 @DirectedContextResolver
 public class SequenceComponent extends Model.Fields
 		implements Binding.TabIndexZero, SequenceArea.Service.Provider,
-		SequenceEvents.NavigateToNewSequencePlace.Handler {
+		SequenceEvents.NavigateToNewSequencePlace.Handler,
+		HasFilteredSequenceElements {
 	class SequenceAreaServiceImpl implements SequenceArea.Service {
-		LeafModel.DivLabel header = new LeafModel.DivLabel("header", null);
-
 		SequenceAreaServiceImpl() {
 		}
 
@@ -31,7 +31,7 @@ public class SequenceComponent extends Model.Fields
 
 		@Override
 		public InstanceProperty<?, SequencePlace> getPlaceProperty() {
-			return properties().place();
+			return sequencePlaceProperty;
 		}
 
 		@Override
@@ -54,18 +54,18 @@ public class SequenceComponent extends Model.Fields
 	@Directed
 	SequenceArea sequenceArea = new SequenceArea();
 
-	SequencePlace place;
-
 	SequenceSettings sequenceSettings = new SequenceSettings();
 
 	SequenceAreaServiceImpl serviceImpl = new SequenceAreaServiceImpl();
 
-	public SequenceComponent(SequencePlace place) {
-		this.place = place;
-	}
+	Model header;
 
-	SequenceComponent() {
-		this.serviceImpl = new SequenceAreaServiceImpl();
+	InstanceProperty<?, SequencePlace> sequencePlaceProperty;
+
+	public SequenceComponent(Model header,
+			InstanceProperty<?, SequencePlace> sequencePlaceProperty) {
+		this.header = header;
+		this.sequencePlaceProperty = sequencePlaceProperty;
 	}
 
 	@Override
@@ -79,6 +79,11 @@ public class SequenceComponent extends Model.Fields
 
 	@Override
 	public void onNavigateToNewSequencePlace(NavigateToNewSequencePlace event) {
-		properties().place().set(event.getModel());
+		sequencePlaceProperty.set(event.getModel());
+	}
+
+	@Override
+	public List<?> provideFiltereedSequenceElements() {
+		return sequenceArea.provideFiltereedSequenceElements();
 	}
 }

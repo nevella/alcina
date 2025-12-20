@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,11 +24,11 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FileUtils;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence.Loader.LoaderLocation;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence.Loader.LoaderType;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.sequence.Sequence.Loader.LoaderLocation;
-import cc.alcina.framework.servlet.component.sequence.Sequence.Loader.LoaderType;
 
 /**
  * <p>

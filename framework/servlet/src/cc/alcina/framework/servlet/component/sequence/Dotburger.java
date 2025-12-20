@@ -2,6 +2,9 @@ package cc.alcina.framework.servlet.component.sequence;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings.DetailDisplayMode;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Button;
@@ -11,7 +14,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 
 /*
  * The main dropdown navigation/options menu
@@ -41,8 +43,14 @@ class Dotburger extends Model.Fields {
 				.of(SequenceBrowserCommand.ShowKeyboardShortcuts.class);
 
 		Menu() {
-			from(SequenceSettings.get().properties().detailDisplayMode())
-					.to(properties().detailDisplayMode()).bidi();
+		}
+
+		@Override
+		public void onBeforeRender(BeforeRender event) {
+			from(event.service(SequenceArea.Service.class).getSettings()
+					.properties().detailDisplayMode())
+							.to(properties().detailDisplayMode()).bidi();
+			super.onBeforeRender(event);
 		}
 	}
 

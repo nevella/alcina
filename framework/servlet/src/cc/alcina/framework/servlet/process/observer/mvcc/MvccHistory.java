@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.persistence.mvcc.MvccEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservable;
-import cc.alcina.framework.servlet.component.sequence.Sequence;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 
 /**
  * A detailed history of changes to the observed mvcc object

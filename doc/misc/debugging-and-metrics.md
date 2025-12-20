@@ -20,7 +20,7 @@ FlightEventRecorder.enabled=true
 
 To view the flight events of the most recent locally recorded romcom app (terminated >5s ago), go to:
 
-http://127.0.0.1:31009/seq#sequence/instanceQuery.loadertype=cc.alcina.extras.dev.console.alcina.MostRecentFlight:instanceQuery.querytype=cc.alcina.framework.servlet.component.sequence.Sequence
+http://127.0.0.1:31009/seq#sequence/instanceQuery.loadertype=cc.alcina.extras.dev.console.alcina.MostRecentFlight:instanceQuery.querytype=cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence
 
 ### Remote
 

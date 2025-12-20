@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,19 +24,18 @@ import cc.alcina.framework.common.client.util.HasFilterableText.Query;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.HighlightModel.Match;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.FilterElements;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.HighlightElements;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NextSelectable;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.PreviousSelectable;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SetSettingMaxElementRows;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.sequence.HighlightModel.Match;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightElements;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextSelectable;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousSelectable;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SetSettingMaxElementRows;
 import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
-import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @TypedProperties
@@ -47,9 +46,9 @@ public class SequenceArea extends Model.Fields
 		SequenceEvents.NextSelectable.Handler,
 		SequenceEvents.PreviousSelectable.Handler,
 		SequenceEvents.SetSettingMaxElementRows.Handler,
-		ExecCommand.PerformCommand.Handler,
 		SequenceEvents.HighlightModelChanged.Emitter,
-		SequenceEvents.SelectedIndexChanged.Emitter, CopyToClipboardHandler {
+		SequenceEvents.SelectedIndexChanged.Emitter, CopyToClipboardHandler,
+		HasFilteredSequenceElements {
 	/**
 	 * The service required by the SequenceArea (provided by the host, generally
 	 * the directed paren t)
@@ -86,7 +85,7 @@ public class SequenceArea extends Model.Fields
 		long getElementLimit();
 	}
 
-	PackageProperties._SequenceArea.InstanceProperties properties() {
+	public PackageProperties._SequenceArea.InstanceProperties properties() {
 		return PackageProperties.sequenceArea.instance(this);
 	}
 
@@ -125,7 +124,7 @@ public class SequenceArea extends Model.Fields
 
 	StyleElement styleElement;
 
-	SequencePlace lastFilterTestPlace = null;
+	SequencePlace lastSequenceTestPlace = null;
 
 	SequencePlace lastHighlightTestPlace = null;
 
@@ -135,7 +134,7 @@ public class SequenceArea extends Model.Fields
 
 	Service service;
 
-	SequenceArea() {
+	public SequenceArea() {
 	}
 
 	void onSelectedIndexChange() {
@@ -238,8 +237,8 @@ public class SequenceArea extends Model.Fields
 	 * The sequence will be changed if the filter is changed (essentially)
 	 */
 	boolean filterUnchangedSequencePlaceChange(SequencePlace place) {
-		boolean result = place.hasFilterChange(lastFilterTestPlace);
-		lastFilterTestPlace = place;
+		boolean result = place.hasSequenceChange(lastSequenceTestPlace);
+		lastSequenceTestPlace = place;
 		return result;
 	}
 
@@ -277,7 +276,7 @@ public class SequenceArea extends Model.Fields
 
 	InstanceOracle.Query<?> oracleQuery;
 
-	Runnable reloadSequenceLambda = this::reloadSequence;
+	public Runnable reloadSequenceLambda = this::reloadSequence;
 
 	Runnable updateStylesLambda = this::updateStyles;
 
@@ -414,17 +413,21 @@ public class SequenceArea extends Model.Fields
 	@Override
 	public void onSetSettingMaxElementRows(SetSettingMaxElementRows event) {
 		String model = event.getModel();
-		SequenceBrowser.Ui.get().settings.putMaxElementRows(model);
-	}
-
-	@Override
-	public void onPerformCommand(ExecCommand.PerformCommand event) {
-		SequenceExecCommand.Support.execCommand(event, filteredSequenceElements,
-				event.getModel());
+		service.getSettings().putMaxElementRows(model);
 	}
 
 	@Property.Not
 	SequencePlace getPlace() {
 		return service.getPlaceProperty().get();
+	}
+
+	@Override
+	public List<?> provideFiltereedSequenceElements() {
+		return filteredSequenceElements;
+	}
+
+	@Property.Not
+	public int getHighlightMatchesCount() {
+		return highlightModel.matches.size();
 	}
 }

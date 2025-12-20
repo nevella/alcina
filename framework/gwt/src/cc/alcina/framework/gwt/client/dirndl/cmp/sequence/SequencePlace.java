@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.util.Objects;
 
@@ -11,9 +11,11 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserPlace;
 
 /**
  * 
@@ -61,7 +63,7 @@ public class SequencePlace extends BasePlace
 					place = FlatTreeSerializer.deserialize(SequencePlace.class,
 							parts[1]);
 				} catch (Exception e) {
-					Ax.simpleExceptionOut(e);
+					Ax.sysLogHigh(CommonUtils.toSimpleExceptionMessage(e));
 				}
 			}
 			return place;
@@ -107,8 +109,20 @@ public class SequencePlace extends BasePlace
 		return this;
 	}
 
-	public boolean hasFilterChange(SequencePlace lastPlace) {
-		return lastPlace == null || !Objects.equals(filter, lastPlace.filter);
+	public boolean hasSequenceChange(SequencePlace lastPlace) {
+		if (lastPlace == null) {
+			return true;
+		}
+		if (!Objects.equals(filter, lastPlace.filter)) {
+			return true;
+		}
+		if (!Objects.equals(search, lastPlace.search)) {
+			return true;
+		}
+		if (!Objects.equals(instanceQuery, lastPlace.instanceQuery)) {
+			return true;
+		}
+		return false;
 	}
 
 	public boolean hasHighlightChange(SequencePlace lastPlace) {

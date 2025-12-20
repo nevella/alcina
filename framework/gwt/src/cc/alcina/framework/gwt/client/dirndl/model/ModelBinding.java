@@ -573,4 +573,10 @@ public class ModelBinding<T> {
 				: Reflections.isAssignableFrom(clazz, e.getClass()));
 		return (ModelBinding<FT>) filtered;
 	}
+
+	public void accept(Object consumer2) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'accept'");
+	}
 }

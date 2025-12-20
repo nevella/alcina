@@ -14,6 +14,16 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea.Service;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.LoadSequence;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NavigateToNewSequencePlace;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings.ColumnSet;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings.DetailDisplayMode;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
@@ -21,7 +31,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
-import cc.alcina.framework.servlet.component.sequence.SequenceArea.Service;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ColumnSetCycle;
@@ -29,10 +38,6 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.Det
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NavigateToNewSequencePlace;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 
 /*
  */
@@ -83,15 +88,6 @@ class Page extends Model.Fields
 		}
 	}
 
-	PackageProperties._Page.InstanceProperties properties() {
-		return PackageProperties.page.instance(this);
-	}
-
-	@Directed
-	SequenceArea sequenceArea = new SequenceArea();
-
-	Ui ui;
-
 	class SequenceAreaServiceImpl implements SequenceArea.Service {
 		Header header;
 
@@ -130,13 +126,19 @@ class Page extends Model.Fields
 		}
 	}
 
+	Ui ui;
+
 	SequenceAreaServiceImpl serviceImpl;
+
+	@Directed
+	SequenceArea sequenceArea;
 
 	Page() {
 		this.ui = Ui.get();
 		this.ui.page = this;
 		this.serviceImpl = new SequenceAreaServiceImpl();
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
+		sequenceArea = new SequenceArea();
 		from(ui.settings.properties().sequenceKey())
 				.dispatchDistinct(sequenceArea.reloadSequenceLambda);
 	}
@@ -196,5 +198,9 @@ class Page extends Model.Fields
 	@Override
 	public void onNavigateToNewSequencePlace(NavigateToNewSequencePlace event) {
 		event.getModel().go();
+	}
+
+	PackageProperties._Page.InstanceProperties properties() {
+		return PackageProperties.page.instance(this);
 	}
 }

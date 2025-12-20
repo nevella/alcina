@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -53,6 +54,10 @@ public class LayoutEvents {
 			this.model = model;
 			this.node = node;
 			setContext(Context.fromNode(node));
+		}
+
+		public <T extends ContextService> T service(Class<T> clazz) {
+			return node.service(clazz);
 		}
 
 		@Override

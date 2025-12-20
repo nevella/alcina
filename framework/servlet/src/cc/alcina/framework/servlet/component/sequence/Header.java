@@ -53,8 +53,8 @@ class Header extends Model.All {
 							: Ax.format("Highlight: '%s' [%s/%s]",
 									place.highlight,
 									Math.max(0, place.highlightIdx),
-									page.sequenceArea.highlightModel.matches
-											.size()))
+									page.sequenceArea
+											.getHighlightMatchesCount()))
 					.to(properties().highlight()).oneWay();
 		}
 	}
