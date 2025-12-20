@@ -230,11 +230,6 @@ public class InstanceOracle {
 			return this;
 		}
 
-		/* Note that this will block if the query is not async */
-		ProviderQueries<T> submit0() {
-			return InstanceOracle.get().submit(this);
-		}
-
 		@Override
 		public String toString() {
 			return FormatBuilder.keyValues("keys", providerKeys, "parameters",
@@ -270,10 +265,9 @@ public class InstanceOracle {
 			return this;
 		}
 
-		public Class[] keys() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'keys'");
+		/* Note that this will block if the query is not async */
+		ProviderQueries<T> submit0() {
+			return InstanceOracle.get().submit(this);
 		}
 	}
 
@@ -323,20 +317,6 @@ public class InstanceOracle {
 	 * {@link Query#equals(Object)}
 	 */
 	static class ProviderQueries<T> {
-		boolean firing;
-
-		/**
-		 * 
-		 * @return true if the instance has no awaiting queries
-		 */
-		synchronized boolean checkEviction() {
-			if (firing) {
-				return false;
-			}
-			awaitingQueries.removeIf(qs -> !qs.query.bound);
-			return awaitingQueries.isEmpty();
-		}
-
 		/**
 		 * Models how the provider has satisfied this particular query. The
 		 * check against lastAccepted instance prevents possible
@@ -394,6 +374,8 @@ public class InstanceOracle {
 			}
 		}
 
+		boolean firing;
+
 		Query<T> definingQuery;
 
 		List<QueryState> awaitingQueries = new ArrayList<>();
@@ -428,6 +410,18 @@ public class InstanceOracle {
 			} else {
 				return super.equals(obj);
 			}
+		}
+
+		/**
+		 * 
+		 * @return true if the instance has no awaiting queries
+		 */
+		synchronized boolean checkEviction() {
+			if (firing) {
+				return false;
+			}
+			awaitingQueries.removeIf(qs -> !qs.query.bound);
+			return awaitingQueries.isEmpty();
 		}
 
 		synchronized void discardExistingInstance() {
@@ -546,15 +540,15 @@ public class InstanceOracle {
 		return new Query<>(clazz);
 	}
 
-	<T> void invalidate(Query<T> query) {
-		store.getProviderQueries(query).invalidate();
-	}
-
 	static InstanceOracle get() {
 		return Registry.impl(InstanceOracle.class);
 	}
 
 	Store store = new Store();
+
+	<T> void invalidate(Query<T> query) {
+		store.getProviderQueries(query).invalidate();
+	}
 
 	<T> ProviderQueries<T> submit(Query<T> query) {
 		query.bind();

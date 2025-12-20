@@ -13,8 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
-import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -26,7 +24,6 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FileUtils;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -71,10 +68,27 @@ public interface Sequence<T> {
 			return elements;
 		}
 
+		public <SQ extends Abstract<T>> SQ withElements(List<T> elements) {
+			this.elements = elements;
+			return (SQ) this;
+		}
+
 		public String name;
 
 		public String getName() {
 			return name;
+		}
+
+		public abstract static class Passthrough<T> extends Abstract<T> {
+			@Override
+			public ModelTransform<T, ? extends Model> getRowTransform() {
+				return t -> (Model) t;
+			}
+
+			@Override
+			public ModelTransform<T, ? extends Model> getDetailTransform() {
+				return t -> (Model) t;
+			}
 		}
 	}
 

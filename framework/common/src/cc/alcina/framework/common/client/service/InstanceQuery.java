@@ -14,10 +14,10 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 
 /**
  * Specifies an instance that will be produced by an InstanceProvider - this can
@@ -31,6 +31,15 @@ public final class InstanceQuery implements TreeSerializable {
 	public abstract static class TransientParameter<V> extends Parameter<V> {
 	}
 
+	/**
+	 * Note for serialization (from the FlatTreeSerializer doc):
+	 * 
+	 * <p>
+	 * * Objects - particularly generic objects such as InstanceQuery.Parameter
+	 * with a complex type parameter - must have en empty value set in the
+	 * constructor for deserialization to work
+	 * 
+	 */
 	@Bean(PropertySource.FIELDS)
 	@Registration.Self
 	@ReflectiveSerializer.Checks(ignore = true)

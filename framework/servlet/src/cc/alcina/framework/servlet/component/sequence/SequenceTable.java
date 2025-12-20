@@ -27,6 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel.RowMeta;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
+import cc.alcina.framework.servlet.component.sequence.SequenceArea.Service;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightModelChanged;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SelectedIndexChanged;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
@@ -67,7 +68,8 @@ class SequenceTable extends Model.Fields
 		}
 
 		boolean isExclude(Property property) {
-			if (SequenceSettings.get().columnSet == ColumnSet.DETAIL) {
+			Service service = getService(SequenceArea.Service.class).get();
+			if (service.getSettings().columnSet == ColumnSet.DETAIL) {
 				switch (property.getName()) {
 				case "in":
 				case "out":
@@ -87,7 +89,7 @@ class SequenceTable extends Model.Fields
 		public AbstractContextSensitiveModelTransform
 				withContextNode(Node node) {
 			SequenceTable ctx = node.getResolver().parent().getRootModel();
-			sequenceRowTransform = ctx.page.sequence.getRowTransform();
+			sequenceRowTransform = ctx.sequenceArea.sequence.getRowTransform();
 			return super.withContextNode(node);
 		}
 
@@ -101,7 +103,7 @@ class SequenceTable extends Model.Fields
 		protected void updateRowDecoratorsAndScroll() {
 			for (int idx = 0; idx < filteredElements.size(); idx++) {
 				Object filteredElement = filteredElements.get(idx);
-				boolean hasMatch = page.highlightModel
+				boolean hasMatch = sequenceArea.highlightModel
 						.hasMatch(filteredElement);
 				RowMeta rowMeta = rowsModel.meta.get(idx);
 				rowMeta.setFlag("matches", hasMatch);
@@ -111,20 +113,24 @@ class SequenceTable extends Model.Fields
 									true));
 				}
 			}
-			selectAndScroll(page.getPlace().selectedElementIdx,
+			selectAndScroll(sequenceArea.getPlace().selectedElementIdx,
 					filteredElements);
 		}
 
 		protected void onSelectedRowsChanged() {
 			IntPair selected = rowsModel.getSelectedRowsRange();
 			if (selected != null) {
+				SequencePlace newPlace = null;
 				if (selected.isPoint()) {
-					page.getPlace().copy().withSelectedElementIdx(selected.i1)
-							.go();
+					newPlace = sequenceArea.getPlace().copy()
+							.withSelectedElementIdx(selected.i1);
 				} else {
-					page.getPlace().copy().withSelectedElementIdx(selected.i1)
-							.withSelectedRange(selected).go();
+					newPlace = sequenceArea.getPlace().copy()
+							.withSelectedElementIdx(selected.i1)
+							.withSelectedRange(selected);
 				}
+				emitEvent(SequenceEvents.NavigateToNewSequencePlace.class,
+						newPlace);
 			}
 		}
 	}
@@ -141,31 +147,32 @@ class SequenceTable extends Model.Fields
 	@DirectedContextResolver(ColumnResolver.class)
 	List<?> filteredElements;
 
-	SequenceArea page;
+	SequenceArea sequenceArea;
 
 	RowsModelSupport selectionSupport = new RowsModelSupport();
 
-	SequenceTable(SequenceArea page) {
-		this.page = page;
-		filteredElements = page.filteredSequenceElements;
+	SequenceTable(SequenceArea sequenceArea) {
+		this.sequenceArea = sequenceArea;
+		filteredElements = sequenceArea.filteredSequenceElements;
 		header = new Heading(
 				Ax.format("Sequence elements [%s]", filteredElements.size()));
-		from(SequenceSettings.get().properties().columnSet())
+		from(sequenceArea.service.getSettings().properties().columnSet())
 				.to(properties().columnSet()).oneWay();
 	}
 
 	public void onRowClicked(RowClicked event) {
 		Object rowModel = event.getModel().getOriginalRowModel();
-		int index = page.sequence.getElements().indexOf(rowModel);
+		int index = sequenceArea.sequence.getElements().indexOf(rowModel);
 		if (event.getContext().getOriginatingNativeEvent().getShiftKey()) {
-			if (page.getPlace().selectedElementIdx != -1) {
+			if (sequenceArea.getPlace().selectedElementIdx != -1) {
 				IntPair absolutePair = IntPair
-						.of(page.getPlace().selectedElementIdx, index)
+						.of(sequenceArea.getPlace().selectedElementIdx, index)
 						.toLowestFirst();
-				page.getPlace().copy().withSelectedRange(absolutePair).go();
+				sequenceArea.getPlace().copy().withSelectedRange(absolutePair)
+						.go();
 			}
 		} else {
-			page.getPlace().copy().withSelectedElementIdx(index).go();
+			sequenceArea.getPlace().copy().withSelectedElementIdx(index).go();
 		}
 	}
 

@@ -30,6 +30,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.Foc
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
+import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NavigateToNewSequencePlace;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 
@@ -46,7 +47,8 @@ class Page extends Model.Fields
 		SequenceBrowserCommand.ToggleHelp.Handler, Binding.TabIndexZero,
 		SequenceArea.Service.Provider,
 		SequenceBrowserCommand.DetailDisplayCycle.Handler,
-		SequenceBrowserCommand.ColumnSetCycle.Handler {
+		SequenceBrowserCommand.ColumnSetCycle.Handler,
+		SequenceEvents.NavigateToNewSequencePlace.Handler {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)
@@ -189,5 +191,10 @@ class Page extends Model.Fields
 		DetailDisplayMode next = settings.nextDetailDisplayMode();
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Detail display mode -> %s", next));
+	}
+
+	@Override
+	public void onNavigateToNewSequencePlace(NavigateToNewSequencePlace event) {
+		event.getModel().go();
 	}
 }

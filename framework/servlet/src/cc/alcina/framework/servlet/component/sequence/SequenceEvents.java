@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class SequenceEvents {
 	public static class FilterElements
@@ -106,6 +107,26 @@ public class SequenceEvents {
 		}
 
 		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
+	public static class NavigateToNewSequencePlace extends
+			ModelEvent<SequencePlace, NavigateToNewSequencePlace.Handler> {
+		@Override
+		public void dispatch(NavigateToNewSequencePlace.Handler handler) {
+			handler.onNavigateToNewSequencePlace(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onNavigateToNewSequencePlace(NavigateToNewSequencePlace event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onNavigateToNewSequencePlace(
+					NavigateToNewSequencePlace event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 }
