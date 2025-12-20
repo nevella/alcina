@@ -508,8 +508,8 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
 		List<ElementLocal> list = stream().filter(Node::provideIsElement)
-				.map(Node::local).map(ElementLocal.class::cast)
-				.collect(Collectors.toList());
+				.filter(elem -> elem.nameIs(name)).map(Node::local)
+				.map(ElementLocal.class::cast).collect(Collectors.toList());
 		return new NodeList(new NodeListLocal(list));
 	}
 
