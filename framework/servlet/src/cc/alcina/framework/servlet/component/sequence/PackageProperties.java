@@ -161,24 +161,7 @@ public class PackageProperties {
       
     }
     
-    public static class _SequenceSettings implements TypedProperty.Container {
-      public TypedProperty<SequenceSettings, SequenceSettings.ColumnSet> columnSet = new TypedProperty<>(SequenceSettings.class, "columnSet");
-      public TypedProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(SequenceSettings.class, "detailDisplayMode");
-      public TypedProperty<SequenceSettings, Integer> maxElementRows = new TypedProperty<>(SequenceSettings.class, "maxElementRows");
-      public TypedProperty<SequenceSettings, String> sequenceKey = new TypedProperty<>(SequenceSettings.class, "sequenceKey");
-      public static class InstanceProperties extends InstanceProperty.Container<SequenceSettings> {
-        public  InstanceProperties(SequenceSettings source){super(source);}
-        public InstanceProperty<SequenceSettings, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.columnSet);}
-        public InstanceProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.detailDisplayMode);}
-        public InstanceProperty<SequenceSettings, Integer> maxElementRows(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.maxElementRows);}
-        public InstanceProperty<SequenceSettings, String> sequenceKey(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.sequenceKey);}
-      }
-      
-      public  InstanceProperties instance(SequenceSettings instance) {
-        return new InstanceProperties( instance);
-      }
-      
-    }
+    
     
 //@formatter:on
 }

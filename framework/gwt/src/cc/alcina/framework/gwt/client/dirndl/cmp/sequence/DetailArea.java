@@ -4,7 +4,7 @@ import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
@@ -37,7 +37,7 @@ class DetailArea extends Model.Fields {
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		Object sequenceElement = sequenceArea.getSelectedSequenceElement();
 		if (sequenceElement == null) {
 			return;
@@ -64,6 +64,5 @@ class DetailArea extends Model.Fields {
 								.getSelectedElementHighlightIndex()));
 			}
 		}
-		super.onBeforeRender(event);
 	}
 }

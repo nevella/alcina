@@ -64,6 +64,10 @@ public class LayoutEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onNodeContext(NodeContext event);
 		}
+
+		public <T extends ContextService> T service(Class<T> serviceType) {
+			return node.getResolver().getService(serviceType);
+		}
 	}
 
 	/*

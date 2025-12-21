@@ -31,8 +31,8 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.Highlig
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NextSelectable;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.PreviousSelectable;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SetSettingMaxElementRows;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -143,8 +143,8 @@ public class SequenceArea extends Model.Fields
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		service = event.node.getResolver().getService(Service.class).get();
+	public void onNodeContext(NodeContext event) {
+		service = event.service(Service.class);
 		definitionHeader = service.getSequenceDefinitionHeader();
 		from(service.getPlaceProperty())
 				// todo - add ignoreable change filter
@@ -174,7 +174,6 @@ public class SequenceArea extends Model.Fields
 		 * checks throughout
 		 */
 		putSequence(Sequence.Blank.createInstance());
-		super.onBeforeRender(event);
 	}
 
 	@Override
