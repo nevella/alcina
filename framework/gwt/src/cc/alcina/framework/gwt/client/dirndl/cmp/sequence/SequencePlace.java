@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowserPlace;
 
 /**
  * 
@@ -23,8 +22,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowserPlace;
  */
 @Bean(PropertySource.FIELDS)
 @ReflectiveSerializer.Checks(ignore = true)
-public class SequencePlace extends BasePlace
-		implements SequenceBrowserPlace, TreeSerializable {
+public class SequencePlace extends BasePlace implements TreeSerializable {
 	/*
 	 * Models the provider of sequence elements
 	 */

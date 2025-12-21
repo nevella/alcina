@@ -1,10 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
-import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
 
 public class SequenceEvents {
 	public static class FilterElements
@@ -43,7 +41,10 @@ public class SequenceEvents {
 		}
 	}
 
-	@KeyBinding(key = ".", context = SequenceBrowser.CommandContext.class)
+	/*
+	 * wip - sequence
+	 */
+	// @KeyBinding(key = ".", context = SequenceBrowser.CommandContext.class)
 	public static class NextSelectable
 			extends ModelEvent<Object, NextSelectable.Handler> {
 		@Override
@@ -56,7 +57,7 @@ public class SequenceEvents {
 		}
 	}
 
-	@KeyBinding(key = ",", context = SequenceBrowser.CommandContext.class)
+	// @KeyBinding(key = ",", context = SequenceBrowser.CommandContext.class)
 	public static class PreviousSelectable
 			extends ModelEvent<Object, PreviousSelectable.Handler> {
 		@Override
@@ -126,6 +127,27 @@ public class SequenceEvents {
 			@Override
 			default void onNavigateToNewSequencePlace(
 					NavigateToNewSequencePlace event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	public static class SequenceGenerationExceptionEvent extends
+			ModelEvent<Exception, SequenceGenerationExceptionEvent.Handler> {
+		@Override
+		public void dispatch(SequenceGenerationExceptionEvent.Handler handler) {
+			handler.onSequenceGenerationExceptionEvent(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSequenceGenerationExceptionEvent(
+					SequenceGenerationExceptionEvent event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSequenceGenerationExceptionEvent(
+					SequenceGenerationExceptionEvent event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}

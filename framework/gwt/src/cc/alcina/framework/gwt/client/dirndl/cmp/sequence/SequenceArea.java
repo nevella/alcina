@@ -35,8 +35,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
-import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @TypedProperties
 @Directed.Delegating
@@ -47,7 +45,7 @@ public class SequenceArea extends Model.Fields
 		SequenceEvents.PreviousSelectable.Handler,
 		SequenceEvents.SetSettingMaxElementRows.Handler,
 		SequenceEvents.HighlightModelChanged.Emitter,
-		SequenceEvents.SelectedIndexChanged.Emitter, CopyToClipboardHandler,
+		SequenceEvents.SelectedIndexChanged.Emitter,
 		HasFilteredSequenceElements {
 	/**
 	 * The service required by the SequenceArea (provided by the host, generally
@@ -288,7 +286,9 @@ public class SequenceArea extends Model.Fields
 		}
 		InstanceOracle.Query<? extends Sequence> oracleQuery = instanceQuery
 				.toOracleQuery();
-		oracleQuery.withExceptionConsumer(RemoteUi.Invoke.exceptionNotifier());
+		oracleQuery.withExceptionConsumer(exception -> emitEvent(
+				SequenceEvents.SequenceGenerationExceptionEvent.class,
+				exception));
 		if (oracleQuery.equals(this.oracleQuery)) {
 			this.oracleQuery.reemit();
 			return;
@@ -318,16 +318,9 @@ public class SequenceArea extends Model.Fields
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
-			observableObservedTimer = Timer.Provider.get()
-					.getTimer(this::observableAccessed);
 		} else {
-			observableObservedTimer.cancel();
 			derefOracleQuery();
 		}
-	}
-
-	void observableAccessed() {
-		SequenceObserver.get().observableObserved(sequence);
 	}
 
 	void updateStyles() {
