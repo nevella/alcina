@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValue;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.Markup;
@@ -126,6 +128,8 @@ public class Suggestor extends Model implements
 		IntPair getResultRange();
 
 		boolean isEmpty();
+
+		void ensureResultRange(int defaultResultCount);
 	}
 
 	public enum SuggestOnBind {
@@ -384,6 +388,13 @@ public class Suggestor extends Model implements
 		public boolean isEmpty() {
 			return Ax.isBlank(getValue());
 		}
+
+		@Override
+		public void ensureResultRange(int defaultResultCount) {
+			if (resultRange == null) {
+				resultRange = new IntPair(0, defaultResultCount);
+			}
+		}
 	}
 
 	/*
@@ -600,6 +611,21 @@ public class Suggestor extends Model implements
 		event.reemit();
 	}
 
+	/**
+	 * Just used to customise result count - which is often controlled way up
+	 * the tree
+	 */
+	public interface Service extends ContextService {
+		int getSuggestorResultCount();
+
+		public static class Default implements Service {
+			@Override
+			public int getSuggestorResultCount() {
+				return 100;
+			}
+		}
+	}
+
 	@Override
 	public void onEditorAsk(EditorAsk event) {
 		this.lastAsk = event;
@@ -608,6 +634,10 @@ public class Suggestor extends Model implements
 		} else {
 			suggestions.toState(State.LOADING);
 		}
+		Service service = Optional.ofNullable(service(Service.class))
+				.orElse(new Service.Default());
+		Ask ask = event.getModel();
+		ask.ensureResultRange(service.getSuggestorResultCount());
 		attributes.answer.ask(event.getModel(), this::onAnswers,
 				this::onAskException);
 	}

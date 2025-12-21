@@ -113,7 +113,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * 
  * <p>
  * Note that the rendered model (which is transformed to a tablemodel) can't
- * (currently) receive modelevents - but it *can* bind via EventService
+ * (currently) receive modelevents - but it *can* bind via the rendered peer
  *
  */
 public class TableModel extends Model

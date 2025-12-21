@@ -19,11 +19,11 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable.AllocationEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccEvent;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafTransforms;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
-import cc.alcina.framework.servlet.component.sequence.Sequence;
 import cc.alcina.framework.servlet.component.sequence.adapter.MvccEventSequence.MvccEventRow;
 
 /**

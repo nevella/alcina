@@ -1,13 +1,11 @@
 package com.google.gwt.dom.client;
 
 import java.util.Iterator;
-import java.util.List;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.impl.JavaScriptIntList;
 import com.google.gwt.core.client.impl.JavaScriptObjectList;
 
-import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -109,8 +107,6 @@ class MarkupJso {
 			token.populateRemotes();
 		} catch (RuntimeException e) {
 			token.remoteMarkup = token.remote.getInnerHTML0();
-			List<DomNode> redundantAs = token.container.asDomNode().stream()
-					.filter(n -> n.tagIs("a") && !n.has("href")).toList();
 			Exception reportedException = new IllegalArgumentException(Ax
 					.format("invalid markup -- mismatched remote, local markup -- \nlocal:\n%s\n\nremote:\n%s",
 							Ax.ntrim(token.localMarkup, 500),

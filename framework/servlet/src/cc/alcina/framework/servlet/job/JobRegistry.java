@@ -570,6 +570,10 @@ public class JobRegistry {
 		return activeJobs.size();
 	}
 
+	public Set<Job> getActiveJobs() {
+		return activeJobs.keySet();
+	}
+
 	void checkActiveJobs() {
 		// FIXME - mvcc.jobs - both (a) remove on transform, not here and (b)
 		// track why not removed in this-vm process (i.e. finally of performJob0

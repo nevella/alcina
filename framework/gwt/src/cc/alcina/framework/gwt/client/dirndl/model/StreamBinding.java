@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
@@ -330,6 +331,23 @@ public class StreamBinding<T> {
 		this.consumer = t -> runnable.run();
 	}
 
+	public void dispatch(Runnable runnable) {
+		this.consumer = t -> Client.eventBus().queued().lambda(runnable)
+				.dispatch();
+	}
+
+	/**
+	 * Enqueue at most one handler lambda - very useful if multiple signals can
+	 * produce a given result, and you only want to process once in a given
+	 * event cycle
+	 * 
+	 * @param runnable
+	 */
+	public void dispatchDistinct(Runnable runnable) {
+		this.consumer = t -> Client.eventBus().queued().lambda(runnable)
+				.distinct().dispatch();
+	}
+
 	public <BSP extends SourcesPropertyChangeEvents> TargetBinding<BSP, T>
 			to(BSP to) {
 		Preconditions.checkNotNull(to);
@@ -566,5 +584,11 @@ public class StreamBinding<T> {
 		StreamBinding<T> filtered = filter(e -> e == null ? false
 				: Reflections.isAssignableFrom(clazz, e.getClass()));
 		return (StreamBinding<FT>) filtered;
+	}
+
+	public void accept(Object consumer2) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'accept'");
 	}
 }

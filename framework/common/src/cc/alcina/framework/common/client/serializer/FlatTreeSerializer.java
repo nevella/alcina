@@ -519,6 +519,11 @@ public class FlatTreeSerializer {
 						}
 						Property property = null;
 						if (state.deserializerOptions.shortPaths) {
+							if (cursor.value == null) {
+								throw new IllegalStateException(Ax.format(
+										"Exception deserializing - this is probably a missing deep-object constructor. Ensure that the value is non-null, probably by populating the final field in the following path:\n\t%s",
+										cursor));
+							}
 							Map<String, Property> segmentMap = getAliasPropertyMap(
 									cursor);
 							checkBranchUniqueness(resolvedSegments,

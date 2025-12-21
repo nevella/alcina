@@ -115,7 +115,7 @@ public class BeanForm extends Model {
 	@Reflected
 	public enum ClassName {
 		grid, wide, horizontal_validation, vertical_validation, vertical,
-		label_over, tight_rows
+		label_over, tight_rows, single_line
 	}
 
 	/**

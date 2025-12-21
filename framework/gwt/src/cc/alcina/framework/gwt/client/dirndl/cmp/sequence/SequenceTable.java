@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence;
+package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -13,6 +13,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea.Service;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.HighlightModelChanged;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SelectedIndexChanged;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -22,40 +26,20 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasClassNames;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
-import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel.RowMeta;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightModelChanged;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SelectedIndexChanged;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 
 @TypedProperties
-@Directed(tag = "sequence")
 // this is just to force the SequenceArea to be accessible from RowTransformer
 // (via the resolver)
+@Directed(tag = "sequence")
 @DirectedContextResolver(FmsCellsContextResolver.class)
-class SequenceArea extends Model.Fields
+class SequenceTable extends Model.Fields
 		implements TableEvents.RowsModelAttached.Handler,
 		SequenceEvents.HighlightModelChanged.Handler,
 		SequenceEvents.SelectedIndexChanged.Handler {
-	PackageProperties._SequenceArea.InstanceProperties properties() {
-		return PackageProperties.sequenceArea.instance(this);
-	}
-
-	@Directed
-	Heading header;
-
-	@Binding(type = Type.PROPERTY)
-	ColumnSet columnSet;
-
-	@Directed.Transform(TableView.class)
-	@TableModel.RowTransformer(RowTransformer.class)
-	@BeanViewModifiers(detached = true, nodeEditors = true, editable = false)
-	@DirectedContextResolver(ColumnResolver.class)
-	List<?> filteredElements;
-
 	static class ColumnResolver extends DisplayAllMixin {
 		@Override
 		public <A extends Annotation> A contextAnnotation(
@@ -71,18 +55,6 @@ class SequenceArea extends Model.Fields
 			return super.contextAnnotation(reflector, clazz, resolutionContext);
 		}
 
-		boolean isExclude(Property property) {
-			if (SequenceSettings.get().columnSet == ColumnSet.DETAIL) {
-				switch (property.getName()) {
-				case "in":
-				case "out":
-				case "type":
-					return true;
-				}
-			}
-			return false;
-		}
-
 		@Override
 		protected <A extends Annotation> List<A> resolveAnnotations0(
 				Class<A> annotationClass, AnnotationLocation location) {
@@ -93,9 +65,20 @@ class SequenceArea extends Model.Fields
 			}
 			return super.resolveAnnotations0(annotationClass, location);
 		}
-	}
 
-	Page page;
+		boolean isExclude(Property property) {
+			Service service = getService(SequenceArea.Service.class).get();
+			if (service.getSettings().columnSet == ColumnSet.DETAIL) {
+				switch (property.getName()) {
+				case "in":
+				case "out":
+				case "type":
+					return true;
+				}
+			}
+			return false;
+		}
+	}
 
 	static class RowTransformer
 			extends ModelTransform.AbstractContextSensitiveModelTransform {
@@ -104,8 +87,8 @@ class SequenceArea extends Model.Fields
 		@Override
 		public AbstractContextSensitiveModelTransform
 				withContextNode(Node node) {
-			SequenceArea ctx = node.getResolver().parent().getRootModel();
-			sequenceRowTransform = ctx.page.sequence.getRowTransform();
+			SequenceTable ctx = node.getResolver().parent().getRootModel();
+			sequenceRowTransform = ctx.sequenceArea.sequence.getRowTransform();
 			return super.withContextNode(node);
 		}
 
@@ -115,37 +98,11 @@ class SequenceArea extends Model.Fields
 		}
 	}
 
-	SequenceArea(Page page) {
-		this.page = page;
-		filteredElements = page.filteredSequenceElements;
-		header = new Heading(
-				Ax.format("Sequence elements [%s]", filteredElements.size()));
-		from(SequenceSettings.get().properties().columnSet())
-				.to(properties().columnSet()).oneWay();
-	}
-
-	public void onRowClicked(RowClicked event) {
-		Object rowModel = event.getModel().getOriginalRowModel();
-		int index = page.sequence.getElements().indexOf(rowModel);
-		if (event.getContext().getOriginatingNativeEvent().getShiftKey()) {
-			if (page.ui.place.selectedElementIdx != -1) {
-				IntPair absolutePair = IntPair
-						.of(page.ui.place.selectedElementIdx, index)
-						.toLowestFirst();
-				page.ui.place.copy().withSelectedRange(absolutePair).go();
-			}
-		} else {
-			page.ui.place.copy().withSelectedElementIdx(index).go();
-		}
-	}
-
-	RowsModelSupport selectionSupport = new RowsModelSupport();
-
 	class RowsModelSupport extends TableModel.RowsModel.Support {
 		protected void updateRowDecoratorsAndScroll() {
 			for (int idx = 0; idx < filteredElements.size(); idx++) {
 				Object filteredElement = filteredElements.get(idx);
-				boolean hasMatch = page.highlightModel
+				boolean hasMatch = sequenceArea.highlightModel
 						.hasMatch(filteredElement);
 				RowMeta rowMeta = rowsModel.meta.get(idx);
 				rowMeta.setFlag("matches", hasMatch);
@@ -155,21 +112,51 @@ class SequenceArea extends Model.Fields
 									true));
 				}
 			}
-			selectAndScroll(page.ui.place.selectedElementIdx, filteredElements);
+			selectAndScroll(sequenceArea.getPlace().selectedElementIdx,
+					filteredElements);
 		}
 
 		protected void onSelectedRowsChanged() {
 			IntPair selected = rowsModel.getSelectedRowsRange();
 			if (selected != null) {
+				SequencePlace newPlace = null;
 				if (selected.isPoint()) {
-					page.ui.place.copy().withSelectedElementIdx(selected.i1)
-							.go();
+					newPlace = sequenceArea.getPlace().copy()
+							.withSelectedElementIdx(selected.i1);
 				} else {
-					page.ui.place.copy().withSelectedElementIdx(selected.i1)
-							.withSelectedRange(selected).go();
+					newPlace = sequenceArea.getPlace().copy()
+							.withSelectedElementIdx(selected.i1)
+							.withSelectedRange(selected);
 				}
+				emitEvent(SequenceEvents.NavigateToNewSequencePlace.class,
+						newPlace);
 			}
 		}
+	}
+
+	@Directed
+	Heading header;
+
+	@Binding(type = Type.PROPERTY)
+	ColumnSet columnSet;
+
+	@Directed.Transform(TableView.class)
+	@TableModel.RowTransformer(RowTransformer.class)
+	@BeanViewModifiers(detached = true, nodeEditors = true, editable = false)
+	@DirectedContextResolver(ColumnResolver.class)
+	List<?> filteredElements;
+
+	SequenceArea sequenceArea;
+
+	RowsModelSupport selectionSupport = new RowsModelSupport();
+
+	SequenceTable(SequenceArea sequenceArea) {
+		this.sequenceArea = sequenceArea;
+		filteredElements = sequenceArea.filteredSequenceElements;
+		header = new Heading(
+				Ax.format("Sequence elements [%s]", filteredElements.size()));
+		from(sequenceArea.service.getSettings().properties().columnSet())
+				.to(properties().columnSet()).oneWay();
 	}
 
 	@Override
@@ -185,5 +172,9 @@ class SequenceArea extends Model.Fields
 	@Override
 	public void onSelectedIndexChanged(SelectedIndexChanged event) {
 		selectionSupport.updateRowDecoratorsAndScroll();
+	}
+
+	PackageProperties._SequenceTable.InstanceProperties properties() {
+		return PackageProperties.sequenceTable.instance(this);
 	}
 }

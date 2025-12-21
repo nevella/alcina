@@ -67,3 +67,10 @@ Overlay.builder().withContents(editor)
 	evt -> closeHandler.accept(editor.value.getValue()))
 .build().open();
 ```
+
+### Composition and services
+
+SequenceArea is an example of using services rather than DirectedContextResolver to customise a container.
+
+The basic philosophy is: 'if you expect customisation, access the expected customisable features via a service' - otherwise
+fall back on the more general (but less strongly typed and more brittle) resolver operations such as annotation resolution.

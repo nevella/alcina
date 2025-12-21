@@ -13,9 +13,10 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.LogUtil;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence.SequenceGenerationComplete;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.sequence.Sequence.SequenceGenerationComplete;
 import cc.alcina.framework.servlet.component.traversal.TraversalObserver;
 
 /**

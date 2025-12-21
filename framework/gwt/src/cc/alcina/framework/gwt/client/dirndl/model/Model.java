@@ -678,7 +678,7 @@ public abstract class Model extends Bindable
 
 		boolean deferred;
 
-		private boolean distinct;
+		boolean distinct;
 
 		Exec(Runnable lambda) {
 			this.lambda = lambda;

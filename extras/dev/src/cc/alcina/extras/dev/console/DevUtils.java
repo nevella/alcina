@@ -1,18 +1,19 @@
 package cc.alcina.extras.dev.console;
 
+import java.io.File;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
-import cc.alcina.framework.common.client.search.grouping.GroupedResult.Cell;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.Csv;
 
 public class DevUtils {
@@ -63,5 +64,24 @@ public class DevUtils {
 		String tableMarkup = tableBuilder.domNode().toPrettyMarkup();
 		DevConsole.get().setClipboardContents(tableMarkup);
 		return tableMarkup;
+	}
+
+	public static List<String> listZipFileElements(File file) {
+		try {
+			try (ZipFile zipFile = new ZipFile(file)) {
+				return Collections.list(zipFile.entries()).stream()
+						.map(ZipEntry::getName).toList();
+			}
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
+	public static void listFilesInJarFolder(File folder) {
+		SEUtilities.listFilesRecursive(folder.getParent(), null).stream()
+				.filter(f -> f.getName().endsWith(".jar")).forEach(f -> {
+					listZipFileElements(f).forEach(
+							name -> Ax.out("%s :: %s", f.getName(), name));
+				});
 	}
 }
