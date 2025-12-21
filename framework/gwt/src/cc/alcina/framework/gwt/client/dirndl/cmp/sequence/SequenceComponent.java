@@ -4,6 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -16,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 @TypedProperties
 @DirectedContextResolver
+@ReflectiveSerializer.Checks(ignore = true)
 public class SequenceComponent extends Model.Fields
 		implements Binding.TabIndexZero, SequenceArea.Service.Provider,
 		SequenceEvents.NavigateToNewSequencePlace.Handler,

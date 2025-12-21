@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.domain.search.BindableSearchFilter;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
@@ -38,6 +39,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @TypedProperties
 @Directed.Delegating
+@ReflectiveSerializer.Checks(ignore = true)
 public class SequenceArea extends Model.Fields
 		implements SequenceEvents.FilterElements.Handler,
 		SequenceEvents.HighlightElements.Handler,
