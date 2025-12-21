@@ -18,7 +18,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.ZipUtil;
-import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
+import cc.alcina.framework.servlet.component.sequence.AbstractSequenceLoader;
 import cc.alcina.framework.servlet.process.observer.mvcc.MvccObserver;
 
 /**
@@ -67,9 +67,9 @@ public class JobHistory {
 			List<? extends IdOrdered> events = stream.sorted()
 					.collect(Collectors.toList());
 			File folder = new File(LOCAL_PATH);
-			Sequence.Loader.writeElements(folder, events);
+			AbstractSequenceLoader.writeElements(folder, events);
 			File datestampedFolder = createLocalDatestampedEventFolder();
-			Sequence.Loader.writeElements(datestampedFolder, events);
+			AbstractSequenceLoader.writeElements(datestampedFolder, events);
 			Ax.out("wrote job event sequence to %s", datestampedFolder);
 			return datestampedFolder;
 		}

@@ -8,11 +8,11 @@ import java.util.Date;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
+import cc.alcina.framework.servlet.component.sequence.AbstractSequenceLoader;
 import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSequence;
 
 @TypeSerialization("mostrecentflight")
-public class MostRecentFlight extends Sequence.AbstractLoader {
+public class MostRecentFlight extends AbstractSequenceLoader {
 	public MostRecentFlight() {
 		super(mostRecentFlightFolder(), "flight-extract", s -> s,
 				new FlightEventSequence());

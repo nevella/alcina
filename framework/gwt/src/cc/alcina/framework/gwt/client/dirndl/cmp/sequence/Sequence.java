@@ -1,29 +1,18 @@
 package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import org.slf4j.LoggerFactory;
-
-import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence.Loader.LoaderLocation;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence.Loader.LoaderType;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -123,19 +112,6 @@ public interface Sequence<T> {
 		}
 	}
 
-	public static class SequenceProvider implements InstanceProvider<Sequence> {
-		@Override
-		public Sequence provide(Query<Sequence> query) throws Exception {
-			LoaderType loaderType = query.typedParameter(LoaderType.class);
-			String location = query.optionalParameter(LoaderLocation.class)
-					.map(LoaderLocation::getValue).orElse(null);
-			String threadName = Ax.format("%s-%s", NestedName.get(this),
-					NestedName.get(loaderType.value));
-			Loader loader = Reflections.newInstance(loaderType.value);
-			return loader.load(location);
-		}
-	}
-
 	@Registration(Loader.class)
 	public interface Loader {
 		@TypeSerialization("loadertype")
@@ -161,77 +137,9 @@ public interface Sequence<T> {
 			return loader;
 		}
 
-		static void writeElements(File folder,
-				List<? extends IdOrdered> elements) {
-			folder.mkdirs();
-			SEUtilities.deleteDirectory(folder, true);
-			elements.forEach(e -> {
-				File writeTo = FileUtils.child(folder,
-						String.valueOf(e.getId()) + ".json");
-				Io.write().asReflectiveSerialized(true).object(e)
-						.toFile(writeTo);
-			});
-			LoggerFactory.getLogger(Loader.class).info(
-					"Logged {} sequence elements to {}", elements.size(),
-					folder);
-		}
-
 		default InstanceQuery getQuery() {
 			return new InstanceQuery().withType(Sequence.class).addParameters(
 					new Loader.LoaderType().withValue(getClass()));
-		}
-	}
-
-	/*
-	 * Children must have a no-args constructor that populates the fields
-	 */
-	public static abstract class AbstractLoader implements Sequence.Loader {
-		String path;
-
-		String name;
-
-		Function<String, String> serializationRefactoringHandler;
-
-		Sequence.Abstract<?> sequence;
-
-		public AbstractLoader(String path, String name,
-				Function<String, String> serializationRefactoringHandler,
-				Sequence.Abstract<?> sequence) {
-			this.path = path;
-			this.name = name;
-			this.serializationRefactoringHandler = serializationRefactoringHandler;
-			this.sequence = sequence;
-		}
-
-		@Override
-		public Sequence<?> load(String location) {
-			sequence.name = name;
-			if (!new File(path).exists()) {
-				// FIXME - romcom - this causes a mutation record apply issue -
-				// see
-				// com.google.gwt.dom.client.mutations.MutationNode.remove(MutationNode
-				// remove, ApplyTo applyTo) -
-				// https://github.com/nevella/alcina/issues/34
-				throw new IllegalArgumentException(Ax.format(
-						"Load sequence - path '%s' does not exist", path));
-			} else {
-				try {
-					sequence.elements = (List) SEUtilities
-							.listFilesRecursive(path, null).stream()
-							.filter(f -> f.isFile())
-							.map(f -> Io.read().file(f).asString())
-							.map(serializationRefactoringHandler::apply)
-							.map(s -> ReflectiveSerializer.deserialize(s,
-									new DeserializerOptions()
-											.withContinueOnException(true)))
-							.sorted().collect(Collectors.toList());
-				} catch (Exception e) {
-					e.printStackTrace();
-					sequence.name += " (load exception)";
-					sequence.elements = new ArrayList<>();
-				}
-			}
-			return sequence;
 		}
 	}
 
@@ -241,6 +149,19 @@ public interface Sequence<T> {
 
 		public SequenceGenerationComplete(Sequence sequence) {
 			this.sequence = sequence;
+		}
+	}
+
+	class SequenceProvider implements InstanceProvider<Sequence> {
+		@Override
+		public Sequence provide(Query<Sequence> query) throws Exception {
+			LoaderType loaderType = query.typedParameter(LoaderType.class);
+			String location = query.optionalParameter(LoaderLocation.class)
+					.map(LoaderLocation::getValue).orElse(null);
+			String threadName = Ax.format("%s-%s", NestedName.get(this),
+					NestedName.get(loaderType.value));
+			Loader loader = Reflections.newInstance(loaderType.value);
+			return loader.load(location);
 		}
 	}
 
