@@ -31,6 +31,6 @@ public class StandardJdbcAysncServicesPlayer extends InitAysncServicesPlayer
 
 	@Override
 	public void run() {
-		new SubconsortSupport().run(consort, asyncConfigConsort, this);
+		new SubconsortSupport().run(getConsort(), asyncConfigConsort, this);
 	}
 }

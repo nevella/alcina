@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 
 import com.google.gwt.user.client.History;
 
-import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnablePlayer;
 import cc.alcina.framework.common.client.logic.permissions.OnlineState;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

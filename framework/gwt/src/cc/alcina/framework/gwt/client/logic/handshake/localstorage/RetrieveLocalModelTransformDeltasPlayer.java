@@ -6,7 +6,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.ConsortPlayer.SubconsortSupport;
-import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.util.CommonUtils;

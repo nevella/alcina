@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.ConsortPlayer;
 import cc.alcina.framework.common.client.consort.EndpointPlayer;
-import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnablePlayer;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
@@ -31,11 +31,11 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 
 	@Override
 	public void run() {
-		new SubconsortSupport().run(consort, loadObjectsConsort, this);
+		new SubconsortSupport().run(getConsort(), loadObjectsConsort, this);
 	}
 
 	@Override
-	protected void wasPlayed() {
+	public void wasPlayed() {
 		boolean success = loadObjectsConsort
 				.containsState(LoadObjectDataState.OBJECT_DATA_LOADED);
 		super.wasPlayed(success ? HandshakeState.OBJECT_DATA_LOADED

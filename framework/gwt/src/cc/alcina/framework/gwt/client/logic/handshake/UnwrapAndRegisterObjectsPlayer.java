@@ -9,7 +9,7 @@ import com.google.gwt.user.client.rpc.SerializationException;
 
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.consort.LoopingPlayer;
-import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
@@ -103,7 +103,7 @@ public class UnwrapAndRegisterObjectsPlayer
 			} else {
 				HandshakeConsortModel.get().ensureLoadObjectsNotifier("")
 						.modalOff();
-				consort.wasPlayed(this, Collections.singletonList(
+				getConsort().wasPlayed(this, Collections.singletonList(
 						HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
 				return;
 			}
@@ -138,7 +138,7 @@ public class UnwrapAndRegisterObjectsPlayer
 			}
 			break;
 		}
-		consort.replay(this);
+		getConsort().replay(this);
 	}
 
 	protected boolean maybeRegisterDomainModelHolder() {
@@ -172,17 +172,17 @@ public class UnwrapAndRegisterObjectsPlayer
 	public void onFailure(Throwable caught) {
 		caught.printStackTrace();
 		if (CommonUtils.hasCauseOfClass(caught, SerializationException.class)) {
-			consort.wasPlayed(this, Collections.singletonList(
+			getConsort().wasPlayed(this, Collections.singletonList(
 					HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
 		} else {
 			// code failure in post-ok handler
-			consort.onFailure(caught);
+			getConsort().onFailure(caught);
 		}
 	}
 
 	@Override
 	public void onSuccess(Void result) {
-		consort.replay(this);
+		getConsort().replay(this);
 	}
 
 	protected void
@@ -226,7 +226,7 @@ public class UnwrapAndRegisterObjectsPlayer
 	public void run() {
 		if (HandshakeConsortModel.get().getLoadObjectsResponse() == null
 				&& isBypassInitialObjectsRegistration()) {
-			consort.wasPlayed(this, Collections.singletonList(
+			getConsort().wasPlayed(this, Collections.singletonList(
 					HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
 			return;
 		}

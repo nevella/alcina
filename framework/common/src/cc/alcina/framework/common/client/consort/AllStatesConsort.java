@@ -87,7 +87,7 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 
 		public AllStatesPlayer(E from, E to) {
 			super(from, to);
-			runnable = this;
+			support().runnable = this;
 			setAsynchronous(AllStatesConsort.this.isAsynchronous());
 		}
 
@@ -98,7 +98,7 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 
 		@Override
 		public void onFailure(Throwable caught) {
-			consort.onFailure(caught);
+			getConsort().onFailure(caught);
 		}
 
 		@Override

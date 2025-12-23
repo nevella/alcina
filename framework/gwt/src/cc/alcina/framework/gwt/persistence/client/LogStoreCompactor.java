@@ -223,7 +223,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 				}
 			} catch (Exception e) {
 				recordId++;
-				consort.onFailure(e);
+				getConsort().onFailure(e);
 				return;
 			}
 		}

@@ -5,7 +5,7 @@ import java.util.Collections;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnablePlayer;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
@@ -46,19 +46,19 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 			extends EnumPlayer<E> implements AsyncCallback<C>, Runnable {
 		public EnumRunnableAsyncCallbackPlayer(E state) {
 			super(state);
-			runnable = this;
+			support().runnable = this;
 			setAsynchronous(true);
 		}
 
 		public EnumRunnableAsyncCallbackPlayer(E from, E to) {
 			super(from, to);
 			setAsynchronous(true);
-			runnable = this;
+			support().runnable = this;
 		}
 
 		@Override
 		public void onFailure(Throwable caught) {
-			consort.onFailure(caught);
+			getConsort().onFailure(caught);
 		}
 
 		@Override

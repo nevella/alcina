@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.consort;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnablePlayer;
 
 public class EndpointPlayer<D> extends RunnablePlayer<D> {
 	private AsyncCallback completionCallback;
@@ -34,15 +34,15 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 	}
 
 	@Override
-	protected void wasPlayed() {
+	public void wasPlayed() {
 		boolean didFinish = finishes && !continueWithNoExit;
 		continueWithNoExit = false;
-		consort.wasPlayed(this, getProvides(), !didFinish);
+		getConsort().wasPlayed(this, getProvides(), !didFinish);
 		if (completionCallback != null) {
 			completionCallback.onSuccess(null);
 		}
 		if (didFinish) {
-			consort.finished();
+			getConsort().finished();
 		}
 	}
 }

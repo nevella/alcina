@@ -432,6 +432,9 @@ class Environment {
 					token = locationMutation.path.startsWith("/")
 							? locationMutation.path.substring(1)
 							: locationMutation.path;
+					if (Ax.notBlank(locationMutation.queryString)) {
+						token += locationMutation.queryString;
+					}
 				} else {
 					token = locationMutation.hash.startsWith("#")
 							? locationMutation.hash.substring(1)

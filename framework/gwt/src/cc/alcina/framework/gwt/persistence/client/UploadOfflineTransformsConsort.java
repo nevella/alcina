@@ -64,7 +64,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		@Override
 		public void onFailure(Throwable caught) {
 			if (ClientUtilsNonGwt.maybeOffline(caught)) {
-				consort.onFailure(caught);
+				getConsort().onFailure(caught);
 				return;
 			}
 			remotePersistenceException = caught;
@@ -121,7 +121,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		public void onFailure(Throwable caught) {
 			cleanup();
 			if (ClientUtils.maybeOffline(caught)) {
-				consort.onFailure(caught);
+				getConsort().onFailure(caught);
 				return;
 			}
 			remotePersistenceException = caught;

@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.ConsortPlayer;
-import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.persistence.client.PersistencePropAndLogWebDbConsort;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;
 
@@ -26,6 +26,6 @@ public class InitPropAndLogDbPlayer
 
 	@Override
 	public void run() {
-		new SubconsortSupport().run(consort, subConsort, this);
+		new SubconsortSupport().run(getConsort(), subConsort, this);
 	}
 }

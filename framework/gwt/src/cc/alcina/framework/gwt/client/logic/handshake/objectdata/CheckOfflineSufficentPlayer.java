@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 import java.util.Arrays;
 import java.util.List;
 
-import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnablePlayer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -36,7 +36,7 @@ public class CheckOfflineSufficentPlayer
 			List<LoadObjectDataState> states = Arrays.asList(
 					LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY,
 					LoadObjectDataState.OBJECT_DATA_LOADED);
-			consort.wasPlayed(this, states);
+			getConsort().wasPlayed(this, states);
 		} else {
 			wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 		}

@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;
 
 public abstract class CheckSoleInstancePlayer
@@ -9,7 +9,7 @@ public abstract class CheckSoleInstancePlayer
 		addProvides(HandshakeState.SOLE_OPEN_TAB_CHECKED);
 	}
 
-	protected abstract void checkFailed();
+	public abstract void checkFailed();
 
 	@Override
 	public void onSuccess(Boolean result) {
@@ -17,7 +17,7 @@ public abstract class CheckSoleInstancePlayer
 			super.onSuccess(result);
 		} else {
 			checkFailed();
-			consort.onFailure(new NotSoleInstanceException());
+			getConsort().onFailure(new NotSoleInstanceException());
 		}
 	}
 

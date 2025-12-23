@@ -8,72 +8,62 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-/*
- * -- dependencies :: always attempt to resolve -- preconditions :: if non-null,
- * wait til met before player becomes active -- provides :: use to satisfy other
- * dependencies (only run if required, as well)
- *
- */
-public abstract class Player<D> {
-	public static final transient int LOW = 1;
+public interface Player<D> {
+	static class Support<D> {
+		Player<D> player;
 
-	public static final transient int PRIORITY_NORMAL = 100;
+		public Runnable runnable;
 
-	public static final transient int PRIORITY_IMMEDIATE = 1000;
+		Consort<D> consort;
 
-	protected Runnable runnable;
+		boolean asynchronous;
 
-	protected Consort<D> consort;
+		List<D> requires = new ArrayList<D>();
 
-	private boolean asynchronous;
+		List<D> provides = new ArrayList<D>();
 
-	private List<D> requires = new ArrayList<D>();
+		long start;
 
-	private List<D> provides = new ArrayList<D>();
-
-	private long start;
-
-	protected Player() {
+		Support(Player<D> player) {
+			this.player = player;
+		}
 	}
 
-	public Player(Runnable runnable) {
-		this.runnable = runnable;
+	static int PRIORITY_LOW = 1;
+
+	static int PRIORITY_NORMAL = 100;
+
+	static int PRIORITY_IMMEDIATE = 1000;
+
+	Player.Support<D> support();
+
+	default void addProvides(D state) {
+		support().provides.add(state);
 	}
 
-	public void addProvides(D state) {
-		provides.add(state);
+	default void addRequires(D state) {
+		support().requires.add(state);
 	}
 
-	public void addRequires(D state) {
-		requires.add(state);
+	default void cancel() {
 	}
 
-	public void cancel() {
-	}
-
-	public boolean canRunInParallelWith(Player<D> otherPlayer) {
+	default boolean canRunInParallelWith(Player<D> otherPlayer) {
 		return false;
 	}
 
-	public Consort<D> getConsort() {
-		return this.consort;
+	default Logger getLogger() {
+		return getConsort().logger;
 	}
 
-	protected Logger getLogger() {
-		return consort.logger;
-	}
-
-	public Collection<D> getPreconditions() {
+	default Collection<D> getPreconditions() {
 		return Collections.emptyList();
 	}
 
-	public int getPriority() {
-		return PRIORITY_NORMAL;
+	default int getPriority() {
+		return Player.PRIORITY_NORMAL;
 	}
 
 	/**
@@ -81,138 +71,88 @@ public abstract class Player<D> {
 	 * one state will be provided per player - still working on this, but see
 	 * Consort.satisfiesSomeSoughtDependenciesOrIsNotASatisfier
 	 */
-	public Collection<D> getProvides() {
-		return provides;
+	default Collection<D> getProvides() {
+		return support().provides;
 	}
 
-	public Collection<D> getRequires() {
-		return requires;
+	default Collection<D> getRequires() {
+		return support().requires;
 	}
 
-	public long getStart() {
-		return this.start;
+	default long getStart() {
+		return support().start;
 	}
 
-	public boolean isAllowEqualPriority() {
+	default boolean isAllowEqualPriority() {
 		return false;
 	}
 
-	public boolean isAsynchronous() {
-		return this.asynchronous;
+	default boolean isAsynchronous() {
+		return support().asynchronous;
 	}
 
-	public boolean isCancellable() {
+	default boolean isCancellable() {
 		return true;
 	}
 
-	public boolean isPerConsortSingleton() {
+	default boolean isPerConsortSingleton() {
 		return false;
 	}
 
-	public boolean isRemoveAfterPlay() {
+	default boolean isRemoveAfterPlay() {
 		return getProvides().isEmpty();
 	}
 
-	protected void logToInfo(String string, Object... args) {
-		consort.logger.info(string, args);
+	default void logToInfo(String string, Object... args) {
+		getConsort().logger.info(string, args);
 	}
 
-	public void onFailure(Throwable caught) {
-		consort.onFailure(caught);
+	default void onFailure(Throwable caught) {
+		getConsort().onFailure(caught);
 	}
 
-	public void play(boolean replaying) {
+	default void play(boolean replaying) {
 		if (replaying) {
 			((LoopingPlayer) this).loop();
 		} else {
-			start = System.currentTimeMillis();
-			runnable.run();
+			support().start = System.currentTimeMillis();
+			support().runnable.run();
 		}
 		if (!isAsynchronous() && getProvides().size() <= 1) {
 			wasPlayed();
 		}
 	}
 
-	public String provideNameForTransitions() {
+	default String provideNameForTransitions() {
 		return getClass().getSimpleName();
 	}
 
-	public void removeRequires(D... requiresStates) {
-		requires.removeAll(Arrays.asList(requiresStates));
+	default void removeRequires(D... requiresStates) {
+		support().requires.removeAll(Arrays.asList(requiresStates));
 	}
 
-	public void setAsynchronous(boolean asynchronous) {
-		this.asynchronous = asynchronous;
+	default void setAsynchronous(boolean asynchronous) {
+		support().asynchronous = asynchronous;
 	}
 
-	public void setConsort(Consort<D> consort) {
-		this.consort = consort;
+	default void setConsort(Consort<D> consort) {
+		support().consort = consort;
 	}
 
-	public String shortName() {
+	default String shortName() {
 		return CommonUtils.simpleClassName(getClass());
 	}
 
-	protected void wasPlayed() {
-		consort.wasPlayed(this);
+	default void wasPlayed() {
+		getConsort().wasPlayed(this);
 	}
 
-	protected void wasPlayed(D dep) {
-		consort.wasPlayed(this, dep == null ? Collections.EMPTY_LIST
+	default Consort<D> getConsort() {
+		return support().consort;
+	}
+
+	default void wasPlayed(D dep) {
+		getConsort().wasPlayed(this, dep == null ? Collections.EMPTY_LIST
 				: Collections.singletonList(dep));
-	}
-
-	public abstract static class RepeatingCommandPlayer<D> extends Player<D>
-			implements Runnable, RepeatingCommand {
-		protected RepeatingCommand delegate;
-
-		public RepeatingCommandPlayer() {
-			super(null);
-			setAsynchronous(true);
-			runnable = this;
-		}
-
-		@Override
-		public boolean execute() {
-			if (!consort.isRunning()) {
-				return false;
-			}
-			try {
-				boolean result = executeRepeatingCommand();
-				if (result == false) {
-					wasPlayed();
-				}
-				return result;
-			} catch (Throwable e) {
-				consort.onFailure(e);
-				return false;
-			}
-		}
-
-		protected boolean executeRepeatingCommand() {
-			return delegate.execute();
-		}
-	}
-
-	public abstract static class RunnableAsyncCallbackPlayer<C, D>
-			extends Player<D> implements Runnable, AsyncCallback<C> {
-		public RunnableAsyncCallbackPlayer() {
-			super(null);
-			setAsynchronous(true);
-			runnable = this;
-		}
-
-		@Override
-		public void onSuccess(C result) {
-			wasPlayed();
-		}
-	}
-
-	public abstract static class RunnablePlayer<D> extends Player<D>
-			implements Runnable {
-		public RunnablePlayer() {
-			super(null);
-			runnable = this;
-		}
 	}
 }
