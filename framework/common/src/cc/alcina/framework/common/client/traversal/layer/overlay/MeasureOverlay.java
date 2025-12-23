@@ -235,6 +235,9 @@ public class MeasureOverlay {
 		 * required
 		 */
 		Location loc = initialRange.start;
+		if (overlays.size() > 0) {
+			loc = overlays.get(0).start;
+		}
 		if (loc.isAtNodeEnd()) {
 			loc = loc.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
 		}
