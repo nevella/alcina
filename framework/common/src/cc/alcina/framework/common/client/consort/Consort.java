@@ -51,7 +51,14 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * HanshakeConsort, SetupAfterObjectsPlayer handles the change from state
  * OBJECTS_UNWRAPPED_AND_REGISTERED to SETUP_AFTER_OBJECTS_LOADED.
  *
- * 
+ * <p>
+ * FIXMEs
+ * <ul>
+ * <li>simplify the player structure (are async players needed?) *
+ * <li>where possible, use enum values rather than classes
+ * <li>switch wasPlayed() to a builder approach - since non-players can report
+ * that 'state x was reached'
+ * </ul>
  *
  */
 public class Consort<D> implements AlcinaProcess {
