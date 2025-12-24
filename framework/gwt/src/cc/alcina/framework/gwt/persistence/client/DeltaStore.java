@@ -17,7 +17,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.ConsortPlayer.SubconsortSupport;
-import cc.alcina.framework.common.client.consort.AbstractPlayer;
+import cc.alcina.framework.common.client.consort.Player;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaLookup;
@@ -249,8 +249,8 @@ public class DeltaStore {
 	public void refreshCache(AsyncCallback callback) {
 		EnsureCacheConsort ensureCacheConsort = new EnsureCacheConsort(
 				callback);
-		if (callback instanceof AbstractPlayer) {
-			AbstractPlayer player = (AbstractPlayer) callback;
+		if (callback instanceof Player) {
+			Player player = (Player) callback;
 			new SubconsortSupport().run(player.getConsort(), ensureCacheConsort,
 					player);
 		} else {

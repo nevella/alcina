@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.consort;
 
 import java.util.Arrays;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -37,6 +38,11 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 
 	public boolean isAsynchronous() {
 		return this.asynchronous;
+	}
+
+	public AllStatesPlayer soleActivePlayer() {
+		Preconditions.checkState(playing.size() == 1);
+		return (AllStatesPlayer) playing.get(0);
 	}
 
 	public void retry(final AllStatesPlayer allStatesPlayer, final E state,
@@ -87,7 +93,7 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 
 		public AllStatesPlayer(E from, E to) {
 			super(from, to);
-			support().runnable = this;
+			this.runnable = this;
 			setAsynchronous(AllStatesConsort.this.isAsynchronous());
 		}
 
@@ -117,6 +123,11 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 		@Override
 		public void run() {
 			runPlayer(this, getProvides().iterator().next());
+		}
+
+		@Override
+		public void wasPlayed() {
+			super.wasPlayed();
 		}
 
 		@Override

@@ -2,7 +2,7 @@ package cc.alcina.framework.jvmclient.persistence;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.ConsortPlayer;
-import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.AsyncConfigConsortState;
 
 public class InitJdbcPlayer

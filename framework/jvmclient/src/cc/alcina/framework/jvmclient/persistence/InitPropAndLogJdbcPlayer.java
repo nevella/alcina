@@ -4,7 +4,7 @@ import java.sql.Connection;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.ConsortPlayer;
-import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.AsyncConfigConsortState;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;
 

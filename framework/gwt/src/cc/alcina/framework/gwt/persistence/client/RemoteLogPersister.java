@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.consort.LoopingPlayer;
-import cc.alcina.framework.common.client.consort.AbstractPlayer;
+import cc.alcina.framework.common.client.consort.Player;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -105,7 +105,7 @@ public class RemoteLogPersister {
 		}
 
 		public void handleExpectableMaybeOffline(Throwable caught,
-				AbstractPlayer player) {
+				Player player) {
 			if (ClientUtils.maybeOffline(caught)) {
 				maybeOffline = true;
 				consort.finished();

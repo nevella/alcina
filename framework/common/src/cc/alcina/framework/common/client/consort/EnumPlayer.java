@@ -5,7 +5,7 @@ import java.util.Collections;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
@@ -42,18 +42,27 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 		return Ax.format("%s [%s->%s]", getClass().getSimpleName(), from, to);
 	}
 
+	/**
+	 * Inversion - the enum constants are the 'runners' - to save on extra
+	 * classes
+	 */
+	public void invokeEnum() {
+		InvokableEnum invokable = (InvokableEnum) to;
+		invokable.invoke(getConsort());
+	}
+
 	public abstract static class EnumRunnableAsyncCallbackPlayer<C, E extends Enum>
 			extends EnumPlayer<E> implements AsyncCallback<C>, Runnable {
 		public EnumRunnableAsyncCallbackPlayer(E state) {
 			super(state);
-			support().runnable = this;
+			this.runnable = this;
 			setAsynchronous(true);
 		}
 
 		public EnumRunnableAsyncCallbackPlayer(E from, E to) {
 			super(from, to);
 			setAsynchronous(true);
-			support().runnable = this;
+			this.runnable = this;
 		}
 
 		@Override
@@ -65,5 +74,9 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 		public void onSuccess(C result) {
 			wasPlayed();
 		}
+	}
+
+	public interface InvokableEnum<C extends Consort> {
+		void invoke(C consort);
 	}
 }

@@ -5,12 +5,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -614,10 +616,24 @@ public class Consort<D> implements AlcinaProcess {
 	// sort of threaded
 	// queue/consumer model - but it ain't so pretty
 	//
+	/**
+	 * 
+	 * @param player
+	 *            Can be null, in which case it is computed as the sole active
+	 *            player providing resultantStates
+	 * @param resultantStates
+	 * @param keepGoing
+	 */
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates,
 			boolean keepGoing) {
 		if (!isRunning()) {
 			return;
+		}
+		if (player == null) {
+			Preconditions.checkArgument(resultantStates.size() > 0);
+			player = playing.stream().filter(
+					p -> Objects.equals(p.getProvides(), resultantStates))
+					.findFirst().get();
 		}
 		if (!playing.contains(player)) {
 			if (LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {

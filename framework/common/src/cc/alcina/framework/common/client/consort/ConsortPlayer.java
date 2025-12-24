@@ -35,7 +35,7 @@ public interface ConsortPlayer {
 			}
 		};
 
-		private AbstractPlayer player;
+		private Player player;
 
 		private Consort subConsort;
 
@@ -45,8 +45,8 @@ public interface ConsortPlayer {
 
 		public void maybeAttach(AsyncCallback callback,
 				Consort maybeChildConsort, boolean fireEndStateIfChild) {
-			if (callback instanceof AbstractPlayer) {
-				AbstractPlayer player = (AbstractPlayer) callback;
+			if (callback instanceof Player) {
+				Player player = (Player) callback;
 				fireEndState = fireEndStateIfChild;
 				run(player.getConsort(), maybeChildConsort, player);
 			} else {
@@ -54,13 +54,12 @@ public interface ConsortPlayer {
 			}
 		}
 
-		public void run(Consort consort, Consort subConsort,
-				AbstractPlayer player) {
+		public void run(Consort consort, Consort subConsort, Player player) {
 			run(consort, subConsort, player, null);
 		}
 
-		public void run(Consort consort, Consort subConsort,
-				AbstractPlayer player, Object stateToFireAfterConsortEnd) {
+		public void run(Consort consort, Consort subConsort, Player player,
+				Object stateToFireAfterConsortEnd) {
 			this.subConsort = subConsort;
 			this.player = player;
 			this.stateToFireAfterConsortEnd = stateToFireAfterConsortEnd;

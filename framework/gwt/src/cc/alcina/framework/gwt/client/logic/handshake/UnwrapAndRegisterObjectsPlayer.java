@@ -9,7 +9,7 @@ import com.google.gwt.user.client.rpc.SerializationException;
 
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.consort.LoopingPlayer;
-import cc.alcina.framework.common.client.consort.AbstractPlayer.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
