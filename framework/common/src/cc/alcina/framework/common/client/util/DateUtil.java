@@ -183,6 +183,14 @@ public class DateUtil {
 				Integer.parseInt(matchResult.getGroup(1)));
 	}
 
+	public static Date parseMmDdYyyy(String mdy) {
+		RegExp regExp = RegExp.compile("(\\d{1,2})[/](\\d{1,2})[/](\\d{4})");
+		MatchResult matchResult = regExp.exec(mdy);
+		return Ax.date(Integer.parseInt(matchResult.getGroup(3)),
+				Integer.parseInt(matchResult.getGroup(1)),
+				Integer.parseInt(matchResult.getGroup(2)));
+	}
+
 	/**
 	 * 
 	 * @param dayMonthnameYear
