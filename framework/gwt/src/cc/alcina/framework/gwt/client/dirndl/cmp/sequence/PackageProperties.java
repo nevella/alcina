@@ -45,7 +45,7 @@ public class PackageProperties {
       public TypedProperty<SequenceArea, SequenceArea.Service> service = new TypedProperty<>(SequenceArea.class, "service");
       public TypedProperty<SequenceArea, StyleElement> styleElement = new TypedProperty<>(SequenceArea.class, "styleElement");
       public TypedProperty<SequenceArea, Runnable> updateStylesLambda = new TypedProperty<>(SequenceArea.class, "updateStylesLambda");
-      public static class InstanceProperties extends InstanceProperty.Container<SequenceArea> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SequenceArea> {
         public  InstanceProperties(SequenceArea source){super(source);}
         public InstanceProperty<SequenceArea, Model> definitionHeader(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.definitionHeader);}
         public InstanceProperty<SequenceArea, DetailArea> detailArea(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.detailArea);}
@@ -77,7 +77,7 @@ public class PackageProperties {
       public TypedProperty<SequenceComponent, InstanceProperty> sequencePlaceProperty = new TypedProperty<>(SequenceComponent.class, "sequencePlaceProperty");
       public TypedProperty<SequenceComponent, SequenceSettings> sequenceSettings = new TypedProperty<>(SequenceComponent.class, "sequenceSettings");
       public TypedProperty<SequenceComponent, SequenceComponent.SequenceAreaServiceImpl> serviceImpl = new TypedProperty<>(SequenceComponent.class, "serviceImpl");
-      public static class InstanceProperties extends InstanceProperty.Container<SequenceComponent> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SequenceComponent> {
         public  InstanceProperties(SequenceComponent source){super(source);}
         public InstanceProperty<SequenceComponent, Model> header(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.header);}
         public InstanceProperty<SequenceComponent, SequenceArea> sequenceArea(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.sequenceArea);}
@@ -98,7 +98,7 @@ public class PackageProperties {
       public TypedProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(SequenceSettings.class, "detailDisplayMode");
       public TypedProperty<SequenceSettings, Integer> maxElementRows = new TypedProperty<>(SequenceSettings.class, "maxElementRows");
       public TypedProperty<SequenceSettings, String> sequenceKey = new TypedProperty<>(SequenceSettings.class, "sequenceKey");
-      public static class InstanceProperties extends InstanceProperty.Container<SequenceSettings> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SequenceSettings> {
         public  InstanceProperties(SequenceSettings source){super(source);}
         public InstanceProperty<SequenceSettings, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.columnSet);}
         public InstanceProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode(){return new InstanceProperty<>(source,PackageProperties.sequenceSettings.detailDisplayMode);}
@@ -118,7 +118,7 @@ public class PackageProperties {
       TypedProperty<SequenceTable, Heading> header = new TypedProperty<>(SequenceTable.class, "header");
       TypedProperty<SequenceTable, SequenceTable.RowsModelSupport> selectionSupport = new TypedProperty<>(SequenceTable.class, "selectionSupport");
       TypedProperty<SequenceTable, SequenceArea> sequenceArea = new TypedProperty<>(SequenceTable.class, "sequenceArea");
-      static class InstanceProperties extends InstanceProperty.Container<SequenceTable> {
+      static class InstanceProperties extends 	InstanceProperty.Container<SequenceTable> {
          InstanceProperties(SequenceTable source){super(source);}
         InstanceProperty<SequenceTable, SequenceSettings.ColumnSet> columnSet(){return new InstanceProperty<>(source,PackageProperties.sequenceTable.columnSet);}
         InstanceProperty<SequenceTable, List> filteredElements(){return new InstanceProperty<>(source,PackageProperties.sequenceTable.filteredElements);}

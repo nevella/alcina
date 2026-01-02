@@ -1,7 +1,5 @@
 package cc.alcina.framework.servlet.component.sequence;
 
-import java.util.Set;
-
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
@@ -13,10 +11,17 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.sequence.Header;
+import cc.alcina.framework.servlet.component.sequence.Page;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
+import java.lang.Boolean;
+import java.lang.Class;
+import java.lang.String;
+import java.util.Set;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _AppSuggestorSequence appSuggestorSequence = new _AppSuggestorSequence();
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
@@ -160,8 +165,6 @@ public class PackageProperties {
       }
       
     }
-    
-    
     
 //@formatter:on
 }

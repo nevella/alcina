@@ -18,6 +18,8 @@ package cc.alcina.framework.gwt.client.history.push;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.util.Al;
+
 /**
  * Utility class with methods to extract and add the <code>gwt.codesvr</code> to
  * the URL.
@@ -39,7 +41,7 @@ public final class CodeServerParameterHelper {
 		/*
 		 * This gets compiled out in production mode!
 		 */
-		if (!GWT.isProdMode() && GWT.isClient()) {
+		if (!GWT.isProdMode() && Al.isBrowser()) {
 			String gwtCodesvr = Window.Location.getParameter("gwt.codesvr");
 			if (gwtCodesvr != null) {
 				if (token.contains("?")) {
