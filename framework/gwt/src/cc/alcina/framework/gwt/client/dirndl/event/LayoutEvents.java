@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -38,9 +37,10 @@ public class LayoutEvents {
 	 * <p>
 	 * Model fields can normally be populated during the constructor - in which
 	 * case the model does not need to react to this event. The primary
-	 * exception is model instances that are received via RPC - often they'll
+	 * exceptions are model instances that are received via RPC - often they'll
 	 * have some fields sent via RPC, others that are only populated (here)
-	 * client-side
+	 * client-side, and model instances that derive information from context
+	 * (ancestor) services.
 	 *
 	 *
 	 *
@@ -48,11 +48,8 @@ public class LayoutEvents {
 	public static class NodeContext extends LayoutEvent<NodeContext.Handler> {
 		public Object model;
 
-		public Node node;
-
 		public NodeContext(DirectedLayout.Node node, Object model) {
 			this.model = model;
-			this.node = node;
 			setContext(Context.fromNode(node));
 		}
 
@@ -64,10 +61,6 @@ public class LayoutEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onNodeContext(NodeContext event);
 		}
-
-		public <T extends ContextService> T service(Class<T> serviceType) {
-			return node.getResolver().getService(serviceType);
-		}
 	}
 
 	/*
@@ -76,16 +69,9 @@ public class LayoutEvents {
 	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
 		public Object model;
 
-		public Node node;
-
 		public BeforeRender(DirectedLayout.Node node, Object model) {
 			this.model = model;
-			this.node = node;
 			setContext(Context.fromNode(node));
-		}
-
-		public <T extends ContextService> T service(Class<T> clazz) {
-			return node.service(clazz);
 		}
 
 		@Override

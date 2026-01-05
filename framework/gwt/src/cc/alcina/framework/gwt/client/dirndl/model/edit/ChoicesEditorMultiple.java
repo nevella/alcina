@@ -56,7 +56,7 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 		public void onNodeContext(NodeContext event) {
 			editor = new ChoicesEditorMultiple<>();
 			// populate the delegate values from this node's AnnotationLocation
-			editor.populateFromNodeContext(event.node, null);
+			editor.populateFromNodeContext(node, null);
 			value = editor.getSelectedValues();
 		}
 

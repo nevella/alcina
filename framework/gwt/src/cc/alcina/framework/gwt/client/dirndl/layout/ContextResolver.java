@@ -287,7 +287,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		registerServices(event.node);
+		registerServices(event.getContext().node);
 		// generally, setup child bindings for complex structures
 		if (parent != null) {
 			parent.onBeforeRender(event);

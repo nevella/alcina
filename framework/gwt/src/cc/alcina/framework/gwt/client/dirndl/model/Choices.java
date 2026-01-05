@@ -375,10 +375,10 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onChange(Change event) {
-			DirectedLayout.Node node = provideNode()
+			DirectedLayout.Node mostSpecficNode = node
 					.provideMostSpecificNodeForModel();
-			SelectElement selectElement = (SelectElement) node.getRendered()
-					.asElement();
+			SelectElement selectElement = (SelectElement) mostSpecficNode
+					.getRendered().asElement();
 			List<OptionElement> options = selectElement.getOptions().stream()
 					.collect(Collectors.toList());
 			List<T> selectedValues = new ArrayList<>();
@@ -400,10 +400,10 @@ public abstract class Choices<T> extends Model implements
 		public void setSelectedValues(List<T> values) {
 			super.setSelectedValues(values);
 			if (provideIsBound()) {
-				DirectedLayout.Node node = provideNode()
+				DirectedLayout.Node mostSpecficNode = node
 						.provideMostSpecificNodeForModel();
-				SelectElement selectElement = (SelectElement) node.getRendered()
-						.asElement();
+				SelectElement selectElement = (SelectElement) mostSpecficNode
+						.getRendered().asElement();
 				List<OptionElement> options = selectElement.getOptions()
 						.stream().collect(Collectors.toList());
 				List<T> selectedValues = new ArrayList<>();
@@ -549,10 +549,10 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onChange(Change event) {
-			DirectedLayout.Node node = provideNode()
+			DirectedLayout.Node mostSpecficNode = node
 					.provideMostSpecificNodeForModel();
-			SelectElement selectElement = (SelectElement) node.getRendered()
-					.asElement();
+			SelectElement selectElement = (SelectElement) mostSpecficNode
+					.getRendered().asElement();
 			int index = selectElement.getSelectedIndex();
 			Choice<T> choice = null;
 			if (index >= 0) {
@@ -567,10 +567,10 @@ public abstract class Choices<T> extends Model implements
 		public void setSelectedValue(T value) {
 			super.setSelectedValue(value);
 			if (provideIsBound()) {
-				DirectedLayout.Node node = provideNode()
+				DirectedLayout.Node mostSpecficNode = node
 						.provideMostSpecificNodeForModel();
-				SelectElement selectElement = (SelectElement) node.getRendered()
-						.asElement();
+				SelectElement selectElement = (SelectElement) mostSpecficNode
+						.getRendered().asElement();
 				int index = getValues().indexOf(value);
 				selectElement.setSelectedIndex(index);
 			}
@@ -928,7 +928,7 @@ public abstract class Choices<T> extends Model implements
 		public void onNodeContext(NodeContext event) {
 			select = new MultipleSelect<>();
 			// populate the delegate values from this node's AnnotationLocation
-			select.populateFromNodeContext(event.node, null);
+			select.populateFromNodeContext(node, null);
 			value = select.getSelectedValues();
 		}
 
@@ -1068,7 +1068,7 @@ public abstract class Choices<T> extends Model implements
 
 	@Override
 	public void onNodeContext(NodeContext event) {
-		populateFromNodeContext(event.node, null);
+		populateFromNodeContext(node, null);
 	}
 
 	public List<T> getValues() {

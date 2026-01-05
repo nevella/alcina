@@ -47,9 +47,9 @@ class Dotburger extends Model.Fields {
 
 		@Override
 		public void onNodeContext(NodeContext event) {
-			from(event.service(SequenceArea.Service.class).getSettings()
-					.properties().detailDisplayMode())
-							.to(properties().detailDisplayMode()).bidi();
+			from(service(SequenceArea.Service.class).getSettings().properties()
+					.detailDisplayMode()).to(properties().detailDisplayMode())
+							.bidi();
 		}
 	}
 

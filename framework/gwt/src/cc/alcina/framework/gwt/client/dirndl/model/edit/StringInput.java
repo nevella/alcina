@@ -285,23 +285,20 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 	@Override
 	public void onNodeContext(NodeContext event) {
-		event.node.optional(Placeholder.class)
+		node.optional(Placeholder.class)
 				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
-		event.node.optional(Autocomplete.class).ifPresent(
+		node.optional(Autocomplete.class).ifPresent(
 				autocomplete -> setAutocomplete(autocomplete.value()));
-		event.node.optional(Validation.class).ifPresent(validation -> {
+		node.optional(Validation.class).ifPresent(validation -> {
 			if (validation.maxLength().length() > 0) {
 				setMaxLength(Integer.parseInt(validation.maxLength()));
 			}
 			setInputMode(validation.inputMode());
 			setPattern(validation.pattern());
 		});
-		event.node.optional(InputType.class)
-				.ifPresent(type -> setType(type.value()));
-		event.node.optional(FocusOnBind.class)
-				.ifPresent(ann -> setFocusOnBind(true));
-		event.node.optional(TextArea.class)
-				.ifPresent(ann -> setTag("textarea"));
+		node.optional(InputType.class).ifPresent(type -> setType(type.value()));
+		node.optional(FocusOnBind.class).ifPresent(ann -> setFocusOnBind(true));
+		node.optional(TextArea.class).ifPresent(ann -> setTag("textarea"));
 	}
 
 	@Override

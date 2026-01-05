@@ -77,7 +77,7 @@ public class FileInput extends Model.Value<FileData>
 
 	@Override
 	public void onNodeContext(NodeContext event) {
-		event.node.optional(Accept.class)
+		node.optional(Accept.class)
 				.ifPresent(accept -> this.accept = accept.value());
 	}
 

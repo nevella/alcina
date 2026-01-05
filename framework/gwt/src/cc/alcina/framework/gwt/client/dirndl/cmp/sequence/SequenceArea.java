@@ -144,7 +144,7 @@ public class SequenceArea extends Model.Fields
 
 	@Override
 	public void onNodeContext(NodeContext event) {
-		service = event.service(Service.class);
+		service = service(Service.class);
 		definitionHeader = service.getSequenceDefinitionHeader();
 		from(service.getPlaceProperty())
 				// todo - add ignoreable change filter

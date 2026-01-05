@@ -113,7 +113,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 public abstract class Model extends Bindable
 		implements LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler,
 		LayoutEvents.NodeContext.Handler, HasNode {
-	private transient DirectedLayout.Node node;
+	protected transient DirectedLayout.Node node;
 
 	private transient Bindings bindings;
 
@@ -157,6 +157,15 @@ public abstract class Model extends Bindable
 
 	@Override
 	public final void onBeforeRender(BeforeRender event) {
+		if (node != null) {
+			Ax.err("binding a model to multiple nodes.\n"
+					+ "--------------------------\n" + "Existing node:\n%s"
+					+ "\n--------------------------\n" + "Incoming node:\n%s",
+					node.toParentStack(),
+					event.getContext().node.toParentStack());
+			Preconditions.checkState(node == null);
+		}
+		node = event.getContext().node;
 		if (bindings != null) {
 			bindings.setLeft();
 		}
@@ -187,15 +196,10 @@ public abstract class Model extends Bindable
 			return;
 		}
 		if (event.isBound()) {
-			if (node != null) {
-				Ax.err("binding a model to multiple nodes.\n"
-						+ "--------------------------\n" + "Existing node:\n%s"
-						+ "\n--------------------------\n"
-						+ "Incoming node:\n%s", node.toParentStack(),
-						event.getContext().node.toParentStack());
-				Preconditions.checkState(node == null);
-			}
-			node = event.getContext().node;
+			/*
+			 * Note that Model.node is set earlier (principally to assist
+			 * service bindings)
+			 */
 			if (bindings != null) {
 				bindings.bind(event.nodeEventTypeValidator);
 			}
