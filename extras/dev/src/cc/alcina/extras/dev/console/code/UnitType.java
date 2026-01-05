@@ -119,8 +119,7 @@ public class UnitType {
 	 * Call *before* modification
 	 */
 	public void dirty() {
-		unitWrapper.prepareForModification();
-		unitWrapper.dirty = true;
+		unitWrapper.dirty();
 	}
 
 	public void dirty(String initialSource, String ensuredSource) {

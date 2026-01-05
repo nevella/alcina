@@ -35,6 +35,8 @@ public class TaskSortClass extends PerformerTask.Fields {
 
 	public boolean test = true;
 
+	public boolean doNotOrderNonStaticFields = true;
+
 	@Override
 	public void run() throws Exception {
 		SingletonCache<CompilationUnits> cache = FsObjectCache
@@ -42,10 +44,12 @@ public class TaskSortClass extends PerformerTask.Fields {
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, classPathList,
 				CompilationUnitWrapperVisitor.Noop::new, refresh);
-		compUnits.unitTypeByName.allValues().stream().filter(type -> {
-			return type.unitWrapper.unitTypes.get(0).qualifiedSourceName
-					.matches(classNameRegex);
-		}).forEach(this::visit);
+		compUnits.unitTypeByName.allValues().stream()
+				.map(type -> type.unitWrapper).distinct()
+				.map(unitWrapper -> unitWrapper.unitTypes.get(0))
+				.filter(type -> type.qualifiedSourceName
+						.matches(classNameRegex))
+				.forEach(this::visit);
 		compUnits.writeDirty(test);
 	}
 
@@ -63,15 +67,15 @@ public class TaskSortClass extends PerformerTask.Fields {
 	void visit0(UnitType type) {
 		ClassOrInterfaceDeclaration declaration = type.getDeclaration();
 		List<OrderedSourceNode> sourceNodes = declaration.getMembers().stream()
-				.map(OrderedSourceNode::new).collect(Collectors.toList());
+				.map(member -> new OrderedSourceNode(declaration, member))
+				.collect(Collectors.toList());
 		List<OrderedSourceNode> preSort = sourceNodes.stream().toList();
 		sourceNodes.sort(null);
 		if (!Objects.equals(preSort, sourceNodes)) {
-			type.unitWrapper.dirty = true;
+			type.dirty();
 		}
-		declaration.getMembers().stream().toList().forEach(Node::remove);
-		sourceNodes.forEach(n -> declaration.addMember(n.member));
-		int debug = 3;
+		sourceNodes.forEach(OrderedSourceNode::remove);
+		sourceNodes.forEach(OrderedSourceNode::add);
 	}
 
 	enum StaticOrder {
@@ -103,7 +107,6 @@ public class TaskSortClass extends PerformerTask.Fields {
 			if (member instanceof MethodDeclaration) {
 				return method;
 			}
-			// TODO Auto-generated method stub
 			throw new UnsupportedOperationException(
 					"Unimplemented method 'forMember'");
 		}
@@ -128,11 +131,31 @@ public class TaskSortClass extends PerformerTask.Fields {
 
 		StaticOrder staticOrder;
 
-		OrderedSourceNode(BodyDeclaration member) {
+		ClassOrInterfaceDeclaration declaration;
+
+		OrderedSourceNode(ClassOrInterfaceDeclaration declaration,
+				BodyDeclaration<?> member) {
+			this.declaration = declaration;
 			this.member = member;
 			typeOrder = TypeOrder.forMember(member);
 			accessSpecifier = memberAccess(member);
 			staticOrder = StaticOrder.forMember(member);
+		}
+
+		void remove() {
+			member.remove();
+		}
+
+		void add() {
+			if (name().equals("Inner3")) {
+				int debug = 3;
+			}
+			declaration.addMember(member);
+		}
+
+		boolean isNonStaticField() {
+			return typeOrder == TypeOrder.field
+					&& staticOrder == StaticOrder._instance;
 		}
 
 		@Override
@@ -150,6 +173,10 @@ public class TaskSortClass extends PerformerTask.Fields {
 						return cmp;
 					}
 				}
+			}
+			if (doNotOrderNonStaticFields && isNonStaticField()
+					&& o.isNonStaticField()) {
+				return 0;
 			}
 			{
 				int cmp = accessSpecifier.compareTo(o.accessSpecifier);

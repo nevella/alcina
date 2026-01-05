@@ -21,7 +21,6 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -427,7 +426,10 @@ public class CompilationUnits {
 
 		public transient CompilationUnit unit;
 
-		public boolean dirty;
+		/**
+		 * call dirty() to ensure lexical preserving output
+		 */
+		private boolean dirty;
 
 		transient boolean preparedForModification;
 
@@ -461,7 +463,7 @@ public class CompilationUnits {
 		void prepareForModification() {
 			if (!preparedForModification) {
 				preparedForModification = true;
-				LexicalPreservingPrinter.setup(unit());
+				// LexicalPreservingPrinter.setup(unit());
 			}
 		}
 
@@ -497,8 +499,13 @@ public class CompilationUnits {
 			}
 			File outFile = FileUtils.child(outDir, getFile().getName());
 			try {
-				String modified = mapper == null
-						? LexicalPreservingPrinter.print(unit)
+				String modified = mapper == null ?
+				/*
+				 * LexicalPreservingPrinter doesn't handle (at least) annotation
+				 * comments
+				 */
+						unit.toString()
+						// LexicalPreservingPrinter.print(unit)
 						: mapper.apply(this);
 				Io.write().string(modified).toFile(outFile);
 				Ax.out("wrote: %s", getFile().getName());
@@ -576,6 +583,15 @@ public class CompilationUnits {
 				content = new Content();
 			}
 			return content;
+		}
+
+		public void dirty() {
+			dirty = true;
+			prepareForModification();
+		}
+
+		public boolean isDirty() {
+			return dirty;
 		}
 	}
 
