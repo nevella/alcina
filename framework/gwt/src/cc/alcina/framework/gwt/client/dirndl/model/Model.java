@@ -712,7 +712,7 @@ public abstract class Model extends Bindable implements
 	}
 
 	public <T extends ContextService> T service(Class<T> serviceType) {
-		return provideNode().getResolver().getService(serviceType).get();
+		return provideNode().getResolver().getService(serviceType).orElse(null);
 	}
 
 	public interface NodeEventTypeValidator {
