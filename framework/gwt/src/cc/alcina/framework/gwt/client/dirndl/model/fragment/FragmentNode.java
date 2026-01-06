@@ -194,6 +194,11 @@ public abstract class FragmentNode extends Model.Fields
 
 	@Override
 	public void onBind(Bind event) {
+		if (event.isBound()) {
+			if (node == null) {
+				node = event.getContext().node;
+			}
+		}
 		super.onBind(event);
 		if (event.isBound()) {
 			domNode = provideNode().getRendered().asDomNode();

@@ -28,6 +28,12 @@ public interface HasNode extends HasElement {
 	}
 
 	@Override
+	default boolean hasElement() {
+		return provideNode() != null && provideNode().getRendered() != null
+				&& provideElement() != null;
+	}
+
+	@Override
 	default boolean provideIsUnbound() {
 		return provideNode() == null;
 	}

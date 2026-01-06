@@ -69,8 +69,12 @@ public class LayoutEvents {
 	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
 		public Object model;
 
-		public BeforeRender(DirectedLayout.Node node, Object model) {
+		public boolean setNode;
+
+		public BeforeRender(DirectedLayout.Node node, Object model,
+				boolean setNode) {
 			this.model = model;
+			this.setNode = setNode;
 			setContext(Context.fromNode(node));
 		}
 

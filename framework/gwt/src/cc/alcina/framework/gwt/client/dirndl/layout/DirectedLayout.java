@@ -77,6 +77,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRe
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.MultiNodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.util.ClassNames;
@@ -1938,6 +1939,45 @@ public class DirectedLayout implements AlcinaProcess {
 		public void deferIfFiring(Runnable runnable) {
 			DirectedLayout.this.deferIfFiring(runnable);
 		}
+
+		void beforeRender() {
+			/*
+			 * MultiNodeModel instances - as the name suggests - are the backing
+			 * models for potentially multiple nodes, so can't be bound (since
+			 * node/model binding binding currently requires 1-1)
+			 */
+			boolean setNode = !(model instanceof MultiNodeModel);
+			if (!lastForModel || !directed.bindToModel()) {
+				// only bind if last of a multiple node -> single model
+				// chain
+				setNode = false;
+			} else if (model instanceof HasNode
+					&& ((HasNode) model).provideIsBound()) {
+				/*
+				 * model.node will already be set in most cases (exceptions are
+				 * like 'FragmentNode.replaceWith', which regenerates child node
+				 * bindings)
+				 */
+				setNode = false;
+			}
+			/*
+			 * This event is fired directly (as method calls), not via
+			 * bubbling/dispatch
+			 */
+			LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
+					this, model, setNode);
+			resolver.onBeforeRender(beforeRender);
+			if (model instanceof LayoutEvents.BeforeRender.Handler) {
+				((LayoutEvents.BeforeRender.Handler) model)
+						.onBeforeRender(beforeRender);
+			}
+			if (model instanceof LayoutEvents.NodeContext.Handler) {
+				LayoutEvents.NodeContext nodeContextEvent = new LayoutEvents.NodeContext(
+						this, model);
+				((LayoutEvents.NodeContext.Handler) model)
+						.onNodeContext(nodeContextEvent);
+			}
+		}
 	}
 
 	void deferIfFiring(Runnable runnable) {
@@ -2204,26 +2244,6 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		void beforeRender() {
-			/*
-			 * This event is fired directly (as method calls), not via
-			 * bubbling/dispatch
-			 */
-			LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
-					node, model);
-			resolver.onBeforeRender(beforeRender);
-			if (model instanceof LayoutEvents.NodeContext.Handler) {
-				LayoutEvents.NodeContext nodeContextEvent = new LayoutEvents.NodeContext(
-						node, model);
-				((LayoutEvents.NodeContext.Handler) model)
-						.onNodeContext(nodeContextEvent);
-			}
-			if (model instanceof LayoutEvents.BeforeRender.Handler) {
-				((LayoutEvents.BeforeRender.Handler) model)
-						.onBeforeRender(beforeRender);
-			}
-		}
-
 		@Override
 		public Iterator children() {
 			throw new UnsupportedOperationException();
@@ -2350,7 +2370,7 @@ public class DirectedLayout implements AlcinaProcess {
 				}
 			}
 			if (node.lastForModel) {
-				beforeRender();
+				node.beforeRender();
 			}
 			boolean hasRenderer = model != null
 					|| Reflections.isAssignableFrom(RendersNull.class,

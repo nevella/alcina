@@ -157,15 +157,17 @@ public abstract class Model extends Bindable
 
 	@Override
 	public final void onBeforeRender(BeforeRender event) {
-		if (node != null) {
-			Ax.err("binding a model to multiple nodes.\n"
-					+ "--------------------------\n" + "Existing node:\n%s"
-					+ "\n--------------------------\n" + "Incoming node:\n%s",
-					node.toParentStack(),
-					event.getContext().node.toParentStack());
-			Preconditions.checkState(node == null);
+		if (event.setNode) {
+			if (node != null) {
+				Ax.err("binding a model to multiple nodes.\n"
+						+ "--------------------------\n" + "Existing node:\n%s"
+						+ "\n--------------------------\n"
+						+ "Incoming node:\n%s", node.toParentStack(),
+						event.getContext().node.toParentStack());
+				Preconditions.checkState(node == null);
+			}
+			node = event.getContext().node;
 		}
-		node = event.getContext().node;
 		if (bindings != null) {
 			bindings.setLeft();
 		}
@@ -198,7 +200,7 @@ public abstract class Model extends Bindable
 		if (event.isBound()) {
 			/*
 			 * Note that Model.node is set earlier (principally to assist
-			 * service bindings)
+			 * service bindings) *except* for FragmentNodes
 			 */
 			if (bindings != null) {
 				bindings.bind(event.nodeEventTypeValidator);
