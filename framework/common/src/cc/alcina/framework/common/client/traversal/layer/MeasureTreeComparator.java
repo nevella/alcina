@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.Comparator;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.Ax;
@@ -28,6 +26,13 @@ public class MeasureTreeComparator implements Comparator<MeasureSelection> {
 		IntPair pair1 = o1.get().toIntPair();
 		IntPair pair2 = o2.get().toIntPair();
 		if (IntPair.sameStartAndAtLeastOnePoint(pair1, pair2)) {
+			int cmp = order.customCompare(o1, o2);
+			if (cmp != 0) {
+				// rare path
+				return cmp;
+			} else {
+				// fallthrough
+			}
 			// skip to order comparator
 		} else {
 			/*

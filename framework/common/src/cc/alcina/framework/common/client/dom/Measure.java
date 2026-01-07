@@ -338,6 +338,11 @@ public class Measure extends Location.Range {
 							CommonUtils.getComparableType(o2));
 				}
 			}
+
+			default int customCompare(MeasureSelection o1,
+					MeasureSelection o2) {
+				return 0;
+			}
 		}
 
 		public interface IgnoreEmptyText {

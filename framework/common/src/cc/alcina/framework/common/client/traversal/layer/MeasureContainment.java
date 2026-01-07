@@ -12,12 +12,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.dom.Measure;
-import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.dom.Measure.Token.Order;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Overlap;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -291,10 +287,12 @@ public class MeasureContainment {
 					// as with MeasureTreeComparator, boundaries are special if
 					// one measure is a point -
 					if (IntPair.sameStartAndAtLeastOnePoint(openRange,
-							cursorRange) && openRange.isPoint()) {
+							cursorRange) && openRange.isPoint()
+							&& !cursorRange.isPoint()) {
 						/*
 						 * because the selections are ordered, cursorRange
-						 * closes openRange
+						 * closes openRange - unless cursorRange is also a point
+						 * (e.g. a block containing an image)
 						 */
 						openItr.remove();
 					} else if (IntPair.sameEndAndAtLeastOnePoint(openRange,
