@@ -104,6 +104,8 @@ public class Consort<D> implements AlcinaProcess {
 
 	protected TopicChannel exitChannel;
 
+	public boolean allowFireOfNonPlayingStates = false;
+
 	public void addEndpointPlayer() {
 		addEndpointPlayer(null, true);
 	}
@@ -640,10 +642,11 @@ public class Consort<D> implements AlcinaProcess {
 			Preconditions.checkArgument(resultantStates.size() > 0);
 			player = playing.stream().filter(
 					p -> Objects.equals(p.getProvides(), resultantStates))
-					.findFirst().get();
+					.findFirst().orElse(null);
 		}
 		if (!playing.contains(player)) {
-			if (LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {
+			if (allowFireOfNonPlayingStates
+					|| LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {
 				return;
 			}
 		}
