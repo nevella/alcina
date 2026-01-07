@@ -155,6 +155,10 @@ public abstract class Model extends Bindable
 		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, value);
 	}
 
+	/*
+	 * note that this event may be fired twice during model setup - see the
+	 * caller. Hence the if/else
+	 */
 	@Override
 	public final void onBeforeRender(BeforeRender event) {
 		if (event.setNode) {
@@ -167,9 +171,10 @@ public abstract class Model extends Bindable
 				Preconditions.checkState(node == null);
 			}
 			node = event.getContext().node;
-		}
-		if (bindings != null) {
-			bindings.setLeft();
+		} else {
+			if (bindings != null) {
+				bindings.setLeft();
+			}
 		}
 	}
 

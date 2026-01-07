@@ -1962,20 +1962,34 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			/*
 			 * This event is fired directly (as method calls), not via
-			 * bubbling/dispatch
+			 * bubbling/dispatch. It's fired once on the resolver (setNode
+			 * independent), and possibly twice on the model - the first time
+			 * only if setNode is true (to set Model.node pre NodeContext), the
+			 * second to perform initial bindings
 			 */
-			LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
-					this, model, setNode);
-			resolver.onBeforeRender(beforeRender);
-			if (model instanceof LayoutEvents.BeforeRender.Handler) {
-				((LayoutEvents.BeforeRender.Handler) model)
-						.onBeforeRender(beforeRender);
+			{
+				LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
+						this, model, setNode);
+				resolver.onBeforeRender(beforeRender);
+				if (setNode
+						&& model instanceof LayoutEvents.BeforeRender.Handler) {
+					((LayoutEvents.BeforeRender.Handler) model)
+							.onBeforeRender(beforeRender);
+				}
 			}
 			if (model instanceof LayoutEvents.NodeContext.Handler) {
 				LayoutEvents.NodeContext nodeContextEvent = new LayoutEvents.NodeContext(
 						this, model);
 				((LayoutEvents.NodeContext.Handler) model)
 						.onNodeContext(nodeContextEvent);
+			}
+			{
+				LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
+						this, model, false);
+				if (model instanceof LayoutEvents.BeforeRender.Handler) {
+					((LayoutEvents.BeforeRender.Handler) model)
+							.onBeforeRender(beforeRender);
+				}
 			}
 		}
 	}
