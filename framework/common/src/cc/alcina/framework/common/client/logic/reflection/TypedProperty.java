@@ -89,7 +89,7 @@ public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 		}
 	}
 
-	public void setIfNotNull(S propertySource, T newValue) {
+	public void setIfUnset(S propertySource, T newValue) {
 		T existing = get(propertySource);
 		if (existing != null) {
 			return;

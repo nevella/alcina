@@ -41,8 +41,8 @@ public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 		return property.setIfNotEqual(getSource(), t);
 	}
 
-	public void setIfNotNull(T newValue) {
-		property.setIfNotNull(getSource(), newValue);
+	public void setIfUnset(T newValue) {
+		property.setIfUnset(getSource(), newValue);
 	}
 
 	public S getSource() {
