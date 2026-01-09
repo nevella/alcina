@@ -129,16 +129,6 @@ public class LayoutEvents {
 			 */
 			void onBind(Bind event);
 		}
-
-		public static Bind exTreeUnbindEvent() {
-			return NodeEvent.Context.CONTEXT_ALLOW_NULL_NODE
-					.callWithTrue(() -> new Bind(null, false));
-		}
-
-		public static Bind exTreeBindEvent() {
-			return NodeEvent.Context.CONTEXT_ALLOW_NULL_NODE
-					.callWithTrue(() -> new Bind(null, true));
-		}
 	}
 
 	/**

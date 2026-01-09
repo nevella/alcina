@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public interface HasNode extends HasElement {
 	@Override
@@ -24,7 +25,8 @@ public interface HasNode extends HasElement {
 
 	@Override
 	default boolean provideIsBound() {
-		return provideNode() != null;
+		Node node = provideNode();
+		return node != null && node.bound;
 	}
 
 	@Override

@@ -593,6 +593,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		boolean bindingsDisabled;
 
+		public boolean bound;
+
 		public boolean isBindingsDisabled() {
 			return bindingsDisabled;
 		}
@@ -1991,6 +1993,10 @@ public class DirectedLayout implements AlcinaProcess {
 							.onBeforeRender(beforeRender);
 				}
 			}
+		}
+
+		public NodeEventTypeValidator provideRootValidator() {
+			return nodeEventTypeValidator;
 		}
 	}
 

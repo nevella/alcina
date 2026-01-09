@@ -19,7 +19,7 @@ public class PackageProperties {
       public TypedProperty<SearchDefinitionEditor, String> ed = new TypedProperty<>(SearchDefinitionEditor.class, "ed");
       public TypedProperty<SearchDefinitionEditor, SearchDefinition> searchDefinition = new TypedProperty<>(SearchDefinitionEditor.class, "searchDefinition");
       public TypedProperty<SearchDefinitionEditor, List> searchables = new TypedProperty<>(SearchDefinitionEditor.class, "searchables");
-      public static class InstanceProperties extends InstanceProperty.Container<SearchDefinitionEditor> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SearchDefinitionEditor> {
         public  InstanceProperties(SearchDefinitionEditor source){super(source);}
         public InstanceProperty<SearchDefinitionEditor, String> ed(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditor.ed);}
         public InstanceProperty<SearchDefinitionEditor, SearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditor.searchDefinition);}
@@ -36,7 +36,7 @@ public class PackageProperties {
       TypedProperty<Searchable, String> name = new TypedProperty<>(Searchable.class, "name");
       TypedProperty<Searchable, SearchCriterion> searchCriterion = new TypedProperty<>(Searchable.class, "searchCriterion");
       TypedProperty<Searchable, Searchable.ValueEditor> valueEditor = new TypedProperty<>(Searchable.class, "valueEditor");
-      static class InstanceProperties extends InstanceProperty.Container<Searchable> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Searchable> {
          InstanceProperties(Searchable source){super(source);}
         InstanceProperty<Searchable, String> name(){return new InstanceProperty<>(source,PackageProperties.searchable.name);}
         InstanceProperty<Searchable, SearchCriterion> searchCriterion(){return new InstanceProperty<>(source,PackageProperties.searchable.searchCriterion);}

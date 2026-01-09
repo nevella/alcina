@@ -82,7 +82,7 @@ public class StreamBinding<T> {
 			acceptLeftToRight();
 			StreamBinding source = binding;
 			StreamBinding<?> reverse = new StreamBinding<>(binding.bindings);
-			binding.bindings.modelBindings.add(reverse);
+			binding.bindings.streamBindings.add(reverse);
 			reverse.fromPropertyChangeSource = to;
 			reverse.map = map;
 			reverse.on = on;
