@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
@@ -55,7 +54,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 			implements ModelEvents.Commit.Handler {
 		public abstract DN createNode();
 
-		public abstract Function<WT, String> itemRenderer();
+		public abstract Function<WT, ?> itemRenderer();
 
 		@Override
 		public abstract void onCommit(Commit event);
@@ -96,7 +95,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 					.getFragmentNode(splitContents);
 			FragmentNode parent = textFragment.parent();
 			DN created = createNode();
-			DecoratorNode.properties.contentEditable.set(created, true);
+			created.properties().contentEditable().set(true);
 			textFragment.nodes().insertBeforeThis(created);
 			created.nodes().append(textFragment);
 			LocalDom.flush();
@@ -117,7 +116,9 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		}
 	}
 
-	public static transient PackageProperties._DecoratorNode properties = PackageProperties.decoratorNode;
+	protected PackageProperties._DecoratorNode.InstanceProperties properties() {
+		return PackageProperties.decoratorNode.instance(this);
+	}
 
 	InternalModel internalModel;
 
@@ -131,7 +132,10 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	public boolean selected;
 
 	@Binding(type = Type.INNER_TEXT)
-	public String content = "";
+	public String content = null;
+
+	@Directed
+	public Object contentModel;
 
 	@Binding(
 		type = Type.PROPERTY,
@@ -147,7 +151,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	}
 
 	public DecoratorNode() {
-		bindings().from(this).on(properties.contentEditable)
+		from(properties().contentEditable())
 				.accept(this::notifyContentEditableDelta);
 	}
 
@@ -156,7 +160,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		boolean selected = selection.hasSelection() && !selection.isCollapsed()
 				&& selection.asRange()
 						.contains(provideElement().asDomNode().asRange());
-		properties.selected.set(this, selected);
+		properties().selected().set(selected);
 	}
 
 	@Override
@@ -191,17 +195,24 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 
 	public abstract Descriptor<WT, SR, ?> getDescriptor();
 
-	public void putReferenced(WT wrappedType) {
-		properties.stringRepresentable.set(this,
-				getDescriptor().toStringRepresentable(wrappedType));
-		String text = getDescriptor().triggerSequence()
-				+ ((Function) getDescriptor().itemRenderer())
-						.apply(wrappedType);
-		properties.content.set(this, text);
+	public void putReferenced(WT referenced) {
+		properties().stringRepresentable()
+				.set(getDescriptor().toStringRepresentable(referenced));
+		String triggerSequence = getDescriptor().triggerSequence();
+		Object renderedReferenced = ((Function) getDescriptor().itemRenderer())
+				.apply(referenced);
+		if (renderedReferenced instanceof String) {
+			String text = triggerSequence + renderedReferenced;
+			properties().content().set(text);
+			properties().contentModel().set(null);
+		} else {
+			properties().content().set(null);
+			properties().contentModel().set(renderedReferenced);
+		}
 	}
 
 	public void toNonEditable() {
-		properties.contentEditable.set(this, false);
+		properties().contentEditable().set(false);
 	}
 
 	@Override

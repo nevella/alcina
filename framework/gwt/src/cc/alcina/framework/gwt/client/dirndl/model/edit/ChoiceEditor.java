@@ -61,8 +61,15 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			}
 
 			@Override
-			public Function<Choice, String> itemRenderer() {
-				return ChoiceEditor::choiceToString;
+			public Function<Choice, ?> itemRenderer() {
+				return choice -> {
+					Object value = choice.getValue();
+					if (value instanceof Model) {
+						return value;
+					} else {
+						return choiceToString(choice);
+					}
+				};
 			}
 
 			public void onCommit(Commit event) {

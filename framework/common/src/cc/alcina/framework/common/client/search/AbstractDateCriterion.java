@@ -15,7 +15,9 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.gwittir.validator.ShortIso8601DateValidator;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.logic.reflection.Validator;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.DateUtil;
 
@@ -54,6 +56,7 @@ public class AbstractDateCriterion extends SearchCriterion
 	@SuppressWarnings("deprecation")
 	@Override
 	@PropertySerialization(defaultProperty = true)
+	@Validator(ShortIso8601DateValidator.class)
 	public Date getValue() {
 		if (value != null) {
 			try {

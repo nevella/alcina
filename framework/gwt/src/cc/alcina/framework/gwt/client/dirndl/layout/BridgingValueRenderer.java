@@ -33,8 +33,10 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 /**
  * <p>
- * Renders a form/table cell *either* as a legacy GWT widget, or as a Directed
- * node/model
+ * Renders a {@link FormModel.ValueModel} (an representation of a Bean property
+ * with additional info to support editing) transformed from a generic value
+ * container such as a form/table cell *either* as a legacy GWT widget, or as a
+ * Directed node/model
  *
  * <p>
  * The directed transformation is relatively complex - it retains a parent
@@ -167,12 +169,13 @@ public class BridgingValueRenderer extends DirectedRenderer {
 
 	/**
 	 * Applies the transformation rules to generate binding models, which will
-	 * then be bound to the form
+	 * then be bound to the form (or other editable source)
 	 * 
 	 * Note that this system doesn't currently allow @Directed annotations with
 	 * a strategy to be applied to bean properties
 	 * (e.g. @Directed.TransformElements) - that would require yet another
-	 * transformation layer
+	 * transformation layer/completed rework of
+	 * AnnotationLocation#operationHistory
 	 *
 	 */
 	static class ValueResolver extends ContextResolver

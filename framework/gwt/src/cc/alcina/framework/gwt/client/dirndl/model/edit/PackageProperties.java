@@ -65,6 +65,7 @@ public class PackageProperties {
     static class _ChoiceEditor_ChoiceNode implements TypedProperty.Container {
       TypedProperty<ChoiceEditor.ChoiceNode, String> content = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "content");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "contentEditable");
+      TypedProperty<ChoiceEditor.ChoiceNode, Object> contentModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "contentModel");
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "descriptor");
       TypedProperty<ChoiceEditor.ChoiceNode, FragmentModel> fragmentModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "fragmentModel");
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "internalModel");
@@ -75,6 +76,7 @@ public class PackageProperties {
          InstanceProperties(ChoiceEditor.ChoiceNode source){super(source);}
         InstanceProperty<ChoiceEditor.ChoiceNode, String> content(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.content);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.contentEditable);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, Object> contentModel(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.contentModel);}
         InstanceProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.descriptor);}
         InstanceProperty<ChoiceEditor.ChoiceNode, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.fragmentModel);}
         InstanceProperty<ChoiceEditor.ChoiceNode, DecoratorNode.InternalModel> internalModel(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.internalModel);}
@@ -160,6 +162,7 @@ public class PackageProperties {
     public static class _DecoratorNode implements TypedProperty.Container {
       public TypedProperty<DecoratorNode, String> content = new TypedProperty<>(DecoratorNode.class, "content");
       public TypedProperty<DecoratorNode, Boolean> contentEditable = new TypedProperty<>(DecoratorNode.class, "contentEditable");
+      public TypedProperty<DecoratorNode, Object> contentModel = new TypedProperty<>(DecoratorNode.class, "contentModel");
       public TypedProperty<DecoratorNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(DecoratorNode.class, "descriptor");
       public TypedProperty<DecoratorNode, FragmentModel> fragmentModel = new TypedProperty<>(DecoratorNode.class, "fragmentModel");
       public TypedProperty<DecoratorNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(DecoratorNode.class, "internalModel");
@@ -171,6 +174,7 @@ public class PackageProperties {
         public  InstanceProperties(DecoratorNode source){super(source);}
         public InstanceProperty<DecoratorNode, String> content(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.content);}
         public InstanceProperty<DecoratorNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.contentEditable);}
+        public InstanceProperty<DecoratorNode, Object> contentModel(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.contentModel);}
         public InstanceProperty<DecoratorNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.descriptor);}
         public InstanceProperty<DecoratorNode, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.fragmentModel);}
         public InstanceProperty<DecoratorNode, DecoratorNode.InternalModel> internalModel(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.internalModel);}
@@ -220,6 +224,7 @@ public class PackageProperties {
     public static class _EntityNode implements TypedProperty.Container {
       public TypedProperty<EntityNode, String> content = new TypedProperty<>(EntityNode.class, "content");
       public TypedProperty<EntityNode, Boolean> contentEditable = new TypedProperty<>(EntityNode.class, "contentEditable");
+      public TypedProperty<EntityNode, Object> contentModel = new TypedProperty<>(EntityNode.class, "contentModel");
       public TypedProperty<EntityNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(EntityNode.class, "descriptor");
       public TypedProperty<EntityNode, FragmentModel> fragmentModel = new TypedProperty<>(EntityNode.class, "fragmentModel");
       public TypedProperty<EntityNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(EntityNode.class, "internalModel");
@@ -230,6 +235,7 @@ public class PackageProperties {
         public  InstanceProperties(EntityNode source){super(source);}
         public InstanceProperty<EntityNode, String> content(){return new InstanceProperty<>(source,PackageProperties.entityNode.content);}
         public InstanceProperty<EntityNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.entityNode.contentEditable);}
+        public InstanceProperty<EntityNode, Object> contentModel(){return new InstanceProperty<>(source,PackageProperties.entityNode.contentModel);}
         public InstanceProperty<EntityNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.entityNode.descriptor);}
         public InstanceProperty<EntityNode, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.entityNode.fragmentModel);}
         public InstanceProperty<EntityNode, DecoratorNode.InternalModel> internalModel(){return new InstanceProperty<>(source,PackageProperties.entityNode.internalModel);}
