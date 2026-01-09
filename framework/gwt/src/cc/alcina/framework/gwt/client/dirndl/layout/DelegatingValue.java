@@ -14,7 +14,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 
 /*
- * Renders all non-editable fields (by default) as their 'natural' renderer.
+ * Renders all non-editable properties of a Bean (by default) as their 'natural'
+ * renderer.
  * 
  * FIXME - dirndl - high - customisation (via valuetransformer) this is very
  * much unoptimised

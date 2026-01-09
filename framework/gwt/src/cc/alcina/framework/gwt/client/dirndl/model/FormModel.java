@@ -1142,7 +1142,7 @@ public class FormModel extends Model
 		}
 	}
 
-	static class ValidationFeedbackProvider
+	public static class ValidationFeedbackProvider
 			implements ValidationFeedback.Provider {
 		@Override
 		public Builder builder() {
