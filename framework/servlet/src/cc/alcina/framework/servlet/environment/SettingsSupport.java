@@ -18,10 +18,12 @@ public class SettingsSupport {
 	public static <T extends Bindable> T deserializeSettings(Class<T> clazz,
 			String settings, Consumer<T> newSettingsCustomiser) {
 		T result = null;
+		boolean hadDeserializationException = false;
 		if (settings != null) {
 			try {
 				result = ReflectiveSerializer.deserializeRpc(settings);
 			} catch (Exception e) {
+				hadDeserializationException = true;
 				e.printStackTrace();
 			}
 		}
@@ -31,6 +33,9 @@ public class SettingsSupport {
 		}
 		result.addPropertyChangeListener(
 				evt -> persistSettings(evt.getSource()));
+		if (hadDeserializationException) {
+			persistSettings(result);
+		}
 		return result;
 	}
 
