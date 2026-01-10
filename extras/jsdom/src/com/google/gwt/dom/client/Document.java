@@ -298,12 +298,14 @@ public class Document extends Node implements ClientDomDocument,
 	}
 
 	public Element createDocumentElement(String markup) {
-		return createDocumentElement(markup, false);
+		return createDocumentElement(markup, false, true);
 	}
 
-	public Element createDocumentElement(String markup,
-			boolean attachToParent) {
-		documentElement = new HtmlParser().parse(markup, null, true);
+	public Element createDocumentElement(String markup, boolean attachToParent,
+			boolean emitBrowserCompatibleDom) {
+		HtmlParser htmlParser = new HtmlParser();
+		htmlParser.emitBrowserCompatibleDom = emitBrowserCompatibleDom;
+		documentElement = htmlParser.parse(markup, null, true);
 		if (attachToParent) {
 			local().appendChild(documentElement);
 			documentElement.setAttached(true, true);

@@ -35,7 +35,7 @@ public class HtmlParser {
 		try {
 			LooseContext.push();
 			Document.contextProvider.createFrame(RemoteType.NONE);
-			Element element = Document.get().createDocumentElement(markup,
+			Element element = Document.get().createDocumentElement(markup, true,
 					true);
 			return element;
 		} finally {
@@ -147,7 +147,7 @@ public class HtmlParser {
 		@Override
 		public String toString() {
 			if (toString == null) {
-				toString = start == -1 ? empty : html.substring(start, end);
+				toString = start == -1 ? empty : markup.substring(start, end);
 			}
 			return toString;
 		}
@@ -173,7 +173,7 @@ public class HtmlParser {
 		}
 
 		char charAt(int idx) {
-			return html.charAt(start + idx);
+			return markup.charAt(start + idx);
 		}
 
 		boolean endsWith(String test) {
@@ -204,7 +204,7 @@ public class HtmlParser {
 
 	int idx = 0;
 
-	private String html;
+	private String markup;
 
 	private String tag;
 
@@ -283,16 +283,16 @@ public class HtmlParser {
 			Preconditions.checkState(!closeTag);
 			int closeIdx0 = idx;
 			while (closeIdx0 != -1) {
-				closeIdx0 = html.indexOf("</", closeIdx0);
-				int closeIdx1 = html.indexOf(">", closeIdx0);
-				String endTag = html.substring(closeIdx0 + 2, closeIdx1);
+				closeIdx0 = markup.indexOf("</", closeIdx0);
+				int closeIdx1 = markup.indexOf(">", closeIdx0);
+				String endTag = markup.substring(closeIdx0 + 2, closeIdx1);
 				if (endTag.equalsIgnoreCase(tag)) {
 					break;
 				} else {
 					closeIdx0 = closeIdx1 + 1;
 				}
 			}
-			String textContent = html.substring(idx, closeIdx0);
+			String textContent = markup.substring(idx, closeIdx0);
 			emitText(textContent);
 			emitEndElement(tag);
 			idx = closeIdx0 + 2 + tag.length() + 1;
@@ -401,36 +401,40 @@ public class HtmlParser {
 		}
 	}
 
-	private Element parse0(String html, Element replaceContents,
+	private Element parse0(String markup, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		/*
 		 * minimal 'make invalid markup parseable'
 		 */
-		if (html.contains("\uFEFF")) {
-			html = html.replace("\uFEFF", " ");
+		if (markup.contains("\uFEFF")) {
+			markup = markup.replace("\uFEFF", " ");
 		}
 		/*
 		 * sky - instead, improve parser (to retain exact source refs)
 		 */
-		if (html.contains("/>")) {
-			html = DomUtils.expandEmptyElements(html);
+		if (markup.contains("/>")) {
+			markup = DomUtils.expandEmptyElements(markup);
 		}
-		this.html = html;
+		if (markup.startsWith("<?xml")) {
+			markup = markup.replaceFirst("<\\?xml.*?\\?>", "");
+			int debug = 3;
+		}
+		this.markup = markup;
 		this.replaceContents = replaceContents;
 		this.lineNumber = 1;
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
-		int length = html.length();
+		int length = markup.length();
 		// gwt compiler hack - force string class init outside loop
 		boolean hasSyntheticContainer = !emitHtmlHeadBodyTags
-				&& (html.startsWith("<html>") || html.startsWith("<HTML>"));
+				&& (markup.startsWith("<html>") || markup.startsWith("<HTML>"));
 		if (hasSyntheticContainer) {
-			html = Ax.format("<div>%s</div>", html);
+			markup = Ax.format("<div>%s</div>", markup);
 		}
-		char c = html.charAt(idx);
+		char c = markup.charAt(idx);
 		while (idx < length) {
-			c = html.charAt(idx++);
+			c = markup.charAt(idx++);
 			boolean isWhiteSpace = false;
 			boolean emptyBuffer = markingBuilder.length() == 0;
 			switch (c) {

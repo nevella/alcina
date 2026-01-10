@@ -761,7 +761,7 @@ class Environment {
 		scheduler = SchedulerFrame.contextProvider.createFrame(null);
 		scheduler.commandExecutor = new CommandExecutorImpl();
 		document = Document.contextProvider.createFrame(RemoteType.REF_ID);
-		document.createDocumentElement("<html/>", true);
+		document.createDocumentElement("<html/>", true, true);
 		document.implAccess().attachIdRemote().mutationProxy = mutationProxy;
 		document.implAccess().attachIdRemote()
 				.registerToRemoteInvokeProxy(invokeProxy);
