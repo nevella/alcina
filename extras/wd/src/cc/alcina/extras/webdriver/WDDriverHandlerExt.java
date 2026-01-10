@@ -10,6 +10,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 
 public abstract class WDDriverHandlerExt implements WDDriverHandler {
@@ -28,7 +29,7 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 		});
 	}
 
-	public static class DriverCreated implements ProcessObservable {
+	public static class DriverCreated implements ContextObservable {
 		public RemoteWebDriver driver;
 
 		public DriverCreated(RemoteWebDriver driver) {

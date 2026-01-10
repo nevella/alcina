@@ -51,18 +51,6 @@ public class ContextObservers {
 		return ContextObservers.class.getName();
 	}
 
-	public interface Observable extends ProcessObservable {
-		default void publish() {
-			ProcessObservers.context().publish(this);
-		}
-
-		/**
-		 * These observables will be routed to the base observer if one exists
-		 */
-		public interface Base extends Observable {
-		}
-	}
-
 	private ProcessObservers instance = new ProcessObservers();
 
 	private Multimap<LooseContextInstance.Frame, List<ProcessObserver>> observers = new Multimap<>();

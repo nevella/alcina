@@ -53,7 +53,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 				com.google.gwt.dom.client.Document document = com.google.gwt.dom.client.Document.contextProvider
 						.createFrame(
 								remote ? RemoteType.REF_ID : RemoteType.NONE);
-				document.createDocumentElement(xml, true);
+				document.createDocumentElement(xml, true, false);
 				return document;
 			} finally {
 				LooseContext.pop();

@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.sync;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
 
@@ -20,8 +20,7 @@ public class SyncLogger {
 		}
 	}
 
-	public static class IgnoredObservable
-			implements ContextObservers.Observable {
+	public static class IgnoredObservable implements ContextObservable {
 		public SyncItemMatch itemMatch;
 
 		public IgnoredObservable(SyncItemMatch itemMatch) {

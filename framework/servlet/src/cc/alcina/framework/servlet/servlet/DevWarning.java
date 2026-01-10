@@ -2,12 +2,13 @@ package cc.alcina.framework.servlet.servlet;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean(PropertySource.FIELDS)
-public class DevWarning implements ProcessObservable, TreeSerializable {
+public class DevWarning implements GlobalObservable, TreeSerializable {
 	public String category;
 
 	public String detail;

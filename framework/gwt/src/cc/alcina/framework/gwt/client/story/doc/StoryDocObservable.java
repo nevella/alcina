@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
-import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IdCounter;
@@ -15,7 +15,7 @@ import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 
 @Bean(PropertySource.FIELDS)
 public abstract class StoryDocObservable
-		implements ContextObservers.Observable, Comparable<StoryDocObservable> {
+		implements ContextObservable, Comparable<StoryDocObservable> {
 	public Date date;
 
 	public transient Visit visit;

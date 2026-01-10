@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
@@ -453,7 +454,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	public static class CancelParentsException extends RuntimeException {
 	}
 
-	public static class TestException implements ProcessObservable {
+	public static class TestException implements GlobalObservable {
 		private WebdriverTest test;
 
 		public TestException(WebdriverTest test) {

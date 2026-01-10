@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
@@ -21,7 +22,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventT
  */
 @Bean(PropertySource.FIELDS)
 public abstract class JobObservable
-		implements ProcessObservable, IdOrdered<JobObservable> {
+		implements GlobalObservable.Debug, IdOrdered<JobObservable> {
 	public long id;
 
 	public long getId() {
@@ -53,7 +54,7 @@ public abstract class JobObservable
 	@Override
 	public void publish() {
 		ProcessObservers.publishUntyped(JobObservable.class, () -> this);
-		ProcessObservable.super.publish();
+		GlobalObservable.Debug.super.publish();
 	}
 
 	public static class Created extends JobObservable {

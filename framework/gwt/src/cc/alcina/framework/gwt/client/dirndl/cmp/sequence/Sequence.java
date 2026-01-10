@@ -5,6 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -143,8 +144,7 @@ public interface Sequence<T> {
 		}
 	}
 
-	public static class SequenceGenerationComplete
-			implements ProcessObservable {
+	public static class SequenceGenerationComplete implements GlobalObservable {
 		public Sequence sequence;
 
 		public SequenceGenerationComplete(Sequence sequence) {

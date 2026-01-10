@@ -15,6 +15,8 @@ import com.google.gwt.dom.client.mutations.MutationNode.EquivalenceTest;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.process.ContextObservable;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -159,7 +161,7 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 	@Bean
 	@TypeSerialization(propertyOrder = PropertyOrder.FIELD)
-	public static class Event implements ProcessObservable {
+	public static class Event implements ContextObservable {
 		public static void publish(Event.Type type,
 				List<MutationRecord> records) {
 			ProcessObservers.publish(MutationHistory.Event.class,

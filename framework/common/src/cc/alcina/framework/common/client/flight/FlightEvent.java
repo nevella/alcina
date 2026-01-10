@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.flight;
 import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializationExceptionData;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.HandlesDeserializationException;
@@ -11,7 +12,7 @@ import cc.alcina.framework.common.client.util.HasStringRepresentation;
 
 @Bean(PropertySource.FIELDS)
 public class FlightEvent
-		implements ProcessObservable, HandlesDeserializationException,
+		implements GlobalObservable, HandlesDeserializationException,
 		HasStringRepresentation, IdOrdered<FlightEvent> {
 	public FlightEventWrappable event;
 

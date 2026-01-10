@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
@@ -16,7 +17,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
  */
 @Bean(PropertySource.FIELDS)
 public class RemoteComponentEvent
-		implements ProcessObservable, FlightEventWrappable {
+		implements GlobalObservable.Debug, FlightEventWrappable {
 	public long start;
 
 	public long end;

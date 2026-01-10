@@ -4,13 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.process.ContextObservable;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 
 public class MessageTransportLayerObservables {
-	public static class SentObservable implements ProcessObservable {
+	public static class SentObservable implements GlobalObservable.Debug {
 		public MessageToken message;
 
 		public boolean resending;
@@ -32,7 +34,7 @@ public class MessageTransportLayerObservables {
 		}
 	}
 
-	public static class ReceivedObservable implements ProcessObservable {
+	public static class ReceivedObservable implements GlobalObservable.Debug {
 		public MessageToken message;
 
 		public ReceivedObservable(MessageToken message) {
@@ -40,7 +42,7 @@ public class MessageTransportLayerObservables {
 		}
 	}
 
-	public static class RetryObservable implements ProcessObservable {
+	public static class RetryObservable implements GlobalObservable.Debug {
 		public MessageToken message;
 
 		public RetryObservable(MessageToken message) {
@@ -48,7 +50,7 @@ public class MessageTransportLayerObservables {
 		}
 	}
 
-	public static class PublishedObservable implements ProcessObservable {
+	public static class PublishedObservable implements GlobalObservable.Debug {
 		public MessageToken message;
 
 		public PublishedObservable(MessageToken message) {

@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.AttributeTemplate;
@@ -432,7 +433,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 *
 	 *
 	 */
-	public static class EventObservable implements ProcessObservable {
+	public static class EventObservable implements GlobalObservable.Debug {
 		Class<? extends NodeEvent> type;
 
 		Context context;
@@ -2453,7 +2454,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 *
 	 *
 	 */
-	public static class RenderObservable implements ProcessObservable {
+	public static class RenderObservable implements GlobalObservable.Debug {
 		public Node node;
 
 		public RenderObservable(Node node) {

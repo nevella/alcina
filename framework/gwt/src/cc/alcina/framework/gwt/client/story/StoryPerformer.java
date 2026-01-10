@@ -7,6 +7,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ContextObservable;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.gwt.client.story.Story.Action;
 import cc.alcina.framework.gwt.client.story.Story.Action.Annotate;
@@ -173,7 +175,7 @@ public class StoryPerformer {
 		void perform(Story.Action.Context context, A action) throws Exception;
 	}
 
-	public static class ActionPerformed implements ProcessObservable {
+	public static class ActionPerformed implements ContextObservable {
 		public Context context;
 
 		public Action action;
@@ -185,7 +187,7 @@ public class StoryPerformer {
 		}
 	}
 
-	public static class ActionException implements ProcessObservable {
+	public static class ActionException implements ContextObservable {
 		public Context context;
 
 		public Action action;

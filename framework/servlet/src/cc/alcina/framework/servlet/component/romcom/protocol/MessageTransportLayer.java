@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGener
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -497,7 +498,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Reflected
-	public class ActiveMessagesChanged implements ProcessObservable {
+	public class ActiveMessagesChanged implements ContextObservable {
 	}
 
 	public abstract class Channel {

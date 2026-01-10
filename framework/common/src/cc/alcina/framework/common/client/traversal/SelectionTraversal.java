@@ -24,7 +24,8 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
-import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.ContextObservable;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
@@ -155,8 +156,7 @@ public class SelectionTraversal
 	 * An exception suppressed [to keep the traversal flow/logs clean], but
 	 * required for end-of-traversal exception wrangling
 	 */
-	public static class SuppressedException
-			implements ContextObservers.Observable {
+	public static class SuppressedException implements ContextObservable {
 		Exception e;
 
 		public SuppressedException(Exception e) {
@@ -167,7 +167,7 @@ public class SelectionTraversal
 	/**
 	 * A non-exception 'short-circuit traversal' message
 	 */
-	public static class ExitTraversal implements ContextObservers.Observable {
+	public static class ExitTraversal implements ContextObservable {
 		String reason;
 
 		public ExitTraversal(String reason) {
@@ -201,7 +201,7 @@ public class SelectionTraversal
 	 *
 	 *
 	 */
-	public static class BeforeLayerSelection implements ProcessObservable {
+	public static class BeforeLayerSelection implements GlobalObservable.Debug {
 		public Layer layer;
 
 		public Selection selection;
@@ -246,7 +246,7 @@ public class SelectionTraversal
 		void submit(Runnable runnable);
 	}
 
-	public class LayerEntry implements ProcessObservable {
+	public class LayerEntry implements ContextObservable {
 		public Layer getLayer() {
 			return layers().getCurrent();
 		}
@@ -258,7 +258,7 @@ public class SelectionTraversal
 		}
 	}
 
-	public class LayerExit implements ProcessObservable {
+	public class LayerExit implements ContextObservable {
 		public Layer getLayer() {
 			return layers().getCurrent();
 		}
@@ -751,7 +751,7 @@ public class SelectionTraversal
 		}
 	}
 
-	public class TraversalComplete implements ProcessObservable {
+	public class TraversalComplete implements ContextObservable {
 	}
 
 	/*

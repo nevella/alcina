@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -147,7 +148,7 @@ public interface Tour {
 
 		public Condition provideTarget();
 
-		public static class Observable implements ProcessObservable {
+		public static class Observable implements ContextObservable {
 			private final Step step;
 
 			public Observable(Step step) {

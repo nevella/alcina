@@ -100,6 +100,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -1630,7 +1631,7 @@ public class DomainStore implements IDomainStore {
 	public volatile long lastExceptionPostProcessDelayWarning;
 
 	public static class ExceptionalPostProcessDelay
-			implements ProcessObservable {
+			implements GlobalObservable {
 		public String message;
 
 		public ExceptionalPostProcessDelay(String message) {
@@ -1751,7 +1752,7 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	public static class Deregistered implements ProcessObservable {
+	public static class Deregistered implements GlobalObservable {
 		public Deregistered() {
 		}
 	}
@@ -1988,7 +1989,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public static class IgnoredLocalIdLocatorResolution
-			implements ProcessObservable {
+			implements GlobalObservable {
 		public static void publish(EntityLocator locator) {
 			ProcessObservers.context()
 					.publish(new IgnoredLocalIdLocatorResolution(locator));
@@ -2401,7 +2402,7 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	public static class AwaitingWriteableStore implements ProcessObservable {
+	public static class AwaitingWriteableStore implements GlobalObservable {
 	}
 
 	public static void onAppSpecificLoadComplete() {

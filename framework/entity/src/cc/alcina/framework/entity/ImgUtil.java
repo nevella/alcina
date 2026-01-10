@@ -46,7 +46,7 @@ import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -58,8 +58,7 @@ public class ImgUtil {
 	 * Models "a monochrome image was converted"
 	 * 
 	 */
-	public static class MonochromeImageObservable
-			implements ContextObservers.Observable {
+	public static class MonochromeImageObservable implements ContextObservable {
 	}
 
 	public static final String CONTEXT_JPEG_COMPRESSION_RATIO = ImgUtil.class

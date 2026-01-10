@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -19,7 +20,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
 
-public class ProcessMetric extends Model implements ProcessObservable {
+public class ProcessMetric extends Model implements GlobalObservable.Debug {
 	private static final String CONTEXT_METRIC_NAME = ProcessMetric.class
 			.getName() + ".CONTEXT_METRIC_NAME";
 
