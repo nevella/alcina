@@ -67,7 +67,7 @@ class SequenceTable extends Model.Fields
 		}
 
 		boolean isExclude(Property property) {
-			Service service = getService(SequenceArea.Service.class);
+			Service service = service(SequenceArea.Service.class);
 			if (service.getSettings().columnSet == ColumnSet.DETAIL) {
 				switch (property.getName()) {
 				case "in":

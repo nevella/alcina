@@ -164,14 +164,6 @@ public abstract class Client implements ContextFrame {
 
 	private Place pendingPlace;
 
-	/**
-	 * Utility method for a common pattern (ui bind :: do xxx on place change);
-	 */
-	public static void addPlaceChangeBinding(Model model, Runnable runnable) {
-		model.bindings().addRegistration(() -> Client.eventBus()
-				.addHandler(PlaceChangeEvent.TYPE, evt -> runnable.run()));
-	}
-
 	public static CommonRemoteServiceAsync commonRemoteService() {
 		return Registry.impl(CommonRemoteServiceAsync.class);
 	}

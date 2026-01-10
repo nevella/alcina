@@ -111,7 +111,7 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 		@Override
 		public Object apply(Object t) {
 			TransformElements transformElements = node.getResolver()
-					.getService(DeltaModelService.class).getTransformElements();
+					.service(DeltaModelService.class).getTransformElements();
 			if (transformElements != null) {
 				return Reflections.newInstance(transformElements.value())
 						.apply(t);

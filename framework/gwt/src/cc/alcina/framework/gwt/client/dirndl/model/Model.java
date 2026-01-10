@@ -118,7 +118,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 	write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable
 		implements LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler,
-		LayoutEvents.NodeContext.Handler, HasNode {
+		LayoutEvents.NodeContext.Handler, HasNode, ContextService.Source {
 	protected transient DirectedLayout.Node node;
 
 	private transient Bindings bindings;
@@ -755,7 +755,7 @@ public abstract class Model extends Bindable
 	}
 
 	public <T extends ContextService> T service(Class<T> serviceType) {
-		return provideNode().getResolver().getService(serviceType);
+		return provideNode().getResolver().service(serviceType);
 	}
 
 	public interface NodeEventTypeValidator {

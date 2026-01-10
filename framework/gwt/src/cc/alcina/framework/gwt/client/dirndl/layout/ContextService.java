@@ -47,6 +47,13 @@ public interface ContextService {
 	}
 
 	public interface Source {
-		<T extends ContextService> T getService(Class<T> serviceType);
+		/**
+		 * not 'getService' because it's _so_ common
+		 * 
+		 * @param <T>
+		 * @param serviceType
+		 * @return
+		 */
+		<T extends ContextService> T service(Class<T> serviceType);
 	}
 }
