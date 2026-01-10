@@ -15,6 +15,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Ref;
@@ -34,7 +35,7 @@ public class ElementQuery {
 		WebDriver getDriver();
 	}
 
-	public class RequiredlementNotFound implements ProcessObservable {
+	public class RequiredlementNotFound implements GlobalObservable.Debug {
 	}
 
 	class RequiredElementNotFoundException extends RuntimeException {

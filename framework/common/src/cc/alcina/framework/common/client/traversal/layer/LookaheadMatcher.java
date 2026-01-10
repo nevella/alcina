@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
@@ -246,7 +247,7 @@ public abstract class LookaheadMatcher<C> {
 			return this;
 		}
 
-		public class MatchStat implements ProcessObservable {
+		public class MatchStat implements GlobalObservable.Debug {
 			public long nanos;
 
 			MatchStat(long nanos) {

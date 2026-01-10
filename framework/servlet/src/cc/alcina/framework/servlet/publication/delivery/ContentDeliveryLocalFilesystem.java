@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -37,7 +37,7 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 	static Logger logger = LoggerFactory
 			.getLogger(ContentDeliveryLocalFilesystem.class);
 
-	public static class FileGenerated implements ContextObservers.Observable {
+	public static class FileGenerated implements ContextObservable {
 		public String path;
 
 		public FileGenerated(File file) {

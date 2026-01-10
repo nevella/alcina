@@ -18,6 +18,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -39,7 +40,7 @@ import cc.alcina.framework.servlet.sync.TreeSync.SyncAction.Type;
  * 
  *
  */
-public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
+public class TreeSync<T extends TreeSyncable> implements ContextObservable {
 	public static TreeSync.SyncContainer createDummyContainer() {
 		TreeSync sync = new TreeSync(null, null);
 		return sync.createDummyContainer0();
@@ -156,7 +157,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		U prepare0(Context context, U u, boolean from);
 
 		public class Context<U extends TreeSyncable>
-				implements ProcessObservable {
+				implements ContextObservable {
 			public U prepared;
 
 			public U value;
@@ -476,7 +477,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		}
 
 		public static class Operation<U extends TreeSyncable>
-				implements ProcessObservable {
+				implements ContextObservable {
 			public U left;
 
 			public U right;
@@ -668,7 +669,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			return Ax.format("[%s :: %s]", left, right);
 		}
 
-		public class Processed implements ProcessObservable {
+		public class Processed implements ContextObservable {
 			public int depth() {
 				return node.depth();
 			}

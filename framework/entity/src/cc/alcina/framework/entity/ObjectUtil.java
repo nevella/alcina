@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -100,7 +101,7 @@ public class ObjectUtil {
 				withShallowCopiedCollections, null);
 	}
 
-	public static class CopyObservable implements ProcessObservable {
+	public static class CopyObservable implements GlobalObservable.Debug {
 		public Object fromInstance;
 
 		public Object toInstance;

@@ -3,6 +3,14 @@ package cc.alcina.framework.common.client.process;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.util.Ax;
 
+/**
+ * No type should directly implement this - rather it should implement either
+ * {@link GlobalObservable} or {@link ContextObservable}
+ * 
+ * <p>
+ * The former are designed for logging/debugging -OR- app-wide pub-sub - the
+ * latter for stack-shaped process implementation
+ */
 public interface ProcessObservable {
 	public static class Id {
 		static SequentialIdGenerator generator = new SequentialIdGenerator();

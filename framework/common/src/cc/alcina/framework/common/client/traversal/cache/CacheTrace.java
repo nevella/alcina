@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -65,7 +66,7 @@ public class CacheTrace {
 				: "<disabled>";
 	}
 
-	public static class CacheEvent implements ProcessObservable {
+	public static class CacheEvent implements GlobalObservable.Debug {
 		public static void publish(String template,
 				Supplier<?>... argSuppliers) {
 			ProcessObservers.context()

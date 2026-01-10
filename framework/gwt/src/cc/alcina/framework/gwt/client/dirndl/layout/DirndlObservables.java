@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -39,7 +40,7 @@ public class DirndlObservables {
 		}
 	}
 
-	public static class ResolveAnnotations0 implements ProcessObservable {
+	public static class ResolveAnnotations0 implements GlobalObservable.Debug {
 		public Class<? extends Annotation> annotationClass;
 
 		public AnnotationLocation location;
@@ -57,7 +58,7 @@ public class DirndlObservables {
 		}
 	}
 
-	public static class Observable implements ProcessObservable {
+	public static class Observable implements GlobalObservable.Debug {
 		final DirectedLayout.Node node;
 
 		DirectedLayout.RendererInput input;

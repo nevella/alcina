@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
@@ -194,7 +195,7 @@ public class BranchingParser {
 		}
 	}
 
-	public class BeforeBranchEntry implements ProcessObservable {
+	public class BeforeBranchEntry implements GlobalObservable.Debug {
 		public Branch branch;
 
 		public BeforeBranchEntry(Branch branch) {
@@ -206,7 +207,7 @@ public class BranchingParser {
 		}
 	}
 
-	public class BeforeTokenMatch implements ProcessObservable {
+	public class BeforeTokenMatch implements GlobalObservable.Debug {
 		public Branch branch;
 
 		public Token token;

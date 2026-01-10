@@ -4,11 +4,12 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
-public abstract class MvccObservable implements ProcessObservable {
+public abstract class MvccObservable implements GlobalObservable.Debug {
 	public MvccEvent event;
 
 	public MvccEvent getEvent() {

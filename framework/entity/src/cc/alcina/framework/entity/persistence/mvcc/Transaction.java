@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -62,13 +62,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
  * the logic of the optimisation holds.
  */
 public class Transaction implements Comparable<Transaction> {
-	public class PreCommitObservable implements ContextObservers.Observable {
+	public class PreCommitObservable implements ContextObservable {
 		public Transaction getTransaction() {
 			return Transaction.this;
 		}
 	}
 
-	public class PreEndObservable implements ContextObservers.Observable {
+	public class PreEndObservable implements ContextObservable {
 		public Transaction getTransaction() {
 			return Transaction.this;
 		}

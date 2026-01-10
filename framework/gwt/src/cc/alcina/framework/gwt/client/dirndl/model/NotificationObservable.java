@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
@@ -15,8 +15,7 @@ import cc.alcina.framework.gwt.client.logic.LogLevel;
  * Single-threaded (GWT) clients should register as a base observer on c
  */
 @Reflected
-public class NotificationObservable
-		implements ContextObservers.Observable.Base {
+public class NotificationObservable implements ContextObservable.Base {
 	/**
 	 * NOTE! This will return a Notification<b>Context</b>Observable if in a
 	 * romcom environment

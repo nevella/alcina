@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.Configuration;
@@ -14,6 +15,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.C
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResultsReuse;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
+import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentRemoteLoader.LoadedWithClear;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.FsObjectCache;
@@ -57,7 +59,7 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 		}
 	}
 
-	public static class LoadedWithClear implements ProcessObservable {
+	public static class LoadedWithClear implements GlobalObservable {
 	}
 
 	void refresh() {
