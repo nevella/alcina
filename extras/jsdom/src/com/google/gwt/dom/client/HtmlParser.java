@@ -260,7 +260,7 @@ public class HtmlParser {
 			return isSelfClosingTagLc(lcTag);
 		} else {
 			int scanIdx = idx;
-			int length = html.length();
+			int length = markup.length();
 			/*
 			 * the constant '4' makes sense if you think about how ends could
 			 * influence this (minimal case, markup ends with </a> - length 4 -
@@ -268,23 +268,23 @@ public class HtmlParser {
 			 * affecting the result)
 			 */
 			while (scanIdx < length - 4) {
-				char c = html.charAt(scanIdx++);
+				char c = markup.charAt(scanIdx++);
 				if (c == '<') {
-					char c1 = html.charAt(scanIdx++);
+					char c1 = markup.charAt(scanIdx++);
 					if (c1 == '/') {
 						/*
 						 * check if this closes an A tag branch
 						 */
-						char c2 = html.charAt(scanIdx++);
+						char c2 = markup.charAt(scanIdx++);
 						if (c2 == 'a' || c2 == 'A') {
-							char c3 = html.charAt(scanIdx++);
+							char c3 = markup.charAt(scanIdx++);
 							if (c3 == '>') {
 								return false;
 							}
 						}
 					} else {
 						if (c1 == 'a' || c1 == 'A') {
-							char c2 = html.charAt(scanIdx++);
+							char c2 = markup.charAt(scanIdx++);
 							// if either end of (start) tag or start of
 							// attributes, it's another <A>
 							if (c2 == '>' || c2 == ' ') {
