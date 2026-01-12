@@ -11,7 +11,6 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.place.shared.Place;
-import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.History;
@@ -42,7 +41,6 @@ import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus.QueuedEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -305,6 +303,17 @@ public abstract class Client implements ContextFrame {
 		return (P) get().pendingPlace;
 	}
 
+	/**
+	 * <p>
+	 * An important abstraction optimising render queueing:
+	 * 
+	 * <p>
+	 * Only execute the runnable once there's a no-cost way of accessing
+	 * currently generated element state. So only execute the runnable once
+	 * local dom changes have been flushed to the remote dom - and in the case
+	 * of Romcom, once the UI offsets of those dom changes have been returned
+	 * from the browser client
+	 */
 	public static class RenderState {
 		/**
 		 * 
@@ -313,6 +322,10 @@ public abstract class Client implements ContextFrame {
 		 *            once per dispatch cycle)
 		 */
 		public static void queueWithRenderedState(Runnable runnable) {
+			/**
+			 * wip - ui2 - there *may* be a prettier environment registration
+			 * strategy (rather than isBrowser)
+			 */
 			if (Al.isBrowser()) {
 				LocalDom.onFlush(runnable);
 			} else {
@@ -320,20 +333,6 @@ public abstract class Client implements ContextFrame {
 			}
 		}
 
-		// FIXME - romcom - rather, this should wait for mutation
-		// post-state
-		/*
-		 * hmmm...I think we always have *some* windowstate - the
-		 * browser->server handshake gives us that
-		 * 
-		 * so not sure this is necessary as a general call. what state?
-		 * 
-		 * ahhh gotcha - essentially need a localdom.flush and await that
-		 * response. 200 is fine for local, and this should have an impl
-		 * involving the MessageProtocol bus for production
-		 * 
-		 * wip - ds
-		 */
 		@EnvironmentRegistration
 		public interface RomcomImpl {
 			void enqueue(Runnable runnable);

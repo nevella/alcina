@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
@@ -39,16 +39,9 @@ class Searchable extends Model.Fields {
 		return PackageProperties.searchable.instance(this);
 	}
 
-	/*
-	 * wip - ds - move to onNodeContext
-	 */
 	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-			exec(() -> properties().valueEditor().set(new ValueEditor()))
-					.dispatch();
-		}
+	public void onNodeContext(NodeContext event) {
+		properties().valueEditor().set(new ValueEditor());
 	}
 
 	class ValueEditor extends Model.All implements ContextResolver.Has {

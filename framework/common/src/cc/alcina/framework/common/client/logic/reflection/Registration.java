@@ -593,7 +593,11 @@ public @interface Registration {
 
 	/*
 	 * Marks a registration key as being required for each Environment
-	 * (server-side client emulation instance)
+	 * (server-side client emulation instance). Note that if entirely different
+	 * behaviour is required depending on whether the environment is browser or
+	 * romcom, currently use the if/else logic in say
+	 * Client.RenderState.queueWithRenderedState - even though it's very much
+	 * not ideal
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented

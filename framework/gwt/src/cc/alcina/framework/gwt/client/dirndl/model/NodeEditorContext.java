@@ -20,7 +20,7 @@ public interface NodeEditorContext {
 	boolean isRenderAsNodeEditors();
 
 	/*
-	 * wip - ds - use a service instead
+	 * wip - ds.late - use a service instead
 	 */
 	public interface Has {
 		NodeEditorContext getNodeEditorContext();
