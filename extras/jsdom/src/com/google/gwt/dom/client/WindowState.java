@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.dom.client.mutations.ElementSelectionRangeRecord;
-import com.google.gwt.dom.client.mutations.SelectionRecord;
-
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol;
 
 /**
  * <p>
@@ -46,6 +44,8 @@ public final class WindowState {
 	public AttachId activeElement;
 
 	public List<NodeUiState> nodeUiStates = new ArrayList<>();
+
+	public OffsetProtocol.OffsetsDelta offsetsDelta;
 
 	transient Map<Integer, NodeUiState> idUiState;
 

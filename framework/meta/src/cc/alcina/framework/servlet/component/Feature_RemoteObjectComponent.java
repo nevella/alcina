@@ -100,4 +100,8 @@ public interface Feature_RemoteObjectComponent extends Feature {
 	@Feature.Parent(Feature_RemoteObjectComponent.class)
 	public interface _Handoff extends Feature {
 	}
+
+	@Feature.Parent(Feature_RemoteObjectComponent.class)
+	public interface _OffsetProtocol extends Feature {
+	}
 }

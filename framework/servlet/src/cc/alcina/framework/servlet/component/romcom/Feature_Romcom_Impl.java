@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom;
 
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
@@ -30,5 +32,17 @@ public interface Feature_Romcom_Impl extends Feature {
 	 */
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _WindowState extends Feature {
+	}
+
+	/**
+	 * <p>
+	 * wip - offset.protocol - notes here
+	 * 
+	 * <ul>
+	 * <li>Revisit {@link ElementBehavior} particularly the docs
+	 * </ul>
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _OffsetProtocol extends Feature {
 	}
 }
