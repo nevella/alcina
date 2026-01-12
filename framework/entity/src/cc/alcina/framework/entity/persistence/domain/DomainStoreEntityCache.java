@@ -59,6 +59,17 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 		// domainstore init time
 	}
 
+	@Override
+	public int size(Class clazz) {
+		if (!domain.containsKey(clazz)) {
+			/*
+			 * handle queries for non-registered entity types
+			 */
+			return 0;
+		}
+		return super.size(clazz);
+	}
+
 	public void ensureVersion(Entity entity) {
 		getDomainMap(entity.entityClass()).ensureVersion(entity.getId());
 	}
