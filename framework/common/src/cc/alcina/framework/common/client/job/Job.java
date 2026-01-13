@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
+import cc.alcina.framework.common.client.domain.GraphProjectionTransient;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
@@ -121,9 +122,11 @@ public abstract class Job extends VersionableEntity<Job>
 	private String resultSerialized;
 
 	@GwtTransient
+	@GraphProjectionTransient
 	private Object largeResult;
 
 	@GwtTransient
+	@GraphProjectionTransient
 	private String largeResultSerialized;
 
 	private String processStateSerialized;
