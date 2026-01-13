@@ -69,7 +69,11 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 				.withContextClassloader(getClass().getClassLoader())
 				.call(() -> {
 					try {
-						return Io.read().file(cacheFile).asObject();
+						if (cacheFile.exists()) {
+							return Io.read().file(cacheFile).asObject();
+						} else {
+							return new ClassMetadataCache();
+						}
 					} catch (Exception e) {
 						if (cacheFile.exists()) {
 							cacheFile.delete();
