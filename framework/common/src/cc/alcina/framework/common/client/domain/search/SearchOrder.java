@@ -5,10 +5,15 @@ import java.util.Comparator;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 
+@Registration(SearchOrder.class)
 @Reflected
 public abstract class SearchOrder<T, V extends Comparable>
 		implements Function<T, V>, Serializable, Comparator<T>,
@@ -47,6 +52,13 @@ public abstract class SearchOrder<T, V extends Comparable>
 	}
 
 	public String provideKey() {
+		ClassReflector<? extends SearchOrder> reflector = Reflections
+				.at(getClass());
+		TypeSerialization typeSerialization = reflector
+				.annotation(TypeSerialization.class);
+		if (typeSerialization != null) {
+			return typeSerialization.value();
+		}
 		return getClass().getName();
 	}
 

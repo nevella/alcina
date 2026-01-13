@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -16,9 +17,11 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -45,12 +48,28 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
 			cmps = (Map) serializableSearchOrders.stream()
 					.collect(AlcinaCollectors.toLinkedHashMap(sso -> {
-						if (sso.getKey().contains(".")) {
-							Class clazz = Reflections.forName(sso.getKey());
+						String key = sso.getKey();
+						if (key.contains(".")) {
+							Class clazz = Reflections.forName(key);
 							return (SearchOrder) Reflections.newInstance(clazz);
 						} else {
+							Optional<Class<? extends SearchOrder>> typeSerializationMatch = Registry
+									.query(SearchOrder.class).registrations()
+									.filter(orderClass -> {
+										String typeKey = Reflections
+												.at(orderClass)
+												.annotationOptional(
+														TypeSerialization.class)
+												.map(TypeSerialization::value)
+												.orElse(null);
+										return Objects.equals(typeKey, key);
+									}).findFirst();
+							if (typeSerializationMatch.isPresent()) {
+								return Reflections.newInstance(
+										typeSerializationMatch.get());
+							}
 							DisplaySearchOrder displaySearchOrder = new DisplaySearchOrder();
-							displaySearchOrder.setFieldName(sso.getKey());
+							displaySearchOrder.setFieldName(key);
 							return displaySearchOrder;
 						}
 					}, sso -> sso.isAscending()));
@@ -236,6 +255,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		}
 	}
 
+	@TypeSerialization("idorder")
 	@Reflected
 	public static class IdOrder<H extends HasId> extends SearchOrder<H, Long> {
 		public IdOrder() {
@@ -247,6 +267,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		}
 	}
 
+	@TypeSerialization("modificationdateorder")
 	@Reflected
 	public static class ModifiicationDateOrder<V extends VersionableEntity>
 			extends SearchOrder<V, Date> {

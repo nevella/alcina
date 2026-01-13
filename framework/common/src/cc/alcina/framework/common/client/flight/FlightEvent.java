@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.flight;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.IdOrdered;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializationExceptionData;
@@ -10,17 +10,12 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.Handles
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 
-@Bean(PropertySource.FIELDS)
-public class FlightEvent
+public class FlightEvent extends Bindable.Fields
 		implements GlobalObservable, HandlesDeserializationException,
-		HasStringRepresentation, IdOrdered<FlightEvent> {
+		HasStringRepresentation, IdOrdered<FlightEvent>, HasId {
 	public FlightEventWrappable event;
 
 	public long id;
-
-	public long getId() {
-		return id;
-	}
 
 	public long time;
 
@@ -33,6 +28,10 @@ public class FlightEvent
 		this.event = event;
 		this.id = ProcessObservable.Id.nextId();
 		this.time = System.currentTimeMillis();
+	}
+
+	public long getId() {
+		return id;
 	}
 
 	@Override
@@ -74,5 +73,10 @@ public class FlightEvent
 	@Override
 	public String provideStringRepresentation() {
 		return event == null ? null : event.provideStringRepresentation();
+	}
+
+	@Override
+	public void setId(long id) {
+		set("id", this.id, id, () -> this.id = id);
 	}
 }

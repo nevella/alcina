@@ -1534,6 +1534,15 @@ public class FlatTreeSerializer {
 					&& value.getClass().getComponentType() == byte.class) {
 				return Base64.encodeBytes((byte[]) value);
 			} else if (value instanceof Class) {
+				/*
+				 * this would require better granularity on the deserializer (it
+				 * would need to know the generic upper bound of the class)
+				 * 
+				 * TypeSerialization typeSerialization = Annotations
+				 * .resolve((Class) value, TypeSerialization.class); return
+				 * typeSerialization != null ? typeSerialization.value() :
+				 * ((Class) value).getName();
+				 */
 				return ((Class) value).getName();
 			} else if (value instanceof BasePlace) {
 				return ((BasePlace) value).toTokenString();
