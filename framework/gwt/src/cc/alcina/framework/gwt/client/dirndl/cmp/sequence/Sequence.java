@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
@@ -34,6 +34,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * (additional). It also allows the specification of additional css/sass to
  * support the transform models
  */
+@TypeSerialization("sequence.intf")
+@Reflected
 public interface Sequence<T> {
 	List<T> getElements();
 
