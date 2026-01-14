@@ -3,12 +3,14 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol;
 
 /**
  * <p>
@@ -45,7 +47,7 @@ public final class WindowState {
 
 	public List<NodeUiState> nodeUiStates = new ArrayList<>();
 
-	public OffsetProtocol.OffsetsDelta offsetsDelta;
+	public OffsetsDelta offsetsDelta;
 
 	transient Map<Integer, NodeUiState> idUiState;
 
@@ -63,5 +65,82 @@ public final class WindowState {
 					AlcinaCollectors.toKeyMap(state -> state.element.id));
 		}
 		return idUiState.get(attachId);
+	}
+
+	@Bean(PropertySource.FIELDS)
+	public final static class OffsetsDelta {
+		public List<ElementOffsets> changes;
+
+		public Set<AttachId> removed;
+
+		/**
+		 * The data synced via the protocol
+		 */
+		@Bean(PropertySource.FIELDS)
+		public final static class ElementOffsets {
+			public static ElementOffsets of(Node node) {
+				ElementOffsets result = new ElementOffsets();
+				result.id = AttachId.forNode(node);
+				if (node instanceof Element) {
+					Element elem = (Element) node;
+					Element offsetParent = elem.getOffsetParent();
+					result.offsetParentId = AttachId.forNode(offsetParent);
+					result.offsetHeight = elem.getOffsetHeight();
+					result.offsetLeft = elem.getOffsetLeft();
+					result.offsetTop = elem.getOffsetTop();
+					result.offsetWidth = elem.getOffsetWidth();
+					result.scrollLeft = elem.getScrollLeft();
+					result.scrollTop = elem.getScrollTop();
+				}
+				return result;
+			}
+
+			public AttachId id;
+
+			public AttachId offsetParentId;
+
+			/*
+			 * these should really be doubles, but that requires a full gwt dom
+			 * rework
+			 */
+			public int offsetLeft;
+
+			public int offsetWidth;
+
+			public int offsetTop;
+
+			public int offsetHeight;
+
+			public int scrollLeft;
+
+			public int scrollTop;
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof ElementOffsets) {
+					ElementOffsets o = (ElementOffsets) obj;
+					return Objects.equals(id, o.id) && Objects.equals(id, o.id)
+							&& offsetHeight == o.offsetHeight
+							&& offsetLeft == o.offsetLeft
+							&& offsetTop == o.offsetTop
+							&& offsetWidth == o.offsetWidth
+							&& scrollLeft == o.scrollLeft
+							&& scrollTop == o.scrollTop;
+				} else {
+					return false;
+				}
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(id, offsetParentId, offsetLeft, offsetWidth,
+						offsetTop, offsetHeight, scrollLeft, scrollTop);
+			}
+		}
+
+		public String toSizes() {
+			return Ax.format("changes: %s - removed: %s", changes.size(),
+					removed.size());
+		}
 	}
 }

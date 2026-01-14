@@ -28,6 +28,7 @@ import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComp
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Mutations;
@@ -119,7 +120,7 @@ public class ClientRpc implements HandlerContext {
 
 	WindowState generateWindowState() {
 		WindowState windowState = new WindowStateGenerator(
-				ui.offsetObservedElements).generate();
+				ui.offsetObservedElements, offsetRegistry).generate();
 		return windowState;
 	}
 
@@ -132,6 +133,8 @@ public class ClientRpc implements HandlerContext {
 	ExceptionHandler exceptionHandler;
 
 	RemoteComponentUi ui;
+
+	OffsetProtocol.OffsetRegistry offsetRegistry = new OffsetProtocol.OffsetRegistry();
 
 	ClientRpc(RemoteComponentUi ui) {
 		this.ui = ui;

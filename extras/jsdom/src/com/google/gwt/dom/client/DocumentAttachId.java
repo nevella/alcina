@@ -888,6 +888,9 @@ public class DocumentAttachId extends NodeAttachId
 	public void onRemoteUiContextReceived(WindowState windowState) {
 		logger.debug("received window.state [observed offsets] {}",
 				windowState.nodeUiStates.size());
+		Ax.out("windowState counts: nodeUiStates: %s - deltas: %s",
+				windowState.nodeUiStates.size(),
+				windowState.offsetsDelta.toSizes());
 		invokeProxy.windowState = windowState;
 	}
 
