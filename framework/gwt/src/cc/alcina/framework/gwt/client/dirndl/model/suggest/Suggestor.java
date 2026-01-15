@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -29,6 +30,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValue;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.Markup;
@@ -60,9 +62,18 @@ public class Suggestor extends Model implements
 		ModelEvents.Closed.Handler, Model.TransmitState {
 	// FIXME - dirndl 1x1e - add a default impl, which routes via a Debounce
 	// (which doesn't send if inflight, but has a timeout)
+	/**
+	 * A router - either synchronous or async - that routes an Ask (such as "how
+	 * high?") via some sort of answers provider to an answersHandler
+	 */
 	public interface Answer<A extends Ask> {
 		public void ask(A ask, Consumer<Answers> answersHandler,
 				Consumer<Throwable> exceptionHandler);
+	}
+
+	public interface SuggestOracleRouter<A extends Ask> {
+		public void ask(DirectedLayout.Node node, A ask,
+				Consumer<SuggestOracle.Response> responseHandler);
 	}
 
 	public static class Answers {

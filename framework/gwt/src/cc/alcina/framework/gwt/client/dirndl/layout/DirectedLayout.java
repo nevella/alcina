@@ -40,7 +40,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.AttributeTemplate;
 import cc.alcina.framework.common.client.reflection.ClassReflector;

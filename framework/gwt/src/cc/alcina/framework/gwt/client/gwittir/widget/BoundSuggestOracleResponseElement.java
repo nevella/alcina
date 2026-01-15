@@ -5,6 +5,7 @@ import java.io.Serializable;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.domain.HasObject;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -27,7 +28,7 @@ public interface BoundSuggestOracleResponseElement {
 	}
 
 	public static class UntypedSuggestion extends Bindable.Fields
-			implements Suggestion, Serializable {
+			implements Suggestion, Serializable, HasObject {
 		public UntypedSuggestion() {
 		}
 
@@ -48,6 +49,11 @@ public interface BoundSuggestOracleResponseElement {
 		public String getReplacementString() {
 			throw new UnsupportedOperationException(
 					"Unimplemented method 'getReplacementString'");
+		}
+
+		@Override
+		public Object provideObject() {
+			return suggestion;
 		}
 	}
 

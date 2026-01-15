@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafTransforms;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -33,6 +34,11 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 	@Override
 	public ModelTransform<FlightEvent, Model> getDetailTransform() {
 		return FlightEventRow::new;
+	}
+
+	@Override
+	public SequenceSearchDefinition getDefaultSearchDefinition() {
+		return new FlightEventSearchDefinition();
 	}
 
 	@Override

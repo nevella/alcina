@@ -368,5 +368,19 @@ public abstract class SuggestOracle {
 		 *         this suggestion is selected
 		 */
 		String getReplacementString();
+
+		/**
+		 * Allow a type to be returned from a suggestoracle but without
+		 * implementing the display methods
+		 */
+		public interface Noop extends Suggestion {
+			default String getDisplayString() {
+				return null;
+			}
+
+			default String getReplacementString() {
+				return null;
+			}
+		}
 	}
 }

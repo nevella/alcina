@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.logic.domain.HasObject;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.StringAskAnswer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
@@ -25,7 +26,7 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
  * the Choices), filter the ask answers by existing choices
  */
 public class ChoiceSuggestor extends DecoratorSuggestor {
-	ChoiceEditor choiceEditor;
+	ChoiceEditor<?> choiceEditor;
 
 	ChoiceSuggestor(ChoiceEditor choiceSuggestions,
 			ContentDecorator contentDecorator, DomNode decoratorNode) {
@@ -42,7 +43,7 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 	}
 
 	/*
-	 * Gets a list of Answer objects (wrapping JadeUser objects) that match the
+	 * Gets a list of Answer objects (wrapping returned objects) that match the
 	 * decorator text
 	 */
 	class AnswerImpl implements Answer<StringAsk> {
@@ -51,15 +52,20 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 		@Override
 		public void ask(StringAsk ask, Consumer<Answers> answersHandler,
 				Consumer<Throwable> exceptionHandler) {
-			// FIXME - FN - there's probably more layers here than needed. First
-			// step (funny that): docco the process
-			/*
-			 * Enums or suchlike
-			 */
-			List<?> values = choiceEditor.getValues();
-			SuggestOracle.Response response = StringAskAnswer
-					.selectValues(values, ask);
-			handleSuggestionResponse(ask, answersHandler, response);
+			if (choiceEditor.suggestOracleRouter != null) {
+				choiceEditor.suggestOracleRouter.ask(provideNode(), ask,
+						response -> handleSuggestionResponse(ask,
+								answersHandler,
+								(SuggestOracle.Response) response));
+			} else {
+				/*
+				 * Enums or suchlike
+				 */
+				List<?> values = choiceEditor.getValues();
+				SuggestOracle.Response response = StringAskAnswer
+						.selectValues(values, ask);
+				handleSuggestionResponse(ask, answersHandler, response);
+			}
 		}
 
 		protected void handleSuggestionResponse(StringAsk ask,
@@ -67,8 +73,8 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 				SuggestOracle.Response response) {
 			Collection<? extends Suggestion> suggestions = response
 					.getSuggestions();
-			List<?> suggestedObjects = suggestions.stream().map(
-					s -> ((BoundSuggestOracleResponseElement.UntypedSuggestion) s).suggestion)
+			List<?> suggestedObjects = suggestions.stream()
+					.map(s -> ((HasObject) s).provideObject())
 					.collect(Collectors.toList());
 			/*
 			 * see DecoratorBehavior.RepeatableChoiceHandling

@@ -37,9 +37,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
  */
 @Directed(className = "decorator-node")
 @TypedProperties
-public abstract class DecoratorNode<WT, SR> extends FragmentNode
-		implements HasStringRepresentableType<SR>, FragmentIsolate,
-		HasContentEditable, Binding.TabIndexMinusOne {
+public abstract class DecoratorNode<WT, SR> extends EditNode
+		implements HasStringRepresentableType<SR>, FragmentIsolate {
 	static boolean isNonEditable(FragmentNode node) {
 		return node instanceof DecoratorNode
 				&& !((DecoratorNode) node).contentEditable;
@@ -106,84 +105,34 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		}
 	}
 
-	/*
-	 * WIP - the internal model of the decorator. Normally this is just a simple
-	 * text node
-	 */
-	class InternalModel extends FragmentModel {
-		InternalModel(Model rootModel) {
-			super(rootModel);
-		}
-	}
-
 	protected PackageProperties._DecoratorNode.InstanceProperties properties() {
 		return PackageProperties.decoratorNode.instance(this);
 	}
 
-	InternalModel internalModel;
-
-	@Binding(
-		type = Type.PROPERTY,
-		to = "contentEditable",
-		transform = Binding.DisplayFalseTrueBidi.class)
-	public boolean contentEditable;
-
-	@Binding(type = Type.CSS_CLASS)
-	public boolean selected;
-
+	/*
+	 * wip - dn
+	 */
 	@Binding(type = Type.INNER_TEXT)
 	public String content = null;
 
-	@Directed
-	public Object contentModel;
-
+	/**
+	 * The serialized form of the object this decorator represents (in
+	 * combination with the decorator tagname)
+	 */
 	@Binding(
 		type = Type.PROPERTY,
-		to = "uid",
+		to = "_data",
 		transform = RepresentableToStringTransform.class)
 	public SR stringRepresentable;
-
-	@Binding(
-		type = Type.PROPERTY,
-		to = DecoratorBehavior.InterceptUpDownBehaviour.ATTR_NAME)
-	public boolean isMagicName() {
-		return true;
-	}
 
 	public DecoratorNode() {
 		from(properties().contentEditable())
 				.accept(this::notifyContentEditableDelta);
 	}
 
-	void updateSelected() {
-		Selection selection = Document.get().getSelection();
-		boolean selected = selection.hasSelection() && !selection.isCollapsed()
-				&& selection.asRange()
-						.contains(provideElement().asDomNode().asRange());
-		properties().selected().set(selected);
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		new DecoratorEvent()
-				.withType(event.isBound() ? DecoratorEvent.Type.node_bound
-						: DecoratorEvent.Type.node_unbound)
-				.withSubtype(NestedName.get(this)).withMessage(content)
-				.publish();
-	}
-
 	@Override
 	public Class<SR> stringRepresentableType() {
 		return Reflections.at(this).getGenericBounds().bounds.get(1);
-	}
-
-	@Override
-	public FragmentModel getFragmentModel() {
-		if (internalModel == null) {
-			internalModel = new InternalModel(this);
-		}
-		return internalModel;
 	}
 
 	/*
@@ -201,34 +150,11 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		String triggerSequence = getDescriptor().triggerSequence();
 		Object renderedReferenced = ((Function) getDescriptor().itemRenderer())
 				.apply(referenced);
-		if (renderedReferenced instanceof String) {
-			String text = triggerSequence + renderedReferenced;
-			properties().content().set(text);
-			properties().contentModel().set(null);
-		} else {
-			properties().content().set(null);
-			properties().contentModel().set(renderedReferenced);
-		}
+		String text = triggerSequence + renderedReferenced;
+		properties().content().set(text);
 	}
 
-	public void toNonEditable() {
-		properties().contentEditable().set(false);
-	}
-
-	@Override
-	public boolean provideIsContentEditable() {
-		return contentEditable;
-	}
-
-	void notifyContentEditableDelta(boolean contentEditable) {
-		new DecoratorEvent().withType(DecoratorEvent.Type.editable_attr_changed)
-				.withSubtype(NestedName.get(this))
-				.withMessage(
-						Ax.format("[-->%s] :: %s", contentEditable, content))
-				.publish();
-	}
-
-	boolean isValid() {
+	public boolean isValid() {
 		// FIXME - DN server shd validate entity on update. and other
 		// validations (e.g. not contained in a decorator)
 		return stringRepresentable != null;

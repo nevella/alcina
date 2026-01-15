@@ -68,6 +68,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode.Transfo
  * Implementation - this is in layout rather than the model/fragment package to
  * allow access to package-protected aspects of DirectedLayout.Node
  */
+/*
+ * FIXME - note that FragmentNodes must not have directed properties (should be
+ * enforced in code), unless it is also a FragmentIsolate. Descendant nodes
+ * should be instead added during #onFragmentRegistration
+ */
 @Transformer(NodeTransformer.DirectedTransformer.class)
 @Directed
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)

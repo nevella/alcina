@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public class SequenceComponent extends Model.Fields
 		implements Binding.TabIndexZero, SequenceArea.Service.Provider,
 		SequenceEvents.NavigateToNewSequencePlace.Handler,
-		HasFilteredSequenceElements {
+		HasFilteredSequenceElements, SequenceEvents.SequenceChanged.Emitter {
 	class SequenceAreaServiceImpl implements SequenceArea.Service {
 		SequenceAreaServiceImpl() {
 		}

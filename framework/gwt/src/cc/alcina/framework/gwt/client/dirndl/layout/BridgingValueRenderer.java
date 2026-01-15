@@ -327,7 +327,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 				 * (that's checked in
 				 * BridgingValueRenderer.ValueResolver.contextAnnotation above)
 				 */
-				Model displayModel = (Model) event.model;
+				Model displayModel = (Model) event.getModel();
 				/*
 				 *
 				 */

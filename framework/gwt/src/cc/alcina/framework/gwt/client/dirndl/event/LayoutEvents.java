@@ -46,8 +46,6 @@ public class LayoutEvents {
 	 *
 	 */
 	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
-		public Object model;
-
 		public Node node;
 
 		public BeforeRender(DirectedLayout.Node node, Object model) {
@@ -67,6 +65,10 @@ public class LayoutEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onBeforeRender(BeforeRender event);
+		}
+
+		public Object getModel() {
+			return model;
 		}
 	}
 
@@ -186,8 +188,6 @@ public class LayoutEvents {
 	 * communication from the _ancestor_
 	 */
 	public static class EmitDescent extends LayoutEvent<EmitDescent.Handler> {
-		public Object model;
-
 		public Node node;
 
 		public EmitDescent(DirectedLayout.Node node, Object model) {

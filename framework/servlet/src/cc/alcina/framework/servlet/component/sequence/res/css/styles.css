@@ -195,26 +195,30 @@ bean-editor.no-labels form label {
   display: none;
 }
 bean-editor.single-line {
-  display: inline-block;
+  display: block;
   flex: 1;
   min-width: auto;
   width: 100%;
+  padding: 0;
 }
-bean-editor.single-line form {
+bean-editor.single-line > form {
   display: flex;
 }
-bean-editor.single-line form section {
+bean-editor.single-line > form > section {
   display: inline-block;
   flex: 1;
 }
-bean-editor.single-line form section form-element,
-bean-editor.single-line form section select {
+bean-editor.single-line > form > section > form-element, bean-editor.single-line > form > section select {
   display: inline-block;
 }
-bean-editor.single-line form section form-element {
+bean-editor.single-line > form > section > form-element {
   padding-right: 1rem;
 }
-bean-editor.single-line form actions {
+bean-editor.single-line > form > section > form-element > label {
+  display: inline-block;
+  padding-right: 0.5rem;
+}
+bean-editor.single-line > form actions {
   display: inline-block;
   margin: 0;
 }
@@ -509,7 +513,7 @@ body > page {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: auto;
   grid-template-areas: "header header header header" "sequence sequence sequence detail";
-  grid-template-rows: 50px 1fr 260px;
+  grid-template-rows: 50px 1fr;
   height: 100vh;
   width: 100vw;
   background: #ccc;
@@ -540,9 +544,10 @@ body > page > sequence {
 }
 body > page > sequence > table {
   border-spacing: 0;
+  min-width: 100%;
 }
 body > page > sequence > table > tbody > tr:nth-of-type(even) {
-  background-color: #f3f3fa;
+  background-color: #f7f9ff;
 }
 body > page > sequence > table > tbody > tr:first-of-type td {
   padding-top: 8px;
@@ -641,7 +646,7 @@ body > page > header {
   font-family: Arial;
   display: grid;
   align-items: center;
-  grid-template-columns: 1fr 34rem 1fr;
+  grid-template-columns: 1fr 68rem 1fr;
   grid-template-areas: "left mid right";
   align-content: center;
   box-sizing: border-box;
@@ -682,6 +687,16 @@ body > page > header > mid {
   grid-area: mid;
   display: flex;
   justify-content: center;
+  gap: 1rem;
+}
+body > page > header > mid > search-definition-editor {
+  display: block;
+  background-color: rgba(255, 255, 255, 0.5);
+  min-width: 10rem;
+}
+body > page > header > mid > search-definition-editor edit:empty:before {
+  content: "Search filters";
+  color: #777;
 }
 body > page > header > right {
   justify-content: flex-end;
@@ -1088,4 +1103,99 @@ overlay.pre-text pre-text {
   background: white;
   display: block;
   user-select: text;
+}
+
+choice-editor > edit {
+  font-size: 16px;
+  color: #666;
+  width: 100%;
+  background-color: transparent;
+  border: solid 1px transparent;
+  font-family: "Helvetica Neue", Arial;
+  resize: none;
+  padding: 0.4rem 0.4rem;
+  box-sizing: border-box;
+  border-color: #aaa;
+  background-color: #ffffff20;
+  display: block;
+  color: #333;
+  height: 100%;
+  line-height: 145%;
+  width: 30rem;
+}
+choice-editor > edit::-webkit-input-placeholder {
+  color: transparent;
+}
+choice-editor > edit:focus::-webkit-input-placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+choice-editor > edit:hover {
+  border-color: #aaa;
+  background-color: #ffffff20;
+}
+choice-editor > edit:focus {
+  border-color: #555;
+  background-color: #FFF;
+}
+choice-editor > edit choice-node {
+  white-space: nowrap;
+}
+choice-editor > edit choice-node:not([contenteditable=false]):first-child {
+  display: inline-block;
+  margin-right: 3px;
+  min-height: 16px;
+  min-width: 1px;
+}
+choice-editor > edit choice-node:not([contenteditable=false]):first-child + choice-node[contenteditable=false] {
+  margin-left: 0;
+}
+choice-editor > edit choice-node[contenteditable=false] {
+  background: none;
+  border-radius: 4px;
+  border: solid 1px #333;
+  padding: 2px 6px;
+  margin: 0 4px;
+  user-select: all;
+  outline: none;
+}
+choice-editor > edit choice-node[contenteditable=false].selected, choice-editor > edit choice-node[contenteditable=false]:focus {
+  border-color: #77e;
+  color: #77e;
+}
+choice-editor > edit choice-node[contenteditable=false].selected::selection, choice-editor > edit choice-node[contenteditable=false]:focus::selection {
+  background-color: transparent;
+}
+
+overlay > .decorator-suggestor {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  display: block;
+  width: 20rem;
+  padding: 0;
+}
+overlay > .decorator-suggestor > suggestor {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+overlay > .decorator-suggestor > suggestor > results {
+  display: contents;
+}
+overlay > .decorator-suggestor > suggestor > choice, overlay > .decorator-suggestor > suggestor > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+}
+overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-suggestor > suggestor > choice[index-selected], overlay > .decorator-suggestor > suggestor > results > choice:hover, overlay > .decorator-suggestor > suggestor > results > choice[index-selected] {
+  background-color: #00000010;
 }

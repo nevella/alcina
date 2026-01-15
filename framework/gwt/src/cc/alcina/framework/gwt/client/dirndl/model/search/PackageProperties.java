@@ -16,12 +16,10 @@ public class PackageProperties {
     static _Searchable searchable = new _Searchable();
     
     public static class _SearchDefinitionEditor implements TypedProperty.Container {
-      public TypedProperty<SearchDefinitionEditor, String> ed = new TypedProperty<>(SearchDefinitionEditor.class, "ed");
       public TypedProperty<SearchDefinitionEditor, SearchDefinition> searchDefinition = new TypedProperty<>(SearchDefinitionEditor.class, "searchDefinition");
       public TypedProperty<SearchDefinitionEditor, List> searchables = new TypedProperty<>(SearchDefinitionEditor.class, "searchables");
       public static class InstanceProperties extends InstanceProperty.Container<SearchDefinitionEditor> {
         public  InstanceProperties(SearchDefinitionEditor source){super(source);}
-        public InstanceProperty<SearchDefinitionEditor, String> ed(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditor.ed);}
         public InstanceProperty<SearchDefinitionEditor, SearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditor.searchDefinition);}
         public InstanceProperty<SearchDefinitionEditor, List> searchables(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditor.searchables);}
       }

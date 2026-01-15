@@ -1,16 +1,26 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -18,11 +28,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 
 /**
  * <p>
@@ -113,6 +126,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	transient KeyboardNavigation keyboardNavigation;
 
+	SuggestOracleRouter suggestOracleRouter;
+
 	public ChoiceEditor() {
 		editArea = new EditArea();
 		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
@@ -120,6 +135,39 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		bindings().from(editArea).on(EditArea.properties.value)
 				.withSetOnInitialise(false).signal(this::onEditCommit);
 		decorators.add(createChoiceDecorator());
+	}
+
+	/*
+	 * this *may* be called twice - but this is interim, pending a think about
+	 * how to resolve annotations along a transformation chain - and this is
+	 * linked to annotation ResolutionHistory
+	 * 
+	 * 
+	 * 
+	 * wip - dirndl.transform
+	 */
+	@Override
+	protected void populateFromNodeContext(Node node,
+			Predicate<T> valueFilter) {
+		Optional<Class<? extends SuggestOracleRouter>> routerTypeOptional = node
+				.optional(RouterType.class).map(RouterType::value);
+		SuggestOracleRouter suggestOracleRouter = routerTypeOptional
+				.map(Reflections::newInstance).orElse(null);
+		if (suggestOracleRouter != null) {
+			this.suggestOracleRouter = suggestOracleRouter;
+		}
+		super.populateFromNodeContext(node, valueFilter);
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface RouterType {
+		/**
+		 * The answer type
+		 */
+		Class<? extends SuggestOracleRouter> value();
 	}
 
 	@Override
@@ -184,6 +232,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	public void validateDecorators() {
 	}
 
+	protected abstract void onSelectedValues(List<T> selectedValues);
+
 	void onEditCommit() {
 		List<T> selectedValues = getEditorValues();
 		onSelectedValues(selectedValues);
@@ -196,8 +246,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.filter(Objects::nonNull).map(this::selectedValueFromString)
 				.collect(Collectors.toList());
 	}
-
-	protected abstract void onSelectedValues(List<T> selectedValues);
 
 	T selectedValueFromString(String uid) {
 		return getValues().stream().filter(

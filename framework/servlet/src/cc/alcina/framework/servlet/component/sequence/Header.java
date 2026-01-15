@@ -7,10 +7,16 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.Help;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SequenceChanged;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.search.SearchDefinitionEditor;
 
 @TypedProperties
 class Header extends Model.All {
@@ -59,11 +65,52 @@ class Header extends Model.All {
 		}
 	}
 
-	class Mid extends Model.All {
+	@TypedProperties
+	class Mid extends Model.All
+			implements SequenceEvents.SequenceChanged.Handler {
+		PackageProperties._Header_Mid.InstanceProperties properties() {
+			return PackageProperties.header_mid.instance(this);
+		}
+
 		AppSuggestorSequence suggestor;
+
+		@Directed.Transform(SearchDefinitionEditor.class)
+		SequenceSearchDefinition searchDefinition;
 
 		Mid() {
 			suggestor = new AppSuggestorSequence();
+			from(page.ui.subtypeProperties().place())
+					.accept(this::updateSearchDefinitionFromPlace);
+		}
+
+		void updateSearchDefinitionFromPlace(SequencePlace place) {
+			if (place.search != null) {
+				properties().searchDefinition().set(place.search);
+			}
+		}
+
+		@Override
+		public void onSequenceChanged(SequenceChanged event) {
+			Sequence sequence = event.getModel();
+			if (sequence == null) {
+				properties().searchDefinition().set(null);
+				return;
+			}
+			if (searchDefinition != null && searchDefinition
+					.sequenceClass() != sequence.getClass()) {
+				properties().searchDefinition().set(null);
+				return;
+			}
+			SequenceSearchDefinition defaultSearchDefinition = sequence
+					.getDefaultSearchDefinition();
+			if (defaultSearchDefinition != null) {
+				boolean set = searchDefinition == null || searchDefinition
+						.getClass() != defaultSearchDefinition.getClass();
+				if (set) {
+					properties().searchDefinition()
+							.set(defaultSearchDefinition);
+				}
+			}
 		}
 	}
 

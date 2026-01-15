@@ -306,6 +306,7 @@ public class SequenceArea extends Model.Fields
 		properties().sequence().set(sequence);
 		List<?> filteredSequenceElements = filteredSequenceElements(sequence);
 		properties().filteredSequenceElements().set(filteredSequenceElements);
+		emitEvent(SequenceEvents.SequenceChanged.class, sequence);
 	}
 
 	void derefOracleQuery() {

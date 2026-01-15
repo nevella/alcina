@@ -152,4 +152,26 @@ public class SequenceEvents {
 			}
 		}
 	}
+
+	public static class SequenceChanged extends
+			ModelEvent.DescendantEvent<Sequence, SequenceChanged.Handler, SequenceChanged.Emitter> {
+		@Override
+		public void dispatch(SequenceChanged.Handler handler) {
+			handler.onSequenceChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSequenceChanged(SequenceChanged event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSequenceChanged(SequenceChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
 }

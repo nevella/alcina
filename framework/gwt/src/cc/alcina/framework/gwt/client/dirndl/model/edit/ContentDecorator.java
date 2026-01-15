@@ -10,9 +10,11 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Selection;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
@@ -32,9 +34,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.Descriptor;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
@@ -124,6 +128,39 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
 		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler,
 		DomEvents.Focusout.Handler {
+	public static class Builder<T> {
+		HasDecorators decoratorParent;
+
+		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
+
+		DecoratorNode.Descriptor<?, ?, ?> descriptor;
+
+		public ContentDecorator build() {
+			Preconditions.checkNotNull(decoratorParent);
+			Preconditions.checkState(decoratorParent instanceof Model);
+			Preconditions.checkNotNull(suggestorProvider);
+			Preconditions.checkNotNull(descriptor);
+			return new ContentDecorator(this);
+		}
+
+		public void setSuggestorProvider(
+				BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider) {
+			this.suggestorProvider = suggestorProvider;
+		}
+
+		public void setDecoratorParent(HasDecorators decoratorParent) {
+			this.decoratorParent = decoratorParent;
+		}
+
+		public void
+				setDescriptor(DecoratorNode.Descriptor<?, ?, ?> descriptor) {
+			this.descriptor = descriptor;
+		}
+	}
+
+	class CancelledDecoratorSuggestion {
+	}
+
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
@@ -139,11 +176,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	 */
 	Topic<InferredDomEvents.SelectionChanged> topicSelectionChanged = Topic
 			.create();
-
-	/*
-	 * The decorator node currently being edited
-	 */
-	DecoratorNode<?, ?> decorator;
 
 	/*
 	 * The suggestor used to edit the current decorator
@@ -168,6 +200,25 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	 */
 	DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
+	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
+
+	/* reference the runnable via a field to ensure distinct() works */
+	Runnable checkTrigger0Runnable = this::checkTrigger0;
+
+	Runnable validateSelection0Runnable = this::validateSelection0;
+
+	/*
+	 * The SuggestingNode currently being edited
+	 */
+	SuggestingNode suggestingNode;
+
+	DomNode overlayEditNode;
+
+	/**
+	 * Should only be called by the builder
+	 * 
+	 * @param builder
+	 */
 	private ContentDecorator(ContentDecorator.Builder builder) {
 		/*
 		 * AttributeBehaviorHandler registration is required
@@ -178,17 +229,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		this.decoratorParent = builder.decoratorParent;
 	}
 
-	boolean canDecorate(EditSelection relativeInput) {
-		return decoratorParent.canDecorate(relativeInput);
-	}
-
 	public boolean isActive() {
 		return suggestor != null;
-	}
-
-	boolean isSpaceOrLeftBracketish(String characterString) {
-		return characterString != null
-				&& characterString.matches("[ \\u200B({\\[]");
 	}
 
 	@Override
@@ -227,64 +269,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		topicInput.publish(event);
 	}
 
-	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
-
-	class CancelledDecoratorSuggestion {
-	}
-
-	/* reference the runnable via a field to ensure distinct() works */
-	Runnable checkTrigger0Runnable = this::checkTrigger0;
-
-	Runnable validateSelection0Runnable = this::validateSelection0;
-
-	void checkTrigger() {
-		/*
-		 * handling requires mutations to be processed (and FN mutations), so
-		 * defer
-		 * 
-		 * FIXME - fn.isolate - check if this causes two sends in romcom. It may
-		 * not, if it does, look at an 'after scheduleFinally' queue
-		 */
-		Client.eventBus().queued().lambda(checkTrigger0Runnable).distinct()
-				.deferred().dispatch();
-	}
-
-	/*
- * @formatter:off
- * 
- * - populate the EditSelection
- * - if collapsed
- * - if currenttextnode matches:
- * -- preceding text matches trigger
- * -- text prior to trigger is ok punctuation (space; start-of-node; left-paren)
- * - wrap in decorator node
- * - reposition selection (ROMCOM!)
- * - show suggestion-choices
- * 
- * * @formatter:on
- */
-	void checkTrigger0() {
-		validateSelection0();
-		EditSelection selection = new EditSelection();
-		if (selection.isTriggerable() && suggestor == null) {
-			validateSelection0();
-			String triggerSequence = null;
-			if (!decoratorParent.canDecorate(selection)) {
-			} else {
-				triggerSequence = descriptor.getTriggerSequence(selection);
-			}
-			// if triggerable, wrap in the decorator tag (possiby splitting
-			// the source text node) and connect the suggestor overlay
-			// split
-			if (triggerSequence != null) {
-				FragmentModel fragmentModel = decoratorParent
-						.provideFragmentModel();
-				decorator = descriptor.splitAndWrap(selection, fragmentModel);
-				showOverlay(decorator.domNode());
-			}
-		}
-	}
-
 	@Override
 	public void onKeyDown(KeyDown event) {
 		validateSelection();
@@ -310,60 +294,35 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		}
 	}
 
-	void closeOverlay() {
-		overlay.close(null, false);
-	}
-
 	@Override
 	public void onReferenceSelected(ReferenceSelected event) {
 		if (event.getContext().getPrevious().node.getModel() == suggestor) {
-			decorator.toNonEditable();
-			decorator.putReferenced(event.getModel());
-			decorator.positionCursorPostReferencedSelection();
-		}
-	}
-
-	void refreshOverlayIfShowing() {
-		if (overlay != null) {
-			overlay.refreshPosition();
-			suggestor.refresh();
-		}
-	}
-
-	void showOverlay(DomNode decoratorDomNode) {
-		LocalDom.flush();
-		DomNode parent = decoratorDomNode.parent();
-		if (parent.tagIs("font")) {
-			// Webkit style-preserving?
-		}
-		Overlay.Attributes attributes = Overlay.attributes();
-		Element domElement = (Element) decoratorDomNode.w3cElement();
-		suggestor = suggestorProvider.apply(this, decoratorDomNode);
-		attributes.withCssClass("decorator-suggestor");
-		attributes.withConsumeSubmit(true).withFocusOnBind(false);
-		overlay = attributes
-				.dropdown(OverlayPosition.Position.START,
-						domElement.getBoundingClientRect(),
-						(Model) decoratorParent, suggestor)
-				.withRectSourceElement(domElement)
-				.withPeerModels(List.of(this.decorator)).create();
-		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
-				.publish();
-		overlay.open();
-		this.overlayEditNode = decoratorDomNode;
-	}
-
-	DomNode overlayEditNode;
-
-	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
-	void validateSelection() {
-		if (suggestor == null) {
+			// decorator.putReferenced(event.getModel());
+			// decorator.positionCursorPostReferencedSelection();
 			/*
-			 * Defer helps handle alt-shift-arrow Keyboard cursor selection -
-			 * and also adds a check for suggestor creation
+			 * nope, replace suggestingnode with decorator
 			 */
-			Client.eventBus().queued().lambda(validateSelection0Runnable)
-					.distinct().dispatch();
+			// decorator.toNonEditable();
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	@Override
+	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
+		checkOverlayValid();
+		checkTrigger();
+		topicSelectionChanged.publish(event);
+	}
+
+	@Override
+	public void onNodeDelta(NodeDelta event) {
+		refreshOverlayIfShowing();
+	}
+
+	@Override
+	public void onFocusout(Focusout event) {
+		if (overlay != null) {
+			closeOverlay();
 		}
 	}
 
@@ -397,55 +356,132 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			 */
 			fragmentModel.byTypeAssignable(DecoratorNode.class)
 					.filter(dn -> dn.contentEditable)
-					.forEach(this::stripRespectingIsolate);
+					.forEach(fragmentNode -> fragmentNode.nodes().strip());
 		}
 	}
 
-	void stripRespectingIsolate(FragmentNode node) {
-		List<? extends FragmentNode> children = node.children()
-				.collect(Collectors.toList());
-		if (node instanceof FragmentIsolate) {
-			children = ((FragmentIsolate) node).getFragmentModel().children()
-					.collect(Collectors.toList());
-		}
-		node.nodes().strip();
+	boolean canDecorate(EditSelection relativeInput) {
+		return decoratorParent.canDecorate(relativeInput);
 	}
 
-	public static class Builder<T> {
-		HasDecorators decoratorParent;
+	boolean isSpaceOrLeftBracketish(String characterString) {
+		return characterString != null
+				&& characterString.matches("[ \\u200B({\\[]");
+	}
 
-		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
+	void checkTrigger() {
+		/*
+		 * handling requires mutations to be processed (and FN mutations), so
+		 * defer
+		 * 
+		 * FIXME - fn.isolate - check if this causes two sends in romcom. It may
+		 * not, if it does, look at an 'after scheduleFinally' queue
+		 */
+		Client.eventBus().queued().lambda(checkTrigger0Runnable).distinct()
+				.deferred().dispatch();
+	}
 
-		DecoratorNode.Descriptor<?, ?, ?> descriptor;
-
-		public ContentDecorator build() {
-			Preconditions.checkNotNull(decoratorParent);
-			Preconditions.checkState(decoratorParent instanceof Model);
-			Preconditions.checkNotNull(suggestorProvider);
-			Preconditions.checkNotNull(descriptor);
-			return new ContentDecorator(this);
-		}
-
-		public void setSuggestorProvider(
-				BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider) {
-			this.suggestorProvider = suggestorProvider;
-		}
-
-		public void setDecoratorParent(HasDecorators decoratorParent) {
-			this.decoratorParent = decoratorParent;
-		}
-
-		public void
-				setDescriptor(DecoratorNode.Descriptor<?, ?, ?> descriptor) {
-			this.descriptor = descriptor;
+	/*
+ * @formatter:off
+ * 
+ * - populate the EditSelection
+ * - if collapsed
+ * - if currenttextnode matches:
+ * -- preceding text matches trigger
+ * -- text prior to trigger is ok punctuation (space; start-of-node; left-paren)
+ * - wrap in decorator node
+ * - reposition selection (ROMCOM!)
+ * - show suggestion-choices
+ * 
+ * * @formatter:on
+ */
+	void checkTrigger0() {
+		validateSelection0();
+		EditSelection editSelection = new EditSelection();
+		if (editSelection.isTriggerable() && suggestor == null) {
+			validateSelection0();
+			String triggerSequence = null;
+			if (!decoratorParent.canDecorate(editSelection)) {
+			} else {
+				triggerSequence = descriptor.getTriggerSequence(editSelection);
+			}
+			// if triggerable, wrap in the decorator tag (possiby splitting
+			// the source text node) and connect the suggestor overlay
+			// split
+			if (triggerSequence != null) {
+				FragmentModel fragmentModel = decoratorParent
+						.provideFragmentModel();
+				suggestingNode = createSuggestingNode(editSelection);
+				showOverlay(suggestingNode.domNode());
+			}
 		}
 	}
 
-	@Override
-	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
-		checkOverlayValid();
-		checkTrigger();
-		topicSelectionChanged.publish(event);
+	SuggestingNode createSuggestingNode(EditSelection editSelection) {
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		LocalDom.flushLocalMutations();
+		String triggerSequence = descriptor.getTriggerSequence(editSelection);
+		SplitResult splits = editSelection.splitAtTriggerRange(triggerSequence);
+		DomNode splitContents = splits.contents;
+		// may need to flush (to populate FNs) - note for romcom, want to
+		// not force remote
+		LocalDom.flushLocalMutations();
+		TextNode textFragment = (TextNode) fragmentModel
+				.getFragmentNode(splitContents);
+		FragmentNode parent = textFragment.parent();
+		SuggestingNode created = new SuggestingNode(descriptor, textFragment);
+		textFragment.nodes().insertBeforeThis(created);
+		LocalDom.flush();
+		Selection selection = Document.get().getSelection();
+		Text text = (Text) splits.contents.w3cNode();
+		selection.collapse(text, text.getLength());
+		return created;
+	}
+
+	void closeOverlay() {
+		overlay.close(null, false);
+	}
+
+	void refreshOverlayIfShowing() {
+		if (overlay != null) {
+			overlay.refreshPosition();
+			suggestor.refresh();
+		}
+	}
+
+	void showOverlay(DomNode decoratorDomNode) {
+		LocalDom.flush();
+		DomNode parent = decoratorDomNode.parent();
+		if (parent.tagIs("font")) {
+			// Webkit style-preserving?
+		}
+		Overlay.Attributes attributes = Overlay.attributes();
+		Element domElement = (Element) decoratorDomNode.w3cElement();
+		suggestor = suggestorProvider.apply(this, decoratorDomNode);
+		attributes.withCssClass("decorator-suggestor");
+		attributes.withConsumeSubmit(true).withFocusOnBind(false);
+		overlay = attributes
+				.dropdown(OverlayPosition.Position.START,
+						domElement.getBoundingClientRect(),
+						(Model) decoratorParent, suggestor)
+				.withRectSourceElement(domElement)
+				.withPeerModels(List.of(this.suggestingNode)).create();
+		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
+				.publish();
+		overlay.open();
+		this.overlayEditNode = decoratorDomNode;
+	}
+
+	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
+	void validateSelection() {
+		if (suggestor == null) {
+			/*
+			 * Defer helps handle alt-shift-arrow Keyboard cursor selection -
+			 * and also adds a check for suggestor creation
+			 */
+			Client.eventBus().queued().lambda(validateSelection0Runnable)
+					.distinct().dispatch();
+		}
 	}
 
 	void checkOverlayValid() {
@@ -463,18 +499,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			if (!retain) {
 				closeOverlay();
 			}
-		}
-	}
-
-	@Override
-	public void onNodeDelta(NodeDelta event) {
-		refreshOverlayIfShowing();
-	}
-
-	@Override
-	public void onFocusout(Focusout event) {
-		if (overlay != null) {
-			closeOverlay();
 		}
 	}
 }
