@@ -418,7 +418,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			setModel(new Data(fragmentModel));
 		}
 
-		public void addEntry(FragmentNodeOps parent, Model model, Type type) {
+		public void addEntry(FragmentNodeOps parent, Object model, Type type) {
 			getData().add(new Entry(parent, model, type));
 		}
 
@@ -463,7 +463,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				Set<FragmentNodeOps> result = new LinkedHashSet<>();
 				entries.forEach(e -> {
 					result.add(e.parent);
-					Model m = e.model;
+					Object m = e.model;
 					if (m instanceof FragmentNode) {
 						result.add((FragmentNode) m);
 					}
@@ -480,13 +480,13 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		}
 
 		public static class Entry {
-			public Model model;
+			public Object model;
 
 			public Type type;
 
 			public FragmentNodeOps parent;
 
-			Entry(FragmentNodeOps parent, Model model, Type type) {
+			Entry(FragmentNodeOps parent, Object model, Type type) {
 				this.parent = parent;
 				this.model = model;
 				this.type = type;

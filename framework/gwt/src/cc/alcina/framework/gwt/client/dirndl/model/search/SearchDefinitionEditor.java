@@ -8,12 +8,15 @@ import java.util.function.Consumer;
 import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.PropertyGraphListener;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SearchDefinition.EditSupport;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -28,6 +31,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
 @DirectedContextResolver
 public class SearchDefinitionEditor extends Model.Fields
 		implements ModelTransform<SearchDefinition, SearchDefinitionEditor> {
+	PackageProperties._SearchDefinitionEditor.InstanceProperties properties() {
+		return PackageProperties.searchDefinitionEditor.instance(this);
+	}
+
 	SearchDefinition searchDefinition;
 
 	@Override
@@ -48,6 +55,9 @@ public class SearchDefinitionEditor extends Model.Fields
 		}
 	}
 
+	/*
+	 * wip - ds.early
+	 */
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
@@ -55,6 +65,17 @@ public class SearchDefinitionEditor extends Model.Fields
 			provideNode().getResolver().registerService(Service.class,
 					new ServiceImpl());
 		}
+	}
+
+	@Property.Not
+	PropertyGraphListener searchablesListener;
+
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		// from(properties().searchDefinition()).signal(runnable);
+		searchablesListener = new PropertyGraphListener(
+				properties().searchables());
+		super.onBeforeRender(event);
 	}
 
 	@Directed.Transform(ChoicesEditorMultiple.ListSuggestions.To.class)

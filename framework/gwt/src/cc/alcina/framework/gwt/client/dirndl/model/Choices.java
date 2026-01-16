@@ -789,8 +789,10 @@ public abstract class Choices<T> extends Model implements
 					// (custom)
 					Choice<T> selectedChoice = choices.get(indexSelected);
 					Ref<Boolean> handledMarker = Ref.of(false);
-					event.reemitAs(selectedChoice, ChoiceSelectedDescent.class,
-							handledMarker);
+					if (selectedChoice.provideIsBound()) {
+						event.reemitAs(selectedChoice,
+								ChoiceSelectedDescent.class, handledMarker);
+					}
 					if (!handledMarker.get()) {
 						// not handled by the choice innards
 						setSelectedValue(getValues().get(indexSelected));

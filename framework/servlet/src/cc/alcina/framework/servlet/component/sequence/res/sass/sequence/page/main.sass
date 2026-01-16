@@ -8,6 +8,7 @@
 @use '../../dirndl/cmp/keyboard-shortcuts'
 @use '../../dirndl/cmp/sequence/area' as sequence
 @use '../../dirndl/cmp/choices'
+@use '../../dirndl/cmp/exec-commands'
 
 @use 'header'
 
@@ -30,6 +31,8 @@ body > page
 @include sequence.overlay
 @include choices.choice-editor-tag
 @include choices.decorator-suggestor
+@include exec-commands.contents
+
 
 
 

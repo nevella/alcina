@@ -1199,3 +1199,53 @@ overlay > .decorator-suggestor > suggestor > choice, overlay > .decorator-sugges
 overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-suggestor > suggestor > choice[index-selected], overlay > .decorator-suggestor > suggestor > results > choice:hover, overlay > .decorator-suggestor > suggestor > results > choice[index-selected] {
   background-color: #00000010;
 }
+
+exec-commands {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  padding: 1rem 2rem 2rem;
+  font-size: 1.1rem;
+  width: 750px;
+  min-height: 50vh;
+  user-select: auto;
+  display: grid;
+  justify-items: start;
+  grid-template-rows: min-content min-content min-content 1fr min-content;
+}
+exec-commands > *:nth-child(3) {
+  overflow-y: auto;
+}
+exec-commands > heading {
+  margin: 1rem 0;
+  font-size: 1.5rem;
+  display: block;
+}
+exec-commands > contents-filter {
+  display: block;
+  padding: 0 0 1rem;
+  font-size: 1.1rem;
+}
+exec-commands > contents-filter > input {
+  border: solid 1px #ddd;
+  padding: 4px 6px;
+  width: 20rem;
+  outline: none;
+}
+exec-commands > commands {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  margin-top: 1rem;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+}
+exec-commands > commands > command-area {
+  display: contents;
+}
+exec-commands > commands > command-area > *:hover {
+  cursor: pointer;
+  text-decoration: underline;
+  background-color: #f3f3fa;
+}

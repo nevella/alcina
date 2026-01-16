@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.gwt.dom.client.Document;
@@ -109,11 +110,8 @@ public abstract class DecoratorNode<WT, SR> extends EditNode
 		return PackageProperties.decoratorNode.instance(this);
 	}
 
-	/*
-	 * wip - dn
-	 */
-	@Binding(type = Type.INNER_TEXT)
-	public String content = null;
+	@Directed
+	public Object content = null;
 
 	/**
 	 * The serialized form of the object this decorator represents (in
@@ -126,8 +124,6 @@ public abstract class DecoratorNode<WT, SR> extends EditNode
 	public SR stringRepresentable;
 
 	public DecoratorNode() {
-		from(properties().contentEditable())
-				.accept(this::notifyContentEditableDelta);
 	}
 
 	@Override
@@ -142,6 +138,12 @@ public abstract class DecoratorNode<WT, SR> extends EditNode
 		return stringRepresentable;
 	}
 
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		emitEvent(DecoratorEvents.DecoratorBound.class);
+	}
+
 	public abstract Descriptor<WT, SR, ?> getDescriptor();
 
 	public void putReferenced(WT referenced) {
@@ -150,8 +152,12 @@ public abstract class DecoratorNode<WT, SR> extends EditNode
 		String triggerSequence = getDescriptor().triggerSequence();
 		Object renderedReferenced = ((Function) getDescriptor().itemRenderer())
 				.apply(referenced);
-		String text = triggerSequence + renderedReferenced;
-		properties().content().set(text);
+		if (renderedReferenced instanceof String) {
+			String text = triggerSequence + renderedReferenced;
+			properties().content().set(text);
+		} else {
+			properties().content().set(renderedReferenced);
+		}
 	}
 
 	public boolean isValid() {
@@ -165,30 +171,23 @@ public abstract class DecoratorNode<WT, SR> extends EditNode
 		if (provideIsUnbound()) {
 			return;// removed
 		}
-		FragmentNode nextSibling = nodes().nextSibling();
-		// FIXME - fragment.isolate - position cursor at the end of the mention,
-		// then allow the
-		// 'cursor validator' to move it to a correct location
-		//
-		// current:
-		// try positioning cursor immediately after the decorator
-		// guaranteed non-null (due to zws insertion)
-		TextNode cursorTarget = nextSibling instanceof TextNode
-				? (TextNode) nextSibling
-				: nextSibling.fragmentTree().nextTextNode(true).orElse(null);
-		/*
-		 * well - what's the dispatch model for ZWS insertion? Maybe it is
-		 * null...maybe we've lost focus...
-		 */
-		if (cursorTarget == null) {
-			// Client.eventBus().queued()
-			// .lambda(this::positionCursorPostReferencedSelection)
-			// .deferred().dispatch();
-			return;
+		TextNode cursorTarget = null;
+		FragmentNode siblingCursor = nodes().nextSibling();
+		while (siblingCursor != null) {
+			Optional<TextNode> subsequentText = siblingCursor.tree().stream()
+					.filter(n -> n instanceof TextNode).map(n -> (TextNode) n)
+					.findFirst();
+			if (subsequentText.isPresent()) {
+				cursorTarget = subsequentText.get();
+			}
+			siblingCursor = siblingCursor.nodes().nextSibling();
 		}
-		Node cursorNode = cursorTarget.domNode().gwtNode();
+		if (cursorTarget == null) {
+			cursorTarget = nodes().append(new TextNode(""));
+		}
+		Node cursorGwtNode = cursorTarget.domNode().gwtNode();
 		Selection selection = Document.get().getSelection();
-		selection.collapse(cursorNode, 0);// after zws
+		selection.collapse(cursorGwtNode, 0);// after zws
 	}
 
 	void stripIfInvalid() {

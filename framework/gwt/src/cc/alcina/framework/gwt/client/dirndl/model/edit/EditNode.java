@@ -86,14 +86,6 @@ public abstract class EditNode extends FragmentNode
 				.publish();
 	}
 
-	void notifyContentEditableDelta(boolean contentEditable) {
-		new DecoratorEvent().withType(DecoratorEvent.Type.editable_attr_changed)
-				.withSubtype(NestedName.get(this))
-				.withMessage(
-						Ax.format("[-->%s] :: %s", contentEditable, toString()))
-				.publish();
-	}
-
 	// FIXME - DN server shd validate entity on update. and other
 	// validations (e.g. not contained in a decorator)
 	public abstract boolean isValid();

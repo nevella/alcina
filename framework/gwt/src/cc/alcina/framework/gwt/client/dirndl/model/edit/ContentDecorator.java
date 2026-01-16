@@ -297,13 +297,11 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	@Override
 	public void onReferenceSelected(ReferenceSelected event) {
 		if (event.getContext().getPrevious().node.getModel() == suggestor) {
-			// decorator.putReferenced(event.getModel());
-			// decorator.positionCursorPostReferencedSelection();
-			/*
-			 * nope, replace suggestingnode with decorator
-			 */
-			// decorator.toNonEditable();
-			throw new UnsupportedOperationException();
+			DecoratorNode decorator = descriptor.createNode();
+			decorator.putReferenced(event.getModel());
+			suggestingNode.nodes().insertAfterThis(decorator);
+			suggestingNode.nodes().removeFromParent();
+			decorator.positionCursorPostReferencedSelection();
 		}
 	}
 

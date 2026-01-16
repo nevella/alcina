@@ -69,7 +69,7 @@ public class PackageProperties {
     }
     
     static class _ChoiceEditor_ChoiceNode implements TypedProperty.Container {
-      TypedProperty<ChoiceEditor.ChoiceNode, String> content = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "content");
+      TypedProperty<ChoiceEditor.ChoiceNode, Object> content = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "content");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "contentEditable");
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "descriptor");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> magicName = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "magicName");
@@ -78,7 +78,7 @@ public class PackageProperties {
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> valid = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "valid");
       static class InstanceProperties extends InstanceProperty.Container<ChoiceEditor.ChoiceNode> {
          InstanceProperties(ChoiceEditor.ChoiceNode source){super(source);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, String> content(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.content);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.content);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.contentEditable);}
         InstanceProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.descriptor);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.magicName);}
@@ -166,7 +166,7 @@ public class PackageProperties {
     }
     
     public static class _DecoratorNode implements TypedProperty.Container {
-      public TypedProperty<DecoratorNode, String> content = new TypedProperty<>(DecoratorNode.class, "content");
+      public TypedProperty<DecoratorNode, Object> content = new TypedProperty<>(DecoratorNode.class, "content");
       public TypedProperty<DecoratorNode, Boolean> contentEditable = new TypedProperty<>(DecoratorNode.class, "contentEditable");
       public TypedProperty<DecoratorNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(DecoratorNode.class, "descriptor");
       public TypedProperty<DecoratorNode, Boolean> magicName = new TypedProperty<>(DecoratorNode.class, "magicName");
@@ -175,7 +175,7 @@ public class PackageProperties {
       public TypedProperty<DecoratorNode, Boolean> valid = new TypedProperty<>(DecoratorNode.class, "valid");
       public static class InstanceProperties extends InstanceProperty.Container<DecoratorNode> {
         public  InstanceProperties(DecoratorNode source){super(source);}
-        public InstanceProperty<DecoratorNode, String> content(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.content);}
+        public InstanceProperty<DecoratorNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.content);}
         public InstanceProperty<DecoratorNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.contentEditable);}
         public InstanceProperty<DecoratorNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.descriptor);}
         public InstanceProperty<DecoratorNode, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.magicName);}
@@ -241,7 +241,7 @@ public class PackageProperties {
     }
     
     public static class _EntityNode implements TypedProperty.Container {
-      public TypedProperty<EntityNode, String> content = new TypedProperty<>(EntityNode.class, "content");
+      public TypedProperty<EntityNode, Object> content = new TypedProperty<>(EntityNode.class, "content");
       public TypedProperty<EntityNode, Boolean> contentEditable = new TypedProperty<>(EntityNode.class, "contentEditable");
       public TypedProperty<EntityNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(EntityNode.class, "descriptor");
       public TypedProperty<EntityNode, Boolean> magicName = new TypedProperty<>(EntityNode.class, "magicName");
@@ -250,7 +250,7 @@ public class PackageProperties {
       public TypedProperty<EntityNode, Boolean> valid = new TypedProperty<>(EntityNode.class, "valid");
       public static class InstanceProperties extends InstanceProperty.Container<EntityNode> {
         public  InstanceProperties(EntityNode source){super(source);}
-        public InstanceProperty<EntityNode, String> content(){return new InstanceProperty<>(source,PackageProperties.entityNode.content);}
+        public InstanceProperty<EntityNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.entityNode.content);}
         public InstanceProperty<EntityNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.entityNode.contentEditable);}
         public InstanceProperty<EntityNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.entityNode.descriptor);}
         public InstanceProperty<EntityNode, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.entityNode.magicName);}
