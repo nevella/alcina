@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +26,14 @@ import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.Selection.DuplicateSelectionException;
+import cc.alcina.framework.common.client.traversal.Selection.HasContextEntryHandlers;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.Selections.SelectionTraversalState;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal.State.SelectionLayers.LayerSelections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -282,6 +282,49 @@ public class SelectionTraversal
 	}
 
 	public class Selections {
+		static class SelectionTraversalState {
+			Selection<?> selection;
+
+			SelectionTraversalState parentState;
+
+			List<HasContextEntryHandlers> selectionsWithEntryContext;
+
+			SelectionTraversalState(SelectionTraversalState parentState,
+					Selection<?> selection) {
+				this.parentState = parentState;
+				this.selection = selection;
+				if (parentState == null) {
+					selectionsWithEntryContext = List.of();
+				} else {
+					selectionsWithEntryContext = parentState.selectionsWithEntryContext;
+				}
+				if (selection instanceof Selection.HasContextEntryHandlers) {
+					selectionsWithEntryContext = new ArrayList<>(
+							selectionsWithEntryContext);
+					selectionsWithEntryContext.add(0,
+							(HasContextEntryHandlers) selection);
+				}
+			}
+
+			void enterContext() {
+				if (selectionsWithEntryContext.isEmpty()) {
+					return;
+				} else {
+					selectionsWithEntryContext
+							.forEach(HasContextEntryHandlers::enterContext);
+				}
+			}
+
+			void exitContext() {
+				if (selectionsWithEntryContext.isEmpty()) {
+					return;
+				} else {
+					selectionsWithEntryContext
+							.forEach(HasContextEntryHandlers::exitContext);
+				}
+			}
+		}
+
 		public Topic<Selection> topicAdded = Topic.create();
 
 		public Topic<Selection> topicProcessed = Topic.create();
@@ -293,10 +336,6 @@ public class SelectionTraversal
 		public Selection root;
 
 		public Map<Selection, Exception> exceptions = new ConcurrentHashMap<>();
-
-		public boolean hasExceptions() {
-			return exceptions.size() > 0;
-		}
 
 		/*
 		 * These selections are available as inputs to subsequent, type-specific
@@ -314,6 +353,9 @@ public class SelectionTraversal
 		Map<Selection, Layer> selectionLayer = AlcinaCollections
 				.newLinkedHashMap();
 
+		Map<Selection, SelectionTraversalState> traversalStates = AlcinaCollections
+				.newLinkedHashMap();
+
 		// layer/segment
 		MultikeyMap<Selection> byLayerSegments = new UnsortedMultikeyMap<>(2);
 
@@ -321,6 +363,10 @@ public class SelectionTraversal
 		MultikeyMap<Selection> byClassSegments = new UnsortedMultikeyMap<>(2);
 
 		int size;
+
+		public boolean hasExceptions() {
+			return exceptions.size() > 0;
+		}
 
 		public Stream<Selection> allSelections() {
 			return selectionLayer.keySet().stream();
@@ -380,6 +426,41 @@ public class SelectionTraversal
 			}
 		}
 
+		public <T extends Selection> T getSingleSelection(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			Preconditions.checkState(selections.size() == 1);
+			return selections.get(0);
+		}
+
+		public <T extends Selection> Optional<T>
+				optionalSingleSelection(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			Preconditions.checkState(selections.size() <= 1);
+			return selections.stream().findFirst();
+		}
+
+		public <T extends Selection> boolean has(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			return selections.size() > 0;
+		}
+
+		public int size() {
+			return size;
+		}
+
+		public Collection<Selection> byLayer(Layer layer) {
+			return byLayerCounts(layer).keySet();
+		}
+
+		public SelectionTraversalState
+				computeSelectionTraversalState(Selection<?> selection) {
+			SelectionTraversalState parentState = traversalStates
+					.get(selection.parentSelection());
+			SelectionTraversalState state = new SelectionTraversalState(
+					parentState, selection);
+			return state;
+		}
+
 		/**
 		 * Return all potential input selections (see above for info about input
 		 * filtering) matching a given type - either an exact class match to S,
@@ -405,28 +486,6 @@ public class SelectionTraversal
 				return (List<S>) byClassInputs.getAndEnsure(clazz).stream()
 						.collect(Collectors.toList());
 			}
-		}
-
-		public <T extends Selection> T getSingleSelection(Class<T> clazz) {
-			List<T> selections = get(clazz, false);
-			Preconditions.checkState(selections.size() == 1);
-			return selections.get(0);
-		}
-
-		public <T extends Selection> Optional<T>
-				optionalSingleSelection(Class<T> clazz) {
-			List<T> selections = get(clazz, false);
-			Preconditions.checkState(selections.size() <= 1);
-			return selections.stream().findFirst();
-		}
-
-		public <T extends Selection> boolean has(Class<T> clazz) {
-			List<T> selections = get(clazz, false);
-			return selections.size() > 0;
-		}
-
-		public int size() {
-			return size;
 		}
 
 		synchronized boolean add(Selection selection) {
@@ -526,10 +585,6 @@ public class SelectionTraversal
 			}
 		}
 
-		public Collection<Selection> byLayer(Layer layer) {
-			return byLayerCounts(layer).keySet();
-		}
-
 		void addException(Selection selection, Exception exception) {
 			exceptions.put(selection, exception);
 		}
@@ -617,6 +672,10 @@ public class SelectionTraversal
 		Map<Layer, SelectionLayers.LayerSelections> selectionsByLayer = new LinkedHashMap<>();
 
 		ExitTraversal exitTraversal;
+
+		boolean beforeExecution = true;
+
+		Selection processingSelection;
 
 		public <T> T context(Class<T> clazz) {
 			return SelectionTraversal.this.context(clazz);
@@ -754,90 +813,6 @@ public class SelectionTraversal
 	public class TraversalComplete implements ContextObservable {
 	}
 
-	/*
-	 * publishes an exception, but does not break code flow
-	 */
-	class SuppressedExceptionObserver
-			implements ProcessObserver<SuppressedException> {
-		int observed = 0;
-
-		@Override
-		public void topicPublished(SuppressedException message) {
-			if (observed++ < 100) {
-				/*
-				 * Duplicate selections are quite possibly an issue with
-				 * external data rather than traversal logic - so don't
-				 * interrupt traversal
-				 */
-				Ax.simpleExceptionOut(message.e);
-			}
-			publishException(message.e);
-		}
-	}
-
-	class ExitTraversalObserver implements ProcessObserver<ExitTraversal> {
-		@Override
-		public void topicPublished(ExitTraversal message) {
-			SelectionTraversal.this.state.exitTraversal = message;
-		}
-	}
-
-	static LooseContext.Key<SelectionTraversal> CONTEXT_TRAVERSAL = LooseContext
-			.key(SelectionTraversal.class, "CONTEXT_TRAVERSAL");
-
-	static LooseContext.Key<Selection> CONTEXT_SELECTION = LooseContext
-			.key(SelectionTraversal.class, "CONTEXT_SELECTION");
-
-	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
-			.create();
-
-	/*
-	 * Each traversal in the VM lifetime is assigned a unique id
-	 */
-	static IdCounter counter = new IdCounter();
-
-	public static <S extends Selection> S contextSelection() {
-		return (S) CONTEXT_SELECTION.getTyped();
-	}
-
-	public static SelectionTraversal contextTraversal() {
-		return CONTEXT_TRAVERSAL.getTyped();
-	}
-
-	public Topic<Layer> topicBeforeLayerTraversal = Topic.create();
-
-	State state = new State();
-
-	Map<Selection, Integer> selectionIndicies = new ConcurrentHashMap<>();
-
-	SelectionFilter filter;
-
-	Executor executor = new Executor.CurrentThreadExecutor();
-
-	Logger logger = LoggerFactory.getLogger(getClass());
-
-	final TraversalContext traversalContext;
-
-	public String id;
-
-	public Object outputContainer;
-
-	public boolean serialExecution = false;
-
-	/*
-	 * Set true to release resources once the layer (and potentially children)
-	 * are complete
-	 */
-	public boolean releaseResources = false;
-
-	public SelectionTraversal() {
-		this(null);
-	}
-
-	public SelectionTraversal(TraversalContext traversalContext) {
-		this.traversalContext = traversalContext;
-	}
-
 	/**
 	 * API grouping sugar class - provides access to layer operations
 	 */
@@ -892,7 +867,104 @@ public class SelectionTraversal
 		}
 	}
 
+	/*
+	 * publishes an exception, but does not break code flow
+	 */
+	class SuppressedExceptionObserver
+			implements ProcessObserver<SuppressedException> {
+		int observed = 0;
+
+		@Override
+		public void topicPublished(SuppressedException message) {
+			if (observed++ < 100) {
+				/*
+				 * Duplicate selections are quite possibly an issue with
+				 * external data rather than traversal logic - so don't
+				 * interrupt traversal
+				 */
+				Ax.simpleExceptionOut(message.e);
+			}
+			publishException(message.e);
+		}
+	}
+
+	class ExitTraversalObserver implements ProcessObserver<ExitTraversal> {
+		@Override
+		public void topicPublished(ExitTraversal message) {
+			SelectionTraversal.this.state.exitTraversal = message;
+		}
+	}
+
+	static LooseContext.Key<SelectionTraversal> CONTEXT_TRAVERSAL = LooseContext
+			.key(SelectionTraversal.class, "CONTEXT_TRAVERSAL");
+
+	static LooseContext.Key<Selection> CONTEXT_SELECTION = LooseContext
+			.key(SelectionTraversal.class, "CONTEXT_SELECTION");
+
+	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
+			.create();
+
+	/*
+	 * Each traversal in the VM lifetime is assigned a unique id
+	 */
+	static IdCounter counter = new IdCounter();
+
+	public static <S extends Selection> S contextSelection() {
+		Preconditions.checkState(contextTraversal().contextSelectionEnabled);
+		return (S) CONTEXT_SELECTION.getTyped();
+	}
+
+	public static SelectionTraversal contextTraversal() {
+		return CONTEXT_TRAVERSAL.getTyped();
+	}
+
+	public Topic<Layer> topicBeforeLayerTraversal = Topic.create();
+
+	State state = new State();
+
+	SelectionFilter filter;
+
+	Executor executor = new Executor.CurrentThreadExecutor();
+
+	Logger logger = LoggerFactory.getLogger(getClass());
+
+	final TraversalContext traversalContext;
+
+	public String id;
+
+	public Object outputContainer;
+
+	public boolean serialExecution = false;
+
+	/*
+	 * Set true to release resources once the layer (and potentially children)
+	 * are complete
+	 */
+	public boolean releaseResources = false;
+
 	Layers layers = new Layers();
+
+	/*
+	 * disabled by default, since this has a cost
+	 */
+	private boolean contextSelectionEnabled = false;
+
+	public boolean isContextSelectionEnabled() {
+		return contextSelectionEnabled;
+	}
+
+	public void setContextSelectionEnabled(boolean contextSelectionEnabled) {
+		Preconditions.checkArgument(state.beforeExecution);
+		this.contextSelectionEnabled = contextSelectionEnabled;
+	}
+
+	public SelectionTraversal() {
+		this(null);
+	}
+
+	public SelectionTraversal(TraversalContext traversalContext) {
+		this.traversalContext = traversalContext;
+	}
 
 	public Layers layers() {
 		return layers;
@@ -986,6 +1058,7 @@ public class SelectionTraversal
 			CONTEXT_TRAVERSAL.set(this);
 			new SuppressedExceptionObserver().bind();
 			new ExitTraversalObserver().bind();
+			state.beforeExecution = false;
 			traverse0();
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -1060,22 +1133,8 @@ public class SelectionTraversal
 		return state.exitTraversal != null;
 	}
 
-	void enterSelectionContext(Selection<?> selection) {
-		Iterator<Selection> itr = selection.ancestorIterator();
-		while (itr.hasNext()) {
-			itr.next().enterContext();
-		}
-	}
-
-	void exitSelectionContext(Selection<?> selection) {
-		Iterator<Selection> itr = selection.ancestorIterator();
-		while (itr.hasNext()) {
-			itr.next().exitContext();
-		}
-	}
-
 	void publishException(Exception e) {
-		Selection selection = CONTEXT_SELECTION.getTyped();
+		Selection selection = state.processingSelection;
 		selections().addException(selection, e);
 		selection.processNode().onException(e);
 		selections().topicException
@@ -1086,11 +1145,16 @@ public class SelectionTraversal
 	}
 
 	void processSelection(Selection selection) {
+		SelectionTraversalState selectionTraversalState = selections()
+				.computeSelectionTraversalState(selection);
 		try {
-			LooseContext.push();
-			CONTEXT_SELECTION.set(selection);
+			state.processingSelection = selection;
+			if (contextSelectionEnabled) {
+				LooseContext.push();
+				CONTEXT_SELECTION.set(selection);
+			}
 			Layer layer = layers().getCurrent();
-			enterSelectionContext(selection);
+			selectionTraversalState.enterContext();
 			selection.processNode().select(null, this);
 			if (!layer.testFilter(selection) || !testLayerFilter(selection)) {
 				// skip processing if, for instance, the traversal has hit max
@@ -1111,14 +1175,17 @@ public class SelectionTraversal
 			}
 		} finally {
 			try {
-				exitSelectionContext(selection);
+				selectionTraversalState.exitContext();
 				releaseCompletedSelections(selection);
 				state.onSelectionProcessed(selection);
 			} catch (Throwable e) {
 				logger.warn("DEVEX-0 :: selection cleanup", e);
 				throw e;
 			} finally {
-				LooseContext.pop();
+				state.processingSelection = null;
+				if (contextSelectionEnabled) {
+					LooseContext.pop();
+				}
 			}
 		}
 	}

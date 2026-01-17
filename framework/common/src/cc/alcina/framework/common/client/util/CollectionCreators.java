@@ -41,6 +41,8 @@ public class CollectionCreators {
 
 		private static UnsortedMapCreator unsortedMapCreator = new UnsortedMapCreator();
 
+		private static LinkedHashSetCreator linkedHashSetCreator = new LinkedHashSetCreator();
+
 		public static <T> Map<Class, T> createConcurrentClassMap() {
 			return concurrentClassMapCreator.create();
 		}
@@ -61,6 +63,10 @@ public class CollectionCreators {
 			return linkedMapCreator;
 		}
 
+		public static LinkedHashSetCreator getLinkedHashSetCreator() {
+			return linkedHashSetCreator;
+		}
+
 		public static void setConcurrentClassMapCreator(
 				ConcurrentMapCreator concurrentClassMapCreator) {
 			CollectionCreators.Bootstrap.concurrentClassMapCreator = concurrentClassMapCreator;
@@ -73,6 +79,11 @@ public class CollectionCreators {
 
 		public static void setHashMapCreator(HashMapCreator hashMapCreator) {
 			Bootstrap.hashMapCreator = hashMapCreator;
+		}
+
+		public static void setLinkedHashSetCreator(
+				LinkedHashSetCreator linkedHashSetCreator) {
+			Bootstrap.linkedHashSetCreator = linkedHashSetCreator;
 		}
 
 		public static void setHashSetCreator(HashSetCreator hashSetCreator) {
@@ -127,8 +138,20 @@ public class CollectionCreators {
 	}
 
 	@Reflected
-	@Registration.Singleton(CollectionCreators.HashSetCreator.class)
+	@Registration.Singleton
 	public static class HashSetCreator {
+		public <T> Set<T> create() {
+			return new HashSet<>();
+		}
+
+		public <T> Set<T> create(int size) {
+			return new HashSet<>(size);
+		}
+	}
+
+	@Reflected
+	@Registration.Singleton
+	public static class LinkedHashSetCreator {
 		public <T> Set<T> create() {
 			return new HashSet<>();
 		}
@@ -157,7 +180,7 @@ public class CollectionCreators {
 				Class<V> valueClass);
 	}
 
-	@Registration(MultiTrieCreator.class)
+	@Registration.Singleton
 	public static class MultiTrieCreator {
 		public MultiTrieCreator() {
 		}
@@ -225,7 +248,7 @@ public class CollectionCreators {
 	}
 
 	@Reflected
-	@Registration.Singleton(CollectionCreators.WeakMapCreator.class)
+	@Registration.Singleton
 	/*
 	 * FIXME - reflection - default (dev only, so not a big drama) impl is in
 	 * fact non-weak
@@ -237,7 +260,7 @@ public class CollectionCreators {
 	}
 
 	@Reflected
-	@Registration.Singleton(CollectionCreators.CoarseIntHashMapCreator.class)
+	@Registration.Singleton
 	/*
 	 * FIXME - reflection - default (dev only, so not a big drama) impl is in
 	 * fact non-weak

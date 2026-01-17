@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.domain;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -10,6 +8,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 
 @Reflected
 @Registration.Singleton
@@ -27,10 +26,10 @@ public class DomainCollections {
 	}
 
 	public <K, V> Map<K, V> createUnsortedMap() {
-		return new LinkedHashMap<>();
+		return AlcinaCollections.newLinkedHashMap();
 	}
 
 	public <E> Set<E> createUnsortedSet() {
-		return new LinkedHashSet<>();
+		return AlcinaCollections.newLinkedHashSet();
 	}
 }

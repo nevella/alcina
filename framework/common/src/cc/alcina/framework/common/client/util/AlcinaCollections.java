@@ -68,6 +68,8 @@ public class AlcinaCollections {
 
 	public static <T> Set<T> newLinkedHashSet() {
 		return new LinkedHashSet<>();
+		// return
+		// CollectionCreators.Bootstrap.getLinkedHashSetCreator().create();
 	}
 
 	public static <T> Set<T> newUniqueSet() {
