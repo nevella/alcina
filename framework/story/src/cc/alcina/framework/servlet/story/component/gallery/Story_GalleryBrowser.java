@@ -36,7 +36,7 @@ public class Story_GalleryBrowser implements Story {
 	@Decl.Require(State.GalleryPageRenders.class)
 	@Decl.Require(State.Loaded.class)
 	@Decl.Child(Point_GalleryBrowser_Home.class)
-	@Decl.Child(Point_GalleryBrowser_MultipleSuggestions.class)
+	@Decl.Child(Point_GalleryBrowser_ChoiceEditor.class)
 	static class Top extends Waypoint {
 	}
 }

@@ -1,34 +1,14 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.function.Function;
+import java.util.List;
 
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.Selection;
-import com.google.gwt.dom.client.Text;
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 
@@ -38,7 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 @Directed(className = "suggesting-node")
 @TypedProperties
 public class SuggestingNode extends EditNode
-		implements Binding.TabIndexMinusOne {
+		implements Binding.TabIndexMinusOne, HasElementBehaviors {
 	protected PackageProperties._SuggestingNode.InstanceProperties
 			properties() {
 		return PackageProperties.suggestingNode.instance(this);
@@ -68,6 +48,11 @@ public class SuggestingNode extends EditNode
 	@Override
 	public void onFragmentRegistration() {
 		nodes().append(textFragment);
+	}
+
+	@Override
+	public List<Class<? extends ElementBehavior>> getBehaviors() {
+		return List.of(DecoratorBehavior.InterceptUpDownBehaviour.class);
 	}
 
 	/*

@@ -10,18 +10,18 @@ import cc.alcina.framework.servlet.story.component.gallery.Point_GalleryBrowser_
 @Decl.Require(Story_GalleryBrowser.State.Home.class)
 @Decl.Child(Cards.class)
 public class Point_GalleryBrowser_Home extends Waypoint {
-	static final String XPATH_MULTIPLE_SUGGESTIONS_LINK = "//a[.='Multiple suggestions']";
+	static final String XPATH_CHOICE_EDITOR_LINK = "//a[.='Choice editor']";
 
-	static final String XPATH_MODEL_TITLE = "//multiple-suggestions-gallery//heading[.='Demo Model (contains users collection)']";
+	static final String XPATH_MODEL_TITLE = "//choice-editor-gallery//heading[.='Demo Model (contains users collection)']";
 
-	@Decl.Child(ToMultipleSuggestions.class)
+	@Decl.Child(ToChoiceEditor.class)
 	static class Cards extends Waypoint {
 	}
 
-	@Decl.Child(ToMultipleSuggestions.ClickMultipleSuggestions.class)
-	@Decl.Child(ToMultipleSuggestions.AwaitGalleryDefinitionTitle.class)
-	static class ToMultipleSuggestions extends Waypoint {
-		@Decl.Location.Xpath(XPATH_MULTIPLE_SUGGESTIONS_LINK)
+	@Decl.Child(ToChoiceEditor.ClickMultipleSuggestions.class)
+	@Decl.Child(ToChoiceEditor.AwaitGalleryDefinitionTitle.class)
+	static class ToChoiceEditor extends Waypoint {
+		@Decl.Location.Xpath(XPATH_CHOICE_EDITOR_LINK)
 		@Decl.Action.UI.Click
 		static class ClickMultipleSuggestions extends Waypoint {
 		}

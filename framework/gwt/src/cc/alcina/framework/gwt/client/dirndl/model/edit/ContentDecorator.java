@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
@@ -34,8 +33,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.Descriptor;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
@@ -396,7 +393,34 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	void checkTrigger0() {
 		validateSelection0();
 		EditSelection editSelection = new EditSelection();
+		DomNode focusNode = editSelection.focusNode();
+		if (focusNode == null) {
+			return;
+		}
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		FragmentNode focussedFragment = fragmentModel
+				.getFragmentNode(focusNode);
+		if (focussedFragment != null) {
+			/*
+			 * behavior. on cursor validation, strip any suggesting nodes that
+			 * are not ancestors of the selection
+			 * 
+			 * better - strip exactly the source suggesting node on overlay
+			 * close
+			 */
+			fragmentModel.byType(SuggestingNode.class).filter(
+					n -> !focussedFragment.ancestors().has(n2 -> n2 == n))
+					.forEach(n -> n.nodes().strip());
+		}
 		if (editSelection.isTriggerable() && suggestor == null) {
+			if (focussedFragment != null
+					&& focussedFragment.ancestors().has(SuggestingNode.class)) {
+				/*
+				 * transitional, transforming from accepted suggesing to
+				 * decorator
+				 */
+				return;
+			}
 			validateSelection0();
 			String triggerSequence = null;
 			if (!decoratorParent.canDecorate(editSelection)) {
@@ -407,8 +431,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			// the source text node) and connect the suggestor overlay
 			// split
 			if (triggerSequence != null) {
-				FragmentModel fragmentModel = decoratorParent
-						.provideFragmentModel();
 				suggestingNode = createSuggestingNode(editSelection);
 				showOverlay(suggestingNode.domNode());
 			}
@@ -484,7 +506,15 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	void checkOverlayValid() {
 		if (overlayEditNode != null) {
-			boolean retain = false;
+			/*
+			 * wip - decorator - possibly should be false, but there are
+			 * 'spurious' - possibly intermediate - selection events (where the
+			 * selection target was removed from dom) that can cause the overlay
+			 * to be incorrectly closed.
+			 * 
+			 * revisit once the editarea state is described with invariants
+			 */
+			boolean retain = true;
 			Selection selection = Document.get().getSelection();
 			if (selection.hasSelection()
 					&& selection.getAnchorLocation() != null

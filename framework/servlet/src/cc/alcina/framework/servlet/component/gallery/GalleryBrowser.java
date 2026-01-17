@@ -4,6 +4,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
@@ -11,6 +12,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.gallery.home.GalleryHomePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;
@@ -72,6 +74,8 @@ public class GalleryBrowser {
 			FmsForm.registerImplementations();
 			EnvironmentRegistry.registerEnvironmentOptionals(
 					GalleryBrowserCommand.ReloadApp.HandlerImpl.class);
+			Registry.register().singleton(BasePlace.HrefProvider.class,
+					new BasePlace.HrefProvider());
 		}
 
 		@Override

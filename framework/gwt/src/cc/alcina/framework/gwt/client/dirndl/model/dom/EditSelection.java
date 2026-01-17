@@ -131,7 +131,8 @@ public class EditSelection {
 	}
 
 	public DomNode focusNode() {
-		return selection.getFocusLocation().getContainingNode();
+		Location focusLocation = selection.getFocusLocation();
+		return focusLocation == null ? null : focusLocation.getContainingNode();
 	}
 
 	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(

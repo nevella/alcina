@@ -8,6 +8,7 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
  * Check if a dom node has a magic attribute set, and if so perform a specific
@@ -19,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
  * 
  */
 @Registration.Self
+@Reflected
 public interface ElementBehavior extends EventBehavior {
 	/**
 	 * Prevent default on a link click, romcom
@@ -72,6 +74,63 @@ public interface ElementBehavior extends EventBehavior {
 				nativeKeydownEvent.preventDefault();
 				break;
 			}
+		}
+	}
+
+	/**
+	 * Note that this stops propagation as well ( to stop bubbling of focusout)
+	 */
+	public static class PreventDefaultMousedownBehaviour
+			implements ElementBehavior {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.MOUSEDOWN;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			event.getNativeEvent().preventDefault();
+			event.getNativeEvent().stopPropagation();
+		}
+	}
+
+	/**
+	 * Note that this *does not* prevent propagation as well. Note also it is
+	 * ignored if meta/ctrl is pressed
+	 */
+	public static class PreventDefaultClickBehaviour
+			implements ElementBehavior {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.CLICK;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			NativeEvent nativeEvent = event.getNativeEvent();
+			if (nativeEvent.getMetaKey() || nativeEvent.getCtrlKey()) {
+				return;
+			}
+			nativeEvent.preventDefault();
+		}
+	}
+
+	/**
+	 * Ensure the selection focus node is a (possibly newly created blank) text
+	 * node
+	 */
+	public static class EnsureCursorTargetIsTextNodeBehaviour
+			implements ElementBehavior {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.SELECTIONCHANGE;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
 		}
 	}
 }

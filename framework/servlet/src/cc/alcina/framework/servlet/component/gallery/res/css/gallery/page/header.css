@@ -61,6 +61,7 @@ overlay > menu > choices {
 overlay > menu > choices > choice {
   display: block;
   cursor: pointer;
+  user-select: none;
 }
 overlay > menu > choices > choice:hover {
   background-color: #f7f7f7;

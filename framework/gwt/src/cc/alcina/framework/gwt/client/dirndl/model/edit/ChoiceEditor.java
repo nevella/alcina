@@ -20,15 +20,11 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -173,29 +169,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Override
 	public List<ContentDecorator> getDecorators() {
 		return this.decorators;
-	}
-
-	/**
-	 * FIXME - reflection - this shouldn't be needed (should be resolved from
-	 * {@link HasDecorators} - that's possibly a gwt vs jdk typemodel
-	 * inconsistency )
-	 */
-	@Binding(
-		type = Type.PROPERTY,
-		to = DecoratorBehavior.ExtendKeyboardNavigationAction.ATTR_NAME)
-	@Override
-	public boolean isMagicName() {
-		return true;
-	}
-
-	/*
-	 * Marker attribute
-	 */
-	@Binding(
-		type = Type.PROPERTY,
-		to = DecoratorBehavior.ModifyNonEditableSelectionBehaviour.ATTR_NAME)
-	public boolean isMagicName2() {
-		return true;
 	}
 
 	@Override

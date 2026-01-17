@@ -1,10 +1,13 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Widget;
@@ -53,7 +56,12 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * but possible), subclass Link and have the subclass implement the appropriate
  * ModelEvent.Handler
  */
-public class Link extends Model implements DomEvents.Click.Handler, HasTag {
+/**
+ * Note the default {@link #getBehaviors()} - if you don't want that (e.g.
+ * because of late binding), use another model
+ */
+public class Link extends Model
+		implements DomEvents.Click.Handler, HasTag, HasElementBehaviors {
 	public static class AnchorTransform
 			implements ModelTransform<Object, Link> {
 		@Override
@@ -84,6 +92,15 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	public static Link button(Class<? extends ModelEvent> modelEvent) {
 		return of(modelEvent).withTag("button");
+	}
+
+	@Override
+	public List<Class<? extends ElementBehavior>> getBehaviors() {
+		if (Ax.isBlank(href) || href.equals("#")) {
+			return List.of(ElementBehavior.PreventDefaultClickBehaviour.class);
+		} else {
+			return List.of();
+		}
 	}
 
 	private String href = INITIAL_HREF;

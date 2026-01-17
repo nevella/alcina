@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.OptionElement;
 import com.google.gwt.dom.client.SelectElement;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
@@ -269,7 +271,8 @@ public abstract class Choices<T> extends Model implements
 		emits = { ModelEvents.Selected.class, ChoiceSelectedDescent.class })
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler,
-			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter, Filterable {
+			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter, Filterable,
+			HasElementBehaviors {
 		private boolean selected;
 
 		private boolean indexSelected;
@@ -279,6 +282,13 @@ public abstract class Choices<T> extends Model implements
 		boolean multipleSelect;
 
 		boolean filtered;
+
+		@Override
+		public List<Class<? extends ElementBehavior>> getBehaviors() {
+			List<Class<? extends ElementBehavior>> result = new ArrayList<>();
+			result.add(ElementBehavior.PreventDefaultMousedownBehaviour.class);
+			return result;
+		}
 
 		public Choice(T value) {
 			this.value = value;

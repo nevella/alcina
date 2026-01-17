@@ -10,7 +10,6 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HrefElement;
-import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 
@@ -85,6 +84,9 @@ class ClientEventDispatch {
 			}
 			DomNode eventTargetDomNode = elem.asDomNode();
 			if (!focusEvent) {
+				/*
+				 * wip - romcom - to ElementBehavior
+				 */
 				if (eventTargetDomNode.ancestors().has("form")) {
 					boolean explicitPrevent = false;
 					boolean explicitStopPropagation = false;
@@ -106,32 +108,6 @@ class ClientEventDispatch {
 					if (explicitStopPropagation) {
 						event.stopPropagation();
 					}
-				}
-				// prevent default action on <a> with no href
-				// TODO - space on <a> with no href?
-				if (eventType.equals("click") || eventType.equals("keydown")) {
-					if (elem.hasTagName("a")) {
-						String href = elem.getAttribute("href");
-						if (Ax.isBlank(href) || href.equals("#")
-								|| elem.hasAttribute(
-										ElementBehavior.BEHAVIOR_PREVENT_DEFAULT)) {
-							if (!(event.getMetaKey() || event.getCtrlKey())) {
-								event.preventDefault();
-							}
-						}
-					}
-				}
-			}
-			// TODO - why (why just this)? should probably be an attrbehavior.
-			// In general, a.withoutLink shd probably preventdefault
-			/*
-			 * FIXME - dirndl - make this a behaviour (although really it should
-			 * be the Choice )
-			 */
-			if (mouseDownEvent) {
-				if (eventTargetDomNode.ancestors().has("choice-suggestor")) {
-					event.preventDefault();
-					event.stopPropagation();
 				}
 			}
 			/*

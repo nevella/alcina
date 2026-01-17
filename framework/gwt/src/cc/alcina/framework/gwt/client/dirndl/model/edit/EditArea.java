@@ -1,10 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -174,6 +169,8 @@ public class EditArea extends Model.Fields
 		} finally {
 			provideNode().setBindingsDisabled(false);
 		}
+		fragmentModel.byType(SuggestingNode.class)
+				.forEach(n -> n.nodes().strip());
 	}
 
 	@Override
@@ -221,9 +218,7 @@ public class EditArea extends Model.Fields
 	}
 
 	public void setValue(String value) {
-		String old_value = this.value;
-		this.value = value;
-		propertyChangeSupport().firePropertyChange("value", old_value, value);
+		set("value", this.value, value, () -> this.value = value);
 	}
 
 	@Override
@@ -238,7 +233,7 @@ public class EditArea extends Model.Fields
 	 * 
 	 * 
 	 * <p>
-	 * Thsi behaviour ensures that a blank text node exists between adjacent
+	 * This behaviour ensures that a blank text node exists between adjacent
 	 * non-editables (DecoratorNodes), and (optionally) at the editor
 	 * Boundaries.
 	 * 

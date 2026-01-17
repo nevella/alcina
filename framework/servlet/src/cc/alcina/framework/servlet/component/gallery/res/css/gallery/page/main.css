@@ -53,6 +53,8 @@ bean-editor.label-over form-element > label:has(+ value > input:placeholder-show
   top: -5px;
   left: 6px;
   font-size: 65%;
+  color: transparent;
+  background-color: transparent;
 }
 bean-editor.label-over form-element > label:not(:has(+ value > input:placeholder-shown)), bean-editor.label-over form-element > label:has(+ value > input:focus) {
   transform: translate(0, 0) scale(1);
@@ -60,6 +62,7 @@ bean-editor.label-over form-element > label:not(:has(+ value > input:placeholder
   left: 6px;
   top: -5px;
   font-size: 65%;
+  background-color: #fefdfb;
 }
 bean-editor.label-over form-element > label, bean-editor.label-over form-element > value > input {
   transition: all 0.2s;
@@ -81,26 +84,30 @@ bean-editor.no-labels form label {
   display: none;
 }
 bean-editor.single-line {
-  display: inline-block;
+  display: block;
   flex: 1;
   min-width: auto;
   width: 100%;
+  padding: 0;
 }
-bean-editor.single-line form {
+bean-editor.single-line > form {
   display: flex;
 }
-bean-editor.single-line form section {
+bean-editor.single-line > form > section {
   display: inline-block;
   flex: 1;
 }
-bean-editor.single-line form section form-element,
-bean-editor.single-line form section select {
+bean-editor.single-line > form > section > form-element, bean-editor.single-line > form > section select {
   display: inline-block;
 }
-bean-editor.single-line form section form-element {
+bean-editor.single-line > form > section > form-element {
   padding-right: 1rem;
 }
-bean-editor.single-line form actions {
+bean-editor.single-line > form > section > form-element > label {
+  display: inline-block;
+  padding-right: 0.5rem;
+}
+bean-editor.single-line > form actions {
   display: inline-block;
   margin: 0;
 }
@@ -486,6 +493,7 @@ overlay > menu > choices {
 overlay > menu > choices > choice {
   display: block;
   cursor: pointer;
+  user-select: none;
 }
 overlay > menu > choices > choice:hover {
   background-color: #f7f7f7;
@@ -997,10 +1005,14 @@ choice-editor > edit:focus {
   border-color: #555;
   background-color: #FFF;
 }
+choice-editor > edit suggesting-node {
+  display: inline-block;
+  padding: 0 1px;
+}
 choice-editor > edit choice-node {
   white-space: nowrap;
 }
-choice-editor > edit choice-node:not([contenteditable=false]):first-child {
+choice-editor > edit suggesting-node:first-child {
   display: inline-block;
   margin-right: 3px;
   min-height: 16px;

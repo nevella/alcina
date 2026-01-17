@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResource;
+import cc.alcina.framework.gwt.client.story.impl.UrlRouterPart;
 
 public class UrlRouter implements PerformerResource {
 	UrlRouterPart part;

@@ -46,6 +46,9 @@ public interface DecoratorBehavior {
 	 * they're there to allow (and control the appearance of) cursor targets,
 	 * but they should be otherwise invisible to the user.
 	 */
+	/*
+	 * wip - decorator - needed?
+	 */
 	public static class ModifyNonEditableSelectionBehaviour
 			implements DecoratorBehavior, ElementBehavior {
 		@Override

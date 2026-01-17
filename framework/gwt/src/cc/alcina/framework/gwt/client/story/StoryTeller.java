@@ -177,7 +177,10 @@ public class StoryTeller {
 				Class<? extends Story.State> requireElement = requires
 						.get(requiresIdx++);
 				if (!state.isResolved(requireElement)) {
-					add(context.resolveSatisfies(requireElement));
+					Provider provider = context
+							.resolveSatisfies(requireElement);
+					provider.withContext(context);
+					add(provider);
 					return;
 				}
 			}

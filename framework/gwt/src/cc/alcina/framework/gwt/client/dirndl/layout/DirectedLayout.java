@@ -961,6 +961,9 @@ public class DirectedLayout implements AlcinaProcess {
 			/*
 			 * This doesn't remove (with recursion) existing rendered dom - we
 			 * move that rather than requiring a rerender
+			 * 
+			 * update - no, we always remove from dom - just not recursively-
+			 * otherwise internal (fragment) listeners don't fire
 			 */
 			removeChildNode(newChildModel, true);
 			RendererInput input = getResolver().layout.enqueueInput(
@@ -1230,7 +1233,7 @@ public class DirectedLayout implements AlcinaProcess {
 		 * associated domNode (if any) - only the rootremoved
 		 */
 		void remove(boolean willReattach) {
-			remove(!willReattach, !willReattach);
+			remove(true, !willReattach);
 		}
 
 		void remove(boolean removeFromRendered, boolean removeParentBindings) {
