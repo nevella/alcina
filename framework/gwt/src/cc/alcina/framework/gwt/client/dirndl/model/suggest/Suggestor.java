@@ -13,6 +13,7 @@ import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -71,6 +72,7 @@ public class Suggestor extends Model implements
 				Consumer<Throwable> exceptionHandler);
 	}
 
+	@Reflected
 	public interface SuggestOracleRouter<A extends Ask> {
 		public void ask(DirectedLayout.Node node, A ask,
 				Consumer<SuggestOracle.Response> responseHandler);
