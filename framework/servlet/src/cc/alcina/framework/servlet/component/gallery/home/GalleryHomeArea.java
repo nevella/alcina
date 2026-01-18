@@ -9,15 +9,20 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.choiceeditor.ChoiceEditorGalleryPlace;
+import cc.alcina.framework.servlet.component.gallery.model.searchdefeditor.SearchDefinitionEditorGalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.tree.TreeGalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.treetable.TreeTableGalleryPlace;
 
 @Registration({ GalleryContents.class, GalleryHomePlace.class })
 class GalleryHomeArea extends GalleryContents {
 	Heading heading = new Heading("Dirndl Gallery");
+
+	SubHeading subHeading = new SubHeading(
+			"Complex Dirndl models. Behaviour tests are run with '[console-launcher] console alcina tell-gallery'");
 
 	@Directed.Wrap("cards")
 	List<Card> cards = new ArrayList<>();
@@ -38,6 +43,7 @@ class GalleryHomeArea extends GalleryContents {
 		add(ChoiceEditorGalleryPlace.class);
 		add(TreeGalleryPlace.class);
 		add(TreeTableGalleryPlace.class);
+		add(SearchDefinitionEditorGalleryPlace.class);
 	}
 
 	void add(Class<? extends GalleryPlace> clazz) {

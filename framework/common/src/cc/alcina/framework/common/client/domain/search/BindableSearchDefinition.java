@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.OrderGroup;
+import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
@@ -75,8 +76,9 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 				.annotation(TypeSerialization.class);
 		Class<? extends EntityCriteriaGroup> ecgClass = Arrays
 				.stream(typeSerialization.properties())
-				.filter(ps -> ps.name().equals("criteriaGroups")).findFirst()
-				.get().types()[0];
+				.filter(ps -> ps.name()
+						.equals(SearchDefinition.PROPERTY_CRITERIA_GROUPS))
+				.findFirst().get().types()[0];
 		getCriteriaGroups().add(Reflections.newInstance(ecgClass));
 		setResultsPerPage(50);
 	}

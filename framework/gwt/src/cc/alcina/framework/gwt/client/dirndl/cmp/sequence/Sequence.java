@@ -53,6 +53,10 @@ public interface Sequence<T> {
 		return null;
 	}
 
+	default SequenceSearchDefinition getDefaultSearchDefinition() {
+		return null;
+	}
+
 	public abstract static class Abstract<T> implements Sequence<T> {
 		public List<T> elements;
 

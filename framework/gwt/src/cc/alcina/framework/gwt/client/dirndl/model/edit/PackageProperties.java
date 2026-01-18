@@ -1,23 +1,18 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
-import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
-import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.EditArea;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.Integer;
-import java.lang.Object;
-import java.lang.String;
 import java.util.Date;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
+
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _ChoiceEditor choiceEditor = new _ChoiceEditor();
     static _ChoiceEditor_ChoiceNode choiceEditor_choiceNode = new _ChoiceEditor_ChoiceNode();
@@ -25,11 +20,13 @@ public class PackageProperties {
     public static _ChoicesEditorSingle choicesEditorSingle = new _ChoicesEditorSingle();
     public static _DecoratorNode decoratorNode = new _DecoratorNode();
     public static _EditArea editArea = new _EditArea();
+    public static _EditNode editNode = new _EditNode();
     public static _EntityNode entityNode = new _EntityNode();
     public static _StringInput stringInput = new _StringInput();
     public static _StringInput_DateEditor stringInput_dateEditor = new _StringInput_DateEditor();
     public static _StringInput_DateInput stringInput_dateInput = new _StringInput_DateInput();
     public static _StringInput_Editor stringInput_editor = new _StringInput_Editor();
+    public static _SuggestingNode suggestingNode = new _SuggestingNode();
     
     public static class _ChoiceEditor implements TypedProperty.Container {
       public TypedProperty<ChoiceEditor, Boolean> changeOnSelectionEvent = new TypedProperty<>(ChoiceEditor.class, "changeOnSelectionEvent");
@@ -37,9 +34,8 @@ public class PackageProperties {
       public TypedProperty<ChoiceEditor, List> decorators = new TypedProperty<>(ChoiceEditor.class, "decorators");
       public TypedProperty<ChoiceEditor, EditArea> editArea = new TypedProperty<>(ChoiceEditor.class, "editArea");
       public TypedProperty<ChoiceEditor, List> elements = new TypedProperty<>(ChoiceEditor.class, "elements");
-      public TypedProperty<ChoiceEditor, Boolean> magicName = new TypedProperty<>(ChoiceEditor.class, "magicName");
-      public TypedProperty<ChoiceEditor, Boolean> magicName2 = new TypedProperty<>(ChoiceEditor.class, "magicName2");
       public TypedProperty<ChoiceEditor, Boolean> repeatableChoices = new TypedProperty<>(ChoiceEditor.class, "repeatableChoices");
+      public TypedProperty<ChoiceEditor, Suggestor.SuggestOracleRouter> suggestOracleRouter = new TypedProperty<>(ChoiceEditor.class, "suggestOracleRouter");
       public TypedProperty<ChoiceEditor, Class> valueTransformer = new TypedProperty<>(ChoiceEditor.class, "valueTransformer");
       public TypedProperty<ChoiceEditor, List> values = new TypedProperty<>(ChoiceEditor.class, "values");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoiceEditor> {
@@ -49,9 +45,8 @@ public class PackageProperties {
         public InstanceProperty<ChoiceEditor, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.decorators);}
         public InstanceProperty<ChoiceEditor, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.editArea);}
         public InstanceProperty<ChoiceEditor, List> elements(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.elements);}
-        public InstanceProperty<ChoiceEditor, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.magicName);}
-        public InstanceProperty<ChoiceEditor, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.magicName2);}
         public InstanceProperty<ChoiceEditor, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.repeatableChoices);}
+        public InstanceProperty<ChoiceEditor, Suggestor.SuggestOracleRouter> suggestOracleRouter(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.suggestOracleRouter);}
         public InstanceProperty<ChoiceEditor, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.valueTransformer);}
         public InstanceProperty<ChoiceEditor, List> values(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.values);}
       }
@@ -63,26 +58,22 @@ public class PackageProperties {
     }
     
     static class _ChoiceEditor_ChoiceNode implements TypedProperty.Container {
-      TypedProperty<ChoiceEditor.ChoiceNode, String> content = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "content");
+      TypedProperty<ChoiceEditor.ChoiceNode, List> behaviors = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "behaviors");
+      TypedProperty<ChoiceEditor.ChoiceNode, Object> content = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "content");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "contentEditable");
-      TypedProperty<ChoiceEditor.ChoiceNode, Object> contentModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "contentModel");
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "descriptor");
-      TypedProperty<ChoiceEditor.ChoiceNode, FragmentModel> fragmentModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "fragmentModel");
-      TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "internalModel");
-      TypedProperty<ChoiceEditor.ChoiceNode, Boolean> magicName = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "magicName");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> selected = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "selected");
-      TypedProperty<ChoiceEditor.ChoiceNode, String> stringRepresentable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "stringRepresentable");
-      static class InstanceProperties extends 	InstanceProperty.Container<ChoiceEditor.ChoiceNode> {
+      TypedProperty<ChoiceEditor.ChoiceNode, Object> stringRepresentable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "stringRepresentable");
+      TypedProperty<ChoiceEditor.ChoiceNode, Boolean> valid = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "valid");
+      static class InstanceProperties extends InstanceProperty.Container<ChoiceEditor.ChoiceNode> {
          InstanceProperties(ChoiceEditor.ChoiceNode source){super(source);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, String> content(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.content);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.behaviors);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.content);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.contentEditable);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, Object> contentModel(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.contentModel);}
         InstanceProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.descriptor);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.fragmentModel);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, DecoratorNode.InternalModel> internalModel(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.internalModel);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.magicName);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.selected);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, String> stringRepresentable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.stringRepresentable);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, Object> stringRepresentable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.stringRepresentable);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> valid(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.valid);}
       }
       
        InstanceProperties instance(ChoiceEditor.ChoiceNode instance) {
@@ -97,10 +88,9 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorMultiple, List> decorators = new TypedProperty<>(ChoicesEditorMultiple.class, "decorators");
       public TypedProperty<ChoicesEditorMultiple, EditArea> editArea = new TypedProperty<>(ChoicesEditorMultiple.class, "editArea");
       public TypedProperty<ChoicesEditorMultiple, List> elements = new TypedProperty<>(ChoicesEditorMultiple.class, "elements");
-      public TypedProperty<ChoicesEditorMultiple, Boolean> magicName = new TypedProperty<>(ChoicesEditorMultiple.class, "magicName");
-      public TypedProperty<ChoicesEditorMultiple, Boolean> magicName2 = new TypedProperty<>(ChoicesEditorMultiple.class, "magicName2");
       public TypedProperty<ChoicesEditorMultiple, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorMultiple.class, "repeatableChoices");
       public TypedProperty<ChoicesEditorMultiple, List> selectedValues = new TypedProperty<>(ChoicesEditorMultiple.class, "selectedValues");
+      public TypedProperty<ChoicesEditorMultiple, Suggestor.SuggestOracleRouter> suggestOracleRouter = new TypedProperty<>(ChoicesEditorMultiple.class, "suggestOracleRouter");
       public TypedProperty<ChoicesEditorMultiple, Class> valueTransformer = new TypedProperty<>(ChoicesEditorMultiple.class, "valueTransformer");
       public TypedProperty<ChoicesEditorMultiple, List> values = new TypedProperty<>(ChoicesEditorMultiple.class, "values");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoicesEditorMultiple> {
@@ -110,10 +100,9 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorMultiple, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.decorators);}
         public InstanceProperty<ChoicesEditorMultiple, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.editArea);}
         public InstanceProperty<ChoicesEditorMultiple, List> elements(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.elements);}
-        public InstanceProperty<ChoicesEditorMultiple, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.magicName);}
-        public InstanceProperty<ChoicesEditorMultiple, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.magicName2);}
         public InstanceProperty<ChoicesEditorMultiple, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.repeatableChoices);}
         public InstanceProperty<ChoicesEditorMultiple, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.selectedValues);}
+        public InstanceProperty<ChoicesEditorMultiple, Suggestor.SuggestOracleRouter> suggestOracleRouter(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.suggestOracleRouter);}
         public InstanceProperty<ChoicesEditorMultiple, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.valueTransformer);}
         public InstanceProperty<ChoicesEditorMultiple, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.values);}
       }
@@ -130,10 +119,9 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorSingle, List> decorators = new TypedProperty<>(ChoicesEditorSingle.class, "decorators");
       public TypedProperty<ChoicesEditorSingle, EditArea> editArea = new TypedProperty<>(ChoicesEditorSingle.class, "editArea");
       public TypedProperty<ChoicesEditorSingle, List> elements = new TypedProperty<>(ChoicesEditorSingle.class, "elements");
-      public TypedProperty<ChoicesEditorSingle, Boolean> magicName = new TypedProperty<>(ChoicesEditorSingle.class, "magicName");
-      public TypedProperty<ChoicesEditorSingle, Boolean> magicName2 = new TypedProperty<>(ChoicesEditorSingle.class, "magicName2");
       public TypedProperty<ChoicesEditorSingle, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorSingle.class, "repeatableChoices");
       public TypedProperty<ChoicesEditorSingle, Object> selectedValue = new TypedProperty<>(ChoicesEditorSingle.class, "selectedValue");
+      public TypedProperty<ChoicesEditorSingle, Suggestor.SuggestOracleRouter> suggestOracleRouter = new TypedProperty<>(ChoicesEditorSingle.class, "suggestOracleRouter");
       public TypedProperty<ChoicesEditorSingle, Object> value = new TypedProperty<>(ChoicesEditorSingle.class, "value");
       public TypedProperty<ChoicesEditorSingle, Class> valueTransformer = new TypedProperty<>(ChoicesEditorSingle.class, "valueTransformer");
       public TypedProperty<ChoicesEditorSingle, List> values = new TypedProperty<>(ChoicesEditorSingle.class, "values");
@@ -144,10 +132,9 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorSingle, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.decorators);}
         public InstanceProperty<ChoicesEditorSingle, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.editArea);}
         public InstanceProperty<ChoicesEditorSingle, List> elements(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.elements);}
-        public InstanceProperty<ChoicesEditorSingle, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName);}
-        public InstanceProperty<ChoicesEditorSingle, Boolean> magicName2(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.magicName2);}
         public InstanceProperty<ChoicesEditorSingle, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.repeatableChoices);}
         public InstanceProperty<ChoicesEditorSingle, Object> selectedValue(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.selectedValue);}
+        public InstanceProperty<ChoicesEditorSingle, Suggestor.SuggestOracleRouter> suggestOracleRouter(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.suggestOracleRouter);}
         public InstanceProperty<ChoicesEditorSingle, Object> value(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.value);}
         public InstanceProperty<ChoicesEditorSingle, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.valueTransformer);}
         public InstanceProperty<ChoicesEditorSingle, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.values);}
@@ -160,25 +147,19 @@ public class PackageProperties {
     }
     
     public static class _DecoratorNode implements TypedProperty.Container {
-      public TypedProperty<DecoratorNode, String> content = new TypedProperty<>(DecoratorNode.class, "content");
+      public TypedProperty<DecoratorNode, List> behaviors = new TypedProperty<>(DecoratorNode.class, "behaviors");
+      public TypedProperty<DecoratorNode, Object> content = new TypedProperty<>(DecoratorNode.class, "content");
       public TypedProperty<DecoratorNode, Boolean> contentEditable = new TypedProperty<>(DecoratorNode.class, "contentEditable");
-      public TypedProperty<DecoratorNode, Object> contentModel = new TypedProperty<>(DecoratorNode.class, "contentModel");
       public TypedProperty<DecoratorNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(DecoratorNode.class, "descriptor");
-      public TypedProperty<DecoratorNode, FragmentModel> fragmentModel = new TypedProperty<>(DecoratorNode.class, "fragmentModel");
-      public TypedProperty<DecoratorNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(DecoratorNode.class, "internalModel");
-      public TypedProperty<DecoratorNode, Boolean> magicName = new TypedProperty<>(DecoratorNode.class, "magicName");
       public TypedProperty<DecoratorNode, Boolean> selected = new TypedProperty<>(DecoratorNode.class, "selected");
       public TypedProperty<DecoratorNode, Object> stringRepresentable = new TypedProperty<>(DecoratorNode.class, "stringRepresentable");
       public TypedProperty<DecoratorNode, Boolean> valid = new TypedProperty<>(DecoratorNode.class, "valid");
       public static class InstanceProperties extends 	InstanceProperty.Container<DecoratorNode> {
         public  InstanceProperties(DecoratorNode source){super(source);}
-        public InstanceProperty<DecoratorNode, String> content(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.content);}
+        public InstanceProperty<DecoratorNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.behaviors);}
+        public InstanceProperty<DecoratorNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.content);}
         public InstanceProperty<DecoratorNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.contentEditable);}
-        public InstanceProperty<DecoratorNode, Object> contentModel(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.contentModel);}
         public InstanceProperty<DecoratorNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.descriptor);}
-        public InstanceProperty<DecoratorNode, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.fragmentModel);}
-        public InstanceProperty<DecoratorNode, DecoratorNode.InternalModel> internalModel(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.internalModel);}
-        public InstanceProperty<DecoratorNode, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.magicName);}
         public InstanceProperty<DecoratorNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.selected);}
         public InstanceProperty<DecoratorNode, Object> stringRepresentable(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.stringRepresentable);}
         public InstanceProperty<DecoratorNode, Boolean> valid(){return new InstanceProperty<>(source,PackageProperties.decoratorNode.valid);}
@@ -191,24 +172,28 @@ public class PackageProperties {
     }
     
     public static class _EditArea implements TypedProperty.Container {
+      public TypedProperty<EditArea, List> behaviors = new TypedProperty<>(EditArea.class, "behaviors");
       public TypedProperty<EditArea, Boolean> contentEditable = new TypedProperty<>(EditArea.class, "contentEditable");
       public TypedProperty<EditArea, String> currentValue = new TypedProperty<>(EditArea.class, "currentValue");
       public TypedProperty<EditArea, Boolean> focusOnBind = new TypedProperty<>(EditArea.class, "focusOnBind");
       public TypedProperty<EditArea, FragmentModel> fragmentModel = new TypedProperty<>(EditArea.class, "fragmentModel");
       public TypedProperty<EditArea, Boolean> insertEditorStartCursorTarget = new TypedProperty<>(EditArea.class, "insertEditorStartCursorTarget");
       public TypedProperty<EditArea, Boolean> insertInterNonEditableCursorTargets = new TypedProperty<>(EditArea.class, "insertInterNonEditableCursorTargets");
+      public TypedProperty<EditArea, List> lastPublishedDecorators = new TypedProperty<>(EditArea.class, "lastPublishedDecorators");
       public TypedProperty<EditArea, String> placeholder = new TypedProperty<>(EditArea.class, "placeholder");
       public TypedProperty<EditArea, Boolean> stripFontTagsOnInput = new TypedProperty<>(EditArea.class, "stripFontTagsOnInput");
       public TypedProperty<EditArea, String> tag = new TypedProperty<>(EditArea.class, "tag");
       public TypedProperty<EditArea, String> value = new TypedProperty<>(EditArea.class, "value");
       public static class InstanceProperties extends 	InstanceProperty.Container<EditArea> {
         public  InstanceProperties(EditArea source){super(source);}
+        public InstanceProperty<EditArea, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.editArea.behaviors);}
         public InstanceProperty<EditArea, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.editArea.contentEditable);}
         public InstanceProperty<EditArea, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.editArea.currentValue);}
         public InstanceProperty<EditArea, Boolean> focusOnBind(){return new InstanceProperty<>(source,PackageProperties.editArea.focusOnBind);}
         public InstanceProperty<EditArea, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.editArea.fragmentModel);}
         public InstanceProperty<EditArea, Boolean> insertEditorStartCursorTarget(){return new InstanceProperty<>(source,PackageProperties.editArea.insertEditorStartCursorTarget);}
         public InstanceProperty<EditArea, Boolean> insertInterNonEditableCursorTargets(){return new InstanceProperty<>(source,PackageProperties.editArea.insertInterNonEditableCursorTargets);}
+        public InstanceProperty<EditArea, List> lastPublishedDecorators(){return new InstanceProperty<>(source,PackageProperties.editArea.lastPublishedDecorators);}
         public InstanceProperty<EditArea, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.editArea.placeholder);}
         public InstanceProperty<EditArea, Boolean> stripFontTagsOnInput(){return new InstanceProperty<>(source,PackageProperties.editArea.stripFontTagsOnInput);}
         public InstanceProperty<EditArea, String> tag(){return new InstanceProperty<>(source,PackageProperties.editArea.tag);}
@@ -221,27 +206,40 @@ public class PackageProperties {
       
     }
     
+    public static class _EditNode implements TypedProperty.Container {
+      public TypedProperty<EditNode, Boolean> contentEditable = new TypedProperty<>(EditNode.class, "contentEditable");
+      public TypedProperty<EditNode, Boolean> selected = new TypedProperty<>(EditNode.class, "selected");
+      public TypedProperty<EditNode, Boolean> valid = new TypedProperty<>(EditNode.class, "valid");
+      public static class InstanceProperties extends InstanceProperty.Container<EditNode> {
+        public  InstanceProperties(EditNode source){super(source);}
+        public InstanceProperty<EditNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.editNode.contentEditable);}
+        public InstanceProperty<EditNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.editNode.selected);}
+        public InstanceProperty<EditNode, Boolean> valid(){return new InstanceProperty<>(source,PackageProperties.editNode.valid);}
+      }
+      
+      public  InstanceProperties instance(EditNode instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
     public static class _EntityNode implements TypedProperty.Container {
-      public TypedProperty<EntityNode, String> content = new TypedProperty<>(EntityNode.class, "content");
+      public TypedProperty<EntityNode, List> behaviors = new TypedProperty<>(EntityNode.class, "behaviors");
+      public TypedProperty<EntityNode, Object> content = new TypedProperty<>(EntityNode.class, "content");
       public TypedProperty<EntityNode, Boolean> contentEditable = new TypedProperty<>(EntityNode.class, "contentEditable");
-      public TypedProperty<EntityNode, Object> contentModel = new TypedProperty<>(EntityNode.class, "contentModel");
       public TypedProperty<EntityNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(EntityNode.class, "descriptor");
-      public TypedProperty<EntityNode, FragmentModel> fragmentModel = new TypedProperty<>(EntityNode.class, "fragmentModel");
-      public TypedProperty<EntityNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(EntityNode.class, "internalModel");
-      public TypedProperty<EntityNode, Boolean> magicName = new TypedProperty<>(EntityNode.class, "magicName");
       public TypedProperty<EntityNode, Boolean> selected = new TypedProperty<>(EntityNode.class, "selected");
       public TypedProperty<EntityNode, EntityLocator> stringRepresentable = new TypedProperty<>(EntityNode.class, "stringRepresentable");
-      public static class InstanceProperties extends 	InstanceProperty.Container<EntityNode> {
+      public TypedProperty<EntityNode, Boolean> valid = new TypedProperty<>(EntityNode.class, "valid");
+      public static class InstanceProperties extends InstanceProperty.Container<EntityNode> {
         public  InstanceProperties(EntityNode source){super(source);}
-        public InstanceProperty<EntityNode, String> content(){return new InstanceProperty<>(source,PackageProperties.entityNode.content);}
+        public InstanceProperty<EntityNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.entityNode.behaviors);}
+        public InstanceProperty<EntityNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.entityNode.content);}
         public InstanceProperty<EntityNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.entityNode.contentEditable);}
-        public InstanceProperty<EntityNode, Object> contentModel(){return new InstanceProperty<>(source,PackageProperties.entityNode.contentModel);}
         public InstanceProperty<EntityNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.entityNode.descriptor);}
-        public InstanceProperty<EntityNode, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.entityNode.fragmentModel);}
-        public InstanceProperty<EntityNode, DecoratorNode.InternalModel> internalModel(){return new InstanceProperty<>(source,PackageProperties.entityNode.internalModel);}
-        public InstanceProperty<EntityNode, Boolean> magicName(){return new InstanceProperty<>(source,PackageProperties.entityNode.magicName);}
         public InstanceProperty<EntityNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.entityNode.selected);}
         public InstanceProperty<EntityNode, EntityLocator> stringRepresentable(){return new InstanceProperty<>(source,PackageProperties.entityNode.stringRepresentable);}
+        public InstanceProperty<EntityNode, Boolean> valid(){return new InstanceProperty<>(source,PackageProperties.entityNode.valid);}
       }
       
       public  InstanceProperties instance(EntityNode instance) {
@@ -413,6 +411,29 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(StringInput.Editor instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _SuggestingNode implements TypedProperty.Container {
+      public TypedProperty<SuggestingNode, List> behaviors = new TypedProperty<>(SuggestingNode.class, "behaviors");
+      public TypedProperty<SuggestingNode, Boolean> contentEditable = new TypedProperty<>(SuggestingNode.class, "contentEditable");
+      public TypedProperty<SuggestingNode, DecoratorNode.Descriptor> decoratorDescriptor = new TypedProperty<>(SuggestingNode.class, "decoratorDescriptor");
+      public TypedProperty<SuggestingNode, Boolean> selected = new TypedProperty<>(SuggestingNode.class, "selected");
+      public TypedProperty<SuggestingNode, TextNode> textFragment = new TypedProperty<>(SuggestingNode.class, "textFragment");
+      public TypedProperty<SuggestingNode, Boolean> valid = new TypedProperty<>(SuggestingNode.class, "valid");
+      public static class InstanceProperties extends InstanceProperty.Container<SuggestingNode> {
+        public  InstanceProperties(SuggestingNode source){super(source);}
+        public InstanceProperty<SuggestingNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.behaviors);}
+        public InstanceProperty<SuggestingNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.contentEditable);}
+        public InstanceProperty<SuggestingNode, DecoratorNode.Descriptor> decoratorDescriptor(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.decoratorDescriptor);}
+        public InstanceProperty<SuggestingNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.selected);}
+        public InstanceProperty<SuggestingNode, TextNode> textFragment(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.textFragment);}
+        public InstanceProperty<SuggestingNode, Boolean> valid(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.valid);}
+      }
+      
+      public  InstanceProperties instance(SuggestingNode instance) {
         return new InstanceProperties( instance);
       }
       

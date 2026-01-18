@@ -463,7 +463,8 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			criteriaGroupsPropertySerialization
 					.setName(PropertySerialization.class.getSimpleName());
 			criteriaGroupsPropertySerialization.addPair("name",
-					new StringLiteralExpr("criteriaGroups"));
+					new StringLiteralExpr(
+							SearchDefinition.PROPERTY_CRITERIA_GROUPS));
 			criteriaGroupsPropertySerialization.addPair("types",
 					Ax.format("%s.class", entityCriteriaGroupName));
 			criteriaGroupsPropertySerialization.addPair("defaultProperty",

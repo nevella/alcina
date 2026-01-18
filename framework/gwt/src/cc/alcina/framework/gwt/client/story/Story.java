@@ -103,6 +103,9 @@ public interface Story {
 			default Class<? extends State> resolvesState() {
 				return Reflections.at(this).firstGenericBound();
 			}
+
+			default void withContext(TellerContext context) {
+			}
 		}
 	}
 

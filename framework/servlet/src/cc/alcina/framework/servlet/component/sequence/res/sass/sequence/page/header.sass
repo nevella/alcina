@@ -4,6 +4,7 @@
 @use '../../dirndl/cmp/choices'
 @use '../../dirndl/cmp/heading'
 @use '../../dirndl/cmp/action'
+@use '../../dirndl/cmp/search-definition-editor/area' as search-definition-editor
 
 $header-height: 50px
 $font-family: Arial
@@ -19,7 +20,7 @@ $item-gap: 2.5rem
   font-family: $font-family
   display: grid
   align-items: center
-  grid-template-columns: 1fr theme.$app-suggestor-width 1fr
+  grid-template-columns: 1fr 68rem 1fr
   grid-template-areas: "left mid right"
   align-content: center
   box-sizing: border-box
@@ -64,6 +65,16 @@ $item-gap: 2.5rem
     grid-area: mid
     display: flex
     justify-content: center
+    gap: 1rem
+
+    > search-definition-editor
+      @include search-definition-editor.contents
+      min-width: 10rem
+      
+      edit:empty:before
+        content: 'Search filters'
+        color: #777
+
 
   >right
     justify-content: flex-end

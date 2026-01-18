@@ -2,16 +2,18 @@ package cc.alcina.framework.servlet.component.sequence.adapter;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.flight.FlightEvent;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.InstanceQuery;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 
 @TypeSerialization(
 	value = "flightevent",
 	properties = { @PropertySerialization(
-		name = "criteriaGroups",
-		types = FlightEventCriterion.CriteriaGroup.class,
+		name = SearchDefinition.PROPERTY_CRITERIA_GROUPS,
+		types = FlightEventCriterion.FlightEventCriteriaGroup.class,
 		defaultProperty = true) })
 public class FlightEventSearchDefinition extends SequenceSearchDefinition {
 	@TypeSerialization("FlightEventSearchDefinition")
@@ -20,6 +22,11 @@ public class FlightEventSearchDefinition extends SequenceSearchDefinition {
 		public Parameter() {
 			setValue(new FlightEventSearchDefinition());
 		}
+	}
+
+	@Override
+	public Class<? extends Sequence> sequenceClass() {
+		return FlightEventSequence.class;
 	}
 
 	@Override

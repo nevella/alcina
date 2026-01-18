@@ -1,16 +1,13 @@
 package com.google.gwt.dom.client.behavior;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
-import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -36,11 +33,6 @@ public class BehaviorRegistry implements NativePreviewHandler {
 
 	List<ElementBehavior> handlers;
 
-	/*
-	 * Used to test uniqueness of magic names
-	 */
-	Set<String> magicAttributeNames;
-
 	Set<String> eventTypes = AlcinaCollections.newUniqueSet();
 
 	boolean initialised = false;
@@ -59,19 +51,11 @@ public class BehaviorRegistry implements NativePreviewHandler {
 		handlers = registerHandlers ? Registry.query(ElementBehavior.class)
 				.implementations().filter(ElementBehavior::isEventHandler)
 				.collect(Collectors.toList()) : List.of();
-		magicAttributeNames = new LinkedHashSet<>();
-		addMagicName(NodeAttachId.ATTR_NAME_TRANSMIT_STATE);
-		handlers.stream().map(ElementBehavior::getMagicAttributeName)
-				.filter(Objects::nonNull).forEach(this::addMagicName);
 		handlers.stream().map(ElementBehavior::getEventType)
 				.filter(Objects::nonNull).forEach(eventTypes::add);
 		if (registerHandlers) {
 			Event.addNativePreviewHandler(this);
 		}
-	}
-
-	void addMagicName(String name) {
-		Preconditions.checkArgument(magicAttributeNames.add(name));
 	}
 
 	public static boolean isInitialised() {

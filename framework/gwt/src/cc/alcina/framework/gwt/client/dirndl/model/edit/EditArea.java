@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.BeforeInput;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
@@ -51,12 +52,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 @DirectedContextResolver(FragmentResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
 @TypedProperties
-public class EditArea extends Model.Fields
-		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
-		DomEvents.BeforeInput.Handler, LayoutEvents.BeforeRender.Handler,
+public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
+		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,
+		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
 		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
 		InferredDomEvents.SelectionChanged.Handler, FragmentModel.Has,
-		ModelMutation.Handler {
+		ModelMutation.Handler, HasElementBehaviors, Binding.TabIndexZero {
 	public static transient PackageProperties._EditArea properties = PackageProperties.editArea;
 
 	@Binding(type = Type.INNER_HTML)
@@ -174,6 +175,8 @@ public class EditArea extends Model.Fields
 		} finally {
 			provideNode().setBindingsDisabled(false);
 		}
+		fragmentModel.byType(SuggestingNode.class)
+				.forEach(n -> n.nodes().strip());
 	}
 
 	@Override
@@ -221,9 +224,7 @@ public class EditArea extends Model.Fields
 	}
 
 	public void setValue(String value) {
-		String old_value = this.value;
-		this.value = value;
-		propertyChangeSupport().firePropertyChange("value", old_value, value);
+		set("value", this.value, value, () -> this.value = value);
 	}
 
 	@Override
@@ -231,14 +232,22 @@ public class EditArea extends Model.Fields
 		provideNode().deferIfFiring(() -> {
 			new CursorTargetConstraint().alignWithConstraint();
 			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
+			List<DecoratorNode> decorators = fragmentModel
+					.byTypeAssignable(DecoratorNode.class).toList();
+			if (!Objects.equals(decorators, lastPublishedDecorators)) {
+				lastPublishedDecorators = decorators;
+				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
+			}
 		});
 	}
+
+	List<DecoratorNode> lastPublishedDecorators;
 
 	/**
 	 * 
 	 * 
 	 * <p>
-	 * Thsi behaviour ensures that a blank text node exists between adjacent
+	 * This behaviour ensures that a blank text node exists between adjacent
 	 * non-editables (DecoratorNodes), and (optionally) at the editor
 	 * Boundaries.
 	 * 
@@ -336,5 +345,24 @@ public class EditArea extends Model.Fields
 	@Override
 	public void onSelectionChanged(SelectionChanged event) {
 		new ContentEditableSelected().updateDecoratorSelected(event);
+	}
+
+	@Override
+	public List<Class<? extends ElementBehavior>> getBehaviors() {
+		return List.of(
+				ElementBehavior.DisableContentEditableOnIsolateMousedown.class);
+	}
+
+	@Override
+	public void onFocusin(Focusin event) {
+		// if (!contentEditable) {
+		// properties.contentEditable.set(this, true);
+		// }
+		/*
+		 * wip - decorator - shouldn't be needed - is because browser
+		 * synchronous attr change isn't syncing?
+		 */
+		properties.contentEditable.set(this, false);
+		properties.contentEditable.set(this, true);
 	}
 }

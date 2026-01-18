@@ -5,12 +5,19 @@ import java.lang.System.Logger.Level;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.gwt.client.story.Story;
+import cc.alcina.framework.gwt.client.story.TellerContext;
 import cc.alcina.framework.gwt.client.story.Waypoint;
-import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalBrowser;
+import cc.alcina.framework.gwt.client.story.impl.UrlRouterPart;
 import cc.alcina.framework.servlet.story.console.Story_Console;
 
 class Story_GalleryBrowserImpl {
 	static final int TIMEOUT = 5000;
+
+	static int getPort(TellerContext context) {
+		UrlRouterPart part = context.getPart(UrlRouterPart.class);
+		int port = part == null ? Story_Console.port() : part.port;
+		return port;
+	}
 
 	/*
 	 * Ensures the gallery page renders (i.e. the console is running + completed
@@ -21,7 +28,7 @@ class Story_GalleryBrowserImpl {
 		@Override
 		public void perform(Context context) throws Exception {
 			String url = Ax.format("http://127.0.0.1:%s/gallery",
-					Story_Console.port());
+					getPort(context.tellerContext()));
 			SimpleHttp http = new SimpleHttp(url).withTimeout(TIMEOUT);
 			try {
 				String response = http.asString();
@@ -36,9 +43,10 @@ class Story_GalleryBrowserImpl {
 	/* Loads the Gallery UI in the browser */
 	static class _UiLoaded extends Waypoint
 			implements Story.State.Provider<Story_GalleryBrowser.State.Loaded> {
-		_UiLoaded() {
+		@Override
+		public void withContext(TellerContext context) {
 			String url = Ax.format("http://127.0.0.1:%s/gallery",
-					Story_Console.port());
+					getPort(context));
 			action = new Story.Action.Ui.Go();
 			location = new Story.Action.Location.Url().withText(url);
 		}
@@ -47,9 +55,10 @@ class Story_GalleryBrowserImpl {
 	/* Loads the Gallery Home (ok, same as the UI provider) in the browser */
 	static class _Home extends Waypoint
 			implements Story.State.Provider<Story_GalleryBrowser.State.Home> {
-		_Home() {
+		@Override
+		public void withContext(TellerContext context) {
 			String url = Ax.format("http://127.0.0.1:%s/gallery",
-					Story_Console.port());
+					getPort(context));
 			action = new Story.Action.Ui.Go();
 			location = new Story.Action.Location.Url().withText(url);
 		}

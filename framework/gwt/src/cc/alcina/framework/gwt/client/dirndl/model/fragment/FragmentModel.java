@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.event.Events;
@@ -330,6 +331,14 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		node.children().forEach(this::register);
 	}
 
+	public void deregister(FragmentNode node) {
+		if (node.provideIsUnbound()) {
+			return;
+		}
+		deregisterTransformer(node.domNode());
+		node.children().forEach(this::deregister);
+	}
+
 	NodeTransformer registerTransformer(DomNode domNode,
 			NodeTransformer transformer) {
 		return domNodeTransformer.put(domNode, transformer);
@@ -418,8 +427,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			setModel(new Data(fragmentModel));
 		}
 
-		public void addEntry(FragmentNodeOps parent, Model model, Type type) {
-			getData().add(new Entry(parent, model, type));
+		public void addEntry(FragmentNodeOps parent, Object model, Type type) {
+			Entry entry = new Entry(parent, model, type);
+			getData().add(entry);
 		}
 
 		@Override
@@ -463,7 +473,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				Set<FragmentNodeOps> result = new LinkedHashSet<>();
 				entries.forEach(e -> {
 					result.add(e.parent);
-					Model m = e.model;
+					Object m = e.model;
 					if (m instanceof FragmentNode) {
 						result.add((FragmentNode) m);
 					}
@@ -475,18 +485,23 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			public String toString() {
 				FormatBuilder format = new FormatBuilder().separator("\n");
 				format.appendIfNotBlank(entries);
-				return format.toString();
+				return FormatBuilder.keyValues("entries", entries,
+						"updateRecords", updateRecords.values());
+			}
+
+			public boolean hasDomUpdates() {
+				return updateRecords.size() > 0;
 			}
 		}
 
 		public static class Entry {
-			public Model model;
+			public Object model;
 
 			public Type type;
 
 			public FragmentNodeOps parent;
 
-			Entry(FragmentNodeOps parent, Model model, Type type) {
+			Entry(FragmentNodeOps parent, Object model, Type type) {
 				this.parent = parent;
 				this.model = model;
 				this.type = type;
@@ -531,6 +546,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 		void add(MutationRecord record) {
 			records.add(record);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s : %s", node, records);
 		}
 
 		void apply() {

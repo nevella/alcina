@@ -1035,6 +1035,10 @@ public class LocalDom implements ContextFrame {
 	 */
 	public class AttachIdRepresentations {
 		public void applyEvent(DomEventData eventData) {
+			if (eventData.event == null) {
+				// shadow-dom event
+				return;
+			}
 			boolean selectionEvent = Objects.equals(eventData.event.getType(),
 					BrowserEvents.SELECTIONCHANGE);
 			EventTarget eventTarget = eventData.event.getEventTarget();

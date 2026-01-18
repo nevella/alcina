@@ -69,6 +69,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode.Transfo
  * Implementation - this is in layout rather than the model/fragment package to
  * allow access to package-protected aspects of DirectedLayout.Node
  */
+/*
+ * FIXME - note that FragmentNodes must not have directed properties (should be
+ * enforced in code), unless it is also a FragmentIsolate. Descendant nodes
+ * should be instead added during #onFragmentRegistration
+ */
 @Transformer(NodeTransformer.DirectedTransformer.class)
 @Directed
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
@@ -445,6 +450,7 @@ public abstract class FragmentNode extends Model.Fields
 
 	public class Nodes {
 		public <FN extends FragmentNode> FN append(FN child) {
+			fragmentModel().deregister(child);
 			withMutating(() -> provideNode().append(child));
 			fragmentModel().register(child);
 			return (FN) child;
@@ -461,17 +467,20 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public void insertAfterThis(FragmentNode fragmentNode) {
+			fragmentModel().deregister(fragmentNode);
 			withMutating(() -> provideParentNode().insertAfter(fragmentNode,
 					FragmentNode.this));
 			fragmentModel().register(fragmentNode);
 		}
 
 		public void insertAsFirstChild(FragmentNode child) {
+			fragmentModel().deregister(child);
 			withMutating(() -> provideNode().insertAsFirstChild(child));
 			fragmentModel().register(child);
 		}
 
 		public void insertBeforeThis(FragmentNode fragmentNode) {
+			fragmentModel().deregister(fragmentNode);
 			withMutating(() -> provideParentNode().insertBefore(fragmentNode,
 					FragmentNode.this));
 			fragmentModel().register(fragmentNode);
@@ -516,6 +525,7 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public void removeFromParent() {
+			fragmentModel().deregister(FragmentNode.this);
 			withMutating(() -> provideParentNode()
 					.removeChildNode(FragmentNode.this, false));
 		}

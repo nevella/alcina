@@ -7,6 +7,10 @@ import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
 
+/**
+ * Essentially a debugging tool for EditArea development. Maybe delete, since
+ * it's not updated to track current editnode/decoratornode split
+ */
 @Bean(PropertySource.FIELDS)
 public class DecoratorEvent implements GlobalObservable, FlightEventWrappable {
 	public String sessionId;

@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.sequence;
 
+import java.util.List;
+
 import com.google.gwt.activity.shared.PlaceUpdateable;
 
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
@@ -53,7 +55,8 @@ class Page extends Model.Fields
 		SequenceArea.Service.Provider,
 		SequenceBrowserCommand.DetailDisplayCycle.Handler,
 		SequenceBrowserCommand.ColumnSetCycle.Handler,
-		SequenceEvents.NavigateToNewSequencePlace.Handler {
+		SequenceEvents.NavigateToNewSequencePlace.Handler,
+		SequenceEvents.SequenceChanged.Emitter, SequenceBehaviorsServer {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)
@@ -201,5 +204,10 @@ class Page extends Model.Fields
 
 	PackageProperties._Page.InstanceProperties properties() {
 		return PackageProperties.page.instance(this);
+	}
+
+	@Override
+	public List<?> provideFiltereedSequenceElements() {
+		return sequenceArea.provideFiltereedSequenceElements();
 	}
 }

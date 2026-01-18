@@ -50,6 +50,26 @@ public interface SequenceExecCommand<T> extends ExecCommand<T> {
 		}
 	}
 
+	public static class ExportToTsv implements SequenceExecCommand {
+		@Override
+		public String name() {
+			return "tsv";
+		}
+
+		@Override
+		public void execCommand(ModelEvent event, List filteredElements) {
+			String csvText = Csv.fromCollection(filteredElements).withTsv(true)
+					.toOutputString();
+			event.reemitAs(event.getContext().node.getModel(),
+					CopyToClipboard.class, csvText);
+			String path = "/tmp/sequence.tsv";
+			Io.write().string(csvText).toPath(path);
+			NotificationObservable
+					.of("TSV copied to clipboard and written to %s", path)
+					.publish();
+		}
+	}
+
 	static class Support {
 		static void showAvailableCommands() {
 			Stream<SequenceExecCommand> commands = Registry

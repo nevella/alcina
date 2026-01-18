@@ -38,8 +38,10 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  * This affects the *computation* of transience (effectively the PropertyNode
  * instances used by the ReflectiveSerializer instance). Since tat computation
  * is identical for a given set of transience flags, it's cached here
+ * 
+ * Public for access for searchdefinition serialization
  */
-class SerializerReflection {
+public class SerializerReflection {
 	private static Map<Class, Class> solePossibleImplementation = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
@@ -96,7 +98,8 @@ class SerializerReflection {
 	static Map<SerializationModifiers, SerializerReflection> reflectionByModifiers = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	static PropertySerialization getPropertySerialization(Property property) {
+	public static PropertySerialization
+			getPropertySerialization(Property property) {
 		Class<?> clazz = property.getOwningType();
 		TypeSerialization typeSerialization = Annotations.resolve(clazz,
 				TypeSerialization.class);

@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCr
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashSetCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators.LinkedHashSetCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.LinkedMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.WeakMapCreator;
@@ -67,11 +68,30 @@ public class CollectionCreatorsJvm {
 		}
 	}
 
+	/*
+	 * note - should probably be ObjectOpenHashSet rather than
+	 * ObjectLinkedOpenHashSet - but need to check callers (particularly mvcc)
+	 */
 	@Reflected
 	@Registration.Singleton(
 		value = CollectionCreators.HashSetCreator.class,
 		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class HashSetCreatorJvm extends HashSetCreator {
+		@Override
+		public <T> Set<T> create() {
+			return new ObjectLinkedOpenHashSet<>();
+		}
+
+		public <T> Set<T> create(int size) {
+			return new ObjectLinkedOpenHashSet<>(size);
+		}
+	}
+
+	@Reflected
+	@Registration.Singleton(
+		value = CollectionCreators.LinkedHashSetCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class LinkedHashSetCreatorJvm extends LinkedHashSetCreator {
 		@Override
 		public <T> Set<T> create() {
 			return new ObjectLinkedOpenHashSet<>();

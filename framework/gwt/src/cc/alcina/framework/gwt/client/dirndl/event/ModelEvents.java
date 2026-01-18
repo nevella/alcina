@@ -381,6 +381,27 @@ public class ModelEvents {
 	}
 
 	/**
+	 * This exists...but generally use Submit
+	 */
+	public static class Go extends ModelEvent<Object, Go.Handler> {
+		@Override
+		public void dispatch(Go.Handler handler) {
+			handler.onGo(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onGo(Go event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onGo(Go event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	/**
 	 * Model version of a DOM input event (input element value has changed, but
 	 * has not been 'committed') - see
 	 * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event
@@ -654,6 +675,30 @@ public class ModelEvents {
 		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onSelectionChanged(SelectionChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	/**
+	 * Published by complex selectors (e.g. ChoiceEditor) when the selection has
+	 * changed but not been committed. Analagous to 'change' vs 'input' DOM
+	 * events on input elements
+	 */
+	public static class SelectionDirty
+			extends ModelEvent<Object, SelectionDirty.Handler> {
+		@Override
+		public void dispatch(SelectionDirty.Handler handler) {
+			handler.onSelectionDirty(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionDirty(SelectionDirty event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSelectionDirty(SelectionDirty event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}

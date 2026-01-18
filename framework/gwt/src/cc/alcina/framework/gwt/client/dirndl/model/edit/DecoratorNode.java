@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.gwt.dom.client.Document;
@@ -7,6 +9,8 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.Text;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
@@ -15,14 +19,12 @@ import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
@@ -37,12 +39,16 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
  */
 @Directed(className = "decorator-node")
 @TypedProperties
-public abstract class DecoratorNode<WT, SR> extends FragmentNode
-		implements HasStringRepresentableType<SR>, FragmentIsolate,
-		HasContentEditable, Binding.TabIndexMinusOne {
+public abstract class DecoratorNode<WT, SR> extends EditNode implements
+		HasStringRepresentableType<SR>, FragmentIsolate, HasElementBehaviors {
 	static boolean isNonEditable(FragmentNode node) {
 		return node instanceof DecoratorNode
 				&& !((DecoratorNode) node).contentEditable;
+	}
+
+	@Override
+	public List<Class<? extends ElementBehavior>> getBehaviors() {
+		return List.of(ElementBehavior.FragmentIsolateBehavior.class);
 	}
 
 	/**
@@ -106,71 +112,24 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		}
 	}
 
-	/*
-	 * WIP - the internal model of the decorator. Normally this is just a simple
-	 * text node
-	 */
-	class InternalModel extends FragmentModel {
-		InternalModel(Model rootModel) {
-			super(rootModel);
-		}
-	}
-
 	protected PackageProperties._DecoratorNode.InstanceProperties properties() {
 		return PackageProperties.decoratorNode.instance(this);
 	}
 
-	InternalModel internalModel;
-
-	@Binding(
-		type = Type.PROPERTY,
-		to = "contentEditable",
-		transform = Binding.DisplayFalseTrueBidi.class)
-	public boolean contentEditable;
-
-	@Binding(type = Type.PROPERTY)
-	public boolean selected;
-
-	@Binding(type = Type.INNER_TEXT)
-	public String content = null;
-
 	@Directed
-	public Object contentModel;
+	public Object content = null;
 
+	/**
+	 * The serialized form of the object this decorator represents (in
+	 * combination with the decorator tagname)
+	 */
 	@Binding(
 		type = Type.PROPERTY,
-		to = "uid",
+		to = "_data",
 		transform = RepresentableToStringTransform.class)
 	public SR stringRepresentable;
 
-	@Binding(
-		type = Type.PROPERTY,
-		to = DecoratorBehavior.InterceptUpDownBehaviour.ATTR_NAME)
-	public boolean isMagicName() {
-		return true;
-	}
-
 	public DecoratorNode() {
-		from(properties().contentEditable())
-				.accept(this::notifyContentEditableDelta);
-	}
-
-	void updateSelected() {
-		Selection selection = Document.get().getSelection();
-		boolean selected = selection.hasSelection() && !selection.isCollapsed()
-				&& selection.asRange()
-						.contains(provideElement().asDomNode().asRange());
-		properties().selected().set(selected);
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		new DecoratorEvent()
-				.withType(event.isBound() ? DecoratorEvent.Type.node_bound
-						: DecoratorEvent.Type.node_unbound)
-				.withSubtype(NestedName.get(this)).withMessage(content)
-				.publish();
 	}
 
 	@Override
@@ -178,19 +137,17 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		return Reflections.at(this).getGenericBounds().bounds.get(1);
 	}
 
-	@Override
-	public FragmentModel getFragmentModel() {
-		if (internalModel == null) {
-			internalModel = new InternalModel(this);
-		}
-		return internalModel;
-	}
-
 	/*
 	 * for method refs
 	 */
 	public SR getStringRepresentable() {
 		return stringRepresentable;
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		emitEvent(DecoratorEvents.DecoratorBound.class);
 	}
 
 	public abstract Descriptor<WT, SR, ?> getDescriptor();
@@ -204,31 +161,12 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		if (renderedReferenced instanceof String) {
 			String text = triggerSequence + renderedReferenced;
 			properties().content().set(text);
-			properties().contentModel().set(null);
 		} else {
-			properties().content().set(null);
-			properties().contentModel().set(renderedReferenced);
+			properties().content().set(renderedReferenced);
 		}
 	}
 
-	public void toNonEditable() {
-		properties().contentEditable().set(false);
-	}
-
-	@Override
-	public boolean provideIsContentEditable() {
-		return contentEditable;
-	}
-
-	void notifyContentEditableDelta(boolean contentEditable) {
-		new DecoratorEvent().withType(DecoratorEvent.Type.editable_attr_changed)
-				.withSubtype(NestedName.get(this))
-				.withMessage(
-						Ax.format("[-->%s] :: %s", contentEditable, content))
-				.publish();
-	}
-
-	boolean isValid() {
+	public boolean isValid() {
 		// FIXME - DN server shd validate entity on update. and other
 		// validations (e.g. not contained in a decorator)
 		return stringRepresentable != null;
@@ -239,27 +177,23 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		if (provideIsUnbound()) {
 			return;// removed
 		}
-		FragmentNode nextSibling = nodes().nextSibling();
-		// FIXME - fragment.isolate - position cursor at the end of the mention,
-		// then allow the
-		// 'cursor validator' to move it to a correct location
-		//
-		// current:
-		// try positioning cursor immediately after the decorator
-		// guaranteed non-null (due to zws insertion)
 		TextNode cursorTarget = null;
-		if (nextSibling != null) {
-			cursorTarget = nextSibling instanceof TextNode
-					? (TextNode) nextSibling
-					: nextSibling.fragmentTree().nextTextNode(true)
-							.orElse(null);
-		} else {
-			cursorTarget = new TextNode("");
-			nodes().insertAfterThis(cursorTarget);
+		FragmentNode siblingCursor = nodes().nextSibling();
+		while (siblingCursor != null) {
+			Optional<TextNode> subsequentText = siblingCursor.tree().stream()
+					.filter(n -> n instanceof TextNode).map(n -> (TextNode) n)
+					.findFirst();
+			if (subsequentText.isPresent()) {
+				cursorTarget = subsequentText.get();
+			}
+			siblingCursor = siblingCursor.nodes().nextSibling();
 		}
-		Node cursorNode = cursorTarget.domNode().gwtNode();
+		if (cursorTarget == null) {
+			cursorTarget = nodes().append(new TextNode(""));
+		}
+		Node cursorGwtNode = cursorTarget.domNode().gwtNode();
 		Selection selection = Document.get().getSelection();
-		selection.collapse(cursorNode, 0);// after zws
+		selection.collapse(cursorGwtNode, 0);// after zws
 	}
 
 	void stripIfInvalid() {
@@ -291,5 +225,16 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 			TextNode newCursorTarget = new TextNode();
 			nodes().insertAfterThis(newCursorTarget);
 		}
+	}
+
+	public boolean allowPartialSelection() {
+		return content != null && content instanceof AlllowsPartialSelection;
+	}
+
+	/**
+	 * Marker for complex decorator content which is itself
+	 * editable/sub-selectable
+	 */
+	public interface AlllowsPartialSelection {
 	}
 }

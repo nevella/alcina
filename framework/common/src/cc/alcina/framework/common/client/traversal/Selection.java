@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.PeekingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
@@ -352,25 +351,23 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return new AncestorIteratorTopDown(this);
 	}
 
-	static class AncestorIteratorTopDown<T> extends PeekingIterator<Selection> {
-		Iterator<Node> nodeItr;
+	static class AncestorIteratorTopDown<T> implements Iterator<Selection> {
+		Selection cursor;
 
 		AncestorIteratorTopDown(Selection<T> selection) {
-			nodeItr = selection.processNode().asNodePath().iterator();
+			cursor = selection;
 		}
 
 		@Override
-		protected Selection peekNext() {
-			while (nodeItr.hasNext()) {
-				Node node = nodeItr.next();
-				Object value = node.getValue();
-				if (value instanceof Selection) {
-					next = (Selection) value;
-					return next;
-				}
-			}
-			finished = true;
-			return null;
+		public boolean hasNext() {
+			return cursor != null;
+		}
+
+		@Override
+		public Selection next() {
+			Selection result = cursor;
+			cursor = result.parentSelection();
+			return result;
 		}
 	}
 
@@ -408,16 +405,6 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	default <ST extends T> ST cast() {
 		return (ST) get();
 	}
-
-	/**
-	 * This method (and teardown exitContext) should generally only operate on
-	 * context properties
-	 */
-	default void enterContext() {
-	};
-
-	default void exitContext() {
-	};
 
 	default String fullPath() {
 		Selection cursor = this;
@@ -636,5 +623,15 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		Preconditions.checkArgument(getClass() == other.getClass());
 		getRelations().addRelation(Selection.Relation.Type.Replacement.class,
 				other);
+	}
+
+	public interface HasContextEntryHandlers {
+		/**
+		 * This method (and teardown exitContext) should generally only operate
+		 * on context properties
+		 */
+		void enterContext();
+
+		void exitContext();
 	}
 }

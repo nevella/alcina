@@ -1,14 +1,20 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
-import com.totsp.gwittir.client.beans.Binding;
+import com.google.gwt.user.client.ui.SuggestOracle;
 import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.domain.HasObject;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
@@ -18,25 +24,41 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 @TypedProperties
-class Searchable extends Model.Fields {
+class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
+		HasObject, DecoratorNode.AlllowsPartialSelection {
 	SearchCriterion searchCriterion;
+
+	// for methodHandle
+	SearchCriterion searchCriterion() {
+		return searchCriterion;
+	}
 
 	@Directed
 	String name;
+
+	@Binding(type = Type.PROPERTY)
+	String criterionClass;
 
 	@Directed
 	ValueEditor valueEditor;
 
 	Searchable(SearchCriterion searchCriterion) {
 		this.searchCriterion = searchCriterion;
-		this.name = searchCriterion.getDisplayName();
+		this.criterionClass = NestedName.get(searchCriterion);
+		this.name = Ax.blankTo(searchCriterion.getDisplayName(), searchCriterion
+				.getClass().getSimpleName().replace("Criterion", ""));
 	}
 
 	PackageProperties._Searchable.InstanceProperties properties() {
 		return PackageProperties.searchable.instance(this);
+	}
+
+	String provideName() {
+		return name;
 	}
 
 	@Override
@@ -103,7 +125,8 @@ class Searchable extends Model.Fields {
 			}
 
 			@Override
-			public void onChildBindingCreated(Binding binding) {
+			public void onChildBindingCreated(
+					com.totsp.gwittir.client.beans.Binding binding) {
 			}
 		}
 
@@ -118,5 +141,18 @@ class Searchable extends Model.Fields {
 		public ContextResolver getContextResolver(AnnotationLocation location) {
 			return new Resolver(Searchable.this.provideNode().getResolver());
 		}
+	}
+
+	@Override
+	public Object provideObject() {
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		Object value = searchCriterion instanceof HasValue
+				? ((HasValue) searchCriterion).getValue()
+				: null;
+		return Ax.format("%s : %s", name, Ax.toString(value));
 	}
 }

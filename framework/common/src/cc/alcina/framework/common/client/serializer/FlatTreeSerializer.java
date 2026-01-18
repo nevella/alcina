@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -210,15 +211,17 @@ public class FlatTreeSerializer {
 			state.keyValues.remove(CLASS);
 			state.serializerReflection = SerializerReflection.get(false);
 			T instance = Reflections.newInstance(clazz);
-			String mappedKeysValue = instance.treeSerializationCustomiser()
-					.mapKeys(value, false);
+			TreeSerializable.Customiser treeSerializationCustomiser = instance
+					.treeSerializationCustomiser();
+			String mappedKeysValue = treeSerializationCustomiser.mapKeys(value,
+					false);
 			if (!Objects.equals(mappedKeysValue, value)) {
 				state.keyValues = StringMap.fromPropertyString(mappedKeysValue);
 				state.keyValues.remove(CLASS);
 			}
-			instance.treeSerializationCustomiser().onBeforeTreeDeserialize();
+			treeSerializationCustomiser.onBeforeTreeDeserialize();
 			new FlatTreeSerializer(state).deserialize0(instance);
-			instance.treeSerializationCustomiser().onAfterTreeDeserialize();
+			treeSerializationCustomiser.onAfterTreeDeserialize();
 			return instance;
 		} finally {
 			LooseContext.pop();
@@ -807,9 +810,13 @@ public class FlatTreeSerializer {
 								"Object %s - illegal in collection: \n\t%s\n\t%s ",
 								childValue, existingPath, cursor));
 					}
-					Node childNode = new Node(cursor, childValue, defaultValue);
-					childNode.path.index = counter.getAndIncrement(childValue);
-					state.pending.add(childNode);
+					if (state.test(childValue)) {
+						Node childNode = new Node(cursor, childValue,
+								defaultValue);
+						childNode.path.index = counter
+								.getAndIncrement(childValue);
+						state.pending.add(childNode);
+					}
 				});
 			} else if (value instanceof TreeSerializable) {
 				state.serializerReflection.getProperties(value.getClass())
@@ -833,6 +840,9 @@ public class FlatTreeSerializer {
 											.getPropertySerialization(
 													property));
 							if (childNode.path.ignoreForSerialization()) {
+								return;
+							}
+							if (!state.test(childValue)) {
 								return;
 							}
 							checkReachableTestingTypes(childNode);
@@ -862,10 +872,14 @@ public class FlatTreeSerializer {
 			return null;
 		}
 		State state;
+		TreeSerializable.Customiser treeSerializationCustomiser = object
+				.treeSerializationCustomiser();
 		try {
-			object.treeSerializationCustomiser().onBeforeTreeSerialize();
+			treeSerializationCustomiser.onBeforeTreeSerialize();
 			state = new State();
 			state.serializerOptions = options;
+			state.serializationPredicate = treeSerializationCustomiser
+					.getTreeSerializationPredicate();
 			Node node = new Node(null, object,
 					Reflections.at(object).templateInstance());
 			state.serializerReflection = SerializerReflection
@@ -874,12 +888,11 @@ public class FlatTreeSerializer {
 			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
 			serializer.serialize();
 		} finally {
-			object.treeSerializationCustomiser().onAfterTreeSerialize();
+			treeSerializationCustomiser.onAfterTreeSerialize();
 		}
 		String serialized = state.keyValues.sorted(new KeyComparator())
 				.toPropertyString();
-		serialized = object.treeSerializationCustomiser().mapKeys(serialized,
-				true);
+		serialized = treeSerializationCustomiser.mapKeys(serialized, true);
 		if (options.singleLine) {
 			serialized = serialized.replace("\n", ":");
 		}
@@ -898,10 +911,10 @@ public class FlatTreeSerializer {
 					.withSingleLine(options.singleLine)
 					.withTopLevelTypeInfo(options.topLevelTypeInfo)
 					.withReadableTime(options.readableTime);
-			String testSerialized = object.treeSerializationCustomiser()
+			String testSerialized = treeSerializationCustomiser
 					.filterTestSerialized(serialized);
 			String checkSerialized = serialize(checkObject, checkOptions);
-			String testCheckSerialized = object.treeSerializationCustomiser()
+			String testCheckSerialized = treeSerializationCustomiser
 					.filterTestSerialized(checkSerialized);
 			if (!Objects.equals(testSerialized, testCheckSerialized)) {
 				unequalSerialized.publish(
@@ -1929,6 +1942,8 @@ public class FlatTreeSerializer {
 	}
 
 	static class State {
+		Predicate serializationPredicate;
+
 		SerializerReflection serializerReflection;
 
 		public Class<? extends Object> rootClass;
@@ -1950,6 +1965,11 @@ public class FlatTreeSerializer {
 				Node root = pending.get(0);
 				keyValues.put(CLASS, root.value.getClass().getName());
 			}
+		}
+
+		boolean test(Object value) {
+			return serializationPredicate == null
+					|| serializationPredicate.test(value);
 		}
 	}
 }

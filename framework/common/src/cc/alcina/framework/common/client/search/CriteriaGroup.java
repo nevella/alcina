@@ -43,6 +43,8 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,
 		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable,
 		TreeSerializable.NonMultiple {
+	public static final String PROPERTY_CRITERIA = "criteria";
+
 	private FilterCombinator combinator = FilterCombinator.AND;
 
 	private Set<SC> criteria = new LightSet<SC>();

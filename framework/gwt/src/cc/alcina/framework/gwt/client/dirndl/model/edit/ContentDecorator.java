@@ -3,16 +3,17 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Selection;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
@@ -32,9 +33,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
@@ -124,6 +125,39 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
 		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler,
 		DomEvents.Focusout.Handler {
+	public static class Builder<T> {
+		HasDecorators decoratorParent;
+
+		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
+
+		DecoratorNode.Descriptor<?, ?, ?> descriptor;
+
+		public ContentDecorator build() {
+			Preconditions.checkNotNull(decoratorParent);
+			Preconditions.checkState(decoratorParent instanceof Model);
+			Preconditions.checkNotNull(suggestorProvider);
+			Preconditions.checkNotNull(descriptor);
+			return new ContentDecorator(this);
+		}
+
+		public void setSuggestorProvider(
+				BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider) {
+			this.suggestorProvider = suggestorProvider;
+		}
+
+		public void setDecoratorParent(HasDecorators decoratorParent) {
+			this.decoratorParent = decoratorParent;
+		}
+
+		public void
+				setDescriptor(DecoratorNode.Descriptor<?, ?, ?> descriptor) {
+			this.descriptor = descriptor;
+		}
+	}
+
+	class CancelledDecoratorSuggestion {
+	}
+
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
@@ -139,11 +173,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	 */
 	Topic<InferredDomEvents.SelectionChanged> topicSelectionChanged = Topic
 			.create();
-
-	/*
-	 * The decorator node currently being edited
-	 */
-	DecoratorNode<?, ?> decorator;
 
 	/*
 	 * The suggestor used to edit the current decorator
@@ -168,6 +197,25 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	 */
 	DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
+	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
+
+	/* reference the runnable via a field to ensure distinct() works */
+	Runnable checkTrigger0Runnable = this::checkTrigger0;
+
+	Runnable validateSelection0Runnable = this::validateSelection0;
+
+	/*
+	 * The SuggestingNode currently being edited
+	 */
+	SuggestingNode suggestingNode;
+
+	DomNode overlayEditNode;
+
+	/**
+	 * Should only be called by the builder
+	 * 
+	 * @param builder
+	 */
 	private ContentDecorator(ContentDecorator.Builder builder) {
 		/*
 		 * AttributeBehaviorHandler registration is required
@@ -178,17 +226,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		this.decoratorParent = builder.decoratorParent;
 	}
 
-	boolean canDecorate(EditSelection relativeInput) {
-		return decoratorParent.canDecorate(relativeInput);
-	}
-
 	public boolean isActive() {
 		return suggestor != null;
-	}
-
-	boolean isSpaceOrLeftBracketish(String characterString) {
-		return characterString != null
-				&& characterString.matches("[ \\u200B({\\[]");
 	}
 
 	@Override
@@ -227,15 +266,103 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		topicInput.publish(event);
 	}
 
-	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
-
-	class CancelledDecoratorSuggestion {
+	@Override
+	public void onKeyDown(KeyDown event) {
+		validateSelection();
 	}
 
-	/* reference the runnable via a field to ensure distinct() works */
-	Runnable checkTrigger0Runnable = this::checkTrigger0;
+	@Override
+	public void onMouseUp(MouseUp event) {
+		validateSelection();
+	}
 
-	Runnable validateSelection0Runnable = this::validateSelection0;
+	@Override
+	public void onNavigation(Navigation event) {
+		if (suggestor != null) {
+			suggestor.suggestor.onNavigation(event);
+		}
+		// FIXME - ui2 - there's probably a better way to do this. but not
+		// super-obvious. Possibly suggestor -> non-overlay results
+		if (overlay != null) {
+			if (event.getModel() == Type.CANCEL
+					|| event.getModel() == Type.COMMIT) {
+				closeOverlay();
+			}
+		}
+	}
+
+	@Override
+	public void onReferenceSelected(ReferenceSelected event) {
+		if (event.getContext().getPrevious().node.getModel() == suggestor) {
+			DecoratorNode decorator = descriptor.createNode();
+			decorator.putReferenced(event.getModel());
+			suggestingNode.nodes().insertAfterThis(decorator);
+			suggestingNode.nodes().removeFromParent();
+			decorator.positionCursorPostReferencedSelection();
+		}
+	}
+
+	@Override
+	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
+		checkOverlayValid();
+		checkTrigger();
+		topicSelectionChanged.publish(event);
+	}
+
+	@Override
+	public void onNodeDelta(NodeDelta event) {
+		refreshOverlayIfShowing();
+	}
+
+	@Override
+	public void onFocusout(Focusout event) {
+		if (overlay != null) {
+			closeOverlay();
+		}
+	}
+
+	protected void validateSelection0() {
+		EditSelection selection = new EditSelection();
+		if (!selection.hasSelection()) {
+			return;
+		}
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		List<? extends FragmentNode> list = fragmentModel.stream().toList();
+		if (suggestor == null) {
+			/*
+			 * ensure the selection doesn't contain a partial decoratornode (in
+			 * dom terms it's totally fine, but not in FN terms)
+			 */
+			Optional<DomNode> partiallySelectedAncestor = selection
+					.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
+							.getFragmentNode(n) instanceof DecoratorNode);
+			if (partiallySelectedAncestor.isPresent()) {
+				DomNode node = partiallySelectedAncestor.get();
+				DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
+						.getFragmentNode(node);
+				if (!decoratorNode.allowPartialSelection()) {
+					// FIXME - FN
+					selection.extendSelectionToIncludeAllOf(node);
+				}
+			}
+			/*
+			 * Strip any editable DNs (they'll have not been assigned a
+			 * referent/representable)
+			 */
+			fragmentModel.byTypeAssignable(DecoratorNode.class)
+					.filter(dn -> dn.contentEditable)
+					.forEach(fragmentNode -> fragmentNode.nodes().strip());
+		}
+	}
+
+	boolean canDecorate(EditSelection relativeInput) {
+		return decoratorParent.canDecorate(relativeInput);
+	}
+
+	boolean isSpaceOrLeftBracketish(String characterString) {
+		return characterString != null
+				&& characterString.matches("[ \\u200B({\\[]");
+	}
 
 	void checkTrigger() {
 		/*
@@ -265,62 +392,74 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
  */
 	void checkTrigger0() {
 		validateSelection0();
-		EditSelection selection = new EditSelection();
-		if (selection.isTriggerable() && suggestor == null) {
+		EditSelection editSelection = new EditSelection();
+		DomNode focusNode = editSelection.focusNode();
+		if (focusNode == null) {
+			return;
+		}
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		FragmentNode focussedFragment = fragmentModel
+				.getFragmentNode(focusNode);
+		if (focussedFragment != null) {
+			/*
+			 * behavior. on cursor validation, strip any suggesting nodes that
+			 * are not ancestors of the selection
+			 * 
+			 * better - strip exactly the source suggesting node on overlay
+			 * close
+			 */
+			fragmentModel.byType(SuggestingNode.class).filter(
+					n -> !focussedFragment.ancestors().has(n2 -> n2 == n))
+					.forEach(n -> n.nodes().strip());
+		}
+		if (editSelection.isTriggerable() && suggestor == null) {
+			if (focussedFragment != null
+					&& focussedFragment.ancestors().has(SuggestingNode.class)) {
+				/*
+				 * transitional, transforming from accepted suggesing to
+				 * decorator
+				 */
+				return;
+			}
 			validateSelection0();
 			String triggerSequence = null;
-			if (!decoratorParent.canDecorate(selection)) {
+			if (!decoratorParent.canDecorate(editSelection)) {
 			} else {
-				triggerSequence = descriptor.getTriggerSequence(selection);
+				triggerSequence = descriptor.getTriggerSequence(editSelection);
 			}
 			// if triggerable, wrap in the decorator tag (possiby splitting
 			// the source text node) and connect the suggestor overlay
 			// split
 			if (triggerSequence != null) {
-				FragmentModel fragmentModel = decoratorParent
-						.provideFragmentModel();
-				decorator = descriptor.splitAndWrap(selection, fragmentModel);
-				showOverlay(decorator.domNode());
+				suggestingNode = createSuggestingNode(editSelection);
+				showOverlay(suggestingNode.domNode());
 			}
 		}
 	}
 
-	@Override
-	public void onKeyDown(KeyDown event) {
-		validateSelection();
-	}
-
-	@Override
-	public void onMouseUp(MouseUp event) {
-		validateSelection();
-	}
-
-	@Override
-	public void onNavigation(Navigation event) {
-		if (suggestor != null) {
-			suggestor.suggestor.onNavigation(event);
-		}
-		// FIXME - ui2 - there's probably a better way to do this. but not
-		// super-obvious. Possibly suggestor -> non-overlay results
-		if (overlay != null) {
-			if (event.getModel() == Type.CANCEL
-					|| event.getModel() == Type.COMMIT) {
-				closeOverlay();
-			}
-		}
+	SuggestingNode createSuggestingNode(EditSelection editSelection) {
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		LocalDom.flushLocalMutations();
+		String triggerSequence = descriptor.getTriggerSequence(editSelection);
+		SplitResult splits = editSelection.splitAtTriggerRange(triggerSequence);
+		DomNode splitContents = splits.contents;
+		// may need to flush (to populate FNs) - note for romcom, want to
+		// not force remote
+		LocalDom.flushLocalMutations();
+		TextNode textFragment = (TextNode) fragmentModel
+				.getFragmentNode(splitContents);
+		FragmentNode parent = textFragment.parent();
+		SuggestingNode created = new SuggestingNode(descriptor, textFragment);
+		textFragment.nodes().insertBeforeThis(created);
+		LocalDom.flush();
+		Selection selection = Document.get().getSelection();
+		Text text = (Text) splits.contents.w3cNode();
+		selection.collapse(text, text.getLength());
+		return created;
 	}
 
 	void closeOverlay() {
 		overlay.close(null, false);
-	}
-
-	@Override
-	public void onReferenceSelected(ReferenceSelected event) {
-		if (event.getContext().getPrevious().node.getModel() == suggestor) {
-			decorator.toNonEditable();
-			decorator.putReferenced(event.getModel());
-			decorator.positionCursorPostReferencedSelection();
-		}
 	}
 
 	void refreshOverlayIfShowing() {
@@ -346,14 +485,12 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 						domElement.getBoundingClientRect(),
 						(Model) decoratorParent, suggestor)
 				.withRectSourceElement(domElement)
-				.withPeerModels(List.of(this.decorator)).create();
+				.withPeerModels(List.of(this.suggestingNode)).create();
 		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
 				.publish();
 		overlay.open();
 		this.overlayEditNode = decoratorDomNode;
 	}
-
-	DomNode overlayEditNode;
 
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
 	void validateSelection() {
@@ -367,90 +504,17 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		}
 	}
 
-	protected void validateSelection0() {
-		EditSelection selection = new EditSelection();
-		if (!selection.hasSelection()) {
-			return;
-		}
-		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
-		List<? extends FragmentNode> list = fragmentModel.stream().toList();
-		if (suggestor == null) {
-			/*
-			 * ensure the selection doesn't contain a partial decoratornode (in
-			 * dom terms it's totally fine, but not in FN terms)
-			 */
-			Optional<DomNode> partiallySelectedAncestor = selection
-					.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
-							.getFragmentNode(n) instanceof DecoratorNode);
-			if (partiallySelectedAncestor.isPresent()) {
-				DomNode node = partiallySelectedAncestor.get();
-				DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
-						.getFragmentNode(node);
-				if (!decoratorNode.contentEditable) {
-					// FIXME - FN
-					selection.extendSelectionToIncludeAllOf(node);
-				}
-			}
-			/*
-			 * Strip any editable DNs (they'll have not been assigned a
-			 * referent/representable)
-			 */
-			fragmentModel.byTypeAssignable(DecoratorNode.class)
-					.filter(dn -> dn.contentEditable)
-					.forEach(this::stripRespectingIsolate);
-		}
-	}
-
-	void stripRespectingIsolate(FragmentNode node) {
-		List<? extends FragmentNode> children = node.children()
-				.collect(Collectors.toList());
-		if (node instanceof FragmentIsolate) {
-			children = ((FragmentIsolate) node).getFragmentModel().children()
-					.collect(Collectors.toList());
-		}
-		node.nodes().strip();
-	}
-
-	public static class Builder<T> {
-		HasDecorators decoratorParent;
-
-		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
-
-		DecoratorNode.Descriptor<?, ?, ?> descriptor;
-
-		public ContentDecorator build() {
-			Preconditions.checkNotNull(decoratorParent);
-			Preconditions.checkState(decoratorParent instanceof Model);
-			Preconditions.checkNotNull(suggestorProvider);
-			Preconditions.checkNotNull(descriptor);
-			return new ContentDecorator(this);
-		}
-
-		public void setSuggestorProvider(
-				BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider) {
-			this.suggestorProvider = suggestorProvider;
-		}
-
-		public void setDecoratorParent(HasDecorators decoratorParent) {
-			this.decoratorParent = decoratorParent;
-		}
-
-		public void
-				setDescriptor(DecoratorNode.Descriptor<?, ?, ?> descriptor) {
-			this.descriptor = descriptor;
-		}
-	}
-
-	@Override
-	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
-		checkOverlayValid();
-		checkTrigger();
-		topicSelectionChanged.publish(event);
-	}
-
 	void checkOverlayValid() {
 		if (overlayEditNode != null) {
-			boolean retain = false;
+			/*
+			 * wip - decorator - possibly should be false, but there are
+			 * 'spurious' - possibly intermediate - selection events (where the
+			 * selection target was removed from dom) that can cause the overlay
+			 * to be incorrectly closed.
+			 * 
+			 * revisit once the editarea state is described with invariants
+			 */
+			boolean retain = true;
 			Selection selection = Document.get().getSelection();
 			if (selection.hasSelection()
 					&& selection.getAnchorLocation() != null
@@ -463,18 +527,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			if (!retain) {
 				closeOverlay();
 			}
-		}
-	}
-
-	@Override
-	public void onNodeDelta(NodeDelta event) {
-		refreshOverlayIfShowing();
-	}
-
-	@Override
-	public void onFocusout(Focusout event) {
-		if (overlay != null) {
-			closeOverlay();
 		}
 	}
 }

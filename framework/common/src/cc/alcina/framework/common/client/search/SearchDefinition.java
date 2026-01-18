@@ -22,8 +22,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.collections.IsInstanceFilter;
@@ -39,6 +41,7 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.SerializerReflection;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -77,6 +80,8 @@ public abstract class SearchDefinition extends Bindable
 	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
 			.getName() + ".CONTEXT_CURRENT_SEARCH_DEFINITION";
 
+	public static final transient String PROPERTY_CRITERIA_GROUPS = "criteriaGroups";
+
 	/*
 	 * Instructs the searcher to not project (results are for an identity with
 	 * root/system privileges)
@@ -113,8 +118,7 @@ public abstract class SearchDefinition extends Bindable
 
 	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc,
 			boolean knownEmptyCriterion) {
-		assert criteriaGroups.size() == 1;
-		criteriaGroups.iterator().next().addCriterion(sc);
+		soleCriteriaGroup().addCriterion(sc);
 		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
 				null);
 		for (PropertyChangeListener listener : new ArrayList<>(
@@ -567,10 +571,55 @@ public abstract class SearchDefinition extends Bindable
 
 		@Override
 		public void onBeforeTreeSerialize() {
-			serializable.getCriteriaGroups().forEach(cg -> cg.getCriteria()
-					.removeIf(sc -> ((SearchCriterion) sc).emptyCriterion()));
 			serializable.getOrderGroups().forEach(og -> og
 					.treeSerializationCustomiser().onBeforeTreeSerialize());
 		}
+
+		@Override
+		public Predicate getTreeSerializationPredicate() {
+			return o -> {
+				if (o instanceof SearchCriterion) {
+					return !((SearchCriterion) o).emptyCriterion();
+				} else {
+					return true;
+				}
+			};
+		}
+	}
+
+	public EditSupport editSupport() {
+		return new EditSupport(this);
+	}
+
+	public static class EditSupport {
+		SearchDefinition searchDefinition;
+
+		public EditSupport(SearchDefinition searchDefinition) {
+			this.searchDefinition = searchDefinition;
+		}
+
+		public List<Class<? extends SearchCriterion>> listAvailableCriteria() {
+			List<Class<? extends SearchCriterion>> result = new ArrayList<>();
+			PropertySerialization criteriaGroupSerialization = SerializerReflection
+					.getPropertySerialization(Reflections.at(searchDefinition)
+							.property(PROPERTY_CRITERIA_GROUPS));
+			List<Class<? extends CriteriaGroup>> criteriaGroups = List
+					.of(criteriaGroupSerialization.types());
+			for (Class<? extends CriteriaGroup> criteriaGroupClass : criteriaGroups) {
+				PropertySerialization criteriaSerialization = SerializerReflection
+						.getPropertySerialization(
+								Reflections.at(criteriaGroupClass).property(
+										CriteriaGroup.PROPERTY_CRITERIA));
+				List<Class<? extends SearchCriterion>> criteria = List
+						.of(criteriaSerialization.types());
+				result.addAll(criteria);
+			}
+			return result;
+		}
+	}
+
+	public CriteriaGroup soleCriteriaGroup() {
+		Preconditions.checkState(criteriaGroups.size() == 1);
+		return criteriaGroups.iterator().next();
 	}
 }

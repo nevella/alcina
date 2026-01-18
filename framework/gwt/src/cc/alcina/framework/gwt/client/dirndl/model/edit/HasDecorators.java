@@ -3,10 +3,10 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.List;
 
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -46,25 +46,17 @@ public interface HasDecorators
 		DomEvents.KeyDown.Handler,
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
-		FragmentModel.Has, DomEvents.Focusout.Handler {
-	/*
-	 * Marker attribute
-	 */
-	@Binding(
-		type = Type.PROPERTY,
-		to = DecoratorBehavior.ExtendKeyboardNavigationAction.ATTR_NAME)
-	default boolean isMagicName() {
-		return true;
-	}
-
-	/*
-	 * Marker attribute
-	 */
-	@Binding(
-		type = Type.PROPERTY,
-		to = DecoratorBehavior.ModifyNonEditableSelectionBehaviour.ATTR_NAME)
-	default boolean isMagicName2() {
-		return true;
+		FragmentModel.Has, DomEvents.Focusout.Handler, HasElementBehaviors {
+	@Override
+	default List<Class<? extends ElementBehavior>> getBehaviors() {
+		return List.of(DecoratorBehavior.ExtendKeyboardNavigationAction.class,
+				/*
+				 * wip - decorator - maybe zap? content-editable may fix this.
+				 * anyway, invariant is along the lines of
+				 * "deletion of partially-selected decorator deletes whole decorator"
+				 */
+				// DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
+				ElementBehavior.EnsureCursorTargetIsTextNodeBehaviour.class);
 	}
 
 	default boolean canDecorate(EditSelection editSelection) {
