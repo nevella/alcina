@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
+import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
@@ -50,7 +51,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
-import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteElementBehaviors;
 
 /**
  * <p>

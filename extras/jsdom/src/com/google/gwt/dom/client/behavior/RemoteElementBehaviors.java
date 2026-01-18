@@ -1,12 +1,15 @@
-package cc.alcina.framework.servlet.component.romcom.client.common.logic;
+package com.google.gwt.dom.client.behavior;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
+/**
+ * Romcom behaviors
+ */
 public class RemoteElementBehaviors {
 	/**
-	 * Send the offsets (batched) with mutations, to reduce roundtrips
+	 * Romcom behaviors. Send the offsets (batched) with mutations, to reduce
+	 * roundtrips
 	 */
 	public static class ElementOffsetsRequired implements ElementBehavior {
 		@Override

@@ -10,6 +10,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
+import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 import com.google.gwt.dom.client.mutations.LocalMutations;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.Event;
