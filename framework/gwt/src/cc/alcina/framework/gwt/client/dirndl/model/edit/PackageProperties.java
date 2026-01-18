@@ -70,7 +70,7 @@ public class PackageProperties {
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "contentEditable");
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "descriptor");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> selected = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "selected");
-      TypedProperty<ChoiceEditor.ChoiceNode, String> stringRepresentable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "stringRepresentable");
+      TypedProperty<ChoiceEditor.ChoiceNode, Object> stringRepresentable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "stringRepresentable");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> valid = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "valid");
       static class InstanceProperties extends InstanceProperty.Container<ChoiceEditor.ChoiceNode> {
          InstanceProperties(ChoiceEditor.ChoiceNode source){super(source);}
@@ -79,7 +79,7 @@ public class PackageProperties {
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.contentEditable);}
         InstanceProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.descriptor);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.selected);}
-        InstanceProperty<ChoiceEditor.ChoiceNode, String> stringRepresentable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.stringRepresentable);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, Object> stringRepresentable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.stringRepresentable);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> valid(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.valid);}
       }
       
@@ -186,6 +186,7 @@ public class PackageProperties {
       public TypedProperty<EditArea, FragmentModel> fragmentModel = new TypedProperty<>(EditArea.class, "fragmentModel");
       public TypedProperty<EditArea, Boolean> insertEditorStartCursorTarget = new TypedProperty<>(EditArea.class, "insertEditorStartCursorTarget");
       public TypedProperty<EditArea, Boolean> insertInterNonEditableCursorTargets = new TypedProperty<>(EditArea.class, "insertInterNonEditableCursorTargets");
+      public TypedProperty<EditArea, List> lastPublishedDecorators = new TypedProperty<>(EditArea.class, "lastPublishedDecorators");
       public TypedProperty<EditArea, String> placeholder = new TypedProperty<>(EditArea.class, "placeholder");
       public TypedProperty<EditArea, Boolean> stripFontTagsOnInput = new TypedProperty<>(EditArea.class, "stripFontTagsOnInput");
       public TypedProperty<EditArea, String> tag = new TypedProperty<>(EditArea.class, "tag");
@@ -199,6 +200,7 @@ public class PackageProperties {
         public InstanceProperty<EditArea, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.editArea.fragmentModel);}
         public InstanceProperty<EditArea, Boolean> insertEditorStartCursorTarget(){return new InstanceProperty<>(source,PackageProperties.editArea.insertEditorStartCursorTarget);}
         public InstanceProperty<EditArea, Boolean> insertInterNonEditableCursorTargets(){return new InstanceProperty<>(source,PackageProperties.editArea.insertInterNonEditableCursorTargets);}
+        public InstanceProperty<EditArea, List> lastPublishedDecorators(){return new InstanceProperty<>(source,PackageProperties.editArea.lastPublishedDecorators);}
         public InstanceProperty<EditArea, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.editArea.placeholder);}
         public InstanceProperty<EditArea, Boolean> stripFontTagsOnInput(){return new InstanceProperty<>(source,PackageProperties.editArea.stripFontTagsOnInput);}
         public InstanceProperty<EditArea, String> tag(){return new InstanceProperty<>(source,PackageProperties.editArea.tag);}

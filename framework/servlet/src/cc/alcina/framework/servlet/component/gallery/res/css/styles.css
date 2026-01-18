@@ -516,6 +516,9 @@ button {
 button:hover {
   color: #777;
 }
+button[disabled] {
+  opacity: 0.5;
+}
 
 spacer {
   display: inline-block;
@@ -531,6 +534,10 @@ a, a:active, a:hover, a:visited {
 a:hover {
   color: #5070FF;
   text-decoration: underline;
+}
+
+a[disabled] {
+  opacity: 0.5;
 }
 
 body {
@@ -1081,6 +1088,13 @@ search-definition-editor > go-container {
   padding: 0.4rem;
   border: solid 1px #aaa;
   border-left: none;
+}
+search-definition-editor > go-container > button {
+  color: #3050FF;
+}
+search-definition-editor > go-container > button:hover {
+  color: #5070FF;
+  text-decoration: underline;
 }
 
 /* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves

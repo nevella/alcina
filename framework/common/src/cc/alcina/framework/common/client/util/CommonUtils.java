@@ -1087,6 +1087,12 @@ public class CommonUtils {
 
 	public static Set intersection(Collection c1, Collection c2) {
 		Set result = setSupplier.get();
+		if (c1 == null) {
+			c1 = Set.of();
+		}
+		if (c2 == null) {
+			c2 = Set.of();
+		}
 		if (c1.size() > c2.size()) {
 			Collection tmp = c1;
 			c1 = c2;

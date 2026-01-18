@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
@@ -231,8 +232,16 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		provideNode().deferIfFiring(() -> {
 			new CursorTargetConstraint().alignWithConstraint();
 			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
+			List<DecoratorNode> decorators = fragmentModel
+					.byTypeAssignable(DecoratorNode.class).toList();
+			if (!Objects.equals(decorators, lastPublishedDecorators)) {
+				lastPublishedDecorators = decorators;
+				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
+			}
 		});
 	}
+
+	List<DecoratorNode> lastPublishedDecorators;
 
 	/**
 	 * 

@@ -1,3 +1,5 @@
+@use '../../../theme/theme'
+
 @mixin contents
   display: flex
   background-color: rgba(255,255,255,0.5)
@@ -8,6 +10,13 @@
     padding: 0.4rem
     border: solid 1px #aaa
     border-left: none
+
+    > button
+      color: theme.$link-color
+
+      &:hover
+        color: theme.$link-hover-color
+        text-decoration: underline
 
 @mixin tag
   search-definition-editor

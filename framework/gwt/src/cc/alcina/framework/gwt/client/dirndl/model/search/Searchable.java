@@ -32,6 +32,11 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		HasObject, DecoratorNode.AlllowsPartialSelection {
 	SearchCriterion searchCriterion;
 
+	// for methodHandle
+	SearchCriterion searchCriterion() {
+		return searchCriterion;
+	}
+
 	@Directed
 	String name;
 

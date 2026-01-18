@@ -11,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 import cc.alcina.framework.gwt.client.dirndl.model.TreePath;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import com.totsp.gwittir.client.ui.table.Field;
 import java.lang.Boolean;
 import java.lang.Class;
@@ -32,6 +33,7 @@ public class PackageProperties {
     public static _DomainViewTree_DomainViewNode domainViewTree_domainViewNode = new _DomainViewTree_DomainViewNode();
     public static _FilteredChoices filteredChoices = new _FilteredChoices();
     public static _HeadingActions headingActions = new _HeadingActions();
+    public static _Link link = new _Link();
     public static _StandardModels_Panel standardModels_panel = new _StandardModels_Panel();
     public static _TableModel_TableColumn tableModel_tableColumn = new _TableModel_TableColumn();
     public static _TableModel_TableColumn_ColumnFilter tableModel_tableColumn_columnFilter = new _TableModel_TableColumn_ColumnFilter();
@@ -206,6 +208,51 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(HeadingActions instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Link implements TypedProperty.Container {
+      public TypedProperty<Link, List> behaviors = new TypedProperty<>(Link.class, "behaviors");
+      public TypedProperty<Link, String> className = new TypedProperty<>(Link.class, "className");
+      public TypedProperty<Link, Boolean> disabled = new TypedProperty<>(Link.class, "disabled");
+      public TypedProperty<Link, Boolean> draggable = new TypedProperty<>(Link.class, "draggable");
+      public TypedProperty<Link, String> href = new TypedProperty<>(Link.class, "href");
+      public TypedProperty<Link, String> id = new TypedProperty<>(Link.class, "id");
+      public TypedProperty<Link, Boolean> inFlight = new TypedProperty<>(Link.class, "inFlight");
+      public TypedProperty<Link, Object> inner = new TypedProperty<>(Link.class, "inner");
+      public TypedProperty<Link, String> innerHtml = new TypedProperty<>(Link.class, "innerHtml");
+      public TypedProperty<Link, Class> modelEvent = new TypedProperty<>(Link.class, "modelEvent");
+      public TypedProperty<Link, Object> modelEventData = new TypedProperty<>(Link.class, "modelEventData");
+      public TypedProperty<Link, Class> nonStandardObjectAction = new TypedProperty<>(Link.class, "nonStandardObjectAction");
+      public TypedProperty<Link, BasePlace> place = new TypedProperty<>(Link.class, "place");
+      public TypedProperty<Link, String> tag = new TypedProperty<>(Link.class, "tag");
+      public TypedProperty<Link, String> target = new TypedProperty<>(Link.class, "target");
+      public TypedProperty<Link, String> text = new TypedProperty<>(Link.class, "text");
+      public TypedProperty<Link, String> title = new TypedProperty<>(Link.class, "title");
+      public static class InstanceProperties extends InstanceProperty.Container<Link> {
+        public  InstanceProperties(Link source){super(source);}
+        public InstanceProperty<Link, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.link.behaviors);}
+        public InstanceProperty<Link, String> className(){return new InstanceProperty<>(source,PackageProperties.link.className);}
+        public InstanceProperty<Link, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.link.disabled);}
+        public InstanceProperty<Link, Boolean> draggable(){return new InstanceProperty<>(source,PackageProperties.link.draggable);}
+        public InstanceProperty<Link, String> href(){return new InstanceProperty<>(source,PackageProperties.link.href);}
+        public InstanceProperty<Link, String> id(){return new InstanceProperty<>(source,PackageProperties.link.id);}
+        public InstanceProperty<Link, Boolean> inFlight(){return new InstanceProperty<>(source,PackageProperties.link.inFlight);}
+        public InstanceProperty<Link, Object> inner(){return new InstanceProperty<>(source,PackageProperties.link.inner);}
+        public InstanceProperty<Link, String> innerHtml(){return new InstanceProperty<>(source,PackageProperties.link.innerHtml);}
+        public InstanceProperty<Link, Class> modelEvent(){return new InstanceProperty<>(source,PackageProperties.link.modelEvent);}
+        public InstanceProperty<Link, Object> modelEventData(){return new InstanceProperty<>(source,PackageProperties.link.modelEventData);}
+        public InstanceProperty<Link, Class> nonStandardObjectAction(){return new InstanceProperty<>(source,PackageProperties.link.nonStandardObjectAction);}
+        public InstanceProperty<Link, BasePlace> place(){return new InstanceProperty<>(source,PackageProperties.link.place);}
+        public InstanceProperty<Link, String> tag(){return new InstanceProperty<>(source,PackageProperties.link.tag);}
+        public InstanceProperty<Link, String> target(){return new InstanceProperty<>(source,PackageProperties.link.target);}
+        public InstanceProperty<Link, String> text(){return new InstanceProperty<>(source,PackageProperties.link.text);}
+        public InstanceProperty<Link, String> title(){return new InstanceProperty<>(source,PackageProperties.link.title);}
+      }
+      
+      public  InstanceProperties instance(Link instance) {
         return new InstanceProperties( instance);
       }
       

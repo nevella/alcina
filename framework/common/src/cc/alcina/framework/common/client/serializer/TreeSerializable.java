@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -115,6 +116,10 @@ public interface TreeSerializable extends Serializable {
 		}
 
 		public void onBeforeTreeSerialize() {
+		}
+
+		public Predicate getTreeSerializationPredicate() {
+			return null;
 		}
 	}
 

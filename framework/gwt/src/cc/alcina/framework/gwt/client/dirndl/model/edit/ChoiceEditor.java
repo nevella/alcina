@@ -7,7 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -20,16 +19,19 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 
@@ -56,12 +58,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
 @Feature.Ref(Feature_Dirndl_ChoiceEditor_Impl.class)
 @Directed(tag = "choice-editor")
 public abstract class ChoiceEditor<T> extends Choices<T>
-		implements HasDecorators {
+		implements HasDecorators, DecoratorEvents.DecoratorsChanged.Handler {
 	@Directed(tag = "choice-node")
 	@Bean(PropertySource.FIELDS)
-	static class ChoiceNode extends DecoratorNode<Choice, String> {
+	static class ChoiceNode extends DecoratorNode<Choice, Object> {
 		static class Descriptor
-				extends DecoratorNode.Descriptor<Choice, String, ChoiceNode> {
+				extends DecoratorNode.Descriptor<Choice, Object, ChoiceNode> {
 			static transient Descriptor INSTANCE = new Descriptor();
 
 			@Override
@@ -91,8 +93,14 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			}
 
 			@Override
-			protected String toStringRepresentable(Choice wrappedType) {
-				return choiceToString(wrappedType);
+			protected Object toStringRepresentable(Choice wrappedType) {
+				return wrappedType.getValue();
+				/*
+				 * wip - decorator
+				 */
+				// if (wrappedType.getValue() instanceof StringRepresentable) {
+				// }
+				// return choiceToString(wrappedType);
 			}
 		}
 
@@ -104,7 +112,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		}
 
 		@Override
-		public DecoratorNode.Descriptor<Choice, String, ?> getDescriptor() {
+		public DecoratorNode.Descriptor<Choice, Object, ?> getDescriptor() {
 			return new ChoiceNode.Descriptor();
 		}
 	}
@@ -123,6 +131,17 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	transient KeyboardNavigation keyboardNavigation;
 
 	SuggestOracleRouter suggestOracleRouter;
+
+	@Override
+	public void onDecoratorsChanged(DecoratorsChanged event) {
+		int debug = 3;
+		Ax.err("Decorators changes :: %s", event.getModel().size());
+		List<DecoratorNode> model = event.getModel();
+		List<T> decoratorChoiceValues = model.stream()
+				.map(n -> (T) n.getStringRepresentable()).toList();
+		event.reemitAs(this, ModelEvents.SelectionDirty.class,
+				decoratorChoiceValues);
+	}
 
 	public ChoiceEditor() {
 		editArea = new EditArea();
@@ -215,15 +234,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Property.Not
 	List<T> getEditorValues() {
 		return editArea.fragmentModel.byType(ChoiceNode.class)
-				.map(ChoiceNode::getStringRepresentable)
-				.filter(Objects::nonNull).map(this::selectedValueFromString)
+				.map(ChoiceNode::getStringRepresentable).map(sr -> (T) sr)
 				.collect(Collectors.toList());
-	}
-
-	T selectedValueFromString(String uid) {
-		return getValues().stream().filter(
-				t -> Objects.equals(CommonUtils.nullSafeToString(t), uid))
-				.findFirst().orElse(null);
 	}
 
 	ContentDecorator createChoiceDecorator() {

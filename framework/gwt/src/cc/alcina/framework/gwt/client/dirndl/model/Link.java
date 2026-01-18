@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -16,6 +17,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -60,6 +62,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * Note the default {@link #getBehaviors()} - if you don't want that (e.g.
  * because of late binding), use another model
  */
+@TypedProperties
 public class Link extends Model
 		implements DomEvents.Click.Handler, HasTag, HasElementBehaviors {
 	public static class AnchorTransform
@@ -134,6 +137,10 @@ public class Link extends Model
 	private boolean disabled;
 
 	private boolean inFlight;
+
+	public PackageProperties._Link.InstanceProperties properties() {
+		return PackageProperties.link.instance(this);
+	}
 
 	@Binding(type = Type.PROPERTY)
 	public boolean isInFlight() {
@@ -245,7 +252,13 @@ public class Link extends Model
 	public void onClick(Click event) {
 		ClickEvent gwtEvent = (ClickEvent) event.getContext().getGwtEvent();
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
-			if (!Document.get().getSelection().isCollapsed()) {
+			Selection selection = Document.get().getSelection();
+			/*
+			 * don't fire if the link is partially selected
+			 */
+			if (!selection.isCollapsed()
+					&& selection.asRange().toIntPair().intersectsWithNonPoint(
+							provideElement().asDomNode().toIndexPair())) {
 				return;
 			}
 			if (modelEvent != null) {

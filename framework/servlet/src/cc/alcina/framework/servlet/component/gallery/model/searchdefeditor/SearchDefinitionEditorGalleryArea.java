@@ -4,10 +4,9 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Submit;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.search.SearchDefinitionEditor;
 import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 
 /*
@@ -30,7 +29,7 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 @TypedProperties
 class SearchDefinitionEditorGalleryArea
 		extends GalleryContents<SearchDefinitionEditorGalleryPlace>
-		implements ModelEvents.Submit.Handler {
+		implements SearchDefinitionEditor.Submit.Handler {
 	PackageProperties._SearchDefinitionEditorGalleryArea.InstanceProperties
 			properties() {
 		return PackageProperties.searchDefinitionEditorGalleryArea
@@ -55,9 +54,9 @@ class SearchDefinitionEditorGalleryArea
 	}
 
 	@Override
-	public void onSubmit(Submit event) {
+	public void onSubmit(SearchDefinitionEditor.Submit event) {
 		SearchDefinitionEditorGalleryPlace to = place.copy();
-		to.definition = this.definition;
+		to.definition.def = event.getModel();
 		Client.refreshOrGoTo(to);
 	}
 
