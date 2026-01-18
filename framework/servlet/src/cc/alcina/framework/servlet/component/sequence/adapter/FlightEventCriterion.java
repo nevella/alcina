@@ -25,7 +25,7 @@ public class FlightEventCriterion {
 					CreatedToCriterion.class
 				//@formatter:on
 			}))
-	@XmlType(name = "UserSessionSearchDefinition_CriteriaGroup")
+	@XmlType(name = "FlightEventCriterion_CriteriaGroup")
 	public static class FlightEventCriteriaGroup extends EntityCriteriaGroup {
 	}
 

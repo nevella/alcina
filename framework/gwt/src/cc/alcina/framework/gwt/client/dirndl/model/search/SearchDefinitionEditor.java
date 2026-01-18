@@ -18,9 +18,11 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorMultiple;
@@ -81,6 +83,9 @@ public class SearchDefinitionEditor extends Model.Fields
 	@Directed.Transform(ChoicesEditorMultiple.ListSuggestions.To.class)
 	@ChoiceEditor.RouterType(Router.class)
 	public List<Searchable> searchables = new ArrayList<>();
+
+	@Directed.Wrap("go-container")
+	Link go = Link.of(ModelEvents.Go.class);
 
 	static class Router implements SuggestOracleRouter<StringAsk> {
 		@Override

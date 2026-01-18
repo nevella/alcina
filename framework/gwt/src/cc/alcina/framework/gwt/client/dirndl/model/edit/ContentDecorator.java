@@ -340,7 +340,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				DomNode node = partiallySelectedAncestor.get();
 				DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
 						.getFragmentNode(node);
-				if (!decoratorNode.contentEditable) {
+				if (!decoratorNode.allowPartialSelection()) {
 					// FIXME - FN
 					selection.extendSelectionToIncludeAllOf(node);
 				}

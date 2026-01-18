@@ -10,11 +10,6 @@ public class RemoteElementBehaviors {
 	 */
 	public static class ElementOffsetsRequired implements ElementBehavior {
 		@Override
-		public String getMagicAttributeName() {
-			return null;
-		}
-
-		@Override
 		public String getEventType() {
 			return null;
 		}

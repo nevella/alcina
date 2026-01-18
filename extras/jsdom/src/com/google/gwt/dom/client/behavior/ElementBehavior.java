@@ -3,6 +3,8 @@ package com.google.gwt.dom.client.behavior;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventBehavior;
+import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -22,15 +24,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 @Registration.Self
 @Reflected
 public interface ElementBehavior extends EventBehavior {
-	/**
-	 * Prevent default on a link click, romcom
-	 */
-	public static String BEHAVIOR_PREVENT_DEFAULT = "__bhvr_pd";
-
-	default String getMagicAttributeName() {
-		return null;
-	}
-
 	default boolean isEventHandler() {
 		return getEventType() != null;
 	}
@@ -43,8 +36,7 @@ public interface ElementBehavior extends EventBehavior {
 	String getEventType();
 
 	default boolean matches(Element elem) {
-		return elem.hasAttribute(getMagicAttributeName())
-				|| elem.hasBehavior(getClass());
+		return elem.hasBehavior(getClass());
 	}
 
 	void onNativeEvent(NativePreviewEvent event, Element registeredElement);
@@ -131,6 +123,60 @@ public interface ElementBehavior extends EventBehavior {
 		@Override
 		public void onNativeEvent(NativePreviewEvent event,
 				Element registeredElement) {
+			/*
+			 * wip - decorator
+			 */
+		}
+	}
+
+	/*
+	 */
+	public static class DisableContentEditableOnIsolateMousedown
+			implements ElementBehavior {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.MOUSEDOWN;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			EventTarget eventTarget = event.getNativeEvent().getEventTarget();
+			if (FragmentIsolateBehavior.hasInterveningIsolate(registeredElement,
+					eventTarget)) {
+				registeredElement.setAttribute("contenteditable", "false");
+				LocalDom.flush();
+			}
+		}
+	}
+
+	/*
+	 * NOOP, marker for DisableContentEditableOnIsolateMousedown
+	 */
+	public static class FragmentIsolateBehavior implements ElementBehavior {
+		public static boolean hasInterveningIsolate(Element registeredElement,
+				EventTarget eventTarget) {
+			if (Element.is(eventTarget)) {
+				Element target = Element.as(eventTarget);
+				while (target != null && target != registeredElement) {
+					if (target.hasBehavior(FragmentIsolateBehavior.class)) {
+						return true;
+					}
+					target = target.getParentElement();
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public String getEventType() {
+			return null;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			throw new UnsupportedOperationException();
 		}
 	}
 }

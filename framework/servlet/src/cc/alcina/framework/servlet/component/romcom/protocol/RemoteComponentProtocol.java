@@ -5,19 +5,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.gwt.dev.protobuf.Message;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.BrowserEvents;
-import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.mutations.ElementSelectionRangeRecord;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -106,7 +104,8 @@ public class RemoteComponentProtocol {
 
 			@Override
 			protected String provideMessageData() {
-				return events.stream().map(e -> e.event.getType()).distinct()
+				return events.stream().filter(e -> e.event != null)
+						.map(e -> e.event.getType()).distinct()
 						.collect(Collectors.joining(", "));
 			}
 

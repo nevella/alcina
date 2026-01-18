@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HtmlConstants;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -2442,5 +2443,16 @@ public class DomNode {
 
 	public static boolean areEqualAttributes(DomNode n1, DomNode n2) {
 		return Objects.equals(n1.attributes(), n2.attributes());
+	}
+
+	/*
+	 * faster than asRange().toIntPair()
+	 */
+	public IntPair toIndexPair() {
+		DomNode treeSubsequent = relative().treeSubsequentNodeNoDescent();
+		int end = treeSubsequent != null
+				? treeSubsequent.asLocation().getIndex()
+				: document.asRange().toIntPair().i2;
+		return new IntPair(asLocation().getIndex(), end);
 	}
 }

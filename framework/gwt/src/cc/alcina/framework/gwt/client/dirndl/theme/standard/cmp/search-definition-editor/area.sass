@@ -1,4 +1,14 @@
 @mixin contents
-  display: block
+  display: flex
   background-color: rgba(255,255,255,0.5)
 
+  > go-container
+    display: block
+    line-height: 145%
+    padding: 0.4rem
+    border: solid 1px #aaa
+    border-left: none
+
+@mixin tag
+  search-definition-editor
+    @include contents

@@ -4,7 +4,7 @@ import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 
 /*
- * This tests the MultipleSuggestions gallery page
+ * This tests the ChoiceEditor gallery page
  */
 @Decl.Require(Story_GalleryBrowser.State.Home.class)
 @Decl.Child(Point_GalleryBrowser_Home.ToChoiceEditor.class)

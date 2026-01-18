@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -8,6 +9,8 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.Text;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
@@ -16,14 +19,12 @@ import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
@@ -38,11 +39,16 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
  */
 @Directed(className = "decorator-node")
 @TypedProperties
-public abstract class DecoratorNode<WT, SR> extends EditNode
-		implements HasStringRepresentableType<SR>, FragmentIsolate {
+public abstract class DecoratorNode<WT, SR> extends EditNode implements
+		HasStringRepresentableType<SR>, FragmentIsolate, HasElementBehaviors {
 	static boolean isNonEditable(FragmentNode node) {
 		return node instanceof DecoratorNode
 				&& !((DecoratorNode) node).contentEditable;
+	}
+
+	@Override
+	public List<Class<? extends ElementBehavior>> getBehaviors() {
+		return List.of(ElementBehavior.FragmentIsolateBehavior.class);
 	}
 
 	/**
@@ -219,5 +225,16 @@ public abstract class DecoratorNode<WT, SR> extends EditNode
 			TextNode newCursorTarget = new TextNode();
 			nodes().insertAfterThis(newCursorTarget);
 		}
+	}
+
+	public boolean allowPartialSelection() {
+		return content != null && content instanceof AlllowsPartialSelection;
+	}
+
+	/**
+	 * Marker for complex decorator content which is itself
+	 * editable/sub-selectable
+	 */
+	public interface AlllowsPartialSelection {
 	}
 }

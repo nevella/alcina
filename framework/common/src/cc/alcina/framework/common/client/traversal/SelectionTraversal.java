@@ -282,7 +282,7 @@ public class SelectionTraversal
 	}
 
 	public class Selections {
-		static class SelectionTraversalState {
+		class SelectionTraversalState {
 			Selection<?> selection;
 
 			SelectionTraversalState parentState;

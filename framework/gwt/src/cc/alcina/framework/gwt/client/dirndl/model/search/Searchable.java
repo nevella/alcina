@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
 import com.google.gwt.user.client.ui.SuggestOracle;
-import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -13,6 +12,9 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
@@ -22,21 +24,26 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 @TypedProperties
-class Searchable extends Model.Fields
-		implements SuggestOracle.Suggestion.Noop, HasObject {
+class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
+		HasObject, DecoratorNode.AlllowsPartialSelection {
 	SearchCriterion searchCriterion;
 
 	@Directed
 	String name;
+
+	@Binding(type = Type.PROPERTY)
+	String criterionClass;
 
 	@Directed
 	ValueEditor valueEditor;
 
 	Searchable(SearchCriterion searchCriterion) {
 		this.searchCriterion = searchCriterion;
+		this.criterionClass = NestedName.get(searchCriterion);
 		this.name = Ax.blankTo(searchCriterion.getDisplayName(), searchCriterion
 				.getClass().getSimpleName().replace("Criterion", ""));
 	}
@@ -120,7 +127,8 @@ class Searchable extends Model.Fields
 			}
 
 			@Override
-			public void onChildBindingCreated(Binding binding) {
+			public void onChildBindingCreated(
+					com.totsp.gwittir.client.beans.Binding binding) {
 			}
 		}
 

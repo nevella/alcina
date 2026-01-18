@@ -1071,6 +1071,18 @@ overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-
   background-color: #00000010;
 }
 
+search-definition-editor {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+search-definition-editor > go-container {
+  display: block;
+  line-height: 145%;
+  padding: 0.4rem;
+  border: solid 1px #aaa;
+  border-left: none;
+}
+
 /* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
  * - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
  * */
@@ -1354,4 +1366,24 @@ tree-table-area tree-table > tree .node > nodes {
 }
 tree-table-area tree-table > tree .node.open > nodes {
   display: block;
+}
+
+search-definition-editor-gallery > definition-editor {
+  max-width: 800px !important;
+}
+search-definition-editor-gallery > definition-editor edit {
+  width: 800px !important;
+}
+search-definition-editor-gallery heading {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+  font-weight: bold;
+}
+search-definition-editor-gallery > info {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+  padding: 1rem 3rem;
+  width: 450px;
 }

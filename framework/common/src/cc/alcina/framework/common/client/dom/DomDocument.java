@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
@@ -85,8 +86,20 @@ public class DomDocument extends DomNode implements Cloneable {
 		clone.documentElementDomNode.copyAttributesFrom(documentElementDomNode);
 		Map<DomNode, DomNode> sourceTarget = AlcinaCollections.newHashMap();
 		sourceTarget.put(documentElementDomNode, clone.documentElementDomNode);
-		documentElementDomNode.descendants().forEach(sourceNode -> {
+		Set<DomNode> skipped = AlcinaCollections.newHashSet(100);
+		DepthFirstTraversal<DomNode> traversal = new DepthFirstTraversal<DomNode>(
+				documentElementDomNode, node -> {
+					if (skipped.contains(node)) {
+						return List.of();
+					}
+					return node.children.nodes();
+				});
+		traversal.forEach(sourceNode -> {
+			if (sourceNode == documentElementDomNode) {
+				return;
+			}
 			if (!sourceFilter.test(sourceNode)) {
+				skipped.add(sourceNode);
 				return;
 			}
 			DomNode cloneParent = sourceTarget.get(sourceNode.parent());

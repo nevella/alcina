@@ -50,7 +50,12 @@ public interface HasDecorators
 	@Override
 	default List<Class<? extends ElementBehavior>> getBehaviors() {
 		return List.of(DecoratorBehavior.ExtendKeyboardNavigationAction.class,
-				DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
+				/*
+				 * wip - decorator - maybe zap? content-editable may fix this.
+				 * anyway, invariant is along the lines of
+				 * "deletion of partially-selected decorator deletes whole decorator"
+				 */
+				// DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
 				ElementBehavior.EnsureCursorTargetIsTextNodeBehaviour.class);
 	}
 

@@ -367,6 +367,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Go extends ModelEvent<Object, Go.Handler> {
+		@Override
+		public void dispatch(Go.Handler handler) {
+			handler.onGo(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onGo(Go event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onGo(Go event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	/**
 	 * Model version of a DOM input event (input element value has changed, but
 	 * has not been 'committed') - see

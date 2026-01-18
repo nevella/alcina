@@ -282,3 +282,23 @@ tree-table-area tree-table > tree .node > nodes {
 tree-table-area tree-table > tree .node.open > nodes {
   display: block;
 }
+
+search-definition-editor-gallery > definition-editor {
+  max-width: 800px !important;
+}
+search-definition-editor-gallery > definition-editor edit {
+  width: 800px !important;
+}
+search-definition-editor-gallery heading {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+  font-weight: bold;
+}
+search-definition-editor-gallery > info {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+  padding: 1rem 3rem;
+  width: 450px;
+}

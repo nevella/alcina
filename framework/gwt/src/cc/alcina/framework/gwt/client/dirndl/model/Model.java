@@ -10,7 +10,8 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.NodeAttachId;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
@@ -38,7 +39,6 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
@@ -50,6 +50,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
+import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteElementBehaviors;
 
 /**
  * <p>
@@ -630,18 +631,11 @@ public abstract class Model extends Bindable implements
 	public static class Blank extends Model {
 	}
 
-	/**
-	 * romcom-specific - ui state (boundingClientRect, scrollPos) of the
-	 * renderedelement should be sent on event notification.
-	 * 
-	 * @see NodeAttachId#ATTR_NAME_TRANSMIT_STATE
-	 */
-	@Directed(
-		bindings = @cc.alcina.framework.gwt.client.dirndl.annotation.Binding(
-			type = Type.PROPERTY,
-			to = NodeAttachId.ATTR_NAME_TRANSMIT_STATE,
-			literal = "true"))
-	public interface TransmitState {
+	public interface TransmitState extends HasElementBehaviors {
+		@Override
+		default List<Class<? extends ElementBehavior>> getBehaviors() {
+			return List.of(RemoteElementBehaviors.ElementOffsetsRequired.class);
+		}
 	}
 
 	public void runDeferredIfBound(Runnable lambda) {

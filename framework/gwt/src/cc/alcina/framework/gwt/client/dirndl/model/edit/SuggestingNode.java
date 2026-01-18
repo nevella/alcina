@@ -7,7 +7,6 @@ import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
@@ -53,16 +52,6 @@ public class SuggestingNode extends EditNode
 	@Override
 	public List<Class<? extends ElementBehavior>> getBehaviors() {
 		return List.of(DecoratorBehavior.InterceptUpDownBehaviour.class);
-	}
-
-	/*
-	 * wip - dn
-	 */
-	@Binding(
-		type = Type.PROPERTY,
-		to = DecoratorBehavior.InterceptUpDownBehaviour.ATTR_NAME)
-	public boolean isMagicName() {
-		return true;
 	}
 
 	@Override
