@@ -9,9 +9,9 @@ import java.util.Set;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
+import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 
 import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteElementBehaviors;
 
 /**
  * <p>

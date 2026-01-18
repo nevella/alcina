@@ -21,8 +21,8 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionDirty;
@@ -56,7 +56,7 @@ public class SearchDefinitionEditor extends Model.Fields
 		@Override
 		public void ask(Node node, StringAsk ask,
 				Consumer<SuggestOracle.Response> responseHandler) {
-			Service service = node.service(Service.class);
+			Service service = node.getResolver().service(Service.class);
 			SearchDefinition searchDefinition = service.getSearchDefinition();
 			if (searchDefinition != null) {
 				EditSupport editSupport = searchDefinition.editSupport();
@@ -136,7 +136,7 @@ public class SearchDefinitionEditor extends Model.Fields
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		this.initialSerializedDefinition = FlatTreeSerializer
 				.serializeElided(this.originalDefinition);
 		this.renderedDefinition = this.originalDefinition.cloneObject();
@@ -145,7 +145,6 @@ public class SearchDefinitionEditor extends Model.Fields
 		searchablesListener = new PropertyGraphListener(
 				this.renderedDefinition);
 		searchablesListener.topicChangeEvent.add(this::onPropertyGraphChange);
-		super.onBeforeRender(event);
 	}
 
 	/**
