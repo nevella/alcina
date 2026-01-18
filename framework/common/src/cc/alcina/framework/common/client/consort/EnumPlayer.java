@@ -45,10 +45,14 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 	/**
 	 * Inversion - the enum constants are the 'runners' - to save on extra
 	 * classes
+	 * 
+	 * @return true if the enum state should be emitted
 	 */
 	public void invokeEnum() {
 		InvokableEnum invokable = (InvokableEnum) to;
-		invokable.invoke(getConsort());
+		if (invokable.invoke(getConsort())) {
+			wasPlayed();
+		}
 	}
 
 	public abstract static class EnumRunnableAsyncCallbackPlayer<C, E extends Enum>
@@ -77,6 +81,12 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 	}
 
 	public interface InvokableEnum<C extends Consort> {
-		void invoke(C consort);
+		/**
+		 * 
+		 * @param consort
+		 * @return true if the player is complete (so the consort can emit the
+		 *         enum state as a completed state)
+		 */
+		boolean invoke(C consort);
 	}
 }
