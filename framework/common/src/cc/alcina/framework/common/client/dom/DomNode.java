@@ -2469,7 +2469,7 @@ public class DomNode {
 		DomNode treeSubsequent = relative().treeSubsequentNodeNoDescent();
 		int end = treeSubsequent != null
 				? treeSubsequent.asLocation().getIndex()
-				: document.asRange().toIntPair().i2;
+				: document.getDocumentElementNode().asRange().toIntPair().i2;
 		return new IntPair(asLocation().getIndex(), end);
 	}
 }

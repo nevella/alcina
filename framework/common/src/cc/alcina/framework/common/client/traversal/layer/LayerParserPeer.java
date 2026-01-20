@@ -70,4 +70,9 @@ public class LayerParserPeer {
 			List<Branch> matchedSentenceBranches) {
 		onSentenceMatched(bestMatch);
 	}
+
+	public BranchingParser.ParserObserver.Attributes
+			getBranchingParserObserverAttributes() {
+		return new BranchingParser.ParserObserver.Attributes();
+	}
 }

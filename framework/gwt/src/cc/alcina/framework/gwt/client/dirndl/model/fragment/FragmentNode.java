@@ -213,8 +213,13 @@ public abstract class FragmentNode extends Model.Fields
 	}
 
 	/**
+	 * <p>
 	 * Allow subclasses to populate children *in a node context*. This is the
 	 * way that fragment nodes should construct their own subtrees
+	 * 
+	 * <p>
+	 * Note that this is only called once - even if the node is detached then
+	 * subsequently reattached
 	 */
 	public void onFragmentRegistration() {
 	}

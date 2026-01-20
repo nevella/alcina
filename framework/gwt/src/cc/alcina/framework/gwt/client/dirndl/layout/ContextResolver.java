@@ -50,10 +50,11 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextService.Provider;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextService.ProviderInvoker;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  * <p>
@@ -119,6 +120,250 @@ existing resolvers to a service model]
 @Reflected
 public class ContextResolver extends AnnotationLocation.Resolver
 		implements LayoutEvents.BeforeRender.Handler, ContextService.Source {
+	public class BindingsCache {
+		class Key {
+			Directed directed;
+
+			Class<? extends Object> clazz;
+
+			Key(Directed directed, Class<? extends Object> clazz) {
+				this.directed = directed;
+				this.clazz = clazz;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (this == obj)
+					return true;
+				if (obj == null)
+					return false;
+				if (getClass() != obj.getClass())
+					return false;
+				Key other = (Key) obj;
+				return Objects.equals(this.clazz, other.clazz)
+						&& Objects.equals(this.directed, other.directed);
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(clazz, directed);
+			}
+		}
+
+		Map<Key, List<Binding>> byKey = new LinkedHashMap<>();
+
+		List<Binding> computeBindings(Key key) {
+			List<Binding> result = new ArrayList<>();
+			Arrays.asList(key.directed.bindings()).forEach(result::add);
+			Class<? extends Object> clazz = key.clazz;
+			ClassReflector<? extends Object> reflector = Reflections.at(clazz);
+			if (reflector != null) {
+				reflector.properties().stream().forEach(p -> {
+					AnnotationLocation location = new AnnotationLocation(clazz,
+							p, ContextResolver.this);
+					Binding binding = location.getAnnotation(Binding.class);
+					if (binding != null) {
+						result.add(Binding.Impl.propertyBinding(p, binding));
+					}
+				});
+			}
+			return result;
+		}
+
+		List<Binding> getBindings(Directed directed,
+				Class<? extends Object> clazz) {
+			Key key = new Key(directed, clazz);
+			return byKey.computeIfAbsent(key, this::computeBindings);
+		}
+	}
+
+	/**
+	 * Used for getting the default app top-level resolver
+	 *
+	 *
+	 *
+	 */
+	@Registration.Singleton
+	public static class Default {
+		public static ContextResolver.Default get() {
+			return Registry.impl(ContextResolver.Default.class);
+		}
+
+		private Class<? extends ContextResolver> defaultResolver = ContextResolver.class;
+
+		public ContextResolver createResolver() {
+			return Reflections.newInstance(defaultResolver);
+		}
+
+		public Class<? extends ContextResolver> getDefaultResolver() {
+			return this.defaultResolver;
+		}
+
+		public void setDefaultResolver(
+				Class<? extends ContextResolver> defaultResolver) {
+			this.defaultResolver = defaultResolver;
+		}
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@Inherited
+	public @interface ServiceRegistration {
+		Class<? extends ContextService> value();
+	}
+
+	public interface Has {
+		/*
+		 * Note - this needs to be reapplied on any implementation (resolution
+		 * currently occurs outside a resolution context )
+		 */
+		@Property.Not
+		ContextResolver getContextResolver(AnnotationLocation location);
+	}
+
+	public static class WithoutResolveModelAscends extends ContextResolver {
+		public WithoutResolveModelAscends() {
+			resolveModelAscends = false;
+		}
+	}
+
+	public abstract static class AnnotationCustomiser extends ContextResolver {
+		public static class Customisation<A extends Annotation> {
+			public static class Transform
+					extends Customisation<Directed.Transform> {
+				Transform(Class locationClass, String propertyName) {
+					super(locationClass, propertyName,
+							Directed.Transform.class);
+				}
+
+				public void
+						with(Class<? extends ModelTransform> transformerClass) {
+					as(new Directed.Transform.Impl()
+							.withValue(transformerClass));
+				}
+			}
+
+			Class locationClass;
+
+			String propertyName;
+
+			Class<A> annotationClass;
+
+			A replacementValue;
+
+			/*
+			 * locationClass null matches all classes - propertyName '*' matches
+			 * all properties
+			 */
+			Customisation(Class locationClass, String propertyName,
+					Class<A> annotationClass) {
+				this.locationClass = locationClass;
+				this.propertyName = propertyName;
+				this.annotationClass = annotationClass;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s.%s [%s] -> %s",
+						NestedName.get(locationClass), propertyName,
+						NestedName.get(annotationClass), replacementValue);
+			}
+
+			public void as(A replacementValue) {
+				this.replacementValue = replacementValue;
+			}
+
+			public boolean matches(HasAnnotations reflector, Class<?> clazz) {
+				return clazz == annotationClass && (reflector
+						.isProperty(locationClass, propertyName)
+						|| reflector.isClass(locationClass, propertyName));
+			}
+		}
+
+		List<Customisation<?>> customisations = new ArrayList<>();
+
+		public AnnotationCustomiser() {
+			resolveModelAscends = false;
+		}
+
+		@Override
+		public <A extends Annotation> A contextAnnotation(
+				HasAnnotations reflector, Class<A> clazz,
+				ResolutionContext resolutionContext) {
+			for (Customisation<?> customisation : customisations) {
+				if (customisation.matches(reflector, clazz)) {
+					return (A) customisation.replacementValue;
+				}
+			}
+			return super.contextAnnotation(reflector, clazz, resolutionContext);
+		}
+
+		protected <A extends Annotation> Customisation<A> resolve(
+				Class locationClass, String propertyName,
+				Class<A> annotationClass) {
+			Customisation<A> customisation = new Customisation<>(locationClass,
+					propertyName, annotationClass);
+			customisations.add(customisation);
+			return customisation;
+		}
+
+		protected Customisation.Transform resolveTransform(Class locationClass,
+				String propertyName) {
+			Customisation.Transform customisation = new Customisation.Transform(
+					locationClass, propertyName);
+			customisations.add(customisation);
+			return customisation;
+		}
+	}
+
+	/**
+	 * <p>
+	 * Like the name says. This is for entities with no explicit properties (and
+	 * only a few from {@link VersionableEntity})
+	 * 
+	 * <p>
+	 * This may well need to be used as a mixin. Note since
+	 * Display.AllProperties has no strategy, override resolveAnnotations0, not
+	 * contextAnnotation
+	 */
+	public static class DisplayAllPropertiesIfNoneExplicitlySet
+			extends ContextResolver {
+		// expose functionality as a mixin
+		public static class Mixin {
+			public static <A extends Annotation> List<A> resolveAnnotations0(
+					Class<A> clazz, AnnotationLocation location) {
+				if (clazz == Display.AllProperties.class) {
+					// this doesn't check location.property, just cares about
+					// location.classLocation
+					Class<?> reflectedClass = Domain
+							.resolveEntityClass(location.classLocation);
+					List<Property> explicitlySet = Reflections
+							.at(reflectedClass).properties().stream()
+							.filter(p -> p.getDeclaringType() == reflectedClass
+									&& p.has(Display.class))
+							// ignore "id" (often has an ordering)
+							.filter(p -> !p.getName().equals("id"))
+							.collect(Collectors.toList());
+					if (explicitlySet.isEmpty()) {
+						return (List<A>) List
+								.of(new Display.AllProperties.Impl());
+					}
+				}
+				return null;
+			}
+		}
+
+		@Override
+		protected <A extends Annotation> List<A> resolveAnnotations0(
+				Class<A> annotationClass, AnnotationLocation location) {
+			List<A> mixinResult = DisplayAllPropertiesIfNoneExplicitlySet.Mixin
+					.resolveAnnotations0(annotationClass, location);
+			return mixinResult != null ? mixinResult
+					: super.resolveAnnotations0(annotationClass, location);
+		}
+	}
+
 	protected ContextResolver parent;
 
 	protected DirectedLayout layout;
@@ -165,20 +410,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return parent;
 	}
 
-	/*
-	 * As per parent() - minimise, but use when needed. The alternative is
-	 * firing descent events
-	 */
-	protected Stream<ContextResolver> ancestors(boolean includeSelf) {
-		List<ContextResolver> ancestors = new ArrayList<>();
-		ContextResolver cursor = includeSelf ? this : parent;
-		while (cursor != null) {
-			ancestors.add(cursor);
-			cursor = cursor.parent();
-		}
-		return ancestors.stream();
-	}
-
 	public void appendToRoot(Rendered rendered) {
 		Registry.impl(RootModifier.class).appendToRoot(rendered);
 	}
@@ -192,10 +423,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			}
 		}
 		return dispatch;
-	}
-
-	protected BindingsCache bindingsCache() {
-		return bindingsCache;
 	}
 
 	public List<Binding> getBindings(Directed directed, Object model) {
@@ -225,47 +452,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return Registry.impl(clazz);
 	}
 
-	protected void init(ContextResolver parent, DirectedLayout layout,
-			Object rootModel) {
-		this.parent = parent;
-		this.layout = layout;
-		this.rootModel = rootModel;
-	}
-
-	void registerServices(DirectedLayout.Node node) {
-		if (rootModel == null) {
-			return;
-		}
-		if (rootModel instanceof ContextService) {
-			registerService(
-					(Class<? extends ContextService>) rootModel.getClass(),
-					(ContextService) rootModel);
-		}
-		Reflections.at(rootModel).provideAllImplementedInterfaces()
-				.filter(intf -> Reflections
-						.isAssignableFrom(ContextService.Provider.class, intf)
-						&& intf != ContextService.Provider.class)
-				.forEach(intf -> {
-					ProviderInvoker providerInvoker = Registry
-							.impl(ContextService.ProviderInvoker.class, intf);
-					Class<? extends ContextService> registration = providerInvoker
-							.getServiceClass();
-					ContextService contextService = providerInvoker
-							.get((Provider) rootModel);
-					registerService(registration, contextService);
-				});
-	}
-
-	protected void init(DirectedLayout.Node node) {
-		init(node.getResolver(), node.parent.resolver.layout,
-				this.rootModel = node.getModel());
-	}
-
-	protected void initCaches() {
-		annotationResolver = new DefaultAnnotationResolver();
-		bindingsCache = new BindingsCache();
-	}
-
 	/**
 	 * Associate an arbitrary object with the renderer tree Node. Default
 	 * handles gwt widget
@@ -287,16 +473,10 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		registerServices(event.getContext().node);
 		// generally, setup child bindings for complex structures
 		if (parent != null) {
 			parent.onBeforeRender(event);
 		}
-	}
-
-	public void registerService(Class<? extends ContextService> service,
-			ContextService implementation) {
-		services.put(service, Optional.of(implementation));
 	}
 
 	@Override
@@ -363,6 +543,46 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		Registry.impl(RootModifier.class).replaceRoot(rendered);
 	}
 
+	// FIXME - dirndl 1x2 - remove
+	public <T> T resolveRenderContextProperty(String key) {
+		return null;
+	}
+
+	/*
+	 * As per parent() - minimise, but use when needed. The alternative is
+	 * firing descent events
+	 */
+	protected Stream<ContextResolver> ancestors(boolean includeSelf) {
+		List<ContextResolver> ancestors = new ArrayList<>();
+		ContextResolver cursor = includeSelf ? this : parent;
+		while (cursor != null) {
+			ancestors.add(cursor);
+			cursor = cursor.parent();
+		}
+		return ancestors.stream();
+	}
+
+	protected BindingsCache bindingsCache() {
+		return bindingsCache;
+	}
+
+	protected void init(ContextResolver parent, DirectedLayout layout,
+			Object rootModel) {
+		this.parent = parent;
+		this.layout = layout;
+		this.rootModel = rootModel;
+	}
+
+	protected void init(DirectedLayout.Node node) {
+		init(node.getResolver(), node.parent.resolver.layout,
+				this.rootModel = node.getModel());
+	}
+
+	protected void initCaches() {
+		annotationResolver = new DefaultAnnotationResolver();
+		bindingsCache = new BindingsCache();
+	}
+
 	@Override
 	protected <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
@@ -400,21 +620,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			return null;
 		} else {
 			return parent.resolveAnnotations1(annotationClass, location);
-		}
-	}
-
-	/**
-	 * This method is sometimes simpler for controlling the annotations exposed
-	 * than {@link #resolveAnnotations0}, since it returns a property that will
-	 * be used to evaluate *all* annotations at a node. Implementations are only
-	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} and
-	 * {@link BridgingValueRenderer}via the package/protected access route
-	 */
-	Property resolveDirectedProperty(Property property) {
-		if (resolveDirectedPropertyAscends) {
-			return parent().resolveDirectedProperty(property);
-		} else {
-			return resolveDirectedProperty0(property);
 		}
 	}
 
@@ -478,252 +683,38 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		}
 	}
 
-	// FIXME - dirndl 1x2 - remove
-	public <T> T resolveRenderContextProperty(String key) {
-		return null;
-	}
-
-	public class BindingsCache {
-		Map<Key, List<Binding>> byKey = new LinkedHashMap<>();
-
-		List<Binding> computeBindings(Key key) {
-			List<Binding> result = new ArrayList<>();
-			Arrays.asList(key.directed.bindings()).forEach(result::add);
-			Class<? extends Object> clazz = key.clazz;
-			ClassReflector<? extends Object> reflector = Reflections.at(clazz);
-			if (reflector != null) {
-				reflector.properties().stream().forEach(p -> {
-					AnnotationLocation location = new AnnotationLocation(clazz,
-							p, ContextResolver.this);
-					Binding binding = location.getAnnotation(Binding.class);
-					if (binding != null) {
-						result.add(Binding.Impl.propertyBinding(p, binding));
-					}
-				});
-			}
-			return result;
-		}
-
-		List<Binding> getBindings(Directed directed,
-				Class<? extends Object> clazz) {
-			Key key = new Key(directed, clazz);
-			return byKey.computeIfAbsent(key, this::computeBindings);
-		}
-
-		class Key {
-			Directed directed;
-
-			Class<? extends Object> clazz;
-
-			Key(Directed directed, Class<? extends Object> clazz) {
-				this.directed = directed;
-				this.clazz = clazz;
-			}
-
-			@Override
-			public boolean equals(Object obj) {
-				if (this == obj)
-					return true;
-				if (obj == null)
-					return false;
-				if (getClass() != obj.getClass())
-					return false;
-				Key other = (Key) obj;
-				return Objects.equals(this.clazz, other.clazz)
-						&& Objects.equals(this.directed, other.directed);
-			}
-
-			@Override
-			public int hashCode() {
-				return Objects.hash(clazz, directed);
-			}
-		}
+	public <CS extends ContextService> void registerService(Class<CS> service,
+			CS implementation) {
+		services.put(service, Optional.of(implementation));
 	}
 
 	/**
-	 * Used for getting the default app top-level resolver
-	 *
-	 *
-	 *
+	 * This method is sometimes simpler for controlling the annotations exposed
+	 * than {@link #resolveAnnotations0}, since it returns a property that will
+	 * be used to evaluate *all* annotations at a node. Implementations are only
+	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} and
+	 * {@link BridgingValueRenderer}via the package/protected access route
 	 */
-	@Registration.Singleton
-	public static class Default {
-		public static ContextResolver.Default get() {
-			return Registry.impl(ContextResolver.Default.class);
-		}
-
-		private Class<? extends ContextResolver> defaultResolver = ContextResolver.class;
-
-		public ContextResolver createResolver() {
-			return Reflections.newInstance(defaultResolver);
-		}
-
-		public Class<? extends ContextResolver> getDefaultResolver() {
-			return this.defaultResolver;
-		}
-
-		public void setDefaultResolver(
-				Class<? extends ContextResolver> defaultResolver) {
-			this.defaultResolver = defaultResolver;
+	Property resolveDirectedProperty(Property property) {
+		if (resolveDirectedPropertyAscends) {
+			return parent().resolveDirectedProperty(property);
+		} else {
+			return resolveDirectedProperty0(property);
 		}
 	}
 
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target(ElementType.TYPE)
-	@Inherited
-	public @interface ServiceRegistration {
-		Class<? extends ContextService> value();
+	@Override
+	public void emitEvent(Class<? extends ModelEvent> clazz) {
+		((Model) rootModel).emitEvent(clazz);
 	}
 
-	public interface Has {
-		/*
-		 * Note - this needs to be reapplied on any implementation (resolution
-		 * currently occurs outside a resolution context )
-		 */
-		@Property.Not
-		ContextResolver getContextResolver(AnnotationLocation location);
+	@Override
+	public void emitEvent(Class<? extends ModelEvent> clazz, Object value) {
+		((Model) rootModel).emitEvent(clazz, value);
 	}
 
-	public static class WithoutResolveModelAscends extends ContextResolver {
-		public WithoutResolveModelAscends() {
-			resolveModelAscends = false;
-		}
-	}
-
-	public abstract static class AnnotationCustomiser extends ContextResolver {
-		public static class Customisation<A extends Annotation> {
-			Class locationClass;
-
-			String propertyName;
-
-			Class<A> annotationClass;
-
-			A replacementValue;
-
-			/*
-			 * locationClass null matches all classes - propertyName '*' matches
-			 * all properties
-			 */
-			Customisation(Class locationClass, String propertyName,
-					Class<A> annotationClass) {
-				this.locationClass = locationClass;
-				this.propertyName = propertyName;
-				this.annotationClass = annotationClass;
-			}
-
-			@Override
-			public String toString() {
-				return Ax.format("%s.%s [%s] -> %s",
-						NestedName.get(locationClass), propertyName,
-						NestedName.get(annotationClass), replacementValue);
-			}
-
-			public void as(A replacementValue) {
-				this.replacementValue = replacementValue;
-			}
-
-			public boolean matches(HasAnnotations reflector, Class<?> clazz) {
-				return clazz == annotationClass && (reflector
-						.isProperty(locationClass, propertyName)
-						|| reflector.isClass(locationClass, propertyName));
-			}
-
-			public static class Transform
-					extends Customisation<Directed.Transform> {
-				Transform(Class locationClass, String propertyName) {
-					super(locationClass, propertyName,
-							Directed.Transform.class);
-				}
-
-				public void
-						with(Class<? extends ModelTransform> transformerClass) {
-					as(new Directed.Transform.Impl()
-							.withValue(transformerClass));
-				}
-			}
-		}
-
-		List<Customisation<?>> customisations = new ArrayList<>();
-
-		protected <A extends Annotation> Customisation<A> resolve(
-				Class locationClass, String propertyName,
-				Class<A> annotationClass) {
-			Customisation<A> customisation = new Customisation<>(locationClass,
-					propertyName, annotationClass);
-			customisations.add(customisation);
-			return customisation;
-		}
-
-		protected Customisation.Transform resolveTransform(Class locationClass,
-				String propertyName) {
-			Customisation.Transform customisation = new Customisation.Transform(
-					locationClass, propertyName);
-			customisations.add(customisation);
-			return customisation;
-		}
-
-		public AnnotationCustomiser() {
-			resolveModelAscends = false;
-		}
-
-		@Override
-		public <A extends Annotation> A contextAnnotation(
-				HasAnnotations reflector, Class<A> clazz,
-				ResolutionContext resolutionContext) {
-			for (Customisation<?> customisation : customisations) {
-				if (customisation.matches(reflector, clazz)) {
-					return (A) customisation.replacementValue;
-				}
-			}
-			return super.contextAnnotation(reflector, clazz, resolutionContext);
-		}
-	}
-
-	/**
-	 * <p>
-	 * Like the name says. This is for entities with no explicit properties (and
-	 * only a few from {@link VersionableEntity})
-	 * 
-	 * <p>
-	 * This may well need to be used as a mixin. Note since
-	 * Display.AllProperties has no strategy, override resolveAnnotations0, not
-	 * contextAnnotation
-	 */
-	public static class DisplayAllPropertiesIfNoneExplicitlySet
-			extends ContextResolver {
-		// expose functionality as a mixin
-		public static class Mixin {
-			public static <A extends Annotation> List<A> resolveAnnotations0(
-					Class<A> clazz, AnnotationLocation location) {
-				if (clazz == Display.AllProperties.class) {
-					// this doesn't check location.property, just cares about
-					// location.classLocation
-					Class<?> reflectedClass = Domain
-							.resolveEntityClass(location.classLocation);
-					List<Property> explicitlySet = Reflections
-							.at(reflectedClass).properties().stream()
-							.filter(p -> p.getDeclaringType() == reflectedClass
-									&& p.has(Display.class))
-							// ignore "id" (often has an ordering)
-							.filter(p -> !p.getName().equals("id"))
-							.collect(Collectors.toList());
-					if (explicitlySet.isEmpty()) {
-						return (List<A>) List
-								.of(new Display.AllProperties.Impl());
-					}
-				}
-				return null;
-			}
-		}
-
-		@Override
-		protected <A extends Annotation> List<A> resolveAnnotations0(
-				Class<A> annotationClass, AnnotationLocation location) {
-			List<A> mixinResult = DisplayAllPropertiesIfNoneExplicitlySet.Mixin
-					.resolveAnnotations0(annotationClass, location);
-			return mixinResult != null ? mixinResult
-					: super.resolveAnnotations0(annotationClass, location);
-		}
+	public void reemitEvent(NodeEvent<?> nodeEvent,
+			Class<? extends ModelEvent> eventClass, Object eventModel) {
+		nodeEvent.reemitAs((Model) rootModel, eventClass, eventModel);
 	}
 }

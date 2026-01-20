@@ -16,28 +16,13 @@
  * <li>Token - a LayeredParserToken
  * <li>Range - corresponds to a DOM range
  * <li>Measure - a tuple of [Token, Range]
- * <li>Larger/smaller - in the sense of the measur.range containment
- * relationship with another measure - so a HEAD measure might contain a
- * METADATA:DOCTITLE measure
- * <li>Layer - a feature recognition layer
+ * 
  * </ul>
- * <h2>Layers</h2>
  * <p>
- * Unlike selectiontraversal (and why partly the reason that's not being
- * reused), it's entirely possible that larger tokens are defined by the
- * presence or absence of smaller tokens - e.g. the HEAD might just be the union
- * of METADATA tokens. So it's not possible to compose the pipeline as a series
- * of DOM descents.
- * <p>
- * Layers form a tree, allowing a structure like [match 1, match 2, combine
- * (1,2)]. If layers contain children, they do not iterate over incoming tokens,
- * rather just emit the output of their last child output layer
- * <p>
- * Layer invariants:
- * <ul>
- * <li>Outputs from a given layer tree cannot have non-nested intersections
- * <li>Outputs from a given layer cannot intersect
- * </ul>
+ * The LayerParser uses a grammar similar to Regex grammar to emit a sequence of
+ * matching "sentences" from a given dom document. See the parser javadoc for
+ * gotchas
  *
+ * 
  */
 package cc.alcina.framework.common.client.traversal.layer;

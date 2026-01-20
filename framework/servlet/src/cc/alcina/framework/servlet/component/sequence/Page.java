@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea;
-import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea.Service;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.LoadSequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NavigateToNewSequencePlace;
@@ -52,7 +51,7 @@ class Page extends Model.Fields
 		ModelEvents.ApplicationHelp.Handler,
 		SequenceEvents.LoadSequence.Handler,
 		SequenceBrowserCommand.ToggleHelp.Handler, Binding.TabIndexZero,
-		SequenceArea.Service.Provider,
+		SequenceArea.Service.ServiceProvider,
 		SequenceBrowserCommand.DetailDisplayCycle.Handler,
 		SequenceBrowserCommand.ColumnSetCycle.Handler,
 		SequenceEvents.NavigateToNewSequencePlace.Handler,
@@ -172,8 +171,8 @@ class Page extends Model.Fields
 	}
 
 	@Override
-	public Service getSequenceAreaService() {
-		return serviceImpl;
+	public void onNodeContext(NodeContext event) {
+		event.registerService(SequenceArea.Service.class, serviceImpl);
 	}
 
 	@Override
@@ -183,7 +182,8 @@ class Page extends Model.Fields
 
 	@Override
 	public void onColumnSetCycle(ColumnSetCycle event) {
-		SequenceSettings settings = getSequenceAreaService().getSettings();
+		SequenceSettings settings = service(SequenceArea.Service.class)
+				.getSettings();
 		ColumnSet next = settings.nextColumnSet();
 		StatusModule.get()
 				.showMessageTransitional(Ax.format("Column set -> %s", next));
@@ -191,7 +191,8 @@ class Page extends Model.Fields
 
 	@Override
 	public void onPropertyDisplayCycle(DetailDisplayCycle event) {
-		SequenceSettings settings = getSequenceAreaService().getSettings();
+		SequenceSettings settings = service(SequenceArea.Service.class)
+				.getSettings();
 		DetailDisplayMode next = settings.nextDetailDisplayMode();
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Detail display mode -> %s", next));

@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.ui.RootPanel;
 
@@ -26,7 +25,6 @@ public class AlcinaGwtTestClient implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 		Client.Init.init();
-		Document.get().domDocument.useLocations2 = true;
 		Registry.register().singleton(Timer.Provider.class,
 				new TimerGwt.Provider());
 		Registry.register().singleton(DomContext.class, new DomContextGwt());

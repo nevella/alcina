@@ -124,6 +124,9 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 	}
 
 	public static boolean isContinuous(List<IntPair> pairs) {
+		if (pairs.isEmpty()) {
+			return true;
+		}
 		IntPair union = unionOf(pairs);
 		return provideUncovered(pairs, union).isEmpty();
 	}

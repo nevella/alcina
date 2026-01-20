@@ -1819,7 +1819,9 @@ public class SEUtilities {
 
 		@Override
 		public String getNestedSimpleName(Class clazz) {
-			return map.computeIfAbsent(clazz, SEUtilities::getNestedSimpleName);
+			return clazz == null ? String.valueOf(clazz)
+					: map.computeIfAbsent(clazz,
+							SEUtilities::getNestedSimpleName);
 		}
 	}
 

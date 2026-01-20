@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -60,6 +61,12 @@ public class LayoutEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onNodeContext(NodeContext event);
+		}
+
+		public <CS extends ContextService> void
+				registerService(Class<CS> service, CS implementation) {
+			getContext().node.getResolver().registerService(service,
+					implementation);
 		}
 	}
 

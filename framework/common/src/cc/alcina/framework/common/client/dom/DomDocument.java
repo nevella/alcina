@@ -51,8 +51,6 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * </ul>
  */
 public class DomDocument extends DomNode implements Cloneable {
-	public boolean useLocations2 = true;
-
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
 
@@ -118,7 +116,6 @@ public class DomDocument extends DomNode implements Cloneable {
 	public static DomDocument createTextContainer(String text) {
 		DomDocument document = DomDocument.from("<container/>", true);
 		document.getDocumentElementNode().setText(text);
-		document.useLocations2 = true;
 		return document;
 	}
 
@@ -292,8 +289,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public LocationContext locations() {
 		if (locationContext == null) {
-			if (useLocations2
-					&& w3cDoc() instanceof com.google.gwt.dom.client.Document) {
+			if (w3cDoc() instanceof com.google.gwt.dom.client.Document) {
 				TrackingLocationContext locationContext3 = new TrackingLocationContext(
 						this);
 				locationContext = locationContext3;

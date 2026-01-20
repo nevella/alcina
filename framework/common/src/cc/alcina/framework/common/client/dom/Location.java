@@ -424,13 +424,15 @@ public class Location implements Comparable<Location> {
 					.getContainingNodes(start, start.getIndex(), start.start);
 			List<DomNode> endContainers = start.getLocationContext()
 					.getContainingNodes(end, end.getIndex(), end.start);
-			DomNode minimal = startContainers.stream()
+			DomNode deepestCommonNode = startContainers.stream()
 					.filter(endContainers::contains).reduce(Ax.last()).get();
-			Location minimalLocation = minimal.asLocation();
-			return new Range(minimalLocation.textRelativeLocation(
-					start.getIndex() - minimalLocation.getIndex(), start.start),
-					minimalLocation.textRelativeLocation(
-							end.getIndex() - minimalLocation.getIndex(),
+			Location deepestCommonLocation = deepestCommonNode.asLocation();
+			return new Range(
+					deepestCommonLocation.textRelativeLocation(
+							start.getIndex() - deepestCommonLocation.getIndex(),
+							start.start),
+					deepestCommonLocation.textRelativeLocation(
+							end.getIndex() - deepestCommonLocation.getIndex(),
 							end.start));
 		}
 
@@ -611,7 +613,7 @@ public class Location implements Comparable<Location> {
 	public enum RelativeDirection {
 		NEXT_LOCATION, NEXT_DOMNODE_START, PREVIOUS_LOCATION,
 		PREVIOUS_DOMNODE_START, CURRENT_NODE_END, NEXT_CONTAINED_LOCATION,
-		PREVIOUS_CONTAINED_LOCATION;
+		PREVIOUS_CONTAINED_LOCATION, AFTER_END;
 
 		public static RelativeDirection ofNumericDelta(int numericDelta) {
 			switch (numericDelta) {
@@ -726,6 +728,10 @@ public class Location implements Comparable<Location> {
 
 		public IntPair asTextIndexPair() {
 			return new IntPair(index, index + textLengthSelf);
+		}
+
+		public IntPair asTreeIndexTextIndexPair() {
+			return new IntPair(treeIndex, index);
 		}
 
 		public boolean hasTextLength() {
@@ -969,11 +975,11 @@ public class Location implements Comparable<Location> {
 		this.index = index;
 		this.locationContext = locationContext;
 		this.documentMutationPosition = documentMutationPosition;
+		this.start = start;
 		if (containingNode == null) {
 			containingNode = locationContext.getContainingNode(this,
 					searchFrom);
 		}
-		this.start = start;
 		this.containingNode = containingNode;
 	}
 
@@ -1211,7 +1217,8 @@ public class Location implements Comparable<Location> {
 
 	public Location toStartLocation() {
 		if (isAtNodeEnd() && isTextNode()) {
-			return new Location(treeIndex + 1, index, true, null,
+			return new Location(treeIndex + 1, index, true,
+					containingNode.relative().treeSubsequentNode(),
 					locationContext);
 		} else if (!start) {
 			return new Location(treeIndex + 1, index, true, null,
@@ -1237,6 +1244,28 @@ public class Location implements Comparable<Location> {
 		return Ax.format("%s,%s,%s %s", treeIndex, index, dir, nodeData);
 	}
 
+	/**
+	 * 
+	 * @return the deepest Location which contains this location's index
+	 */
+	public Location toDeepestLocation() {
+		if (containingNode.isText()) {
+			return this;
+		}
+		Location cursor = this;
+		if (cursor.getContainingNode().isDocumentNode()) {
+			/*
+			 * ensure we're not at the top tree index but somewhere in the weeds
+			 */
+			cursor = new Location(treeIndex, index, start, null,
+					locationContext, this);
+		}
+		DomNode last = Ax
+				.last(locationContext.getContainingNodes(cursor, index, start));
+		return new Location(last.asLocation().treeIndex, index, start, last,
+				locationContext);
+	}
+
 	public Location toTextLocation(boolean toTextLocation) {
 		if (!toTextLocation) {
 			return this;
@@ -1253,8 +1282,28 @@ public class Location implements Comparable<Location> {
 			cursor = new Location(treeIndex, index, start, null,
 					locationContext, this);
 		}
-		DomNode text = Ax
-				.last(locationContext.getContainingNodes(cursor, index, start));
+		/*
+		 * optimise - avoid call to getContainingNodes if possible
+		 */
+		DomNode text = null;
+		if (cursor.getContainingNode().toIndexPair().length() < 1000) {
+			DomNode nodeCursor = cursor.getContainingNode();
+			while (nodeCursor != null) {
+				if (nodeCursor.isText()) {
+					int cursorIndex = nodeCursor.location.getIndex();
+					int length = nodeCursor.textLengthSelf();
+					if (cursorIndex + length > index || cursorIndex == index) {
+						text = nodeCursor;
+						break;
+					}
+				}
+				nodeCursor = nodeCursor.relative().treeSubsequentNode();
+			}
+		}
+		if (text == null) {
+			text = Ax.last(
+					locationContext.getContainingNodes(cursor, index, start));
+		}
 		Preconditions.checkState(text.isText());
 		return new Location(text.asLocation().treeIndex, index, start, text,
 				locationContext);

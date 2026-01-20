@@ -54,29 +54,15 @@ public class SequenceArea extends Model.Fields
 	 * the directed paren t)
 	 */
 	public interface Service extends ContextService {
+		public interface ServiceProvider {
+		}
+
 		/**
 		 * Return the definition editor/viewer, rendered as a header
 		 */
 		Model getSequenceDefinitionHeader();
 
 		InstanceProperty<?, SequencePlace> getPlaceProperty();
-
-		public interface Provider extends ContextService.Provider {
-			Service getSequenceAreaService();
-		}
-
-		static class ProviderInvoker
-				implements ContextService.ProviderInvoker<Service.Provider> {
-			@Override
-			public ContextService get(Provider provider) {
-				return ((Service.Provider) provider).getSequenceAreaService();
-			}
-
-			@Override
-			public Class<? extends ContextService> getServiceClass() {
-				return Service.class;
-			}
-		}
 
 		InstanceQuery getInstanceQuery();
 

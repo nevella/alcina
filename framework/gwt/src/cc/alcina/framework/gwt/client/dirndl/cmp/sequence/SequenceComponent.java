@@ -9,8 +9,8 @@ import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea.Service;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NavigateToNewSequencePlace;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /*
@@ -18,9 +18,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @TypedProperties
 @DirectedContextResolver
 @ReflectiveSerializer.Checks(ignore = true)
-public class SequenceComponent extends Model.Fields
-		implements Binding.TabIndexZero, SequenceArea.Service.Provider,
-		SequenceEvents.NavigateToNewSequencePlace.Handler,
+public class SequenceComponent extends Model.Fields implements
+		Binding.TabIndexZero, SequenceEvents.NavigateToNewSequencePlace.Handler,
 		HasFilteredSequenceElements, SequenceEvents.SequenceChanged.Emitter {
 	class SequenceAreaServiceImpl implements SequenceArea.Service {
 		SequenceAreaServiceImpl() {
@@ -70,13 +69,13 @@ public class SequenceComponent extends Model.Fields
 		this.sequencePlaceProperty = sequencePlaceProperty;
 	}
 
-	@Override
-	public Service getSequenceAreaService() {
-		return serviceImpl;
-	}
-
 	PackageProperties._SequenceComponent.InstanceProperties properties() {
 		return PackageProperties.sequenceComponent.instance(this);
+	}
+
+	@Override
+	public void onNodeContext(NodeContext event) {
+		event.registerService(SequenceArea.Service.class, serviceImpl);
 	}
 
 	@Override

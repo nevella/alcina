@@ -119,7 +119,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 	write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable
 		implements LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler,
-		LayoutEvents.NodeContext.Handler, HasNode, ContextService.Source {
+		LayoutEvents.NodeContext.Handler, HasNode {
 	protected transient DirectedLayout.Node node;
 
 	private transient Bindings bindings;
@@ -755,5 +755,38 @@ public abstract class Model extends Bindable
 	public interface NodeEventTypeValidator {
 		void validate(Class<? extends Model> modelType,
 				List<Class<? extends NodeEvent>> modelEventBindings);
+	}
+
+	public ContextService.Source provideServiceSource() {
+		return new ContextServiceSourceImpl();
+	}
+
+	class ContextServiceSourceImpl implements ContextService.Source {
+		public void reemitEvent(NodeEvent<?> nodeEvent,
+				Class<? extends ModelEvent> eventClass, Object eventModel) {
+			nodeEvent.reemitAs(Model.this, eventClass, eventModel);
+		}
+
+		@Override
+		public <T extends ContextService> T service(Class<T> serviceType) {
+			return Model.this.service(serviceType);
+		}
+
+		@Override
+		public void emitEvent(Class<? extends ModelEvent> clazz) {
+			Model.this.emitEvent(clazz);
+		}
+
+		@Override
+		public void emitEvent(Class<? extends ModelEvent> clazz, Object value) {
+			Model.this.emitEvent(clazz, value);
+		}
+
+		@Override
+		public <CS extends ContextService> void
+				registerService(Class<CS> service, CS implementation) {
+			provideNode().getResolver().registerService(service,
+					implementation);
+		}
 	}
 }

@@ -263,6 +263,10 @@ public interface LocationContext {
 				nodeTraversalRequired = true;
 				break;
 			}
+			case AFTER_END: {
+				nodeTraversalRequired = true;
+				break;
+			}
 			default:
 				throw new UnsupportedOperationException();
 			}
@@ -354,6 +358,17 @@ public interface LocationContext {
 					} else {
 						targetNode = node.relative().treeSubsequentNode();
 					}
+				}
+				break;
+			}
+			case AFTER_END: {
+				DomNode nextSibling = node.relative().nextSibling();
+				if (nextSibling != null) {
+					targetNode = nextSibling;
+					targetStart = true;
+				} else {
+					targetNode = node.parent();
+					targetStart = false;
 				}
 				break;
 			}

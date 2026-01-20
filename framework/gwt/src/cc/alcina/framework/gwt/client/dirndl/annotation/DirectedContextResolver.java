@@ -28,37 +28,25 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
 			Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 	mergeStrategy = DirectedContextResolver.MergeStrategy.class)
 public @interface DirectedContextResolver {
-	/**
-	 * Apply the resolver to the current node (as well as descendants)
-	 */
-	boolean includeSelf() default true;
-
-	/**
-	 * Resolve annotations + models in the node's subtree with this resolver.
-	 * The default delegates to the parent, so is correct for pure service
-	 * registrations
-	 */
-	Class<? extends ContextResolver> value() default DelegatingContextResolver.class;
-
 	@Reflected
 	public static class MergeStrategy extends
 			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<DirectedContextResolver> {
 	}
 
 	public static class Impl implements DirectedContextResolver {
+		boolean includeSelf;
+
+		Class<? extends ContextResolver> value;
+
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return DirectedContextResolver.class;
 		}
 
-		boolean includeSelf;
-
 		public Impl withIncludeSelf(boolean includeSelf) {
 			this.includeSelf = includeSelf;
 			return this;
 		}
-
-		Class<? extends ContextResolver> value;
 
 		public Impl withValue(Class<? extends ContextResolver> value) {
 			this.value = value;
@@ -75,4 +63,16 @@ public @interface DirectedContextResolver {
 			return value;
 		}
 	}
+
+	/**
+	 * Apply the resolver to the current node (as well as descendants)
+	 */
+	boolean includeSelf() default true;
+
+	/**
+	 * Resolve annotations + models in the node's subtree with this resolver.
+	 * The default delegates to the parent, so is correct for pure service
+	 * registrations
+	 */
+	Class<? extends ContextResolver> value() default DelegatingContextResolver.class;
 }

@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
@@ -33,7 +33,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Comparators;
 import cc.alcina.framework.common.client.util.ConditionalLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  * <p>
@@ -146,6 +148,117 @@ public class BranchingParser {
 	}
 
 	void parse(ParserEnvironment env) {
+		try {
+			parserObserver = new ParserObserver(
+					peer.getBranchingParserObserverAttributes());
+			parserObserver.bind();
+			parse0(env);
+		} finally {
+			parserObserver.unbind();
+		}
+	}
+
+	ParserObserver parserObserver;
+
+	public static class ParserObserver implements HasBind {
+		Attributes attributes;
+
+		public static class Attributes {
+			/**
+			 * the rnages to log
+			 */
+			public List<IntPair> logRanges;
+
+			public ObserverType observerType = ObserverType.MATCH;
+
+			public enum ObserverType {
+				MATCH;
+			}
+		}
+
+		public ParserObserver(Attributes attributes) {
+			this.attributes = attributes;
+			branchEntryObserver = new BranchEntryObserver();
+			tokenMatchObserver = new TokenMatchObserver();
+			sentenceMatchObserver = new SentenceMatchObserver();
+		}
+
+		boolean isObserve(Location location) {
+			return attributes.logRanges.stream()
+					.anyMatch(intPair -> intPair.contains(location.getIndex()));
+		}
+
+		class BranchEntryObserver
+				implements ProcessObserver<BranchingParser.BeforeBranchEntry> {
+			@Override
+			public void topicPublished(BeforeBranchEntry message) {
+				if (isObserve(message.getParserState().location)
+						&& (message.branch.parent == null)) {
+					String logMessageString = Ax.format("[Entry] %s :: %s",
+							message.branch.location.toLocationSnapshot()
+									.asTreeIndexTextIndexPair(),
+							message.branch.toString());
+					Ax.out(logMessageString);
+				}
+			}
+		}
+
+		class TokenMatchObserver
+				implements ProcessObserver<BranchingParser.TokenMatch> {
+			@Override
+			public void topicPublished(TokenMatch message) {
+				if (isObserve(message.getParserState().location)) {
+					String logMessageString = Ax.format(
+							"[Token match] %s :: %s :: %s :: %s ",
+							message.match.start.toLocationSnapshot()
+									.asTreeIndexTextIndexPair(),
+							message.token, message.match.toLocationString(),
+							message.branch.toAncestorString());
+					Ax.out(logMessageString);
+				}
+			}
+		}
+
+		class SentenceMatchObserver
+				implements ProcessObserver<BranchingParser.SentenceMatch> {
+			@Override
+			public void topicPublished(SentenceMatch message) {
+				if (isObserve(message.getParserState().location)) {
+					String logMessageString = Ax.format(
+							"[Sentence match] %s :: %s  ",
+							message.measure.toIntPair(),
+							message.branch.toResult().toStructuredString());
+					Ax.out(logMessageString);
+				}
+			}
+		}
+
+		BranchEntryObserver branchEntryObserver;
+
+		TokenMatchObserver tokenMatchObserver;
+
+		SentenceMatchObserver sentenceMatchObserver;
+
+		@Override
+		public void bind() {
+			if (attributes.logRanges != null) {
+				branchEntryObserver.bind();
+				tokenMatchObserver.bind();
+				sentenceMatchObserver.bind();
+			}
+		}
+
+		@Override
+		public void unbind() {
+			if (attributes.logRanges != null) {
+				branchEntryObserver.unbind();
+				tokenMatchObserver.unbind();
+				sentenceMatchObserver.unbind();
+			}
+		}
+	}
+
+	void parse0(ParserEnvironment env) {
 		this.env = env;
 		this.state = new State();
 		computeInvariants();
@@ -188,6 +301,8 @@ public class BranchingParser {
 						.get(parserState.bestMatch);
 				peer.onSentenceMatched(state.bestMatch,
 						state.matchedSentenceBranches);
+				new SentenceMatch(state.bestMatch, parserState.bestMatch)
+						.publish();
 			} else {
 				parserState.location = env.successorFollowingNoMatch
 						.get(state.lookaheadMatches);
@@ -215,6 +330,39 @@ public class BranchingParser {
 		public BeforeTokenMatch(Branch branch, Token token) {
 			this.branch = branch;
 			this.token = token;
+		}
+
+		public ParserState getParserState() {
+			return parserState;
+		}
+	}
+
+	public class TokenMatch implements GlobalObservable.Debug {
+		public Branch branch;
+
+		public Token token;
+
+		public Measure match;
+
+		public TokenMatch(Branch branch, Measure match, Token token) {
+			this.branch = branch;
+			this.match = match;
+			this.token = token;
+		}
+
+		public ParserState getParserState() {
+			return parserState;
+		}
+	}
+
+	public class SentenceMatch implements GlobalObservable.Debug {
+		public Branch branch;
+
+		public Measure measure;
+
+		public SentenceMatch(Branch branch, Measure measure) {
+			this.branch = branch;
+			this.measure = measure;
 		}
 
 		public ParserState getParserState() {
@@ -352,7 +500,8 @@ public class BranchingParser {
 							&& predecessor.predecessor.group == group
 							&& predecessor.match != null) {
 						// it's a sole-child, check the match
-						if (predecessor.match.token.isNonDomToken()) {
+						if (((BranchToken) predecessor.match.token)
+								.isNonDomToken()) {
 							matchToken = BranchToken.Standard.ANON_NON_DOM;
 						}
 					}
@@ -544,6 +693,8 @@ public class BranchingParser {
 			this.match = match;
 			conditionalLogger.debug("Matched: {}{}", () -> new Object[] {
 					group.negated ? "!" : "", match.toTokenRangeTextString() });
+			ProcessObservers.publish(TokenMatch.class,
+					() -> new TokenMatch(this, match, group.token));
 			parent.onChildSatisfied(this);
 		}
 
@@ -579,6 +730,16 @@ public class BranchingParser {
 			String dir = backtracking ? "<" : ">";
 			return Ax.format("%s %s [%s][%s]%s", dir, group, repetitionIndex,
 					indexInGroup, leafMatch);
+		}
+
+		public String toAncestorString() {
+			FormatBuilder format = new FormatBuilder().separator(" <= ");
+			Branch cursor = this;
+			while (cursor != null) {
+				format.append(cursor);
+				cursor = cursor.parent;
+			}
+			return format.toString();
 		}
 	}
 

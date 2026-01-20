@@ -131,6 +131,13 @@ public class DomEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onClick(Click event);
 		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onClick(Click event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
 	}
 
 	public static class Focus extends NodeEvent<Focus.Handler> {
