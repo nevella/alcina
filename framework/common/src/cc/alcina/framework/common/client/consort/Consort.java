@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,11 @@ import cc.alcina.framework.common.client.util.TopicListener;
  *
  * 
  *
+ */
+/*
+ * wip - doc - a consort is really a system of [consort, states, players] -
+ * particularly the consort (in its role as bandleader) has equal powers to the
+ * player - see e.g. #stateReachedExPlayer
  */
 public class Consort<D> implements AlcinaProcess {
 	private static final String PLAYERS_WITH_EQUAL_DEPS_ERR = "Players with equal"
@@ -607,6 +613,28 @@ public class Consort<D> implements AlcinaProcess {
 
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
 		wasPlayed(player, resultantStates, true);
+	}
+
+	/**
+	 * <p>
+	 * Use this if centralising logic with the consort, and something like an
+	 * enum player
+	 * 
+	 * <p>
+	 * If (say) handling a centralised callback, and you can compute the
+	 * achieved state from the callback, call this to 'wasPlayed' the
+	 * appropriate player, if any
+	 * 
+	 * @param state
+	 */
+	protected void stateReachedExPlayer(D state) {
+		if (reachedStates.contains(state)) {
+			return;
+		}
+		Optional<Player<D>> providingPlayer = playing.stream()
+				.filter(player -> player.getProvides().contains(state))
+				.findFirst();
+		providingPlayer.ifPresent(this::wasPlayed);
 	}
 
 	// FIXME - consort - applifecycle.consort - cleanup - this works - unless we
