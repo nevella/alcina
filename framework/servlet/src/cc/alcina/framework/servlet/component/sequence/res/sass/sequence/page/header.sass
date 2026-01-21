@@ -4,24 +4,24 @@
 @use '../../dirndl/cmp/choices'
 @use '../../dirndl/cmp/heading'
 @use '../../dirndl/cmp/action'
-@use '../../dirndl/cmp/search-definition-editor/area' as search-definition-editor
+@use '../../dirndl/cmp/search-definition-editor/search-definition-editor' as search-definition-editor
 
 $header-height: 50px
 $font-family: Arial
 $background-color: #84A4FC
 $color: white
 $hover-color: black
-$padding: 0.5rem 2rem
+$vertical-gap: 0.5rem
+$padding: $vertical-gap 2rem
 $item-gap: 2.5rem
 
 @mixin contents
   width: 100%
-  height: $header-height
   font-family: $font-family
   display: grid
   align-items: center
   grid-template-columns: 1fr 68rem 1fr
-  grid-template-areas: "left mid right"
+  grid-template-areas: "left mid right" "search search search"
   align-content: center
   box-sizing: border-box
   justify-self: center
@@ -34,6 +34,7 @@ $item-gap: 2.5rem
   justify-self: stretch
   grid-column: 1 / -1
   column-gap: 1rem
+  row-gap: $vertical-gap
 
   a:hover, button:hover
     color:  $hover-color
@@ -65,18 +66,9 @@ $item-gap: 2.5rem
     grid-area: mid
     display: flex
     justify-content: center
-    gap: 1rem
+    height: $header-height
 
-    > search-definition-editor
-      @include search-definition-editor.contents
-      min-width: 10rem
-      
-      edit:empty:before
-        content: 'Search filters'
-        color: #777
-
-
-  >right
+  > right
     justify-content: flex-end
     grid-area: right
 
@@ -95,6 +87,26 @@ $item-gap: 2.5rem
 
         &.dotburger
           @include ellipsis-vertical.content
+
+  > search
+    grid-area: search
+    display: grid
+    grid-template-columns: 1fr min-content
+
+    &:focus-within, &:hover
+      background: white
+      transition: all 0.3s
+
+    > search-definition-editor
+      @include search-definition-editor.contents
+      
+      edit
+        width: auto
+
+        &:empty:before
+          content: 'Search filters'
+          color: #777
+
 
 overlay > menu
   @include context-menu.context-menu-std-padding

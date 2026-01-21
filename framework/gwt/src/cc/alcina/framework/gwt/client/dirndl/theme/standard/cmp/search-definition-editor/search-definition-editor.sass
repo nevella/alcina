@@ -1,0 +1,55 @@
+@use '../../../theme/theme'
+
+@mixin contents
+  display: flex
+  > choice-editor
+    flex-grow: 1
+
+    > edit 
+      border: none
+      background: none
+      
+      choice-node
+        border-color: #eee
+        background: #eee
+        padding: 0.2rem 0.8rem
+        display: inline-block
+
+        > searchable
+          display: inline-flex
+          gap: 0.5rem
+
+          > name
+
+          > operator
+
+          > value-editor
+            display: inline-block
+            height: 100%
+
+            > select, > input
+              border-color: transparent
+              background-color: transparent
+
+          &:focus-within, &:hover
+            > value-editor
+              > select, > input
+                background-color: white
+
+
+  > go-container
+    display: block
+    line-height: 145%
+    padding: 0.4rem
+
+    > button
+      color: theme.$link-color
+
+      &:hover
+        color: theme.$link-hover-color
+        background: white
+        border-color: transparent
+
+@mixin tag
+  search-definition-editor
+    @include contents

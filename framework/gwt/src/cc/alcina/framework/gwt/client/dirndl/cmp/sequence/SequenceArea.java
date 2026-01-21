@@ -355,7 +355,7 @@ public class SequenceArea extends Model.Fields
 			default:
 				throw new UnsupportedOperationException();
 			}
-			builder.line("body > page {grid-template-rows: 50px 1fr}");
+			builder.line("body > page {grid-template-rows: min-content 1fr}");
 			//
 			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
 					.collect(Collectors.joining(" "));

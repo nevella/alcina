@@ -24,7 +24,7 @@ public class BaseDoubleCriterionPack {
 
 		@Override
 		default DomainFilter getFilter(SC sc) {
-			Double value = sc.getDouble();
+			Double value = sc.getValue();
 			if (value == null) {
 				return null;
 			}
@@ -82,7 +82,7 @@ public class BaseDoubleCriterionPack {
 
 		@Override
 		public boolean hasValue(DoubleCriterion sc) {
-			return sc.getDouble() != null;
+			return sc.getValue() != null;
 		}
 	}
 
@@ -93,7 +93,7 @@ public class BaseDoubleCriterionPack {
 
 		@Override
 		default DomainFilter getFilter(SC sc) {
-			Double value = sc.getDouble();
+			Double value = sc.getValue();
 			if (value == null) {
 				return null;
 			}

@@ -44,11 +44,23 @@ public class SearchDefinitionEditor extends Model.Fields
 		ModelEvents.SelectionDirty.Handler, ModelEvents.Submit.Handler {
 	interface Service extends ContextService {
 		SearchDefinition getSearchDefinition();
+
+		Peer getPeer();
+	}
+
+	/**
+	 * Models default logic behaviour for the definition, may be overridden
+	 */
+	public static class Peer {
 	}
 
 	class ServiceImpl implements Service {
 		public SearchDefinition getSearchDefinition() {
 			return originalDefinition;
+		}
+
+		public Peer getPeer() {
+			return peer;
 		}
 	}
 
@@ -117,6 +129,9 @@ public class SearchDefinitionEditor extends Model.Fields
 	@Property.Not
 	SearchDefinition renderedDefinition;
 
+	@Property.Not
+	Peer peer;
+
 	@Override
 	public SearchDefinitionEditor apply(SearchDefinition searchDefinition) {
 		this.originalDefinition = searchDefinition;
@@ -145,6 +160,7 @@ public class SearchDefinitionEditor extends Model.Fields
 		searchablesListener = new PropertyGraphListener(
 				this.renderedDefinition);
 		searchablesListener.topicChangeEvent.add(this::onPropertyGraphChange);
+		this.peer = new Peer();
 		super.onBeforeRender(event);
 	}
 

@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -45,9 +46,57 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 	read = @Permission(access = AccessLevel.EVERYONE),
 	write = @Permission(access = AccessLevel.EVERYONE))
 @Registration(JaxbContextRegistration.class)
+@TypedProperties
 public abstract class SearchCriterion extends Bindable
 		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
 		HasEquivalence<SearchCriterion>, TreeSerializable {
+	/**
+	 * Can also apply to things like date criteria, not just order - so leave
+	 * here rather than in OrderCriterion
+	 *
+	 * 
+	 */
+	@Reflected
+	public enum Direction {
+		ASCENDING, DESCENDING;
+
+		public static Direction valueOfAbbrev(String string) {
+			if (string == null) {
+				return null;
+			}
+			switch (string.toLowerCase()) {
+			case "asc":
+				return ASCENDING;
+			case "desc":
+				return DESCENDING;
+			default:
+				return null;
+			}
+		}
+
+		public String toAbbrevString() {
+			switch (this) {
+			case ASCENDING:
+				return "asc";
+			case DESCENDING:
+				return "desc";
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		public int toComparatorMultiplier() {
+			switch (this) {
+			case ASCENDING:
+				return 1;
+			case DESCENDING:
+				return -1;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+	}
+
 	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
 			+ ".CONTEXT_ENSURE_DISPLAY_NAME";
 
@@ -64,6 +113,12 @@ public abstract class SearchCriterion extends Bindable
 
 	public SearchCriterion(String displayName) {
 		this.displayName = displayName;
+	}
+
+	//
+	public PackageProperties._SearchCriterion.InstanceProperties
+			searchCriterionProperties() {
+		return PackageProperties.searchCriterion.instance(this);
 	}
 
 	public void addToCriteriaGroup(CriteriaGroup group) {
@@ -140,14 +195,6 @@ public abstract class SearchCriterion extends Bindable
 		this.targetPropertyName = propertyName;
 	}
 
-	protected String targetPropertyNameWithTable() {
-		String targetPropertyName = getTargetPropertyName();
-		if (targetPropertyName == null || targetPropertyName.contains(".")) {
-			return targetPropertyName;
-		}
-		return "t." + targetPropertyName;
-	}
-
 	public String toHtml() {
 		return toString();
 	}
@@ -157,50 +204,11 @@ public abstract class SearchCriterion extends Bindable
 		return this;
 	}
 
-	/**
-	 * Can also apply to things like date criteria, not just order - so leave
-	 * here rather than in OrderCriterion
-	 *
-	 * 
-	 */
-	@Reflected
-	public enum Direction {
-		ASCENDING, DESCENDING;
-
-		public static Direction valueOfAbbrev(String string) {
-			if (string == null) {
-				return null;
-			}
-			switch (string.toLowerCase()) {
-			case "asc":
-				return ASCENDING;
-			case "desc":
-				return DESCENDING;
-			default:
-				return null;
-			}
+	protected String targetPropertyNameWithTable() {
+		String targetPropertyName = getTargetPropertyName();
+		if (targetPropertyName == null || targetPropertyName.contains(".")) {
+			return targetPropertyName;
 		}
-
-		public String toAbbrevString() {
-			switch (this) {
-			case ASCENDING:
-				return "asc";
-			case DESCENDING:
-				return "desc";
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-
-		public int toComparatorMultiplier() {
-			switch (this) {
-			case ASCENDING:
-				return 1;
-			case DESCENDING:
-				return -1;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
+		return "t." + targetPropertyName;
 	}
 }

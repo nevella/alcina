@@ -30,6 +30,7 @@ public class PackageProperties {
     static _Header header = new _Header();
     static _Header_Left header_left = new _Header_Left();
     static _Header_Mid header_mid = new _Header_Mid();
+    static _Header_Search header_search = new _Header_Search();
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
     static _SequenceBrowser_Ui sequenceBrowser_ui = new _SequenceBrowser_Ui();
@@ -74,11 +75,13 @@ public class PackageProperties {
       TypedProperty<Header, Header.Left> left = new TypedProperty<>(Header.class, "left");
       TypedProperty<Header, Header.Mid> mid = new TypedProperty<>(Header.class, "mid");
       TypedProperty<Header, Header.Right> right = new TypedProperty<>(Header.class, "right");
+      TypedProperty<Header, Header.Search> search = new TypedProperty<>(Header.class, "search");
       static class InstanceProperties extends InstanceProperty.Container<Header> {
          InstanceProperties(Header source){super(source);}
         InstanceProperty<Header, Header.Left> left(){return new InstanceProperty<>(source,PackageProperties.header.left);}
         InstanceProperty<Header, Header.Mid> mid(){return new InstanceProperty<>(source,PackageProperties.header.mid);}
         InstanceProperty<Header, Header.Right> right(){return new InstanceProperty<>(source,PackageProperties.header.right);}
+        InstanceProperty<Header, Header.Search> search(){return new InstanceProperty<>(source,PackageProperties.header.search);}
       }
       
        InstanceProperties instance(Header instance) {
@@ -105,15 +108,26 @@ public class PackageProperties {
     }
     
     static class _Header_Mid implements TypedProperty.Container {
-      TypedProperty<Header.Mid, SequenceSearchDefinition> searchDefinition = new TypedProperty<>(Header.Mid.class, "searchDefinition");
       TypedProperty<Header.Mid, AppSuggestorSequence> suggestor = new TypedProperty<>(Header.Mid.class, "suggestor");
       static class InstanceProperties extends InstanceProperty.Container<Header.Mid> {
          InstanceProperties(Header.Mid source){super(source);}
-        InstanceProperty<Header.Mid, SequenceSearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.header_mid.searchDefinition);}
         InstanceProperty<Header.Mid, AppSuggestorSequence> suggestor(){return new InstanceProperty<>(source,PackageProperties.header_mid.suggestor);}
       }
       
        InstanceProperties instance(Header.Mid instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _Header_Search implements TypedProperty.Container {
+      TypedProperty<Header.Search, SequenceSearchDefinition> searchDefinition = new TypedProperty<>(Header.Search.class, "searchDefinition");
+      static class InstanceProperties extends InstanceProperty.Container<Header.Search> {
+         InstanceProperties(Header.Search source){super(source);}
+        InstanceProperty<Header.Search, SequenceSearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.header_search.searchDefinition);}
+      }
+      
+       InstanceProperties instance(Header.Search instance) {
         return new InstanceProperties( instance);
       }
       

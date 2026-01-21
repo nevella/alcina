@@ -5,17 +5,18 @@ import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResultsReuse;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
-import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentRemoteLoader.LoadedWithClear;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.FsObjectCache;
@@ -42,8 +43,9 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 	@Override
 	public void init() {
 		TransformCommit.setCommitTestTransforms(false);
-		this.definition = Reflections
-				.newInstance(Configuration.get("definitionClassName"));
+		String definitionClassName = Configuration.get("definitionClassName");
+		Preconditions.checkArgument(Ax.notBlank(definitionClassName));
+		this.definition = Reflections.newInstance(definitionClassName);
 		this.definition.configureLocal();
 		logger.info("Definition :: {}", definition.asString());
 		if (clear.is()) {

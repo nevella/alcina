@@ -67,7 +67,7 @@ public class BaseLongCriterionPack {
 
 		@Override
 		public boolean hasValue(LongCriterion sc) {
-			return sc.getLong() != null;
+			return sc.getValue() != null;
 		}
 	}
 }

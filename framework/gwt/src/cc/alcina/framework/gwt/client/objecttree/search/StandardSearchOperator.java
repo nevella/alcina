@@ -3,8 +3,11 @@ package cc.alcina.framework.gwt.client.objecttree.search;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Reflected
@@ -66,6 +69,58 @@ public enum StandardSearchOperator implements SearchOperator {
 			return comparatorResult <= 0;
 		default:
 			throw new UnsupportedOperationException();
+		}
+	}
+
+	public FilterOperator toFilterOperator() {
+		switch (this) {
+		case ALL_OF:
+		case AT_LEAST_ONE_OF:
+		case CONTAINS:
+		case DOES_NOT_CONTAIN:
+		case STARTS_WITH:
+			return null;
+		case DOES_NOT_EQUAL:
+			return FilterOperator.NE;
+		case EQUALS:
+			return FilterOperator.EQ;
+		case GREATER_THAN:
+			return FilterOperator.GT;
+		case GREATER_THAN_OR_EQUAL_TO:
+			return FilterOperator.GT_EQ;
+		case LESS_THAN:
+			return FilterOperator.LT;
+		case LESS_THAN_OR_EQUAL_TO:
+			return FilterOperator.LT_EQ;
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	/**
+	 * wip - search - 'simple' rendering actually depends on the set of values
+	 * available to the operator - so replace with a context-aware renderer
+	 * 
+	 * 
+	 */
+	@Reflected
+	public static class SimpleRenderer
+			implements Function<StandardSearchOperator, String> {
+		@Override
+		public String apply(StandardSearchOperator operator) {
+			if (operator == null) {
+				return ":";
+			}
+			switch (operator) {
+			case EQUALS:
+				return ":";
+			default:
+				FilterOperator filterOperator = operator.toFilterOperator();
+				if (filterOperator != null) {
+					return filterOperator.operationText();
+				}
+				return Ax.friendly(operator);
+			}
 		}
 	}
 }
