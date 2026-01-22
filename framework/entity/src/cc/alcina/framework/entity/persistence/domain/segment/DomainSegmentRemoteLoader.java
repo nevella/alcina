@@ -107,7 +107,6 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 				}
 			} else {
 				// join table classes
-				int debug = 3;
 			}
 			return ConnResultsReuse.super.getIterator(connResults, itr);
 		}

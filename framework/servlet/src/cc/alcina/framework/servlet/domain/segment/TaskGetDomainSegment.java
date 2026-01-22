@@ -48,6 +48,7 @@ public class TaskGetDomainSegment extends PerformerTask.Remote {
 				cache.allValues().size());
 		this.result = new DomainSegment();
 		result.addCache(cache);
+		definition.computeProperties(cache, result.properties);
 		result.filterExisting(localState);
 		if (Ax.isTest() && !TransformCommit.isCommitTestTransforms()) {
 		} else {
