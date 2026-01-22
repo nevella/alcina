@@ -326,10 +326,14 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			NodeTransformer transformer = createNodeTransformer(domNode);
 			transformer.setLayoutNode(node.provideNode());
 			registerTransformer(domNode, transformer);
-			node.onFragmentRegistration();
+			if (fragmentRegisteredOnce.add(node)) {
+				node.onFragmentRegistration();
+			}
 		}
 		node.children().forEach(this::register);
 	}
+
+	Set<FragmentNode> fragmentRegisteredOnce = AlcinaCollections.newHashSet();
 
 	public void deregister(FragmentNode node) {
 		if (node.provideIsUnbound()) {
