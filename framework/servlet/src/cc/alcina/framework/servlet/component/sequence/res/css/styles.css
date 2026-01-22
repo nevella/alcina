@@ -659,7 +659,7 @@ body > page > header {
   justify-self: stretch;
   grid-column: 1/-1;
   column-gap: 1rem;
-  row-gap: 0.5rem;
+  min-height: 50px;
 }
 body > page > header a:hover, body > page > header button:hover {
   color: black;
@@ -687,7 +687,6 @@ body > page > header > mid {
   grid-area: mid;
   display: flex;
   justify-content: center;
-  height: 50px;
 }
 body > page > header > right {
   justify-content: flex-end;
@@ -729,6 +728,7 @@ body > page > header > search:focus-within, body > page > header > search:hover 
 }
 body > page > header > search > search-definition-editor {
   display: flex;
+  padding-top: 0.5rem;
 }
 body > page > header > search > search-definition-editor > choice-editor {
   flex-grow: 1;
