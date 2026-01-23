@@ -90,4 +90,9 @@ class JobEnvironmentTx implements JobEnvironment {
 	public void updateJobStatus(JobContext jobContext, Runnable runnable) {
 		runInTransaction(() -> jobContext.enqueue(runnable));
 	}
+
+	@Override
+	public boolean isSchedulerEnabled() {
+		return DomainStore.writableStore().getDomainSegmentLoader() == null;
+	}
 }

@@ -127,6 +127,9 @@ public class JobScheduler {
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
 		this.environment = jobRegistry.getEnvironment();
+		if (!this.environment.isSchedulerEnabled()) {
+			return;
+		}
 		JobDomain.get().topicQueueEvents.add(queueEventListener);
 		JobDomain.get().topicFutureConsistencyEvents
 				.add(futureConsistencyEventListener);
