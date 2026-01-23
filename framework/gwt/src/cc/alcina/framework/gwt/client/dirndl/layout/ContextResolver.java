@@ -445,15 +445,18 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 * The main reason I think it's nasty is because it's an undemocratic
 	 * clobberer - it doesn't allow input/merge from other resolvers.
 	 * 
+	 * @param parentNode
+	 * 
 	 * @param model2
 	 * 
 	 */
 	/*
 	 * TODO - use ContextService rather than resolveModelAscends
 	 */
-	protected Object resolveModel(AnnotationLocation location, Object model) {
+	protected Object resolveModel(Node parentNode, AnnotationLocation location,
+			Object model) {
 		if (resolveModelAscends && parent != null) {
-			return parent.resolveModel(location, model);
+			return parent.resolveModel(parentNode, location, model);
 		} else {
 			return model;
 		}
@@ -706,5 +709,17 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			return mixinResult != null ? mixinResult
 					: super.resolveAnnotations0(annotationClass, location);
 		}
+	}
+
+	/**
+	 * For delegation/mixin/access to resolveModel()
+	 */
+	public interface ModelResolver {
+		Object resolveModel(Node parentNode, AnnotationLocation location,
+				Object model);
+	}
+
+	public interface DirectedPropertyResolver {
+		Property resolveDirectedProperty0(Property property);
 	}
 }

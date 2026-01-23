@@ -41,7 +41,6 @@ public class ChoiceEditorGalleryPlace extends GalleryPlace {
 	}
 
 	@Display.AllProperties
-	@PropertyOrder(fieldOrder = true)
 	@ObjectPermissions(
 		read = @Permission(access = AccessLevel.EVERYONE),
 		write = @Permission(access = AccessLevel.EVERYONE))

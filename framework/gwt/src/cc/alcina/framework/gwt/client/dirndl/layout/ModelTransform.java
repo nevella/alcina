@@ -46,6 +46,12 @@ public interface ModelTransform<A, B> extends Function<A, B> {
 			extends ModelTransform<A, B> {
 		public ContextSensitiveTransform<A, B>
 				withContextNode(DirectedLayout.Node node);
+
+		public static void withNode(Function transform, Node node) {
+			if (transform instanceof ContextSensitiveTransform) {
+				((ContextSensitiveTransform) transform).withContextNode(node);
+			}
+		}
 	}
 
 	public static class DateStyle_TimestampHuman

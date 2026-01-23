@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Ax;
@@ -549,6 +550,7 @@ public abstract class Model extends Bindable implements
 	 * an @Directed
 	 */
 	@Bean(PropertySource.FIELDS)
+	@PropertyOrder(fieldOrder = true)
 	public abstract static class Fields extends Model {
 	}
 

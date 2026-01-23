@@ -132,6 +132,11 @@ public class ModalResolver extends ContextResolver implements FormModel.Has {
 						|| matchingModal.isPresent()) {
 					return defaultResolution;
 				} else {
+					if (annotationClass == Display.class) {
+						Display.Impl impl = new Display.Impl();
+						impl.displayMask = Display.DISPLAY_NONE;
+						return (List<A>) List.of(impl);
+					}
 					return List.of();
 				}
 			}

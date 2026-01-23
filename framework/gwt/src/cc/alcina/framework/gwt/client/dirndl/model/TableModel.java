@@ -36,7 +36,6 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -54,14 +53,14 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
@@ -117,7 +116,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  *
  */
 public class TableModel extends Model
-		implements NodeEditorContext, TableEvents.CellClicked.Handler {
+		implements NodeEditorContextService, TableEvents.CellClicked.Handler {
 	public static class DirectedCategoriesActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedCategoriesActivity<?>, TableModel> {
 		@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE))
@@ -799,9 +798,27 @@ public class TableModel extends Model
 		}
 	}
 
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		event.node.getResolver().registerService(NodeEditorContextService.class,
+				this);
+		super.onBeforeRender(event);
+	}
+
 	@Directed(reemits = { DomEvents.Click.class, TableEvents.RowClicked.class })
+	@DirectedContextResolver
 	public static class TableRow extends Model
 			implements TableEvents.RowClicked.Handler {
+		public class RowService implements ContextService {
+			public <T> T getRowModel() {
+				return (T) rowModel;
+			}
+
+			public <T> T getOriginalRowModel() {
+				return (T) originalRowModel;
+			}
+		}
+
 		List<TableCell> cells = new ArrayList<>();
 
 		Object rowModel;
@@ -852,6 +869,8 @@ public class TableModel extends Model
 			if (originalRowModel instanceof Model) {
 				((Model) originalRowModel).onBeforeRender(event);
 			}
+			event.node.getResolver().registerService(RowService.class,
+					new RowService());
 			super.onBeforeRender(event);
 		}
 
@@ -889,30 +908,13 @@ public class TableModel extends Model
 	}
 
 	class CellEditor {
-		class ValueEditor extends Model.All implements ContextResolver.Has {
-			class Resolver extends DelegatingContextResolver
-					implements NodeEditorContext.Has {
-				class NodeEditorContextImpl implements NodeEditorContext {
-					@Override
-					public boolean isEditable() {
-						return true;
-					}
-
-					@Override
-					public boolean isRenderAsNodeEditors() {
-						return true;
-					}
-				}
-
-				Resolver(ContextResolver logicalParent) {
-					super(logicalParent);
-				}
-
-				@Override
-				@Property.Not
-				public NodeEditorContext getNodeEditorContext() {
-					return new NodeEditorContextImpl();
-				}
+		class ValueEditor extends Model.All {
+			@Override
+			public void onBeforeRender(BeforeRender event) {
+				event.node.getResolver().registerService(
+						NodeEditorContextService.class,
+						NodeEditorContextService.Editable.INSTANCE);
+				super.onBeforeRender(event);
 			}
 
 			class EditableCell extends TableCell {
@@ -929,13 +931,6 @@ public class TableModel extends Model
 			ValueEditor() {
 				value = Reflections.newInstance(cell.getValue().getClass());
 				value.setCell(new EditableCell());
-			}
-
-			@Override
-			@Property.Not
-			public ContextResolver
-					getContextResolver(AnnotationLocation location) {
-				return new Resolver(cell.provideNode().getResolver());
 			}
 
 			@Override

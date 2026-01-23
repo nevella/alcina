@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer.ValueResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
@@ -59,12 +60,15 @@ public class DelegatingValue extends Model.Value<Object>
 		}
 
 		@Override
-		protected Object resolveModel(AnnotationLocation location,
-				Object model) {
+		protected Object resolveModel(Node parentNode,
+				AnnotationLocation location, Object model) {
 			if (model == value) {
-				return Reflections.newInstance(valueTransformer).apply(model);
+				Function transform = Reflections.newInstance(valueTransformer);
+				ModelTransform.ContextSensitiveTransform.withNode(transform,
+						parentNode);
+				return transform.apply(model);
 			}
-			return super.resolveModel(location, model);
+			return super.resolveModel(parentNode, location, model);
 		}
 	}
 

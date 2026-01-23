@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -26,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Select;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
+import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 
 @Directed.Delegating
 @Bean(PropertySource.FIELDS)
@@ -49,8 +48,8 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 	@Override
 	public void onBeforeRender(BeforeRender event) {
 		Node node = event.getContext().node;
-		ContextResolver resolver = node.getResolver();
-		NodeEditorContext context = NodeEditorContext.get(resolver);
+		NodeEditorContextService context = node
+				.service(NodeEditorContextService.class);
 		select = new Select<>();
 		Class<E> type = context.getEditingProperty().getType();
 		List<E> values = Arrays.stream(type.getEnumConstants())

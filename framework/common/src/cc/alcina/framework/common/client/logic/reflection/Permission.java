@@ -70,6 +70,37 @@ public @interface Permission {
 
 	String rule() default "";
 
+	public static class Impl implements Permission {
+		public static Impl EVEERYONE = new Impl(AccessLevel.EVERYONE, "");
+
+		public Impl() {
+		}
+
+		public Impl(AccessLevel access, String rule) {
+			this.access = access;
+			this.rule = rule;
+		}
+
+		public AccessLevel access = AccessLevel.DEVELOPER;
+
+		public String rule = "";
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Permission.class;
+		}
+
+		@Override
+		public AccessLevel access() {
+			return access;
+		}
+
+		@Override
+		public String rule() {
+			return rule;
+		}
+	}
+
 	public static class SimplePermissions {
 		public static Permission getPermission(AccessLevel level) {
 			switch (level) {

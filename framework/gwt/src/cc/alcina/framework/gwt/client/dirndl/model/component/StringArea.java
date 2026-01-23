@@ -20,6 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Copy;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CopyToClipboard;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -60,8 +61,8 @@ public class StringArea extends Model.Fields
 
 	static class InnerResolver extends ContextResolver {
 		@Override
-		protected Object resolveModel(AnnotationLocation location,
-				Object model) {
+		protected Object resolveModel(Node parentNode,
+				AnnotationLocation location, Object model) {
 			return model;
 		}
 	}
@@ -143,7 +144,8 @@ public class StringArea extends Model.Fields
 	 */
 	public static class StringAreaResolver extends ContextResolver {
 		@Override
-		public Object resolveModel(AnnotationLocation location, Object model) {
+		public Object resolveModel(Node parentNode, AnnotationLocation location,
+				Object model) {
 			if (location.property != null
 					&& location.property.getOwningType() == StringArea.class) {
 				return model;

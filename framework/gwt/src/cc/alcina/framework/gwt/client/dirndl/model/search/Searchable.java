@@ -7,7 +7,6 @@ import com.totsp.gwittir.client.ui.table.Field;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasObject;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -21,14 +20,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
+import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
@@ -147,32 +144,7 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		}
 	}
 
-	class ValueEditor extends Model.All implements ContextResolver.Has {
-		class Resolver extends DelegatingContextResolver
-				implements NodeEditorContext.Has {
-			class NodeEditorContextImpl implements NodeEditorContext {
-				@Override
-				public boolean isEditable() {
-					return true;
-				}
-
-				@Override
-				public boolean isRenderAsNodeEditors() {
-					return true;
-				}
-			}
-
-			Resolver(ContextResolver logicalParent) {
-				super(logicalParent);
-			}
-
-			@Override
-			@Property.Not
-			public NodeEditorContext getNodeEditorContext() {
-				return new NodeEditorContextImpl();
-			}
-		}
-
+	class ValueEditor extends Model.All {
 		@Directed(renderer = BridgingValueRenderer.class)
 		class ValueModelImpl implements ValueModel {
 			@Override
@@ -218,9 +190,11 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		}
 
 		@Override
-		@Property.Not
-		public ContextResolver getContextResolver(AnnotationLocation location) {
-			return new Resolver(Searchable.this.provideNode().getResolver());
+		public void onBeforeRender(BeforeRender event) {
+			event.node.getResolver().registerService(
+					NodeEditorContextService.class,
+					NodeEditorContextService.Editable.INSTANCE);
+			super.onBeforeRender(event);
 		}
 	}
 

@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnWidth;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.CellClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.BindableClassTransformer;
@@ -89,8 +90,7 @@ public class TreeTable extends Model.Fields
 		gridTemplateColumns = Ax.format("%s %s", nodeLabelWidth, cellColumns);
 	}
 
-	public static class Resolver extends ContextResolver
-			implements NodeEditorContext.Has {
+	public static class Resolver extends ContextResolver {
 		AnnotationLocation contentsLocation;
 
 		private TreeTable treeTable;
@@ -108,13 +108,8 @@ public class TreeTable extends Model.Fields
 		}
 
 		@Override
-		public NodeEditorContext getNodeEditorContext() {
-			return treeTable.tableModel;
-		}
-
-		@Override
-		protected Object resolveModel(AnnotationLocation location,
-				Object model) {
+		protected Object resolveModel(Node parentNode,
+				AnnotationLocation location, Object model) {
 			if (contentsLocation == null && location.property != null) {
 				if (Reflections.isAssignableFrom(Tree.TreeNode.class,
 						location.property.getDeclaringType())
@@ -128,7 +123,7 @@ public class TreeTable extends Model.Fields
 						treeTable().tableModel, model);
 				model = tableRow;
 			}
-			return super.resolveModel(location, model);
+			return super.resolveModel(parentNode, location, model);
 		}
 	}
 

@@ -1,8 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.resolver;
 
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import com.google.gwt.core.client.GWT;
 
@@ -15,20 +13,31 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class PermissibleModelResolver extends ContextResolver {
 	PermissibleModelResolver.Support support;
 
 	public PermissibleModelResolver() {
-		support = new Support(super::resolveModel,
-				super::resolveDirectedProperty0);
+		support = new Support(this::resolveModelSuper,
+				this::resolveDirectedProperty0Super);
 		resolveDirectedPropertyAscends = false;
 	}
 
+	protected Object resolveModelSuper(Node parentNode,
+			AnnotationLocation location, Object model) {
+		return super.resolveModel(parentNode, location, model);
+	}
+
+	protected Property resolveDirectedProperty0Super(Property property) {
+		return super.resolveDirectedProperty0(property);
+	}
+
 	@Override
-	protected Object resolveModel(AnnotationLocation location, Object model) {
-		return support.resolveModel(location, model);
+	protected Object resolveModel(Node parentNode, AnnotationLocation location,
+			Object model) {
+		return support.resolveModel(parentNode, location, model);
 	}
 
 	@Override
@@ -46,15 +55,14 @@ public class PermissibleModelResolver extends ContextResolver {
 		Map<Property, Permission> propertyVisibilityPermissions = AlcinaCollections
 				.newUnqiueMap();
 
-		BiFunction<AnnotationLocation, Object, Object> superResolveModel;
+		ContextResolver.ModelResolver modelResolver;
 
-		Function<Property, Property> superResolveDirectedProperty;
+		ContextResolver.DirectedPropertyResolver directedPropertyResolver;
 
-		public Support(
-				BiFunction<AnnotationLocation, Object, Object> superResolveModel,
-				Function<Property, Property> superResolveDirectedProperty) {
-			this.superResolveModel = superResolveModel;
-			this.superResolveDirectedProperty = superResolveDirectedProperty;
+		public Support(ContextResolver.ModelResolver modelResolver,
+				ContextResolver.DirectedPropertyResolver directedPropertyResolver) {
+			this.modelResolver = modelResolver;
+			this.directedPropertyResolver = directedPropertyResolver;
 		}
 
 		public Property resolveDirectedProperty0(Property property) {
@@ -66,12 +74,13 @@ public class PermissibleModelResolver extends ContextResolver {
 					&& !Permissions.isPermitted(propertyVisible)) {
 				return null;
 			}
-			return superResolveDirectedProperty.apply(property);
+			return directedPropertyResolver.resolveDirectedProperty0(property);
 		}
 
-		public Object resolveModel(AnnotationLocation location, Object model) {
+		public Object resolveModel(Node parentNode, AnnotationLocation location,
+				Object model) {
 			if (model == null) {
-				return superResolveModel.apply(location, model);
+				return modelResolver.resolveModel(parentNode, location, model);
 			}
 			Class<? extends Object> modelClass = model.getClass();
 			Permission classAccess = classAccessPermissions.computeIfAbsent(
@@ -83,7 +92,7 @@ public class PermissibleModelResolver extends ContextResolver {
 					&& !Permissions.isPermitted(model, classAccess)) {
 				return new AccessDenied(model);
 			}
-			return superResolveModel.apply(location, model);
+			return modelResolver.resolveModel(parentNode, location, model);
 		}
 	}
 

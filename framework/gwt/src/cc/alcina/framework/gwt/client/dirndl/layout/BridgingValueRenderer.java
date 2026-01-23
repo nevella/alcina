@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
+import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
@@ -67,15 +67,9 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
  *
  */
 public class BridgingValueRenderer extends DirectedRenderer {
-	static NodeEditorContext getEditorContext(Node node) {
-		NodeEditorContext.Has contextSource = (NodeEditorContext.Has) node.resolver;
-		NodeEditorContext editorContext = contextSource.getNodeEditorContext();
-		return editorContext;
-	}
-
 	Node node;
 
-	NodeEditorContext editorContext;
+	NodeEditorContextService editorContext;
 
 	ValueModel valueModel;
 
@@ -99,7 +93,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 	protected void render(RendererInput input) {
 		this.input = input;
 		node = input.node;
-		editorContext = getEditorContext(node);
+		editorContext = node.service(NodeEditorContextService.class);
 		valueModel = (ValueModel) node.getModel();
 		field = valueModel.getField();
 		target = null;
@@ -159,7 +153,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			extends AbstractContextSensitiveModelTransform<Object, Model> {
 		@Override
 		public Model apply(Object t) {
-			NodeEditorContext editorContext = getEditorContext(node);
+			NodeEditorContextService editorContext = node
+					.service(NodeEditorContextService.class);
 			Property property = ((ValueResolver) node.resolver).valueLocation.property;
 			Class marker = editorContext.isEditable() ? FormModel.Editor.class
 					: FormModel.Viewer.class;
@@ -178,8 +173,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 	 * AnnotationLocation#operationHistory
 	 *
 	 */
-	static class ValueResolver extends ContextResolver
-			implements NodeEditorContext.Has {
+	static class ValueResolver extends ContextResolver {
 		AnnotationLocation valueLocation;
 
 		BridgingValueRenderer renderer;
@@ -302,17 +296,16 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		}
 
 		@Override
-		public NodeEditorContext getNodeEditorContext() {
-			return new Context();
-		}
-
-		@Override
 		protected void initCaches() {
 			// delegates to parent caches
 		}
 
 		@Override
 		public void onBeforeRender(BeforeRender event) {
+			NodeEditorContextService ancestorContext = getService(
+					NodeEditorContextService.class).get();
+			registerService(NodeEditorContextService.class,
+					new Context(ancestorContext));
 			Node node = event.getContext().node;
 			// skip the transform node, bind the transform child to the
 			// valueModel
@@ -337,7 +330,13 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			}
 		}
 
-		class Context implements NodeEditorContext {
+		class Context implements NodeEditorContextService {
+			NodeEditorContextService ancestorContext;
+
+			public Context(NodeEditorContextService ancestorContext) {
+				this.ancestorContext = ancestorContext;
+			}
+
 			@Override
 			public Property getEditingProperty() {
 				return field.getProperty();
@@ -345,17 +344,12 @@ public class BridgingValueRenderer extends DirectedRenderer {
 
 			@Override
 			public boolean isEditable() {
-				return parentContext().isEditable() && field.isEditable();
+				return ancestorContext.isEditable() && field.isEditable();
 			}
 
 			@Override
 			public boolean isRenderAsNodeEditors() {
-				return parentContext().isRenderAsNodeEditors();
-			}
-
-			public NodeEditorContext parentContext() {
-				return ((NodeEditorContext.Has) ValueResolver.this.parent)
-						.getNodeEditorContext();
+				return ancestorContext.isRenderAsNodeEditors();
 			}
 		}
 	}

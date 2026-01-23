@@ -1,7 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.TreePathModel;
@@ -17,7 +16,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.StringArea;
-import cc.alcina.framework.gwt.client.dirndl.model.component.StringArea.StringAreaResolver;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
@@ -61,7 +59,6 @@ class PropertiesArea extends Model.Fields {
 	@Directed.Transform(BeanForm.Viewer.class)
 	@BeanForm.Classes({ ClassName.vertical })
 	@Display.AllProperties
-	@PropertyOrder(fieldOrder = true)
 	static class SelectionArea extends Model.All
 			implements ModelTransform<Selection, SelectionArea> {
 		TreePathModel treePath;

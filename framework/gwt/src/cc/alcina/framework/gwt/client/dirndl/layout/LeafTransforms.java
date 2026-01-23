@@ -35,6 +35,14 @@ public class LeafTransforms {
 				return DateStyle.TIMESTAMP_NO_DAY.format(t);
 			}
 		}
+
+		public static class DatestampDashed
+				implements ModelTransform<Date, String> {
+			@Override
+			public String apply(Date t) {
+				return DateStyle.DATESTAMP_DASHED.format(t);
+			}
+		}
 	}
 
 	public static class TimestampHuman implements ModelTransform<Date, String> {

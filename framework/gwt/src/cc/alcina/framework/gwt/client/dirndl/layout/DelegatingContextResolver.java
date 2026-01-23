@@ -5,6 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class DelegatingContextResolver extends ContextResolver {
 	ContextResolver logicalParent;
@@ -54,8 +55,9 @@ public class DelegatingContextResolver extends ContextResolver {
 	}
 
 	@Override
-	protected Object resolveModel(AnnotationLocation location, Object model) {
-		return parent.resolveModel(location, model);
+	protected Object resolveModel(Node parentNode, AnnotationLocation location,
+			Object model) {
+		return parent.resolveModel(parentNode, location, model);
 	}
 
 	@Override

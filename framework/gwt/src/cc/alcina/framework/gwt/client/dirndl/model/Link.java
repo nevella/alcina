@@ -63,8 +63,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * because of late binding), use another model
  */
 @TypedProperties
-public class Link extends Model
-		implements DomEvents.Click.Handler, HasTag, HasElementBehaviors {
+public class Link extends Model implements DomEvents.Click.Handler, HasTag,
+		HasElementBehaviors, Model.ResetDirecteds {
 	public static class AnchorTransform
 			implements ModelTransform<Object, Link> {
 		@Override

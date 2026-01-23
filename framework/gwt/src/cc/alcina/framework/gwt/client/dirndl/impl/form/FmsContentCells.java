@@ -16,29 +16,20 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsTable.FmsTableColumn;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsTable.FmsTreeTableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeTable;
 
 public class FmsContentCells {
 	// FIXME - dirndl 1x2 - remove
 	public static class FmsCellsContextResolver extends FmsContextResolver
-			implements FormModel.Has, NodeEditorContext.Has {
+			implements FormModel.Has {
 		@Override
 		public FormModel getFormModel() {
 			return getRootModel() instanceof FormModel ? getRootModel() : null;
-		}
-
-		@Override
-		public NodeEditorContext getNodeEditorContext() {
-			return getRootModel();
 		}
 
 		@Override

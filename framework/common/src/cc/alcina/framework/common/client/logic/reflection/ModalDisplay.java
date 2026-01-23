@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
-@Target({ ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.FIELD })
 @Resolution(
 	inheritance = { Inheritance.PROPERTY },
 	mergeStrategy = ModalDisplay.MergeStrategy.class)

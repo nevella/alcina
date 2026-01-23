@@ -69,6 +69,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -172,7 +173,7 @@ static class SelectionArea
 // FIXME - dirndl 1x1dz - actions - check validation, form submit
 @Directed
 public class FormModel extends Model
-		implements NodeEditorContext, DomEvents.Submit.Handler,
+		implements NodeEditorContextService, DomEvents.Submit.Handler,
 		DomEvents.KeyDown.Handler, ModelEvents.Cancel.Handler,
 		ModelEvents.Submit.Handler, FormEvents.PropertyValidationChange.Handler,
 		FormEvents.QueryValidity.Handler {
@@ -1052,6 +1053,13 @@ public class FormModel extends Model
 	// correct model)(maybe)
 	public interface Has {
 		public FormModel getFormModel();
+	}
+
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		event.node.getResolver().registerService(NodeEditorContextService.class,
+				this);
+		super.onBeforeRender(event);
 	}
 
 	public static class LabelModel extends Model {

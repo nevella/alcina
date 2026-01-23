@@ -1683,10 +1683,8 @@ public class DirectedLayout implements AlcinaProcess {
 				if (hasTransform) {
 					ToStringFunction transform = Registry
 							.newInstanceOrImpl(binding.transform());
-					if (transform instanceof Binding.ContextSensitiveTransform) {
-						((Binding.ContextSensitiveTransform) transform)
-								.withContextNode(Node.this);
-					}
+					Binding.ContextSensitiveTransform.withNode(transform,
+							Node.this);
 					value = transform.apply(value);
 				}
 				String stringValue = value == null ? "null" : value.toString();
@@ -2285,7 +2283,7 @@ public class DirectedLayout implements AlcinaProcess {
 			/*
 			 * Now compute other fields (using the resolver)
 			 */
-			this.model = resolver.resolveModel(location, model);
+			this.model = resolver.resolveModel(parentNode, location, model);
 			if (this.model != model) {
 				if (this.model instanceof Model.ResetDirecteds) {
 					location = new AnnotationLocation(this.model.getClass(),
