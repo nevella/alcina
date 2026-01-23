@@ -80,7 +80,7 @@ public class FmsContentCells {
 						contentsLocation = location;
 					}
 				}
-				if (Objects.equals(location, contentsLocation)) {
+				if (location.equalsExResolver(contentsLocation)) {
 					modifiedClass = FmsTable.FmsTreeTableRow.class;
 				}
 				if (incomingClass == TableModel.TableColumn.class) {

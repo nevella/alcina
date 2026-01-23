@@ -1,17 +1,26 @@
 package cc.alcina.framework.common.client.search;
 
-import java.util.Date;
-import java.util.Set;
-
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.common.client.search.BooleanEnum;
+import cc.alcina.framework.common.client.search.DateRange;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+import java.lang.Boolean;
+import java.lang.Class;
+import java.lang.Double;
+import java.lang.Enum;
+import java.lang.Long;
+import java.lang.String;
+import java.util.Date;
+import java.util.Set;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _AbstractDateCriterion abstractDateCriterion = new _AbstractDateCriterion();
     public static _AbstractUserCriterion abstractUserCriterion = new _AbstractUserCriterion();

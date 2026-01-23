@@ -44,6 +44,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -721,5 +722,16 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	public interface DirectedPropertyResolver {
 		Property resolveDirectedProperty0(Property property);
+	}
+
+	public String toParentStack() {
+		FormatBuilder format = new FormatBuilder();
+		ContextResolver cursor = this;
+		while (cursor != null) {
+			format.appendPadRight(30, NestedName.get(cursor));
+			format.line(" :: %s", NestedName.get(cursor.rootModel));
+			cursor = cursor.parent;
+		}
+		return format.toString();
 	}
 }

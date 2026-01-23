@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /*
@@ -115,6 +116,19 @@ public class AnnotationLocation {
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Special case when comparing locations with an intermediate Resolver.
+	 * Currently only for treetable resolution
+	 * 
+	 * @param o
+	 * @return
+	 */
+	public boolean equalsExResolver(AnnotationLocation o) {
+		return o != null && property == o.property
+				&& classLocation == o.classLocation
+				&& Objects.equals(resolutionState, o.resolutionState);
 	}
 
 	/*
@@ -237,10 +251,13 @@ public class AnnotationLocation {
 
 	public String toPropertyString() {
 		if (property != null) {
-			return Ax.format("%s.%s", classLocation.getSimpleName(),
+			return Ax.format("%s.%s",
+					classLocation == null
+							? NestedName.get(property.getOwningType())
+							: NestedName.get(classLocation),
 					property.getName());
 		} else {
-			return classLocation.getSimpleName();
+			return NestedName.get(classLocation);
 		}
 	}
 

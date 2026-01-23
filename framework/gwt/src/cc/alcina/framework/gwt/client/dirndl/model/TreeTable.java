@@ -67,6 +67,11 @@ public class TreeTable extends Model.Fields
 		transformer.withContextNode(event.node);
 		tableModel = transformer.apply(bindableClass);
 		tableModel.init(event.node);
+		/*
+		 * register the nodecontext service (the tableModel iteslf is not
+		 * attached)
+		 */
+		tableModel.onBeforeRender(event);
 		columns = tableModel.header.getColumns().stream()
 				.collect(Collectors.toList());
 		columns.add(0, new TableColumn("\u00A0"));
@@ -98,6 +103,7 @@ public class TreeTable extends Model.Fields
 		Resolver() {
 			resolveDirectedPropertyAscends = true;
 			resolveAnnotationsAscends = true;
+			resolveModelAscends = true;
 		}
 
 		TreeTable treeTable() {
@@ -118,7 +124,7 @@ public class TreeTable extends Model.Fields
 					contentsLocation = location;
 				}
 			}
-			if (Objects.equals(location, contentsLocation)) {
+			if (location.equalsExResolver(contentsLocation)) {
 				TableRow tableRow = new TableModel.TableRow(
 						treeTable().tableModel, model);
 				model = tableRow;

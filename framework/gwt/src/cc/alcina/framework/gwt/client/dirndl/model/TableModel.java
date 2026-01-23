@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
@@ -114,6 +115,12 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * Note that the rendered model (which is transformed to a tablemodel) can't
  * (currently) receive modelevents - but it *can* bind via the rendered peer
  *
+ * <h3>Rendering + resolving example
+ * <ul>
+ * <li>[modal]
+ * <li>[cellsresolver]
+ * <li>TableCell
+ * </ul>
  */
 public class TableModel extends Model
 		implements NodeEditorContextService, TableEvents.CellClicked.Handler {

@@ -107,7 +107,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * <code>
 class PropertiesArea extends Model.Fields {
 ...
-@Directed.Transform(BeanForm.Viewer.class)
+_at_Directed.Transform(BeanForm.Viewer.class)
 static class SelectionArea
 </code>
  * </pre>
