@@ -282,6 +282,11 @@ public class SelectionTraversal
 	}
 
 	public class Selections {
+		/*
+		 * This is an optimisation to prevent having to re-enter all ancestor
+		 * layer contexts for every selection, unless there's actually context
+		 * in use
+		 */
 		class SelectionTraversalState {
 			Selection<?> selection;
 
@@ -353,6 +358,9 @@ public class SelectionTraversal
 		Map<Selection, Layer> selectionLayer = AlcinaCollections
 				.newLinkedHashMap();
 
+		/*
+		 * access is synchronized
+		 */
 		Map<Selection, SelectionTraversalState> traversalStates = AlcinaCollections
 				.newLinkedHashMap();
 
@@ -452,12 +460,18 @@ public class SelectionTraversal
 			return byLayerCounts(layer).keySet();
 		}
 
-		public SelectionTraversalState
+		synchronized SelectionTraversalState
 				computeSelectionTraversalState(Selection<?> selection) {
+			// selections can be processed by multiple layers
+			SelectionTraversalState existing = traversalStates.get(selection);
+			if (existing != null) {
+				return existing;
+			}
 			SelectionTraversalState parentState = traversalStates
 					.get(selection.parentSelection());
 			SelectionTraversalState state = new SelectionTraversalState(
 					parentState, selection);
+			traversalStates.put(selection, state);
 			return state;
 		}
 

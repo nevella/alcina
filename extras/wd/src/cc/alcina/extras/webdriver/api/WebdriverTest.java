@@ -59,6 +59,18 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 	}
 
+	/*
+	 * marker, can be run in parallel
+	 */
+	public interface AllowsParallel {
+	}
+
+	/*
+	 * close wd (tab) on error
+	 */
+	public interface CloseOnError {
+	}
+
 	public static <T extends WebdriverTest> T current() {
 		return LooseContext.get(CONTEXT_CURRENT_TEST);
 	}
