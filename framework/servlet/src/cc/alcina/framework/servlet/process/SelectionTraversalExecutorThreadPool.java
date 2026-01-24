@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.util.AlcinaParallel;
@@ -60,6 +61,31 @@ public class SelectionTraversalExecutorThreadPool
 
 	@Override
 	public void submit(Runnable runnable) {
-		runnables.add(runnable);
+		runnables.add(new ThreadParentNamingRunnable(runnable));
+	}
+
+	class ThreadParentNamingRunnable implements Runnable {
+		Runnable runnable;
+
+		String parentThreadName;
+
+		public ThreadParentNamingRunnable(Runnable runnable) {
+			this.runnable = runnable;
+			parentThreadName = Thread.currentThread().getName();
+		}
+
+		@Override
+		public void run() {
+			Thread currentThread = Thread.currentThread();
+			String entryThreadName = currentThread.getName();
+			try {
+				String relationalThreadName = Ax.format("%s--%s",
+						entryThreadName, parentThreadName);
+				currentThread.setName(relationalThreadName);
+				runnable.run();
+			} finally {
+				currentThread.setName(entryThreadName);
+			}
+		}
 	}
 }
