@@ -417,7 +417,9 @@ public class HtmlParser {
 		}
 		if (markup.startsWith("<?xml")) {
 			markup = markup.replaceFirst("<\\?xml.*?\\?>", "");
-			int debug = 3;
+		}
+		if (markup.startsWith("<!doctype")) {
+			markup = markup.replaceFirst("<!doctype.+>\n?", "");
 		}
 		this.markup = markup;
 		this.replaceContents = replaceContents;
