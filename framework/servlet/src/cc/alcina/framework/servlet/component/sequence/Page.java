@@ -203,12 +203,12 @@ class Page extends Model.Fields
 		event.getModel().go();
 	}
 
-	PackageProperties._Page.InstanceProperties properties() {
-		return PackageProperties.page.instance(this);
-	}
-
 	@Override
 	public List<?> provideFiltereedSequenceElements() {
 		return sequenceArea.provideFiltereedSequenceElements();
+	}
+
+	PackageProperties._Page.InstanceProperties properties() {
+		return PackageProperties.page.instance(this);
 	}
 }

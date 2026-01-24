@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.extras.webdriver.api.TestResultType;
 import cc.alcina.extras.webdriver.api.WDWriter;
 import cc.alcina.extras.webdriver.api.WebdriverTest;
+import cc.alcina.extras.webdriver.api.WebdriverTest.AllowsParallel;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 
@@ -59,8 +61,14 @@ public class WDManager {
 
 	public WDToken runTest(WDConfiguration config, HttpServletResponse response,
 			boolean persist, boolean statsOnly) throws Exception {
-		synchronized (WDManager.class) {
+		Ax.err("run test - %s - %s", config.name, config.uri);
+		if (AllowsParallel.class.isAssignableFrom(
+				Reflections.forName(config.topLevelClassName))) {
 			return runTest0(config, response, persist, statsOnly);
+		} else {
+			synchronized (WDManager.class) {
+				return runTest0(config, response, persist, statsOnly);
+			}
 		}
 	}
 

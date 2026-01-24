@@ -10,11 +10,34 @@
   padding: 0.5rem
 
   > properties
+    container-type: inline-size
+
+    &:empty
+      display: none
+
     > table
       th
         text-align: left
         padding-right: 2rem
         padding-left: 1rem
+        font-weight: normal
+        color: #666
+
+    @container(width < 500px)
+      > table
+        display: block
+
+        > tbody
+          display: flex
+          flex-direction: column
+          gap: 0.5rem
+
+        tr,th,td
+          display: block
+
+        td
+          padding-left: 1rem
+
 
   > string-representation
     display: block

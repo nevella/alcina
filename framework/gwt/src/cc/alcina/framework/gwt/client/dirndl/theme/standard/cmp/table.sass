@@ -3,8 +3,10 @@
 @use 'action'
 @use '../multi/icons/filter-circle-outline.svg.data-url-rule' as filter-circle
 @use '../multi/icons/ellipsis-vertical.svg.data-url-rule' as ellipsis-vertical
-@use '../multi/icons/chevron-up-circle-outline.svg.data-url-rule' as chevron-up
-@use '../multi/icons/chevron-down-circle-outline.svg.data-url-rule' as chevron-down
+@use '../multi/icons/chevron-up.svg.data-url-rule' as chevron-up
+@use '../multi/icons/chevron-down.svg.data-url-rule' as chevron-down
+@use '../multi/icons/chevron-up-circle-outline.svg.data-url-rule' as chevron-up-hover
+@use '../multi/icons/chevron-down-circle-outline.svg.data-url-rule' as chevron-down-hover
 @use '../multi/icons/chevron-up-down-circle-outline.svg.data-url-rule' as chevron-up-down
 
 
@@ -16,6 +18,7 @@
       display: grid
       width: 100%
       grid-template-columns: 1fr min-content min-content
+      align-items: center
 
       > span
         padding-right: 1.5rem
@@ -39,9 +42,15 @@
 
         &[direction='DESCENDING']
           @include chevron-down.content
+          
+          &:hover
+            @include chevron-down-hover.content
 
         &[direction='ASCENDING']
           @include chevron-up.content
+
+          &:hover
+            @include chevron-up-hover.content
 
       &:hover
         cursor: pointer

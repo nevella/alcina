@@ -15,6 +15,7 @@ import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -32,6 +33,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Submit;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirndlAccess;
 import cc.alcina.framework.gwt.client.dirndl.model.HasLinks;
@@ -86,7 +89,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
 		InferredDomEvents.MouseDownOutside.Handler, ModelEvents.Submit.Handler,
-		ModelEvents.Closed.Handler, FocusOnBind, Binding.TabIndexZero {
+		ModelEvents.Closed.Handler, FocusOnBind, Binding.TabIndexZero,
+		ContextResolver.Has {
 	public static class Actions extends Model implements HasLinks {
 		public static Actions close() {
 			return new Actions().withClose();
@@ -303,7 +307,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		public Attributes overlay(Model toOverlay, Model contents) {
 			position.overlay(toOverlay);
-			withLogicalParent(logicalParent);
+			withLogicalParent(toOverlay);
 			withContents(contents);
 			withCloseOnMouseDownOutside(true);
 			return this;
@@ -607,5 +611,15 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	public void refreshPosition() {
 		emitEvent(RefreshPositioning.class);
+	}
+
+	@Override
+	public ContextResolver getContextResolver(AnnotationLocation location) {
+		if (attributes.logicalParent != null) {
+			return new DelegatingContextResolver(
+					attributes.logicalParent.provideNode().getResolver());
+		} else {
+			return null;
+		}
 	}
 }

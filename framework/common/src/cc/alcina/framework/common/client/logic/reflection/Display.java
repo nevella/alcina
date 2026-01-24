@@ -92,6 +92,94 @@ public @interface Display {
 
 	String widgetStyleName() default "";
 
+	public static class Impl implements Display {
+		public String autocompleteName;
+
+		// note, if you want a r-o property, don't use DISPLAY_RO, you need to
+		// set
+		// DISPLAY_AS_PROPERTY | DISPLAY_RO
+		public int displayMask = DISPLAY_AS_PROPERTY;
+
+		public Class filterClass = Void.class;
+
+		public boolean focus = false;
+
+		public String helpText = "";
+
+		public String name = "";
+
+		// FIXME - dirndl 1x2 - this should be defined in @Bean (with sections)
+		public int orderingHint = 100;
+
+		public String rendererHint = "";
+
+		public String styleName = "";
+
+		public Permission visible = Permission.Impl.EVEERYONE;
+
+		String widgetStyleName = "";
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Display.class;
+		}
+
+		@Override
+		public String autocompleteName() {
+			return autocompleteName;
+		}
+
+		@Override
+		public int displayMask() {
+			return displayMask;
+		}
+
+		@Override
+		public Class filterClass() {
+			return filterClass;
+		}
+
+		@Override
+		public boolean focus() {
+			return focus;
+		}
+
+		@Override
+		public String helpText() {
+			return helpText;
+		}
+
+		@Override
+		public String name() {
+			return name;
+		}
+
+		@Override
+		public int orderingHint() {
+			return orderingHint;
+		}
+
+		@Override
+		public String rendererHint() {
+			return rendererHint;
+		}
+
+		@Override
+		public String styleName() {
+			return styleName;
+		}
+
+		@Override
+		public Permission visible() {
+			return visible;
+		}
+
+		@Override
+		public String widgetStyleName() {
+			return widgetStyleName;
+		}
+	}
+
 	/**
 	 *
 	 * Marks that all properties should be displayed, irresepective of

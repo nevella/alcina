@@ -41,16 +41,8 @@ public class DoubleCriterion extends SearchCriterion
 		return result;
 	}
 
-	public Double getDouble() {
-		return getValue();
-	}
-
 	public Double getValue() {
 		return value;
-	}
-
-	public void setDouble(Double value) {
-		setValue(value);
 	}
 
 	public void setValue(Double value) {

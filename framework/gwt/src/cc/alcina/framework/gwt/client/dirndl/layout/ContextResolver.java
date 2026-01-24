@@ -44,6 +44,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -669,15 +670,18 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 * The main reason I think it's nasty is because it's an undemocratic
 	 * clobberer - it doesn't allow input/merge from other resolvers.
 	 * 
+	 * @param parentNode
+	 * 
 	 * @param model2
 	 * 
 	 */
 	/*
 	 * TODO - use ContextService rather than resolveModelAscends
 	 */
-	protected Object resolveModel(AnnotationLocation location, Object model) {
+	protected Object resolveModel(Node parentNode, AnnotationLocation location,
+			Object model) {
 		if (resolveModelAscends && parent != null) {
-			return parent.resolveModel(location, model);
+			return parent.resolveModel(parentNode, location, model);
 		} else {
 			return model;
 		}
@@ -716,5 +720,28 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	public void reemitEvent(NodeEvent<?> nodeEvent,
 			Class<? extends ModelEvent> eventClass, Object eventModel) {
 		nodeEvent.reemitAs((Model) rootModel, eventClass, eventModel);
+	}
+
+	/**
+	 * For delegation/mixin/access to resolveModel()
+	 */
+	public interface ModelResolver {
+		Object resolveModel(Node parentNode, AnnotationLocation location,
+				Object model);
+	}
+
+	public interface DirectedPropertyResolver {
+		Property resolveDirectedProperty0(Property property);
+	}
+
+	public String toParentStack() {
+		FormatBuilder format = new FormatBuilder();
+		ContextResolver cursor = this;
+		while (cursor != null) {
+			format.appendPadRight(30, NestedName.get(cursor));
+			format.line(" :: %s", NestedName.get(cursor.rootModel));
+			cursor = cursor.parent;
+		}
+		return format.toString();
 	}
 }

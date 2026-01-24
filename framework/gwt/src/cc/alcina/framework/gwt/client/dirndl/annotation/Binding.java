@@ -86,8 +86,22 @@ public @interface Binding {
 	}
 
 	public interface ContextSensitiveTransform<T> extends ToStringFunction<T> {
+		/**
+		 * 
+		 * 
+		 * @param node
+		 *            If called before node creation (e.g.
+		 *            {@link ValueTransformer} ), this will be the parent node
+		 * @return
+		 */
 		public ContextSensitiveTransform<T>
 				withContextNode(DirectedLayout.Node node);
+
+		public static void withNode(Function transform, Node node) {
+			if (transform instanceof ContextSensitiveTransform) {
+				((ContextSensitiveTransform) transform).withContextNode(node);
+			}
+		}
 	}
 
 	@Reflected

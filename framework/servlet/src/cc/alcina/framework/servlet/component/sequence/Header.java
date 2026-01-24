@@ -17,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.search.SearchDefinitionEditor;
+import cc.alcina.framework.gwt.client.dirndl.model.search.SearchDefinitionEditor.Submit;
 
 @TypedProperties
 class Header extends Model.All {
@@ -66,28 +67,49 @@ class Header extends Model.All {
 	}
 
 	@TypedProperties
-	class Mid extends Model.All
-			implements SequenceEvents.SequenceChanged.Handler {
-		PackageProperties._Header_Mid.InstanceProperties properties() {
-			return PackageProperties.header_mid.instance(this);
-		}
-
+	class Mid extends Model.All {
 		AppSuggestorSequence suggestor;
-
-		@Directed.Transform(SearchDefinitionEditor.class)
-		SequenceSearchDefinition searchDefinition;
 
 		Mid() {
 			suggestor = new AppSuggestorSequence();
-			from(page.ui.subtypeProperties().place())
-					.accept(this::updateSearchDefinitionFromPlace);
 		}
+	}
 
+	class Right extends Model.All {
+		Help.HeaderButton helpButton = new Help.HeaderButton();
+
+		Dotburger dotburger = new Dotburger();
+	}
+
+	Left left;
+
+	Mid mid;
+
+	Right right;
+
+	Search search;
+
+	@TypedProperties
+	class Search extends Model.All
+			implements SequenceEvents.SequenceChanged.Handler,
+			SearchDefinitionEditor.Submit.Handler {
 		void updateSearchDefinitionFromPlace(SequencePlace place) {
 			if (place.search != null) {
 				properties().searchDefinition().set(place.search);
 			}
 		}
+
+		PackageProperties._Header_Search.InstanceProperties properties() {
+			return PackageProperties.header_search.instance(this);
+		}
+
+		Search() {
+			from(page.ui.subtypeProperties().place())
+					.accept(this::updateSearchDefinitionFromPlace);
+		}
+
+		@Directed.Transform(SearchDefinitionEditor.class)
+		SequenceSearchDefinition searchDefinition;
 
 		@Override
 		public void onSequenceChanged(SequenceChanged event) {
@@ -112,19 +134,15 @@ class Header extends Model.All {
 				}
 			}
 		}
+
+		@Override
+		public void onSubmit(Submit event) {
+			SequencePlace place = page.ui.subtypeProperties().place().get()
+					.copy();
+			place.search = event.getModel();
+			place.go();
+		}
 	}
-
-	class Right extends Model.All {
-		Help.HeaderButton helpButton = new Help.HeaderButton();
-
-		Dotburger dotburger = new Dotburger();
-	}
-
-	Left left;
-
-	Mid mid;
-
-	Right right;
 
 	@Property.Not
 	Page page;
@@ -133,6 +151,7 @@ class Header extends Model.All {
 		this.page = page;
 		mid = new Mid();
 		right = new Right();
+		search = new Search();
 	}
 
 	@Override

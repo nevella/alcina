@@ -1303,6 +1303,17 @@ public class GraphProjection {
 			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
+
+		public boolean ancestorMatches(Class<?> clazz, String propertyName) {
+			GraphProjectionContext cursor = this;
+			while (cursor != null) {
+				if (matches(clazz, propertyName)) {
+					return true;
+				}
+				cursor = cursor.parent;
+			}
+			return false;
+		}
 	}
 
 	public static interface GraphProjectionDataFilter {

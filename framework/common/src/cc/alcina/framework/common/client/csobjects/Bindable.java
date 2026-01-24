@@ -40,9 +40,9 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 	}
 
 	@Bean(PropertySource.FIELDS)
+	@PropertyOrder(fieldOrder = true)
 	public abstract static class Fields extends Bindable {
 		@Display.AllProperties
-		@PropertyOrder(fieldOrder = true)
 		@ObjectPermissions(
 			read = @Permission(access = AccessLevel.EVERYONE),
 			write = @Permission(access = AccessLevel.EVERYONE))

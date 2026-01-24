@@ -14,7 +14,8 @@ import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.RequireSp
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelProvider;
@@ -27,7 +28,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
  * (read/write, single/multiple)
  *
  */
-public class ModalResolver extends ContextResolver implements FormModel.Has {
+public class ModalResolver extends DelegatingContextResolver
+		implements FormModel.Has {
 	public static ModalResolver multiple(Node node, boolean readOnly) {
 		return new ModalResolver(node,
 				readOnly ? Mode.MULTIPLE_READ : Mode.MULTIPLE_WRITE);
@@ -132,6 +134,11 @@ public class ModalResolver extends ContextResolver implements FormModel.Has {
 						|| matchingModal.isPresent()) {
 					return defaultResolution;
 				} else {
+					if (annotationClass == Display.class) {
+						Display.Impl impl = new Display.Impl();
+						impl.displayMask = Display.DISPLAY_NONE;
+						return (List<A>) List.of(impl);
+					}
 					return List.of();
 				}
 			}
@@ -146,5 +153,15 @@ public class ModalResolver extends ContextResolver implements FormModel.Has {
 
 	public void setTableModel(TableModel tableModel) {
 		this.tableModel = tableModel;
+	}
+
+	/**
+	 * TODO - explain why this is necessary (basically, this resolver is
+	 * synthetic...but even so....)
+	 */
+	@Override
+	public void registerService(Class<? extends ContextService> service,
+			ContextService implementation) {
+		parent.registerService(service, implementation);
 	}
 }

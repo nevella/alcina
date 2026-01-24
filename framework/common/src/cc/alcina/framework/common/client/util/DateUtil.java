@@ -96,6 +96,15 @@ public class DateUtil {
 		return d;
 	}
 
+	public static Date roundDateNonMutating(Date d, boolean up) {
+		d = new Date(d.getTime());
+		d.setHours(up ? 23 : 0);
+		d.setMinutes(up ? 59 : 0);
+		d.setSeconds(up ? 59 : 0);
+		d.setTime(d.getTime() - d.getTime() % 1000);
+		return d;
+	}
+
 	public static boolean areCloseDates(Date d1, Date d2, long ms) {
 		if (d1 == null || d2 == null) {
 			return d1 == d2;

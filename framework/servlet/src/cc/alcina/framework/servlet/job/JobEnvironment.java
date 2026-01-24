@@ -38,4 +38,8 @@ public interface JobEnvironment {
 	void waitUntilCurrentRequestsProcessed();
 
 	void updateJobStatus(JobContext jobContext, Runnable runnable);
+
+	default boolean isSchedulerEnabled() {
+		return true;
+	}
 }

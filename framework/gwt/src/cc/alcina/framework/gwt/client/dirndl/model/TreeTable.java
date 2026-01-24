@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnWidth;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.CellClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.BindableClassTransformer;
@@ -66,6 +67,11 @@ public class TreeTable extends Model.Fields
 		transformer.withContextNode(node);
 		tableModel = transformer.apply(bindableClass);
 		tableModel.init(node);
+		/*
+		 * register the nodecontext service (the tableModel iteslf is not
+		 * attached)
+		 */
+		tableModel.onNodeContext(event);
 		columns = tableModel.header.getColumns().stream()
 				.collect(Collectors.toList());
 		columns.add(0, new TableColumn("\u00A0"));
@@ -88,8 +94,7 @@ public class TreeTable extends Model.Fields
 		gridTemplateColumns = Ax.format("%s %s", nodeLabelWidth, cellColumns);
 	}
 
-	public static class Resolver extends ContextResolver
-			implements NodeEditorContext.Has {
+	public static class Resolver extends ContextResolver {
 		AnnotationLocation contentsLocation;
 
 		private TreeTable treeTable;
@@ -97,6 +102,7 @@ public class TreeTable extends Model.Fields
 		Resolver() {
 			resolveDirectedPropertyAscends = true;
 			resolveAnnotationsAscends = true;
+			resolveModelAscends = true;
 		}
 
 		TreeTable treeTable() {
@@ -107,13 +113,8 @@ public class TreeTable extends Model.Fields
 		}
 
 		@Override
-		public NodeEditorContext getNodeEditorContext() {
-			return treeTable.tableModel;
-		}
-
-		@Override
-		protected Object resolveModel(AnnotationLocation location,
-				Object model) {
+		protected Object resolveModel(Node parentNode,
+				AnnotationLocation location, Object model) {
 			if (contentsLocation == null && location.property != null) {
 				if (Reflections.isAssignableFrom(Tree.TreeNode.class,
 						location.property.getDeclaringType())
@@ -122,12 +123,12 @@ public class TreeTable extends Model.Fields
 					contentsLocation = location;
 				}
 			}
-			if (Objects.equals(location, contentsLocation)) {
+			if (location.equalsExResolver(contentsLocation)) {
 				TableRow tableRow = new TableModel.TableRow(
 						treeTable().tableModel, model);
 				model = tableRow;
 			}
-			return super.resolveModel(location, model);
+			return super.resolveModel(parentNode, location, model);
 		}
 	}
 

@@ -24,7 +24,7 @@ public class BaseLongComparatorCriterionPack {
 
 		@Override
 		default DomainFilter getFilter(SC sc) {
-			Long value = sc.getLong();
+			Long value = sc.getValue();
 			if (value == null) {
 				return null;
 			}
@@ -86,7 +86,7 @@ public class BaseLongComparatorCriterionPack {
 
 		@Override
 		public boolean hasValue(LongCriterion sc) {
-			return sc.getLong() != null;
+			return sc.getValue() != null;
 		}
 	}
 
@@ -96,7 +96,7 @@ public class BaseLongComparatorCriterionPack {
 		public Stream<Long> apply(T t);
 
 		default DomainFilter getFilter0(LongCriterion sc) {
-			Long value = sc.getLong();
+			Long value = sc.getValue();
 			if (value == null) {
 				return null;
 			}

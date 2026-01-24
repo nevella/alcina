@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilterWithCache;
@@ -50,12 +51,6 @@ public class DomainSegment {
 		public SegmentEntity() {
 		}
 
-		@Override
-		public String toString() {
-			return Ax.format("%s :: %s", entityClass.getSimpleName(),
-					CommonUtils.padEight((int) id));
-		}
-
 		public SegmentEntity(Entity entity, ValueMapper mapper) {
 			id = entity.getId();
 			entityClass = entity.entityClass();
@@ -64,6 +59,12 @@ public class DomainSegment {
 			lastModificationTime = lastModificationDate == null ? 0L
 					: lastModificationDate.getTime();
 			mapper.setProperties(entity, this);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", entityClass.getSimpleName(),
+					CommonUtils.padEight((int) id));
 		}
 
 		public SegmentEntity toMemberRef() {
@@ -255,10 +256,20 @@ public class DomainSegment {
 		 * and {@link IGroup} implementations for the domain
 		 */
 		Set<Class<? extends Entity>> providePassthroughClasses();
+
+		default void computeProperties(DetachedEntityCache cache,
+				Multiset<String, Set<EntityLocator>> properties) {
+		}
 	}
 
 	class Lookup {
 		Map<Class<? extends Entity>, SegmentCollection> entityCollection;
+
+		Lookup() {
+			entityCollection = collections.stream()
+					.collect(AlcinaCollectors.toKeyMap(sc -> sc.entityClass));
+			collections.forEach(SegmentCollection::reindex);
+		}
 
 		public List<ValueContainer[]> getValues(Class<? extends Entity> clazz) {
 			SegmentCollection segmentCollection = entityCollection.get(clazz);
@@ -268,12 +279,6 @@ public class DomainSegment {
 				return segmentCollection.segmentEntities.stream()
 						.map(e -> e.values).toList();
 			}
-		}
-
-		Lookup() {
-			entityCollection = collections.stream()
-					.collect(AlcinaCollectors.toKeyMap(sc -> sc.entityClass));
-			collections.forEach(SegmentCollection::reindex);
 		}
 
 		void indexToList() {
@@ -342,6 +347,8 @@ public class DomainSegment {
 	List<SegmentCollection> collections = new ArrayList<>();
 
 	List<EntityLocator> deleted = new ArrayList<>();
+
+	public Multiset<String, Set<EntityLocator>> properties = new Multiset<>();
 
 	public DomainSegment toLocalState() {
 		DomainSegment result = new DomainSegment();

@@ -29,7 +29,7 @@ public interface GroupingHandler<DS extends VersionableEntity, GP extends Groupi
 	}
 
 	default String suggestFileName(String prefix, GP groupingParameters) {
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-hhmmss");
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
 		return String.format("%s-%s", prefix, df.format(new Date()));
 	}
 }
