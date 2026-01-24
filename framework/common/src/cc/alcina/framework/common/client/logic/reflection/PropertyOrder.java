@@ -85,6 +85,12 @@ public @interface PropertyOrder {
 	public static class Support {
 		public static boolean hasCustomOrder(PropertyOrder propertyOrder) {
 			return propertyOrder != null
+					&& (propertyOrder.custom() != Custom.Default.class);
+		}
+
+		public static boolean
+				hasCustomOrFieldOrder(PropertyOrder propertyOrder) {
+			return propertyOrder != null
 					&& (propertyOrder.custom() != Custom.Default.class
 							|| propertyOrder.fieldOrder());
 		}

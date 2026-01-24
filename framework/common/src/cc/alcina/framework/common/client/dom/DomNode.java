@@ -534,6 +534,10 @@ public class DomNode {
 		return ntc().length() > 0;
 	}
 
+	public boolean isNonWhitespaceTextOrElement() {
+		return isElement() || ntc().length() > 0;
+	}
+
 	public boolean isProcessingInstruction() {
 		return node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE;
 	}
@@ -966,7 +970,10 @@ public class DomNode {
 	}
 
 	public class DomNodeChildren {
-		List<DomNode> nodes;
+		/**
+		 * don't access directly, use nodes()
+		 */
+		private List<DomNode> nodes;
 
 		public void adoptFrom(DomNode n) {
 			n.children.nodes().forEach(this::append);
@@ -974,6 +981,11 @@ public class DomNode {
 
 		public void append(Collection<DomNode> childNodes) {
 			childNodes.stream().forEach(n -> append(n));
+		}
+
+		public Stream<DomNode> nonWhitespaceTextAndElementChildren() {
+			return nodes().stream()
+					.filter(DomNode::isNonWhitespaceTextOrElement);
 		}
 
 		public void append(DomNode xmlNode) {
