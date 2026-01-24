@@ -78,14 +78,13 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			/*
 			 * wip - cookbook - note finaldispatch - otherwise cascading
 			 * property changes cause render woes
 			 */
 			from(searchCriterion.searchCriterionProperties().operator())
 					.withFinalDispatch().to(properties().operator()).oneWay();
-			super.onBeforeRender(event);
 		}
 	}
 
@@ -104,11 +103,10 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			from(properties().operator())
 					.to(searchCriterion.searchCriterionProperties().operator())
 					.bidi();
-			super.onBeforeRender(event);
 		}
 	}
 
@@ -183,11 +181,9 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
-			event.node.getResolver().registerService(
-					NodeEditorContextService.class,
+		public void onNodeContext(NodeContext event) {
+			node.getResolver().registerService(NodeEditorContextService.class,
 					NodeEditorContextService.Editable.INSTANCE);
-			super.onBeforeRender(event);
 		}
 	}
 

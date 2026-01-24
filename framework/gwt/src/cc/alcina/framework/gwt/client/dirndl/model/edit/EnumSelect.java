@@ -48,8 +48,8 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 	@Override
 	public void onNodeContext(NodeContext event) {
 		Node node = event.getContext().node;
-		NodeEditorContextService context = node
-				.service(NodeEditorContextService.class);
+		NodeEditorContextService context = service(
+				NodeEditorContextService.class);
 		select = new Select<>();
 		Class<E> type = context.getEditingProperty().getType();
 		List<E> values = Arrays.stream(type.getEnumConstants())

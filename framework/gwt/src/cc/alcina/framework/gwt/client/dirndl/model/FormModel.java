@@ -71,6 +71,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
@@ -1056,10 +1057,9 @@ public class FormModel extends Model
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		event.node.getResolver().registerService(NodeEditorContextService.class,
+	public void onNodeContext(NodeContext event) {
+		node.getResolver().registerService(NodeEditorContextService.class,
 				this);
-		super.onBeforeRender(event);
 	}
 
 	public static class LabelModel extends Model {

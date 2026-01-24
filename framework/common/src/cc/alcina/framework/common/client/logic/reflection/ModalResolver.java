@@ -160,8 +160,8 @@ public class ModalResolver extends DelegatingContextResolver
 	 * synthetic...but even so....)
 	 */
 	@Override
-	public void registerService(Class<? extends ContextService> service,
-			ContextService implementation) {
+	public <CS extends ContextService> void registerService(Class<CS> service,
+			CS implementation) {
 		parent.registerService(service, implementation);
 	}
 }
