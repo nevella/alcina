@@ -45,7 +45,7 @@ public class UrlRequest {
 	}
 
 	public UrlRequest(String url, String cacheKey) {
-		this.url = url;
+		this.url = url.replace(" ", "%20");
 		this.cacheKey = cacheKey;
 	}
 

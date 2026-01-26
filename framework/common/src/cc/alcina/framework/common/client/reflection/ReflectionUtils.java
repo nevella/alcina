@@ -15,7 +15,7 @@ public class ReflectionUtils {
 		List<Column> columns = new ArrayList<>();
 		List<Property> properties = reflector.properties();
 		PropertyOrder order = reflector.annotation(PropertyOrder.class);
-		if (order != null) {
+		if (PropertyOrder.Support.hasCustomOrder(order)) {
 			properties = Arrays.stream(order.value()).map(reflector::property)
 					.collect(Collectors.toList());
 		}

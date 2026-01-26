@@ -651,7 +651,8 @@ public class BeanFields {
 			this.classReflector = classReflector;
 			PropertyOrder propertyOrder = classReflector
 					.annotation(PropertyOrder.class);
-			ignoreHints = PropertyOrder.Support.hasCustomOrder(propertyOrder);
+			ignoreHints = PropertyOrder.Support
+					.hasCustomOrFieldOrder(propertyOrder);
 		}
 
 		@Override
