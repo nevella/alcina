@@ -76,7 +76,7 @@ abstract public class SelectionSupport {
 	 * Extracts any selection and makes it a child of an element not attached to
 	 * the DOM.
 	 *
-	 * @param element
+	 * @param nodeId
 	 */
 	public Element extract(final Selection selection) {
 		throw new UnsupportedOperationException();

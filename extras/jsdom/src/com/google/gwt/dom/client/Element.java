@@ -419,6 +419,9 @@ public class Element extends Node implements ClientDomElement,
 		return local().getAttributes();
 	}
 
+	/**
+	 * In general, getAbsoluteXxx may be better
+	 */
 	@Override
 	public DomRect getBoundingClientRect() {
 		return callWithRemoteOrDefault(true,

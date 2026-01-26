@@ -36,10 +36,14 @@ public interface Feature_Romcom_Impl extends Feature {
 
 	/**
 	 * <p>
-	 * wip - offset.protocol - notes here
+	 * This optimises client/server comms - the server needs to know the offsets
+	 * of potentially many elements, but they can be computed from _relative_
+	 * offsets (relative to the parent) which change infrequently. So optimise
+	 * via a caching protocol. Implemented + a large performance improvement
 	 * 
 	 * <ul>
-	 * <li>Revisit {@link ElementBehavior} particularly the docs
+	 * <li>Revisit {@link ElementBehavior} particularly the docs (and send
+	 * instances, not classes)
 	 * </ul>
 	 */
 	@Feature.Parent(Feature_Romcom_Impl.class)

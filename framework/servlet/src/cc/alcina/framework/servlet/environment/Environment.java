@@ -63,6 +63,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteWindowState;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
@@ -268,6 +269,12 @@ class Environment {
 		void onInvokeResponse(InvokeResponse response) {
 			ResponseHandler handler = responseHandlers.remove(response.id);
 			handler.handle(response);
+		}
+
+		@Override
+		public void onWindowState(WindowState windowState) {
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'onWindowState'");
 		}
 	}
 
@@ -768,8 +775,10 @@ class Environment {
 		document = Document.contextProvider.createFrame(RemoteType.REF_ID);
 		document.createDocumentElement("<html/>", true, true);
 		document.implAccess().attachIdRemote().mutationProxy = mutationProxy;
+		RemoteWindowState remoteWindowState = new RemoteWindowState(
+				invokeProxy);
 		document.implAccess().attachIdRemote()
-				.registerToRemoteInvokeProxy(invokeProxy);
+				.registerInvokeProxy(remoteWindowState);
 		LocalDom.initalizeDetachedSync();
 		// FIXME - locationcontext3 - remove
 		document.domDocument.asLocation();

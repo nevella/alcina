@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.Document;
@@ -36,23 +37,15 @@ class WindowStateGenerator {
 
 	WindowState generate() {
 		Document doc = Document.get();
-		addRect(doc.getDocumentElement());
-		Element activeElement = doc.getActiveElement();
-		if (activeElement != null) {
-			result.activeElement = AttachId.forNode(activeElement);
-			Element cursor = activeElement;
-			while (cursor != doc.getDocumentElement()) {
-				addRect(cursor);
-				cursor = cursor.getParentElement();
-			}
-		}
+		addElement(doc.getDocumentElement());
+		addElement(doc.getActiveElement());
 		Iterator<Element> itr = offsetObservedElements.iterator();
 		while (itr.hasNext()) {
 			Element elem = itr.next();
 			if (!elem.isAttached()) {
 				itr.remove();
 			} else {
-				addRect(elem);
+				addElement(elem);
 			}
 		}
 		/*
@@ -60,34 +53,33 @@ class WindowStateGenerator {
 		 */
 		List<Element> withStateAttributes = doc.querySelectorAll(
 				NodeAttachId.ATTR_NAME_TRANSMIT_STATE_SELECTOR);
-		withStateAttributes.forEach(this::addRect);
+		withStateAttributes.forEach(this::addElement);
 		List<ElementOffsets> elementOffsets = result.nodeUiStates.stream()
-				.map(nus -> nus.element.node()).map(ElementOffsets::of)
-				.toList();
+				.map(nus -> nus.nodeId.node()).map(ElementOffsets::of).toList();
 		result.offsetsDelta = offsetRegistry
 				.computeOffsetsDelta(elementOffsets);
 		result.clientHeight = Window.getClientHeight();
 		result.clientWidth = Window.getClientWidth();
-		result.scrollTop = Window.getScrollTop();
-		result.scrollLeft = Window.getScrollLeft();
+		/*
+		 * for the protocol, this is optimised to result.offsetsDelta
+		 */
+		result.nodeUiStates.clear();
 		return result;
 	}
 
-	void addRect(Element elem) {
+	void addElement(Element elem) {
+		if (elem == null) {
+			return;
+		}
 		if (!addedUiStates.add(elem)) {
 			return;
 		}
 		NodeUiState uiState = new NodeUiState();
-		uiState.element = AttachId.forNode(elem);
+		uiState.nodeId = AttachId.forNode(elem);
 		uiState.boundingClientRect = elem.getBoundingClientRect();
 		uiState.scrollPos = elem.getScrollPosition();
 		result.nodeUiStates.add(uiState);
-		if (uiState.boundingClientRect.isZeroDimensions()) {
-			/*
-			 * A pattern - if using an empty element for positioning, it will
-			 * have zero dimensions - so will use its parent for positioning
-			 */
-			addRect(elem.getParentElement());
-		}
+		Element parentElement = elem.getParentElement();
+		addElement(parentElement);
 	}
 }

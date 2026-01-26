@@ -10,6 +10,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 
 /**
@@ -40,7 +42,35 @@ public final class WindowState {
 
 		public IntPair scrollPos;
 
-		public AttachId element;
+		public AttachId nodeId;
+
+		public int absoluteTop;
+
+		public int absoluteLeft;
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("boundingClientRect",
+					boundingClientRect, "scrollPos", scrollPos, "element",
+					nodeId);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(boundingClientRect, scrollPos, nodeId);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NodeUiState) {
+				NodeUiState o = (NodeUiState) obj;
+				return CommonUtils.equals(boundingClientRect,
+						o.boundingClientRect, scrollPos, o.scrollPos, nodeId,
+						o.nodeId);
+			} else {
+				return super.equals(obj);
+			}
+		}
 	}
 
 	public AttachId activeElement;
@@ -55,14 +85,10 @@ public final class WindowState {
 
 	public int clientWidth;
 
-	public int scrollTop;
-
-	public int scrollLeft;
-
 	public NodeUiState uiStateFor(int attachId) {
 		if (idUiState == null) {
 			idUiState = nodeUiStates.stream().collect(
-					AlcinaCollectors.toKeyMap(state -> state.element.id));
+					AlcinaCollectors.toKeyMap(state -> state.nodeId.id));
 		}
 		return idUiState.get(attachId);
 	}

@@ -7,11 +7,17 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.DomRect;
+import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.WindowState.NodeUiState;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
 import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * <p>
@@ -51,6 +57,84 @@ public class OffsetProtocol {
 			attachIdOffsets.keySet().removeAll(removed);
 			result.removed = removed;
 			return result;
+		}
+
+		public void update(OffsetsDelta offsetsDelta) {
+			attachIdOffsets.keySet().removeAll(offsetsDelta.removed);
+			offsetsDelta.changes
+					.forEach(change -> attachIdOffsets.put(change.id, change));
+		}
+
+		public boolean containsKey(AttachId attachId) {
+			return attachIdOffsets.containsKey(attachId);
+		}
+
+		public NodeUiState computeNodeUiState(AttachId attachId) {
+			NodeUiState computed = new NodeUiState();
+			computed.nodeId = attachId;
+			computed.boundingClientRect = new DomRect();
+			ElementOffsets offsets = attachIdOffsets.get(attachId);
+			computed.scrollPos = IntPair.of(offsets.scrollLeft,
+					offsets.scrollTop);
+			Node node = offsets.id.node();
+			if (node.getOwnerDocument().getDocumentElement() == node) {
+				/*
+				 * short-circuit
+				 */
+				computed.boundingClientRect.top = computed.scrollPos.i2;
+				computed.boundingClientRect.left = computed.scrollPos.i1;
+				computed.boundingClientRect.right = computed.boundingClientRect.left
+						+ offsets.offsetWidth;
+				computed.boundingClientRect.bottom = computed.boundingClientRect.top
+						+ offsets.offsetHeight;
+			} else {
+				/*
+				 * see com.google.gwt.dom.client.DOMImpl.getSubPixelAbsoluteTop(
+				 * Element multiplex)
+				 */
+				{
+					ElementOffsets cursor = offsets;
+					int top = 0;
+					// This intentionally excludes body which has a null
+					// offsetParent.
+					while (cursor.offsetParentId != null) {
+						top -= cursor.scrollTop;
+						cursor = attachIdOffsets.get(cursor.offsetParentId);
+					}
+					cursor = offsets;
+					while (cursor != null) {
+						top += cursor.offsetTop;
+						cursor = attachIdOffsets.get(cursor.offsetParentId);
+					}
+					computed.absoluteTop = top;
+				}
+				{
+					ElementOffsets cursor = offsets;
+					int left = 0;
+					// This intentionally excludes body which has a null
+					// offsetParent.
+					while (cursor.offsetParentId != null) {
+						left -= cursor.scrollLeft;
+						cursor = attachIdOffsets.get(cursor.offsetParentId);
+					}
+					cursor = offsets;
+					while (cursor != null) {
+						left += cursor.offsetLeft;
+						cursor = attachIdOffsets.get(cursor.offsetParentId);
+					}
+					computed.absoluteLeft = left;
+				}
+				computed.boundingClientRect.top = computed.absoluteTop
+						+ Window.getScrollTop();
+				computed.boundingClientRect.left = computed.absoluteLeft
+						+ Window.getScrollLeft();
+				computed.boundingClientRect.right = computed.boundingClientRect.left
+						+ offsets.offsetWidth;
+				computed.boundingClientRect.bottom = computed.boundingClientRect.top
+						+ offsets.offsetHeight;
+			}
+			computed.boundingClientRect.computeFromTLBR();
+			return computed;
 		}
 	}
 }

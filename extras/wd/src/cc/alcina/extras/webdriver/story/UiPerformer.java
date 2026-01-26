@@ -133,6 +133,11 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				Story.Action.Ui.TestAbsent action) throws Exception {
 			ElementQuery query = WdActionPerformer.createQuery(wdPerformer);
 			boolean absent = !query.isPresent();
+			if (!absent && action.resetIfPresent > 0) {
+				Thread.sleep(action.resetIfPresent);
+				absent = !query.isPresent();
+				int debug = 3;
+			}
 			wdPerformer.context.getVisit().onActionTestResult(absent);
 			wdPerformer.context.log("TestAbsent --> %s", query);
 		}

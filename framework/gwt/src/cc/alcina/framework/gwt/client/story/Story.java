@@ -441,11 +441,14 @@ public interface Story {
 				@Target({ ElementType.TYPE })
 				@Registration(DeclarativeAction.class)
 				public @interface TestAbsent {
+					int resetIfPresent() default 0;
+
 					public static class ConverterImpl
 							implements Converter<TestAbsent> {
 						@Override
 						public Story.Action convert(TestAbsent ann) {
-							return new Story.Action.Ui.TestAbsent();
+							return new Story.Action.Ui.TestAbsent()
+									.withRetestIfPresent(ann.resetIfPresent());
 						}
 					}
 				}
@@ -1093,6 +1096,12 @@ public interface Story {
 			 * Test for the absence of the document locator
 			 */
 			public static class TestAbsent implements Ui {
+				public int resetIfPresent;
+
+				public TestAbsent withRetestIfPresent(int resetIfPresent) {
+					this.resetIfPresent = resetIfPresent;
+					return this;
+				}
 			}
 
 			public static class Go implements Ui {
