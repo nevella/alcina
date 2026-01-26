@@ -544,6 +544,7 @@ body > page > sequence {
 }
 body > page > sequence > table {
   border-spacing: 0;
+  padding-right: 0.5rem;
   min-width: 100%;
 }
 body > page > sequence > table > tbody > tr:nth-of-type(even) {
@@ -615,7 +616,7 @@ body > page > sequence > table th > ch-content {
   align-items: center;
 }
 body > page > sequence > table th > ch-content > span {
-  padding-right: 1.5rem;
+  padding-right: 0.5rem;
 }
 body > page > sequence > table th > ch-content > column-filter, body > page > sequence > table th > ch-content > sort-direction {
   display: inline-block;
