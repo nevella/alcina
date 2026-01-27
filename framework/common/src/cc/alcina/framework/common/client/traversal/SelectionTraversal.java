@@ -157,10 +157,13 @@ public class SelectionTraversal
 	 * required for end-of-traversal exception wrangling
 	 */
 	public static class SuppressedException implements ContextObservable {
-		Exception e;
+		Exception exception;
 
-		public SuppressedException(Exception e) {
-			this.e = e;
+		Selection selection;
+
+		public SuppressedException(Selection selection, Exception exception) {
+			this.selection = selection;
+			this.exception = exception;
 		}
 	}
 
@@ -689,8 +692,6 @@ public class SelectionTraversal
 
 		boolean beforeExecution = true;
 
-		Selection processingSelection;
-
 		public <T> T context(Class<T> clazz) {
 			return SelectionTraversal.this.context(clazz);
 		}
@@ -896,9 +897,9 @@ public class SelectionTraversal
 				 * external data rather than traversal logic - so don't
 				 * interrupt traversal
 				 */
-				Ax.simpleExceptionOut(message.e);
+				Ax.simpleExceptionOut(message.exception);
 			}
-			publishException(message.e);
+			publishException(message.selection, message.exception);
 		}
 	}
 
@@ -1030,9 +1031,9 @@ public class SelectionTraversal
 	public SelectionFilter provideExceptionSelectionFilter() {
 		List<Selection> exceptionKeys = selections().exceptions.keySet()
 				.stream().toList();
-		int skip = Math.max(0, exceptionKeys.size() - 10);
-		List<Selection> last5 = exceptionKeys.stream().skip(skip).toList();
-		return SelectionFilter.ofSelections(last5);
+		int skip = Math.max(0, exceptionKeys.size() - 50);
+		List<Selection> last50 = exceptionKeys.stream().skip(skip).toList();
+		return SelectionFilter.ofSelections(last50);
 	}
 
 	public void select(Selection selection) {
@@ -1040,7 +1041,7 @@ public class SelectionTraversal
 		try {
 			added = state.selections.add(selection);
 		} catch (DuplicateSelectionException e) {
-			new SuppressedException(e).publish();
+			new SuppressedException(selection, e).publish();
 		}
 		/*
 		 * this will never be processed, so mark as released
@@ -1147,14 +1148,19 @@ public class SelectionTraversal
 		return state.exitTraversal != null;
 	}
 
-	void publishException(Exception e) {
-		Selection selection = state.processingSelection;
-		selections().addException(selection, e);
-		selection.processNode().onException(e);
-		selections().topicException
-				.publish(new SelectionException(selection, e));
-		if (context(TraversalContext.ThrowOnException.class) != null) {
-			throw WrappedRuntimeException.wrap(e);
+	void publishException(Selection selection, Exception e) {
+		try {
+			selections().addException(selection, e);
+			selection.processNode().onException(e);
+			selections().topicException
+					.publish(new SelectionException(selection, e));
+			if (context(TraversalContext.ThrowOnException.class) != null) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		} catch (RuntimeException e2) {
+			Ax.err("DEVEX-0 - traversal exception handling exception");
+			e2.printStackTrace();
+			throw e2;
 		}
 	}
 
@@ -1162,7 +1168,6 @@ public class SelectionTraversal
 		SelectionTraversalState selectionTraversalState = selections()
 				.computeSelectionTraversalState(selection);
 		try {
-			state.processingSelection = selection;
 			if (contextSelectionEnabled) {
 				LooseContext.push();
 				CONTEXT_SELECTION.set(selection);
@@ -1183,7 +1188,7 @@ public class SelectionTraversal
 			} catch (Exception e) {
 				logger.warn(Ax.format("Selection exception :: %s",
 						Ax.trimForLogging(selection)), e);
-				publishException(e);
+				publishException(selection, e);
 			} finally {
 				layer.onAfterProcess(selection);
 			}
@@ -1196,7 +1201,6 @@ public class SelectionTraversal
 				logger.warn("DEVEX-0 :: selection cleanup", e);
 				throw e;
 			} finally {
-				state.processingSelection = null;
 				if (contextSelectionEnabled) {
 					LooseContext.pop();
 				}
