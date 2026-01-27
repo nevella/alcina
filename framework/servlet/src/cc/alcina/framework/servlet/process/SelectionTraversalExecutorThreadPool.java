@@ -88,4 +88,8 @@ public class SelectionTraversalExecutorThreadPool
 			}
 		}
 	}
+
+	public void close() {
+		executor.close();
+	}
 }
