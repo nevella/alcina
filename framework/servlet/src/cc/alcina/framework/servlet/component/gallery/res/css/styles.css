@@ -1028,7 +1028,7 @@ choice-editor > edit suggesting-node:first-child {
 choice-editor > edit choice-node:not([contenteditable=false]):first-child + choice-node[contenteditable=false] {
   margin-left: 0;
 }
-choice-editor > edit choice-node[contenteditable=false] {
+choice-editor > edit choice-node {
   background: none;
   border-radius: 4px;
   border: solid 1px #333;
@@ -1037,11 +1037,11 @@ choice-editor > edit choice-node[contenteditable=false] {
   user-select: all;
   outline: none;
 }
-choice-editor > edit choice-node[contenteditable=false].selected, choice-editor > edit choice-node[contenteditable=false]:focus {
+choice-editor > edit choice-node.selected, choice-editor > edit choice-node:focus {
   border-color: #77e;
   color: #77e;
 }
-choice-editor > edit choice-node[contenteditable=false].selected::selection, choice-editor > edit choice-node[contenteditable=false]:focus::selection {
+choice-editor > edit choice-node.selected::selection, choice-editor > edit choice-node:focus::selection {
   background-color: transparent;
 }
 
@@ -1080,21 +1080,53 @@ overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-
 
 search-definition-editor {
   display: flex;
-  background-color: rgba(255, 255, 255, 0.5);
+}
+search-definition-editor > choice-editor {
+  flex-grow: 1;
+}
+search-definition-editor > choice-editor > edit {
+  border: none;
+  background: none;
+}
+search-definition-editor > choice-editor > edit choice-node {
+  border-color: #eee;
+  background: #eee;
+  padding: 0.2rem 0.8rem;
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable {
+  display: inline-flex;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > name {
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator {
+  display: inline-block;
+  padding: 0 0.5rem;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > value-editor {
+  display: inline-block;
+  height: 100%;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > input {
+  border-color: transparent;
+  background-color: transparent;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > input, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > input {
+  background-color: white;
 }
 search-definition-editor > go-container {
   display: block;
   line-height: 145%;
   padding: 0.4rem;
-  border: solid 1px #aaa;
-  border-left: none;
 }
 search-definition-editor > go-container > button {
   color: #3050FF;
 }
 search-definition-editor > go-container > button:hover {
   color: #5070FF;
-  text-decoration: underline;
+  background: white;
+  border-color: transparent;
 }
 
 /* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
@@ -1169,7 +1201,9 @@ gallery-home > heading {
   display: block;
 }
 gallery-home > cards {
+  padding-top: 2rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 4rem;
 }
 gallery-home > cards > card {
@@ -1181,8 +1215,10 @@ gallery-home > cards > card {
   overflow-x: auto;
   border: solid 1px #ccc;
   padding: 1.5rem 2rem;
-  max-width: 24rem;
+  width: 16rem;
+  min-width: 16rem;
   min-height: 10rem;
+  margin: 0;
 }
 gallery-home > cards > card > heading, gallery-home > cards > card > heading-actions {
   margin: 0 0 0.5rem;
@@ -1291,7 +1327,7 @@ tree-table-area tree-table > columns {
 tree-table-area tree-table > tree {
   display: contents;
 }
-tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node.open > nodes, tree-table-area tree-table > tree .node > cells {
+tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node.open > nodes, tree-table-area tree-table > tree .node > cells, tree-table-area tree-table > tree contents-node > table-row {
   display: contents !important;
 }
 tree-table-area tree-table > tree node-label {

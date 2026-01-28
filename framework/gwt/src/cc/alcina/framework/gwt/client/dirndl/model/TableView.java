@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.OrderService;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView.TableContainer;
@@ -85,6 +86,13 @@ public class TableView extends
 
 		@Override
 		public void onSortTable(SortTable event) {
+			OrderService orderService = service(TableModel.OrderService.class);
+			if (orderService != null) {
+				orderService.onSortTable(event);
+				if (event.isHandled()) {
+					return;
+				}
+			}
 			TableColumn column = event.getModel();
 			Property property = column.getField().getProperty();
 			if (sortedBy == column) {

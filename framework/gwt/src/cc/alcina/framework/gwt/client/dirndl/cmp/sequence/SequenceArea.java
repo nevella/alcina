@@ -36,7 +36,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
+/*
+ * wip - ds - add orderservice.provider interface
+ */
 @TypedProperties
 @Directed.Delegating
 @ReflectiveSerializer.Checks(ignore = true)
@@ -134,6 +139,13 @@ public class SequenceArea extends Model.Fields
 
 	Service service;
 
+	class OrderServiceImpl implements TableModel.OrderService {
+		@Override
+		public void onSortTable(SortTable event) {
+			int debug = 3;
+		}
+	}
+
 	public SequenceArea() {
 	}
 
@@ -144,6 +156,8 @@ public class SequenceArea extends Model.Fields
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
+		event.node.getResolver().registerService(TableModel.OrderService.class,
+				new OrderServiceImpl());
 		service = event.node.getResolver().getService(Service.class).get();
 		definitionHeader = service.getSequenceDefinitionHeader();
 		from(service.getPlaceProperty())

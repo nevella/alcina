@@ -21,8 +21,6 @@ public class FlightEventStreamProviderZip {
 
 	String eventZipPath;
 
-	String outputFolder;
-
 	Function<String, String> serializationRefactoringHandler;
 
 	public FlightEventStreamProviderZip(String eventZipPath,
@@ -32,20 +30,21 @@ public class FlightEventStreamProviderZip {
 	}
 
 	public ReplayStream getReplayStream() {
+		File outputFolder = null;
 		try {
 			{
 				// unzip events
 				Preconditions.checkState(eventZipPath.endsWith(".zip"));
-				outputFolder = eventZipPath.replace(".zip", "");
-				SEUtilities.deleteDirectory(new File(outputFolder), true);
-				new ZipUtil().unzip(new File(outputFolder),
-						new FileInputStream(eventZipPath));
+				outputFolder = File.createTempFile("unzip", "zip");
+				SEUtilities.deleteDirectory(outputFolder, false);
+				outputFolder.mkdirs();
+				ZipUtil.unzip(outputFolder, new FileInputStream(eventZipPath));
 			}
 			{
 				// compute event stream
-				List<FlightEvent> events = (List) SEUtilities
-						.listFilesRecursive(outputFolder, null).stream()
-						.filter(f -> f.isFile())
+				events = (List) SEUtilities
+						.listFilesRecursive(outputFolder.getPath(), null)
+						.stream().filter(f -> f.isFile())
 						.map(f -> Io.read().file(f).asString())
 						.map(this::trackRefactoring)
 						.<FlightEvent> map(ReflectiveSerializer::deserialize)
@@ -54,6 +53,8 @@ public class FlightEventStreamProviderZip {
 			}
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
+		} finally {
+			SEUtilities.deleteDirectory(outputFolder, false);
 		}
 	}
 

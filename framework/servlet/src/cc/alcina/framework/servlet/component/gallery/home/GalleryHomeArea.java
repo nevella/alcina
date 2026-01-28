@@ -14,6 +14,7 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.choiceeditor.ChoiceEditorGalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.searchdefeditor.SearchDefinitionEditorGalleryPlace;
+import cc.alcina.framework.servlet.component.gallery.model.sequencearea.GallerySequenceAreasReportPlace;
 import cc.alcina.framework.servlet.component.gallery.model.tree.TreeGalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.treetable.TreeTableGalleryPlace;
 
@@ -44,6 +45,7 @@ class GalleryHomeArea extends GalleryContents {
 		add(TreeGalleryPlace.class);
 		add(TreeTableGalleryPlace.class);
 		add(SearchDefinitionEditorGalleryPlace.class);
+		add(GallerySequenceAreasReportPlace.class);
 	}
 
 	void add(Class<? extends GalleryPlace> clazz) {

@@ -46,7 +46,6 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
@@ -122,6 +121,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * <li>TableCell
  * </ul>
  */
+@Feature.Ref(Feature_Dirndl_TableModel.class)
 public class TableModel extends Model
 		implements NodeEditorContextService, TableEvents.CellClicked.Handler {
 	public static class DirectedCategoriesActivityTransformer extends
@@ -210,6 +210,11 @@ public class TableModel extends Model
 			 */
 			return tableModel;
 		}
+	}
+
+	@Feature.Parent(Feature_Dirndl_TableModel._OrderService.class)
+	public interface OrderService
+			extends ContextService, TableEvents.SortTable.Handler {
 	}
 
 	public static class DirectedEntitySearchActivityTransformer extends

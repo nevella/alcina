@@ -70,7 +70,9 @@ gallery-home > heading {
   display: block;
 }
 gallery-home > cards {
+  padding-top: 2rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 4rem;
 }
 gallery-home > cards > card {
@@ -82,8 +84,10 @@ gallery-home > cards > card {
   overflow-x: auto;
   border: solid 1px #ccc;
   padding: 1.5rem 2rem;
-  max-width: 24rem;
+  width: 16rem;
+  min-width: 16rem;
   min-height: 10rem;
+  margin: 0;
 }
 gallery-home > cards > card > heading, gallery-home > cards > card > heading-actions {
   margin: 0 0 0.5rem;
@@ -192,7 +196,7 @@ tree-table-area tree-table > columns {
 tree-table-area tree-table > tree {
   display: contents;
 }
-tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node.open > nodes, tree-table-area tree-table > tree .node > cells {
+tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node.open > nodes, tree-table-area tree-table > tree .node > cells, tree-table-area tree-table > tree contents-node > table-row {
   display: contents !important;
 }
 tree-table-area tree-table > tree node-label {

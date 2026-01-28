@@ -87,7 +87,7 @@ public class JobHistory {
 	public static File unzipExportedEvents(InputStream inputStream) {
 		File datestampedFolder = createLocalDatestampedEventFolder();
 		try {
-			new ZipUtil().unzip(datestampedFolder, inputStream);
+			ZipUtil.unzip(datestampedFolder, inputStream);
 			return datestampedFolder;
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
