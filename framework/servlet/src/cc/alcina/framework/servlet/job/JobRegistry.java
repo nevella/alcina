@@ -587,6 +587,13 @@ public class JobRegistry {
 				if (Mvcc.isVisible(job) && job.getState() == JobState.ABORTED) {
 					return true;
 				}
+				/*
+				 * ahh...if cancelled by a call to another vm. gotcha
+				 */
+				if (Mvcc.isVisible(job)
+						&& job.getState() == JobState.CANCELLED) {
+					return true;
+				}
 				if (job.domain().wasPersisted() && Domain.find(job) == null) {
 					/*
 					 * Deleted, but with issues during persistence propagation
