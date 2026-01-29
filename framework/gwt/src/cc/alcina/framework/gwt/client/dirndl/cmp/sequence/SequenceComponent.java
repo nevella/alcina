@@ -84,8 +84,7 @@ public class SequenceComponent extends Model.Fields
 		sequencePlaceProperty.set(event.getModel());
 	}
 
-	@Override
-	public List<?> provideFiltereedSequenceElements() {
-		return sequenceArea.provideFiltereedSequenceElements();
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit) {
+		return sequenceArea.provideFilteredSequenceElements(ignoreRowsLimit);
 	}
 }

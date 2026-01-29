@@ -318,7 +318,8 @@ public class SequenceArea extends Model.Fields
 
 	void putSequence(Sequence sequence) {
 		properties().sequence().set(sequence);
-		List<?> filteredSequenceElements = filteredSequenceElements(sequence);
+		List<?> filteredSequenceElements = filteredSequenceElements(sequence,
+				false);
 		properties().filteredSequenceElements().set(filteredSequenceElements);
 		emitEvent(SequenceEvents.SequenceChanged.class, sequence);
 	}
@@ -383,7 +384,8 @@ public class SequenceArea extends Model.Fields
 		}
 	}
 
-	List<?> filteredSequenceElements(Sequence sequence) {
+	List<?> filteredSequenceElements(Sequence sequence,
+			boolean ignoreRowsLimit) {
 		Stream<?> stream = sequence.getElements().stream();
 		SequenceSearchDefinition search = getPlace().search;
 		if (search != null) {
@@ -402,10 +404,12 @@ public class SequenceArea extends Model.Fields
 		Query<Model> query = HasFilterableText.Query.of(getPlace().filter)
 				.withCaseInsensitive(true).withRegex(true);
 		ModelTransform sequenceRowTransform = sequence.getRowTransform();
+		long limit = ignoreRowsLimit ? Integer.MAX_VALUE
+				: service.getElementLimit();
 		List<?> filteredElements = (List<?>) stream
 				.filter(new IndexPredicate(getPlace().selectedRange))
 				.filter(e -> query.test(sequenceRowTransform.apply(e)))
-				.limit(service.getElementLimit()).collect(Collectors.toList());
+				.limit(limit).collect(Collectors.toList());
 		return filteredElements;
 	}
 
@@ -432,8 +436,8 @@ public class SequenceArea extends Model.Fields
 	}
 
 	@Override
-	public List<?> provideFiltereedSequenceElements() {
-		return filteredSequenceElements;
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit) {
+		return filteredSequenceElements(sequence, true);
 	}
 
 	@Property.Not

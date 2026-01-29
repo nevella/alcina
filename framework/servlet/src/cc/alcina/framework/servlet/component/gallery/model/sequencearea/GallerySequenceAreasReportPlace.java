@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URL;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSequence;
@@ -17,14 +18,16 @@ public class GallerySequenceAreasReportPlace extends GalleryPlace {
 	}
 
 	public GallerySequenceAreasReportPlace() {
-		try {
-			sequencePlace = new SequencePlace();
-			URL resource = getClass().getResource("flight-events.zip");
-			String path = new File(resource.toURI()).getPath();
-			sequencePlace.instanceQuery = FlightEventSequence
-					.createInstanceQuery(path);
-		} catch (Exception e) {
-			throw WrappedRuntimeException.wrap(e);
+		if (Ax.isTest()) {
+			try {
+				sequencePlace = new SequencePlace();
+				URL resource = getClass().getResource("flight-events.zip");
+				String path = new File(resource.toURI()).getPath();
+				sequencePlace.instanceQuery = FlightEventSequence
+						.createInstanceQuery(path);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
 		}
 	}
 

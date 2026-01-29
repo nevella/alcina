@@ -39,8 +39,8 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 		List<AppSuggestion> suggestions = new ArrayList<>();
 		addLoadSuggestion(query, suggestions);
 		addHighlightSuggestion(query, suggestions);
-		addSetSuggestion(query, invocation.ask.getResultRange().length(),
-				suggestions);
+		addSetSuggestion(query,
+				SequenceBrowser.Ui.get().settings.maxElementRows, suggestions);
 		addExecSuggestion(query, suggestions);
 		{
 			// add filter selection

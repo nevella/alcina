@@ -14,7 +14,7 @@ public interface SequenceBehaviorsServer
 	@Override
 	default void onPerformCommand(ExecCommand.PerformCommand event) {
 		SequenceExecCommand.Support.execCommand(event,
-				provideFiltereedSequenceElements(), event.getModel());
+				provideFilteredSequenceElements(true), event.getModel());
 	}
 
 	@Override

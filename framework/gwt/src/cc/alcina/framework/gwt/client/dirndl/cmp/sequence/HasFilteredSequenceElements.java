@@ -3,5 +3,5 @@ package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 import java.util.List;
 
 public interface HasFilteredSequenceElements {
-	public List<?> provideFiltereedSequenceElements();
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit);
 }

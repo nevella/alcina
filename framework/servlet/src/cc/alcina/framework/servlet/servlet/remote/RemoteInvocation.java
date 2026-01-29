@@ -188,7 +188,7 @@ public class RemoteInvocation {
 		}
 	}
 
-	class PostAndClient {
+	public class PostAndClient {
 		public HttpPost post;
 
 		public HttpGet get;
