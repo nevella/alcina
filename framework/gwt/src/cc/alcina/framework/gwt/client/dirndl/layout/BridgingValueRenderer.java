@@ -277,7 +277,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			 * property/Field), but allows transferral of @Directed annotations
 			 * from the bean properties to the renderer
 			 */
-			if (clazz == Directed.class || clazz == Directed.Exclude.class) {
+			if (clazz == Directed.class || clazz == Directed.Exclude.class
+					|| clazz == Directed.TransformElements.class) {
 				if (reflector instanceof Property && ((Property) reflector)
 						.getOwningType() == DelegatingValue.class) {
 					A directAnnotation = super.contextAnnotation(

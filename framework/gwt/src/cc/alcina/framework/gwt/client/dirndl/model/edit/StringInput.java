@@ -47,6 +47,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
@@ -96,11 +97,12 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			ModelEvents.Commit.class })
 @TypeSerialization(reflectiveSerializable = false)
 @TypedProperties
-public class StringInput extends Model.Value<String> implements FocusOnBind,
-		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
-		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
-		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
-		ModelEvents.FormElementLabelClicked.Handler, HasElementBehaviors {
+public class StringInput extends Model.Value<String>
+		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
+		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
+		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler,
+		DomEvents.KeyDown.Handler, ModelEvents.FormElementLabelClicked.Handler,
+		HasElementBehaviors, ModelEvents.FocusEditor.Handler {
 	static PackageProperties._StringInput properties = PackageProperties.stringInput;
 
 	private String value;
@@ -703,5 +705,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		public StringInput apply(String t) {
 			return new StringInput(t);
 		}
+	}
+
+	@Override
+	public void onFocusEditor(FocusEditor event) {
+		Model.FocusOnBind.focusIfAttached(provideNode());
 	}
 }

@@ -46,7 +46,15 @@ public class SearchDefinitionEditor extends Model.Fields
 		SearchDefinition getSearchDefinition();
 
 		Peer getPeer();
+
+		boolean isInitialRenderComplete();
 	}
+
+	/*
+	 * searchables attached post initial render should focus the editor
+	 */
+	@Property.Not
+	boolean initialRenderComplete;
 
 	/**
 	 * Models default logic behaviour for the definition, may be overridden
@@ -61,6 +69,11 @@ public class SearchDefinitionEditor extends Model.Fields
 
 		public Peer getPeer() {
 			return peer;
+		}
+
+		@Override
+		public boolean isInitialRenderComplete() {
+			return initialRenderComplete;
 		}
 	}
 
@@ -161,6 +174,7 @@ public class SearchDefinitionEditor extends Model.Fields
 				this.renderedDefinition);
 		searchablesListener.topicChangeEvent.add(this::onPropertyGraphChange);
 		this.peer = new Peer();
+		exec(() -> initialRenderComplete = true).deferred().dispatch();
 		super.onBeforeRender(event);
 	}
 

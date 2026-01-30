@@ -18,6 +18,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -31,8 +33,9 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 @TypedProperties
-class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
-		HasObject, DecoratorNode.AlllowsPartialSelection {
+class Searchable extends Model.Fields
+		implements SuggestOracle.Suggestion.Noop, HasObject,
+		DecoratorNode.AlllowsPartialSelection, ModelEvents.FocusEditor.Emitter {
 	/**
 	 * Although these are implemented in .sass, this documents *why* they are so
 	 */
@@ -139,8 +142,13 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
-			exec(() -> properties().valueEditor().set(new ValueEditor()))
-					.dispatch();
+			exec(() -> {
+				properties().valueEditor().set(new ValueEditor());
+				if (service(SearchDefinitionEditor.Service.class)
+						.isInitialRenderComplete()) {
+					emitEvent(FocusEditor.class);
+				}
+			}).dispatch();
 		}
 	}
 

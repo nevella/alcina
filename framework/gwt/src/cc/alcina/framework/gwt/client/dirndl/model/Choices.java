@@ -59,6 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Filter;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -537,8 +538,8 @@ public abstract class Choices<T> extends Model implements
 	 * String - which is used by the Option.Transform
 	 */
 	@Directed(tag = "select")
-	public static class Select<T> extends Single<T>
-			implements DomEvents.Change.Handler {
+	public static class Select<T> extends Single<T> implements
+			DomEvents.Change.Handler, ModelEvents.FocusEditor.Handler {
 		public static class To implements ModelTransform<Object, Single<?>> {
 			@Override
 			public Select<?> apply(Object t) {
@@ -546,6 +547,11 @@ public abstract class Choices<T> extends Model implements
 				select.setValue(t);
 				return select;
 			}
+		}
+
+		@Override
+		public void onFocusEditor(FocusEditor event) {
+			Model.FocusOnBind.focusIfAttached(provideNode());
 		}
 
 		@Override

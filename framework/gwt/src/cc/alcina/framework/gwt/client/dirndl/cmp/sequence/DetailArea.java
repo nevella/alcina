@@ -5,9 +5,10 @@ import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanForm;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanForm.ClassName;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -20,8 +21,9 @@ class DetailArea extends Model.Fields {
 	Heading header = new Heading("Detail");
 
 	@Directed(tag = "properties", bindToModel = false)
-	@Directed(renderer = TransformRenderer.class)
-	@Directed.Transform(Tables.Single.class)
+	@Directed.Transform(BeanForm.Viewer.class)
+	@BeanViewModifiers(detached = true, nodeEditors = true, editable = false)
+	@BeanForm.Classes({ ClassName.vertical })
 	Object transformedSequenceElement;
 
 	@Directed(tag = "properties", bindToModel = false)

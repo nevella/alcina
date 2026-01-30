@@ -846,4 +846,30 @@ public class ModelEvents {
 		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
+
+	/**
+	 * Instructs any editor (a model analagous to select, input etc) to focus
+	 * itself
+	 */
+	public static class FocusEditor extends
+			ModelEvent.DescendantEvent<Object, FocusEditor.Handler, FocusEditor.Emitter> {
+		@Override
+		public void dispatch(FocusEditor.Handler handler) {
+			handler.onFocusEditor(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFocusEditor(FocusEditor event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onFocusEditor(FocusEditor event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
 }

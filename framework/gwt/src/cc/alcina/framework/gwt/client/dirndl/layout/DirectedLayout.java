@@ -637,7 +637,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		public <T extends ContextService> T service(Class<T> serviceType) {
-			return getResolver().getService(serviceType).get();
+			return getResolver().getService(serviceType).orElse(null);
 		}
 
 		void bind(boolean modelToRendered) {
