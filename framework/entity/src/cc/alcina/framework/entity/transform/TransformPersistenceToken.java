@@ -92,6 +92,7 @@ public class TransformPersistenceToken implements Serializable {
 				.impl(TransformPropagationPolicy.class);
 		this.initialTransforms = new IntitialTransforms();
 	}
+
 	/**
 	 * Used to ensure that only transforms of the incoming objects (not
 	 * cascaded) are returned to the client
@@ -125,7 +126,6 @@ public class TransformPersistenceToken implements Serializable {
 
 		Set<EntityLocator> initialLocators;
 	}
-
 
 	public boolean addCascadedEvents() {
 		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
@@ -388,5 +388,14 @@ public class TransformPersistenceToken implements Serializable {
 				getRequest().getPriorRequestsWithoutResponse().size() == 0);
 		getRequest().getEvents().clear();
 		getRequest().getEvents().addAll(getTransformCollation().getAllEvents());
+	}
+
+	/*
+	 * dev-only, when transferring from a console
+	 */
+	public void ensureInitialTransforms() {
+		if (initialTransforms == null) {
+			initialTransforms = new IntitialTransforms();
+		}
 	}
 }
