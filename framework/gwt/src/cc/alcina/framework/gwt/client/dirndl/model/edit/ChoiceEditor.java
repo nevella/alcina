@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -134,8 +133,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	@Override
 	public void onDecoratorsChanged(DecoratorsChanged event) {
-		int debug = 3;
-		Ax.err("Decorators changes :: %s", event.getModel().size());
 		List<DecoratorNode> model = event.getModel();
 		List<T> decoratorChoiceValues = model.stream()
 				.map(n -> (T) n.getStringRepresentable()).toList();

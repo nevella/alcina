@@ -320,7 +320,8 @@ public class SequenceArea extends Model.Fields
 		properties().sequence().set(sequence);
 		List<?> filteredSequenceElements = filteredSequenceElements(sequence,
 				false);
-		properties().filteredSequenceElements().set(filteredSequenceElements);
+		properties().filteredSequenceElements()
+				.setIfNotEqual(filteredSequenceElements);
 		emitEvent(SequenceEvents.SequenceChanged.class, sequence);
 	}
 

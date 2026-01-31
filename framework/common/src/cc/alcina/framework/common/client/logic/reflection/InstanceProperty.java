@@ -37,6 +37,10 @@ public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 		property.set(getSource(), t);
 	}
 
+	public void setIfNotEqual(T t) {
+		property.setIfNotEqual(getSource(), t);
+	}
+
 	public S getSource() {
 		return source;
 	}

@@ -5,7 +5,6 @@ import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 
@@ -16,12 +15,9 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefiniti
 		types = FlightEventCriterion.FlightEventCriteriaGroup.class,
 		defaultProperty = true) })
 public class FlightEventSearchDefinition extends SequenceSearchDefinition {
-	@TypeSerialization("FlightEventSearchDefinition")
-	public static class Parameter
-			extends InstanceQuery.Parameter<FlightEventSearchDefinition> {
-		public Parameter() {
-			setValue(new FlightEventSearchDefinition());
-		}
+	@TypeSerialization("flighteventsearchdefinition")
+	public static class Parameter extends
+			SequenceSearchDefinition.BaseParameter<FlightEventSearchDefinition> {
 	}
 
 	@Override
