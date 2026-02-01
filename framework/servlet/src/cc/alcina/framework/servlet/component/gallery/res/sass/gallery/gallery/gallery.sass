@@ -4,6 +4,7 @@
 @use 'tree'
 @use 'tree-table'
 @use 'search-definition-editor'
+@use 'gallery-sequence-area'
 
 
 gallery
@@ -77,4 +78,10 @@ tree-table-area
 
 search-definition-editor-gallery
   @include search-definition-editor.content
+
+gallery-sequence-area
+  @include gallery-sequence-area.content
+
+@mixin overlay
+  @include gallery-sequence-area.overlay
 

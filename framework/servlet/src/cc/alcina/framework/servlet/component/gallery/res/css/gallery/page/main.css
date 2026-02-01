@@ -434,6 +434,863 @@ body > overlay-container-modal > overlay {
   background-color: white;
 }
 
+/* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
+ * - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
+ * */
+gallery {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: "Open Sans", "Arial";
+  background: white;
+  min-height: 100vh;
+}
+gallery a, gallery a.link, gallery a.visited {
+  text-decoration: none;
+  color: black;
+}
+gallery a:hover, gallery a.link:hover, gallery a.visited:hover {
+  color: #387ed3;
+}
+gallery > heading {
+  display: block;
+  font-weight: bold;
+  color: #0f4589;
+  margin: 1rem 0;
+}
+gallery about > ul {
+  margin-top: 0;
+}
+gallery header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+gallery header img {
+  width: 200px;
+}
+gallery header heading {
+  font-size: 18px;
+  font-weight: bold;
+}
+gallery header spacer {
+  display: block;
+  width: 200px;
+}
+gallery table.metadata {
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+  border-collapse: separate;
+  border-spacing: 1rem 0.5rem;
+}
+gallery table.metadata th {
+  text-align: left;
+  width: 12rem;
+}
+gallery table.metadata td > value {
+  white-space: pre-wrap;
+}
+gallery table.metadata td > value:not(:last-child):after {
+  content: ", ";
+}
+
+gallery-home {
+  padding: 2rem 6rem;
+}
+gallery-home > heading {
+  margin: 1rem 0;
+  font-size: 1.5rem;
+  display: block;
+}
+gallery-home > cards {
+  padding-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4rem;
+}
+gallery-home > cards > card {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: solid 1px #ccc;
+  padding: 1.5rem 2rem;
+  width: 16rem;
+  min-width: 16rem;
+  min-height: 10rem;
+  margin: 0;
+}
+gallery-home > cards > card > heading, gallery-home > cards > card > heading-actions {
+  margin: 0 0 0.5rem;
+  display: flex;
+  width: 100%;
+  font-weight: bold;
+  justify-content: space-between;
+}
+gallery-home > cards > card > heading > actions, gallery-home > cards > card > heading-actions > actions {
+  font-weight: normal;
+  display: flex;
+  gap: 1em;
+}
+gallery-home > cards > card > heading > actions a, gallery-home > cards > card > heading-actions > actions a {
+  cursor: pointer;
+}
+gallery-home > cards > card > key-values {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 1rem;
+  row-gap: 0.1rem;
+}
+gallery-home > cards > card > key-values > key-value {
+  display: contents;
+}
+gallery-home > cards > card > key-values > key-value > key {
+  color: #777;
+}
+gallery-home > cards > card > a {
+  display: block;
+  margin: 0 0 0.2rem;
+}
+
+choice-editor-gallery > info {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+  padding: 1rem 3rem;
+  border: solid 1px blue;
+  width: 450px;
+}
+
+tree-area tree.root-hidden > .node > node-label {
+  display: none;
+}
+tree-area tree.root-hidden > .node > nodes {
+  padding-left: 0;
+}
+tree-area tree .node > node-label {
+  position: relative;
+  display: block;
+  margin-bottom: 5px;
+}
+tree-area tree .node > node-label > span:first-child {
+  display: inline-block;
+  width: 12px;
+  border: solid 1px #ccc;
+  text-align: center;
+  font-size: 10px;
+  border-radius: 6px;
+  color: #777;
+  height: 12px;
+  box-sizing: border-box;
+  vertical-align: top;
+  margin-top: 5px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+tree-area tree .node > node-label > node-label {
+  display: inline-block;
+  cursor: pointer;
+}
+tree-area tree .node:not(.open) > node-label > span:before {
+  content: " ";
+  position: absolute;
+  border-radius: 3px;
+  color: #bbb;
+  background-color: #bbb;
+  width: 6px;
+  height: 6px;
+  left: 3px;
+  top: 7.5px;
+}
+tree-area tree .node.leaf > node-label > span {
+  visibility: hidden;
+}
+tree-area tree .node.keyboard-selected > node-label {
+  background-color: #E6E6E6;
+}
+tree-area tree .node > nodes {
+  padding-left: 20px;
+  display: none;
+}
+tree-area tree .node.open > nodes {
+  display: block;
+}
+
+tree-table-area tree-table {
+  display: grid;
+  column-gap: 1rem;
+}
+tree-table-area tree-table > columns {
+  display: contents;
+  font-weight: bold;
+}
+tree-table-area tree-table > tree {
+  display: contents;
+}
+tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node.open > nodes, tree-table-area tree-table > tree .node > cells, tree-table-area tree-table > tree contents-node > table-row {
+  display: contents !important;
+}
+tree-table-area tree-table > tree node-label {
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+}
+tree-table-area tree-table > tree node-label:hover {
+  overflow: auto;
+}
+tree-table-area tree-table > tree > .node > node-label {
+  margin-left: 0;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > node-label {
+  margin-left: 1rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 2rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 3rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 4rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 5rem;
+}
+tree-table-area tree-table > tree .node > cells > *:hover {
+  outline: solid 1px #AAF;
+  background: #FCFCFF;
+}
+tree-table-area tree-table > tree .node > cells > *.editing {
+  visibility: hidden;
+}
+tree-table-area tree-table > tree.root-hidden > .node > node-label {
+  display: none;
+}
+tree-table-area tree-table > tree.root-hidden > .node > nodes {
+  padding-left: 0;
+}
+tree-table-area tree-table > tree .node > node-label {
+  position: relative;
+  display: block;
+  margin-bottom: 5px;
+}
+tree-table-area tree-table > tree .node > node-label > span:first-child {
+  display: inline-block;
+  width: 12px;
+  border: solid 1px #ccc;
+  text-align: center;
+  font-size: 10px;
+  border-radius: 6px;
+  color: #777;
+  height: 12px;
+  box-sizing: border-box;
+  vertical-align: top;
+  margin-top: 5px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+tree-table-area tree-table > tree .node > node-label > node-label {
+  display: inline-block;
+  cursor: pointer;
+}
+tree-table-area tree-table > tree .node:not(.open) > node-label > span:before {
+  content: " ";
+  position: absolute;
+  border-radius: 3px;
+  color: #bbb;
+  background-color: #bbb;
+  width: 6px;
+  height: 6px;
+  left: 3px;
+  top: 7.5px;
+}
+tree-table-area tree-table > tree .node.leaf > node-label > span {
+  visibility: hidden;
+}
+tree-table-area tree-table > tree .node.keyboard-selected > node-label {
+  background-color: #E6E6E6;
+}
+tree-table-area tree-table > tree .node > nodes {
+  padding-left: 20px;
+  display: none;
+}
+tree-table-area tree-table > tree .node.open > nodes {
+  display: block;
+}
+
+search-definition-editor-gallery > definition-editor {
+  max-width: 800px !important;
+}
+search-definition-editor-gallery > definition-editor edit {
+  width: 800px !important;
+}
+search-definition-editor-gallery heading {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+  font-weight: bold;
+}
+search-definition-editor-gallery > info {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+  padding: 1rem 3rem;
+  width: 450px;
+}
+
+gallery-sequence-area {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100% !important;
+}
+gallery-sequence-area > sequence-component {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto;
+  grid-template-areas: "header header header header" "sequence sequence sequence detail";
+  grid-template-rows: min-content 1fr;
+  height: 100vh;
+  width: 100vw;
+  background: #ccc;
+  gap: 1px;
+  height: calc(100vh - 50px);
+}
+gallery-sequence-area > sequence-component > * {
+  min-height: 0;
+  background: white;
+  position: relative;
+}
+gallery-sequence-area > sequence-component > * > heading {
+  margin-bottom: 0.2rem;
+  height: 2rem;
+  display: flex;
+  padding-left: 1rem;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  color: #888;
+}
+gallery-sequence-area > sequence-component > sequence {
+  display: block;
+  grid-area: sequence;
+  background: #f7f7f7;
+  width: 100%;
+  overflow-x: auto;
+}
+gallery-sequence-area > sequence-component > sequence > table {
+  border-spacing: 0;
+  padding-right: 0.5rem;
+  min-width: 100%;
+}
+gallery-sequence-area > sequence-component > sequence > table > tbody > tr:nth-of-type(even) {
+  background-color: #f7f9ff;
+}
+gallery-sequence-area > sequence-component > sequence > table > tbody > tr:first-of-type td {
+  padding-top: 8px;
+}
+gallery-sequence-area > sequence-component > sequence > table > thead > tr > th {
+  border-bottom: solid 1px #bbb;
+  cursor: pointer;
+  white-space: nowrap;
+}
+gallery-sequence-area > sequence-component > sequence > table td, gallery-sequence-area > sequence-component > sequence > table th {
+  padding: 6px 2px;
+}
+gallery-sequence-area > sequence-component > sequence > table td > value {
+  display: block;
+}
+gallery-sequence-area > sequence-component > sequence > table td > value.numeric {
+  text-align: right;
+  padding-right: 1rem;
+}
+gallery-sequence-area > sequence-component > sequence > table td > value.nowrap {
+  white-space: nowrap;
+}
+gallery-sequence-area > sequence-component > sequence > table td > * {
+  white-space: nowrap;
+  overflow-x: auto;
+  display: inline-block;
+  max-width: 14rem;
+}
+gallery-sequence-area > sequence-component > sequence > table td > *:not(:first-child) {
+  display: none;
+}
+gallery-sequence-area > sequence-component > sequence > table th {
+  text-align: left;
+  padding-right: 2rem;
+}
+gallery-sequence-area > sequence-component > sequence > table td > *.wide {
+  max-width: 28rem;
+}
+gallery-sequence-area > sequence-component > sequence > table td > *.x-wide {
+  max-width: 40rem;
+}
+gallery-sequence-area > sequence-component > sequence > table td > *.xx-wide {
+  max-width: 56rem;
+}
+gallery-sequence-area > sequence-component > sequence > table tr:hover {
+  cursor: pointer;
+}
+gallery-sequence-area > sequence-component > sequence > table tr:hover > td {
+  background-color: #eee;
+}
+gallery-sequence-area > sequence-component > sequence > table th:first-of-type, gallery-sequence-area > sequence-component > sequence > table td:first-of-type {
+  padding-left: 1rem;
+}
+gallery-sequence-area > sequence-component > sequence > table th, gallery-sequence-area > sequence-component > sequence > table td {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+gallery-sequence-area > sequence-component > sequence > table th {
+  padding-right: 1rem;
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr min-content min-content;
+  align-items: center;
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > span {
+  padding-right: 0.5rem;
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > column-filter, gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  background-color: transparent;
+  visibility: hidden;
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > column-filter:hover, gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction:hover {
+  filter: invert(0.5);
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > column-filter {
+  padding-right: 0.5rem;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNNDQ4LDI1NmMwLTEwNi04Ni0xOTItMTkyLTE5MlM2NCwxNTAsNjQsMjU2czg2LDE5MiwxOTIsMTkyUzQ0OCwzNjIsNDQ4LDI1NloiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjMyIi8+PGxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMzIiIHgxPSIxNDQiIHgyPSIzNjgiIHkxPSIyMDgiIHkyPSIyMDgiLz48bGluZSBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgeDE9IjE3NiIgeDI9IjMzNiIgeTE9IjI3MiIgeTI9IjI3MiIvPjxsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjMyIiB4MT0iMjI0IiB4Mj0iMjg4IiB5MT0iMzM2IiB5Mj0iMzM2Ii8+PC9zdmc+");
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > column-filter[filtered], gallery-sequence-area > sequence-component > sequence > table th > ch-content > column-filter[filter-open] {
+  visibility: visible;
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4gPHRpdGxlPmlvbmljb25zLXY1LWI8L3RpdGxlPiA8cGF0aCBkPSJNMjU2LDY0QzE1MCw2NCw2NCwxNTAsNjQsMjU2czg2LDE5MiwxOTIsMTkyLDE5Mi04NiwxOTItMTkyUzM2Miw2NCwyNTYsNjRaIiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZTojMDAwO3N0cm9rZS1taXRlcmxpbWl0OjEwO3N0cm9rZS13aWR0aDozMnB4Ii8+IDxwb2x5bGluZSBwb2ludHM9IjMyNiAzMDMgMjU2IDM3MyAxODYgMzAzIiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZTojMDAwO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2Utd2lkdGg6MzJweCIvPiA8cG9seWxpbmUgcG9pbnRzPSIzMjYgMjA5IDI1NiAxMzkgMTg2IDIwOSIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2U6IzAwMDtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbGluZWpvaW46cm91bmQ7c3Ryb2tlLXdpZHRoOjMycHgiLz4gPC9zdmc+");
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction[direction] {
+  visibility: visible;
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction[direction=DESCENDING] {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48dGl0bGU+aW9uaWNvbnMtdjUtYTwvdGl0bGU+PHBvbHlsaW5lIHBvaW50cz0iMTEyIDE4NCAyNTYgMzI4IDQwMCAxODQiIHN0eWxlPSJmaWxsOm5vbmU7c3Ryb2tlOiMwMDA7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLWxpbmVqb2luOnJvdW5kO3N0cm9rZS13aWR0aDo0OHB4Ii8+PC9zdmc+");
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction[direction=DESCENDING]:hover {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48dGl0bGU+aW9uaWNvbnMtdjUtYjwvdGl0bGU+PHBhdGggZD0iTTI1Niw2NEMxNTAsNjQsNjQsMTUwLDY0LDI1NnM4NiwxOTIsMTkyLDE5MiwxOTItODYsMTkyLTE5MlMzNjIsNjQsMjU2LDY0WiIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2U6IzAwMDtzdHJva2UtbWl0ZXJsaW1pdDoxMDtzdHJva2Utd2lkdGg6MzJweCIvPjxwb2x5bGluZSBwb2ludHM9IjM1MiAyMTYgMjU2IDMxMiAxNjAgMjE2IiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZTojMDAwO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2Utd2lkdGg6MzJweCIvPjwvc3ZnPg==");
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction[direction=ASCENDING] {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+PHRpdGxlPmlvbmljb25zLXY1LWE8L3RpdGxlPjxwb2x5bGluZSBwb2ludHM9IjExMiAzMjggMjU2IDE4NCA0MDAgMzI4IiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZTojMDAwO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2Utd2lkdGg6NDhweCIvPjwvc3ZnPg==");
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content > sort-direction[direction=ASCENDING]:hover {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48dGl0bGU+aW9uaWNvbnMtdjUtYTwvdGl0bGU+PHBvbHlsaW5lIHBvaW50cz0iMzUyIDI5NiAyNTYgMjAwIDE2MCAyOTYiIHN0eWxlPSJmaWxsOm5vbmU7c3Ryb2tlOiMwMDA7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLWxpbmVqb2luOnJvdW5kO3N0cm9rZS13aWR0aDozMnB4Ii8+PHBhdGggZD0iTTI1Niw2NEMxNTAsNjQsNjQsMTUwLDY0LDI1NnM4NiwxOTIsMTkyLDE5MiwxOTItODYsMTkyLTE5MlMzNjIsNjQsMjU2LDY0WiIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2U6IzAwMDtzdHJva2UtbWl0ZXJsaW1pdDoxMDtzdHJva2Utd2lkdGg6MzJweCIvPjwvc3ZnPg==");
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content:hover {
+  cursor: pointer;
+}
+gallery-sequence-area > sequence-component > sequence > table th > ch-content:hover > column-filter, gallery-sequence-area > sequence-component > sequence > table th > ch-content:hover > sort-direction {
+  visibility: visible;
+}
+gallery-sequence-area > sequence-component > sequence > table tr.matches > td {
+  background-color: yellow;
+}
+gallery-sequence-area > sequence-component > sequence > table tr.selected > td {
+  background-color: #84A4FC;
+}
+gallery-sequence-area > sequence-component > sequence > table tr a {
+  text-decoration: none;
+}
+gallery-sequence-area > sequence-component > sequence > table tr a:hover {
+  text-decoration: underline;
+}
+gallery-sequence-area > sequence-component > sequence[column-set=DETAIL] > table td > value.wide {
+  max-width: unset;
+}
+gallery-sequence-area > sequence-component > detail {
+  display: grid;
+  grid-template-rows: min-content min-content 1fr;
+  grid-area: detail;
+  overflow: auto;
+  padding: 0.5rem;
+}
+gallery-sequence-area > sequence-component > detail > properties {
+  padding: 1em 2em;
+  line-height: 2em;
+  padding-bottom: 1px;
+  display: block;
+  /* FIXME - 2022 - either move to per-app style of theme - 
+  * */
+  line-height: normal;
+  container-type: inline-size;
+}
+gallery-sequence-area > sequence-component > detail > properties.vertical-validation {
+  line-height: 2.6rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.vertical-validation > form > section > form-element > value > validation-feedback > message {
+  top: 0.3rem;
+  left: 1rem;
+  line-height: 1;
+}
+gallery-sequence-area > sequence-component > detail > properties.horizontal-validation > form > section > form-element > value {
+  display: flex;
+  flex-direction: row;
+}
+gallery-sequence-area > sequence-component > detail > properties.horizontal-validation > form > section > form-element > value > validation-feedback > message {
+  left: 1rem;
+  white-space: nowrap;
+}
+gallery-sequence-area > sequence-component > detail > properties.label-over form-element {
+  position: relative;
+  margin-bottom: 0.8rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.label-over form-element > label:has(+ value > *:is(input, select)) {
+  position: absolute;
+  background-color: #fefdfb;
+  color: #555;
+  font-family: "Helvetica Neue", Arial;
+  font-style: normal;
+  padding: 0 5px;
+  line-height: 100%;
+  z-index: 1;
+  left: 6px;
+  top: -5px;
+  font-size: 65%;
+}
+gallery-sequence-area > sequence-component > detail > properties.label-over form-element > label:has(+ value > input:placeholder-shown) {
+  cursor: text;
+  max-width: 66.66%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform-origin: left bottom;
+  transform: translate(0px, 10px) scale(1);
+  white-space: nowrap;
+  color: #999;
+  padding-left: 1px;
+  top: -5px;
+  left: 6px;
+  font-size: 65%;
+  color: transparent;
+  background-color: transparent;
+}
+gallery-sequence-area > sequence-component > detail > properties.label-over form-element > label:not(:has(+ value > input:placeholder-shown)), gallery-sequence-area > sequence-component > detail > properties.label-over form-element > label:has(+ value > input:focus) {
+  transform: translate(0, 0) scale(1);
+  cursor: pointer;
+  left: 6px;
+  top: -5px;
+  font-size: 65%;
+  background-color: #fefdfb;
+}
+gallery-sequence-area > sequence-component > detail > properties.label-over form-element > label, gallery-sequence-area > sequence-component > detail > properties.label-over form-element > value > input {
+  transition: all 0.2s;
+  touch-action: manipulation;
+}
+gallery-sequence-area > sequence-component > detail > properties.bordered {
+  margin: 1em 0;
+  border-top: solid 1px #ccc;
+  border: none;
+  background-color: #f9f9f9;
+}
+gallery-sequence-area > sequence-component > detail > properties:empty {
+  display: none;
+}
+gallery-sequence-area > sequence-component > detail > properties.not-first {
+  padding-top: 0;
+}
+gallery-sequence-area > sequence-component > detail > properties.no-labels form label {
+  display: none;
+}
+gallery-sequence-area > sequence-component > detail > properties.single-line {
+  display: block;
+  flex: 1;
+  min-width: auto;
+  width: 100%;
+  padding: 0;
+}
+gallery-sequence-area > sequence-component > detail > properties.single-line > form {
+  display: flex;
+}
+gallery-sequence-area > sequence-component > detail > properties.single-line > form > section {
+  display: inline-block;
+  flex: 1;
+}
+gallery-sequence-area > sequence-component > detail > properties.single-line > form > section > form-element, gallery-sequence-area > sequence-component > detail > properties.single-line > form > section select {
+  display: inline-block;
+}
+gallery-sequence-area > sequence-component > detail > properties.single-line > form > section > form-element {
+  padding-right: 1rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.single-line > form > section > form-element > label {
+  display: inline-block;
+  padding-right: 0.5rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.single-line > form actions {
+  display: inline-block;
+  margin: 0;
+}
+gallery-sequence-area > sequence-component > detail > properties.wide form input,
+gallery-sequence-area > sequence-component > detail > properties.wide form select,
+gallery-sequence-area > sequence-component > detail > properties.wide form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+gallery-sequence-area > sequence-component > detail > properties.wide form input:focus,
+gallery-sequence-area > sequence-component > detail > properties.wide form select:focus,
+gallery-sequence-area > sequence-component > detail > properties.wide form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+gallery-sequence-area > sequence-component > detail > properties.wide form select {
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-right: 2px;
+}
+gallery-sequence-area > sequence-component > detail > properties.wide form textarea {
+  padding-top: 1px;
+}
+gallery-sequence-area > sequence-component > detail > properties.wide form input,
+gallery-sequence-area > sequence-component > detail > properties.wide form select,
+gallery-sequence-area > sequence-component > detail > properties.wide form textarea {
+  width: 20em;
+}
+gallery-sequence-area > sequence-component > detail > properties.wide form div.ol-select {
+  display: inline-block;
+}
+gallery-sequence-area > sequence-component > detail > properties.grid > form {
+  display: block;
+}
+gallery-sequence-area > sequence-component > detail > properties.grid > form > section {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  row-gap: 0.5rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.grid > form > section > div, gallery-sequence-area > sequence-component > detail > properties.grid > form > section form-element {
+  display: contents;
+}
+gallery-sequence-area > sequence-component > detail > properties.grid > form > section > div > label, gallery-sequence-area > sequence-component > detail > properties.grid > form > section form-element > label {
+  white-space: nowrap;
+  padding-right: 2em;
+}
+gallery-sequence-area > sequence-component > detail > properties.grid.tight-rows {
+  line-height: 1.2;
+}
+gallery-sequence-area > sequence-component > detail > properties.grid.tight-rows > form > section > form-element > value {
+  display: flex;
+}
+gallery-sequence-area > sequence-component > detail > properties.over-only > form input:not(:hover):not(:focus), gallery-sequence-area > sequence-component > detail > properties.over-only > form input[readonly],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select:not(:hover):not(:focus),
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select[readonly],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea:not(:hover):not(:focus),
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea[readonly] {
+  background: none;
+  border: solid 1px transparent;
+  -webkit-appearance: none;
+}
+gallery-sequence-area > sequence-component > detail > properties.over-only > form input:not(:hover):not(:focus)[type=checkbox], gallery-sequence-area > sequence-component > detail > properties.over-only > form input[readonly][type=checkbox],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select:not(:hover):not(:focus)[type=checkbox],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select[readonly][type=checkbox],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea:not(:hover):not(:focus)[type=checkbox],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea[readonly][type=checkbox] {
+  background: initial;
+  border: initial;
+  -webkit-appearance: auto;
+  width: initial;
+}
+gallery-sequence-area > sequence-component > detail > properties.over-only > form input[type=checkbox],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select[type=checkbox],
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea[type=checkbox] {
+  width: initial;
+}
+gallery-sequence-area > sequence-component > detail > properties.over-only > form input,
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select,
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+gallery-sequence-area > sequence-component > detail > properties.over-only > form input:focus,
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select:focus,
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+gallery-sequence-area > sequence-component > detail > properties.over-only > form select {
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-right: 2px;
+}
+gallery-sequence-area > sequence-component > detail > properties.over-only > form textarea {
+  padding-top: 1px;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight {
+  padding: 0.5rem 1rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight form-element {
+  line-height: 1.3em;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 100px;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight180 {
+  padding: 0.5rem 1rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight180 form-element {
+  line-height: 1.3em;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight180 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 180px;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight230 {
+  padding: 0.25rem 0.5rem;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight230 form-element {
+  line-height: 1.3em;
+}
+gallery-sequence-area > sequence-component > detail > properties.tight230 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 230px;
+}
+gallery-sequence-area > sequence-component > detail > properties[inert] > form {
+  opacity: 0.7;
+}
+gallery-sequence-area > sequence-component > detail > properties > heading {
+  display: block;
+  font-weight: 500;
+  padding-bottom: 0.2em;
+  padding-left: 3px;
+}
+gallery-sequence-area > sequence-component > detail > properties > description {
+  line-height: 1.3rem;
+  display: block;
+}
+gallery-sequence-area > sequence-component > detail > properties > description:not(:empty) {
+  margin-bottom: 1rem;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > section > form-element {
+  display: block;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > section > form-element[invalid] select, gallery-sequence-area > sequence-component > detail > properties > form > section > form-element[invalid] input {
+  border-color: #FF5030;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > section > form-element > value {
+  position: relative;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > section > form-element > value > validation-feedback {
+  display: block;
+  position: relative;
+  color: #FF5030;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > section > form-element > value > validation-feedback > message {
+  position: absolute;
+  font-size: 90%;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > actions {
+  margin: 1em;
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > actions > * {
+  display: inline-block;
+  line-height: 1.5rem;
+  padding: 0 0.5em;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > actions.right {
+  justify-content: flex-end;
+}
+gallery-sequence-area > sequence-component > detail > properties > form > form-validation {
+  display: block;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #FF5030;
+  margin-top: 2rem;
+}
+gallery-sequence-area > sequence-component > detail > properties form > section > form-element {
+  display: flex;
+  flex-direction: column;
+}
+gallery-sequence-area > sequence-component > detail > properties form > section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+gallery-sequence-area > sequence-component > detail > properties form-element > label {
+  color: #666;
+}
+gallery-sequence-area > sequence-component > detail > properties form-element > value {
+  display: flex;
+  gap: 1rem;
+}
+gallery-sequence-area > sequence-component > detail > properties:empty {
+  display: none;
+}
+@container (width < 500px) {
+  gallery-sequence-area > sequence-component > detail > properties > table {
+    display: block;
+  }
+  gallery-sequence-area > sequence-component > detail > properties > table > tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  gallery-sequence-area > sequence-component > detail > properties > table tr, gallery-sequence-area > sequence-component > detail > properties > table th, gallery-sequence-area > sequence-component > detail > properties > table td {
+    display: block;
+  }
+  gallery-sequence-area > sequence-component > detail > properties > table td {
+    padding-left: 1rem;
+  }
+}
+gallery-sequence-area > sequence-component > detail > string-representation {
+  display: block;
+  margin-top: 1rem;
+  border-top: solid 1px #ccc;
+  padding-top: 1rem;
+  white-space: pre;
+  overflow: auto;
+}
+gallery-sequence-area > sequence-component > detail > string-representation .__markup_highlight {
+  background-color: yellow;
+}
+gallery-sequence-area > sequence-component > detail > string-representation .__selected_markup_highlight {
+  background-color: orange;
+}
+gallery-sequence-area > sequence-component > header {
+  grid-area: header;
+}
+gallery-sequence-area > sequence-component > header > search-definition-editor edit {
+  width: auto;
+}
+gallery-sequence-area > sequence-component > sequence > table {
+  background: white;
+}
+
 overlay > menu {
   background: white;
   user-select: none;
@@ -1127,4 +1984,81 @@ search-definition-editor > go-container > button:hover {
   color: #5070FF;
   background: white;
   border-color: transparent;
+}
+
+overlay.string-area string-area-expanded {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  padding-top: 0.5rem;
+  display: grid;
+  grid-template-rows: min-content minmax(min-content, 30vh);
+  user-select: text;
+  white-space: pre;
+}
+overlay.string-area string-area-expanded > heading, overlay.string-area string-area-expanded > heading-actions {
+  margin: 0 0 0.5rem;
+  display: flex;
+  width: 100%;
+  font-weight: bold;
+  justify-content: space-between;
+}
+overlay.string-area string-area-expanded > heading > actions, overlay.string-area string-area-expanded > heading-actions > actions {
+  font-weight: normal;
+  display: flex;
+  gap: 1em;
+}
+overlay.string-area string-area-expanded > heading > actions a, overlay.string-area string-area-expanded > heading-actions > actions a {
+  cursor: pointer;
+}
+overlay.string-area string-area-expanded > heading-actions > heading {
+  margin-bottom: 0.2rem;
+  height: 2rem;
+  display: flex;
+  padding-left: 1rem;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  color: #888;
+}
+overlay.string-area string-area-expanded > heading-actions > actions {
+  align-items: center;
+  margin-right: 1rem;
+  white-space: nowrap;
+}
+overlay.string-area string-area-expanded > heading-actions > actions > a {
+  text-decoration: none;
+}
+overlay.string-area string-area-expanded > heading-actions > actions > a, overlay.string-area string-area-expanded > heading-actions > actions > a:visited {
+  color: #77f;
+}
+overlay.string-area string-area-expanded > heading-actions > actions > a:hover {
+  text-decoration: underline;
+}
+overlay.string-area string-area-expanded > value {
+  display: block;
+  border: solid 1px #ccc;
+  margin: 0.2rem 1rem;
+  padding: 0.4rem;
+  overflow: auto;
+}
+
+overlay.pre-text {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  padding: 1rem 2rem 2rem;
+  font-size: 1.1rem;
+}
+overlay.pre-text pre-text {
+  min-width: 30vw;
+  min-height: 30vh;
+  background: white;
+  display: block;
+  user-select: text;
 }

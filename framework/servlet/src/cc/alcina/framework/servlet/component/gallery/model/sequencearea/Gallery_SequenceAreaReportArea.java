@@ -17,10 +17,11 @@ import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSearchD
 /*
  */
 @Feature.Ref(Feature_Dirndl_TableModel._OrderService.class)
-@Registration({ GalleryContents.class, GallerySequenceAreasReportPlace.class })
+@Registration({ GalleryContents.class, GallerySequenceAreaReportPlace.class })
 @TypedProperties
-class Gallery_SequenceAreasReportArea
-		extends GalleryContents<GallerySequenceAreasReportPlace> {
+@Directed(tag = "gallery-sequence-area")
+class Gallery_SequenceAreaReportArea
+		extends GalleryContents<GallerySequenceAreaReportPlace> {
 	PackageProperties._Gallery_SequenceAreasReportArea.InstanceProperties
 			properties() {
 		return PackageProperties.userSessionsReportArea.instance(this);
@@ -34,7 +35,6 @@ class Gallery_SequenceAreasReportArea
 					.instance(this);
 		}
 
-		@Directed(bindToModel = false)
 		@Directed.Transform(SearchDefinitionEditor.class)
 		SearchDefinition searchDefinition;
 	}
@@ -52,18 +52,17 @@ class Gallery_SequenceAreasReportArea
 	@Directed.Exclude
 	Header header = new Header();
 
-	Gallery_SequenceAreasReportArea() {
+	Gallery_SequenceAreaReportArea() {
 		bindings().from(properties().place())
-				.typed(GallerySequenceAreasReportPlace.class)
+				.typed(GallerySequenceAreaReportPlace.class)
 				.accept(this::updateDefinition);
 		from(properties().sequencePlace())
-				.map(GallerySequenceAreasReportPlace::new)
-				.accept(BasePlace::go);
+				.map(GallerySequenceAreaReportPlace::new).accept(BasePlace::go);
 		model = new SequenceComponentServer(header,
 				properties().sequencePlace());
 	}
 
-	void updateDefinition(GallerySequenceAreasReportPlace place) {
+	void updateDefinition(GallerySequenceAreaReportPlace place) {
 		SequencePlace sequencePlace = place.sequencePlace;
 		properties().sequencePlace().set(sequencePlace);
 		FlightEventSearchDefinition.Parameter typedParameter = sequencePlace.instanceQuery

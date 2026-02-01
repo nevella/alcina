@@ -9,6 +9,7 @@
 @use '../../dirndl/cmp/choices'
 @use '../../dirndl/cmp/search-definition-editor/search-definition-editor' 
 @use '../multi/common'
+@use '../gallery/gallery'
 
 @use 'header'
 
@@ -69,6 +70,8 @@ body > page
 @include choices.choice-editor-tag
 @include choices.decorator-suggestor
 @include search-definition-editor.tag
+
+@include gallery.overlay
 
 
 

@@ -14,19 +14,19 @@ public class PackageProperties {
     static _Gallery_SequenceAreasReportArea_Header userSessionsReportArea_header = new _Gallery_SequenceAreasReportArea_Header();
     
     static class _Gallery_SequenceAreasReportArea implements TypedProperty.Container {
-      TypedProperty<Gallery_SequenceAreasReportArea, Gallery_SequenceAreasReportArea.Header> header = new TypedProperty<>(Gallery_SequenceAreasReportArea.class, "header");
-      TypedProperty<Gallery_SequenceAreasReportArea, Object> model = new TypedProperty<>(Gallery_SequenceAreasReportArea.class, "model");
-      TypedProperty<Gallery_SequenceAreasReportArea, GalleryPlace> place = new TypedProperty<>(Gallery_SequenceAreasReportArea.class, "place");
-      TypedProperty<Gallery_SequenceAreasReportArea, SequencePlace> sequencePlace = new TypedProperty<>(Gallery_SequenceAreasReportArea.class, "sequencePlace");
-      static class InstanceProperties extends InstanceProperty.Container<Gallery_SequenceAreasReportArea> {
-         InstanceProperties(Gallery_SequenceAreasReportArea source){super(source);}
-        InstanceProperty<Gallery_SequenceAreasReportArea, Gallery_SequenceAreasReportArea.Header> header(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.header);}
-        InstanceProperty<Gallery_SequenceAreasReportArea, Object> model(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.model);}
-        InstanceProperty<Gallery_SequenceAreasReportArea, GalleryPlace> place(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.place);}
-        InstanceProperty<Gallery_SequenceAreasReportArea, SequencePlace> sequencePlace(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.sequencePlace);}
+      TypedProperty<Gallery_SequenceAreaReportArea, Gallery_SequenceAreaReportArea.Header> header = new TypedProperty<>(Gallery_SequenceAreaReportArea.class, "header");
+      TypedProperty<Gallery_SequenceAreaReportArea, Object> model = new TypedProperty<>(Gallery_SequenceAreaReportArea.class, "model");
+      TypedProperty<Gallery_SequenceAreaReportArea, GalleryPlace> place = new TypedProperty<>(Gallery_SequenceAreaReportArea.class, "place");
+      TypedProperty<Gallery_SequenceAreaReportArea, SequencePlace> sequencePlace = new TypedProperty<>(Gallery_SequenceAreaReportArea.class, "sequencePlace");
+      static class InstanceProperties extends InstanceProperty.Container<Gallery_SequenceAreaReportArea> {
+         InstanceProperties(Gallery_SequenceAreaReportArea source){super(source);}
+        InstanceProperty<Gallery_SequenceAreaReportArea, Gallery_SequenceAreaReportArea.Header> header(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.header);}
+        InstanceProperty<Gallery_SequenceAreaReportArea, Object> model(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.model);}
+        InstanceProperty<Gallery_SequenceAreaReportArea, GalleryPlace> place(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.place);}
+        InstanceProperty<Gallery_SequenceAreaReportArea, SequencePlace> sequencePlace(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea.sequencePlace);}
       }
       
-       InstanceProperties instance(Gallery_SequenceAreasReportArea instance) {
+       InstanceProperties instance(Gallery_SequenceAreaReportArea instance) {
         return new InstanceProperties( instance);
       }
       
@@ -35,13 +35,13 @@ public class PackageProperties {
   
     
     static class _Gallery_SequenceAreasReportArea_Header implements TypedProperty.Container {
-      TypedProperty<Gallery_SequenceAreasReportArea.Header, SearchDefinition> searchDefinition = new TypedProperty<>(Gallery_SequenceAreasReportArea.Header.class, "searchDefinition");
-      static class InstanceProperties extends InstanceProperty.Container<Gallery_SequenceAreasReportArea.Header> {
-         InstanceProperties(Gallery_SequenceAreasReportArea.Header source){super(source);}
-        InstanceProperty<Gallery_SequenceAreasReportArea.Header, SearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea_header.searchDefinition);}
+      TypedProperty<Gallery_SequenceAreaReportArea.Header, SearchDefinition> searchDefinition = new TypedProperty<>(Gallery_SequenceAreaReportArea.Header.class, "searchDefinition");
+      static class InstanceProperties extends InstanceProperty.Container<Gallery_SequenceAreaReportArea.Header> {
+         InstanceProperties(Gallery_SequenceAreaReportArea.Header source){super(source);}
+        InstanceProperty<Gallery_SequenceAreaReportArea.Header, SearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.userSessionsReportArea_header.searchDefinition);}
       }
       
-       InstanceProperties instance(Gallery_SequenceAreasReportArea.Header instance) {
+       InstanceProperties instance(Gallery_SequenceAreaReportArea.Header instance) {
         return new InstanceProperties( instance);
       }
       

@@ -1,0 +1,23 @@
+@use '../multi/common'
+@use '../../dirndl/cmp/sequence/sequence-area' as sequence
+@use '_shared'
+
+@mixin content
+  @include shared.full-width
+
+  > sequence-component
+    @include sequence.contents
+    height: calc(100vh - 50px)
+
+    > header
+      grid-area: header
+
+      > search-definition-editor
+        edit
+          width: auto
+
+    > sequence > table
+      background: white
+
+@mixin overlay
+  @include sequence.overlay

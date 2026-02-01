@@ -9,15 +9,15 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSequence;
 
-public class GallerySequenceAreasReportPlace extends GalleryPlace {
+public class GallerySequenceAreaReportPlace extends GalleryPlace {
 	public SequencePlace sequencePlace = new SequencePlace();
 
 	@Override
-	public GallerySequenceAreasReportPlace copy() {
-		return (GallerySequenceAreasReportPlace) super.copy();
+	public GallerySequenceAreaReportPlace copy() {
+		return (GallerySequenceAreaReportPlace) super.copy();
 	}
 
-	public GallerySequenceAreasReportPlace() {
+	public GallerySequenceAreaReportPlace() {
 		if (Ax.isTest()) {
 			try {
 				sequencePlace = new SequencePlace();
@@ -31,12 +31,12 @@ public class GallerySequenceAreasReportPlace extends GalleryPlace {
 		}
 	}
 
-	public GallerySequenceAreasReportPlace(SequencePlace sequencePlace) {
+	public GallerySequenceAreaReportPlace(SequencePlace sequencePlace) {
 		this.sequencePlace = sequencePlace;
 	}
 
 	public static class Tokenizer
-			extends GalleryPlace.Tokenizer<GallerySequenceAreasReportPlace> {
+			extends GalleryPlace.Tokenizer<GallerySequenceAreaReportPlace> {
 	}
 
 	@Override
