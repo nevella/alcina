@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.story.component.gallery;
 
+import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_ChoiceEditor;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 
@@ -9,6 +11,7 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 @Decl.Require(Story_GalleryBrowser.State.Home.class)
 @Decl.Child(Point_GalleryBrowser_Home.ToChoiceEditor.class)
 @Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.class)
+@Feature.Parent(Feature_Dirndl_ChoiceEditor.class)
 public class Point_GalleryBrowser_ChoiceEditor extends Waypoint {
 	static final String XPATH_USER_EDITOR = "//definition-editor//choice-editor/edit";
 

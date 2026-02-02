@@ -241,7 +241,7 @@ public class RemoteComponentUi {
 	}
 
 	void onBehaviorAdded(LocalMutations.BehaviorAdded behaviorAdded) {
-		if (behaviorAdded.behavior == RemoteElementBehaviors.ElementOffsetsRequired.class) {
+		if (behaviorAdded.behavior instanceof RemoteElementBehaviors.ElementOffsetsRequired) {
 			offsetObservedElements.add(behaviorAdded.element);
 		}
 	}

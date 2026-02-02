@@ -21,7 +21,7 @@ public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 
 	public IndexedSelection(IndexedSelection.Host host) {
 		this.host = host;
-		setIndexSelected(wrapIndex(host.getInitialSelectedIndex()));
+		setIndexSelected(host.getInitialSelectedIndex());
 	}
 
 	public int getIndexSelected() {

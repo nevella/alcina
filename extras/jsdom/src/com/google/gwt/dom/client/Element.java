@@ -1513,9 +1513,9 @@ public class Element extends Node implements ClientDomElement,
 	 * Behaviors are not intended to be removed, so there's no corresponding
 	 * remove method
 	 */
-	public void addBehavior(Class<? extends ElementBehavior> clazz) {
-		local().addBehavior(clazz);
-		mutations().notifyAddedBehavior(this, clazz);
+	public void addBehavior(ElementBehavior behavior) {
+		local().addBehavior(behavior);
+		mutations().notifyAddedBehavior(this, behavior);
 		/*
 		 * Behaviors are not used for ElementJso, and are marshalled at
 		 * emitMutation time by DocumentAttachId
@@ -1523,7 +1523,7 @@ public class Element extends Node implements ClientDomElement,
 		// sync(() -> remote().addBehavior(clazz));
 	}
 
-	public List<Class<? extends ElementBehavior>> getBehaviors() {
+	public List<ElementBehavior> getBehaviors() {
 		return local().getBehaviors();
 	}
 

@@ -10,5 +10,5 @@ import cc.alcina.framework.common.client.reflection.Property;
  */
 public interface HasElementBehaviors {
 	@Property.Not
-	List<Class<? extends ElementBehavior>> getBehaviors();
+	List<ElementBehavior> getBehaviors();
 }

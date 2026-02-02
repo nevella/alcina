@@ -87,10 +87,13 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		if (!visible) {
 			return;
 		}
-		choices = new Choices.Single.Delegating<>(answers.getSuggestions());
+		int initialIndexSelectionIndex = answers.ask.isEmpty() ? -1 : 0;
+		choices = new Choices.Single.Delegating<>(answers.getSuggestions(),
+				initialIndexSelectionIndex);
 		contents.setModel(choices);
-		if (choices.getValues().size() > 0 && suggestor.attributes
-				.isInputEditorKeyboardNavigationEnabled()) {
+		if (choices.getValues().size() > 0
+				&& suggestor.attributes.isInputEditorKeyboardNavigationEnabled()
+				&& !answers.ask.isEmpty()) {
 			/*
 			 * keyboard-navigate to the first entry
 			 */

@@ -310,7 +310,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			element.addStyleName(cssClass);
 		}
 		if (layoutNode.model instanceof HasElementBehaviors) {
-			List<Class<? extends ElementBehavior>> behaviors = ((HasElementBehaviors) layoutNode.model)
+			List<ElementBehavior> behaviors = ((HasElementBehaviors) layoutNode.model)
 					.getBehaviors();
 			behaviors.forEach(element::addBehavior);
 		}

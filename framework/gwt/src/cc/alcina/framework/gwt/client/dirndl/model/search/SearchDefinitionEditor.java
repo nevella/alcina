@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.SuggestOracle;
 
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.PropertyGraphListener;
@@ -25,6 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionDirty;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
@@ -39,27 +42,45 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
 
 @TypedProperties
 @DirectedContextResolver
+@Feature.Parent(Feature_Dirndl_SearchDefinitionEditor_Impl.class)
 public class SearchDefinitionEditor extends Model.Fields
 		implements ModelTransform<SearchDefinition, SearchDefinitionEditor>,
-		ModelEvents.SelectionDirty.Handler, ModelEvents.Submit.Handler {
+		ModelEvents.SelectionDirty.Handler, ModelEvents.Submit.Handler,
+		ModelEvents.Commit.Handler {
+	/**
+	 * Models default logic behaviour for the definition, may be overridden
+	 */
+	public static class Peer {
+	}
+
+	/**
+	 * the model value is the proposed updated Search Definition
+	 */
+	public static class Submit
+			extends ModelEvent<SearchDefinition, Submit.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onSubmit(Submit event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSubmit(Submit event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		@Override
+		public void dispatch(Submit.Handler handler) {
+			handler.onSubmit(this);
+		}
+	}
+
 	interface Service extends ContextService {
 		SearchDefinition getSearchDefinition();
 
 		Peer getPeer();
 
 		boolean isInitialRenderComplete();
-	}
-
-	/*
-	 * searchables attached post initial render should focus the editor
-	 */
-	@Property.Not
-	boolean initialRenderComplete;
-
-	/**
-	 * Models default logic behaviour for the definition, may be overridden
-	 */
-	public static class Peer {
 	}
 
 	class ServiceImpl implements Service {
@@ -85,17 +106,23 @@ public class SearchDefinitionEditor extends Model.Fields
 			SearchDefinition searchDefinition = service.getSearchDefinition();
 			if (searchDefinition != null) {
 				EditSupport editSupport = searchDefinition.editSupport();
-				List<Searchable> searchables = editSupport
+				List<SuggestOracle.Suggestion> searchables = editSupport
 						.listAvailableCriteria().stream().map(Reflections::at)
 						.map(ClassReflector::newInstance).map(Searchable::new)
 						.sorted(Comparator.comparing(Searchable::provideName))
-						.toList();
+						.collect(Collectors.toList());
 				SuggestOracle.Response response = new SuggestOracle.Response(
 						searchables);
 				responseHandler.accept(response);
 			}
 		}
 	}
+
+	/*
+	 * searchables attached post initial render should focus the editor
+	 */
+	@Property.Not
+	boolean initialRenderComplete;
 
 	/**
 	 * Note - these won't be changed (they're basically the initialisation
@@ -107,28 +134,6 @@ public class SearchDefinitionEditor extends Model.Fields
 
 	@Directed.Wrap("go-container")
 	Link go = Link.button(ModelEvents.Submit.class).withText("Go");
-
-	/**
-	 * the model value is the proposed updated Search Definition
-	 */
-	public static class Submit
-			extends ModelEvent<SearchDefinition, Submit.Handler> {
-		@Override
-		public void dispatch(Submit.Handler handler) {
-			handler.onSubmit(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onSubmit(Submit event);
-		}
-
-		public interface Binding extends Handler {
-			@Override
-			default void onSubmit(Submit event) {
-				((Model) this).bindings().onNodeEvent(event);
-			}
-		}
-	}
 
 	@Property.Not
 	SearchDefinition originalDefinition;
@@ -192,6 +197,27 @@ public class SearchDefinitionEditor extends Model.Fields
 		updateGoState();
 	}
 
+	@Override
+	public void onSubmit(ModelEvents.Submit event) {
+		emitSubmitEvent(event);
+	}
+
+	void emitSubmitEvent(ModelEvent event) {
+		if (go.isDisabled()) {
+			return;
+		}
+		event.reemitAs(this, SearchDefinitionEditor.Submit.class,
+				renderedDefinition.copy());
+	}
+
+	/**
+	 * from the searchables/ChoicesEditor
+	 */
+	@Override
+	public void onCommit(Commit event) {
+		emitSubmitEvent(event);
+	}
+
 	void updateGoState() {
 		String renderedDefinitionSerialized = FlatTreeSerializer
 				.serializeElided(renderedDefinition);
@@ -205,11 +231,5 @@ public class SearchDefinitionEditor extends Model.Fields
 
 	PackageProperties._SearchDefinitionEditor.InstanceProperties properties() {
 		return PackageProperties.searchDefinitionEditor.instance(this);
-	}
-
-	@Override
-	public void onSubmit(ModelEvents.Submit event) {
-		event.reemitAs(this, SearchDefinitionEditor.Submit.class,
-				renderedDefinition.copy());
 	}
 }

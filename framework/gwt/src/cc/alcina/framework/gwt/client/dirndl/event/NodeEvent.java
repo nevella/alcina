@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -237,6 +238,23 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			Preconditions.checkState(this.nodeEvent == null);
 			this.nodeEvent = nodeEvent;
 			nodeEvent.context = this;
+		}
+
+		@Override
+		public String toString() {
+			Object event = gwtEvent != null ? gwtEvent : nodeEvent;
+			return Ax.format("%s :: %s", event, node);
+		}
+
+		public String toHistoryString() {
+			FormatBuilder format = new FormatBuilder();
+			Context cursor = this;
+			while (cursor != null) {
+				format.appendIfBuilderNonEmpty(" => ");
+				format.line(cursor);
+				cursor = cursor.previous;
+			}
+			return format.toString();
 		}
 	}
 

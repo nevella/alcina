@@ -48,15 +48,15 @@ public interface HasDecorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
 		FragmentModel.Has, DomEvents.Focusout.Handler, HasElementBehaviors {
 	@Override
-	default List<Class<? extends ElementBehavior>> getBehaviors() {
-		return List.of(DecoratorBehavior.ExtendKeyboardNavigationAction.class,
+	default List<ElementBehavior> getBehaviors() {
+		return List.of(new DecoratorBehavior.ExtendKeyboardNavigationAction(),
 				/*
 				 * wip - decorator - maybe zap? content-editable may fix this.
 				 * anyway, invariant is along the lines of
 				 * "deletion of partially-selected decorator deletes whole decorator"
 				 */
 				// DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
-				ElementBehavior.EnsureCursorTargetIsTextNodeBehaviour.class);
+				new ElementBehavior.EnsureCursorTargetIsTextNodeBehaviour());
 	}
 
 	default boolean canDecorate(EditSelection editSelection) {

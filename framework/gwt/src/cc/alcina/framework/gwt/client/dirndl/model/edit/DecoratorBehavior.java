@@ -42,8 +42,8 @@ public interface DecoratorBehavior {
 	 * prevent default up/down
 	 * 
 	 */
-	public static class InterceptUpDownBehaviour
-			implements DecoratorBehavior, ElementBehavior {
+	public static class InterceptUpDownBehaviour extends
+			ElementBehavior.NonParameterised implements DecoratorBehavior {
 		@Override
 		public String getEventType() {
 			return BrowserEvents.KEYDOWN;
@@ -85,8 +85,8 @@ public interface DecoratorBehavior {
 	 * treats the non-editables equivalently to a single-cursor position
 	 * (between two editable text cursor positions)
 	 */
-	public static class ExtendKeyboardNavigationAction
-			implements DecoratorBehavior, ElementBehavior {
+	public static class ExtendKeyboardNavigationAction extends
+			ElementBehavior.NonParameterised implements DecoratorBehavior {
 		enum Direction {
 			left, right, none;
 

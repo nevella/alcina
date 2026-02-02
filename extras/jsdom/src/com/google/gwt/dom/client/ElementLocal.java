@@ -885,9 +885,9 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		throw new UnsupportedOperationException();
 	}
 
-	List<Class<? extends ElementBehavior>> behaviors;
+	List<ElementBehavior> behaviors;
 
-	public void addBehavior(Class<? extends ElementBehavior> clazz) {
+	public void addBehavior(ElementBehavior behavior) {
 		/*
 		 * given the probable size (1 or rarely a few more), this is more
 		 * efficient than using a set
@@ -895,18 +895,19 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		if (behaviors == null) {
 			behaviors = new ArrayList<>();
 		} else {
-			if (hasBehavior(clazz)) {
+			if (hasBehavior(behavior.getClass())) {
 				return;
 			}
 		}
-		behaviors.add(clazz);
+		behaviors.add(behavior);
 	}
 
-	List<Class<? extends ElementBehavior>> getBehaviors() {
+	List<ElementBehavior> getBehaviors() {
 		return behaviors;
 	}
 
-	public boolean hasBehavior(Class<? extends ElementBehavior> clazz) {
-		return behaviors != null && behaviors.contains(clazz);
+	public boolean hasBehavior(Class<? extends ElementBehavior> behaviorClass) {
+		return behaviors != null && behaviors.stream()
+				.anyMatch(bh -> bh.getClass() == behaviorClass);
 	}
 }

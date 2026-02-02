@@ -23,7 +23,6 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.DomLocation;
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Models the browser selection object. Normally use the exposed Location

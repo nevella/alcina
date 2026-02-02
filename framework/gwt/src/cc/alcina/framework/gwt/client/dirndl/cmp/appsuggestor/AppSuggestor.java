@@ -145,7 +145,7 @@ public class AppSuggestor extends Model.Fields
 				List<Suggestion> suggestions = appSuggestions.stream()
 						.map(Suggestion.ModelSuggestion::new)
 						.collect(Collectors.toList());
-				Suggestor.Answers result = new Answers();
+				Suggestor.Answers result = new Answers(ask);
 				result.setTotal(suggestions.size());
 				result.setSuggestions(suggestions);
 				answersHandler.accept(result);
@@ -162,7 +162,7 @@ public class AppSuggestor extends Model.Fields
 		public void ask(StringAsk ask, Consumer<Answers> answersHandler,
 				Consumer<Throwable> exceptionHandler) {
 			if (Ax.isBlank(ask.getValue()) && !answerSupplier.checkEmptyAsk()) {
-				Suggestor.Answers result = new Answers();
+				Suggestor.Answers result = new Answers(ask);
 				answersHandler.accept(result);
 				return;
 			}

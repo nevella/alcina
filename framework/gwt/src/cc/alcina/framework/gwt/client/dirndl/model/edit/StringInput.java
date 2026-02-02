@@ -6,7 +6,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -51,6 +50,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
@@ -141,6 +141,10 @@ public class StringInput extends Model.Value<String>
 
 	private Integer maxLength;
 
+	public interface Service extends ContextService {
+		boolean isCommitOnEnter();
+	}
+
 	@Binding(type = Type.PROPERTY, to = "maxlength")
 	public Integer getMaxLength() {
 		return maxLength;
@@ -186,12 +190,10 @@ public class StringInput extends Model.Value<String>
 	}
 
 	@Override
-	public List<Class<? extends ElementBehavior>> getBehaviors() {
-		List<Class<? extends ElementBehavior>> result = new ArrayList<>();
-		if (commitOnEnter) {
-			result.add(ElementBehavior.PreventDefaultEnterBehaviour.class);
-		}
-		return result;
+	public List<ElementBehavior> getBehaviors() {
+		return commitOnEnter
+				? List.of(new ElementBehavior.PreventDefaultEnterBehaviour())
+				: List.of();
 	}
 
 	public StringInput(String value) {
@@ -302,6 +304,10 @@ public class StringInput extends Model.Value<String>
 				.ifPresent(ann -> setFocusOnBind(true));
 		event.node.optional(TextArea.class)
 				.ifPresent(ann -> setTag("textarea"));
+		Service service = event.node.service(Service.class);
+		if (service != null) {
+			setCommitOnEnter(service.isCommitOnEnter());
+		}
 		super.onBeforeRender(event);
 	}
 
@@ -380,7 +386,7 @@ public class StringInput extends Model.Value<String>
 	}
 
 	public void commitCurrentValue() {
-		value = getCurrentValue();
+		setValue(getCurrentValue());
 	}
 
 	@Override
@@ -709,6 +715,7 @@ public class StringInput extends Model.Value<String>
 
 	@Override
 	public void onFocusEditor(FocusEditor event) {
+		setFocusOnBind(true);
 		Model.FocusOnBind.focusIfAttached(provideNode());
 	}
 }

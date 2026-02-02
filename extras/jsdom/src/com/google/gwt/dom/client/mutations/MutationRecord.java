@@ -311,18 +311,18 @@ public final class MutationRecord {
 	 */
 	public IdProtocolList attachIds;
 
-	public Multimap<Class<? extends ElementBehavior>, List<AttachId>> behaviors;
+	public Multimap<ElementBehavior, List<AttachId>> behaviors;
 
 	public void registerBehaviors(Element elem) {
-		List<Class<? extends ElementBehavior>> behaviors = elem.getBehaviors();
+		List<ElementBehavior> behaviors = elem.getBehaviors();
 		if (behaviors == null) {
 			return;
 		}
 		if (this.behaviors == null) {
 			this.behaviors = new Multimap<>();
 		}
-		behaviors.forEach(
-				clazz -> this.behaviors.add(clazz, AttachId.forNode(elem)));
+		behaviors.forEach(behavior -> this.behaviors.add(behavior,
+				AttachId.forNode(elem)));
 	}
 
 	transient MutationRecordJso jso;

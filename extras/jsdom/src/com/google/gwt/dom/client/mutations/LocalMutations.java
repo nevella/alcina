@@ -56,10 +56,9 @@ public class LocalMutations {
 	public static class BehaviorAdded {
 		public Element element;
 
-		public Class<? extends ElementBehavior> behavior;
+		public ElementBehavior behavior;
 
-		BehaviorAdded(Element element,
-				Class<? extends ElementBehavior> behavior) {
+		BehaviorAdded(Element element, ElementBehavior behavior) {
 			this.element = element;
 			this.behavior = behavior;
 		}
@@ -173,8 +172,7 @@ public class LocalMutations {
 		}
 	}
 
-	public void notifyAddedBehavior(Element element,
-			Class<? extends ElementBehavior> behavior) {
+	public void notifyAddedBehavior(Element element, ElementBehavior behavior) {
 		topicBehaviorAdded.publish(new BehaviorAdded(element, behavior));
 	}
 

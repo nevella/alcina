@@ -3,7 +3,6 @@ package com.google.gwt.dom.client;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.util.IntPair;

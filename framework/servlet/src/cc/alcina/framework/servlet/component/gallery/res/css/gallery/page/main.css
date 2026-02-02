@@ -1945,6 +1945,9 @@ search-definition-editor > choice-editor > edit {
   border: none;
   background: none;
 }
+search-definition-editor > choice-editor > edit cursor-target {
+  display: inline-block;
+}
 search-definition-editor > choice-editor > edit choice-node {
   border-color: #eee;
   background: #eee;

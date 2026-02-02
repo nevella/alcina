@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -29,10 +30,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 @TypedProperties
+@DirectedContextResolver
 class Searchable extends Model.Fields
 		implements SuggestOracle.Suggestion.Noop, HasObject,
 		DecoratorNode.AlllowsPartialSelection, ModelEvents.FocusEditor.Emitter {
@@ -135,6 +138,13 @@ class Searchable extends Model.Fields
 		return name;
 	}
 
+	class StringInputServiceImpl implements StringInput.Service {
+		@Override
+		public boolean isCommitOnEnter() {
+			return true;
+		}
+	}
+
 	/*
 	 * wip - ds - move to onNodeContext
 	 */
@@ -143,6 +153,9 @@ class Searchable extends Model.Fields
 		super.onBind(event);
 		if (event.isBound()) {
 			exec(() -> {
+				provideNode().getResolver().registerService(
+						StringInput.Service.class,
+						new StringInputServiceImpl());
 				properties().valueEditor().set(new ValueEditor());
 				if (service(SearchDefinitionEditor.Service.class)
 						.isInitialRenderComplete()) {

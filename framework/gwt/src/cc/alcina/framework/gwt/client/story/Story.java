@@ -405,6 +405,21 @@ public interface Story {
 					}
 				}
 
+				/** An AwaitSelection action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface AwaitSelection {
+					public static class ConverterImpl
+							implements Converter<AwaitSelection> {
+						@Override
+						public Story.Action convert(AwaitSelection ann) {
+							return new Story.Action.Ui.AwaitSelection();
+						}
+					}
+				}
+
 				/** An ScrollIntoView action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -821,6 +836,21 @@ public interface Story {
 					}
 				}
 			}
+
+			/** Reference the current focus */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			@Registration(DeclarativeLocation.class)
+			public @interface CurrentFocus {
+				public static class ConverterImpl
+						implements Converter<CurrentFocus> {
+					@Override
+					public Story.Action.Location convert(CurrentFocus ann) {
+						return new Story.Action.Location.CurrentFocus();
+					}
+				}
+			}
 		}
 
 		/** The point's label (for rendering in the UI or logs) */
@@ -1022,6 +1052,13 @@ public interface Story {
 				}
 			}
 
+			public static class CurrentFocus extends LocWithText {
+				@Override
+				public Axis getAxis() {
+					return Axis.DOCUMENT;
+				}
+			}
+
 			public static class Marked implements Location {
 				@Override
 				public Axis getAxis() {
@@ -1069,6 +1106,13 @@ public interface Story {
 			 * Await the presence of the document locator
 			 */
 			public static class AwaitPresent implements Ui {
+			}
+
+			/**
+			 * Await the overlap/intersection of the document locator with the
+			 * DOM Selection
+			 */
+			public static class AwaitSelection implements Ui {
 			}
 
 			/**

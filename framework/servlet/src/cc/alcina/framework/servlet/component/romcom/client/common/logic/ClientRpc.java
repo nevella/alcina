@@ -104,6 +104,10 @@ public class ClientRpc implements HandlerContext {
 		SelectionRecord currentSelectionRecord = Document.get().getSelection()
 				.getSelectionRecord();
 		if (!Objects.equals(lastSelectionRecord, currentSelectionRecord)) {
+			if (currentSelectionRecord != null) {
+				Ax.out("Selection :: %s",
+						currentSelectionRecord.toNodeString());
+			}
 			lastSelectionRecord = currentSelectionRecord;
 		}
 		return currentSelectionRecord;

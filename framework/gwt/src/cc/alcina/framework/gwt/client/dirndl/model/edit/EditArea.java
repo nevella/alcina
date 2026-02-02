@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -232,13 +233,17 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		provideNode().deferIfFiring(() -> {
 			new CursorTargetConstraint().alignWithConstraint();
 			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
-			List<DecoratorNode> decorators = fragmentModel
-					.byTypeAssignable(DecoratorNode.class).toList();
+			List<DecoratorNode> decorators = getDecoratorNodes();
 			if (!Objects.equals(decorators, lastPublishedDecorators)) {
 				lastPublishedDecorators = decorators;
 				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
 			}
 		});
+	}
+
+	@Property.Not
+	List<DecoratorNode> getDecoratorNodes() {
+		return fragmentModel.byTypeAssignable(DecoratorNode.class).toList();
 	}
 
 	List<DecoratorNode> lastPublishedDecorators;
@@ -348,9 +353,9 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	}
 
 	@Override
-	public List<Class<? extends ElementBehavior>> getBehaviors() {
+	public List<ElementBehavior> getBehaviors() {
 		return List.of(
-				ElementBehavior.DisableContentEditableOnIsolateMousedown.class);
+				new ElementBehavior.DisableContentEditableOnIsolateMousedown());
 	}
 
 	@Override
