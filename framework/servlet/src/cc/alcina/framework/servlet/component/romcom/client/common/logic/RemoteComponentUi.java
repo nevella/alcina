@@ -36,6 +36,7 @@ import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComp
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.ActiveMessagesChanged;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
@@ -188,7 +189,7 @@ public class RemoteComponentUi {
 						RemoteComponentProtocolServer.ROMCOM_HISTORY_PUSHSTATE));
 		History.addValueChangeHandler(hash -> {
 			if (!RemoteObjectModelComponentState.get().firingLocationMutation) {
-				ClientRpc.send(Message.Mutations.ofLocation());
+				ClientRpc.send(Mutations.ofLocation());
 			}
 		});
 		/*
@@ -235,7 +236,7 @@ public class RemoteComponentUi {
 			return;
 		}
 		mutationRecords.forEach(mr -> mr.populateAttachIds(true));
-		Message.Mutations mutations = new Message.Mutations();
+		Mutations mutations = new Mutations();
 		mutations.domMutations = mutationRecords;
 		ClientRpc.send(mutations);
 	}

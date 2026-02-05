@@ -906,8 +906,14 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		return behaviors;
 	}
 
-	public boolean hasBehavior(Class<? extends ElementBehavior> behaviorClass) {
-		return behaviors != null && behaviors.stream()
-				.anyMatch(bh -> bh.getClass() == behaviorClass);
+	public <B extends ElementBehavior> B
+			getBehavior(Class<? extends ElementBehavior> behaviorClass) {
+		if (behaviors != null) {
+			return (B) behaviors.stream()
+					.filter(bh -> bh.getClass() == behaviorClass).findFirst()
+					.orElse(null);
+		} else {
+			return null;
+		}
 	}
 }

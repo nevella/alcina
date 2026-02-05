@@ -23,6 +23,7 @@ import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
@@ -142,10 +143,9 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	}
 
 	public static class MutationsHandler
-			extends ProtocolMessageHandlerClient<Message.Mutations> {
+			extends ProtocolMessageHandlerClient<Mutations> {
 		@Override
-		public void handle(HandlerContext handlerContext,
-				Message.Mutations message) {
+		public void handle(HandlerContext handlerContext, Mutations message) {
 			LocalDom.attachIdRepresentations()
 					.applyMutations(message.domMutations, true);
 			SelectionRecord selectionMutation = message.selectionMutation;

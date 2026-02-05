@@ -19,14 +19,15 @@ import cc.alcina.framework.servlet.environment.Environment.InvokeException;
  * access restriction to a mutable tree, nothing special about a DOM really)
  * 
  * Note :: (transport) document why everything in Environment is private,
- * exception-that-proves for Beans manfiesto private rule is that it's a highly
+ * exception-that-proves for Beans manifesto private rule is that it's a highly
  * accessed package class with complex access rules
  */
 class ClientExecutionQueue implements Runnable {
-	/*
-	 * either of these should be dispatched asynchronously, in order
-	 */
 	class AsyncDispatchable {
+		/*
+		 * either of these [fromClientMessage, message] should be dispatched
+		 * asynchronously, in order
+		 */
 		MessageProcessingToken fromClientMessage;
 
 		Runnable runnable;
@@ -152,6 +153,11 @@ class ClientExecutionQueue implements Runnable {
 	 * TODO - rather than two modes (? two threads?), the logic might be cleaner
 	 * if 'acceptClientEvents' is replaced by a check on syncEventQueue
 	 * non-empty
+	 * 
+	 * Note that each dispatchable is processed in an analogue of the GWT Impl
+	 * dispatch frame - before processing, any pre-processing tasks are
+	 * performed, and post-, any finally tasks (and there may be
+	 * many...cascading...) are performed
 	 */
 	// WIP - replacement for loop
 	void pumpMessage() {

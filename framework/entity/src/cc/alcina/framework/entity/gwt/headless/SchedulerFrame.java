@@ -28,7 +28,7 @@ import cc.alcina.framework.entity.util.TimerJvm;
  * will wait until that command returns
  * 
  * FIXME - sel.trav - remove 'postmutations' - really, that should all be the
- * responsiblity of the blocking
+ * responsiblity of the blocking qu
  */
 public class SchedulerFrame extends Scheduler implements ContextFrame {
 	public static ContextProvider<Void, SchedulerFrame> contextProvider;

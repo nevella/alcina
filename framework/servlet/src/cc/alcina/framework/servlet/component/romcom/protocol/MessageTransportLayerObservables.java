@@ -4,9 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
@@ -26,7 +24,7 @@ public class MessageTransportLayerObservables {
 		static class LogObserver implements ProcessObserver<SentObservable> {
 			@Override
 			public void topicPublished(SentObservable message) {
-				if (message.message.message instanceof RemoteComponentProtocol.Message.Mutations) {
+				if (message.message.message instanceof Mutations) {
 					logger.debug("{} {} - mutations sent", Ax.appMillis(),
 							message.message.transportHistory.messageId);
 				}
@@ -62,7 +60,7 @@ public class MessageTransportLayerObservables {
 				implements ProcessObserver<PublishedObservable> {
 			@Override
 			public void topicPublished(PublishedObservable message) {
-				if (message.message.message instanceof RemoteComponentProtocol.Message.Mutations) {
+				if (message.message.message instanceof Mutations) {
 					logger.debug("{} {} - mutations published - {}",
 							Ax.appMillis(),
 							message.message.transportHistory.messageId,

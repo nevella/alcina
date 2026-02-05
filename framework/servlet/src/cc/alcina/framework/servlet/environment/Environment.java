@@ -49,6 +49,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
@@ -313,7 +314,7 @@ class Environment {
 		// run the runnable in a mutation-processing context
 		void runWithMutations(Runnable runnable) {
 			if (mutations == null) {
-				mutations = new Message.Mutations();
+				mutations = new Mutations();
 			}
 			// if there's leakage of singletons, the mutationRecord may be
 			// firing in the wrong environment's context
@@ -638,7 +639,7 @@ class Environment {
 
 	private InvokeProxyImpl invokeProxy = new InvokeProxyImpl();
 
-	private Message.Mutations mutations = null;
+	private Mutations mutations = null;
 
 	// FIXME - romcom - use an event pump rather than a timer
 	private EventCollator<Object> eventCollator;
@@ -710,7 +711,7 @@ class Environment {
 		SelectionRecord pendingSelectionMutation = Document.get()
 				.attachIdRemote().getPendingSelectionMutationAndClear();
 		if (mutations == null && pendingSelectionMutation != null) {
-			mutations = new Message.Mutations();
+			mutations = new Mutations();
 		}
 		if (mutations != null) {
 			Document.get().attachIdRemote().flushSinkEventsQueue();
@@ -858,8 +859,8 @@ class Environment {
 	}
 
 	private void onHistoryChange(ValueChangeEvent<String> event) {
-		mutationProxy.onLocationMutation(
-				Message.Mutations.ofLocation().locationMutation);
+		mutationProxy
+				.onLocationMutation(Mutations.ofLocation().locationMutation);
 	}
 
 	private void startup(MessageProcessingToken token, Startup message) {

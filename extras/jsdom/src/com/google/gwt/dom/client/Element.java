@@ -51,6 +51,7 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -1528,6 +1529,12 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	public boolean hasBehavior(Class<? extends ElementBehavior> clazz) {
-		return local().hasBehavior(clazz);
+		return getBehavior(clazz) != null;
+	}
+
+	@Property.Not
+	public <B extends ElementBehavior> B
+			getBehavior(Class<? extends ElementBehavior> clazz) {
+		return local().getBehavior(clazz);
 	}
 }
