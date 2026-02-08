@@ -40,11 +40,12 @@ public class Point_GalleryBrowser_ChoiceEditor extends Waypoint {
 		}
 
 		/*
-		 * fixme - romcom - this is actually a perfect example of concurrent
-		 * editing (issues) , since "lars" gets truncated effectively to "l" by
-		 * server-side action
+		 * romcom - this is actually a perfect example of concurrent editing
+		 * (issues) , since "lars" gets truncated effectively to "l" by
+		 * server-side action - see
+		 * Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		 */
-		@Decl.Location.Xpath({ XPATH_USER_EDITOR, _REL_EDIT_ENTRY })
+		@Decl.Location.CurrentFocus
 		@Decl.Action.UI.Keys("lar")
 		static class SendName extends Waypoint {
 		}

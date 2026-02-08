@@ -28,8 +28,10 @@ import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComp
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.protocol.MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.WindowStateUpdate;
@@ -129,21 +131,26 @@ public class ClientRpc implements HandlerContext {
 
 	RemoteComponentUi ui;
 
-	ClientMutationConflictResolution clientMutationConflictResolution;
+	MutationConflictResolution mutationConflictResolution;
 
 	ClientRpc(RemoteComponentUi ui) {
 		this.ui = ui;
 		transportLayer = new MessageTransportLayerClient();
 		exceptionHandler = new ExceptionHandler();
-		clientMutationConflictResolution = new ClientMutationConflictResolution();
+		mutationConflictResolution = new MutationConflictResolution(false);
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 	}
 
 	void onMessageReceived(Message message) {
-		ProtocolMessageHandlerClient handler = Registry
-				.impl(ProtocolMessageHandlerClient.class, message.getClass());
 		try {
-			handler.handle(this, message);
+			BeforeHandled beforeHandled = new Message.BeforeHandled(message);
+			beforeHandled.publish();
+			if (!beforeHandled.cancelled) {
+				ProtocolMessageHandlerClient handler = Registry.impl(
+						ProtocolMessageHandlerClient.class, message.getClass());
+				handler.handle(this, message);
+				new Message.AfterHandled(message).publish();
+			}
 		} catch (Throwable e) {
 			RemoteObjectModelComponentClient.markWindowAsErrorState();
 			ui.messageStateRouter.onMessageHandlingException(message, e);

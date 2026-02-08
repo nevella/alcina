@@ -49,7 +49,7 @@ public interface HasDecorators
 		FragmentModel.Has, DomEvents.Focusout.Handler, HasElementBehaviors {
 	@Override
 	default List<ElementBehavior> getBehaviors() {
-		return List.of(new DecoratorBehavior.ExtendKeyboardNavigationAction(),
+		return List.of(new EditAreaBehavior.ExtendKeyboardNavigationAction(),
 				/*
 				 * wip - decorator - maybe zap? content-editable may fix this.
 				 * anyway, invariant is along the lines of

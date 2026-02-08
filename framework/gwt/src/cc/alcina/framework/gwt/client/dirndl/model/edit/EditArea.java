@@ -265,7 +265,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	 * lowest affected block. If a decorator is not within the lowest affected
 	 * block (and that itself is something computed by FM), no need to recompute
 	 */
-	class CursorTargetConstraint implements DecoratorBehavior {
+	class CursorTargetConstraint implements EditAreaBehavior {
 		void alignWithConstraint() {
 			// fragmentModel.byTypeAssignable(CursorTarget.class).toList()
 			// .forEach(ZeroWidthCursorTarget::unwrapIfContainsNonZwsText);
@@ -325,7 +325,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	 * choices modified.
 	 * 
 	 */
-	class SuggestorCurrencyConstraint implements DecoratorBehavior {
+	class SuggestorCurrencyConstraint implements EditAreaBehavior {
 		void maybeRefreshOverlays(ModelMutation event) {
 			if (!event.getData().isEmpty()) {
 				Scheduler.get().scheduleFinally(() -> emitEvent(
@@ -340,7 +340,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	 * choices modified.
 	 * 
 	 */
-	class ContentEditableSelected implements DecoratorBehavior {
+	class ContentEditableSelected implements EditAreaBehavior {
 		void updateDecoratorSelected(SelectionChanged event) {
 			fragmentModel.byTypeAssignable(DecoratorNode.class).toList()
 					.forEach(DecoratorNode::updateSelected);
@@ -355,7 +355,8 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Override
 	public List<ElementBehavior> getBehaviors() {
 		return List.of(
-				new ElementBehavior.DisableContentEditableOnIsolateMousedown());
+				new ElementBehavior.DisableContentEditableOnIsolateMousedown(),
+				new EditAreaBehavior.RejectConflictingMutation());
 	}
 
 	@Override

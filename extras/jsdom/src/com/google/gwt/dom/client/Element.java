@@ -56,9 +56,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.ListenerReference;
-import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  * All HTML element interfaces derive from this class.
@@ -175,11 +172,6 @@ public class Element extends Node implements ClientDomElement,
 
 	private HandlerManager handlerManager;
 
-	/*
-	 * Debugging aid
-	 */
-	private Topic<Boolean> topicAttach;
-
 	protected Element() {
 	}
 
@@ -245,17 +237,6 @@ public class Element extends Node implements ClientDomElement,
 			sinkEvents(typeInt);
 		}
 		return ensureHandlers().addHandler(type, handler);
-	}
-
-	public ListenerReference addAttachListner(TopicListener<Boolean> listener) {
-		return ensureAttachTopic().add(listener);
-	}
-
-	Topic<Boolean> ensureAttachTopic() {
-		if (topicAttach == null) {
-			topicAttach = Topic.create();
-		}
-		return topicAttach;
 	}
 
 	/*
@@ -812,9 +793,6 @@ public class Element extends Node implements ClientDomElement,
 		}
 		DOM.setEventListener(this, eventListener);
 		super.onAttach();
-		if (topicAttach != null) {
-			topicAttach.publish(false);
-		}
 	}
 
 	@Override
@@ -862,9 +840,6 @@ public class Element extends Node implements ClientDomElement,
 		 */
 		// DOM.setEventListener(this, null);
 		super.onDetach();
-		if (topicAttach != null) {
-			topicAttach.publish(false);
-		}
 	}
 
 	protected ElementAttachId attachIdRemote() {

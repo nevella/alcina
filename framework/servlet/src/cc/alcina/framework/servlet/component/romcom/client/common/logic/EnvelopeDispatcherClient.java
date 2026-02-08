@@ -46,7 +46,7 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 	/*
 	 * Because http/2 - there's no reason to not send messages as they come in
 	 * (except possibly server load, but trying to gate that from the client is
-	 * dubiousx)
+	 * dubious)
 	 */
 	@Override
 	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientEventThrottling.class)

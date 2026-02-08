@@ -711,6 +711,24 @@ public interface Story {
 						}
 					}
 
+					/**
+					 * A get-the-url action (direct http call, not a browser
+					 * navigation)
+					 */
+					@Retention(RetentionPolicy.RUNTIME)
+					@Documented
+					@Target({ ElementType.TYPE })
+					@Registration(DeclarativeAction.class)
+					public @interface Get {
+						public static class ConverterImpl
+								implements Converter<Get> {
+							@Override
+							public Story.Action convert(Get ann) {
+								return new Story.Action.Ui.Get();
+							}
+						}
+					}
+
 					/** A refresh-url action */
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
@@ -1140,6 +1158,9 @@ public interface Story {
 			}
 
 			public static class Go implements Ui {
+			}
+
+			public static class Get implements Ui {
 			}
 
 			public static class Refresh implements Ui {

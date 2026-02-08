@@ -51,7 +51,7 @@ public class SuggestingNode extends EditNode
 
 	@Override
 	public List<ElementBehavior> getBehaviors() {
-		return List.of(new DecoratorBehavior.InterceptUpDownBehaviour(),
+		return List.of(new EditAreaBehavior.InterceptUpDownBehaviour(),
 				new ElementBehavior.PreventDefaultEnterBehaviour());
 	}
 

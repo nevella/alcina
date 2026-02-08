@@ -11,6 +11,7 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -77,8 +78,19 @@ public class Mutations extends RemoteComponentProtocol.Message
 		return result;
 	}
 
+	public static class Rejected implements ContextObservable {
+		public Mutations mutations;
+
+		public Rejected(Mutations mutations) {
+			this.mutations = mutations;
+		}
+	}
+
 	// TODO - romcom/ref.ser, serialized, there should be no classname
 	// (but there is)
+	/*
+	 * wip - localdom
+	 */
 	public List<MutationRecord> domMutations = new ArrayList<>();
 
 	public List<EventSystemMutation> eventSystemMutations = new ArrayList<>();

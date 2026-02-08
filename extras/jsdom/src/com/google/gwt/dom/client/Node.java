@@ -683,4 +683,12 @@ public abstract class Node
 	public boolean nameIs(String name) {
 		return getNodeName().equals(name);
 	}
+
+	public Element selfOrParentElement() {
+		if (this instanceof Element) {
+			return (Element) this;
+		} else {
+			return getParentElement();
+		}
+	}
 }

@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.ContextObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -526,15 +525,16 @@ public abstract class MessageTransportLayer {
 
 		abstract String channelName();
 
-		void bufferMessage(MessageToken message) {
+		void bufferMessage(MessageToken messageToken) {
 			synchronized (activeMessages) {
 				logger.debug("Message added to active [{}] ::  {}",
 						channelName(),
-						message.transportHistory.toTransportDebugString());
-				activeMessages.add(message);
+						messageToken.transportHistory.toTransportDebugString());
+				activeMessages.add(messageToken);
+				new Message.OnQueued(messageToken.message).publish();
 				new ActiveMessagesChanged().publish();
-				messageIdActiveMessage.put(message.transportHistory.messageId,
-						message);
+				messageIdActiveMessage.put(
+						messageToken.transportHistory.messageId, messageToken);
 			}
 		}
 

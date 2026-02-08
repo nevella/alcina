@@ -222,7 +222,6 @@ public interface ElementBehavior extends EventBehavior {
 		public void onNativeEvent(NativePreviewEvent event,
 				Element registeredElement) {
 			Selection selection = Document.get().getSelection();
-			int debug = 3;
 			/*
 			 * wip - decorator
 			 */
@@ -269,32 +268,6 @@ public interface ElementBehavior extends EventBehavior {
 
 		@Override
 		public String getEventType() {
-			return null;
-		}
-
-		@Override
-		public void onNativeEvent(NativePreviewEvent event,
-				Element registeredElement) {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	public static class RejectConflictingMutation
-			extends ElementBehavior.NonParameterised {
-		@Override
-		public String getEventType() {
-			return null;
-		}
-
-		public static RejectConflictingMutation hasAncestry(Element elem) {
-			while (elem != null) {
-				RejectConflictingMutation behavior = elem
-						.getBehavior(RejectConflictingMutation.class);
-				if (behavior != null) {
-					return behavior;
-				}
-				elem = elem.getParentElement();
-			}
 			return null;
 		}
 

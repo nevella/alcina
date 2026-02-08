@@ -4,6 +4,7 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -18,10 +19,10 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 /**
  * Complex/gritty mini-processes used to handle the extra appendages required by
- * the Decorator system, particularly interpolated empty text Nodes
+ * the Decorator and EditArea systems
  * 
  */
-public interface DecoratorBehavior {
+public interface EditAreaBehavior {
 	static void squelch(NodeEvent event) {
 		DomEvent domEvent = (DomEvent) event.getContext()
 				.getOriginatingGwtEvent();
@@ -31,7 +32,7 @@ public interface DecoratorBehavior {
 	/**
 	 * Handle repeatable choices (during ChoiceEditor ask)
 	 */
-	interface RepeatableChoiceHandling extends DecoratorBehavior {
+	interface RepeatableChoiceHandling extends EditAreaBehavior {
 	}
 
 	/**
@@ -43,7 +44,7 @@ public interface DecoratorBehavior {
 	 * 
 	 */
 	public static class InterceptUpDownBehaviour extends
-			ElementBehavior.NonParameterised implements DecoratorBehavior {
+			ElementBehavior.NonParameterised implements EditAreaBehavior {
 		@Override
 		public String getEventType() {
 			return BrowserEvents.KEYDOWN;
@@ -86,7 +87,7 @@ public interface DecoratorBehavior {
 	 * (between two editable text cursor positions)
 	 */
 	public static class ExtendKeyboardNavigationAction extends
-			ElementBehavior.NonParameterised implements DecoratorBehavior {
+			ElementBehavior.NonParameterised implements EditAreaBehavior {
 		enum Direction {
 			left, right, none;
 
@@ -240,6 +241,39 @@ public interface DecoratorBehavior {
 		public void onNativeEvent(NativePreviewEvent event,
 				Element registeredElement) {
 			onKeyDown(event.getNativeEvent(), registeredElement);
+		}
+	}
+
+	/**
+	 * <p>
+	 * Elements with this behavior may reject mutations that would cause
+	 * conflicts
+	 * 
+	 */
+	public static class RejectConflictingMutation extends
+			ElementBehavior.NonParameterised implements EditAreaBehavior {
+		@Override
+		public String getEventType() {
+			return null;
+		}
+
+		public static Element ancestorWithBehavior(Node node) {
+			Element elem = node.selfOrParentElement();
+			while (elem != null) {
+				RejectConflictingMutation behavior = elem
+						.getBehavior(RejectConflictingMutation.class);
+				if (behavior != null) {
+					return elem;
+				}
+				elem = elem.getParentElement();
+			}
+			return null;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			throw new UnsupportedOperationException();
 		}
 	}
 }

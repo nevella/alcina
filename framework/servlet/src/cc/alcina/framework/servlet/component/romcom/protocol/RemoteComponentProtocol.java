@@ -79,6 +79,8 @@ public class RemoteComponentProtocol {
 		public static class BeforeHandled implements ContextObservable.Base {
 			public Message message;
 
+			public boolean cancelled;
+
 			public BeforeHandled(Message message) {
 				this.message = message;
 			}
@@ -88,6 +90,14 @@ public class RemoteComponentProtocol {
 			public Message message;
 
 			public AfterHandled(Message message) {
+				this.message = message;
+			}
+		}
+
+		public static class OnQueued implements ContextObservable.Base {
+			public Message message;
+
+			public OnQueued(Message message) {
 				this.message = message;
 			}
 		}
