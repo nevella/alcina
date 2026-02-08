@@ -17,6 +17,7 @@ import cc.alcina.extras.webdriver.query.ElementQuery;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 
@@ -42,6 +43,29 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 			webDriver.navigate().to(toUrl);
 			wdPerformer.context.log("Navigate --> %s", toUrl);
 			wdContext.navigationPerformed = true;
+		}
+	}
+
+	public static class Get implements TypedPerformer<Story.Action.Ui.Get> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.Get action) throws Exception {
+			Location.Url location = wdPerformer.context
+					.getLocation(Location.Axis.URL);
+			WdContext wdContext = wdPerformer.wdContext;
+			WebDriver webDriver = wdContext.token.getWebDriver();
+			String currentUrl = webDriver.getCurrentUrl();
+			String to = location.getText();
+			String toUrl = wdPerformer.context
+					.performerResource(UrlRouter.class).route(to);
+			wdPerformer.context.performerResource(UrlRouter.class);
+			if (Objects.equals(currentUrl, toUrl)) {
+				if (!wdContext.alwaysRefresh && wdContext.navigationPerformed) {
+					return;
+				}
+			}
+			String result = new SimpleHttp(toUrl).asString();
+			wdPerformer.context.log("Get :: %s\n\nResult:\n%s", toUrl, result);
 		}
 	}
 

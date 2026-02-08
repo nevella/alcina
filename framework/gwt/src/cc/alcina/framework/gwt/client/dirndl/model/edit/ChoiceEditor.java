@@ -12,6 +12,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.gwt.dom.client.Document;
+
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -19,7 +22,6 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -52,16 +54,23 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
  * Note: this doesn't share much implementation with other {@link Choices}
  * subtypes, but very much shares behavior, so I'm happy with the type structure
  * (sure, Choices could be abstracted further to an interface, but...)
+ * 
+ * <p>
+ * This will emit a Commit event if enter is pressed with no choice selected
+ * (i.e. reemitting a descendant CommitWithNoSelectedChoice) (instructing the
+ * container that the user may be requesting commit of the choices)
  */
 @Bean(PropertySource.FIELDS)
 @TypedProperties
 @Feature.Ref(Feature_Dirndl_ChoiceEditor_Impl.class)
 @Directed(tag = "choice-editor")
 public abstract class ChoiceEditor<T> extends Choices<T>
-		implements HasDecorators, DecoratorEvents.DecoratorsChanged.Handler {
+		implements HasDecorators, DecoratorEvents.DecoratorsChanged.Handler,
+		ModelEvents.Commit.Handler, Choices.CommitWithNoSelectedChoice.Handler {
 	@Directed(tag = "choice-node")
 	@Bean(PropertySource.FIELDS)
-	static class ChoiceNode extends DecoratorNode<Choice, Object> {
+	static class ChoiceNode extends DecoratorNode<Choice, Object>
+			implements ModelEvents.Commit.Handler {
 		static class Descriptor
 				extends DecoratorNode.Descriptor<Choice, Object, ChoiceNode> {
 			static transient Descriptor INSTANCE = new Descriptor();
@@ -115,6 +124,19 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		public DecoratorNode.Descriptor<Choice, Object, ?> getDescriptor() {
 			return new ChoiceNode.Descriptor();
 		}
+
+		/**
+		 * Reemit any commit events from inside - the container may position the
+		 * cursor
+		 */
+		@Override
+		public void onCommit(Commit event) {
+			if (event.getModel() == this) {
+				event.bubble();
+				return;
+			}
+			event.reemitAs(this, Commit.class, this);
+		}
 	}
 
 	static String choiceToString(Choice choice) {
@@ -132,8 +154,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	@Override
 	public void onDecoratorsChanged(DecoratorsChanged event) {
-		int debug = 3;
-		Ax.err("Decorators changes :: %s", event.getModel().size());
 		List<DecoratorNode> model = event.getModel();
 		List<T> decoratorChoiceValues = model.stream()
 				.map(n -> (T) n.getStringRepresentable()).toList();
@@ -278,5 +298,23 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	void areaContentsFromChoices(List<Choice<?>> choices) {
 		Client.eventBus().queued()
 				.lambda(() -> areaContentsFromChoices0(choices)).dispatch();
+	}
+
+	@Override
+	public void onCommit(Commit event) {
+		Model model = event.getModel();
+		if (model == this) {
+			event.bubble();
+			return;
+		}
+		ChoiceNode choiceNode = (ChoiceNode) model;
+		DomNode choiceNodeNode = choiceNode.provideElement().asDomNode();
+		DomNode target = choiceNodeNode.relative().nextSibling();
+		Document.get().getSelection().collapse(target.asLocation());
+	}
+
+	@Override
+	public void onCommitWithNoSelectedChoice(CommitWithNoSelectedChoice event) {
+		event.reemitAs(this, Commit.class, this);
 	}
 }

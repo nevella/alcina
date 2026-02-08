@@ -59,6 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Filter;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -284,10 +285,9 @@ public abstract class Choices<T> extends Model implements
 		boolean filtered;
 
 		@Override
-		public List<Class<? extends ElementBehavior>> getBehaviors() {
-			List<Class<? extends ElementBehavior>> result = new ArrayList<>();
-			result.add(ElementBehavior.PreventDefaultMousedownBehaviour.class);
-			return result;
+		public List<ElementBehavior> getBehaviors() {
+			return List
+					.of(new ElementBehavior.PreventDefaultMousedownBehaviour());
 		}
 
 		public Choice(T value) {
@@ -537,8 +537,8 @@ public abstract class Choices<T> extends Model implements
 	 * String - which is used by the Option.Transform
 	 */
 	@Directed(tag = "select")
-	public static class Select<T> extends Single<T>
-			implements DomEvents.Change.Handler {
+	public static class Select<T> extends Single<T> implements
+			DomEvents.Change.Handler, ModelEvents.FocusEditor.Handler {
 		public static class To implements ModelTransform<Object, Single<?>> {
 			@Override
 			public Select<?> apply(Object t) {
@@ -546,6 +546,11 @@ public abstract class Choices<T> extends Model implements
 				select.setValue(t);
 				return select;
 			}
+		}
+
+		@Override
+		public void onFocusEditor(FocusEditor event) {
+			Model.FocusOnBind.focusIfAttached(provideNode());
 		}
 
 		@Override
@@ -686,6 +691,26 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
+	public static class CommitWithNoSelectedChoice
+			extends ModelEvent<Object, CommitWithNoSelectedChoice.Handler> {
+		@Override
+		public void dispatch(CommitWithNoSelectedChoice.Handler handler) {
+			handler.onCommitWithNoSelectedChoice(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCommitWithNoSelectedChoice(CommitWithNoSelectedChoice event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onCommitWithNoSelectedChoice(
+					CommitWithNoSelectedChoice event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	@TypeSerialization(reflectiveSerializable = false)
 	@Directed(
 		emits = { ModelEvents.SelectionChanged.class,
@@ -723,8 +748,8 @@ public abstract class Choices<T> extends Model implements
 		 */
 		@Directed.Delegating
 		public static class Delegating<T> extends Single<T> {
-			public Delegating(List<T> values) {
-				super(values);
+			public Delegating(List<T> values, int initialIndexSelectionIndex) {
+				super(values, initialIndexSelectionIndex);
 			}
 		}
 
@@ -732,6 +757,11 @@ public abstract class Choices<T> extends Model implements
 			@Override
 			public List getItems() {
 				return choices;
+			}
+
+			@Override
+			public int getInitialSelectedIndex() {
+				return initialIndexSelectionIndex;
 			}
 		}
 
@@ -758,12 +788,19 @@ public abstract class Choices<T> extends Model implements
 
 		IndexedSelection indexedSelection;
 
+		int initialIndexSelectionIndex = 0;
+
 		public Single() {
 			this(new ArrayList<>());
 		}
 
 		public Single(List<T> values) {
+			this(values, 0);
+		}
+
+		public Single(List<T> values, int initialIndexSelectionIndex) {
 			super(values);
+			this.initialIndexSelectionIndex = initialIndexSelectionIndex;
 			indexedSelection = new IndexedSelection(
 					new IndexedSelectionHostImpl());
 			indexedSelection.topicIndexChanged
@@ -808,6 +845,8 @@ public abstract class Choices<T> extends Model implements
 						setSelectedValue(getValues().get(indexSelected));
 					}
 					return;
+				} else {
+					event.reemitAs(this, CommitWithNoSelectedChoice.class);
 				}
 				break;
 			}

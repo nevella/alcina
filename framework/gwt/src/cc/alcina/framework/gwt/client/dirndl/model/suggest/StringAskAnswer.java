@@ -26,7 +26,8 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 public class StringAskAnswer<T> {
 	public Suggestor.Answers ask(Suggestor.StringAsk ask, List<T> models,
 			Function<T, String> stringRepresentation) {
-		Suggestor.Answers result = new Answers();
+		Suggestor.Answers result = new Answers(ask);
+		result.ask = ask;
 		models.stream().map(model -> {
 			String string = stringRepresentation.apply(model);
 			MarkupMatch match = new MarkupMatch(string, ask.getValue());

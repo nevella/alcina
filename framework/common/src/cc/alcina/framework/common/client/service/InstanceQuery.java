@@ -46,6 +46,25 @@ public final class InstanceQuery implements TreeSerializable {
 	@ReflectiveSerializer.Checks(ignore = true)
 	public abstract static class Parameter<V>
 			implements TreeSerializable, Registration.AllSubtypes {
+		/**
+		 * When comparing queries, this parameter may be ignored (if it is
+		 * essentially empty)
+		 */
+		public interface HasQueryResultIgnorable {
+			boolean provideIsQueryResultIgnorable();
+
+			static List<Parameter<?>>
+					filterForQueryEquivalence(List<Parameter<?>> parameters) {
+				return parameters.stream().filter(p -> {
+					if (p instanceof HasQueryResultIgnorable) {
+						return !((HasQueryResultIgnorable) p)
+								.provideIsQueryResultIgnorable();
+					}
+					return true;
+				}).toList();
+			}
+		}
+
 		public static class Support {
 			static volatile Map<Class<?>, Class<? extends Parameter>> valueTypeParameterType;
 
@@ -150,7 +169,11 @@ public final class InstanceQuery implements TreeSerializable {
 	public boolean equals(Object obj) {
 		if (obj instanceof InstanceQuery) {
 			InstanceQuery o = (InstanceQuery) obj;
-			return CommonUtils.equals(type, o.type, parameters, o.parameters);
+			return CommonUtils.equals(type, o.type,
+					Parameter.HasQueryResultIgnorable
+							.filterForQueryEquivalence(parameters),
+					Parameter.HasQueryResultIgnorable
+							.filterForQueryEquivalence(o.parameters));
 		} else {
 			return false;
 		}

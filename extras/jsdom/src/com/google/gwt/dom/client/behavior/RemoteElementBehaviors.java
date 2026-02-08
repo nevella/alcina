@@ -11,7 +11,10 @@ public class RemoteElementBehaviors {
 	 * Romcom behaviors. Send the offsets (batched) with mutations, to reduce
 	 * roundtrips
 	 */
-	public static class ElementOffsetsRequired implements ElementBehavior {
+	public static class ElementOffsetsRequired
+			extends ElementBehavior.NonParameterised {
+		public static ElementOffsetsRequired INSTANCE = new ElementOffsetsRequired();
+
 		@Override
 		public String getEventType() {
 			return null;

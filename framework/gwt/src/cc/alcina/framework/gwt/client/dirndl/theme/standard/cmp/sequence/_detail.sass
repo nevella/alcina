@@ -1,6 +1,7 @@
 @use '../../multi/base'
 @use '../string-area'
 @use '../context-menu'
+@use '../../multi/form'
 
 @mixin contents
   display: grid
@@ -10,18 +11,29 @@
   padding: 0.5rem
 
   > properties
+
+    @include form.bean-editor
+    
+    @include form.vertical-layout
+    
+    line-height: normal
     container-type: inline-size
+
+    form > section
+      display: flex
+      flex-direction: column
+      gap: 0.5rem 
+
+    form-element 
+      > label
+        color: #666
+
+      > value
+        display: flex
+        gap: 1rem
 
     &:empty
       display: none
-
-    > table
-      th
-        text-align: left
-        padding-right: 2rem
-        padding-left: 1rem
-        font-weight: normal
-        color: #666
 
     @container(width < 500px)
       > table

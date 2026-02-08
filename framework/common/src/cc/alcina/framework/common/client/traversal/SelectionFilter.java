@@ -146,6 +146,9 @@ public class SelectionFilter extends Bindable.Fields
 		}
 
 		void prepareToFilter() {
+			if (filterRegex == null) {
+				filterRegex = ".*";
+			}
 			this.regexp = RegExp.compile(filterRegex);
 		}
 
@@ -154,5 +157,10 @@ public class SelectionFilter extends Bindable.Fields
 			return Ax.format("Filter entry :: %s :: %s",
 					NestedName.get(selectionClass), filterRegex);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.joinWithNewlines(filters);
 	}
 }

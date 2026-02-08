@@ -681,8 +681,9 @@ public abstract class Model extends Bindable
 
 	public interface TransmitState extends HasElementBehaviors {
 		@Override
-		default List<Class<? extends ElementBehavior>> getBehaviors() {
-			return List.of(RemoteElementBehaviors.ElementOffsetsRequired.class);
+		default List<ElementBehavior> getBehaviors() {
+			return List
+					.of(RemoteElementBehaviors.ElementOffsetsRequired.INSTANCE);
 		}
 	}
 

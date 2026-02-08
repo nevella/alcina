@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.ContextObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -533,6 +532,7 @@ public abstract class MessageTransportLayer {
 						messageToken.transportHistory.toTransportDebugString());
 				activeMessages.add(messageToken);
 				topicMessageBuffered.publish(messageToken.message);
+				new Message.OnQueued(messageToken.message).publish();
 				new ActiveMessagesChanged().publish();
 				messageIdActiveMessage.put(
 						messageToken.transportHistory.messageId, messageToken);

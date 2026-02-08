@@ -185,6 +185,10 @@ public interface RemoteUi {
 
 	// complete setup (custom registry etc)
 	default void onEnterContext() {
+		/*
+		 * this binds the statusmodule observer to observe all
+		 * NotificationObservables at the correct context level
+		 */
 		StatusModule.get();
 	}
 

@@ -9,8 +9,13 @@ import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.service.InstanceOracle.Query;
+import cc.alcina.framework.common.client.service.InstanceProvider;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
@@ -20,6 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvent;
+import cc.alcina.framework.servlet.flight.FlightEventStreamProviderZip;
 
 /**
  * A transformation class to render a sequence of FlightEvent instances in the
@@ -45,6 +51,17 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 	public ModelTransform<FlightEvent, ? extends Model>
 			getDetailTransformAdditional() {
 		return new DetailTransformerAdditional();
+	}
+
+	@TypeSerialization("sequencepath")
+	public static class SequencePathParameter
+			extends InstanceQuery.Parameter<String> {
+	}
+
+	public static InstanceQuery createInstanceQuery(String sequencePath) {
+		return new InstanceQuery().withType(FlightEventSequence.class)
+				.addParameters(new SequencePathParameter()
+						.withValue(PathEncoder.encode(sequencePath)));
 	}
 
 	class DetailTransformerAdditional
@@ -137,6 +154,34 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 		@Override
 		public String provideStringRepresentation() {
 			return stringRepresentation;
+		}
+	}
+
+	@InstanceProvider.Parameter(SequencePathParameter.class)
+	@InstanceProvider.Parameter(FlightEventSearchDefinition.Parameter.class)
+	public static class InstanceProviderImpl
+			implements InstanceProvider<FlightEventSequence> {
+		@Override
+		public FlightEventSequence provide(Query<FlightEventSequence> query)
+				throws Exception {
+			FlightEventSequence sequence = new FlightEventSequence();
+			String path = PathEncoder
+					.decode(query.parameterValue(SequencePathParameter.class));
+			FlightEventStreamProviderZip provider = new FlightEventStreamProviderZip(
+					path, s -> s);
+			provider.getReplayStream();
+			sequence.elements = provider.events;
+			return sequence;
+		}
+	}
+
+	static class PathEncoder {
+		static String encode(String path) {
+			return UrlComponentEncoder.get().encode(path);
+		}
+
+		static String decode(String path) {
+			return UrlComponentEncoder.get().decode(path);
 		}
 	}
 }

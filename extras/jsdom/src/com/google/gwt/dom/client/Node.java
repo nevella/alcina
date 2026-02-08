@@ -689,6 +689,14 @@ public abstract class Node
 		return getNodeName().equals(name);
 	}
 
+	public Element selfOrParentElement() {
+		if (this instanceof Element) {
+			return (Element) this;
+		} else {
+			return getParentElement();
+		}
+	}
+
 	public MutationGroups mutationGroups() {
 		return new MutationGroups();
 	}

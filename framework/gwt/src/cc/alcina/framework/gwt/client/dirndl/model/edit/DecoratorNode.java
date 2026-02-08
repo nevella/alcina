@@ -47,8 +47,8 @@ public abstract class DecoratorNode<WT, SR> extends EditNode implements
 	}
 
 	@Override
-	public List<Class<? extends ElementBehavior>> getBehaviors() {
-		return List.of(ElementBehavior.FragmentIsolateBehavior.class);
+	public List<ElementBehavior> getBehaviors() {
+		return List.of(new ElementBehavior.FragmentIsolateBehavior());
 	}
 
 	/**

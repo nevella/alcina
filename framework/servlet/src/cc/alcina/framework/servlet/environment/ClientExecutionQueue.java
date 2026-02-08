@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.WindowStateUpdate;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
@@ -27,14 +28,15 @@ import cc.alcina.framework.servlet.environment.Environment.InvokeException;
  * access restriction to a mutable tree, nothing special about a DOM really)
  * 
  * Note :: (transport) document why everything in Environment is private,
- * exception-that-proves for Beans manfiesto private rule is that it's a highly
+ * exception-that-proves for Beans manifesto private rule is that it's a highly
  * accessed package class with complex access rules
  */
 class ClientExecutionQueue implements Runnable {
-	/*
-	 * either of these should be dispatched asynchronously, in order
-	 */
 	class AsyncDispatchable {
+		/*
+		 * either of these [fromClientMessage, message] should be dispatched
+		 * asynchronously, in order
+		 */
 		MessageProcessingToken fromClientMessage;
 
 		Runnable runnable;
@@ -271,8 +273,7 @@ class ClientExecutionQueue implements Runnable {
 		MessageHandlerServer handler = MessageHandlerServer.forMessage(message);
 		MessageProcessingToken token = new MessageProcessingToken(message);
 		if (handler.isSynchronous()) {
-			handler.handle(token, environment.access(), message);
-			topicMessageHandled.publish(message);
+			handleFromClientMessageOnThread(token);
 		} else {
 			addDispatchable(new AsyncDispatchable(token));
 		}
@@ -309,6 +310,11 @@ class ClientExecutionQueue implements Runnable {
 	 * TODO - rather than two modes (? two threads?), the logic might be cleaner
 	 * if 'acceptClientEvents' is replaced by a check on syncEventQueue
 	 * non-empty
+	 * 
+	 * Note that each dispatchable is processed in an analogue of the GWT Impl
+	 * dispatch frame - before processing, any pre-processing tasks are
+	 * performed, and post-, any finally tasks (and there may be
+	 * many...cascading...) are performed
 	 */
 	// WIP - replacement for loop
 	void pumpMessage() {
@@ -402,16 +408,23 @@ class ClientExecutionQueue implements Runnable {
 	 * waiting for the token to be processed, it will be unblocked by the
 	 * token.latch.countDown() call
 	 * 
-	 * TODO - romcom - remove?
-	 * 
+	 * See the similar client block -
+	 * cc.alcina.framework.servlet.component.romcom.client.common.logic.
+	 * ClientRpc.onMessageReceived(Message message)
 	 * 
 	 */
 	void handleFromClientMessageOnThread(MessageProcessingToken token) {
 		try {
-			MessageHandlerServer messageHandler = MessageHandlerServer
-					.forMessage(token.message);
-			messageHandler.handle(token, environment.access(), token.message);
-			topicMessageHandled.publish(token.message);
+			Message message = token.message;
+			BeforeHandled beforeHandled = new Message.BeforeHandled(message);
+			beforeHandled.publish();
+			if (!beforeHandled.cancelled) {
+				MessageHandlerServer messageHandler = MessageHandlerServer
+						.forMessage(message);
+				messageHandler.handle(token, environment.access(), message);
+				topicMessageHandled.publish(token.message);
+				new Message.AfterHandled(message).publish();
+			}
 		} catch (Exception e) {
 			logger.warn(
 					"Exception in server queue (in response to invokesync)");

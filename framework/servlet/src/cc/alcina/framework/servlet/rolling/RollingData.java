@@ -13,6 +13,8 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.persistence.RollingDataItem;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -82,7 +84,8 @@ public abstract class RollingData<K extends Comparable, V> {
 		Function<String, List<V>> deserializer = deserializer();
 		try {
 			for (RollingDataItem item : list) {
-				List<V> values = deserializer.apply(item.getData());
+				List<V> values = getValues(getClass(), isCaching(),
+						(Function) deserializer, item.getData());
 				for (V v : values) {
 					map.put(keyMaker.apply(v), v);
 				}
@@ -96,6 +99,32 @@ public abstract class RollingData<K extends Comparable, V> {
 			return getValues0(earliestKey);
 		}
 		return map;
+	}
+
+	/*
+	 * dataclass - data - values
+	 */
+	static MultikeyMap<List<?>> cachedDeserializations = new UnsortedMultikeyMap<>(
+			2);
+
+	protected static synchronized List<?> getValues(
+			Class<? extends RollingData> clazz, boolean cached,
+			Function<String, List> deserializer, String data) {
+		List<?> result = null;
+		if (cached) {
+			result = cachedDeserializations.get(clazz, data);
+		}
+		if (result == null) {
+			result = deserializer.apply(data);
+			if (cached) {
+				cachedDeserializations.put(clazz, data, result);
+			}
+		}
+		return result;
+	}
+
+	protected boolean isCaching() {
+		return false;
 	}
 
 	protected abstract Function<String, K> keyDeserializer();

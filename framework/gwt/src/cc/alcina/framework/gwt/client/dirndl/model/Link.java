@@ -98,9 +98,9 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 	}
 
 	@Override
-	public List<Class<? extends ElementBehavior>> getBehaviors() {
+	public List<ElementBehavior> getBehaviors() {
 		if (Ax.isBlank(href) || href.equals("#")) {
-			return List.of(ElementBehavior.PreventDefaultClickBehaviour.class);
+			return List.of(new ElementBehavior.PreventDefaultClickBehaviour());
 		} else {
 			return List.of();
 		}

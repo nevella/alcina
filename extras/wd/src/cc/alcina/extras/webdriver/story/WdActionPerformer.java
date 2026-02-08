@@ -1,5 +1,6 @@
 package cc.alcina.extras.webdriver.story;
 
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 
 import cc.alcina.extras.webdriver.query.ElementQuery;
@@ -50,8 +51,14 @@ public abstract class WdActionPerformer<A extends Story.Action>
 
 	static ElementQuery createQuery(WdActionPerformer wdPerformer) {
 		Location mark = wdPerformer.context.getLocation(Location.Axis.MARK);
-		Location.Xpath xpath = wdPerformer.context
+		Location documentLocation = wdPerformer.context
 				.getLocation(Location.Axis.DOCUMENT);
+		Location.Xpath xpath = documentLocation instanceof Location.Xpath
+				? (Location.Xpath) documentLocation
+				: null;
+		Location.CurrentFocus currentFocus = documentLocation instanceof Location.CurrentFocus
+				? (Location.CurrentFocus) documentLocation
+				: null;
 		if (mark != null) {
 			WebElement markedElement = wdPerformer.context
 					.getAttribute(PerformerAttribute.MarkedElement.class).get();
@@ -67,6 +74,12 @@ public abstract class WdActionPerformer<A extends Story.Action>
 					.xpath(wdPerformer.wdContext.token.getWebDriver(),
 							xpath.getText())
 					.withTimeout(timeout);
+		} else if (currentFocus != null) {
+			JavascriptExecutor executor = (JavascriptExecutor) wdPerformer.wdContext.token
+					.getWebDriver();
+			WebElement activeElement = (WebElement) executor.executeScript(
+					"return document.activeElement", new Object[0]);
+			return ElementQuery.fromElement(activeElement);
 		} else {
 			return null;
 		}

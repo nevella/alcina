@@ -6,7 +6,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -47,9 +46,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
@@ -96,11 +97,12 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			ModelEvents.Commit.class })
 @TypeSerialization(reflectiveSerializable = false)
 @TypedProperties
-public class StringInput extends Model.Value<String> implements FocusOnBind,
-		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
-		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
-		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
-		ModelEvents.FormElementLabelClicked.Handler, HasElementBehaviors {
+public class StringInput extends Model.Value<String>
+		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
+		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
+		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler,
+		DomEvents.KeyDown.Handler, ModelEvents.FormElementLabelClicked.Handler,
+		HasElementBehaviors, ModelEvents.FocusEditor.Handler {
 	PackageProperties._StringInput.InstanceProperties properties() {
 		return PackageProperties.stringInput.instance(this);
 	}
@@ -140,6 +142,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	private String title;
 
 	private Integer maxLength;
+
+	public interface Service extends ContextService {
+		boolean isCommitOnEnter();
+	}
 
 	@Binding(type = Type.PROPERTY, to = "maxlength")
 	public Integer getMaxLength() {
@@ -186,12 +192,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	}
 
 	@Override
-	public List<Class<? extends ElementBehavior>> getBehaviors() {
-		List<Class<? extends ElementBehavior>> result = new ArrayList<>();
-		if (commitOnEnter) {
-			result.add(ElementBehavior.PreventDefaultEnterBehaviour.class);
-		}
-		return result;
+	public List<ElementBehavior> getBehaviors() {
+		return commitOnEnter
+				? List.of(new ElementBehavior.PreventDefaultEnterBehaviour())
+				: List.of();
 	}
 
 	public StringInput(String value) {
@@ -376,7 +380,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	}
 
 	public void commitCurrentValue() {
-		value = getCurrentValue();
+		setValue(getCurrentValue());
 	}
 
 	@Override
@@ -703,5 +707,11 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		public StringInput apply(String t) {
 			return new StringInput(t);
 		}
+	}
+
+	@Override
+	public void onFocusEditor(FocusEditor event) {
+		setFocusOnBind(true);
+		Model.FocusOnBind.focusIfAttached(provideNode());
 	}
 }

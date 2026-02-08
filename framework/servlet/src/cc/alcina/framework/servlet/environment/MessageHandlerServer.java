@@ -4,13 +4,10 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.gwt.client.logic.handshake.SetupAfterObjectsPlayer;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolResponse;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.environment.Environment.Access;
 
@@ -93,10 +90,10 @@ public abstract class MessageHandlerServer<PM extends Message>
 	}
 
 	public static class MutationsHandler
-			extends MessageHandlerServer<Message.Mutations> {
+			extends MessageHandlerServer<Mutations> {
 		@Override
 		public void handle(MessageProcessingToken token, Environment.Access env,
-				Message.Mutations message) {
+				Mutations message) {
 			env.applyDomMutations(message.domMutations);
 			Preconditions.checkState(message.eventSystemMutations.isEmpty());
 			if (message.locationMutation != null) {

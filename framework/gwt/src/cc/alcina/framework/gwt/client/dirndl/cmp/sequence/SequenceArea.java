@@ -36,7 +36,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
+/*
+ * wip - ds - add orderservice.provider interface
+ */
 @TypedProperties
 @Directed.Delegating
 @ReflectiveSerializer.Checks(ignore = true)
@@ -120,6 +125,13 @@ public class SequenceArea extends Model.Fields
 
 	Service service;
 
+	class OrderServiceImpl implements TableModel.OrderService {
+		@Override
+		public void onSortTable(SortTable event) {
+			int debug = 3;
+		}
+	}
+
 	public SequenceArea() {
 	}
 
@@ -130,6 +142,8 @@ public class SequenceArea extends Model.Fields
 
 	@Override
 	public void onNodeContext(NodeContext event) {
+		event.registerService(TableModel.OrderService.class,
+				new OrderServiceImpl());
 		service = service(Service.class);
 		definitionHeader = service.getSequenceDefinitionHeader();
 		from(service.getPlaceProperty())
@@ -289,8 +303,10 @@ public class SequenceArea extends Model.Fields
 
 	void putSequence(Sequence sequence) {
 		properties().sequence().set(sequence);
-		List<?> filteredSequenceElements = filteredSequenceElements(sequence);
-		properties().filteredSequenceElements().set(filteredSequenceElements);
+		List<?> filteredSequenceElements = filteredSequenceElements(sequence,
+				false);
+		properties().filteredSequenceElements()
+				.setIfNotEqual(filteredSequenceElements);
 		emitEvent(SequenceEvents.SequenceChanged.class, sequence);
 	}
 
@@ -354,7 +370,8 @@ public class SequenceArea extends Model.Fields
 		}
 	}
 
-	List<?> filteredSequenceElements(Sequence sequence) {
+	List<?> filteredSequenceElements(Sequence sequence,
+			boolean ignoreRowsLimit) {
 		Stream<?> stream = sequence.getElements().stream();
 		SequenceSearchDefinition search = getPlace().search;
 		if (search != null) {
@@ -373,10 +390,12 @@ public class SequenceArea extends Model.Fields
 		Query<Model> query = HasFilterableText.Query.of(getPlace().filter)
 				.withCaseInsensitive(true).withRegex(true);
 		ModelTransform sequenceRowTransform = sequence.getRowTransform();
+		long limit = ignoreRowsLimit ? Integer.MAX_VALUE
+				: service.getElementLimit();
 		List<?> filteredElements = (List<?>) stream
 				.filter(new IndexPredicate(getPlace().selectedRange))
 				.filter(e -> query.test(sequenceRowTransform.apply(e)))
-				.limit(service.getElementLimit()).collect(Collectors.toList());
+				.limit(limit).collect(Collectors.toList());
 		return filteredElements;
 	}
 
@@ -403,8 +422,8 @@ public class SequenceArea extends Model.Fields
 	}
 
 	@Override
-	public List<?> provideFiltereedSequenceElements() {
-		return filteredSequenceElements;
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit) {
+		return filteredSequenceElements(sequence, true);
 	}
 
 	@Property.Not

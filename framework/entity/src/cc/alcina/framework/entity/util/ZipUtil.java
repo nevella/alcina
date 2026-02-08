@@ -136,7 +136,7 @@ public class ZipUtil {
 		s.close();
 	}
 
-	public void unzip(File outputFolder, InputStream zipStream)
+	public static void unzip(File outputFolder, InputStream zipStream)
 			throws Exception {
 		if (zipStream instanceof ZipInputStream) {
 			throw new IllegalArgumentException();

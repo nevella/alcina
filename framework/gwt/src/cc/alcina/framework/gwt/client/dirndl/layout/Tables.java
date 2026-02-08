@@ -27,8 +27,15 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanForm;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
+/**
+ * These are simplistic transforms of collections/beans to html tables - for a
+ * far richer model (which respects annotations on the transformed beans), use
+ * {@link TableModel} and {@link BeanForm}
+ */
 public class Tables {
 	public static class ColumnHeaders extends Model.All {
 		List<ColumnName> names;

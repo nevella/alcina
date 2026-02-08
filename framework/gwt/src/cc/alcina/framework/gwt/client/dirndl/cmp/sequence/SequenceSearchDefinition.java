@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 
 @Registration(SequenceSearchDefinition.class)
 public abstract class SequenceSearchDefinition
@@ -22,6 +24,21 @@ public abstract class SequenceSearchDefinition
 			 * will never match a concrete sequence class
 			 */
 			return Sequence.class;
+		}
+	}
+
+	public abstract static class BaseParameter<SSD extends SequenceSearchDefinition>
+			extends InstanceQuery.Parameter<SSD>
+			implements InstanceQuery.Parameter.HasQueryResultIgnorable {
+		public BaseParameter() {
+			Class<SSD> definitionType = Reflections.at(getClass())
+					.getGenericBounds().bounds.get(0);
+			setValue(Reflections.newInstance(definitionType));
+		}
+
+		@Override
+		public boolean provideIsQueryResultIgnorable() {
+			return getValue().provideHasNoCriteria();
 		}
 	}
 }

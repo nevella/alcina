@@ -16,8 +16,10 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -27,12 +29,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 @TypedProperties
-class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
-		HasObject, DecoratorNode.AlllowsPartialSelection {
+@DirectedContextResolver
+class Searchable extends Model.Fields
+		implements SuggestOracle.Suggestion.Noop, HasObject,
+		DecoratorNode.AlllowsPartialSelection, ModelEvents.FocusEditor.Emitter {
 	/**
 	 * Although these are implemented in .sass, this documents *why* they are so
 	 */
@@ -130,9 +135,24 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		return name;
 	}
 
-	@Override
+	class StringInputServiceImpl implements StringInput.Service {
+		@Override
+		public boolean isCommitOnEnter() {
+			return true;
+		}
+	}
+	/*
+	 * wip - ds - move to onNodeContext
+	 */
+
 	public void onNodeContext(NodeContext event) {
+		node.getResolver().registerService(StringInput.Service.class,
+				new StringInputServiceImpl());
 		properties().valueEditor().set(new ValueEditor());
+		if (service(SearchDefinitionEditor.Service.class)
+				.isInitialRenderComplete()) {
+			exec(() -> emitEvent(FocusEditor.class)).dispatch();
+		}
 	}
 
 	class ValueEditor extends Model.All {

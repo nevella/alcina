@@ -79,9 +79,19 @@ public class Suggestor extends Model implements
 	}
 
 	public static class Answers {
+		public Ask ask;
+
 		private List<Suggestion> suggestions = new ArrayList<>();
 
 		private int total;
+
+		// Serialization ctor
+		Answers() {
+		}
+
+		public Answers(Ask ask) {
+			this.ask = ask;
+		}
 
 		public void add(Suggestion suggestion, IntPair resultRange) {
 			if (resultRange == null || resultRange.contains(total)) {

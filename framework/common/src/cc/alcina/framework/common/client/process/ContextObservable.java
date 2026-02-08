@@ -5,8 +5,11 @@ public interface ContextObservable extends ProcessObservable {
 		ProcessObservers.context().publish(this);
 	}
 
-	/**
-	 * These observables will be routed to the base observer if one exists
+	/*
+	 * The observer must be registered in the application context (root for
+	 * single-threaded applicatoins). For example, when the StatusModule UI
+	 * component is registered, there must not be a containing LooseContext
+	 * frame (i.e. LooseContext.push() in the stack)
 	 */
 	public interface Base extends ContextObservable {
 	}

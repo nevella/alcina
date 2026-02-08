@@ -189,6 +189,23 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			ModelEvent modelEvent = (ModelEvent) nodeEvent;
 			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
 		}
+
+		@Override
+		public String toString() {
+			Object event = gwtEvent != null ? gwtEvent : nodeEvent;
+			return Ax.format("%s :: %s", event, node);
+		}
+
+		public String toHistoryString() {
+			FormatBuilder format = new FormatBuilder();
+			Context cursor = this;
+			while (cursor != null) {
+				format.appendIfBuilderNonEmpty(" => ");
+				format.line(cursor);
+				cursor = cursor.previous;
+			}
+			return format.toString();
+		}
 	}
 
 	// Omit from Event binding

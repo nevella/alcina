@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -232,13 +233,17 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		provideNode().deferIfFiring(() -> {
 			new CursorTargetConstraint().alignWithConstraint();
 			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
-			List<DecoratorNode> decorators = fragmentModel
-					.byTypeAssignable(DecoratorNode.class).toList();
+			List<DecoratorNode> decorators = getDecoratorNodes();
 			if (!Objects.equals(decorators, lastPublishedDecorators)) {
 				lastPublishedDecorators = decorators;
 				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
 			}
 		});
+	}
+
+	@Property.Not
+	List<DecoratorNode> getDecoratorNodes() {
+		return fragmentModel.byTypeAssignable(DecoratorNode.class).toList();
 	}
 
 	List<DecoratorNode> lastPublishedDecorators;
@@ -260,7 +265,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	 * lowest affected block. If a decorator is not within the lowest affected
 	 * block (and that itself is something computed by FM), no need to recompute
 	 */
-	class CursorTargetConstraint implements DecoratorBehavior {
+	class CursorTargetConstraint implements EditAreaBehavior {
 		void alignWithConstraint() {
 			// fragmentModel.byTypeAssignable(CursorTarget.class).toList()
 			// .forEach(ZeroWidthCursorTarget::unwrapIfContainsNonZwsText);
@@ -320,7 +325,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	 * choices modified.
 	 * 
 	 */
-	class SuggestorCurrencyConstraint implements DecoratorBehavior {
+	class SuggestorCurrencyConstraint implements EditAreaBehavior {
 		void maybeRefreshOverlays(ModelMutation event) {
 			if (!event.getData().isEmpty()) {
 				Scheduler.get().scheduleFinally(() -> emitEvent(
@@ -335,7 +340,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	 * choices modified.
 	 * 
 	 */
-	class ContentEditableSelected implements DecoratorBehavior {
+	class ContentEditableSelected implements EditAreaBehavior {
 		void updateDecoratorSelected(SelectionChanged event) {
 			fragmentModel.byTypeAssignable(DecoratorNode.class).toList()
 					.forEach(DecoratorNode::updateSelected);
@@ -348,9 +353,10 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	}
 
 	@Override
-	public List<Class<? extends ElementBehavior>> getBehaviors() {
+	public List<ElementBehavior> getBehaviors() {
 		return List.of(
-				ElementBehavior.DisableContentEditableOnIsolateMousedown.class);
+				new ElementBehavior.DisableContentEditableOnIsolateMousedown(),
+				new EditAreaBehavior.RejectConflictingMutation());
 	}
 
 	@Override

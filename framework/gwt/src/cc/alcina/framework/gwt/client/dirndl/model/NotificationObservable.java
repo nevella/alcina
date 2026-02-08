@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.ContextObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
@@ -13,8 +12,8 @@ import cc.alcina.framework.gwt.client.logic.LogLevel;
  * per-client observables.
  * 
  * <p>
- * Single-threaded (GWT) clients should register as a base observer on context
- * entry
+ * Single-threaded (GWT) clients should register as a base observer on the
+ * context
  */
 @Reflected
 public class NotificationObservable implements ContextObservable.Base {

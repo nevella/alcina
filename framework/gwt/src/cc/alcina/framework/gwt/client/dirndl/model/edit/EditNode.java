@@ -32,7 +32,7 @@ public abstract class EditNode extends FragmentNode
 
 	@Binding(
 		type = Type.PROPERTY,
-		to = "contentEditable",
+		to = "contenteditable",
 		transform = Binding.DisplayFalseTrueBidi.class)
 	public boolean contentEditable = false;
 

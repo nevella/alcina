@@ -405,6 +405,21 @@ public interface Story {
 					}
 				}
 
+				/** An AwaitSelection action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface AwaitSelection {
+					public static class ConverterImpl
+							implements Converter<AwaitSelection> {
+						@Override
+						public Story.Action convert(AwaitSelection ann) {
+							return new Story.Action.Ui.AwaitSelection();
+						}
+					}
+				}
+
 				/** An ScrollIntoView action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -699,6 +714,24 @@ public interface Story {
 						}
 					}
 
+					/**
+					 * A get-the-url action (direct http call, not a browser
+					 * navigation)
+					 */
+					@Retention(RetentionPolicy.RUNTIME)
+					@Documented
+					@Target({ ElementType.TYPE })
+					@Registration(DeclarativeAction.class)
+					public @interface Get {
+						public static class ConverterImpl
+								implements Converter<Get> {
+							@Override
+							public Story.Action convert(Get ann) {
+								return new Story.Action.Ui.Get();
+							}
+						}
+					}
+
 					/** A refresh-url action */
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
@@ -821,6 +854,21 @@ public interface Story {
 					public Story.Action.Location convert(Url ann) {
 						return new Story.Action.Location.Url()
 								.withText(ann.value());
+					}
+				}
+			}
+
+			/** Reference the current focus */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			@Registration(DeclarativeLocation.class)
+			public @interface CurrentFocus {
+				public static class ConverterImpl
+						implements Converter<CurrentFocus> {
+					@Override
+					public Story.Action.Location convert(CurrentFocus ann) {
+						return new Story.Action.Location.CurrentFocus();
 					}
 				}
 			}
@@ -1025,6 +1073,13 @@ public interface Story {
 				}
 			}
 
+			public static class CurrentFocus extends LocWithText {
+				@Override
+				public Axis getAxis() {
+					return Axis.DOCUMENT;
+				}
+			}
+
 			public static class Marked implements Location {
 				@Override
 				public Axis getAxis() {
@@ -1075,6 +1130,13 @@ public interface Story {
 			}
 
 			/**
+			 * Await the overlap/intersection of the document locator with the
+			 * DOM Selection
+			 */
+			public static class AwaitSelection implements Ui {
+			}
+
+			/**
 			 * Scroll the located element into view
 			 */
 			public static class ScrollIntoView implements Ui {
@@ -1105,6 +1167,9 @@ public interface Story {
 			}
 
 			public static class Go implements Ui {
+			}
+
+			public static class Get implements Ui {
 			}
 
 			public static class Refresh implements Ui {

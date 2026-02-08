@@ -20,6 +20,8 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -28,7 +30,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentSettings;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.MutationId;
 
 public class RemoteComponentProtocol {
 	@Bean
@@ -67,6 +71,37 @@ public class RemoteComponentProtocol {
 
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Message {
+		/**
+		 * BeforeHandled and AfterHandled are used to handle the processes
+		 * supporting mutation conflict resolution, client and server side
+		 */
+		@Feature.Ref(Feature_Dirndl_MutationConflictResolution.class)
+		public static class BeforeHandled implements ContextObservable.Base {
+			public Message message;
+
+			public boolean cancelled;
+
+			public BeforeHandled(Message message) {
+				this.message = message;
+			}
+		}
+
+		public static class AfterHandled implements ContextObservable.Base {
+			public Message message;
+
+			public AfterHandled(Message message) {
+				this.message = message;
+			}
+		}
+
+		public static class OnQueued implements ContextObservable.Base {
+			public Message message;
+
+			public OnQueued(Message message) {
+				this.message = message;
+			}
+		}
+
 		/*
 		 * Sent by the client to allow the server to send it messages
 		 */
@@ -102,17 +137,17 @@ public class RemoteComponentProtocol {
 				implements PrependWindowState {
 			public List<DomEventData> events = new ArrayList<>();
 
+			/* utility method for end-of-app inspection */
+			public boolean provideIsPageHide() {
+				return events.stream().anyMatch(evt -> Objects
+						.equals(evt.event.getType(), BrowserEvents.PAGEHIDE));
+			}
+
 			@Override
 			protected String provideMessageData() {
 				return events.stream().filter(e -> e.event != null)
 						.map(e -> e.event.getType()).distinct()
 						.collect(Collectors.joining(", "));
-			}
-
-			/* utility method for end-of-app inspection */
-			public boolean provideIsPageHide() {
-				return events.stream().anyMatch(evt -> Objects
-						.equals(evt.event.getType(), BrowserEvents.PAGEHIDE));
 			}
 		}
 
@@ -208,6 +243,10 @@ public class RemoteComponentProtocol {
 			public ExceptionTransport exception;
 		}
 
+		public static class RejectMutation extends Message {
+			public MutationId counterpartId;
+		}
+
 		public static class ExceptionTransport extends Bindable.Fields {
 			public String className;
 
@@ -233,55 +272,6 @@ public class RemoteComponentProtocol {
 			public String toExceptionString() {
 				return Ax.format("%s :: %s\n\n%s", NestedName.get(this),
 						nestedClassName, stackTrace);
-			}
-		}
-
-		/*
-		 * An album by Beck. Amazing.
-		 */
-		public static class Mutations extends Message
-				implements PrependWindowState {
-			public static Mutations ofLocation() {
-				Mutations result = new Mutations();
-				result.locationMutation = LocationMutation.ofWindow(false);
-				return result;
-			}
-
-			// TODO - romcom/ref.ser, serialized, there should be no classname
-			// (but there is)
-			public List<MutationRecord> domMutations = new ArrayList<>();
-
-			public List<EventSystemMutation> eventSystemMutations = new ArrayList<>();
-
-			public LocationMutation locationMutation;
-
-			public SelectionRecord selectionMutation;
-
-			@Override
-			public String toDebugString() {
-				return FormatBuilder.keyValues("dom", domMutations.size(),
-						"event", eventSystemMutations.size(), "loc",
-						locationMutation);
-			}
-
-			public void addDomMutation(MutationRecord mutationRecord) {
-				domMutations.add(mutationRecord);
-			}
-
-			@Override
-			protected String provideMessageData() {
-				FormatBuilder format = new FormatBuilder().separator(" - ");
-				if (domMutations.size() > 0) {
-					format.append(domMutations.stream()
-							.map(dm -> dm.target.nodeName).distinct()
-							.collect(Collectors.joining(", ")));
-				}
-				if (domMutations.isEmpty() && eventSystemMutations.size() > 0) {
-					format.append(eventSystemMutations.stream()
-							.map(esm -> esm.eventTypeName).distinct()
-							.collect(Collectors.joining(", ")));
-				}
-				return format.toString();
 			}
 		}
 

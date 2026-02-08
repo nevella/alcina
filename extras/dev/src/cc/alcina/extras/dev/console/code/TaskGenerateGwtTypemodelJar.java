@@ -30,7 +30,7 @@ public class TaskGenerateGwtTypemodelJar extends PerformerTask {
 		File outJar = new File(outPath + ".jar");
 		SEUtilities.deleteDirectory(outFolder);
 		outFolder.mkdirs();
-		new ZipUtil().unzip(outFolder,
+		ZipUtil.unzip(outFolder,
 				new BufferedInputStream(new FileInputStream(path)));
 		List<File> files = SEUtilities.listFilesRecursive(outPath, null);
 		files.stream().filter(f -> f.isFile()).filter(f -> !this.isTypeModel(f))

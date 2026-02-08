@@ -2,6 +2,11 @@
 @use '../../theme/color'
 @use 'form-input'
 
+@mixin vertical-layout
+  form > section > form-element
+    display: flex
+    flex-direction: column
+
 @mixin subtle-form 
   input,
   select,

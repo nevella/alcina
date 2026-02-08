@@ -21,6 +21,8 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -33,7 +35,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class InferredDomEvents {
 	public static class ActionOutside extends NodeEvent<ActionOutside.Handler> {
@@ -169,6 +170,43 @@ public class InferredDomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onEnterPressed(EnterPressed event);
+		}
+	}
+
+	public static class EnterDown extends NodeEvent<EnterDown.Handler> {
+		@Override
+		public void dispatch(EnterDown.Handler handler) {
+			handler.onEnterDown(this);
+		}
+
+		public static class BindingImpl extends DomBinding<EnterDown>
+				implements KeyDownHandler {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onKeyDown,
+						KeyDownEvent.getType());
+			}
+
+			@Override
+			public void onKeyDown(KeyDownEvent event) {
+				if (isEnterDown(event)) {
+					fireEvent(event);
+				}
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEnterDown(EnterDown event);
+		}
+
+		public static boolean isEnterDown(KeyDownEvent event) {
+			int keyCode = event.getNativeEvent().getKeyCode();
+			if (keyCode == KeyCodes.KEY_ENTER) {
+				if (!event.isControlKeyDown() && !event.isMetaKeyDown()) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 

@@ -73,6 +73,8 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 
 	public static class Navigation
 			extends ModelEvent<Navigation.Type, Navigation.Handler> {
+		public boolean consumed;
+
 		/**
 		 * When a keyevent on a contenteditable DOM node is intercepted by a
 		 * navigation handler, it must not cause changes in the editable DOM
@@ -82,6 +84,7 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 					.getOriginatingGwtEvent();
 			domEvent.getNativeEvent().preventDefault();
 			domEvent.getNativeEvent().stopPropagation();
+			consumed = true;
 		}
 
 		@Override

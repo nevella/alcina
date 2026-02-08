@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.story.component.gallery;
 
+import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_ChoiceEditor;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 
@@ -9,6 +11,7 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 @Decl.Require(Story_GalleryBrowser.State.Home.class)
 @Decl.Child(Point_GalleryBrowser_Home.ToChoiceEditor.class)
 @Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.class)
+@Feature.Parent(Feature_Dirndl_ChoiceEditor.class)
 public class Point_GalleryBrowser_ChoiceEditor extends Waypoint {
 	static final String XPATH_USER_EDITOR = "//definition-editor//choice-editor/edit";
 
@@ -37,11 +40,12 @@ public class Point_GalleryBrowser_ChoiceEditor extends Waypoint {
 		}
 
 		/*
-		 * fixme - romcom - this is actually a perfect example of concurrent
-		 * editing (issues) , since "lars" gets truncated effectively to "l" by
-		 * server-side action
+		 * romcom - this is actually a perfect example of concurrent editing
+		 * (issues) , since "lars" gets truncated effectively to "l" by
+		 * server-side action - see
+		 * Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		 */
-		@Decl.Location.Xpath({ XPATH_USER_EDITOR, _REL_EDIT_ENTRY })
+		@Decl.Location.CurrentFocus
 		@Decl.Action.UI.Keys("lar")
 		static class SendName extends Waypoint {
 		}
