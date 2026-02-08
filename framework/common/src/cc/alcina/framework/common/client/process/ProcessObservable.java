@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.process;
 
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -11,6 +12,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * The former are designed for logging/debugging -OR- app-wide pub-sub - the
  * latter for stack-shaped process implementation
  */
+@Reflected
 public interface ProcessObservable {
 	public static class Id {
 		static SequentialIdGenerator generator = new SequentialIdGenerator();

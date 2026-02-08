@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.process;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -12,22 +13,22 @@ import cc.alcina.framework.gwt.client.util.HasBind;
 /**
  * Marker interface: observes AlcinaProcess observable topics
  *
- *
- *
  */
+@Reflected
 public interface ProcessObserver<T extends ProcessObservable>
 		extends TopicListener<T>, HasBind {
 	default void bind() {
+		Class<T> observableClass = getObservableClass();
 		if (Reflections.isAssignableFrom(ContextObservable.class,
-				getObservableClass())) {
+				observableClass)) {
 			ProcessObservers.context().observe(this);
 		} else if (Reflections.isAssignableFrom(GlobalObservable.class,
-				getObservableClass())) {
+				observableClass)) {
 			ProcessObservers.observe(this, true);
 		} else {
 			throw new UnsupportedOperationException(Ax.format(
 					"%s must be assignable from ContextObservable or GlobalObservable",
-					getObservableClass()));
+					observableClass));
 		}
 	}
 

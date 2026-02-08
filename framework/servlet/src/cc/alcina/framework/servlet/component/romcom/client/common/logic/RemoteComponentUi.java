@@ -19,6 +19,7 @@ import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -32,6 +33,7 @@ import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
+import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.ActiveMessagesChanged;
@@ -67,8 +69,11 @@ public class RemoteComponentUi {
 	class MessageStateRouter {
 		void onMessageHandlingException(Message message, Throwable e) {
 			// FIXME - ask the context to log
-			Ax.out("Exception handling message %s\n"
-					+ "================\nSerialized form:\n%s", message, "??");
+			String logMesssage = Ax.format(
+					"Exception handling message %s\n"
+							+ "================\nSerialized form:\n%s",
+					message, "??");
+			RemoteObjectModelComponentClient.consoleError(logMesssage);
 			e.printStackTrace();
 			/*
 			 * FIXME - devex - 0 - once syncmutations.3 is stable, this should
@@ -80,7 +85,14 @@ public class RemoteComponentUi {
 			 * extension)
 			 */
 			Window.alert(CommonUtils.toSimpleExceptionMessage(e));
+			if (!toServerMessageSent) {
+				ProcessingException toServerMessage = ProcessingException
+						.wrap(WrappedRuntimeException.wrap(e), true);
+				ClientRpc.send(toServerMessage);
+			}
 		}
+
+		boolean toServerMessageSent = false;
 
 		Element notificationElement;
 

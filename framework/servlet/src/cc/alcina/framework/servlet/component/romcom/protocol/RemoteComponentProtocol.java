@@ -20,6 +20,8 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -28,6 +30,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.MutationId;
 
@@ -68,6 +71,27 @@ public class RemoteComponentProtocol {
 
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Message {
+		/**
+		 * BeforeHandled and AfterHandled are used to handle the processes
+		 * supporting mutation conflict resolution, client and server side
+		 */
+		@Feature.Ref(Feature_Dirndl_MutationConflictResolution.class)
+		public static class BeforeHandled implements ContextObservable.Base {
+			public Message message;
+
+			public BeforeHandled(Message message) {
+				this.message = message;
+			}
+		}
+
+		public static class AfterHandled implements ContextObservable.Base {
+			public Message message;
+
+			public AfterHandled(Message message) {
+				this.message = message;
+			}
+		}
+
 		/*
 		 * Sent by the client to allow the server to send it messages
 		 */

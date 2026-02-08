@@ -596,6 +596,10 @@ public class DocumentAttachId extends NodeAttachId
 	 */
 	@Override
 	public void emitMutation(MutationRecord mutation) {
+		/*
+		 * send ids and behaviors in a side channel exactly once - note the
+		 * filtering of innerMarkup to avoid sending the root id/behaviors twice
+		 */
 		switch (mutation.type) {
 		case attributes:
 			switch (mutation.attributeName) {
@@ -606,7 +610,7 @@ public class DocumentAttachId extends NodeAttachId
 			break;
 		case innerMarkup:
 			mutation.target.node.stream().filter(Node::provideIsElement)
-					.forEach(n -> {
+					.filter(n -> n != mutation.target.node).forEach(n -> {
 						Element elem = (Element) n;
 						String id = ((Element) n).getId();
 						if (Ax.notBlank(id)) {

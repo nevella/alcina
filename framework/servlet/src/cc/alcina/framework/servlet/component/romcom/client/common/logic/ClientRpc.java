@@ -129,10 +129,13 @@ public class ClientRpc implements HandlerContext {
 
 	RemoteComponentUi ui;
 
+	ClientMutationConflictResolution clientMutationConflictResolution;
+
 	ClientRpc(RemoteComponentUi ui) {
 		this.ui = ui;
 		transportLayer = new MessageTransportLayerClient();
 		exceptionHandler = new ExceptionHandler();
+		clientMutationConflictResolution = new ClientMutationConflictResolution();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 	}
 

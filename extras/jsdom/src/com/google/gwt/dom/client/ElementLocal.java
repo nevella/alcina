@@ -895,8 +895,10 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		if (behaviors == null) {
 			behaviors = new ArrayList<>();
 		} else {
-			if (hasBehavior(behavior.getClass())) {
-				return;
+			if (getBehavior(behavior.getClass()) != null) {
+				throw new IllegalStateException(
+						Ax.format("Element has an existing behavior of type %s",
+								behavior.getClass()));
 			}
 		}
 		behaviors.add(behavior);

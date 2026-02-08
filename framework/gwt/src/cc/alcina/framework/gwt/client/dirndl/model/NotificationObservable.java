@@ -12,7 +12,8 @@ import cc.alcina.framework.gwt.client.logic.LogLevel;
  * per-client observables.
  * 
  * <p>
- * Single-threaded (GWT) clients should register as a base observer on c
+ * Single-threaded (GWT) clients should register as a base observer on the
+ * context
  */
 @Reflected
 public class NotificationObservable implements ContextObservable.Base {
