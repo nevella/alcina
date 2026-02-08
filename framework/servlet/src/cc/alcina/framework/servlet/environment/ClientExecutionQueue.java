@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
@@ -68,7 +69,7 @@ class ClientExecutionQueue implements Runnable {
 		int lastMutationIdUpdateHandled;
 
 		synchronized void onMessageBuffered(Message message) {
-			if (message instanceof Message.Mutations) {
+			if (message instanceof Mutations) {
 				lastMutationIdBuffered = message.messageId;
 			}
 		}

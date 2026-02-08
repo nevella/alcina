@@ -74,23 +74,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return context;
 		}
 
-		@Override
-		public String toString() {
-			Object event = gwtEvent != null ? gwtEvent : nodeEvent;
-			return Ax.format("%s :: %s", event, node);
-		}
-
-		public String toHistoryString() {
-			FormatBuilder format = new FormatBuilder();
-			Context cursor = this;
-			while (cursor != null) {
-				format.appendIfBuilderNonEmpty(" => ");
-				format.line(cursor);
-				cursor = cursor.previous;
-			}
-			return format.toString();
-		}
-
 		private Context previous;
 
 		public final Node node;
