@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
@@ -61,7 +62,12 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	/*
-	 * Used to track mutation send/return, for client optimisation
+	 * Used to track mutation send/return, for client optimisation. the
+	 * synchronization is almost certainly not needed - all methods should be
+	 * called on the execution thread
+	 * 
+	 * Note that this is a specialisation of the more general tracking of
+	 * last-seen-counterpart-id
 	 */
 	class MutationMessageData {
 		int lastMutationIdBuffered;
@@ -70,15 +76,16 @@ class ClientExecutionQueue implements Runnable {
 
 		synchronized void onMessageBuffered(Message message) {
 			if (message instanceof Mutations) {
-				lastMutationIdBuffered = message.messageId;
+				lastMutationIdBuffered = message.messageId.number;
 			}
 		}
 
 		synchronized void onMessageHandled(Message message) {
 			if (message instanceof Message.WindowStateUpdate) {
 				WindowStateUpdate update = (WindowStateUpdate) message;
-				if (lastMutationIdUpdateHandled < update.highestProcessedMutationMessageId) {
-					lastMutationIdUpdateHandled = update.highestProcessedMutationMessageId;
+				if (update.counterpartProcessingId != null
+						&& lastMutationIdUpdateHandled < update.counterpartProcessingId.number) {
+					lastMutationIdUpdateHandled = update.counterpartProcessingId.number;
 				}
 			}
 		}
@@ -98,9 +105,9 @@ class ClientExecutionQueue implements Runnable {
 
 	/**
 	 * <p>
-	 * This class executes runnables any dom mutations have been flushed to the
-	 * remote *and* the corresponding browser nodes (and eagerly-synced offsets,
-	 * if any) have been returned
+	 * This class executes runnables after any dom mutations have been flushed
+	 * to the remote *and* the corresponding browser nodes (and eagerly-synced
+	 * offsets, if any) have been returned
 	 * 
 	 * <p>
 	 * If there are no pending mutations, this just amounts to waiting on the
@@ -219,6 +226,8 @@ class ClientExecutionQueue implements Runnable {
 	MutationMessageData mutationMessageData;
 
 	RenderStateImpl renderStateImpl;
+
+	MessageId highestExecutingCounterpartId;
 
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
@@ -417,6 +426,9 @@ class ClientExecutionQueue implements Runnable {
 	void handleFromClientMessageOnThread(MessageProcessingToken token) {
 		try {
 			Message message = token.message;
+			if (!message.sync) {
+				highestExecutingCounterpartId = message.messageId;
+			}
 			BeforeHandled beforeHandled = new Message.BeforeHandled(message);
 			beforeHandled.publish();
 			if (!beforeHandled.cancelled) {

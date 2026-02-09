@@ -27,8 +27,8 @@ public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 	 * between SendNameChar1 and SendNameChar2
 	 */
 	// @Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.AwaitOverlay.class)
-	@Decl.Child(_DefinitionEditor.SendNameChar1.class)
 	@Decl.Child(SetDelayConfigurationOn.class)
+	@Decl.Child(_DefinitionEditor.SendNameChar1.class)
 	@Decl.Child(_DefinitionEditor.SendNameChar2.class)
 	@Decl.Child(SetDelayConfigurationOff.class)
 	@Decl.Child(Wait1000.class)
@@ -41,7 +41,7 @@ public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		}
 
 		@Decl.Location.CurrentFocus
-		@Decl.Action.UI.Keys("a")
+		@Decl.Action.UI.Keys(value = "a", clear = false)
 		static class SendNameChar2 extends Waypoint {
 		}
 

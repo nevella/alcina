@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.environment;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.AttachIdException;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentAttachId;
@@ -35,6 +35,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.service.DispatchRefProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -180,7 +181,8 @@ class Environment {
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
 					arguments, flags, null, null);
 			queue.flush();
-			return awaitResponse(node, methodName, handler);
+			T result = awaitResponse(node, methodName, handler);
+			return result;
 		}
 
 		@Override
@@ -227,11 +229,19 @@ class Environment {
 				if (handler.response.exception == null) {
 					return (T) handler.response.response;
 				} else {
-					String context = Ax.format(
-							"invoke-remote - node %s - method %s", node.node(),
-							methodName);
-					throw new InvokeException(context,
-							handler.response.exception);
+					Class<? extends Throwable> exceptionType = Reflections
+							.forName(handler.response.exception.className);
+					if (Reflections.isAssignableFrom(AttachIdException.class,
+							exceptionType)) {
+						throw (AttachIdException) Reflections
+								.newInstance(exceptionType);
+					} else {
+						String context = Ax.format(
+								"invoke-remote - node %s - method %s",
+								node.node(), methodName);
+						throw new InvokeException(context,
+								handler.response.exception);
+					}
 				}
 			}
 		}
@@ -680,6 +690,8 @@ class Environment {
 
 	private ClientExecutionThreadAccess clientExecutionThreadAccess;
 
+	MutationConflictResolutionServer mutationConflictResolution;
+
 	Environment(RemoteUi ui, Session session) {
 		this.ui = ui;
 		this.session = session;
@@ -758,6 +770,8 @@ class Environment {
 		LooseContext.set(CONTEXT_ENVIRONMENT, this);
 		environmentRegistry = new EnvironmentRegistry();
 		EnvironmentRegistry.enter(environmentRegistry);
+		queue.transportLayer.registerInContext();
+		mutationConflictResolution = new MutationConflictResolutionServer();
 		// the order - location, history, client, document - is necessary
 		location = Window.Location.contextProvider.createFrame(null);
 		navigator = Window.Navigator.contextProvider.createFrame(null);

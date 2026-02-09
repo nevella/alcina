@@ -6,8 +6,10 @@ import java.util.function.BiFunction;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.NodeNotFoundException;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
@@ -480,16 +482,23 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		suggestor = suggestorProvider.apply(this, decoratorDomNode);
 		attributes.withCssClass("decorator-suggestor");
 		attributes.withConsumeSubmit(true).withFocusOnBind(false);
-		overlay = attributes
-				.dropdown(OverlayPosition.Position.START,
-						domElement.getBoundingClientRect(),
-						(Model) decoratorParent, suggestor)
-				.withRectSourceElement(domElement)
-				.withPeerModels(List.of(this.suggestingNode)).create();
-		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
-				.publish();
-		overlay.open();
-		this.overlayEditNode = decoratorDomNode;
+		try {
+			DomRect boundingClientRect = domElement.getBoundingClientRect();
+			overlay = attributes
+					.dropdown(OverlayPosition.Position.START,
+							boundingClientRect, (Model) decoratorParent,
+							suggestor)
+					.withRectSourceElement(domElement)
+					.withPeerModels(List.of(this.suggestingNode)).create();
+			new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
+					.publish();
+			overlay.open();
+			this.overlayEditNode = decoratorDomNode;
+		} catch (NodeNotFoundException e) {
+			/*
+			 * the suggestor was never rendered due to edit conflicts
+			 */
+		}
 	}
 
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)

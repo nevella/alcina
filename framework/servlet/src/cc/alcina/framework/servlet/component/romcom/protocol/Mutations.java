@@ -4,80 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.process.ContextObservable;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasTimeline;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.PrependWindowState;
 
 /*
  * An album by Beck. Amazing.
  */
 public class Mutations extends RemoteComponentProtocol.Message
-		implements PrependWindowState {
-	@Bean(PropertySource.FIELDS)
-	public static class MutationId implements Comparable<MutationId> {
-		public static int nullAwareCompare(MutationId o1, MutationId o2) {
-			return CommonUtils.compareWithNullMinusOne(o1, o2);
-		}
-
-		public SendChannelId sendChannelId;
-
-		public int number;
-
-		public MutationId(SendChannelId sendChannelId, int number) {
-			this.sendChannelId = sendChannelId;
-			this.number = number;
-		}
-
-		public MutationId() {
-		}
-
-		@Override
-		public int compareTo(MutationId o) {
-			Preconditions.checkState(sendChannelId == o.sendChannelId);
-			return number - o.number;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof MutationId) {
-				MutationId o = (MutationId) obj;
-				return sendChannelId == o.sendChannelId && number == o.number;
-			} else {
-				return false;
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return sendChannelId.hashCode() ^ number;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("#%s [%s]", number, sendChannelId);
-		}
-	}
-
-	public MutationId mutationId;
-
-	public MutationId highestVisibleCounterpartId;
-
-	public static Mutations ofLocation() {
-		Mutations result = new Mutations();
-		result.locationMutation = LocationMutation.ofWindow(false);
-		return result;
-	}
-
+		implements PrependWindowState, HasTimeline {
 	public static class Rejected implements ContextObservable {
 		public Mutations mutations;
 
@@ -85,6 +27,14 @@ public class Mutations extends RemoteComponentProtocol.Message
 			this.mutations = mutations;
 		}
 	}
+
+	public static Mutations ofLocation() {
+		Mutations result = new Mutations();
+		result.locationMutation = LocationMutation.ofWindow(false);
+		return result;
+	}
+
+	public MessageId counterpartProcessingId;
 
 	// TODO - romcom/ref.ser, serialized, there should be no classname
 	// (but there is)
@@ -99,6 +49,11 @@ public class Mutations extends RemoteComponentProtocol.Message
 
 	public SelectionRecord selectionMutation;
 
+	@Property.Not
+	public MessageId getCounterpartProcessingId() {
+		return counterpartProcessingId;
+	}
+
 	@Override
 	public String toDebugString() {
 		return FormatBuilder.keyValues("dom", domMutations.size(), "event",
@@ -107,6 +62,12 @@ public class Mutations extends RemoteComponentProtocol.Message
 
 	public void addDomMutation(MutationRecord mutationRecord) {
 		domMutations.add(mutationRecord);
+	}
+
+	@Property.Not
+	@Override
+	public void setCounterpartProcessingId(MessageId counterpartProcessingId) {
+		this.counterpartProcessingId = counterpartProcessingId;
 	}
 
 	@Override

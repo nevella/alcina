@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -28,6 +29,7 @@ import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportEvent.Type;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasTimeline;
 
 /**
  * <h3>The Message Transport Layer</h3>
@@ -91,7 +93,22 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 public abstract class MessageTransportLayer {
 	@Reflected
 	public enum SendChannelId {
-		CLIENT_TO_SERVER, SERVER_TO_CLIENT
+		CLIENT_TO_SERVER, SERVER_TO_CLIENT;
+
+		public boolean isSelf() {
+			return CONTEXT_TRANSPORT_LAYER.getTyped().sendChannelId() == this;
+		}
+
+		SendChannelId oppositeEndpointId() {
+			switch (this) {
+			case CLIENT_TO_SERVER:
+				return SERVER_TO_CLIENT;
+			case SERVER_TO_CLIENT:
+				return CLIENT_TO_SERVER;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)
@@ -265,22 +282,6 @@ public abstract class MessageTransportLayer {
 
 		public Date sendExceptionDate;
 
-		void queuedForDispatch() {
-			sent = new Date();
-		}
-
-		boolean wasAcknowledged(SendChannelId sendChannelId,
-				EnvelopeId highestReceivedEnvelopeId) {
-			boolean isSenderEndpoint = sendChannelId == messageId.sendChannelId;
-			if (isSenderEndpoint) {
-				return received != null;
-			} else {
-				return firstReceiptAcknowledgedEnvelopeId != null
-						&& firstReceiptAcknowledgedEnvelopeId
-								.compareTo(highestReceivedEnvelopeId) <= 0;
-			}
-		}
-
 		public void onBeforeSendReceivedMessageHistory(EnvelopeId envelopeId) {
 			if (received != null
 					&& firstReceiptAcknowledgedEnvelopeId == null) {
@@ -304,6 +305,22 @@ public abstract class MessageTransportLayer {
 
 		public boolean wasSent() {
 			return sent != null || unacknowledgedSendDates.size() > 0;
+		}
+
+		void queuedForDispatch() {
+			sent = new Date();
+		}
+
+		boolean wasAcknowledged(SendChannelId sendChannelId,
+				EnvelopeId highestReceivedEnvelopeId) {
+			boolean isSenderEndpoint = sendChannelId == messageId.sendChannelId;
+			if (isSenderEndpoint) {
+				return received != null;
+			} else {
+				return firstReceiptAcknowledgedEnvelopeId != null
+						&& firstReceiptAcknowledgedEnvelopeId
+								.compareTo(highestReceivedEnvelopeId) <= 0;
+			}
 		}
 
 		String toTransportDebugString() {
@@ -380,13 +397,23 @@ public abstract class MessageTransportLayer {
 		 */
 		boolean acknowledged;
 
-		public MessageToken(Message message, SendChannelId sendChannelId) {
-			if (message.messageId == 0) {
-				message.messageId = messageIdGenerator.incrementAndGetInt();
-			}
+		transient int size = -1;
+
+		public MessageToken(Message message) {
+			ensureMessageId(message);
 			this.message = message;
-			this.transportHistory.messageId = new MessageId(sendChannelId,
-					message.messageId);
+			this.transportHistory.messageId = message.messageId;
+			if (message instanceof Message.HasTimeline) {
+				if (highestProcessingCounterpartId == null) {
+					highestProcessingCounterpartId = new MessageId(
+							sendChannelId().oppositeEndpointId(), -1);
+				}
+				HasTimeline hasTimeline = (HasTimeline) message;
+				if (hasTimeline.getCounterpartProcessingId() == null) {
+					hasTimeline.setCounterpartProcessingId(
+							highestProcessingCounterpartId);
+				}
+			}
 		}
 
 		@Override
@@ -397,6 +424,39 @@ public abstract class MessageTransportLayer {
 
 		public void onSendException(Throwable exception) {
 			transportHistory.sendExceptionDate = new Date();
+		}
+
+		public void onSending() {
+			boolean resending = transportHistory.sent != null;
+			transportHistory.sent = new Date();
+			new MessageTransportLayerObservables.SentObservable(this, resending)
+					.publish();
+		}
+
+		public void onHighestReceivedEnvelopeId(
+				EnvelopeId highestReceivedEnvelopeId) {
+			if (transportHistory.wasAcknowledged(sendChannelId(),
+					highestReceivedEnvelopeId)) {
+				acknowledged = true;
+			}
+		}
+
+		public int getSize() {
+			if (size == -1) {
+				size = ReflectiveSerializer.serialize(message).length();
+			}
+			return size;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - %s", transportHistory.messageId, message);
+		}
+
+		public String toDebugString() {
+			return Ax.format("%s ::\n%s",
+					transportHistory.toTransportDebugString(),
+					message.toDebugString());
 		}
 
 		boolean shouldSend() {
@@ -426,41 +486,6 @@ public abstract class MessageTransportLayer {
 						.publish();
 			}
 		}
-
-		public void onSending() {
-			boolean resending = transportHistory.sent != null;
-			transportHistory.sent = new Date();
-			new MessageTransportLayerObservables.SentObservable(this, resending)
-					.publish();
-		}
-
-		public void onHighestReceivedEnvelopeId(
-				EnvelopeId highestReceivedEnvelopeId) {
-			if (transportHistory.wasAcknowledged(sendChannelId(),
-					highestReceivedEnvelopeId)) {
-				acknowledged = true;
-			}
-		}
-
-		transient int size = -1;
-
-		public int getSize() {
-			if (size == -1) {
-				size = ReflectiveSerializer.serialize(message).length();
-			}
-			return size;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s - %s", transportHistory.messageId, message);
-		}
-
-		public String toDebugString() {
-			return Ax.format("%s ::\n%s",
-					transportHistory.toTransportDebugString(),
-					message.toDebugString());
-		}
 	}
 
 	public static class TransportEvent {
@@ -476,24 +501,6 @@ public abstract class MessageTransportLayer {
 			this.date = new Date();
 			this.type = type;
 		}
-	}
-
-	class TransportEvents {
-		List<TransportEvent> events = new ArrayList<>();
-
-		synchronized void onTransportSuccess() {
-			events.add(new TransportEvent(Type.success));
-		}
-
-		synchronized void onTransportFailure() {
-			events.add(new TransportEvent(Type.transport_failure));
-		}
-	}
-
-	TransportEvents transportEvents = new TransportEvents();
-
-	public void onReceiveSuccess() {
-		transportEvents.onTransportSuccess();
 	}
 
 	@Reflected
@@ -516,6 +523,16 @@ public abstract class MessageTransportLayer {
 					.allMatch(m -> m.message instanceof Message.AwaitRemote);
 		}
 
+		@Override
+		public String toString() {
+			return Ax.format("active message count: %s", activeMessages.size());
+		}
+
+		/**
+		 * true for receivechannel, false for sendchannel
+		 */
+		protected abstract boolean publishesMessages();
+
 		boolean shouldSendMessagesOrMetadata() {
 			synchronized (activeMessages) {
 				return activeMessages.stream()
@@ -532,7 +549,9 @@ public abstract class MessageTransportLayer {
 						messageToken.transportHistory.toTransportDebugString());
 				activeMessages.add(messageToken);
 				topicMessageBuffered.publish(messageToken.message);
-				new Message.OnQueued(messageToken.message).publish();
+				new Message.OnQueued(
+						messageToken.transportHistory.messageId.sendChannelId,
+						messageToken.message).publish();
 				new ActiveMessagesChanged().publish();
 				messageIdActiveMessage.put(
 						messageToken.transportHistory.messageId, messageToken);
@@ -563,16 +582,6 @@ public abstract class MessageTransportLayer {
 					new ActiveMessagesChanged().publish();
 				}
 			}
-		}
-
-		/**
-		 * true for receivechannel, false for sendchannel
-		 */
-		protected abstract boolean publishesMessages();
-
-		@Override
-		public String toString() {
-			return Ax.format("active message count: %s", activeMessages.size());
 		}
 	}
 
@@ -612,72 +621,6 @@ public abstract class MessageTransportLayer {
 	 * 
 	 */
 	public abstract class SendChannel extends Channel {
-		@Override
-		String channelName() {
-			return "send";
-		}
-
-		/*
-		 * If no inflight or retry, send
-		 */
-		public void conditionallySend() {
-			synchronized (activeMessages) {
-				if (envelopeDispatcher().isDispatchAvailable()) {
-					if (shouldSendMessagesOrMetadata()) {
-						unconditionallySend();
-					} else {
-						if (receiveChannel().shouldSendMessagesOrMetadata()
-								&& envelopeDispatcher()
-										.shouldSendReceiveChannelMetadata()) {
-							unconditionallySend();
-						}
-					}
-				}
-				receiptVerifier.verify();
-			}
-		}
-
-		public boolean hasMessagesPendingDispatch() {
-			synchronized (activeMessages) {
-				return activeMessages.stream()
-						.anyMatch(token -> !token.transportHistory.wasSent());
-			}
-		}
-
-		public void unconditionallySend() {
-			synchronized (activeMessages) {
-				envelopeDispatcher().dispatch(activeMessages,
-						receiveChannel().snapshotActiveMessages());
-			}
-		}
-
-		protected void send(Message message) {
-			send(List.of(message));
-		}
-
-		protected void send(List<Message> messages) {
-			messages.forEach(message -> {
-				message.messageId = nextId();
-				bufferMessage(new MessageToken(message, sendChannelId()));
-			});
-			conditionallySend();
-		}
-
-		protected ReceiptVerifier receiptVerifier;
-
-		public SendChannel() {
-			initImplementations();
-		}
-
-		protected void initImplementations() {
-			receiptVerifier = new ReceiptVerifier();
-		}
-
-		@Override
-		protected boolean publishesMessages() {
-			return false;
-		}
-
 		/**
 		 * <p>
 		 * THe ReceiptVerifier verifies receipt, by checking receipt after a
@@ -848,11 +791,6 @@ public abstract class MessageTransportLayer {
 				}
 			}
 
-			void onScheduledVerification() {
-				scheduledVerification = null;
-				verify();
-			}
-
 			/*
 			 * Non-computed, and doesn't allow for compression - just a
 			 * heuristic
@@ -882,6 +820,82 @@ public abstract class MessageTransportLayer {
 				transmissionTimeMs = Math.min(60000.0, transmissionTimeMs);
 				return new Date((long) transmissionTimeMs + from);
 			}
+
+			void onScheduledVerification() {
+				scheduledVerification = null;
+				verify();
+			}
+		}
+
+		protected ReceiptVerifier receiptVerifier;
+
+		public SendChannel() {
+			initImplementations();
+		}
+
+		/*
+		 * If no inflight or retry, send
+		 */
+		public void conditionallySend() {
+			synchronized (activeMessages) {
+				if (envelopeDispatcher().isDispatchAvailable()) {
+					if (shouldSendMessagesOrMetadata()) {
+						unconditionallySend();
+					} else {
+						if (receiveChannel().shouldSendMessagesOrMetadata()
+								&& envelopeDispatcher()
+										.shouldSendReceiveChannelMetadata()) {
+							unconditionallySend();
+						}
+					}
+				}
+				receiptVerifier.verify();
+			}
+		}
+
+		public boolean hasMessagesPendingDispatch() {
+			synchronized (activeMessages) {
+				return activeMessages.stream()
+						.anyMatch(token -> !token.transportHistory.wasSent());
+			}
+		}
+
+		public void unconditionallySend() {
+			synchronized (activeMessages) {
+				envelopeDispatcher().dispatch(activeMessages,
+						receiveChannel().snapshotActiveMessages());
+			}
+		}
+
+		public String toActiveStateString() {
+			List<MessageToken> snapshotActiveMessages = snapshotActiveMessages();
+			return snapshotActiveMessages.stream().map(MessageToken::toString)
+					.collect(Collectors.joining("\n"));
+		}
+
+		protected void send(Message message) {
+			send(List.of(message));
+		}
+
+		protected void send(List<Message> messages) {
+			messages.forEach(message -> {
+				bufferMessage(new MessageToken(message));
+			});
+			conditionallySend();
+		}
+
+		protected void initImplementations() {
+			receiptVerifier = new ReceiptVerifier();
+		}
+
+		@Override
+		protected boolean publishesMessages() {
+			return false;
+		}
+
+		@Override
+		String channelName() {
+			return "send";
 		}
 
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
@@ -912,12 +926,6 @@ public abstract class MessageTransportLayer {
 		void sendAcknowledgments() {
 			conditionallySend();
 		}
-
-		public String toActiveStateString() {
-			List<MessageToken> snapshotActiveMessages = snapshotActiveMessages();
-			return snapshotActiveMessages.stream().map(MessageToken::toString)
-					.collect(Collectors.joining("\n"));
-		}
 	}
 
 	public abstract class ReceiveChannel extends Channel {
@@ -926,11 +934,6 @@ public abstract class MessageTransportLayer {
 		EnvelopeId highestReceivedEnvelopeId;
 
 		protected Set<MessageId> receivedMessageIds = new LinkedHashSet<>();
-
-		@Override
-		String channelName() {
-			return "receive";
-		}
 
 		/*
 		 * Send - update histories
@@ -951,10 +954,22 @@ public abstract class MessageTransportLayer {
 			sendChannel().sendAcknowledgments();
 		}
 
+		@Override
+		protected boolean publishesMessages() {
+			return true;
+		}
+
+		protected abstract Message.Handler handler(Message message);
+
+		@Override
+		String channelName() {
+			return "receive";
+		}
+
 		void publishSequentialMessages() {
 			synchronized (activeMessages) {
 				for (MessageToken activeMessageToken : activeMessages) {
-					boolean publish = activeMessageToken.message.messageId == highestPublishedMessageId
+					boolean publish = activeMessageToken.message.messageId.number == highestPublishedMessageId
 							+ 1;
 					publish |= handler(activeMessageToken.message)
 							.isHandleOutOfBand();
@@ -968,13 +983,6 @@ public abstract class MessageTransportLayer {
 			}
 		}
 
-		@Override
-		protected boolean publishesMessages() {
-			return true;
-		}
-
-		protected abstract Message.Handler handler(Message message);
-
 		void addMessagesToActive(MessageEnvelope envelope) {
 			/*
 			 * this is the only place receivedMessageIds is used, so sync works
@@ -986,7 +994,7 @@ public abstract class MessageTransportLayer {
 						return;
 					}
 					MessageToken activeMessageToken = new MessageToken(
-							packet.message, packet.messageId.sendChannelId);
+							packet.message);
 					activeMessageToken.transportHistory.received = new Date();
 					activeMessageToken.transportHistory.sent = envelope.dateSent;
 					bufferMessage(activeMessageToken);
@@ -1017,6 +1025,25 @@ public abstract class MessageTransportLayer {
 		}
 	}
 
+	class TransportEvents {
+		List<TransportEvent> events = new ArrayList<>();
+
+		synchronized void onTransportSuccess() {
+			events.add(new TransportEvent(Type.success));
+		}
+
+		synchronized void onTransportFailure() {
+			events.add(new TransportEvent(Type.transport_failure));
+		}
+	}
+
+	public static LooseContext.Key<MessageTransportLayer> CONTEXT_TRANSPORT_LAYER = LooseContext
+			.key(MessageTransportLayer.class, "CONTEXT_TRANSPORT_LAYER");
+
+	MessageId highestProcessingCounterpartId;
+
+	TransportEvents transportEvents = new TransportEvents();
+
 	SequentialIdGenerator messageIdGenerator = new SequentialIdGenerator();
 
 	SequentialIdGenerator envelopeIdGenerator = new SequentialIdGenerator();
@@ -1026,6 +1053,20 @@ public abstract class MessageTransportLayer {
 
 	public Topic<RemoteComponentProtocol.Message> topicMessageBuffered = Topic
 			.create();
+
+	protected Logger logger = LoggerFactory
+			.getLogger(MessageTransportLayer.class);
+
+	public void setHighestProcessingCounterpartId(
+			MessageId highestProcessingCounterpartId) {
+		Preconditions.checkArgument(highestProcessingCounterpartId == null
+				|| highestProcessingCounterpartId.sendChannelId != sendChannelId());
+		this.highestProcessingCounterpartId = highestProcessingCounterpartId;
+	}
+
+	public void onReceiveSuccess() {
+		transportEvents.onTransportSuccess();
+	}
 
 	/*
 	 * TODO - remove
@@ -1038,6 +1079,17 @@ public abstract class MessageTransportLayer {
 		sendChannel().send(message);
 	}
 
+	@Override
+	public String toString() {
+		return FormatBuilder.keyValues("sendChannelId", sendChannelId(),
+				"sendChannel", sendChannel(), "receiveChannel",
+				receiveChannel());
+	}
+
+	public void registerInContext() {
+		CONTEXT_TRANSPORT_LAYER.set(this);
+	}
+
 	protected abstract SendChannelId sendChannelId();
 
 	protected abstract SendChannel sendChannel();
@@ -1046,13 +1098,11 @@ public abstract class MessageTransportLayer {
 
 	protected abstract EnvelopeDispatcher envelopeDispatcher();
 
-	protected Logger logger = LoggerFactory
-			.getLogger(MessageTransportLayer.class);
-
-	@Override
-	public String toString() {
-		return FormatBuilder.keyValues("sendChannelId", sendChannelId(),
-				"sendChannel", sendChannel(), "receiveChannel",
-				receiveChannel());
+	void ensureMessageId(Message message) {
+		if (message.messageId == null) {
+			MessageId messageId = new MessageId(sendChannelId(),
+					messageIdGenerator.incrementAndGetInt());
+			message.messageId = messageId;
+		}
 	}
 }

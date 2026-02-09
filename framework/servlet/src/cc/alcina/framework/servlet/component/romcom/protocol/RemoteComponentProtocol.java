@@ -32,7 +32,8 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentSettings;
-import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.MutationId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 
 public class RemoteComponentProtocol {
 	@Bean
@@ -72,6 +73,16 @@ public class RemoteComponentProtocol {
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Message {
 		/**
+		 * Consumers of subtypes may require visibility data for both timelines
+		 */
+		public interface HasTimeline {
+			void setCounterpartProcessingId(
+					MessageId highestProcessingCounterpartId);
+
+			MessageId getCounterpartProcessingId();
+		}
+
+		/**
 		 * BeforeHandled and AfterHandled are used to handle the processes
 		 * supporting mutation conflict resolution, client and server side
 		 */
@@ -97,7 +108,21 @@ public class RemoteComponentProtocol {
 		public static class OnQueued implements ContextObservable.Base {
 			public Message message;
 
-			public OnQueued(Message message) {
+			public SendChannelId sendChannelId;
+
+			public OnQueued(SendChannelId sendChannelId, Message message) {
+				this.sendChannelId = sendChannelId;
+				this.message = message;
+			}
+		}
+
+		public static class OnProcessed implements ContextObservable.Base {
+			public Message message;
+
+			public SendChannelId sendChannelId;
+
+			public OnProcessed(SendChannelId sendChannelId, Message message) {
+				this.sendChannelId = sendChannelId;
 				this.message = message;
 			}
 		}
@@ -240,11 +265,15 @@ public class RemoteComponentProtocol {
 
 			public Object response;
 
+			/**
+			 * this encapsulates both any unexpected exception, and handleable
+			 * exceptions such as NodeNotFound
+			 */
 			public ExceptionTransport exception;
 		}
 
 		public static class RejectMutation extends Message {
-			public MutationId counterpartId;
+			public MessageId counterpartId;
 		}
 
 		public static class ExceptionTransport extends Bindable.Fields {
@@ -320,20 +349,31 @@ public class RemoteComponentProtocol {
 		public interface PrependWindowState {
 		}
 
-		public static class WindowStateUpdate extends Message {
+		public static class WindowStateUpdate extends Message
+				implements Message.HasTimeline {
 			public WindowState windowState;
 
 			public SelectionRecord selectionRecord;
 
 			public ElementSelectionRangeRecord elementSelectionRangeRecord;
-
 			/*
 			 * Another way to handle this would be to track (on the server)
 			 * which ids have been processed when this was emitted, using the
 			 * transporthistory. Even though this has a bit of doubling-up
 			 * though - it's a *lot* clearer/simpler to understand
 			 */
-			public int highestProcessedMutationMessageId;
+
+			public MessageId counterpartProcessingId;
+
+			public MessageId getCounterpartProcessingId() {
+				return counterpartProcessingId;
+			}
+
+			@Override
+			public void setCounterpartProcessingId(
+					MessageId counterpartProcessingId) {
+				this.counterpartProcessingId = counterpartProcessingId;
+			}
 
 			@Override
 			protected String provideMessageData() {
@@ -384,9 +424,9 @@ public class RemoteComponentProtocol {
 		public boolean sync;
 
 		/*
-		 * Client -> server; incremental.
+		 * Models the sequence index and the message source
 		 */
-		public int messageId;
+		public MessageId messageId;
 
 		public String toDebugString() {
 			return toString();

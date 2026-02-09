@@ -474,6 +474,10 @@ public interface Story {
 				 * <p>
 				 * To send a control code, use
 				 * Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN) etc
+				 * 
+				 * <p>
+				 * Note that by default this clears the element (which is not
+				 * Selenium default)
 				 */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented

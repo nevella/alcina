@@ -13,18 +13,33 @@ import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.EditAreaBehavior.RejectConflictingMutation;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
-import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.MutationId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.OnQueued;
 
+/*
+ * Note that much of this code is shared, since the server environment behaves
+ * 'like the client' - the client just rejects, the server needs to reject AND
+ * merge.
+ * 
+ * Tracking on the server as well as the client avoids waiting for in-flight
+ * messages to cross
+ */
 @Feature.Ref(Feature_Dirndl_MutationConflictResolution.class)
-public class MutationConflictResolution {
+public abstract class MutationConflictResolution {
 	/**
 	 * Reject server mutation messages if the client has modified in a timeline
 	 * not visible to the server at mutation time
+	 * 
+	 * This code works both client + server - the client rejects the server
+	 * mutation, wheras the server rejects (initially) ths client mutation
 	 */
-	class TestRejectionObserver implements
+	protected class TestRejectionObserver implements
 			ProcessObserver<RemoteComponentProtocol.Message.BeforeHandled> {
+		public TestRejectionObserver() {
+		}
+
 		@Override
 		public void topicPublished(BeforeHandled observable) {
 			RemoteComponentProtocol.Message message = observable.message;
@@ -32,17 +47,22 @@ public class MutationConflictResolution {
 				ConflictingMutations conflictingMutations = new ConflictingMutations();
 				Mutations mutations = (Mutations) message;
 				mutations.domMutations.forEach(record -> {
-					Node affectedNode = record.target.node();
-					Element rejectBehavior = RejectConflictingMutation
-							.ancestorWithBehavior(affectedNode);
-					if (rejectBehavior != null
-							&& testReject(rejectBehavior, mutations)) {
-						conflictingMutations.conflicting.add(record);
+					Node affectedNode = record.target.attachId.node();
+					/*
+					 * to-be-attached nodes will be null here, but they can be
+					 * ignored (it's the parent mod that counts here)
+					 */
+					if (affectedNode != null) {
+						Element rejectBehavior = RejectConflictingMutation
+								.ancestorWithBehavior(affectedNode);
+						if (rejectBehavior != null
+								&& testReject(rejectBehavior, mutations)) {
+							conflictingMutations.conflicting.add(record);
+						}
 					}
 				});
 				if (conflictingMutations.hasConflicts()) {
-					observable.cancelled = true;
-					new Mutations.Rejected(mutations).publish();
+					onHasConflicts(observable, conflictingMutations);
 				}
 			}
 		}
@@ -51,25 +71,37 @@ public class MutationConflictResolution {
 	/**
 	 * Register client elements for possible mutation rejection. Client only
 	 */
-	class RejectHappensBeforeMutations implements
+	protected class RejectHappensBeforeQueuedMutations implements
 			ProcessObserver<RemoteComponentProtocol.Message.OnQueued> {
+		public RejectHappensBeforeQueuedMutations() {
+		}
+
 		@Override
 		public void topicPublished(OnQueued observable) {
-			RemoteComponentProtocol.Message message = observable.message;
-			if (message instanceof Mutations) {
-				Mutations mutations = (Mutations) message;
-				mutations.domMutations.forEach(record -> {
-					Node affectedNode = record.target.node();
-					Element rejectBehavior = RejectConflictingMutation
-							.ancestorWithBehavior(affectedNode);
-					ensureCurrency(
-							rejectBehavior).newestLocalMutationId = mutations.mutationId;
-				});
+			if (observable.sendChannelId == SendChannelId.SERVER_TO_CLIENT) {
+				return;
 			}
+			RemoteComponentProtocol.Message message = observable.message;
+			maybeUpdateRejectionCurrency(message);
 		}
 	}
 
-	static class ConflictingMutations {
+	protected class RejectHappensAfterQueuedMutations implements
+			ProcessObserver<RemoteComponentProtocol.Message.OnQueued> {
+		public RejectHappensAfterQueuedMutations() {
+		}
+
+		@Override
+		public void topicPublished(OnQueued observable) {
+			if (observable.sendChannelId == SendChannelId.CLIENT_TO_SERVER) {
+				return;
+			}
+			RemoteComponentProtocol.Message message = observable.message;
+			maybeUpdateRejectionCurrency(message);
+		}
+	}
+
+	protected static class ConflictingMutations {
 		List<MutationRecord> conflicting = new ArrayList<>();
 
 		boolean hasConflicts() {
@@ -77,33 +109,83 @@ public class MutationConflictResolution {
 		}
 	}
 
+	/**
+	 * Perform the undo.
+	 */
+	/*
+	 * Steps:
+	 * 
+	 * - populate the pending to-client mutationrecord with the mutations of the
+	 * rejected record
+	 * 
+	 * - generate + apply undo (inverse) mutations for conflicting mutations (in
+	 * reverse order)
+	 * 
+	 * - flush listeners
+	 */
+	protected class PerformPartialUndo
+			implements ProcessObserver<Mutations.Rejected> {
+		public PerformPartialUndo() {
+		}
+
+		@Override
+		public void topicPublished(Mutations.Rejected observable) {
+			int debug = 3;
+		}
+	}
+
 	class EditCurrency {
 		Element withRejectBehavior;
 
-		MutationId newestLocalMutationId;
+		MessageId newestLocalMutationId;
+
+		/**
+		 * these are retained for undo, and removed if testReject passes
+		 */
+		List<Mutations> mutationsList = new ArrayList<>();
 
 		EditCurrency(Element withRejectBehavior) {
 			this.withRejectBehavior = withRejectBehavior;
 		}
 
+		void addLocalMutations(Mutations mutations) {
+			this.mutationsList.add(mutations);
+			newestLocalMutationId = mutations.messageId;
+		}
+
 		boolean testReject(Mutations mutations) {
-			return newestLocalMutationId != null && newestLocalMutationId
-					.compareTo(mutations.highestVisibleCounterpartId) > 0;
+			boolean reject = newestLocalMutationId != null
+					&& newestLocalMutationId
+							.compareTo(mutations.counterpartProcessingId) > 0;
+			if (!reject) {
+				mutationsList.removeIf(m -> m.messageId
+						.compareTo(mutations.counterpartProcessingId) <= 0);
+			}
+			return reject;
 		}
 	}
-
-	boolean server;
 
 	Map<Element, EditCurrency> elementCurrency = AlcinaCollections
 			.newLinkedHashMap();
 
-	public MutationConflictResolution(boolean server) {
-		this.server = server;
-		/*
-		 * wip
-		 */
-		// new TestRejectionObserver().bind();
-		// new RejectHappensBeforeMutations().bind();
+	protected abstract void onHasConflicts(BeforeHandled observable,
+			ConflictingMutations conflictingMutations);
+
+	void maybeUpdateRejectionCurrency(RemoteComponentProtocol.Message message) {
+		if (message instanceof Mutations) {
+			Mutations mutations = (Mutations) message;
+			mutations.domMutations.forEach(record -> {
+				Node affectedNode = record.target.attachId.node();
+				if (affectedNode != null) {
+					Element rejectBehavior = RejectConflictingMutation
+							.ancestorWithBehavior(affectedNode);
+					if (rejectBehavior != null) {
+						ensureCurrency(rejectBehavior)
+								.addLocalMutations(mutations);
+					}
+				}
+			});
+		}
 	}
 
 	boolean testReject(Element withRejectBehavior, Mutations mutations) {

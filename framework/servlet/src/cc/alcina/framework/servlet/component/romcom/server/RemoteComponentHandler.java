@@ -320,6 +320,7 @@ public class RemoteComponentHandler {
 					ProcessingException message = ProcessingException.wrap(e,
 							false);
 					MessageId messageId = new MessageId(sendChannelId, -1);
+					message.messageId = messageId;
 					response.messageEnvelope.packets
 							.add(new MessagePacket(messageId, message));
 				}

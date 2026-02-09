@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.NodeNotFoundException;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Window;
@@ -151,8 +152,12 @@ public class OverlayContainer extends Model implements HasTag,
 							.isAttached()) {
 				return;
 			}
-			containerOptions.position.fromRect = containerOptions.position.rectSourceElement
-					.getBoundingClientRect();
+			try {
+				containerOptions.position.fromRect = containerOptions.position.rectSourceElement
+						.getBoundingClientRect();
+			} catch (NodeNotFoundException e) {
+				return;
+			}
 			this.position();
 		});
 	}

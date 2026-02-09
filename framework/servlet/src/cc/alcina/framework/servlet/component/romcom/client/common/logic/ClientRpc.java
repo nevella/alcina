@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
-import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
@@ -45,10 +44,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
  * TODO - romcom - handle network issue retry (client and server)
  */
 @Registration.Singleton
-public class ClientRpc implements HandlerContext {
+public class ClientRpc {
 	int awaitDelay = 0;
-
-	int highestProcessedMutationMessageId;
 
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
@@ -107,7 +104,6 @@ public class ClientRpc implements HandlerContext {
 		} else if (message instanceof Message.WindowStateUpdate) {
 			WindowStateUpdate windowStateUpdate = (WindowStateUpdate) message;
 			windowStateUpdate.windowState = generateWindowState();
-			windowStateUpdate.highestProcessedMutationMessageId = highestProcessedMutationMessageId;
 		}
 	}
 
@@ -141,24 +137,30 @@ public class ClientRpc implements HandlerContext {
 	RemoteComponentUi ui;
 
 	OffsetProtocol.OffsetRegistry offsetRegistry = new OffsetProtocol.OffsetRegistry();
+
 	MutationConflictResolution mutationConflictResolution;
 
 	ClientRpc(RemoteComponentUi ui) {
 		this.ui = ui;
 		transportLayer = new MessageTransportLayerClient();
+		transportLayer.registerInContext();
 		exceptionHandler = new ExceptionHandler();
-		mutationConflictResolution = new MutationConflictResolution(false);
+		mutationConflictResolution = new MutationConflictResolutionClient();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 	}
 
 	void onMessageReceived(Message message) {
 		try {
+			if (!message.sync) {
+				transportLayer
+						.setHighestProcessingCounterpartId(message.messageId);
+			}
 			BeforeHandled beforeHandled = new Message.BeforeHandled(message);
 			beforeHandled.publish();
 			if (!beforeHandled.cancelled) {
 				ProtocolMessageHandlerClient handler = Registry.impl(
 						ProtocolMessageHandlerClient.class, message.getClass());
-				handler.handle(this, message);
+				handler.handle(message);
 				new Message.AfterHandled(message).publish();
 			}
 		} catch (Throwable e) {
@@ -295,10 +297,5 @@ public class ClientRpc implements HandlerContext {
 		if (ui.environmentSettings.attachRpcDebugMethod) {
 			transportLayer.attachRpcDebugMethod();
 		}
-	}
-
-	@Override
-	public void setHighestProcessedMutationMessageId(int messageId) {
-		this.highestProcessedMutationMessageId = messageId;
 	}
 }
