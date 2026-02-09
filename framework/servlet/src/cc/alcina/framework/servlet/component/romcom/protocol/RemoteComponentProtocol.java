@@ -378,8 +378,6 @@ public class RemoteComponentProtocol {
 			@Override
 			protected String provideMessageData() {
 				FormatBuilder format = new FormatBuilder().separator(" - ");
-				format.format("[node offsets: %s]",
-						windowState.nodeUiStates.size());
 				if (selectionRecord != null) {
 					format.format("[selection: %s]", selectionRecord);
 				}

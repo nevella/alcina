@@ -253,7 +253,7 @@ public class PackageProperties {
       public TypedProperty<Link, String> target = new TypedProperty<>(Link.class, "target");
       public TypedProperty<Link, String> text = new TypedProperty<>(Link.class, "text");
       public TypedProperty<Link, String> title = new TypedProperty<>(Link.class, "title");
-      public static class InstanceProperties extends InstanceProperty.Container<Link> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Link> {
         public  InstanceProperties(Link source){super(source);}
         public InstanceProperty<Link, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.link.behaviors);}
         public InstanceProperty<Link, String> className(){return new InstanceProperty<>(source,PackageProperties.link.className);}

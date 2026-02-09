@@ -1,18 +1,25 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.Date;
-import java.util.List;
-
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.EditArea;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
+import java.lang.Boolean;
+import java.lang.Class;
+import java.lang.Integer;
+import java.lang.Object;
+import java.lang.String;
+import java.util.Date;
+import java.util.List;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _ChoiceEditor choiceEditor = new _ChoiceEditor();
     static _ChoiceEditor_ChoiceNode choiceEditor_choiceNode = new _ChoiceEditor_ChoiceNode();
@@ -65,7 +72,7 @@ public class PackageProperties {
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> selected = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "selected");
       TypedProperty<ChoiceEditor.ChoiceNode, Object> stringRepresentable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "stringRepresentable");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> valid = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "valid");
-      static class InstanceProperties extends InstanceProperty.Container<ChoiceEditor.ChoiceNode> {
+      static class InstanceProperties extends 	InstanceProperty.Container<ChoiceEditor.ChoiceNode> {
          InstanceProperties(ChoiceEditor.ChoiceNode source){super(source);}
         InstanceProperty<ChoiceEditor.ChoiceNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.behaviors);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.content);}
@@ -210,7 +217,7 @@ public class PackageProperties {
       public TypedProperty<EditNode, Boolean> contentEditable = new TypedProperty<>(EditNode.class, "contentEditable");
       public TypedProperty<EditNode, Boolean> selected = new TypedProperty<>(EditNode.class, "selected");
       public TypedProperty<EditNode, Boolean> valid = new TypedProperty<>(EditNode.class, "valid");
-      public static class InstanceProperties extends InstanceProperty.Container<EditNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<EditNode> {
         public  InstanceProperties(EditNode source){super(source);}
         public InstanceProperty<EditNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.editNode.contentEditable);}
         public InstanceProperty<EditNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.editNode.selected);}
@@ -231,7 +238,7 @@ public class PackageProperties {
       public TypedProperty<EntityNode, Boolean> selected = new TypedProperty<>(EntityNode.class, "selected");
       public TypedProperty<EntityNode, EntityLocator> stringRepresentable = new TypedProperty<>(EntityNode.class, "stringRepresentable");
       public TypedProperty<EntityNode, Boolean> valid = new TypedProperty<>(EntityNode.class, "valid");
-      public static class InstanceProperties extends InstanceProperty.Container<EntityNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<EntityNode> {
         public  InstanceProperties(EntityNode source){super(source);}
         public InstanceProperty<EntityNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.entityNode.behaviors);}
         public InstanceProperty<EntityNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.entityNode.content);}
@@ -423,7 +430,7 @@ public class PackageProperties {
       public TypedProperty<SuggestingNode, Boolean> selected = new TypedProperty<>(SuggestingNode.class, "selected");
       public TypedProperty<SuggestingNode, TextNode> textFragment = new TypedProperty<>(SuggestingNode.class, "textFragment");
       public TypedProperty<SuggestingNode, Boolean> valid = new TypedProperty<>(SuggestingNode.class, "valid");
-      public static class InstanceProperties extends InstanceProperty.Container<SuggestingNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SuggestingNode> {
         public  InstanceProperties(SuggestingNode source){super(source);}
         public InstanceProperty<SuggestingNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.behaviors);}
         public InstanceProperty<SuggestingNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.contentEditable);}

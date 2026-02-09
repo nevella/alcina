@@ -1054,6 +1054,12 @@ public class LocalDom implements ContextFrame {
 				case BrowserEvents.PAGEHIDE:
 					Window.onPageHide();
 					break;
+				case BrowserEvents.SCROLL:
+					Window.onScroll();
+					break;
+				case BrowserEvents.WINDOWRESIZE:
+					Window.onResize();
+					break;
 				default:
 					// ignore, could be implemented
 				}

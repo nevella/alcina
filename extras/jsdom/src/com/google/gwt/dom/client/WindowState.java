@@ -1,14 +1,11 @@
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -75,23 +72,11 @@ public final class WindowState {
 
 	public AttachId activeElement;
 
-	public List<NodeUiState> nodeUiStates = new ArrayList<>();
-
 	public OffsetsDelta offsetsDelta;
-
-	transient Map<Integer, NodeUiState> idUiState;
 
 	public int clientHeight;
 
 	public int clientWidth;
-
-	public NodeUiState uiStateFor(int attachId) {
-		if (idUiState == null) {
-			idUiState = nodeUiStates.stream().collect(
-					AlcinaCollectors.toKeyMap(state -> state.nodeId.id));
-		}
-		return idUiState.get(attachId);
-	}
 
 	@Bean(PropertySource.FIELDS)
 	public final static class OffsetsDelta {

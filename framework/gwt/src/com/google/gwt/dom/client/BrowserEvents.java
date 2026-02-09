@@ -105,6 +105,11 @@ public class BrowserEvents {
 
 	public static final String TOUCHSTART = "touchstart";
 
+	/*
+	 * synthetic, occurs on the window
+	 */
+	public static final String WINDOWRESIZE = "windowresize";
+
 	// Prevents instantiation and subclassing.
 	private BrowserEvents() {
 	}

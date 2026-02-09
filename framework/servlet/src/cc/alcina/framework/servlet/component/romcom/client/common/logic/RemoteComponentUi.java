@@ -57,7 +57,8 @@ public class RemoteComponentUi {
 		@Override
 		public void onPreviewNativeEvent(NativePreviewEvent event) {
 			Event nativeEvent = (Event) event.getNativeEvent();
-			ClientEventDispatch.dispatchEventMessage(nativeEvent, null, true);
+			ClientRpc.get().clientEventDispatch
+					.dispatchEventMessage(nativeEvent, null, true);
 		}
 	}
 
@@ -269,13 +270,32 @@ public class RemoteComponentUi {
 	// now handles window events)
 	void onPageHideNativeEvent() {
 		Event event = new Event(BrowserEvents.PAGEHIDE);
-		ClientEventDispatch.dispatchEventMessage(event, null, false);
+		ClientRpc.get().clientEventDispatch.dispatchEventMessage(event, null,
+				false);
+	}
+
+	void onWindowResizeNativeEvent() {
+		Event event = new Event(BrowserEvents.WINDOWRESIZE);
+		ClientRpc.get().clientEventDispatch.dispatchEventMessage(event, null,
+				false);
+	}
+
+	void onWindowScrollNativeEvent() {
+		Event event = new Event(BrowserEvents.SCROLL);
+		ClientRpc.get().clientEventDispatch.dispatchEventMessage(event, null,
+				false);
 	}
 
 	final native void initWindowListeners() /*-{
 		var _this=this;
 		$wnd.onpagehide = $entry(function (evt){
 			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::onPageHideNativeEvent()();
+		});
+		$wnd.onresize = $entry(function (evt){
+			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::onWindowResizeNativeEvent()();
+		});
+		$wnd.onscroll = $entry(function (evt){
+			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::onWindowScrollNativeEvent()();
 		});
 		}-*/;
 }

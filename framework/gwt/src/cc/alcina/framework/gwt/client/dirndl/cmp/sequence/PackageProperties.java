@@ -73,7 +73,6 @@ public class PackageProperties {
     public static class _SequenceComponent implements TypedProperty.Container {
       public TypedProperty<SequenceComponent, Model> header = new TypedProperty<>(SequenceComponent.class, "header");
       public TypedProperty<SequenceComponent, SequenceArea> sequenceArea = new TypedProperty<>(SequenceComponent.class, "sequenceArea");
-      public TypedProperty<SequenceComponent, SequenceArea.Service> sequenceAreaService = new TypedProperty<>(SequenceComponent.class, "sequenceAreaService");
       public TypedProperty<SequenceComponent, InstanceProperty> sequencePlaceProperty = new TypedProperty<>(SequenceComponent.class, "sequencePlaceProperty");
       public TypedProperty<SequenceComponent, SequenceSettings> sequenceSettings = new TypedProperty<>(SequenceComponent.class, "sequenceSettings");
       public TypedProperty<SequenceComponent, SequenceComponent.SequenceAreaServiceImpl> serviceImpl = new TypedProperty<>(SequenceComponent.class, "serviceImpl");
@@ -81,7 +80,6 @@ public class PackageProperties {
         public  InstanceProperties(SequenceComponent source){super(source);}
         public InstanceProperty<SequenceComponent, Model> header(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.header);}
         public InstanceProperty<SequenceComponent, SequenceArea> sequenceArea(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.sequenceArea);}
-        public InstanceProperty<SequenceComponent, SequenceArea.Service> sequenceAreaService(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.sequenceAreaService);}
         public InstanceProperty<SequenceComponent, InstanceProperty> sequencePlaceProperty(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.sequencePlaceProperty);}
         public InstanceProperty<SequenceComponent, SequenceSettings> sequenceSettings(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.sequenceSettings);}
         public InstanceProperty<SequenceComponent, SequenceComponent.SequenceAreaServiceImpl> serviceImpl(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.serviceImpl);}

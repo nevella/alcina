@@ -1,16 +1,15 @@
 package cc.alcina.framework.servlet.component.gallery.home;
 
-import java.util.List;
-
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
+import java.util.List;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     static _GalleryHomeArea galleryHomeArea = new _GalleryHomeArea();
     
@@ -19,7 +18,7 @@ public class PackageProperties {
       TypedProperty<GalleryHomeArea, Heading> heading = new TypedProperty<>(GalleryHomeArea.class, "heading");
       TypedProperty<GalleryHomeArea, GalleryPlace> place = new TypedProperty<>(GalleryHomeArea.class, "place");
       TypedProperty<GalleryHomeArea, SubHeading> subHeading = new TypedProperty<>(GalleryHomeArea.class, "subHeading");
-      static class InstanceProperties extends InstanceProperty.Container<GalleryHomeArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<GalleryHomeArea> {
          InstanceProperties(GalleryHomeArea source){super(source);}
         InstanceProperty<GalleryHomeArea, List> cards(){return new InstanceProperty<>(source,PackageProperties.galleryHomeArea.cards);}
         InstanceProperty<GalleryHomeArea, Heading> heading(){return new InstanceProperty<>(source,PackageProperties.galleryHomeArea.heading);}

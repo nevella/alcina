@@ -434,13 +434,13 @@ public class Window {
     $wnd.moveTo(x, y);
 	}-*/;
 
-	static void onClosed() {
+	public static void onClosed() {
 		if (closeHandlersInitialized) {
 			CloseEvent.fire(ensureHandlers(), null);
 		}
 	}
 
-	static String onClosing() {
+	public static String onClosing() {
 		if (closeHandlersInitialized) {
 			Window.ClosingEvent event = new Window.ClosingEvent();
 			fireEvent(event);
@@ -453,13 +453,13 @@ public class Window {
 		fireEvent(new PageHideEvent());
 	}
 
-	static void onResize() {
+	public static void onResize() {
 		if (resizeHandlersInitialized) {
 			Resources.get().onResize();
 		}
 	}
 
-	static void onScroll() {
+	public static void onScroll() {
 		if (scrollHandlersInitialized) {
 			fireEvent(new Window.ScrollEvent(getScrollLeft(), getScrollTop()));
 		}

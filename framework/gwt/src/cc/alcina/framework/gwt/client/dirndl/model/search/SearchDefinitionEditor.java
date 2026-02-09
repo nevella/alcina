@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -156,20 +155,9 @@ public class SearchDefinitionEditor extends Model.Fields
 		return this;
 	}
 
-	/*
-	 * wip - ds.early
-	 */
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-			provideNode().getResolver().registerService(Service.class,
-					new ServiceImpl());
-		}
-	}
-
 	@Override
 	public void onNodeContext(NodeContext event) {
+		event.registerService(Service.class, new ServiceImpl());
 		this.initialSerializedDefinition = FlatTreeSerializer
 				.serializeElided(this.originalDefinition);
 		this.renderedDefinition = this.originalDefinition.cloneObject();

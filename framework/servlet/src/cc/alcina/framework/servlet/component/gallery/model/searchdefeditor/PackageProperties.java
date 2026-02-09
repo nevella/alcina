@@ -20,7 +20,7 @@ public class PackageProperties {
       TypedProperty<SearchDefinitionEditorGalleryArea, Heading> heading = new TypedProperty<>(SearchDefinitionEditorGalleryArea.class, "heading");
       TypedProperty<SearchDefinitionEditorGalleryArea, SearchDefinitionEditorGalleryArea.InfoModel> model = new TypedProperty<>(SearchDefinitionEditorGalleryArea.class, "model");
       TypedProperty<SearchDefinitionEditorGalleryArea, GalleryPlace> place = new TypedProperty<>(SearchDefinitionEditorGalleryArea.class, "place");
-      static class InstanceProperties extends InstanceProperty.Container<SearchDefinitionEditorGalleryArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<SearchDefinitionEditorGalleryArea> {
          InstanceProperties(SearchDefinitionEditorGalleryArea source){super(source);}
         InstanceProperty<SearchDefinitionEditorGalleryArea, SearchDefinitionEditorGalleryPlace.Definition> definition(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditorGalleryArea.definition);}
         InstanceProperty<SearchDefinitionEditorGalleryArea, Heading> heading(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditorGalleryArea.heading);}
@@ -36,7 +36,7 @@ public class PackageProperties {
     
     public static class _SearchDefinitionEditorGalleryPlace_Definition implements TypedProperty.Container {
       public TypedProperty<SearchDefinitionEditorGalleryPlace.Definition, SequenceSearchDefinition> def = new TypedProperty<>(SearchDefinitionEditorGalleryPlace.Definition.class, "def");
-      public static class InstanceProperties extends InstanceProperty.Container<SearchDefinitionEditorGalleryPlace.Definition> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SearchDefinitionEditorGalleryPlace.Definition> {
         public  InstanceProperties(SearchDefinitionEditorGalleryPlace.Definition source){super(source);}
         public InstanceProperty<SearchDefinitionEditorGalleryPlace.Definition, SequenceSearchDefinition> def(){return new InstanceProperty<>(source,PackageProperties.searchDefinitionEditorGalleryPlace_definition.def);}
       }

@@ -42,8 +42,10 @@ public interface Feature_Romcom_Impl extends Feature {
 	 * via a caching protocol. Implemented + a large performance improvement
 	 * 
 	 * <ul>
-	 * <li>Revisit {@link ElementBehavior} particularly the docs (and send
-	 * instances, not classes)
+	 * <li>wip - ds.mid - Revisit {@link ElementBehavior} particularly the docs
+	 * (and send instances, not classes) *
+	 * <li>wip - ds.mid - check the offsetprotocol json size + possibly
+	 * client-side zip
 	 * </ul>
 	 */
 	@Feature.Parent(Feature_Romcom_Impl.class)

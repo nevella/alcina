@@ -202,7 +202,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 
 			@Override
 			public void onBrowserEvent(Event event) {
-				ClientEventDispatch.dispatchEventMessage(event, elem, false);
+				ClientRpc.get().clientEventDispatch.dispatchEventMessage(event,
+						elem, false);
 			}
 		}
 	}

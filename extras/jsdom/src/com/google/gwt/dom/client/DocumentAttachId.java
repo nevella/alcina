@@ -891,8 +891,6 @@ public class DocumentAttachId extends NodeAttachId
 	 * a swap)
 	 */
 	public void onRemoteUiContextReceived(WindowState windowState) {
-		logger.debug("received window.state [observed offsets] {}",
-				windowState.nodeUiStates.size());
 		invokeProxy.onWindowState(windowState);
 	}
 

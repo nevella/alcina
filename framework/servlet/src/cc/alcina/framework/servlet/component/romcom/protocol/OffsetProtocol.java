@@ -16,7 +16,6 @@ import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 
 /**
@@ -125,9 +124,9 @@ public class OffsetProtocol {
 					computed.absoluteLeft = left;
 				}
 				computed.boundingClientRect.top = computed.absoluteTop
-						+ Window.getScrollTop();
+						- Window.getScrollTop();
 				computed.boundingClientRect.left = computed.absoluteLeft
-						+ Window.getScrollLeft();
+						- Window.getScrollLeft();
 				computed.boundingClientRect.right = computed.boundingClientRect.left
 						+ offsets.offsetWidth;
 				computed.boundingClientRect.bottom = computed.boundingClientRect.top

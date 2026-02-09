@@ -1,11 +1,9 @@
 package cc.alcina.framework.servlet.component.romcom.protocol;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
 
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.DocumentAttachId;
@@ -16,7 +14,6 @@ import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.WindowState.NodeUiState;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol.OffsetRegistry;
 
 /**
@@ -66,22 +63,6 @@ public class RemoteWindowState implements InvokeProxy {
 		}
 		NodeUiState fromOffsets = offsetRegistry.computeNodeUiState(attachId);
 		return fromOffsets;
-		// NodeUiState uiState = windowState.uiStateFor(attachId.id);
-		// if (uiState != null) {
-		// uiState.boundingClientRect = uiState.boundingClientRect
-		// .toRoundedIntRect();
-		// }
-		// if (!Objects.equals(uiState, fromOffsets)) {
-		// if (attachId.node() == attachId.node().getOwnerDocument()
-		// .getDocumentElement()) {
-		// } else {
-		// Objects.equals(uiState, fromOffsets);
-		// Ax.out(uiState);
-		// Ax.out(fromOffsets);
-		// int debug = 3;
-		// }
-		// }
-		// return uiState;
 	}
 
 	public <T> T invokeSync(NodeAttachId node, String methodName,
@@ -98,8 +79,9 @@ public class RemoteWindowState implements InvokeProxy {
 					switch (methodName) {
 					case "getScrollTop":
 						return (T) (Integer) nodeUiState.scrollPos.i2;
+					case "getScrollLeft":
+						return (T) (Integer) nodeUiState.scrollPos.i1;
 					case "getBoundingClientRect":
-						// Ax.out("bcr: %s", node.node().toNameAttachId());
 						return (T) nodeUiState.boundingClientRect;
 					case "getClientHeight":
 					case "getClientWidth":

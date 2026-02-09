@@ -22,8 +22,8 @@ import java.lang.String;
 import java.util.Set;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _AppSuggestorSequence appSuggestorSequence = new _AppSuggestorSequence();
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
@@ -76,7 +76,7 @@ public class PackageProperties {
       TypedProperty<Header, Header.Mid> mid = new TypedProperty<>(Header.class, "mid");
       TypedProperty<Header, Header.Right> right = new TypedProperty<>(Header.class, "right");
       TypedProperty<Header, Header.Search> search = new TypedProperty<>(Header.class, "search");
-      static class InstanceProperties extends InstanceProperty.Container<Header> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Header> {
          InstanceProperties(Header source){super(source);}
         InstanceProperty<Header, Header.Left> left(){return new InstanceProperty<>(source,PackageProperties.header.left);}
         InstanceProperty<Header, Header.Mid> mid(){return new InstanceProperty<>(source,PackageProperties.header.mid);}
@@ -109,7 +109,7 @@ public class PackageProperties {
     
     static class _Header_Mid implements TypedProperty.Container {
       TypedProperty<Header.Mid, AppSuggestorSequence> suggestor = new TypedProperty<>(Header.Mid.class, "suggestor");
-      static class InstanceProperties extends InstanceProperty.Container<Header.Mid> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Header.Mid> {
          InstanceProperties(Header.Mid source){super(source);}
         InstanceProperty<Header.Mid, AppSuggestorSequence> suggestor(){return new InstanceProperty<>(source,PackageProperties.header_mid.suggestor);}
       }
@@ -122,7 +122,7 @@ public class PackageProperties {
     
     static class _Header_Search implements TypedProperty.Container {
       TypedProperty<Header.Search, SequenceSearchDefinition> searchDefinition = new TypedProperty<>(Header.Search.class, "searchDefinition");
-      static class InstanceProperties extends InstanceProperty.Container<Header.Search> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Header.Search> {
          InstanceProperties(Header.Search source){super(source);}
         InstanceProperty<Header.Search, SequenceSearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.header_search.searchDefinition);}
       }
@@ -135,13 +135,11 @@ public class PackageProperties {
     
     static class _Page implements TypedProperty.Container {
       TypedProperty<Page, SequenceArea> sequenceArea = new TypedProperty<>(Page.class, "sequenceArea");
-      TypedProperty<Page, SequenceArea.Service> sequenceAreaService = new TypedProperty<>(Page.class, "sequenceAreaService");
       TypedProperty<Page, Page.SequenceAreaServiceImpl> serviceImpl = new TypedProperty<>(Page.class, "serviceImpl");
       TypedProperty<Page, SequenceBrowser.Ui> ui = new TypedProperty<>(Page.class, "ui");
       static class InstanceProperties extends 	InstanceProperty.Container<Page> {
          InstanceProperties(Page source){super(source);}
         InstanceProperty<Page, SequenceArea> sequenceArea(){return new InstanceProperty<>(source,PackageProperties.page.sequenceArea);}
-        InstanceProperty<Page, SequenceArea.Service> sequenceAreaService(){return new InstanceProperty<>(source,PackageProperties.page.sequenceAreaService);}
         InstanceProperty<Page, Page.SequenceAreaServiceImpl> serviceImpl(){return new InstanceProperty<>(source,PackageProperties.page.serviceImpl);}
         InstanceProperty<Page, SequenceBrowser.Ui> ui(){return new InstanceProperty<>(source,PackageProperties.page.ui);}
       }

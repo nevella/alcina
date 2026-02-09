@@ -59,7 +59,7 @@ public class PackageProperties {
     
     static class _Searchable_OperatorSelector implements TypedProperty.Container {
       TypedProperty<Searchable.OperatorSelector, StandardSearchOperator> operator = new TypedProperty<>(Searchable.OperatorSelector.class, "operator");
-      static class InstanceProperties extends InstanceProperty.Container<Searchable.OperatorSelector> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Searchable.OperatorSelector> {
          InstanceProperties(Searchable.OperatorSelector source){super(source);}
         InstanceProperty<Searchable.OperatorSelector, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.searchable_operatorSelector.operator);}
       }
@@ -72,7 +72,7 @@ public class PackageProperties {
     
     static class _Searchable_RenderedOperator implements TypedProperty.Container {
       TypedProperty<Searchable.RenderedOperator, StandardSearchOperator> operator = new TypedProperty<>(Searchable.RenderedOperator.class, "operator");
-      static class InstanceProperties extends InstanceProperty.Container<Searchable.RenderedOperator> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Searchable.RenderedOperator> {
          InstanceProperties(Searchable.RenderedOperator source){super(source);}
         InstanceProperty<Searchable.RenderedOperator, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.searchable_renderedOperator.operator);}
       }
