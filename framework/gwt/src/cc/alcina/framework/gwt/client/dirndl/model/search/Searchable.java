@@ -141,9 +141,6 @@ class Searchable extends Model.Fields
 			return true;
 		}
 	}
-	/*
-	 * wip - ds - move to onNodeContext
-	 */
 
 	public void onNodeContext(NodeContext event) {
 		node.getResolver().registerService(StringInput.Service.class,

@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 /*
- * wip - ds - add orderservice.provider interface
+ * wip - ds.late - add orderservice.provider interface
  */
 @TypedProperties
 @Directed.Delegating
