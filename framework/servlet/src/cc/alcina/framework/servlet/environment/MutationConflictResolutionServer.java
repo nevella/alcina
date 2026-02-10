@@ -9,7 +9,8 @@ public class MutationConflictResolutionServer
 	@Override
 	protected void onHasConflicts(BeforeHandled observable,
 			ConflictingMutations conflictingMutations) {
-		new Mutations.Rejected((Mutations) observable.message).publish();
+		new MutationConflictResolution.Rejected((Mutations) observable.message,
+				conflictingMutations).publish();
 	}
 
 	MutationConflictResolutionServer() {

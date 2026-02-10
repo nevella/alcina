@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.EditAreaBehavior.RejectConflictingMutation;
@@ -28,6 +29,18 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  */
 @Feature.Ref(Feature_Dirndl_MutationConflictResolution.class)
 public abstract class MutationConflictResolution {
+	public static class Rejected implements ContextObservable {
+		public Mutations mutations;
+
+		public ConflictingMutations conflictingMutations;
+
+		public Rejected(Mutations mutations,
+				ConflictingMutations conflictingMutations) {
+			this.mutations = mutations;
+			this.conflictingMutations = conflictingMutations;
+		}
+	}
+
 	/**
 	 * Reject server mutation messages if the client has modified in a timeline
 	 * not visible to the server at mutation time
@@ -124,13 +137,46 @@ public abstract class MutationConflictResolution {
 	 * - flush listeners
 	 */
 	protected class PerformPartialUndo
-			implements ProcessObserver<Mutations.Rejected> {
+			implements ProcessObserver<MutationConflictResolution.Rejected> {
+		List<Mutations> rejectedMessages;
+
+		List<MutationRecord> rejectedMutations;
+
 		public PerformPartialUndo() {
 		}
 
 		@Override
-		public void topicPublished(Mutations.Rejected observable) {
-			int debug = 3;
+		public void
+				topicPublished(MutationConflictResolution.Rejected observable) {
+			computeRejectedMessages();
+			populateCurrentMutationsMessage();
+			computeRejectedMutations();
+			generateAndApplyUndoMutations();
+			// flush required?
+		}
+
+		void generateAndApplyUndoMutations() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'generateAndApplyUndoMutations'");
+		}
+
+		void computeRejectedMutations() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'computeRejectedMutations'");
+		}
+
+		void populateCurrentMutationsMessage() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'populateCurrentMutationsMessage'");
+		}
+
+		void computeRejectedMessages() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'computeRejectedMessages'");
 		}
 	}
 
