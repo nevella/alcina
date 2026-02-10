@@ -84,8 +84,9 @@ public class RemoteWindowState implements InvokeProxy {
 					case "getBoundingClientRect":
 						return (T) nodeUiState.boundingClientRect;
 					case "getClientHeight":
+						return (T) (Integer) windowState.clientHeight;
 					case "getClientWidth":
-						break;
+						return (T) (Integer) windowState.clientWidth;
 					}
 				} else {
 					switch (methodName) {

@@ -8,6 +8,7 @@ import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
@@ -19,6 +20,14 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  */
 public class Mutations extends RemoteComponentProtocol.Message
 		implements PrependWindowState, HasTimeline {
+	public static class Resubmit implements ContextObservable {
+		public Mutations mutations;
+
+		public Resubmit(Mutations mutations) {
+			this.mutations = mutations;
+		}
+	}
+
 	public static Mutations ofLocation() {
 		Mutations result = new Mutations();
 		result.locationMutation = LocationMutation.ofWindow(false);
@@ -53,6 +62,12 @@ public class Mutations extends RemoteComponentProtocol.Message
 
 	public void addDomMutation(MutationRecord mutationRecord) {
 		domMutations.add(mutationRecord);
+	}
+
+	public void resubmit(Mutations otherMutations) {
+		domMutations.addAll(otherMutations.domMutations);
+		eventSystemMutations.addAll(otherMutations.eventSystemMutations);
+		locationMutation = otherMutations.locationMutation;
 	}
 
 	@Property.Not

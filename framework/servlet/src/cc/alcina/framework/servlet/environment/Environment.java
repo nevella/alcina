@@ -35,6 +35,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.service.DispatchRefProvider;
 import cc.alcina.framework.common.client.util.Ax;
@@ -53,6 +54,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.Resubmit;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
@@ -616,6 +618,10 @@ class Environment {
 		boolean isSendFullExceptionMessage() {
 			return ui.isSendFullExceptionMessage();
 		}
+
+		boolean hasPendingMutations() {
+			return mutations != null && mutations.domMutations.size() > 0;
+		}
 	}
 
 	class DispatchRefProviderImpl extends DispatchRefProvider {
@@ -764,6 +770,15 @@ class Environment {
 				responseMessage.serverState);
 		queue.sendToClient(responseMessage);
 		queue.flush();
+	}
+
+	class ResubmitObserver implements ProcessObserver<Mutations.Resubmit> {
+		@Override
+		public void topicPublished(Resubmit message) {
+			mutationProxy.runWithMutations(() -> {
+				mutations.resubmit(message.mutations);
+			});
+		}
 	}
 
 	private void enterContext() {

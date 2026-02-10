@@ -164,10 +164,11 @@ public class OverlayPosition {
 		constraints.forEach(Constraint::apply);
 		/*
 		 * FIXME - romcom - this should be run client-side (non-romcom, better
-		 * to not defer)
+		 * to not defer). Note that it has no effect if the overlay isn't
+		 * constrained by the viewport
 		 */
-		Client.eventBus().queued().lambda(() -> viewportConstraint.apply(this))
-				.deferred().dispatch();
+		Client.RenderState
+				.queueWithRenderedState(() -> viewportConstraint.apply(this));
 	}
 
 	public void dropdown(Position xalign, DomRect rect, Model rectSource,

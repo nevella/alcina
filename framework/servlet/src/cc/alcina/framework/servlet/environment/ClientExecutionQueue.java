@@ -157,7 +157,8 @@ class ClientExecutionQueue implements Runnable {
 		public void enqueue(Runnable runnable) {
 			int awaitId = mutationMessageData.lastMutationIdBuffered;
 			boolean awaitNextMutationId = false;
-			if (LocalDom.hasPending()) {
+			if (LocalDom.hasPending()
+					|| environment.access().hasPendingMutations()) {
 				if (!transportLayer.sendChannel.hasMessagesPendingDispatch()) {
 					// await return of the *next* message (which will include
 					// mutations)
@@ -196,7 +197,8 @@ class ClientExecutionQueue implements Runnable {
 			Iterator<QueuedRunnable> itr = pending.iterator();
 			while (itr.hasNext()) {
 				QueuedRunnable next = itr.next();
-				if (next.messageId <= messageDataSnapshot.lastMutationIdUpdateHandled) {
+				if (!next.awaitNextMutationId
+						&& next.messageId <= messageDataSnapshot.lastMutationIdUpdateHandled) {
 					addDispatchable(new AsyncDispatchable(next.runnable));
 					itr.remove();
 				}

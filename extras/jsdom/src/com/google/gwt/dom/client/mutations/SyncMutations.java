@@ -46,7 +46,7 @@ class SyncMutations {
 
 	private Set<NodeJso> syncedChildren;
 
-	public SyncMutations(MutationsAccess mutationsAccess) {
+	SyncMutations(MutationsAccess mutationsAccess) {
 		this.mutationsAccess = mutationsAccess;
 	}
 

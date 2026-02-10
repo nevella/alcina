@@ -51,7 +51,7 @@ public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		}
 	}
 
-	@Decl.Location.Url("/control?action=set-property&key=MessageTransportLayerServer.ReceiveChannelImpl.receiveDelay&value=200")
+	@Decl.Location.Url("/control?action=set-property&key=MessageTransportLayerServer.ReceiveChannelImpl.receiveDelay&value=800")
 	@Decl.Action.UI.Navigation.Get
 	static class SetDelayConfigurationOn extends Waypoint {
 	}

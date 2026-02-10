@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -590,5 +591,35 @@ public final class MutationRecord {
 		} else {
 			return jsonValue.asString();
 		}
+	}
+
+	/*
+	 * this seems very short - which it is! a lot of the joy here is that
+	 * AttachId is exactly what we want for undo (preserving the old id of
+	 * originally-removed nodes)
+	 */
+	public MutationRecord invert() {
+		MutationRecord result = new MutationRecord();
+		result.type = type;
+		result.target = target;
+		result.attributeName = attributeName;
+		result.attributeNamespace = attributeNamespace;
+		switch (this.type) {
+		case attributes:
+		case characterData:
+		case innerMarkup:
+			result.newValue = this.oldValue;
+			result.oldValue = this.newValue;
+			break;
+		case childList:
+			result.removedNodes = this.addedNodes.stream()
+					.collect(Collectors.toList());
+			result.addedNodes = this.removedNodes.stream()
+					.collect(Collectors.toList());
+			Collections.reverse(result.removedNodes);
+			Collections.reverse(result.addedNodes);
+			break;
+		}
+		return result;
 	}
 }

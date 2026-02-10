@@ -850,9 +850,10 @@ public class Element extends Node implements ClientDomElement,
 		return (ElementAttachId) remote();
 	}
 
-	public boolean provideIsAncestorOf(Element potentialChild,
+	public boolean provideIsAncestorOf(Node potentialChild,
 			boolean includeSelf) {
-		return potentialChild
+		Element testElement = potentialChild.selfOrParentElement();
+		return testElement
 				.firstInAncestry(
 						e -> e == this && (e != potentialChild || includeSelf))
 				.isPresent();

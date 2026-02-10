@@ -434,7 +434,12 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			// split
 			if (triggerSequence != null) {
 				suggestingNode = createSuggestingNode(editSelection);
-				showOverlay(suggestingNode.domNode());
+				/*
+				 * overlay positioning will require the suggestingNode be
+				 * rendered
+				 */
+				Client.RenderState.queueWithRenderedState(
+						() -> showOverlay(suggestingNode.domNode()));
 			}
 		}
 	}
@@ -472,7 +477,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	void showOverlay(DomNode decoratorDomNode) {
-		LocalDom.flush();
 		DomNode parent = decoratorDomNode.parent();
 		if (parent.tagIs("font")) {
 			// Webkit style-preserving?
