@@ -56,7 +56,8 @@ public interface HasDecorators
 				 * "deletion of partially-selected decorator deletes whole decorator"
 				 */
 				// DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
-				new ElementBehavior.EnsureCursorTargetIsTextNodeBehaviour());
+				new ElementBehavior.EnsureCursorTargetIsTextNodeBehaviour(),
+				new ElementBehavior.UndoEditableAutocreatedBr());
 	}
 
 	default boolean canDecorate(EditSelection editSelection) {

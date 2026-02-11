@@ -38,7 +38,8 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @DirectedContextResolver
 class Searchable extends Model.Fields
 		implements SuggestOracle.Suggestion.Noop, HasObject,
-		DecoratorNode.AlllowsPartialSelection, ModelEvents.FocusEditor.Emitter {
+		DecoratorNode.AlllowsPartialSelection, ModelEvents.FocusEditor.Emitter,
+		DecoratorNode.EditableDecoratorContents {
 	/**
 	 * Although these are implemented in .sass, this documents *why* they are so
 	 */
@@ -230,5 +231,11 @@ class Searchable extends Model.Fields
 				? ((HasValue) searchCriterion).getValue()
 				: null;
 		return Ax.format("%s : %s", name, Ax.toString(value));
+	}
+
+	@Property.Not
+	@Override
+	public boolean isEditableDecoratorContents() {
+		return true;
 	}
 }

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName.PreferDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
@@ -47,6 +48,8 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 
 	public EnumCriterion() {
 		setOperator(StandardSearchOperator.EQUALS);
+		setDisplayName(CommonUtils
+				.deInfix(getClass().getSimpleName().replace("Criterion", "")));
 	}
 
 	public EnumCriterion(String criteriaDisplayName, boolean withNull) {
@@ -89,7 +92,7 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 
 	@Override
 	public String toString() {
-		return String.valueOf(getValue());
+		return toStringWithDisplayName(true);
 	}
 
 	/**
@@ -133,5 +136,15 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		public boolean hasValue(C sc) {
 			return sc.getValue() != null;
 		}
+	}
+
+	public String toStringWithDisplayName(boolean withDisplayName) {
+		if (getValue() == null) {
+			return null;
+		}
+		String displayName = getDisplayName();
+		String valueString = Ax.friendly(getValue());
+		return withDisplayName ? Ax.format("%s %s", displayName, valueString)
+				: valueString;
 	}
 }

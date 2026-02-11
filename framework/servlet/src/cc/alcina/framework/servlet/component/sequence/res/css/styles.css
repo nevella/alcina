@@ -683,6 +683,7 @@ body > page > detail {
   grid-area: detail;
   overflow: auto;
   padding: 0.5rem;
+  container-type: inline-size;
 }
 body > page > detail > properties {
   padding: 1em 2em;
@@ -692,7 +693,6 @@ body > page > detail > properties {
   /* FIXME - 2022 - either move to per-app style of theme - 
   * */
   line-height: normal;
-  container-type: inline-size;
 }
 body > page > detail > properties.vertical-validation {
   line-height: 2.6rem;
@@ -990,10 +990,6 @@ body > page > detail > properties > form > form-validation {
   color: #FF5030;
   margin-top: 2rem;
 }
-body > page > detail > properties form > section > form-element {
-  display: flex;
-  flex-direction: column;
-}
 body > page > detail > properties form > section {
   display: flex;
   flex-direction: column;
@@ -1010,19 +1006,20 @@ body > page > detail > properties:empty {
   display: none;
 }
 @container (width < 500px) {
-  body > page > detail > properties > table {
-    display: block;
-  }
-  body > page > detail > properties > table > tbody {
+  body > page > detail > properties form > section > form-element {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
   }
-  body > page > detail > properties > table tr, body > page > detail > properties > table th, body > page > detail > properties > table td {
-    display: block;
+}
+@container (width >= 500px) {
+  body > page > detail > properties form > section {
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    row-gap: 0.2rem;
+    column-gap: 1rem;
   }
-  body > page > detail > properties > table td {
-    padding-left: 1rem;
+  body > page > detail > properties form > section > form-element {
+    display: contents;
   }
 }
 body > page > detail > string-representation {
@@ -1135,6 +1132,9 @@ body > page > header > search > search-definition-editor > choice-editor {
 body > page > header > search > search-definition-editor > choice-editor > edit {
   border: none;
   background: none;
+}
+body > page > header > search > search-definition-editor > choice-editor > edit cursor-target {
+  display: inline-block;
 }
 body > page > header > search > search-definition-editor > choice-editor > edit choice-node {
   border-color: #eee;

@@ -298,7 +298,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			decorator.putReferenced(event.getModel());
 			suggestingNode.nodes().insertAfterThis(decorator);
 			suggestingNode.nodes().removeFromParent();
-			decorator.positionCursorPostReferencedSelection();
+			if (decorator.isPositionPostDecoratorOnCreate()) {
+				decorator.positionCursorPostReferencedSelection();
+			}
 		}
 	}
 

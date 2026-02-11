@@ -67,23 +67,6 @@ public interface ElementBehavior extends EventBehavior {
 		}
 	}
 
-	default boolean isEventHandler() {
-		return getEventType() != null;
-	}
-
-	/**
-	 * This may be null, for more general housekeeping behaviors
-	 * 
-	 * @return
-	 */
-	String getEventType();
-
-	default boolean matches(Element elem) {
-		return elem.hasBehavior(getClass());
-	}
-
-	void onNativeEvent(NativePreviewEvent event, Element registeredElement);
-
 	/**
 	 * <p>
 	 * This behavior prevents the default handling of [enter] on the element
@@ -277,4 +260,36 @@ public interface ElementBehavior extends EventBehavior {
 			throw new UnsupportedOperationException();
 		}
 	}
+
+	public static class UndoEditableAutocreatedBr
+			extends ElementBehavior.NonParameterised {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.INPUT;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			registeredElement.asDomNode().stream().filter(n -> n.tagIs("br"))
+					.toList().forEach(DomNode::removeFromParent);
+		}
+	}
+
+	default boolean isEventHandler() {
+		return getEventType() != null;
+	}
+
+	/**
+	 * This may be null, for more general housekeeping behaviors
+	 * 
+	 * @return
+	 */
+	String getEventType();
+
+	default boolean matches(Element elem) {
+		return elem.hasBehavior(getClass());
+	}
+
+	void onNativeEvent(NativePreviewEvent event, Element registeredElement);
 }

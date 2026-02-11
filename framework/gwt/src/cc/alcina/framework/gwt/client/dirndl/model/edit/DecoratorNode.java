@@ -16,6 +16,7 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
@@ -236,5 +237,21 @@ public abstract class DecoratorNode<WT, SR> extends EditNode implements
 	 * editable/sub-selectable
 	 */
 	public interface AlllowsPartialSelection {
+	}
+
+	@Property.Not
+	public boolean isPositionPostDecoratorOnCreate() {
+		if (content instanceof EditableDecoratorContents) {
+			return !((EditableDecoratorContents) content)
+					.isEditableDecoratorContents();
+		}
+		return !(content instanceof EditableDecoratorContents);
+	}
+
+	/**
+	 * Marker, don't reposition selection on create
+	 */
+	public interface EditableDecoratorContents {
+		boolean isEditableDecoratorContents();
 	}
 }
