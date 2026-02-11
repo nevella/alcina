@@ -89,6 +89,9 @@ public class DateUtil {
 
 	// to 00.00:00 or 23:59.59
 	public static Date roundDate(Date d, boolean up) {
+		if (d == null) {
+			return d;
+		}
 		d.setHours(up ? 23 : 0);
 		d.setMinutes(up ? 59 : 0);
 		d.setSeconds(up ? 59 : 0);
@@ -97,6 +100,9 @@ public class DateUtil {
 	}
 
 	public static Date roundDateNonMutating(Date d, boolean up) {
+		if (d == null) {
+			return d;
+		}
 		d = new Date(d.getTime());
 		d.setHours(up ? 23 : 0);
 		d.setMinutes(up ? 59 : 0);

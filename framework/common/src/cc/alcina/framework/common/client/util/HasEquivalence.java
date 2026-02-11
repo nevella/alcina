@@ -393,24 +393,27 @@ public interface HasEquivalence<T> {
 
 		public static <T extends HasEquivalence> Multimap<T, List<T>>
 				mapDuplicates(Collection<T> o1) {
-			List<T> passed = new ArrayList<T>();
-			List<T> duplicates = new ArrayList<T>();
+			Multimap<Integer, List<T>> hashed = o1.stream()
+					.collect(AlcinaCollectors
+							.toKeyMultimap(HasEquivalence::equivalenceHash));
 			Multimap<T, List<T>> result = new Multimap<>();
-			for (T t : o1) {
-				boolean duplicate = false;
-				for (T pass : passed) {
-					if (pass.equivalentTo(t)) {
-						duplicates.add(t);
-						result.add(pass, t);
-						duplicate = true;
-						break;
+			hashed.values().forEach(perHash -> {
+				List<T> passed = new ArrayList<T>();
+				for (T t : perHash) {
+					boolean duplicate = false;
+					for (T pass : passed) {
+						if (pass.equivalentTo(t)) {
+							result.add(pass, t);
+							duplicate = true;
+							break;
+						}
+					}
+					if (!duplicate) {
+						passed.add(t);
+						result.add(t, t);
 					}
 				}
-				if (!duplicate) {
-					passed.add(t);
-					result.add(t, t);
-				}
-			}
+			});
 			return result;
 		}
 
