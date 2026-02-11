@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.SerializerReflection;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
@@ -621,5 +622,22 @@ public abstract class SearchDefinition extends Bindable
 	public CriteriaGroup soleCriteriaGroup() {
 		Preconditions.checkState(criteriaGroups.size() == 1);
 		return criteriaGroups.iterator().next();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (obj.getClass() != getClass()) {
+			return false;
+		}
+		return Objects.equals(FlatTreeSerializer.serializeElided(this),
+				FlatTreeSerializer.serializeElided((SearchDefinition) obj));
+	}
+
+	@Override
+	public int hashCode() {
+		return FlatTreeSerializer.serializeElided(this).hashCode();
 	}
 }
