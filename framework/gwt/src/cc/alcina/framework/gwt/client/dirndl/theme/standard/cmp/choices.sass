@@ -47,25 +47,17 @@ $selected-editor-choice: #77e
     line-height: 145%
     width: 30rem
 
-    suggesting-node
-      display: inline-block
-      padding: 0 1px
-
-
-    choice-node
-      white-space: nowrap
-
     //browsers are weird around that very first choice (with empty text child)  
     // min-height is sensitive (it affects cursor size + overall line height)
     // so override if the editor font size changes
-    suggesting-node:first-child
-      display: inline-block
-      margin-right: 3px
-      min-height: 16px
-      min-width: 1px
 
-    choice-node:not([contenteditable='false']):first-child + choice-node[contenteditable='false']
-      margin-left: 0
+    
+    suggesting-node
+      display: inline-block
+      white-space: nowrap
+      display: inline-block
+      min-height: 16px
+      padding-right: 1px
 
     choice-node
       background: none
@@ -83,8 +75,9 @@ $selected-editor-choice: #77e
         &::selection
           background-color: transparent
 
-
-    //choice-node
+    // suggesting node is at least 1px width, so twiddle inter-choice-node spacing if it exists
+    suggesting-node + choice-node
+      margin-left: 3px
 
 @mixin choice-editor-tag
   choice-editor

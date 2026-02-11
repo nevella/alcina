@@ -52,6 +52,9 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
  */
 @Registration.Singleton
 public class DomainSearchHandler {
+	public static final transient LooseContext.Key CONTEXT_DO_NOT_PROJECT_SEARCH = LooseContext
+			.key(DomainSearchHandler.class, "CONTEXT_DO_NOT_PROJECT_SEARCH");;
+
 	public static DomainSearchHandler get() {
 		return Registry.impl(DomainSearchHandler.class);
 	}
@@ -244,6 +247,9 @@ public class DomainSearchHandler {
 	}
 
 	boolean withoutProjection(BindableSearchDefinition def) {
+		if (CONTEXT_DO_NOT_PROJECT_SEARCH.is()) {
+			return true;
+		}
 		if (def != null && def.withoutProjection) {
 			Preconditions.checkState(Permissions.isRoot());
 			return true;

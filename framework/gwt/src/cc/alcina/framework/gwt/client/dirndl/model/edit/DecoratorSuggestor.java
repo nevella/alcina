@@ -13,7 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeChooserClosed;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeSuggestorClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOnBind;
@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	// but see
 	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
 	className = "decorator-suggestor",
-	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
+	emits = { ModelEvents.Selected.class, BeforeSuggestorClosed.class })
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class DecoratorSuggestor extends Model.Fields
 		implements ModelEvents.BeforeSelectionChangedDispatch.Handler,
@@ -87,7 +87,7 @@ public abstract class DecoratorSuggestor extends Model.Fields
 
 	@Override
 	public void onBeforeClosed(BeforeClosed event) {
-		event.reemitAs(this, BeforeChooserClosed.class);
+		event.reemitAs(this, BeforeSuggestorClosed.class);
 	}
 
 	@Override
@@ -112,20 +112,20 @@ public abstract class DecoratorSuggestor extends Model.Fields
 		event.reemitAs(this, ModelEvents.Close.class);
 	}
 
-	public static class BeforeChooserClosed
-			extends ModelEvent<Object, BeforeChooserClosed.Handler> {
+	public static class BeforeSuggestorClosed
+			extends ModelEvent<Object, BeforeSuggestorClosed.Handler> {
 		@Override
-		public void dispatch(BeforeChooserClosed.Handler handler) {
-			handler.onChooserClosed(this);
+		public void dispatch(BeforeSuggestorClosed.Handler handler) {
+			handler.onSuggestorClosed(this);
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onChooserClosed(BeforeChooserClosed event);
+			void onSuggestorClosed(BeforeSuggestorClosed event);
 		}
 	}
 
 	public interface Provider {
-		DecoratorSuggestor provideChooser(ContentDecorator contentDecorator,
+		DecoratorSuggestor provideSuggestor(ContentDecorator contentDecorator,
 				DomNode decorator, String triggerSequence);
 	}
 

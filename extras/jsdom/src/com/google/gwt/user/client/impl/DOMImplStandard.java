@@ -211,6 +211,11 @@ public abstract class DOMImplStandard extends DOMImpl {
 																//Nick - selection
 
 																selectionchange:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+
+																//Nick - input
+
+																input:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+																beforeinput:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
 																
 																// Touch events
 																touchstart:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),

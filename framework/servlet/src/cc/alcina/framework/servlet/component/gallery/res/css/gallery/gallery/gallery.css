@@ -814,6 +814,7 @@ gallery-sequence-area > sequence-component > detail {
   grid-area: detail;
   overflow: auto;
   padding: 0.5rem;
+  container-type: inline-size;
 }
 gallery-sequence-area > sequence-component > detail > properties {
   padding: 1em 2em;
@@ -823,7 +824,6 @@ gallery-sequence-area > sequence-component > detail > properties {
   /* FIXME - 2022 - either move to per-app style of theme - 
   * */
   line-height: normal;
-  container-type: inline-size;
 }
 gallery-sequence-area > sequence-component > detail > properties.vertical-validation {
   line-height: 2.6rem;
@@ -1121,10 +1121,6 @@ gallery-sequence-area > sequence-component > detail > properties > form > form-v
   color: #FF5030;
   margin-top: 2rem;
 }
-gallery-sequence-area > sequence-component > detail > properties form > section > form-element {
-  display: flex;
-  flex-direction: column;
-}
 gallery-sequence-area > sequence-component > detail > properties form > section {
   display: flex;
   flex-direction: column;
@@ -1141,19 +1137,20 @@ gallery-sequence-area > sequence-component > detail > properties:empty {
   display: none;
 }
 @container (width < 500px) {
-  gallery-sequence-area > sequence-component > detail > properties > table {
-    display: block;
-  }
-  gallery-sequence-area > sequence-component > detail > properties > table > tbody {
+  gallery-sequence-area > sequence-component > detail > properties form > section > form-element {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
   }
-  gallery-sequence-area > sequence-component > detail > properties > table tr, gallery-sequence-area > sequence-component > detail > properties > table th, gallery-sequence-area > sequence-component > detail > properties > table td {
-    display: block;
+}
+@container (width >= 500px) {
+  gallery-sequence-area > sequence-component > detail > properties form > section {
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    row-gap: 0.2rem;
+    column-gap: 1rem;
   }
-  gallery-sequence-area > sequence-component > detail > properties > table td {
-    padding-left: 1rem;
+  gallery-sequence-area > sequence-component > detail > properties form > section > form-element {
+    display: contents;
   }
 }
 gallery-sequence-area > sequence-component > detail > string-representation {

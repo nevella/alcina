@@ -176,8 +176,11 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		} finally {
 			provideNode().setBindingsDisabled(false);
 		}
-		fragmentModel.byType(SuggestingNode.class)
-				.forEach(n -> n.nodes().strip());
+		/*
+		 * fixme - edit - this should fire unbound on SN (but doesn't)
+		 */
+		// fragmentModel.byType(SuggestingNode.class)
+		// .forEach(n -> n.nodes().strip());
 	}
 
 	@Override

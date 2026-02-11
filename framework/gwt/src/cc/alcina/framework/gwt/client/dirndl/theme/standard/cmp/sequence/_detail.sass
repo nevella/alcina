@@ -9,15 +9,12 @@
   grid-area: detail
   overflow: auto
   padding: 0.5rem
+  container-type: inline-size
 
   > properties
-
     @include form.bean-editor
     
-    @include form.vertical-layout
-    
     line-height: normal
-    container-type: inline-size
 
     form > section
       display: flex
@@ -36,20 +33,10 @@
       display: none
 
     @container(width < 500px)
-      > table
-        display: block
+      @include form.vertical-layout
 
-        > tbody
-          display: flex
-          flex-direction: column
-          gap: 0.5rem
-
-        tr,th,td
-          display: block
-
-        td
-          padding-left: 1rem
-
+    @container(width >= 500px)
+      @include form.horizontal-layout
 
   > string-representation
     display: block

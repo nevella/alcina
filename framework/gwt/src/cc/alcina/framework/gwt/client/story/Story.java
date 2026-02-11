@@ -486,7 +486,7 @@ public interface Story {
 				public @interface Keys {
 					String value();
 
-					boolean clear() default true;
+					boolean clear() default false;
 
 					public static class ConverterImpl
 							implements Converter<Keys> {
@@ -1135,7 +1135,7 @@ public interface Story {
 
 			/**
 			 * Await the overlap/intersection of the document locator with the
-			 * DOM Selection
+			 * DOM Selection (not implemented)
 			 */
 			public static class AwaitSelection implements Ui {
 			}
