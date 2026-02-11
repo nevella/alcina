@@ -16,14 +16,25 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String XPATH_CREATED_FROM_INPUT = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']//input";
 
-	static final String XPATH_CURSOR_TARGET = "//search-definition-editor//cursor-target";
+	static final String XPATH_CURSOR_TARGET = "//search-definition-editor//suggesting-node";
 
-	static final String XPATH_GO_BUTTON_DISABLED = "//search-definition-editor//button[.='Go'][disabled='true']";
+	static final String XPATH_GO_BUTTON_DISABLED = "//search-definition-editor//button[.='Go'][@disabled='true']";
+
+	static final String XPATH_OVERLAY = "//overlay[contains(@class,'choices-editor-multiple')]";
+
+	static final String _REL_CHOICE_MUTATIONS = "//suggestion[contains(.,'mutations')]";
+
+	static final String XPATH_SELECT = "//search-definition-editor//searchable//select";
 
 	@Decl.Child(_DefinitionEditor.ClickCreatedFrom.class)
 	@Decl.Child(_DefinitionEditor.SetCreatedFromText.class)
 	@Decl.Child(_DefinitionEditor.EnterOnCreatedFromText.class)
-	// @Decl.Child(_DefinitionEditor.TestFocusIsCursorTarget.class)
+	@Decl.Child(_DefinitionEditor.TestFocusIsCursorTarget.class)
+	@Decl.Child(_DefinitionEditor.AwaitOverlay.class)
+	@Decl.Child(_DefinitionEditor.SelectCriterion.class)
+	@Decl.Child(_DefinitionEditor.ClickMutations.class)
+	@Decl.Child(_DefinitionEditor.AwaitSelectFocus.class)
+	@Decl.Child(_DefinitionEditor.SelectTrue.class)
 	// @Decl.Child(_DefinitionEditor.TestGoButtonIsEnabled.class)
 	// @Decl.Child(_DefinitionEditor.EnterOnCurrentFocus.class)
 	// @Decl.Child(_DefinitionEditor.TestGoButtonIsDisabled.class)
@@ -45,8 +56,33 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 		}
 
 		@Decl.Location.Xpath(XPATH_CURSOR_TARGET)
-		@Decl.Action.UI.AwaitSelection
+		@Decl.Action.UI.AwaitPresent
 		static class TestFocusIsCursorTarget extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_OVERLAY)
+		@Decl.Action.UI.AwaitPresent
+		static class AwaitOverlay extends Waypoint {
+		}
+
+		@Decl.Location.CurrentFocus
+		@Decl.Action.UI.Keys("i")
+		static class SelectCriterion extends Waypoint {
+		}
+
+		@Decl.Location.Xpath({ XPATH_OVERLAY, _REL_CHOICE_MUTATIONS })
+		@Decl.Action.UI.Click
+		static class ClickMutations extends Waypoint {
+		}
+
+		@Decl.Location.Xpath({ XPATH_SELECT })
+		@Decl.Action.UI.AwaitPresent
+		static class AwaitSelectFocus extends Waypoint {
+		}
+
+		@Decl.Location.CurrentFocus
+		@Decl.Action.UI.Keys("t")
+		static class SelectTrue extends Waypoint {
 		}
 
 		@Decl.Location.Xpath(XPATH_GO_BUTTON_DISABLED)

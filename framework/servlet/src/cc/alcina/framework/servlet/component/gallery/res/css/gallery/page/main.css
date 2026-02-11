@@ -1868,19 +1868,10 @@ choice-editor > edit:focus {
 }
 choice-editor > edit suggesting-node {
   display: inline-block;
-  padding: 0 1px;
-}
-choice-editor > edit choice-node {
   white-space: nowrap;
-}
-choice-editor > edit suggesting-node:first-child {
   display: inline-block;
-  margin-right: 3px;
   min-height: 16px;
-  min-width: 1px;
-}
-choice-editor > edit choice-node:not([contenteditable=false]):first-child + choice-node[contenteditable=false] {
-  margin-left: 0;
+  padding-right: 1px;
 }
 choice-editor > edit choice-node {
   background: none;
@@ -1897,6 +1888,9 @@ choice-editor > edit choice-node.selected, choice-editor > edit choice-node:focu
 }
 choice-editor > edit choice-node.selected::selection, choice-editor > edit choice-node:focus::selection {
   background-color: transparent;
+}
+choice-editor > edit suggesting-node + choice-node {
+  margin-left: 3px;
 }
 
 overlay > .decorator-suggestor {

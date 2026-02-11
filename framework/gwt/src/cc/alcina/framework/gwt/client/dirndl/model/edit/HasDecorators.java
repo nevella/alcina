@@ -21,20 +21,34 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeChooserClosed;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeSuggestorClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 
 /**
  * <p>
  * A decorator host (HasDecorators implementor) is a contentEditable model which
- * can be decorated
- *
- *
+ * can be decorated. Behavior is complex and much of it must be synchronous. See
+ * {@link #getBehaviors()}
+ * 
+ * <p>
+ * Invariants (tracking behviors). Some are to deal with browser quirks, such as
+ * the cursor not being visible on a blank text node
+ * <ul>
+ * <li>- the following respect isolatez
+ * <li>content exists at every non-ce node bundary. If there's none, insert a
+ * blank text node
+ * <li>if collapsed, the selection is always outside a decorator (non-ce)
+ * <li>collapse adjacent text nodes
+ * <li>if the selection is on a blank text node, wrap in 'blank-node' (general)
+ * <li>if the selection is on a blank text node, wrap in 'suggesting-node'
+ * (choice)
+ * 
+ * </ul>
  *
  */
 public interface HasDecorators
-		extends DecoratorSuggestor.BeforeChooserClosed.Handler,
+		extends DecoratorSuggestor.BeforeSuggestorClosed.Handler,
 		DomEvents.Input.Handler, InferredDomEvents.SelectionChanged.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		ContentDecoratorEvents.NodeDelta.Handler,
@@ -49,14 +63,16 @@ public interface HasDecorators
 		FragmentModel.Has, DomEvents.Focusout.Handler, HasElementBehaviors {
 	@Override
 	default List<ElementBehavior> getBehaviors() {
-		return List.of(new EditAreaBehavior.ExtendKeyboardNavigationAction(),
+		return List.of(
+				new ElementBehavior.EnsureEditableNodesAtUneditableBoundaries(),
+				new ElementBehavior.EnsureCursorTargetIsTextNode(),
+				// new EditAreaBehavior.ExtendKeyboardNavigationAction(),
 				/*
 				 * wip - decorator - maybe zap? content-editable may fix this.
 				 * anyway, invariant is along the lines of
 				 * "deletion of partially-selected decorator deletes whole decorator"
 				 */
 				// DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
-				new ElementBehavior.EnsureCursorTargetIsTextNodeBehaviour(),
 				new ElementBehavior.UndoEditableAutocreatedBr());
 	}
 
@@ -94,7 +110,7 @@ public interface HasDecorators
 	}
 
 	@Override
-	default void onChooserClosed(BeforeChooserClosed event) {
+	default void onSuggestorClosed(BeforeSuggestorClosed event) {
 		validateDecorators();
 	}
 

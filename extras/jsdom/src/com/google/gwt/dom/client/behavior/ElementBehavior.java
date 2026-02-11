@@ -3,6 +3,7 @@ package com.google.gwt.dom.client.behavior;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -135,13 +136,68 @@ public interface ElementBehavior extends EventBehavior {
 		}
 	}
 
+	static class ContentEditable {
+		static boolean is(DomNode node) {
+			return node.attrIs("contenteditable", "true");
+		}
+
+		static boolean isNot(DomNode node) {
+			return node.attrIs("contenteditable", "false");
+		}
+
+		static void ensureEditableBoundaryNodes(DomNode node) {
+			{
+				DomNode previousSibling = node.relative().previousSibling();
+				if (previousSibling == null || isNot(previousSibling)) {
+					node.builder().text("").insertBeforeThis();
+				}
+			}
+			{
+				DomNode nextSibling = node.relative().nextSibling();
+				if (nextSibling == null || isNot(nextSibling)) {
+					node.builder().text("").insertAfterThis();
+				}
+			}
+		}
+
+		public static DomNode getEditable(DomNode registeredElement) {
+			DomNode cursor = registeredElement.asDomNode();
+			if (is(cursor)) {
+				return cursor;
+			}
+			DomNode firstElement = cursor.children.firstElement();
+			Preconditions.checkState(is(firstElement));
+			return firstElement;
+		}
+	}
+
+	public static class EnsureEditableNodesAtUneditableBoundaries
+			extends ElementBehavior.NonParameterised {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.INPUT;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			DomNode editable = ContentEditable
+					.getEditable(registeredElement.asDomNode());
+			List<DomNode> nonEditables = editable.children.nodes().stream()
+					.filter(ContentEditable::isNot).toList();
+			nonEditables.forEach(ContentEditable::ensureEditableBoundaryNodes);
+			int debug = 3;
+			// TODO Auto-generated method stub
+		}
+	}
+
 	/**
 	 * 
 	 * <p>
 	 * Move the selection (back) off non-editables onto (empty) text nodes, and
 	 * from the end of the editable container to the final empty text node
 	 */
-	public static class EnsureCursorTargetIsTextNodeBehaviour
+	public static class EnsureCursorTargetIsTextNode
 			extends ElementBehavior.NonParameterised {
 		@Override
 		public String getEventType() {

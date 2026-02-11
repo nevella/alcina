@@ -1132,6 +1132,10 @@ body > page > header > search > search-definition-editor > choice-editor {
 body > page > header > search > search-definition-editor > choice-editor > edit {
   border: none;
   background: none;
+  line-height: 2.2;
+}
+body > page > header > search > search-definition-editor > choice-editor > edit > * {
+  line-height: 1.5;
 }
 body > page > header > search > search-definition-editor > choice-editor > edit cursor-target {
   display: inline-block;

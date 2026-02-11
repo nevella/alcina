@@ -7,10 +7,8 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.Environme
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @AppSuggestorCommand(
@@ -130,6 +128,40 @@ public abstract class SequenceBrowserCommand<T, H extends NodeEvent.Handler>
 
 		public interface Handler extends NodeEvent.Handler {
 			void onShowKeyboardShortcuts(ShowKeyboardShortcuts event);
+		}
+	}
+
+	@AppSuggestorCommand(
+		parent = SequenceBrowserCommand.class,
+		name = "list actions",
+		description = "List the exec actions")
+	@KeyBinding(key = "L")
+	public static class ListActions
+			extends SequenceBrowserCommand<Object, ListActions.Handler> {
+		@Override
+		public void dispatch(ListActions.Handler handler) {
+			handler.onListActions(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onListActions(ListActions event);
+		}
+	}
+
+	@AppSuggestorCommand(
+		parent = SequenceBrowserCommand.class,
+		name = "Copy to tsv",
+		description = "Copy the sequence to a tsv (clipboard)")
+	@KeyBinding(key = "T")
+	public static class CopyToTsv
+			extends SequenceBrowserCommand<Object, CopyToTsv.Handler> {
+		@Override
+		public void dispatch(CopyToTsv.Handler handler) {
+			handler.onCopyToTsv(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCopyToTsv(CopyToTsv event);
 		}
 	}
 

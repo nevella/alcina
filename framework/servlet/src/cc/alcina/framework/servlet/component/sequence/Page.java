@@ -36,10 +36,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsAr
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ColumnSetCycle;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.CopyToTsv;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.DetailDisplayCycle;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ListActions;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
+import cc.alcina.framework.servlet.component.sequence.SequenceExecCommand.ExportToTsv;
+import cc.alcina.framework.servlet.component.shared.ExecCommand.PerformCommand;
 
 /*
  */
@@ -49,6 +53,8 @@ class Page extends Model.Fields
 		implements SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.FocusSearch.Handler,
 		SequenceBrowserCommand.ShowKeyboardShortcuts.Handler,
+		SequenceBrowserCommand.ListActions.Handler,
+		SequenceBrowserCommand.CopyToTsv.Handler,
 		ModelEvents.ApplicationHelp.Handler,
 		SequenceEvents.LoadSequence.Handler,
 		SequenceBrowserCommand.ToggleHelp.Handler, Binding.TabIndexZero,
@@ -210,5 +216,15 @@ class Page extends Model.Fields
 
 	PackageProperties._Page.InstanceProperties properties() {
 		return PackageProperties.page.instance(this);
+	}
+
+	@Override
+	public void onListActions(ListActions event) {
+		new SequenceExecCommand.ListCommands().execCommand(null, null);
+	}
+
+	@Override
+	public void onCopyToTsv(CopyToTsv event) {
+		event.reemitAs(this, PerformCommand.class, new ExportToTsv().name());
 	}
 }
