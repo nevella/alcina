@@ -375,6 +375,11 @@ public class DomNode {
 		return false;
 	}
 
+	public boolean classContains(String test) {
+		String className = getClassName();
+		return List.of(className.split(" ")).contains(test);
+	}
+
 	public boolean classMatches(String regex) {
 		return attr("class").matches(regex);
 	}

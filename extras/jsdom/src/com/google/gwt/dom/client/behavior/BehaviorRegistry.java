@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Currently this is all or nothing (otherwise it's hard to avoid main-app-init
@@ -70,7 +69,6 @@ public class BehaviorRegistry implements NativePreviewHandler {
 		}
 		Event nativeEvent = (Event) event.getNativeEvent();
 		String eventType = nativeEvent.getType();
-		Ax.out(eventType);
 		if (!eventTypes.contains(eventType)) {
 			return;
 		}

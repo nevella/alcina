@@ -363,9 +363,6 @@ public abstract class Model extends Bindable
 		 */
 		public void addListener(ListenerBinding listenerBinding) {
 			listenerBindings.add(listenerBinding);
-			if (bound) {
-				listenerBinding.bind();
-			}
 		}
 
 		/**
@@ -499,10 +496,7 @@ public abstract class Model extends Bindable
 
 		private void addStreamBinding(StreamBinding streamBinding) {
 			streamBindings.add(streamBinding);
-			if (bound) {
-				streamBinding.prepare();
-				streamBinding.bind();
-			}
+			streamBinding.bindOnTerminal(bound);
 		}
 
 		public <T> StreamBinding<T>

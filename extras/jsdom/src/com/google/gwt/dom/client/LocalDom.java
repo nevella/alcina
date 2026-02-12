@@ -611,8 +611,12 @@ public class LocalDom implements ContextFrame {
 			!n.hasRemote());
 			List<Node> toSync = new ArrayList<>(pendingSync);
 			toSync.stream().forEach(this::ensurePendingSynced);
+			/*
+			 * handle possible cascading mods
+			 */
+			LinkedHashSet<Runnable> onFlushRunnables = this.onFlushRunnables;
+			this.onFlushRunnables = new LinkedHashSet<>();
 			onFlushRunnables.forEach(Runnable::run);
-			onFlushRunnables.clear();
 		} catch (RuntimeException re) {
 			topicReportException.publish(re);
 			throw re;
@@ -1230,7 +1234,7 @@ public class LocalDom implements ContextFrame {
 
 	void onFlush0(Runnable runnable) {
 		if (pendingSync.isEmpty()) {
-			runnable.run();
+			Scheduler.get().scheduleFinally(runnable::run);
 		} else {
 			onFlushRunnables.add(runnable);
 		}

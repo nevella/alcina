@@ -212,6 +212,8 @@ public class StreamBinding<T> {
 
 	Object oldValue;
 
+	boolean bindOnTerminal;
+
 	public StreamBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
@@ -227,6 +229,7 @@ public class StreamBinding<T> {
 	 */
 	public void accept(Consumer<T> consumer) {
 		this.consumer = consumer;
+		checkBindOnTerminal();
 	}
 
 	/**
@@ -328,12 +331,11 @@ public class StreamBinding<T> {
 	 * the pipeline
 	 */
 	public void signal(Runnable runnable) {
-		this.consumer = t -> runnable.run();
+		accept(t -> runnable.run());
 	}
 
 	public void dispatch(Runnable runnable) {
-		this.consumer = t -> Client.eventBus().queued().lambda(runnable)
-				.dispatch();
+		accept(t -> Client.eventBus().queued().lambda(runnable).dispatch());
 	}
 
 	/**
@@ -344,8 +346,8 @@ public class StreamBinding<T> {
 	 * @param runnable
 	 */
 	public void dispatchDistinct(Runnable runnable) {
-		this.consumer = t -> Client.eventBus().queued().lambda(runnable)
-				.distinct().dispatch();
+		accept(t -> Client.eventBus().queued().lambda(runnable).distinct()
+				.dispatch());
 	}
 
 	public <BSP extends SourcesPropertyChangeEvents> TargetBinding<BSP, T>
@@ -586,9 +588,15 @@ public class StreamBinding<T> {
 		return (StreamBinding<FT>) filtered;
 	}
 
-	public void accept(Object consumer2) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'accept'");
+	void bindOnTerminal(boolean bound) {
+		this.bindOnTerminal = bound;
+		checkBindOnTerminal();
+	}
+
+	void checkBindOnTerminal() {
+		if (bindOnTerminal && consumer != null) {
+			prepare();
+			bind();
+		}
 	}
 }

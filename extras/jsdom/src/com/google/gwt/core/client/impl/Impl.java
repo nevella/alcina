@@ -22,6 +22,8 @@ import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.LocalDom;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+
 /**
  * Private implementation class for GWT core. This API is should not be
  * considered public or stable.
@@ -194,7 +196,12 @@ public final class Impl {
 	 */
 	private static void exit(boolean initialEntry) {
 		if (initialEntry) {
-			SchedulerImpl.INSTANCE.flushFinallyCommands();
+			try {
+				SchedulerImpl.INSTANCE.flushFinallyCommands();
+			} catch (Throwable e) {
+				e.printStackTrace();
+				throw WrappedRuntimeException.wrap(e);
+			}
 		}
 		// Decrement after we call flush
 		entryDepth--;

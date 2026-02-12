@@ -223,11 +223,16 @@ public class StoryTeller {
 		}
 
 		public Action getAction() {
-			return point.getAction();
+			return point.getAction(context);
 		}
 
 		public List<Annotate> getAnnotateActions() {
 			return point.getAnnotateActions();
+		}
+
+		public List<Story.Decl.ContextModifier.SetAttribute>
+				getContextAttributes() {
+			return point.getContextAttributes();
 		}
 
 		public Action.Location getLocation() {
@@ -432,6 +437,10 @@ public class StoryTeller {
 		public Ancestors ancestors() {
 			return new Ancestors();
 		}
+
+		public void removeContextAttributes() {
+			new StoryPerformer().removeContextAttributes(this);
+		}
 	}
 
 	public enum LogType {
@@ -535,6 +544,7 @@ public class StoryTeller {
 			public void topicPublished(Visit visit) {
 				updateLocation(visit);
 				performAction(visit);
+				removeContextAttributes(visit);
 			}
 		}
 
@@ -767,5 +777,9 @@ public class StoryTeller {
 	public <T> void setAttribute(Class<? extends Story.Attribute<T>> key,
 			T value) {
 		state.setAttribute(key, value);
+	}
+
+	void removeContextAttributes(Visit visit) {
+		visit.removeContextAttributes();
 	}
 }

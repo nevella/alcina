@@ -8,6 +8,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.story.Story.Attribute;
+import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
 import cc.alcina.framework.gwt.client.story.Story.State;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 
@@ -89,5 +91,11 @@ public class StoryTellerPeer implements TellerContext {
 
 	protected void initObservers() {
 		ProcessObservers.context().observe(new BeforeVisitObserver());
+	}
+
+	@Override
+	public <V> Entry<V, Attribute<V>>
+			getAttribute(Class<? extends Attribute<V>> clazz) {
+		return storyTeller.state.getAttribute(clazz);
 	}
 }

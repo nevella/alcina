@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.story;
 
+import cc.alcina.framework.gwt.client.story.Story.Attribute;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 
 public interface TellerContext {
@@ -39,4 +40,7 @@ public interface TellerContext {
 	}
 
 	boolean isThrowOnFailure();
+
+	<V> Attribute.Entry<V, Attribute<V>>
+			getAttribute(Class<? extends Attribute<V>> clazz);
 }

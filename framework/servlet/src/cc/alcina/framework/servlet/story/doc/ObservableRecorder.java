@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.process.ProcessObserver;
-import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -111,10 +110,10 @@ class ObservableRecorder {
 	}
 
 	void observe() {
-		ProcessObservers.context().observe(new BeforeStoryObserver());
-		ProcessObservers.context().observe(new BeforeVisitObserver());
-		ProcessObservers.context().observe(new AfterPerformActionObserver());
-		ProcessObservers.context().observe(new AfterStoryObserver());
+		new BeforeStoryObserver().bind();
+		new BeforeVisitObserver().bind();
+		new AfterPerformActionObserver().bind();
+		new AfterStoryObserver().bind();
 	}
 
 	class BeforeStoryObserver

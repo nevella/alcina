@@ -929,6 +929,32 @@ public interface Story {
 			public @interface Invert {
 			}
 		}
+
+		/**
+		 * Conditional execution attributes
+		 */
+		public interface ContextModifier {
+			/**
+			 * Set a context attribute. This will be visible for the point and
+			 * all child points
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			@Repeatable(SetAttribute.Multiple.class)
+			public @interface SetAttribute {
+				Class<? extends Attribute<String>> key();
+
+				String value();
+
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				public @interface Multiple {
+					SetAttribute[] value();
+				}
+			}
+		}
 	}
 
 	/**
@@ -967,9 +993,10 @@ public interface Story {
 
 		/**
 		 * 
+		 * @param context
 		 * @return the Action (which will not be a subtype of Annotate)
 		 */
-		Story.Action getAction();
+		Story.Action getAction(TellerContext context);
 
 		/**
 		 * 
@@ -986,6 +1013,8 @@ public interface Story {
 		String getLabel();
 
 		String getDescription();
+
+		List<Story.Decl.ContextModifier.SetAttribute> getContextAttributes();
 
 		/*
 		 * An aspect added to point/performers
