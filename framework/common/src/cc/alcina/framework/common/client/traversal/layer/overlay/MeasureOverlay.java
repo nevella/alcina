@@ -156,7 +156,8 @@ public class MeasureOverlay {
 	}
 
 	public void detach() {
-		overlays.forEach(overlay -> overlay.containingNode().strip());
+		overlays.stream().filter(Measure::isAttached)
+				.forEach(overlay -> overlay.containingNode().strip());
 	}
 
 	public ExtendResult extend(BoundaryTraversals quota, boolean reversed) {

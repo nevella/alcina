@@ -1944,7 +1944,7 @@ public class DirectedLayout implements AlcinaProcess {
 		 *            the runnable to execute which may cause layout
 		 */
 		public void deferIfFiring(Runnable runnable) {
-			DirectedLayout.this.deferIfFiring(runnable);
+			getResolver().layout.deferIfFiring(runnable);
 		}
 
 		void beforeRender() {

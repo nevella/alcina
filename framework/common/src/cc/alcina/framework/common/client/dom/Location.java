@@ -253,6 +253,10 @@ public class Location implements Comparable<Location> {
 			return 0;
 		}
 
+		public boolean isAttached() {
+			return start.isAttached();
+		}
+
 		// FIXME - selection - throw if start.node != end.node?
 		public DomNode containingNode() {
 			return start.getContainingNode();
@@ -705,6 +709,17 @@ public class Location implements Comparable<Location> {
 
 	public LocationSnapshot toLocationSnapshot() {
 		return new LocationSnapshot();
+	}
+
+	public boolean isAttached() {
+		/*
+		 * do not ensurecurrent (which would throw if detached)
+		 */
+		if (containingNode == null) {
+			return false;
+		} else {
+			return containingNode.isAttached();
+		}
 	}
 
 	/*
