@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
 import com.google.gwt.user.client.Window;
@@ -45,12 +44,6 @@ class WindowStateGenerator {
 				addElement(elem);
 			}
 		}
-		/*
-		 * wip - localdom.offsetprotocol - should just be offsetobservedelements
-		 */
-		List<Element> withStateAttributes = doc.querySelectorAll(
-				NodeAttachId.ATTR_NAME_TRANSMIT_STATE_SELECTOR);
-		withStateAttributes.forEach(this::addElement);
 		List<ElementOffsets> elementOffsets = addedUiStates.stream()
 				.map(ElementOffsets::of).toList();
 		result.offsetsDelta = offsetRegistry

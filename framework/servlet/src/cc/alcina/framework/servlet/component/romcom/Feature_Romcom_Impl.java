@@ -1,7 +1,5 @@
 package cc.alcina.framework.servlet.component.romcom;
 
-import com.google.gwt.dom.client.behavior.ElementBehavior;
-
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
@@ -41,12 +39,9 @@ public interface Feature_Romcom_Impl extends Feature {
 	 * offsets (relative to the parent) which change infrequently. So optimise
 	 * via a caching protocol. Implemented + a large performance improvement
 	 * 
-	 * <ul>
-	 * <li>wip - ds.mid - Revisit {@link ElementBehavior} particularly the docs
-	 * (and send instances, not classes) *
-	 * <li>wip - ds.mid - check the offsetprotocol json size + possibly
-	 * client-side zip
-	 * </ul>
+	 * <p>
+	 * wip - ds.late - check the offsetprotocol json size + possibly client-side
+	 * zip
 	 */
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _OffsetProtocol extends Feature {
