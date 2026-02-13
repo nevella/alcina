@@ -478,7 +478,12 @@ public class Window {
 	 * @param features
 	 *            the features to be enabled/disabled on this window
 	 */
-	public static native void open(String url, String name, String features) /*-{
+	public static void open(String url, String name, String features) {
+		Document.get().invoke(() -> open0(url, name, features), Window.class,
+				"open0", null, List.of(url, name, features), false);
+	}
+
+	public static native void open0(String url, String name, String features) /*-{
     $wnd.open(url, name, features);
 	}-*/;
 

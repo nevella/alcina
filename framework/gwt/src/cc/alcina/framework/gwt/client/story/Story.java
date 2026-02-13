@@ -220,6 +220,52 @@ public interface Story {
 				Story.Action convert(A ann);
 			}
 
+			public interface Code {
+			}
+
+			public interface Environment {
+				/**
+				 * Mark the current downloads folder (to await changes)
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface MarkDownloads {
+					public static class ConverterImpl
+							implements Converter<MarkDownloads> {
+						@Override
+						public Story.Action convert(MarkDownloads ann) {
+							return new Story.Action.Environment.MarkDownloads();
+						}
+					}
+				}
+
+				/**
+				 * Mark the current downloads folder (to await changes)
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface AwaitNewDownload {
+					/**
+					 * 
+					 * @return the new download regex to match
+					 */
+					String value() default ".*";
+
+					public static class ConverterImpl
+							implements Converter<AwaitNewDownload> {
+						@Override
+						public Story.Action convert(AwaitNewDownload ann) {
+							return new Story.Action.Environment.AwaitNewDownload(
+									ann.value());
+						}
+					}
+				}
+			}
+
 			/**
 			 * <p>
 			 * Actions which annotate the UI - a separate logical unit to the
@@ -534,7 +580,7 @@ public interface Story {
 					}
 				}
 
-				/** Define a script action */
+				/** Define a resizeviewport action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
@@ -552,6 +598,36 @@ public interface Story {
 						public Story.Action convert(ResizeViewport ann) {
 							return new Story.Action.Ui.ResizeViewport(
 									ann.width(), ann.height(), ann.maximise());
+						}
+					}
+				}
+
+				/** Define a FocusWindow action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface FocusWindow {
+					public static class ConverterImpl
+							implements Converter<FocusWindow> {
+						@Override
+						public Story.Action convert(FocusWindow ann) {
+							return new Story.Action.Ui.FocusWindow();
+						}
+					}
+				}
+
+				/** Define a CloseWindow action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface CloseWindow {
+					public static class ConverterImpl
+							implements Converter<CloseWindow> {
+						@Override
+						public Story.Action convert(CloseWindow ann) {
+							return new Story.Action.Ui.CloseWindow();
 						}
 					}
 				}
@@ -1032,6 +1108,19 @@ public interface Story {
 			void perform(Action.Context context) throws Exception;
 		}
 
+		public interface Environment extends Story.Action {
+			public static class MarkDownloads implements Environment {
+			}
+
+			public static class AwaitNewDownload implements Environment {
+				AwaitNewDownload(String newDownloadPathRegex) {
+					this.newDownloadPathRegex = newDownloadPathRegex;
+				}
+
+				public String newDownloadPathRegex;
+			}
+		}
+
 		/*
 		 * <p>A directive to annotate the UI <p> By default, they're not enabled
 		 * - an observer must set the {@link Enabled} attribute to true to
@@ -1354,6 +1443,12 @@ public interface Story {
 					this.toX = toX;
 					this.toY = toY;
 				}
+			}
+
+			public static class FocusWindow implements Ui {
+			}
+
+			public static class CloseWindow implements Ui {
 			}
 		}
 

@@ -364,4 +364,40 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 			}
 		}
 	}
+
+	public static class FocusWindow
+			implements TypedPerformer<Story.Action.Ui.FocusWindow> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.FocusWindow action) throws Exception {
+			WebDriver driver = wdPerformer.wdContext.exec.getDriver();
+			try {
+				driver.switchTo().window(driver.getWindowHandle());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	/*
+	 * closes the most recently created window
+	 */
+	public static class CloseWindow
+			implements TypedPerformer<Story.Action.Ui.CloseWindow> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.CloseWindow action) throws Exception {
+			WebDriver driver = wdPerformer.wdContext.exec.getDriver();
+			try {
+				String originalHandle = driver.getWindowHandle();
+				String openedHandle = driver.getWindowHandles().stream()
+						.filter(h -> !h.equals(originalHandle)).findFirst()
+						.get();
+				driver.switchTo().window(openedHandle).close();
+				driver.switchTo().window(originalHandle);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
 }

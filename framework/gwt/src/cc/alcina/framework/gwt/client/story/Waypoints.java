@@ -39,4 +39,12 @@ public class Waypoints {
 	@Decl.Action.UI.Wait(5000)
 	public static class Wait5000 extends Waypoint {
 	}
+
+	@Decl.Action.UI.FocusWindow
+	public static class FocusWindow extends Waypoint {
+	}
+
+	@Decl.Action.UI.CloseWindow
+	public static class CloseWindow extends Waypoint {
+	}
 }
