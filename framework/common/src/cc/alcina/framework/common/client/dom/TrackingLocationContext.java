@@ -152,6 +152,9 @@ class TrackingLocationContext implements LocationContext {
 			 */
 			if (added != null) {
 				DomNode node = added.node.asDomNode();
+				/*
+				 * self and descendants
+				 */
 				node.stream().forEach(DomNode::asLocation);
 				DomNode lastDescendant = node.relative().lastDescendant();
 				/*
@@ -329,6 +332,14 @@ class TrackingLocationContext implements LocationContext {
 					boolean groupExtendable = mutationCount < groupMutationCount;
 					if (groupExtendable) {
 						addDomMutation(mutation);
+						if (mutation.addedNodes.size() == 1) {
+							/*
+							 * FIXME - localdom - this should not be necessary
+							 * (location should not be removed during strip)
+							 */
+							mutation.addedNodes.get(0).node().asDomNode()
+									.asLocation();
+						}
 					}
 					return groupExtendable;
 				}
@@ -743,7 +754,7 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public void validateLocations() {
-		validateLocations(false);
+		validateLocations(true);
 	}
 
 	void validateLocations(boolean withoutSideEffects) {
