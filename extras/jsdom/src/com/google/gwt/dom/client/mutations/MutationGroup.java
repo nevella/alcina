@@ -4,8 +4,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 
 /**
  * <p>
- * A mutatiob is assigned to a mutationgroup (there are at least two mutations
- * per group) if the cumulative effect of the mutattions is no modification in
+ * A mutation is assigned to a mutationgroup (there are at least two mutations
+ * per group) if the cumulative effect of the mutations is no modification to
  * the character sequence of the document
  * 
  * <p>

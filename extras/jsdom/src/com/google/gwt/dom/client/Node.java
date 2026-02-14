@@ -701,6 +701,10 @@ public abstract class Node
 		return new MutationGroups();
 	}
 
+	/*
+	 * sugar to set the special mutation mode of the containing document's
+	 * localdom
+	 */
 	public class MutationGroups {
 		public void exit() {
 			getOwnerDocument().localDom.mutationGroup = null;
