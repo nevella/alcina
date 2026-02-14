@@ -1,8 +1,8 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils;
@@ -229,6 +230,8 @@ public class HtmlParser {
 
 	private List<Element> syntheticElements = new ArrayList<>();
 
+	private CountingMap<String> ignoreClose = null;
+
 	int debugCursorDepth = 0;
 
 	private int lineNumber;
@@ -255,49 +258,6 @@ public class HtmlParser {
 		cursor.appendChild(comment);
 	}
 
-	boolean isSelfClosingTagLcRead(String lcTag) {
-		if (!Objects.equals(lcTag, "a")) {
-			return isSelfClosingTagLc(lcTag);
-		} else {
-			int scanIdx = idx;
-			int length = markup.length();
-			/*
-			 * the constant '4' makes sense if you think about how ends could
-			 * influence this (minimal case, markup ends with </a> - length 4 -
-			 * anything else and there's no possibility of the last 4 chars only
-			 * affecting the result)
-			 */
-			while (scanIdx < length - 4) {
-				char c = markup.charAt(scanIdx++);
-				if (c == '<') {
-					char c1 = markup.charAt(scanIdx++);
-					if (c1 == '/') {
-						/*
-						 * check if this closes an A tag branch
-						 */
-						char c2 = markup.charAt(scanIdx++);
-						if (c2 == 'a' || c2 == 'A') {
-							char c3 = markup.charAt(scanIdx++);
-							if (c3 == '>') {
-								return false;
-							}
-						}
-					} else {
-						if (c1 == 'a' || c1 == 'A') {
-							char c2 = markup.charAt(scanIdx++);
-							// if either end of (start) tag or start of
-							// attributes, it's another <A>
-							if (c2 == '>' || c2 == ' ') {
-								return true;
-							}
-						}
-					}
-				}
-			}
-			return true;
-		}
-	}
-
 	private void emitElement() {
 		boolean closeTag = false;
 		if (tag == null) {
@@ -308,11 +268,11 @@ public class HtmlParser {
 			}
 		}
 		if (!closeTag) {
+			closeToValidateOutput(tag);
 			emitStartElement(tag);
 		}
 		// selfCloseTag |= !closeTag && isSelfClosingTagLcRead(tag);
-		selfCloseTag = closeTag ? isSelfClosingTagLc(tag)
-				: isSelfClosingTagLcRead(tag);
+		selfCloseTag = isSelfClosingTagLc(tag);
 		if (closeTag && selfCloseTag) {
 			// exclusive or really. we'll have already emitted the close here,
 			// so ignore
@@ -349,6 +309,41 @@ public class HtmlParser {
 		selfCloseTag = false;
 	}
 
+	private void closeToValidateOutput(String tag) {
+		if (cursor == null) {
+			return;
+		}
+		Element closeTo = null;
+		if (tag.equals("a")) {
+			closeTo = cursor.firstInAncestry(e -> e.nameIs("a")).orElse(null);
+		}
+		if (tag.equals("p")) {
+			closeTo = cursor.firstInAncestry(e -> e.nameIs("p")).orElse(null);
+		}
+		if (closeTo != null) {
+			/*
+			 * close up to the invalid container, then reopen. Add closeTo to
+			 * the list of
+			 */
+			List<Element> reopen = new ArrayList<>();
+			Element closeCursor = cursor;
+			for (;;) {
+				emitEndElement(closeCursor.getTagName());
+				if (closeCursor == closeTo) {
+					break;
+				}
+				reopen.add(closeCursor);
+				closeCursor = closeCursor.getParentElement();
+			}
+			Collections.reverse(reopen);
+			reopen.forEach(e -> emitStartElement(e.getTagName()));
+			if (ignoreClose == null) {
+				ignoreClose = new CountingMap<>();
+			}
+			ignoreClose.add(closeTo.getTagName());
+		}
+	}
+
 	private void emitEndElement(String tag) {
 		if (!emitHtmlHeadBodyTags) {
 			switch (tag) {
@@ -356,6 +351,20 @@ public class HtmlParser {
 			case "head":
 			case "body":
 				return;
+			}
+		}
+		if (ignoreClose != null) {
+			Integer ignoreCount = ignoreClose.get(tag);
+			if (ignoreCount != null) {
+				if (ignoreCount == 0) {
+					ignoreClose.remove(tag);
+					if (ignoreClose.isEmpty()) {
+						ignoreClose = null;
+					}
+					return;
+				} else {
+					ignoreClose.add(tag, -1);
+				}
 			}
 		}
 		setCursor(cursor.getParentElement(), tag, -1);
