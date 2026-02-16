@@ -400,6 +400,8 @@ public class RemoteComponentProtocol {
 					result.settingsException = CommonUtils
 							.getFullExceptionMessage(e);
 				}
+				result.stringMetadata = MessageTransportLayer.get()
+						.getStringProtocolCache().toMetadata();
 				return result;
 			}
 
@@ -412,6 +414,8 @@ public class RemoteComponentProtocol {
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
 			public String settings;
+
+			public StringProtocol.State stringMetadata;
 		}
 
 		/*
@@ -479,7 +483,7 @@ public class RemoteComponentProtocol {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class Session {
+	public static final class Session {
 		public String id;
 
 		public String auth;
@@ -487,6 +491,8 @@ public class RemoteComponentProtocol {
 		public String url;
 
 		public String componentClassName;
+
+		public String componentPath;
 
 		// ipv4 address
 		@Property.Not

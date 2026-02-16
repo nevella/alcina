@@ -91,12 +91,19 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * 
  */
 public abstract class MessageTransportLayer {
+	protected static LooseContext.Key<MessageTransportLayer> CONTEXT_TRANSPORT_LAYER = LooseContext
+			.key(MessageTransportLayer.class, "CONTEXT_TRANSPORT_LAYER");
+
+	public static MessageTransportLayer get() {
+		return CONTEXT_TRANSPORT_LAYER.getTyped();
+	}
+
 	@Reflected
 	public enum SendChannelId {
 		CLIENT_TO_SERVER, SERVER_TO_CLIENT;
 
 		public boolean isSelf() {
-			return CONTEXT_TRANSPORT_LAYER.getTyped().sendChannelId() == this;
+			return MessageTransportLayer.get().sendChannelId() == this;
 		}
 
 		SendChannelId oppositeEndpointId() {
@@ -1037,9 +1044,6 @@ public abstract class MessageTransportLayer {
 		}
 	}
 
-	public static LooseContext.Key<MessageTransportLayer> CONTEXT_TRANSPORT_LAYER = LooseContext
-			.key(MessageTransportLayer.class, "CONTEXT_TRANSPORT_LAYER");
-
 	MessageId highestProcessingCounterpartId;
 
 	TransportEvents transportEvents = new TransportEvents();
@@ -1097,6 +1101,8 @@ public abstract class MessageTransportLayer {
 	protected abstract ReceiveChannel receiveChannel();
 
 	protected abstract EnvelopeDispatcher envelopeDispatcher();
+
+	public abstract StringProtocol.Cache getStringProtocolCache();
 
 	void ensureMessageId(Message message) {
 		if (message.messageId == null) {

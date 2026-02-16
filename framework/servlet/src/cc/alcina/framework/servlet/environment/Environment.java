@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -53,6 +54,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.Resubmit;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
@@ -68,6 +70,9 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteWindowState;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol.Cache.Key;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol.CacheableStringProvider;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
@@ -102,9 +107,6 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * thread
  */
 class Environment {
-	static Configuration.Key invokeSyncTimeoutSecs = Configuration
-			.key("invokeSyncTimeoutSecs");
-
 	static class TimerProvider implements Timer.Provider {
 		static TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
 
@@ -198,6 +200,12 @@ class Environment {
 			return null;
 		}
 
+		@Override
+		public void onWindowState(WindowState windowState) {
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'onWindowState'");
+		}
+
 		<T> T awaitResponse(NodeAttachId node, String methodName,
 				ResponseHandler handler) {
 			boolean timedOut = false;
@@ -283,24 +291,18 @@ class Environment {
 			ResponseHandler handler = responseHandlers.remove(response.id);
 			handler.handle(response);
 		}
-
-		@Override
-		public void onWindowState(WindowState windowState) {
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'onWindowState'");
-		}
 	}
 
 	static class InvokeException extends RuntimeException {
-		InvokeException(String context, ExceptionTransport exception) {
-			super(Ax.format("%s\n======================\n%s", context,
-					exception.toExceptionString()));
-		}
-
 		static class PageHide extends InvokeException {
 			PageHide(String message) {
 				super(message);
 			}
+		}
+
+		InvokeException(String context, ExceptionTransport exception) {
+			super(Ax.format("%s\n======================\n%s", context,
+					exception.toExceptionString()));
 		}
 
 		InvokeException(String message) {
@@ -353,6 +355,12 @@ class Environment {
 			runWithMutations(() -> {
 				Element elem = (Element) eventSystemMutation.nodeId.node();
 				mutations.eventSystemMutations.add(eventSystemMutation);
+			});
+		}
+
+		void emitStringProtocolInvalidation(Key key) {
+			runWithMutations(() -> {
+				mutations.ensureStringProtocolDelta().remove.add(key);
 			});
 		}
 	}
@@ -622,6 +630,17 @@ class Environment {
 		boolean hasPendingMutations() {
 			return mutations != null && mutations.domMutations.size() > 0;
 		}
+
+		void setClientState(StringProtocol.State clientState) {
+			StringProtocol.Cache serverCache = MessageTransportLayer.get()
+					.getStringProtocolCache();
+			serverCache.clientState = clientState;
+			clientState.metadataEntries.forEach(entry -> {
+				if (serverCache.isInvalid(entry)) {
+					mutationProxy.emitStringProtocolInvalidation(entry.key);
+				}
+			});
+		}
 	}
 
 	class DispatchRefProviderImpl extends DispatchRefProvider {
@@ -630,6 +649,18 @@ class Environment {
 			return access()::invoke;
 		}
 	}
+
+	class ResubmitObserver implements ProcessObserver<Mutations.Resubmit> {
+		@Override
+		public void topicPublished(Resubmit message) {
+			mutationProxy.runWithMutations(() -> {
+				mutations.resubmit(message.mutations);
+			});
+		}
+	}
+
+	static Configuration.Key invokeSyncTimeoutSecs = Configuration
+			.key("invokeSyncTimeoutSecs");
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class
 			.getName() + ".CONTEXT_ENVIRONMENT";
@@ -714,6 +745,10 @@ class Environment {
 		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
+	public String getContextPath() {
+		return ui.getRemoteComponent().getPath();
+	}
+
 	void flushNonClientMutations() {
 		access().invoke(() -> {
 			emitMutations();
@@ -746,9 +781,18 @@ class Environment {
 		if (mutations != null) {
 			Document.get().attachIdRemote().flushSinkEventsQueue();
 			mutations.selectionMutation = pendingSelectionMutation;
+			Set<StringProtocol.Cache.Entry> cacheEntriesEmitted = MessageTransportLayer
+					.get().getStringProtocolCache()
+					.dehydrateMutations(mutations);
+			cacheEntriesEmitted
+					.forEach(mutations.ensureStringProtocolDelta().add::add);
 			queue.sendToClient(mutations);
 			mutations = null;
 		}
+	}
+
+	Class<? extends CacheableStringProvider> getCacheableStringProviderClass() {
+		return ui.getCacheableStringProviderClass();
 	}
 
 	private void emitServerDebugProtocolResponse(
@@ -770,15 +814,6 @@ class Environment {
 				responseMessage.serverState);
 		queue.sendToClient(responseMessage);
 		queue.flush();
-	}
-
-	class ResubmitObserver implements ProcessObserver<Mutations.Resubmit> {
-		@Override
-		public void topicPublished(Resubmit message) {
-			mutationProxy.runWithMutations(() -> {
-				mutations.resubmit(message.mutations);
-			});
-		}
 	}
 
 	private void enterContext() {
@@ -917,6 +952,7 @@ class Environment {
 		access().applyDomMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
 		access().applyWindowState(message.windowState);
+		access().setClientState(message.stringMetadata);
 		initialiseSettings(message.settings);
 		startClient();
 		History.setEnabled(true);

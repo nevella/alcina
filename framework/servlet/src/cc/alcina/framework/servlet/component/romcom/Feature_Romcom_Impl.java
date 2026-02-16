@@ -46,4 +46,18 @@ public interface Feature_Romcom_Impl extends Feature {
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _OffsetProtocol extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * This optimises client/server comms - large string constants are cached
+	 * client-side in local storage, and MutationRecord.innerMarkup is ...
+	 * munged? extended? to support
+	 * 
+	 * <p>
+	 * some considerations: onload cache invalidation and client-to-server cache
+	 * comms
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _StringProtocol extends Feature {
+	}
 }

@@ -1,7 +1,11 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.google.gwt.activity.shared.ActivityMapper;
 import com.google.gwt.dom.client.StyleInjector;
@@ -14,8 +18,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.service.DispatchRefProvider;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Ref;
+import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivityManager;
@@ -25,6 +32,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete.EnvironmentSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol.CacheableStringProvider;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 
 /**
  * <p>
@@ -241,4 +251,50 @@ public interface RemoteUi {
 	default boolean isHistoryPushState() {
 		return false;
 	}
+
+	/**
+	 * 
+	 * @return the class marker for cacheable client/server strings
+	 *         (stylesheets, fonts etc)
+	 */
+	default Class<? extends StringProtocol.CacheableStringProvider>
+			getCacheableStringProviderClass() {
+		return CacheableStringProvider.None.class;
+	}
+
+	public static abstract interface CacheableStringProviderHash
+			extends StringProtocol.CacheableStringProvider {
+		static Map<Class<? extends CacheableStringProviderHash>, String> cachedValues = Collections
+				.synchronizedMap(AlcinaCollections.newLinkedHashMap());
+
+		/**
+		 * 
+		 * Ensures there's only one instance of the large string in memory
+		 * 
+		 * @param valueSupplier
+		 *            the string supplier. Only called once in non-test mode
+		 * @return
+		 */
+		default String getPreferCached(Supplier<String> uncachedSupplier) {
+			String cached = cachedValues.get(getClass());
+			if (cached != null && !Ax.isTest()) {
+				return cached;
+			}
+			String uncached = uncachedSupplier.get();
+			if (!Objects.equals(uncached, cached)) {
+				cachedValues.put(getClass(), uncached);
+				cached = uncached;
+			}
+			return cached;
+		}
+
+		@Override
+		default String getValueHash() {
+			return EncryptionUtils.get().SHA1(getValue());
+		}
+	}
+
+	RemoteUi withComponent(RemoteComponent remoteComponent);
+
+	RemoteComponent getRemoteComponent();
 }

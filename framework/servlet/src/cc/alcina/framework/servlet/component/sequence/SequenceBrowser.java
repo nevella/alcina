@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
@@ -15,7 +16,9 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.CacheableStringProviderImpl.StylesheetProvider;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.environment.DomainUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;
@@ -64,6 +67,8 @@ public class SequenceBrowser {
 
 	@TypedProperties
 	static class Ui extends AbstractUi<SequencePlace> implements DomainUi {
+		private static final String STYLES_RESOURCE_PATH = "res/css/styles.css";
+
 		PackageProperties._SequenceBrowser_Ui.InstanceProperties
 				subtypeProperties() {
 			return PackageProperties.sequenceBrowser_ui.instance(this);
@@ -117,7 +122,7 @@ public class SequenceBrowser {
 
 		@Override
 		protected DirectedLayout render0() {
-			injectCss("res/css/styles.css");
+			injectCssText(new StylesheetProvider().getValue());
 			Registry.impl(UiCustomiser.class).beforeRender(this);
 			//
 			Client.get().initAppHistory();
@@ -143,6 +148,32 @@ public class SequenceBrowser {
 
 		int elementLimit() {
 			return settings.maxElementRows;
+		}
+
+		public Class<? extends StringProtocol.CacheableStringProvider>
+				getCacheableStringProviderClass() {
+			return CacheableStringProviderImpl.class;
+		}
+	}
+
+	@Registration(CacheableStringProviderImpl.class)
+	public static interface CacheableStringProviderImpl
+			extends RemoteUi.CacheableStringProviderHash {
+		public static class StylesheetProvider
+				implements CacheableStringProviderImpl {
+			StylesheetProvider() {
+			}
+
+			@Override
+			public String getKey() {
+				return "stylesheet";
+			}
+
+			@Override
+			public String getValue() {
+				return getPreferCached(() -> Io.read()
+						.resource(Ui.STYLES_RESOURCE_PATH).asString());
+			}
 		}
 	}
 

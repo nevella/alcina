@@ -303,6 +303,43 @@ public final class MutationRecord {
 	 */
 	public String newValue;
 
+	public DehydratedValue newValueDehydrated;
+
+	/**
+	 * Used to optimise transport of large strings, such as stylesheets, base64
+	 */
+	@Bean(PropertySource.FIELDS)
+	public static final class DehydratedValue {
+		public List<Entry> entries = new ArrayList<>();
+
+		/**
+		 * An entry will have either a value -or- a cacheKey, never both
+		 */
+		@Bean(PropertySource.FIELDS)
+		public static final class Entry {
+			public static Entry ofValue(String value) {
+				Entry result = new Entry();
+				result.value = value;
+				return result;
+			}
+
+			public static Entry ofCacheKey(String cacheKey) {
+				Entry result = new Entry();
+				result.cacheKey = cacheKey;
+				return result;
+			}
+
+			public String value;
+
+			public String cacheKey;
+
+			@Property.Not
+			public boolean isEmpty() {
+				return cacheKey == null && Ax.isBlank(value);
+			}
+		}
+	}
+
 	/**
 	 * For dom trees, this carries the tree node ids (which are not carried by
 	 * the markup)

@@ -15,6 +15,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
 /**
@@ -228,7 +229,14 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 	MessageBatcherServer batcher;
 
-	MessageTransportLayerServer() {
+	StringProtocol.Cache stringProtocolCache;
+
+	public StringProtocol.Cache getStringProtocolCache() {
+		return stringProtocolCache;
+	}
+
+	MessageTransportLayerServer(StringProtocol.Cache stringProtocolCache) {
+		this.stringProtocolCache = stringProtocolCache;
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
 		aggregateDispatcher = new AggregateDispatcher(this);

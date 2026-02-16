@@ -189,6 +189,10 @@ public class RemoteComponentHandler {
 						"require-corp");
 			}
 		}
+		boolean addCacheHeaders = path.matches(".+\\.cache\\.js");
+		if (addCacheHeaders) {
+			response.addHeader("Cache-Control", "max-age=8640000");
+		}
 		String suffix = path.replaceFirst(".+\\.(.+)", "$1");
 		switch (suffix) {
 		case "html":

@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
@@ -30,6 +31,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
@@ -37,6 +39,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.WindowStateUpdate;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
 
 /*
  * Nice thing about statics is they *ensure* statelessness
@@ -176,8 +180,14 @@ public class ClientRpc {
 
 	ClientRpc(RemoteComponentUi ui) {
 		this.ui = ui;
-		transportLayer = new MessageTransportLayerClient();
+		RemoteComponentProtocol.Session session = ReflectiveSerializer
+				.deserializeRpc(ClientUtils.wndString(
+						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
+		StringProtocol.Cache cacheFromLocalStorage = StringProtocol.Cache
+				.fromLocalStorage(session.componentPath);
+		transportLayer = new MessageTransportLayerClient(cacheFromLocalStorage);
 		transportLayer.registerInContext();
+		transportLayer.session = session;
 		exceptionHandler = new ExceptionHandler();
 		mutationConflictResolution = new MutationConflictResolutionClient();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);

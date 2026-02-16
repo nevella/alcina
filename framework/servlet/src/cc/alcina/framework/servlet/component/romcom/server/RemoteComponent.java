@@ -56,6 +56,7 @@ public interface RemoteComponent {
 		if (Ax.notBlank(request.getQueryString())) {
 			session.url += "?" + request.getQueryString();
 		}
+		session.componentPath = getPath();
 		session.componentClassName = ui.getClass().getName();
 		EnvironmentManager.get().register(ui, session,
 				getNonInteractionTimeout(session));
@@ -85,7 +86,7 @@ public interface RemoteComponent {
 	}
 
 	default RemoteUi getUiInstance() {
-		return Reflections.newInstance(getUiType());
+		return Reflections.newInstance(getUiType()).withComponent(this);
 	}
 
 	Class<? extends RemoteUi> getUiType();

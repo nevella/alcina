@@ -118,8 +118,8 @@ public abstract class MutationConflictResolution {
 
 		private boolean
 				isFromOtherEndpoit(RemoteComponentProtocol.Message message) {
-			return message.messageId.sendChannelId == MessageTransportLayer.CONTEXT_TRANSPORT_LAYER
-					.getTyped().sendChannelId().oppositeEndpointId();
+			return message.messageId.sendChannelId == MessageTransportLayer
+					.get().sendChannelId().oppositeEndpointId();
 		}
 	}
 

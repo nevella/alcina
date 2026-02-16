@@ -49,6 +49,8 @@ public class Mutations extends RemoteComponentProtocol.Message
 
 	public SelectionRecord selectionMutation;
 
+	public StringProtocol.Delta stringProtocolDelta;
+
 	@Property.Not
 	public MessageId getCounterpartProcessingId() {
 		return counterpartProcessingId;
@@ -89,5 +91,12 @@ public class Mutations extends RemoteComponentProtocol.Message
 							.distinct().collect(Collectors.joining(", ")));
 		}
 		return format.toString();
+	}
+
+	public StringProtocol.Delta ensureStringProtocolDelta() {
+		if (stringProtocolDelta == null) {
+			stringProtocolDelta = new StringProtocol.Delta();
+		}
+		return stringProtocolDelta;
 	}
 }

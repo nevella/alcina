@@ -702,6 +702,9 @@ public class Registry {
 		}
 
 		V checkNonSingleton(Class<? extends V> clazz) {
+			if (singletons.contains(clazz)) {
+				int debug = 3;
+			}
 			Preconditions.checkArgument(!singletons.contains(clazz));
 			return Reflections.at(clazz).isAbstract() ? null
 					: Reflections.newInstance(clazz);

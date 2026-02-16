@@ -15,8 +15,10 @@ import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
 import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 
 /**
  * <p>
@@ -28,6 +30,7 @@ import cc.alcina.framework.common.client.util.IntPair;
  * This class optimises by only transmitting changes, and providing a
  * server-side view of current client state generated from the delta sequence
  */
+@Feature.Ref(Feature_Romcom_Impl._OffsetProtocol.class)
 public class OffsetProtocol {
 	/**
 	 * The registry of offsets synced via the protocol

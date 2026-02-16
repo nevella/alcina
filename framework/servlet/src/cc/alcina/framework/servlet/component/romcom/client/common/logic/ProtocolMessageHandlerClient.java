@@ -23,6 +23,7 @@ import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -142,10 +143,12 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public static class MutationsHandler
 			extends ProtocolMessageHandlerClient<Mutations> {
 		@Override
-		public void handle(Mutations message) {
+		public void handle(Mutations mutations) {
+			MessageTransportLayer.get().getStringProtocolCache()
+					.hydrateMutations(mutations);
 			LocalDom.attachIdRepresentations()
-					.applyMutations(message.domMutations, true);
-			SelectionRecord selectionMutation = message.selectionMutation;
+					.applyMutations(mutations.domMutations, true);
+			SelectionRecord selectionMutation = mutations.selectionMutation;
 			if (selectionMutation != null) {
 				LocalDom.flush();
 				selectionMutation.populateNodes();
@@ -159,7 +162,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 							selectionMutation.focusOffset);
 				}
 			}
-			message.eventSystemMutations.forEach(m -> {
+			mutations.eventSystemMutations.forEach(m -> {
 				try {
 					Element elem = (Element) m.nodeId.node();
 					if (m.eventBits == -1) {
@@ -172,16 +175,16 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 					e.printStackTrace();
 				}
 			});
-			if (message.locationMutation != null) {
+			if (mutations.locationMutation != null) {
 				try {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = true;
 					History.CONTEXT_REPLACING.runWith(
 							() -> History.newItem(
 									HistoryImplDelegate.pushStateEnabled
-											? message.locationMutation.path
-											: message.locationMutation.hash),
-							message.locationMutation.replace);
+											? mutations.locationMutation.path
+											: mutations.locationMutation.hash),
+							mutations.locationMutation.replace);
 				} finally {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = false;

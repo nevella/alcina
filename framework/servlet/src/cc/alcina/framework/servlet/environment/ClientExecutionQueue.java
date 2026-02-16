@@ -21,6 +21,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.WindowStateUpdate;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.environment.Environment.InvokeException;
@@ -233,7 +234,10 @@ class ClientExecutionQueue implements Runnable {
 
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
-		transportLayer = new MessageTransportLayerServer();
+		StringProtocol.Cache cacheFromRegistry = StringProtocol.Cache
+				.fromRegistry(environment.getContextPath(),
+						environment.getCacheableStringProviderClass());
+		transportLayer = new MessageTransportLayerServer(cacheFromRegistry);
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 		mutationMessageData = new MutationMessageData();
 		renderStateImpl = new RenderStateImpl();
