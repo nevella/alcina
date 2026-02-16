@@ -11,6 +11,7 @@ import com.google.gwt.event.dom.client.BeforeInputEvent;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.CopyEvent;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusinEvent;
 import com.google.gwt.event.dom.client.FocusoutEvent;
@@ -23,6 +24,7 @@ import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseUpEvent;
+import com.google.gwt.event.dom.client.PasteEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.SelectionChangedEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -130,6 +132,25 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onClick(Click event);
+		}
+	}
+
+	public static class Copy extends NodeEvent<Copy.Handler> {
+		@Override
+		public void dispatch(Copy.Handler handler) {
+			handler.onCopy(this);
+		}
+
+		public static class BindingImpl extends DomBinding<Copy> {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::fireEvent,
+						CopyEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCopy(Copy event);
 		}
 	}
 
@@ -423,6 +444,25 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onMouseUp(MouseUp event);
+		}
+	}
+
+	public static class Paste extends NodeEvent<Paste.Handler> {
+		@Override
+		public void dispatch(Paste.Handler handler) {
+			handler.onPaste(this);
+		}
+
+		public static class BindingImpl extends DomBinding<Paste> {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::fireEvent,
+						PasteEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPaste(Paste event);
 		}
 	}
 
