@@ -31,6 +31,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.NativeEventJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style.Display;
@@ -1283,4 +1284,8 @@ public class WidgetUtils {
 			attachHandlerRegistration.removeHandler();
 		}
 	}
+
+	public static native String getClipboardText(NativeEventJso jsoEvent) /*-{
+	return jsoEvent.clipboardData.getData("text");
+	}-*/;
 }

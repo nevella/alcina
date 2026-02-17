@@ -31,6 +31,8 @@ public class BrowserEvents {
 
 	public static final String CONTEXTMENU = "contextmenu";
 
+	public static final String COPY = "copy";
+
 	public static final String DBLCLICK = "dblclick";
 
 	public static final String DRAG = "drag";
@@ -90,6 +92,8 @@ public class BrowserEvents {
 	public static final String MOUSEWHEEL = "mousewheel";
 
 	public static final String PAGEHIDE = "pagehide";
+
+	public static final String PASTE = "paste";
 
 	public static final String PROGRESS = "progress";
 
