@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.test.client;
 
+import java.util.function.Consumer;
+
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.user.client.Timer;
@@ -8,7 +10,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl;
@@ -16,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.EventObservable;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagText;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -33,9 +36,17 @@ class TestSyncMutations2a {
     }
 	}-*/;
 
-	void run() {
-		ProcessObservers.observe(DirectedLayout.EventObservable.class, Ax::out,
-				true);
+	static class LoggingObserver implements ProcessObserver<EventObservable> {
+		@Override
+		public void topicPublished(EventObservable message) {
+			Ax.out(message);
+		}
+	}
+
+	LoggingObserver observer = new LoggingObserver();
+
+	void run(Consumer<Boolean> completionCallback) {
+		observer.bind();
 		Registry.register().singleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
 		Tests consort = new Tests();
@@ -44,11 +55,15 @@ class TestSyncMutations2a {
 			public void onFailure(Throwable e) {
 				e.printStackTrace();
 				ClientUtils.consoleInfo("   [TestSyncMutations2a] Failed");
+				observer.unbind();
+				completionCallback.accept(false);
 			}
 
 			@Override
 			public void onSuccess(Object arg0) {
 				ClientUtils.consoleInfo("   [TestSyncMutations2a] Passed");
+				observer.unbind();
+				completionCallback.accept(true);
 			}
 		});
 		consort.start();

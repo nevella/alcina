@@ -713,9 +713,24 @@ public class DomNode {
 		try {
 			if (gwtNode != null) {
 				gwtNode.mutationGroups().enterStrip();
+				List<com.google.gwt.dom.client.Node> gwtNodes = nodes.stream()
+						.map(DomNode::gwtNode).toList();
+				gwtNode.getOwnerDocument().setWillReattach(gwtNodes);
 			}
-			nodes.forEach(relative()::insertBeforeThis);
+			/**
+			 * need to insert the children *after* the parent so the parent
+			 * removal mutation affects them
+			 */
+			DomNode insertAfter = this;
+			for (DomNode node : nodes) {
+				insertAfter.relative().insertAfterThis(node);
+				insertAfter = node;
+			}
+			if (gwtNode != null) {
+				gwtNode.getOwnerDocument().setWillReattach(null);
+			}
 			removeFromParent();
+			nodes.get(0).asLocation().getIndex();
 		} finally {
 			if (gwtNode != null) {
 				gwtNode.mutationGroups().exit();

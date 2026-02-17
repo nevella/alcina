@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationGroup;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
@@ -76,8 +77,6 @@ class TrackingLocationContext implements LocationContext {
 
 		IndexTuple delta;
 
-		MutationGroup mutationGroup;
-
 		/*
 		 * The first location at which the mutation occurred
 		 */
@@ -90,6 +89,8 @@ class TrackingLocationContext implements LocationContext {
 		int mutationIndex;
 
 		boolean extendable = true;
+
+		MutationGroup mutationGroup;
 
 		IndexMutation(TrackingLocationContext context) {
 			this.context = context;
@@ -114,8 +115,17 @@ class TrackingLocationContext implements LocationContext {
 
 		void clearLocationIfRemove(MutationRecord mutationRecord) {
 			if (mutationRecord.removedNodes.size() > 0) {
-				mutationRecord.removedNodes.get(0).node
-						.asDomNode().location = null;
+				DomNode toClear = mutationRecord.removedNodes.get(0).node
+						.asDomNode();
+				if (mutationGroup != null) {
+					Document gwtDoc = (Document) toClear.document.w3cDoc();
+					List<Node> willReattach = gwtDoc.getWillReattach();
+					if (willReattach != null
+							&& willReattach.contains(toClear.gwtNode())) {
+						return;
+					}
+				}
+				toClear.location = null;
 			}
 		}
 
@@ -310,39 +320,71 @@ class TrackingLocationContext implements LocationContext {
 			}
 		}
 
+		MutationGroupTracker mutationGroupTracker;
+
+		/*
+		 * Handles custom location mods while keeping the whole wrap/split/strip
+		 * to one delta. Must be kept in exact sync with the operation order in
+		 * DomNode/DomNodeBuilder (strip is move-children-remove, wrap is
+		 * insert-wrapper-move-wrapee). Needed because - while the group can be
+		 * reprsented as a group *outside* the OP, it can't *inside* (at least
+		 * for strip/wrap)
+		 */
+		class MutationGroupTracker {
+			MutationRecord firstMutation;
+
+			List<MutationRecord> mutations = new ArrayList<>();
+
+			MutationGroupTracker(MutationRecord firstMutation) {
+				this.firstMutation = firstMutation;
+				add(firstMutation);
+			}
+
+			void add(MutationRecord mutation) {
+				Preconditions.checkState(
+						firstMutation.mutationGroup == mutation.mutationGroup);
+				mutations.add(mutation);
+				boolean lastMutation = false;
+				switch (firstMutation.mutationGroup) {
+				case wrap:
+					if (mutations.size() == 3) {
+						// wrappee
+						Location wrappeeLocation = mutation.addedNodes.get(0)
+								.node().asDomNode().asLocation();
+						wrappeeLocation.applyIndexDelta(
+								new IndexTuple(1, 0, true, null));
+						lastMutation = true;
+					}
+					break;
+				case strip:
+					DomNode stripee = firstMutation.target.node().asDomNode();
+					if (mutation.removedNodes.size() > 0) {
+						DomNode removedNode = mutation.removedNodes.get(0)
+								.node().asDomNode();
+						if (removedNode == stripee) {
+							lastMutation = true;
+						} else {
+							removedNode.asLocation().applyIndexDelta(
+									new IndexTuple(-1, 0, true, null));
+						}
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+				if (lastMutation) {
+					// remove from parent
+					mutationGroupTracker = null;
+				}
+			}
+		}
+
 		/* only child list mutations in the same direction can be extended */
 		boolean extendWith(MutationRecord mutation) {
 			if (mutation.mutationGroup != null) {
-				if (this.mutationGroup != mutation.mutationGroup) {
-					return false;
-				} else {
-					int mutationCount = domMutations.size();
-					int groupMutationCount = 0;
-					switch (mutationGroup) {
-					case split:
-						groupMutationCount = 2;
-						break;
-					case strip:
-					case wrap:
-						groupMutationCount = 3;
-						break;
-					default:
-						throw new UnsupportedOperationException();
-					}
-					boolean groupExtendable = mutationCount < groupMutationCount;
-					if (groupExtendable) {
-						addDomMutation(mutation);
-						if (mutation.addedNodes.size() == 1) {
-							/*
-							 * FIXME - localdom - this should not be necessary
-							 * (location should not be removed during strip)
-							 */
-							mutation.addedNodes.get(0).node().asDomNode()
-									.asLocation();
-						}
-					}
-					return groupExtendable;
-				}
+				addToGroupTracker(mutation);
+				addDomMutation(mutation);
+				return true;
 			}
 			if (!extendable
 					|| mutation.type == MutationRecord.Type.characterData) {
@@ -383,6 +425,27 @@ class TrackingLocationContext implements LocationContext {
 			clearLocationIfRemove(mutation);
 			return true;
 		}
+
+		void addToGroupTracker(MutationRecord mutation) {
+			if (mutation.mutationGroup == null) {
+				return;
+			}
+			switch (mutation.mutationGroup) {
+			case split:
+				break;
+			case wrap:
+			case strip: {
+				if (mutationGroupTracker != null) {
+					mutationGroupTracker.add(mutation);
+				} else {
+					mutationGroupTracker = new MutationGroupTracker(mutation);
+				}
+				break;
+			}
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 
 	/**
@@ -421,6 +484,7 @@ class TrackingLocationContext implements LocationContext {
 						TrackingLocationContext.this);
 				mutations.add(currentMutation);
 				currentMutation.init(mutation);
+				currentMutation.addToGroupTracker(mutation);
 			}
 		}
 	}

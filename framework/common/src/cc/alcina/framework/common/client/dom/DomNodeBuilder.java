@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.dom;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -203,12 +205,21 @@ public class DomNodeBuilder {
 				: null;
 		try {
 			if (gwtNode != null) {
+				gwtNode.mutationGroups().enterStrip();
+				List<com.google.gwt.dom.client.Node> gwtNodes = Stream
+						.of(relativeTo).map(DomNode::gwtNode).toList();
+				gwtNode.getOwnerDocument().setWillReattach(gwtNodes);
+			}
+			if (gwtNode != null) {
 				gwtNode.mutationGroups().enterWrap();
 			}
 			DomNode node = build();
 			relativeTo.node.getParentNode().insertBefore(node.node,
 					relativeTo.node);
 			node.node.appendChild(relativeTo.node);
+			if (gwtNode != null) {
+				gwtNode.getOwnerDocument().setWillReattach(null);
+			}
 			return node;
 		} finally {
 			if (gwtNode != null) {

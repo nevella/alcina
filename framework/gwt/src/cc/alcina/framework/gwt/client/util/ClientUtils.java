@@ -642,7 +642,9 @@ public class ClientUtils {
 			}-*/;
 
 	public static void consoleInfo(String template, Object... args) {
-		consoleInfo0(Ax.format(template, args));
+		String message = Ax.format(template, args);
+		Ax.out(message);
+		consoleInfo0(message);
 	}
 
 	static native void consoleInfo0(String s) /*-{

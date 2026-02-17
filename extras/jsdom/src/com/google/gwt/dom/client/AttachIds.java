@@ -74,6 +74,10 @@ public class AttachIds {
 	}
 
 	void onAttach(Node node) {
+		List<Node> willReattach = node.getOwnerDocument().getWillReattach();
+		if (willReattach != null && willReattach.contains(node)) {
+			return;
+		}
 		int id = nextCounterValue();
 		Preconditions.checkState(node.attachId == 0);
 		node.setAttachId(id);
@@ -123,6 +127,10 @@ public class AttachIds {
 	}
 
 	void onDetach(Node node) {
+		List<Node> willReattach = node.getOwnerDocument().getWillReattach();
+		if (willReattach != null && willReattach.contains(node)) {
+			return;
+		}
 		int attachId = node.attachId;
 		Preconditions.checkState(attachId != 0);
 		byId.remove(attachId);

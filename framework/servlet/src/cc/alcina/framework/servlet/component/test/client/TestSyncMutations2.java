@@ -15,6 +15,7 @@ class TestSyncMutations2 {
 		Preconditions.checkState(mutated.textMatches("korg"));
 		ClientUtils.consoleInfo("Mutated node text content: '%s'",
 				mutated.textContent());
+		Document.get().domDocument.locations().validateLocations();
 		ClientUtils.consoleInfo("   [TestSyncMutations2] Passed");
 	}
 

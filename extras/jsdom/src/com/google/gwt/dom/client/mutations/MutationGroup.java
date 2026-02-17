@@ -1,5 +1,6 @@
 package com.google.gwt.dom.client.mutations;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
@@ -13,6 +14,13 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  * case is to preserve the text index for Location instances, even when they're
  * within the text node being mutated; this extra modelling also allows
  * preservation of attachIds (and elides unbind/bind cycles) for wrapped nodes.
+ * <p>
+ * Note that {@link #merge} is unused - since the post-split locations will be
+ * treeindex-mutated by split, there's no advantage to a merge (and no current
+ * {@link DomNode} operation to support it )
+ * <p>
+ * Split requires no special attach/detach handling - where strip and wrap do
+ * (see {@link Document#getWillReattach} )
  */
 @Reflected
 public enum MutationGroup {

@@ -61,6 +61,101 @@ import cc.alcina.framework.common.client.util.TopicListener;
 public class Document extends Node implements ClientDomDocument,
 		org.w3c.dom.Document, org.w3c.dom.ranges.DocumentRange,
 		org.w3c.dom.traversal.DocumentTraversal, ContextFrame {
+	public interface DocumentContextProvider {
+		Document contextDocument();
+
+		void registerCreatedDocument(Document document);
+	}
+
+	public class DocumentImplAccess {
+		public DocumentAttachId attachIdRemote() {
+			return (DocumentAttachId) remote();
+		}
+
+		public Node getNode(AttachId attachId) {
+			return localDom.attachIds.getNode(attachId);
+		}
+	}
+
+	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)
+	public static class PerDocumentSupplierGwtImpl
+			implements DomDocument.PerDocumentSupplier {
+		@Override
+		public DomDocument get(org.w3c.dom.Document document) {
+			return ((Document) document).domDocument;
+		}
+	}
+
+	public enum RemoteType {
+		NONE, JSO, REF_ID;
+
+		boolean hasRemote() {
+			switch (this) {
+			case NONE:
+				return false;
+			default:
+				return true;
+			}
+		}
+	}
+
+	/*
+	 * Invokes RPC messages on the browser client document
+	 */
+	@Registration({ TypeInvoker.class, Document.class })
+	public static class TypeInvokerImpl extends TypeInvoker<Document> {
+		@Override
+		public Object invoke(Document doc, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			switch (methodName) {
+			case "hasFocus":
+				return doc.hasFocus();
+			default:
+				break;
+			}
+			return invokeReflective(doc, methodName, argumentTypes, arguments,
+					flags);
+		}
+	}
+
+	class NodeImport {
+		class InOut {
+			org.w3c.dom.Node in;
+
+			Node outParent;
+
+			public InOut(org.w3c.dom.Node in, Node outParent) {
+				this.in = in;
+				this.outParent = outParent;
+			}
+		}
+
+		LinkedList<InOut> stack = new LinkedList<>();
+
+		NodeImport(org.w3c.dom.Node in) {
+			stack.add(new InOut(in, null));
+		}
+
+		Node run() {
+			Node result = null;
+			while (stack.size() > 0) {
+				// don't pop, append in insert order
+				InOut cursor = stack.remove(0);
+				Node imported = importNode(cursor.in, false);
+				if (cursor.outParent != null) {
+					cursor.outParent.appendChild(imported);
+				} else {
+					result = imported;
+				}
+				org.w3c.dom.NodeList childNodes = cursor.in.getChildNodes();
+				for (int idx = 0; idx < childNodes.getLength(); idx++) {
+					stack.add(new InOut(childNodes.item(idx), imported));
+				}
+			}
+			return result;
+		}
+	}
+
 	/**
 	 * Disable HTML markup validation (allow invalid children such as SPAN
 	 * inside TR nodes, e.g.). Particularly useful for MSWord docs
@@ -115,6 +210,8 @@ public class Document extends Node implements ClientDomDocument,
 
 	Selection selection;
 
+	private List<Node> willReattach;
+
 	protected Document(RemoteType remoteType) {
 		this.remoteType = remoteType;
 		domDocument = DomDocument.from(this, true);
@@ -136,9 +233,8 @@ public class Document extends Node implements ClientDomDocument,
 		localDom = new LocalDom();
 	}
 
-	@Override
-	protected void onDetach() {
-		throw new UnsupportedOperationException();
+	public List<Node> getWillReattach() {
+		return willReattach;
 	}
 
 	@Override
@@ -1105,44 +1201,6 @@ public class Document extends Node implements ClientDomDocument,
 		}
 	}
 
-	class NodeImport {
-		class InOut {
-			org.w3c.dom.Node in;
-
-			Node outParent;
-
-			public InOut(org.w3c.dom.Node in, Node outParent) {
-				this.in = in;
-				this.outParent = outParent;
-			}
-		}
-
-		LinkedList<InOut> stack = new LinkedList<>();
-
-		NodeImport(org.w3c.dom.Node in) {
-			stack.add(new InOut(in, null));
-		}
-
-		Node run() {
-			Node result = null;
-			while (stack.size() > 0) {
-				// don't pop, append in insert order
-				InOut cursor = stack.remove(0);
-				Node imported = importNode(cursor.in, false);
-				if (cursor.outParent != null) {
-					cursor.outParent.appendChild(imported);
-				} else {
-					result = imported;
-				}
-				org.w3c.dom.NodeList childNodes = cursor.in.getChildNodes();
-				for (int idx = 0; idx < childNodes.getLength(); idx++) {
-					stack.add(new InOut(childNodes.item(idx), imported));
-				}
-			}
-			return result;
-		}
-	}
-
 	@Override
 	public boolean isCSS1Compat() {
 		return remote.isCSS1Compat();
@@ -1151,11 +1209,6 @@ public class Document extends Node implements ClientDomDocument,
 	@Override
 	public DocumentJso jsoRemote() {
 		return (DocumentJso) remote;
-	}
-
-	@Override
-	protected DocumentLocal local() {
-		return local;
 	}
 
 	@Override
@@ -1173,16 +1226,6 @@ public class Document extends Node implements ClientDomDocument,
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	protected ClientDomDocument remote() {
-		return remote;
-	}
-
-	@Override
 	public void removeFromParent() {
 		throw new UnsupportedOperationException();
 	}
@@ -1191,10 +1234,6 @@ public class Document extends Node implements ClientDomDocument,
 	public org.w3c.dom.Node renameNode(org.w3c.dom.Node arg0, String arg1,
 			String arg2) throws DOMException {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	protected void resetRemote0() {
 	}
 
 	@Override
@@ -1235,44 +1274,6 @@ public class Document extends Node implements ClientDomDocument,
 	@Override
 	public void setXmlVersion(String arg0) throws DOMException {
 		throw new UnsupportedOperationException();
-	}
-
-	public interface DocumentContextProvider {
-		Document contextDocument();
-
-		void registerCreatedDocument(Document document);
-	}
-
-	public class DocumentImplAccess {
-		public DocumentAttachId attachIdRemote() {
-			return (DocumentAttachId) remote();
-		}
-
-		public Node getNode(AttachId attachId) {
-			return localDom.attachIds.getNode(attachId);
-		}
-	}
-
-	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)
-	public static class PerDocumentSupplierGwtImpl
-			implements DomDocument.PerDocumentSupplier {
-		@Override
-		public DomDocument get(org.w3c.dom.Document document) {
-			return ((Document) document).domDocument;
-		}
-	}
-
-	public enum RemoteType {
-		NONE, JSO, REF_ID;
-
-		boolean hasRemote() {
-			switch (this) {
-			case NONE:
-				return false;
-			default:
-				return true;
-			}
-		}
 	}
 
 	/*
@@ -1318,14 +1319,6 @@ public class Document extends Node implements ClientDomDocument,
 				"writeClipboardText0", null, List.of(clipboardText), false);
 	}
 
-	private native void writeClipboardText0(String clipboardText) /*-{
-	if($wnd.navigator.clipboard==null){
-		$wnd.alert('Cannot access clipboard in non-secure context')
-	}else{
-    	$wnd.navigator.clipboard.writeText(clipboardText);
-	}
-	}-*/;
-
 	public void addUnbatchedLocalMutationListener(
 			TopicListener<MutationRecord> listener,
 			boolean toAttachedListener) {
@@ -1357,22 +1350,39 @@ public class Document extends Node implements ClientDomDocument,
 		return node == null ? null : node.asDomNode();
 	}
 
-	/*
-	 * Invokes RPC messages on the browser client document
-	 */
-	@Registration({ TypeInvoker.class, Document.class })
-	public static class TypeInvokerImpl extends TypeInvoker<Document> {
-		@Override
-		public Object invoke(Document doc, String methodName,
-				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
-			switch (methodName) {
-			case "hasFocus":
-				return doc.hasFocus();
-			default:
-				break;
-			}
-			return invokeReflective(doc, methodName, argumentTypes, arguments,
-					flags);
-		}
+	public void setWillReattach(List<Node> willReattach) {
+		this.willReattach = willReattach;
 	}
+
+	@Override
+	protected void onDetach() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected DocumentLocal local() {
+		return local;
+	}
+
+	@Override
+	protected void putRemote(ClientDomNode remote) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected ClientDomDocument remote() {
+		return remote;
+	}
+
+	@Override
+	protected void resetRemote0() {
+	}
+
+	private native void writeClipboardText0(String clipboardText) /*-{
+	if($wnd.navigator.clipboard==null){
+		$wnd.alert('Cannot access clipboard in non-secure context')
+	}else{
+    	$wnd.navigator.clipboard.writeText(clipboardText);
+	}
+	}-*/;
 }

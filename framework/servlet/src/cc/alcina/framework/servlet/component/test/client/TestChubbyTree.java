@@ -2,6 +2,8 @@ package cc.alcina.framework.servlet.component.test.client;
 
 import java.util.List;
 
+import com.google.gwt.dom.client.Document;
+
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -11,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 class TestChubbyTree {
 	void run() {
@@ -29,6 +32,8 @@ class TestChubbyTree {
 				.set(List.of("bruce", "there", "was", "here", "luckily"));
 		cont.properties().collection()
 				.set(List.of("bruce", "there", "was", "beer", "luckily"));
+		Document.get().domDocument.locations().validateLocations();
+		ClientUtils.consoleInfo("   [TestChubbyTree] Passed");
 	}
 
 	@Directed
