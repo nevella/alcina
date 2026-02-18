@@ -59,11 +59,13 @@ public class DomDocument extends DomNode implements Cloneable {
 	private static volatile transient PerDocumentSupplier perDocumentSupplier;
 
 	public static DomDocument basicHtmlDoc() {
-		return DomDocument.from("<html><head></head><body></body></html>");
+		return DomDocument.from(
+				"<html><head><meta charset=\"utf-8\" /></head><body></body></html>");
 	}
 
 	public static DomDocument basicGwtHtmlDoc() {
-		return DomDocument.from("<html><head></head><body></body></html>",
+		return DomDocument.from(
+				"<html><head><meta charset=\"utf-8\" /></head><body></body></html>",
 				true);
 	}
 
