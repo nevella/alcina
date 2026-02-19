@@ -227,7 +227,7 @@ class EntityTraversalQueryLayer extends Layer
 
 		boolean matchesOrContains(String string, String match) {
 			return string.matches(filter.value)
-					|| string.matches(Ax.format("(?i).*%s.*", match));
+					|| string.matches(Ax.format("(?is).*%s.*", match));
 		}
 
 		Object getTypedValue(Property property, String propertyValuePart) {
