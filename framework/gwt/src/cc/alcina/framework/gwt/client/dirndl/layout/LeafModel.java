@@ -95,7 +95,7 @@ public interface LeafModel {
 	}
 
 	public static class Svg extends Model.Fields {
-		@Binding(type = Type.PROPERTY)
+		@Binding(type = Type.PROPERTY, to = "viewBox")
 		String viewBox;
 
 		@Binding(type = Type.INNER_HTML)

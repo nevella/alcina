@@ -85,6 +85,17 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 		}
 	}
 
+	public static class PlaceTransform
+			implements ModelTransform<BasePlace, Link> {
+		@Override
+		public Link apply(BasePlace place) {
+			if (place == null) {
+				return null;
+			}
+			return new Link().withPlace(place).withText(place.toNameString());
+		}
+	}
+
 	private static final transient String INITIAL_HREF = "#";
 
 	public static final transient String PRIMARY_ACTION = "primary-action";
