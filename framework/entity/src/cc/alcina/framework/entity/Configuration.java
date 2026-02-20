@@ -378,9 +378,15 @@ public class Configuration {
 			return nestedStringRepresentation;
 		}
 
+		protected Key clone() {
+			Key result = new Key<>(clazz, keyPart);
+			return result;
+		}
+
 		public Key withContextOverride(boolean contextOverride) {
-			this.contextOverride = contextOverride;
-			return this;
+			Key result = clone();
+			result.contextOverride = contextOverride;
+			return result;
 		}
 	}
 
