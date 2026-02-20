@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Future;
@@ -2244,5 +2245,13 @@ public class CommonUtils {
 
 	public static String toFileUrl(String name) {
 		return "file://" + name;
+	}
+
+	public static <T> T greatestLte(SortedSet<T> set, T t) {
+		if (set.contains(t)) {
+			return t;
+		} else {
+			return set.headSet(t).last();
+		}
 	}
 }
