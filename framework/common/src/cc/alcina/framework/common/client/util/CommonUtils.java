@@ -2251,7 +2251,8 @@ public class CommonUtils {
 		if (set.contains(t)) {
 			return t;
 		} else {
-			return set.headSet(t).last();
+			SortedSet<T> headSet = set.headSet(t);
+			return headSet.isEmpty() ? null : headSet.last();
 		}
 	}
 }
