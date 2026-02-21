@@ -1416,6 +1416,9 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void unbind() {
+			if (children != null) {
+				children.forEach(Node::unbind);
+			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
 				if (parent != null && parent.model == model) {
 					// noop (to prevent multiple bind event firings on the same
@@ -1428,9 +1431,6 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			if (onUnbind != null) {
 				onUnbind.run();
-			}
-			if (children != null) {
-				children.forEach(Node::unbind);
 			}
 			if (replacementListener != null) {
 				replacementListener.unbind();
