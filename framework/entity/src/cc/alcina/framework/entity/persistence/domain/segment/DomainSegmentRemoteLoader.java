@@ -89,7 +89,7 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 	}
 
 	@Override
-	public ConnResultsReuse getConnResultsReuse() {
+	public synchronized ConnResultsReuse getConnResultsReuse() {
 		return new ConnResultsReuseImpl();
 	}
 

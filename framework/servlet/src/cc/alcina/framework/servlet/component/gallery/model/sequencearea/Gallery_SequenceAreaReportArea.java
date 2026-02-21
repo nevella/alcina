@@ -22,16 +22,16 @@ import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSearchD
 @Directed(tag = "gallery-sequence-area")
 class Gallery_SequenceAreaReportArea
 		extends GalleryContents<GallerySequenceAreaReportPlace> {
-	PackageProperties._Gallery_SequenceAreasReportArea.InstanceProperties
+	PackageProperties._Gallery_SequenceAreaReportArea.InstanceProperties
 			properties() {
-		return PackageProperties.userSessionsReportArea.instance(this);
+		return PackageProperties.gallery_sequenceAreaReportArea.instance(this);
 	}
 
 	@TypedProperties
 	class Header extends Model.All {
-		PackageProperties._Gallery_SequenceAreasReportArea_Header.InstanceProperties
+		PackageProperties._Gallery_SequenceAreaReportArea_Header.InstanceProperties
 				properties() {
-			return PackageProperties.userSessionsReportArea_header
+			return PackageProperties.gallery_sequenceAreaReportArea_header
 					.instance(this);
 		}
 

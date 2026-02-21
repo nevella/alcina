@@ -1600,19 +1600,10 @@ choice-editor > edit:focus {
 }
 choice-editor > edit suggesting-node {
   display: inline-block;
-  padding: 0 1px;
-}
-choice-editor > edit choice-node {
   white-space: nowrap;
-}
-choice-editor > edit suggesting-node:first-child {
   display: inline-block;
-  margin-right: 3px;
   min-height: 16px;
-  min-width: 1px;
-}
-choice-editor > edit choice-node:not([contenteditable=false]):first-child + choice-node[contenteditable=false] {
-  margin-left: 0;
+  padding-right: 1px;
 }
 choice-editor > edit choice-node {
   background: none;
@@ -1629,6 +1620,9 @@ choice-editor > edit choice-node.selected, choice-editor > edit choice-node:focu
 }
 choice-editor > edit choice-node.selected::selection, choice-editor > edit choice-node:focus::selection {
   background-color: transparent;
+}
+choice-editor > edit suggesting-node + choice-node {
+  margin-left: 3px;
 }
 
 overlay > .decorator-suggestor {
@@ -1687,29 +1681,79 @@ exec-commands > heading {
   font-size: 1.5rem;
   display: block;
 }
-exec-commands > contents-filter {
+exec-commands > suggestor {
+  display: block;
+}
+exec-commands > suggestor > editor {
+  display: block;
+}
+exec-commands > suggestor > editor > input {
+  width: 100%;
+  border: none;
+  box-sizing: border-box;
+  outline: none;
+}
+exec-commands > suggestor > editor > input {
+  font-size: 16px;
+  color: #666;
+  width: 100%;
+  background-color: transparent;
+  border: solid 1px transparent;
+  font-family: "Helvetica Neue", Arial;
+  resize: none;
+  padding: 0.4rem 0.4rem;
+  box-sizing: border-box;
+}
+exec-commands > suggestor > editor > input::-webkit-input-placeholder {
+  color: transparent;
+}
+exec-commands > suggestor > editor > input:focus::-webkit-input-placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+exec-commands > suggestor > editor > input:hover {
+  border-color: #aaa;
+  background-color: #ffffff20;
+}
+exec-commands > suggestor > editor > input:focus {
+  border-color: #555;
+  background-color: #FFF;
+}
+exec-commands > suggestor > editor {
   display: block;
   padding: 0 0 1rem;
   font-size: 1.1rem;
 }
-exec-commands > contents-filter > input {
+exec-commands > suggestor > editor > input {
   border: solid 1px #ddd;
   padding: 4px 6px;
   width: 20rem;
   outline: none;
 }
-exec-commands > commands {
+exec-commands > suggestor > results {
   display: grid;
   grid-template-columns: 8rem 1fr;
   margin-top: 1rem;
-  column-gap: 1rem;
   row-gap: 0.5rem;
 }
-exec-commands > commands > command-area {
+exec-commands > suggestor > results > choice {
   display: contents;
 }
-exec-commands > commands > command-area > *:hover {
+exec-commands > suggestor > results > choice > suggestion {
+  display: contents;
+}
+exec-commands > suggestor > results > choice > suggestion > command-area {
+  display: contents;
+}
+exec-commands > suggestor > results > choice > suggestion > command-area > * {
   cursor: pointer;
-  text-decoration: underline;
-  background-color: #f3f3fa;
+}
+exec-commands > suggestor > results > choice > suggestion > command-area > *:hover {
+  background-color: #00000010;
+}
+exec-commands > suggestor > results > choice > suggestion > command-area > *:first-child {
+  padding-right: 1rem;
+}
+exec-commands > suggestor > results > choice[index-selected] > suggestion > command-area > * {
+  background-color: #00000010;
 }
