@@ -72,6 +72,7 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 
 		@Override
 		public void onSelectionChanged(ModelEvents.SelectionChanged event) {
+			event.bubble();
 			setValue(editor.getSelectedValues());
 		}
 	}

@@ -101,12 +101,6 @@ public abstract class BasePlace extends Place
 	@Property.Not
 	public transient boolean refreshed;
 
-	/*
-	 * for systems where places are resolved by different servlets/web paths
-	 */
-	@Property.Not
-	public transient String urlPrefix;
-
 	public class Fragments {
 		public void remove(Class<? extends BasePlace> fragmentType) {
 			fragments.removeIf(p -> p.getClass() == fragmentType);
@@ -168,13 +162,16 @@ public abstract class BasePlace extends Place
 		return Registry.impl(BasePlaceAbsoluteHrefSupplier.class).getHref(this);
 	}
 
+	public interface UrlPrefixContext {
+		String prefix(BasePlace place);
+	}
+
 	public String toHrefString() {
 		String hrefString = HrefProvider.get().toHrefString(this);
-		if (Ax.notBlank(urlPrefix)) {
-			return urlPrefix + hrefString;
-		} else {
-			return hrefString;
-		}
+		String withPrefix = Registry
+				.optional(UrlPrefixContext.class, getClass())
+				.map(ctx -> ctx.prefix(this)).orElse("") + hrefString;
+		return withPrefix;
 	}
 
 	public String toNameString() {
