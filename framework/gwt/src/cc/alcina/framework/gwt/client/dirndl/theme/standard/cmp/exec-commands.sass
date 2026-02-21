@@ -2,6 +2,7 @@
 @use '../../theme/color'
 @use '../../dirndl/cmp/dialog'
 @use '../../dirndl/cmp/heading'
+@use '../../dirndl/cmp/suggestor'
 @use '../../dirndl/cmp/filter'
 
 @mixin contents
@@ -12,23 +13,34 @@
     > heading
       @include heading.panel-3
 
-    > contents-filter
-      @include filter.contents-filter
-      font-size: 1.1rem
+    > suggestor
+      @include suggestor.fancy
+      > editor
+        @include filter.contents-filter
+        font-size: 1.1rem 
       
-    > commands
-      display: grid
-      grid-template-columns: 8rem 1fr
-      margin-top: 1rem
-      column-gap: 1rem
-      row-gap: 0.5rem
+      > results
+        display: grid
+        grid-template-columns: 8rem 1fr
+        margin-top: 1rem
+        row-gap: 0.5rem
 
-      > command-area
-        display: contents
-        > *:hover
-          cursor: pointer
-          text-decoration: underline
-          background-color: #f3f3fa
+        > choice
+          display: contents
+          > suggestion
+            display: contents
+            > command-area
+              display: contents
+              > *
+                cursor: pointer
+                &:hover
+                  background-color: color.$dark_alpha_10
+                &:first-child
+                  padding-right: 1rem
+
+        > choice[index-selected] > suggestion > command-area > *
+          background-color: color.$dark_alpha_10
+
 
 
 @mixin overlay

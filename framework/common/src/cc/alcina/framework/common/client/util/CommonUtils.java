@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Future;
@@ -2282,5 +2283,14 @@ public class CommonUtils {
 			result.add(orDefault);
 		});
 		return result;
+	}
+
+	public static <T> T greatestLte(SortedSet<T> set, T t) {
+		if (set.contains(t)) {
+			return t;
+		} else {
+			SortedSet<T> headSet = set.headSet(t);
+			return headSet.isEmpty() ? null : headSet.last();
+		}
 	}
 }

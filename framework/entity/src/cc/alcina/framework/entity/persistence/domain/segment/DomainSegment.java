@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +24,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -84,7 +84,8 @@ public class DomainSegment {
 
 		public List<SegmentEntity> segmentEntities = new ArrayList<>();
 
-		transient Map<Long, SegmentEntity> idToEntity = new LinkedHashMap<>();
+		transient Map<Long, SegmentEntity> idToEntity = AlcinaCollections
+				.newHashMap();
 
 		public SegmentCollection() {
 		}
@@ -268,7 +269,7 @@ public class DomainSegment {
 		Lookup() {
 			entityCollection = collections.stream()
 					.collect(AlcinaCollectors.toKeyMap(sc -> sc.entityClass));
-			collections.forEach(SegmentCollection::reindex);
+			collections.stream().parallel().forEach(SegmentCollection::reindex);
 		}
 
 		public List<ValueContainer[]> getValues(Class<? extends Entity> clazz) {
