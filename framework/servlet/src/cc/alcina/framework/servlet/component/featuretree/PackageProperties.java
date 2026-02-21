@@ -7,6 +7,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.featuretree.FeaturePlace;
 import cc.alcina.framework.servlet.component.featuretree.Page;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import java.lang.Class;
 import java.lang.String;
 import java.util.Set;
@@ -24,6 +25,7 @@ public class PackageProperties {
       public TypedProperty<FeatureTree.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(FeatureTree.Ui.class, "keybindingsHandler");
       public TypedProperty<FeatureTree.Ui, String> mainCaption = new TypedProperty<>(FeatureTree.Ui.class, "mainCaption");
       public TypedProperty<FeatureTree.Ui, FeaturePlace> place = new TypedProperty<>(FeatureTree.Ui.class, "place");
+      public TypedProperty<FeatureTree.Ui, RemoteComponent> remoteComponent = new TypedProperty<>(FeatureTree.Ui.class, "remoteComponent");
       public static class InstanceProperties extends 	InstanceProperty.Container<FeatureTree.Ui> {
         public  InstanceProperties(FeatureTree.Ui source){super(source);}
         public InstanceProperty<FeatureTree.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.featureTree_ui.appCommandContexts);}
@@ -31,6 +33,7 @@ public class PackageProperties {
         public InstanceProperty<FeatureTree.Ui, KeybindingsHandler> keybindingsHandler(){return new InstanceProperty<>(source,PackageProperties.featureTree_ui.keybindingsHandler);}
         public InstanceProperty<FeatureTree.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.featureTree_ui.mainCaption);}
         public InstanceProperty<FeatureTree.Ui, FeaturePlace> place(){return new InstanceProperty<>(source,PackageProperties.featureTree_ui.place);}
+        public InstanceProperty<FeatureTree.Ui, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.featureTree_ui.remoteComponent);}
       }
       
       public  InstanceProperties instance(FeatureTree.Ui instance) {

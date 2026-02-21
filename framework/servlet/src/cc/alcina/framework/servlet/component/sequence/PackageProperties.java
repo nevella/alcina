@@ -12,6 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.sequence.AppSuggestorSequence;
 import cc.alcina.framework.servlet.component.sequence.Header;
 import cc.alcina.framework.servlet.component.sequence.Page;
@@ -169,6 +170,7 @@ public class PackageProperties {
     
     static class _SequenceBrowser_Ui implements TypedProperty.Container {
       TypedProperty<SequenceBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(SequenceBrowser.Ui.class, "appCommandContexts");
+      TypedProperty<SequenceBrowser.Ui, Class> cacheableStringProviderClass = new TypedProperty<>(SequenceBrowser.Ui.class, "cacheableStringProviderClass");
       TypedProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(SequenceBrowser.Ui.class, "commandContextProvider");
       TypedProperty<SequenceBrowser.Ui, Boolean> domain = new TypedProperty<>(SequenceBrowser.Ui.class, "domain");
       TypedProperty<SequenceBrowser.Ui, Boolean> isDomain = new TypedProperty<>(SequenceBrowser.Ui.class, "isDomain");
@@ -176,10 +178,12 @@ public class PackageProperties {
       TypedProperty<SequenceBrowser.Ui, String> mainCaption = new TypedProperty<>(SequenceBrowser.Ui.class, "mainCaption");
       TypedProperty<SequenceBrowser.Ui, Page> page = new TypedProperty<>(SequenceBrowser.Ui.class, "page");
       TypedProperty<SequenceBrowser.Ui, SequencePlace> place = new TypedProperty<>(SequenceBrowser.Ui.class, "place");
+      TypedProperty<SequenceBrowser.Ui, RemoteComponent> remoteComponent = new TypedProperty<>(SequenceBrowser.Ui.class, "remoteComponent");
       TypedProperty<SequenceBrowser.Ui, SequenceSettings> settings = new TypedProperty<>(SequenceBrowser.Ui.class, "settings");
       static class InstanceProperties extends 	InstanceProperty.Container<SequenceBrowser.Ui> {
          InstanceProperties(SequenceBrowser.Ui source){super(source);}
         InstanceProperty<SequenceBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.appCommandContexts);}
+        InstanceProperty<SequenceBrowser.Ui, Class> cacheableStringProviderClass(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.cacheableStringProviderClass);}
         InstanceProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.commandContextProvider);}
         InstanceProperty<SequenceBrowser.Ui, Boolean> domain(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.domain);}
         InstanceProperty<SequenceBrowser.Ui, Boolean> isDomain(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.isDomain);}
@@ -187,6 +191,7 @@ public class PackageProperties {
         InstanceProperty<SequenceBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.mainCaption);}
         InstanceProperty<SequenceBrowser.Ui, Page> page(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.page);}
         InstanceProperty<SequenceBrowser.Ui, SequencePlace> place(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.place);}
+        InstanceProperty<SequenceBrowser.Ui, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.remoteComponent);}
         InstanceProperty<SequenceBrowser.Ui, SequenceSettings> settings(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.settings);}
       }
       

@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.Header;
 import cc.alcina.framework.servlet.component.traversal.LayerFilterEditor;
@@ -328,6 +329,7 @@ public class PackageProperties {
       public TypedProperty<TraversalBrowser.Ui, String> mainCaption = new TypedProperty<>(TraversalBrowser.Ui.class, "mainCaption");
       public TypedProperty<TraversalBrowser.Ui, Page> page = new TypedProperty<>(TraversalBrowser.Ui.class, "page");
       public TypedProperty<TraversalBrowser.Ui, TraversalPlace> place = new TypedProperty<>(TraversalBrowser.Ui.class, "place");
+      public TypedProperty<TraversalBrowser.Ui, RemoteComponent> remoteComponent = new TypedProperty<>(TraversalBrowser.Ui.class, "remoteComponent");
       public TypedProperty<TraversalBrowser.Ui, Layer> selectedLayer0 = new TypedProperty<>(TraversalBrowser.Ui.class, "selectedLayer0");
       public TypedProperty<TraversalBrowser.Ui, SelectionMarkup> selectionMarkup = new TypedProperty<>(TraversalBrowser.Ui.class, "selectionMarkup");
       public TypedProperty<TraversalBrowser.Ui, TraversalSettings> settings = new TypedProperty<>(TraversalBrowser.Ui.class, "settings");
@@ -347,6 +349,7 @@ public class PackageProperties {
         public InstanceProperty<TraversalBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.mainCaption);}
         public InstanceProperty<TraversalBrowser.Ui, Page> page(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.page);}
         public InstanceProperty<TraversalBrowser.Ui, TraversalPlace> place(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.place);}
+        public InstanceProperty<TraversalBrowser.Ui, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.remoteComponent);}
         public InstanceProperty<TraversalBrowser.Ui, Layer> selectedLayer0(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.selectedLayer0);}
         public InstanceProperty<TraversalBrowser.Ui, SelectionMarkup> selectionMarkup(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.selectionMarkup);}
         public InstanceProperty<TraversalBrowser.Ui, TraversalSettings> settings(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.settings);}

@@ -20,7 +20,7 @@ public class PackageProperties {
       public TypedProperty<FlightEventCriterion.IsMutationsCriterion, String> targetPropertyName = new TypedProperty<>(FlightEventCriterion.IsMutationsCriterion.class, "targetPropertyName");
       public TypedProperty<FlightEventCriterion.IsMutationsCriterion, BooleanEnum> value = new TypedProperty<>(FlightEventCriterion.IsMutationsCriterion.class, "value");
       public TypedProperty<FlightEventCriterion.IsMutationsCriterion, Boolean> withNull = new TypedProperty<>(FlightEventCriterion.IsMutationsCriterion.class, "withNull");
-      public static class InstanceProperties extends InstanceProperty.Container<FlightEventCriterion.IsMutationsCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<FlightEventCriterion.IsMutationsCriterion> {
         public  InstanceProperties(FlightEventCriterion.IsMutationsCriterion source){super(source);}
         public InstanceProperty<FlightEventCriterion.IsMutationsCriterion, BooleanEnum> booleanEnum(){return new InstanceProperty<>(source,PackageProperties.flightEventCriterion_isMutationsCriterion.booleanEnum);}
         public InstanceProperty<FlightEventCriterion.IsMutationsCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.flightEventCriterion_isMutationsCriterion.displayName);}

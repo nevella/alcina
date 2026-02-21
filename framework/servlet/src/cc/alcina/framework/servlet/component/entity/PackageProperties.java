@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser;
 import cc.alcina.framework.servlet.component.entity.NonOptimisedQueryCache;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
@@ -36,6 +37,7 @@ public class PackageProperties {
       public TypedProperty<EntityBrowser.Ui, String> mainCaption = new TypedProperty<>(EntityBrowser.Ui.class, "mainCaption");
       public TypedProperty<EntityBrowser.Ui, EntityBrowser.Ui.EntityPeer> peer = new TypedProperty<>(EntityBrowser.Ui.class, "peer");
       public TypedProperty<EntityBrowser.Ui, TraversalPlace> place = new TypedProperty<>(EntityBrowser.Ui.class, "place");
+      public TypedProperty<EntityBrowser.Ui, RemoteComponent> remoteComponent = new TypedProperty<>(EntityBrowser.Ui.class, "remoteComponent");
       public TypedProperty<EntityBrowser.Ui, SelectionMarkup> selectionMarkup = new TypedProperty<>(EntityBrowser.Ui.class, "selectionMarkup");
       public TypedProperty<EntityBrowser.Ui, TraversalSettings> settings = new TypedProperty<>(EntityBrowser.Ui.class, "settings");
       public TypedProperty<EntityBrowser.Ui, SelectionTraversal> traversal = new TypedProperty<>(EntityBrowser.Ui.class, "traversal");
@@ -55,6 +57,7 @@ public class PackageProperties {
         public InstanceProperty<EntityBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.mainCaption);}
         public InstanceProperty<EntityBrowser.Ui, EntityBrowser.Ui.EntityPeer> peer(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.peer);}
         public InstanceProperty<EntityBrowser.Ui, TraversalPlace> place(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.place);}
+        public InstanceProperty<EntityBrowser.Ui, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.remoteComponent);}
         public InstanceProperty<EntityBrowser.Ui, SelectionMarkup> selectionMarkup(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.selectionMarkup);}
         public InstanceProperty<EntityBrowser.Ui, TraversalSettings> settings(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.settings);}
         public InstanceProperty<EntityBrowser.Ui, SelectionTraversal> traversal(){return new InstanceProperty<>(source,PackageProperties.entityBrowser_ui.traversal);}

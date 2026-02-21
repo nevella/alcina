@@ -15,6 +15,7 @@ import cc.alcina.framework.servlet.component.gallery.GalleryPage;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.GallerySettings;
 import cc.alcina.framework.servlet.component.gallery.Header;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import java.lang.Class;
 import java.lang.String;
 import java.util.Set;
@@ -85,6 +86,7 @@ public class PackageProperties {
       TypedProperty<GalleryBrowser.Ui, String> mainCaption = new TypedProperty<>(GalleryBrowser.Ui.class, "mainCaption");
       TypedProperty<GalleryBrowser.Ui, GalleryPage> page = new TypedProperty<>(GalleryBrowser.Ui.class, "page");
       TypedProperty<GalleryBrowser.Ui, GalleryPlace> place = new TypedProperty<>(GalleryBrowser.Ui.class, "place");
+      TypedProperty<GalleryBrowser.Ui, RemoteComponent> remoteComponent = new TypedProperty<>(GalleryBrowser.Ui.class, "remoteComponent");
       TypedProperty<GalleryBrowser.Ui, GallerySettings> settings = new TypedProperty<>(GalleryBrowser.Ui.class, "settings");
       static class InstanceProperties extends 	InstanceProperty.Container<GalleryBrowser.Ui> {
          InstanceProperties(GalleryBrowser.Ui source){super(source);}
@@ -94,6 +96,7 @@ public class PackageProperties {
         InstanceProperty<GalleryBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.mainCaption);}
         InstanceProperty<GalleryBrowser.Ui, GalleryPage> page(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.page);}
         InstanceProperty<GalleryBrowser.Ui, GalleryPlace> place(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.place);}
+        InstanceProperty<GalleryBrowser.Ui, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.remoteComponent);}
         InstanceProperty<GalleryBrowser.Ui, GallerySettings> settings(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.settings);}
       }
       
