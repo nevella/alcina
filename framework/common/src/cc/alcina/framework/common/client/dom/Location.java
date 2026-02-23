@@ -1183,20 +1183,18 @@ public class Location implements Comparable<Location> {
 	}
 
 	public Location toEndTextLocationIfAtStart() {
-		if (isAtNodeStart()) {
-			Location cursor = this;
-			while (true) {
-				// the logic of text runs guarantees there will be a text
-				// nodeLocation ending at the index prior to this location
-				/*
-				 * query - shouldn't arg2 be true?
-				 */
-				cursor = new Location(cursor.treeIndex - 1, index, false, null,
-						locationContext);
-				if (cursor.isTextNode()) {
-					return cursor;
+		locationContext.ensureCurrent(this);
+		if (isAtNodeStart() && index != 0) {
+			// the logic of text runs guarantees there will be a text
+			// nodeLocation ending at the index prior to this location
+			DomNode node = containingNode.relative().treePreviousNode();
+			for (;;) {
+				if (node.isText()) {
+					break;
 				}
+				node = node.relative().treePreviousNode();
 			}
+			return node.location.toEndOfTextLocation();
 		} else {
 			return this;
 		}
