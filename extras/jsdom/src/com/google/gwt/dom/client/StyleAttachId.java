@@ -733,7 +733,7 @@ public class StyleAttachId implements ClientDomStyle {
 	@Override
 	public void setProperty(String name, String value) {
 		element.invokeStyleAsync("setProperty",
-				List.of(String.class, double.class), List.of(name, value));
+				List.of(String.class, String.class), List.of(name, value));
 	}
 
 	@Override
@@ -743,7 +743,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setPropertyPx(String name, int value) {
-		throw new UnsupportedOperationException();
+		setProperty(name, value, Unit.PX);
 	}
 
 	@Override
