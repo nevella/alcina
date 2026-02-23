@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.logic.ServerClientInstance;
@@ -148,8 +149,10 @@ public class RemoteInvocation {
 			ArrayList container = deserializeResult(content);
 			Object object = container.get(0);
 			if (object instanceof Exception) {
-				((Exception) object).printStackTrace();
-				throw new Exception("Remote exception");
+				Exception exception = (Exception) object;
+				exception.printStackTrace();
+				throw new Exception("Remote exception\n"
+						+ CommonUtils.getFullExceptionMessage(exception));
 			}
 			if (transformMethod) {
 				// will be invalid if replaying
