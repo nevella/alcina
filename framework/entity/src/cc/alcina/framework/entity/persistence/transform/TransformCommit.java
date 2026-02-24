@@ -554,10 +554,12 @@ public class TransformCommit {
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
-			CONTEXT_RETRY_POLICY.set(
-					new PersistenceLayerTransformRetryPolicy.JobPersistenceBackoff(
-							initialDelayMs, retries, delayMs, retryMultiplier));
-			return commitTransforms(true);
+			PersistenceLayerTransformRetryPolicy.JobPersistenceBackoff policy = new PersistenceLayerTransformRetryPolicy.JobPersistenceBackoff(
+					initialDelayMs, retries, delayMs, retryMultiplier);
+			CONTEXT_RETRY_POLICY.set(policy);
+			int commitTransforms = commitTransforms(true);
+			policy.maybeThrowCommitRewriteException();
+			return commitTransforms;
 		} finally {
 			LooseContext.pop();
 		}

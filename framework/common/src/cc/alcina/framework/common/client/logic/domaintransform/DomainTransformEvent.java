@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -409,6 +410,10 @@ public class DomainTransformEvent
 			return true;
 		}
 		return false;
+	}
+
+	public boolean referencesTypes(Class... types) {
+		return Arrays.stream(types).anyMatch(this::provideIsType);
 	}
 
 	public boolean provideIsPropertyName(PropertyEnum property) {

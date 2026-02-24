@@ -208,7 +208,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				e.printStackTrace();
 				if (e instanceof InvocationTargetException) {
 					e = new Exception(
-							"Invocation target exception = see server logs");
+							"Invocation target exception = see server logs\n"
+									+ CommonUtils.getFullExceptionMessage(e));
 				}
 				out = e;
 				if (transformMethod) {
@@ -243,7 +244,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				}
 			}
 			if (params.api.isLinkToDomain(method.getName())
-					&& params.mayLinkToDomain) {
+					&& params.mayLinkToDomain
+					&& !(result instanceof Exception)) {
 				resultHolder = DomainLinker.linkToDomain(resultHolder);
 			}
 			ArrayList f_resultHolder = resultHolder;
