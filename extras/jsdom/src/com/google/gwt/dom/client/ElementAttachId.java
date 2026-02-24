@@ -293,12 +293,12 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public int getScrollHeight() {
-		throw new UnsupportedOperationException();
+		return invokeSync("getScrollHeight");
 	}
 
 	@Override
 	public final int getScrollLeft() {
-		throw new UnsupportedOperationException();
+		return invokeSync("getScrollLeft");
 	}
 
 	@Override
@@ -308,7 +308,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public int getScrollWidth() {
-		throw new UnsupportedOperationException();
+		return invokeSync("getScrollWidth");
 	}
 
 	@Override

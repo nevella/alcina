@@ -261,9 +261,14 @@ class Environment {
 				String javascript, AsyncCallback<?> callback) {
 			// check this is valid
 			if (node != null && AttachId.forNode(node.node()).id == 0) {
-				throw new IllegalStateException(Ax.format(
-						"node %s is detached, cannot be remote-invoked",
-						node.node().getNodeName()));
+				if (callback != null) {
+					throw new IllegalStateException(Ax.format(
+							"node %s is detached, cannot be remote-invoked",
+							node.node().getNodeName()));
+				} else {
+					// WIP - romcom
+					return new ResponseHandler(callback);
+				}
 			}
 			// always emit mutations before proxy invoke
 			access().flush();
