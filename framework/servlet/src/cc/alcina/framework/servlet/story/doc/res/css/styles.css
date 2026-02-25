@@ -7,6 +7,22 @@ td, th {
   text-align: left;
 }
 
+body[columns-view=on] sequence > visit {
+  display: grid;
+  grid-template-areas: "path img" "description img";
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: min-content 1fr;
+}
+body[columns-view=on] sequence > visit > path {
+  font-weight: bold;
+}
+body[columns-view=on] sequence > visit > description {
+  margin-bottom: 1rem;
+}
+body[columns-view=on] sequence > visit > img {
+  align-self: center;
+}
+
 sequence {
   display: flex;
   flex-direction: column;
@@ -71,11 +87,14 @@ sequence > visit {
   margin-bottom: 5rem;
 }
 sequence > visit > path {
+  grid-area: path;
   font-weight: bold;
 }
 sequence > visit > description {
+  grid-area: description;
   margin-bottom: 1rem;
 }
 sequence > visit > img {
+  grid-area: img;
   max-width: 100%;
 }

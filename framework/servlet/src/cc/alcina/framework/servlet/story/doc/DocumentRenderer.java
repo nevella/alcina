@@ -12,11 +12,13 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Img;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafTransforms;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.story.doc.StoryDocObservable;
 import cc.alcina.framework.servlet.publication.DirndlRenderer;
@@ -39,7 +41,9 @@ public class DocumentRenderer implements StoryDocRenderer {
 		}
 		renderer.addScriptResource(
 				Io.read().resource("res/js/doc-renderer.js").asString());
-		String markup = renderer.withWrapStyleInCdata(true).asMarkup();
+		renderer.withWrapStyleInCdata(true);
+		renderer.asDocument().html().body().setAttr("columns-view", "on");
+		String markup = renderer.asMarkup();
 		File out = FileUtils.child(outputFolder, "document.html");
 		Io.write().string(markup).toFile(out);
 		Ax.out("Wrote report markup to %s", out);
@@ -79,6 +83,7 @@ public class DocumentRenderer implements StoryDocRenderer {
 			String build;
 		}
 
+		@Directed(tag = "doc-header")
 		class Header extends Model.All {
 			Header() {
 				heading2 = part.rendererConfiguration.storyTitle;
@@ -92,6 +97,14 @@ public class DocumentRenderer implements StoryDocRenderer {
 			}
 
 			String heading2;
+
+			@Directed(tag = "links")
+			@Directed(
+				bindings = @Binding(
+					type = Binding.Type.PROPERTY,
+					to = "onclick",
+					literal = "toggleColumns()"))
+			Link link = new Link().withText("Toggle columns").withHref("#");
 		}
 
 		Header header;
@@ -115,8 +128,14 @@ public class DocumentRenderer implements StoryDocRenderer {
 
 			String path;
 
+			@Directed(tag = "description")
 			LeafModel.HtmlBlock description;
 
+			@Directed(
+				bindings = @Binding(
+					type = Binding.Type.PROPERTY,
+					to = "onclick",
+					literal = "toggleColumns()"))
 			Img screenshot;
 
 			VisitArea(StoryDocObservable observable) {

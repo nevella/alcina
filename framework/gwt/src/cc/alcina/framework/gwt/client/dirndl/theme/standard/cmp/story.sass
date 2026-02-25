@@ -5,6 +5,39 @@
   color: #0f4589
   margin: 1rem 0
 
+@mixin visit
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  margin-bottom: 5rem
+
+  > path
+    grid-area: path
+    font-weight: bold
+
+  > description
+    grid-area: description
+    margin-bottom: 1rem
+
+  > img
+    grid-area: img
+    max-width: 100%
+
+@mixin visit-columns
+  display: grid
+  grid-template-areas: "path img" "description img"
+  grid-template-columns: 1fr 1fr 
+  grid-template-rows: min-content 1fr
+
+  > path
+    font-weight: bold
+
+  > description
+    margin-bottom: 1rem
+
+  > img
+    align-self: center
+
 @mixin top-level
   body
     background: #eee
@@ -12,6 +45,11 @@
   td, th
     vertical-align: top
     text-align: left
+
+  body[columns-view='on'] sequence > visit
+    @include visit-columns
+
+
 
 @mixin contents
   sequence
@@ -70,16 +108,4 @@
             content:', '
 
     > visit
-      display: flex
-      flex-direction: column
-      gap: 1rem
-      margin-bottom: 5rem
-
-      > path
-        font-weight: bold
-
-      > description
-        margin-bottom: 1rem
-
-      > img
-        max-width: 100%
+      @include visit
