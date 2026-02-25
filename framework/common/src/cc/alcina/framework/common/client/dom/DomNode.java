@@ -730,7 +730,9 @@ public class DomNode {
 				gwtNode.getOwnerDocument().setWillReattach(null);
 			}
 			removeFromParent();
-			nodes.get(0).asLocation().getIndex();
+			if (gwtNode != null) {
+				nodes.get(0).asLocation().getIndex();
+			}
 		} finally {
 			if (gwtNode != null) {
 				gwtNode.mutationGroups().exit();

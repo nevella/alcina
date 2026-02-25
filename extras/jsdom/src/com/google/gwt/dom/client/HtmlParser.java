@@ -459,6 +459,10 @@ public class HtmlParser {
 	private Element parse0(String markup, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		/*
+		 * trim leading ws
+		 */
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		/*
 		 * minimal 'make invalid markup parseable'
 		 */
 		if (markup.contains("\uFEFF")) {
@@ -470,12 +474,17 @@ public class HtmlParser {
 		if (markup.contains("/>")) {
 			markup = DomUtils.expandEmptyElements(markup);
 		}
-		if (markup.startsWith("<?xml")) {
-			markup = markup.replaceFirst("<\\?xml.*?\\?>", "");
+		if (markup.matches("(?si)<!doctype.*")) {
+			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
 		}
-		if (markup.startsWith("<!doctype")) {
-			markup = markup.replaceFirst("<!doctype.+>\n?", "");
+		if (markup.matches("(?si)<\\?xml.*")) {
+			markup = markup.replaceFirst("(?si)<\\?xml.*?\\?>", "");
 		}
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		if (markup.matches("(?si)<!doctype.*")) {
+			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
+		}
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
 		this.markup = markup;
 		this.replaceContents = replaceContents;
 		this.lineNumber = 1;
