@@ -132,4 +132,11 @@ public abstract class RollingData<K extends Comparable, V> {
 	protected abstract Function<V, K> keyMaker();
 
 	protected abstract Function<List<V>, String> serializer();
+
+	public void clearExisting() {
+		Class<? extends RollingDataItem> rdImplClass = PersistentImpl
+				.getImplementation(RollingDataItem.class);
+		Domain.query(rdImplClass).filter("typeKey", typeKey).stream()
+				.forEach(Entity::delete);
+	}
 }
