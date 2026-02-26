@@ -1,8 +1,10 @@
 package cc.alcina.framework.servlet.component.featuretree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -10,52 +12,27 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.meta.Feature.ReleaseVersion.Ref;
 import cc.alcina.framework.common.client.meta.Feature.Status;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.story.Story.Point;
+import cc.alcina.framework.servlet.component.featuretree.FeatureTree.Ui;
 
+@TypedProperties
 class FeatureTable extends Model.Fields {
-	static String treeName(Class<? extends Feature> clazz) {
-		if (clazz == null) {
-			return "0";
-		} else {
-			String simpleName = clazz.getSimpleName();
-			return simpleName.replaceFirst("^Feature_?", "");
+	class Service implements ContextService {
+		Features getFeatures() {
+			return features;
 		}
-	}
-
-	@Directed
-	Table table;
-
-	Features features;
-
-	FeatureTable() {
-		features = new Features();
-		features.generate();
-		table = new Table(features.entries);
 	}
 
 	static class Features {
-		Map<Class<? extends Feature>, Entry> entriesByFeature;
-
-		List<Entry> entries = new ArrayList<>();
-
-		void generate() {
-			entriesByFeature = Registry.query(Feature.class).registrations()
-					.filter(c -> c != Feature.class).map(Entry::new)
-					.collect(AlcinaCollectors.toKeyMap(e -> e.feature));
-			entriesByFeature.values().forEach(Entry::addToParent);
-			List<Entry> roots = entriesByFeature.values().stream()
-					.filter(e -> e.parent == null).sorted()
-					.collect(Collectors.toList());
-			for (Entry entry : roots) {
-				new DepthFirstTraversal<>(entry, Entry::sortedChildren).stream()
-						.forEach(entries::add);
-			}
-		}
-
 		class Entry implements Comparable<Entry> {
 			Class<? extends Feature> feature;
 
@@ -67,6 +44,25 @@ class FeatureTable extends Model.Fields {
 				this.feature = feature;
 			}
 
+			@Override
+			public int compareTo(Entry o) {
+				return treeName().compareTo(o.treeName());
+			}
+
+			public boolean filter(Class<? extends Feature> featureFilter) {
+				if (featureFilter == null || feature == featureFilter) {
+					return true;
+				}
+				Entry cursor = this;
+				while (cursor != null) {
+					if (cursor.feature == featureFilter) {
+						return true;
+					}
+					cursor = cursor.parent;
+				}
+				return children.stream().anyMatch(c -> c.filter(featureFilter));
+			}
+
 			void addToParent() {
 				Class<? extends Feature> parentClass = parentClass();
 				if (parentClass == null) {
@@ -75,11 +71,6 @@ class FeatureTable extends Model.Fields {
 					this.parent = parent;
 					parent.children.add(this);
 				}
-			}
-
-			@Override
-			public int compareTo(Entry o) {
-				return treeName().compareTo(o.treeName());
 			}
 
 			int depth() {
@@ -136,5 +127,91 @@ class FeatureTable extends Model.Fields {
 				return FeatureTable.treeName(feature);
 			}
 		}
+
+		Map<Class<? extends Feature>, Entry> entriesByFeature;
+
+		List<Entry> entries = new ArrayList<>();
+
+		Multimap<Class<? extends Feature>, List<Class<? extends Point>>> testPoints = new Multimap<>();
+
+		public boolean hasTestCoverage(Class<? extends Feature> feature) {
+			return testPoints.containsKey(feature);
+		}
+
+		public List<Class<? extends Point>>
+				getTestPoints(Class<? extends Feature> feature) {
+			return testPoints.get(feature);
+		}
+
+		void generate() {
+			entriesByFeature = Registry.query(Feature.class).registrations()
+					.filter(c -> c != Feature.class).map(Entry::new)
+					.collect(AlcinaCollectors.toKeyMap(e -> e.feature));
+			entriesByFeature.values().forEach(Entry::addToParent);
+			List<Entry> roots = entriesByFeature.values().stream()
+					.filter(e -> e.parent == null).sorted()
+					.collect(Collectors.toList());
+			for (Entry entry : roots) {
+				new DepthFirstTraversal<>(entry, Entry::sortedChildren).stream()
+						.forEach(entries::add);
+			}
+			Registry.query(Point.class).registrations().forEach(clazz -> {
+				Feature.Ref annotation = Reflections.at(clazz)
+						.annotation(Feature.Ref.class);
+				if (annotation != null) {
+					Arrays.stream(annotation.value())
+							.forEach(featureClass -> testPoints
+									.add(featureClass, (Class) clazz));
+				}
+			});
+		}
+	}
+
+	static String treeName(Class<? extends Feature> clazz) {
+		if (clazz == null) {
+			return "0";
+		} else {
+			String simpleName = clazz.getSimpleName();
+			return simpleName.replaceFirst("^Feature_?", "");
+		}
+	}
+
+	@Directed
+	Table table;
+
+	Features features;
+
+	FeaturePlace lastTablePlace;
+
+	FeatureTable() {
+		features = new Features();
+		features.generate();
+		bindings().from(Ui.get().subtypeProperties().place())
+				.filter(this::isRequiresTableRefresh)
+				.map(p -> new Table(features.entries, p.featureFilter))
+				.to(properties().table()).oneWay();
+	}
+
+	@Override
+	public void onNodeContext(NodeContext event) {
+		event.registerService(Service.class, new Service());
+	}
+
+	PackageProperties._FeatureTable.InstanceProperties properties() {
+		return PackageProperties.featureTable.instance(this);
+	}
+
+	boolean isRequiresTableRefresh(FeaturePlace place) {
+		boolean result = true;
+		if (lastTablePlace != null) {
+			if (Objects.equals(lastTablePlace.featureFilter,
+					place.featureFilter)) {
+				result = false;
+			}
+		}
+		if (result) {
+			lastTablePlace = place;
+		}
+		return result;
 	}
 }

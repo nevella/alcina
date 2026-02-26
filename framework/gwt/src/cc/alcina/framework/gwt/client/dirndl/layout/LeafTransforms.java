@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.util.DateStyle;
+import cc.alcina.framework.common.client.util.NestedName;
 
 public class LeafTransforms {
 	public interface Dates {
@@ -49,6 +50,13 @@ public class LeafTransforms {
 		@Override
 		public String apply(Date t) {
 			return DateStyle.TIMESTAMP_HUMAN.format(t);
+		}
+	}
+
+	public static class ToNestedName implements ModelTransform<Class, String> {
+		@Override
+		public String apply(Class t) {
+			return NestedName.get(t);
 		}
 	}
 }

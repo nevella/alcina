@@ -336,6 +336,30 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * The most common use of Filter is as a subtree notification - so
+	 * {@link Filter} is a DescendantEvent, this is the Ascending
+	 * verb/gerund/thing
+	 */
+	public static class FilterAscent
+			extends ModelEvent<Object, FilterAscent.Handler> {
+		@Override
+		public void dispatch(FilterAscent.Handler handler) {
+			handler.onFilterAscent(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFilterAscent(FilterAscent event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onFilterAscent(FilterAscent event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Find extends ModelEvent<Object, Find.Handler> {
 		@Override
 		public void dispatch(Find.Handler handler) {

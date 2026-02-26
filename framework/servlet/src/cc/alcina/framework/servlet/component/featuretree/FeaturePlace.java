@@ -9,6 +9,8 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 public class FeaturePlace extends BasePlace {
 	public Class<? extends Feature> feature;
 
+	public Class<? extends Feature> featureFilter;
+
 	public static class Tokenizer extends BasePlaceTokenizer<FeaturePlace> {
 		@Override
 		protected FeaturePlace getPlace0(String token) {
@@ -20,6 +22,13 @@ public class FeaturePlace extends BasePlace {
 					Ax.simpleExceptionOut(e);
 				}
 			}
+			if (parts.length > 2) {
+				try {
+					place.featureFilter = Reflections.forName(parts[2]);
+				} catch (Exception e) {
+					Ax.simpleExceptionOut(e);
+				}
+			}
 			return place;
 		}
 
@@ -27,6 +36,9 @@ public class FeaturePlace extends BasePlace {
 		protected void getToken0(FeaturePlace place) {
 			if (place.feature != null) {
 				addTokenPart(place.feature.getName());
+			}
+			if (place.featureFilter != null) {
+				addTokenPart(place.featureFilter.getName());
 			}
 		}
 	}

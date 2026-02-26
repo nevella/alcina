@@ -63,7 +63,7 @@ class Page extends Model.All {
 
 		Main() {
 			featureTable = new FeatureTable();
-			properties = new Properties(featureTable.features);
+			properties = new Properties();
 		}
 	}
 }

@@ -1060,6 +1060,7 @@ public interface Story {
 	 * </ul>
 	 * 
 	 */
+	@Registration(Point.class)
 	public interface Point {
 		List<Class<? extends Story.State>> getRequires();
 

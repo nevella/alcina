@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
@@ -65,7 +64,6 @@ public class SequenceBrowser {
 		}
 	}
 
-	@TypedProperties
 	static class Ui extends AbstractUi<SequencePlace> implements DomainUi {
 		private static final String STYLES_RESOURCE_PATH = "res/css/styles.css";
 

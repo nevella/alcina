@@ -16,6 +16,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features.Entry;
 
@@ -26,10 +27,13 @@ class Table extends Model.Fields {
 	@Directed.Wrap("tbody")
 	List<Row> rows;
 
-	Table(List<Entry> entries) {
-		columns.releaseColumns = entries.stream().map(Entry::releaseVersion)
-				.distinct().sorted(new Feature.ReleaseVersion.Cmp())
-				.map(ReleaseColumn::new).collect(Collectors.toList());
+	Table(List<Entry> entries, Class<? extends Feature> featureFilter) {
+		entries.removeIf(e -> !e.filter(featureFilter));
+		columns.columns = new ArrayList<>();
+		columns.columns.add(new CoverageColumn());
+		entries.stream().map(Entry::releaseVersion).distinct()
+				.sorted(new Feature.ReleaseVersion.Cmp())
+				.map(ReleaseColumn::new).forEach(columns.columns::add);
 		rows = entries.stream().map(Row::new).collect(Collectors.toList());
 		PlaceChangeEvent.Handler handler = evt -> {
 			rows.forEach(Row::updateSelected);
@@ -46,9 +50,38 @@ class Table extends Model.Fields {
 		@Binding(type = Type.CLASS_PROPERTY)
 		String statusName;
 
-		Cell(Entry entry, ReleaseColumn col) {
-			if (entry.children.size() > 0
-					|| entry.releaseVersion() != col.version) {
+		Entry entry;
+
+		Column col;
+
+		Cell(Entry entry, Column col) {
+			this.entry = entry;
+			this.col = col;
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			if (entry.children.size() > 0) {
+				statusName = "container";
+				return;
+			}
+			if (col instanceof ReleaseColumn) {
+				populateFromReleaseColulmn((ReleaseColumn) col);
+			}
+			if (col instanceof CoverageColumn) {
+				populateFromCoverage();
+			}
+		}
+
+		void populateFromCoverage() {
+			if (service(FeatureTable.Service.class).getFeatures()
+					.hasTestCoverage(entry.feature)) {
+				statusName = "test-coverage";
+			}
+		}
+
+		void populateFromReleaseColulmn(ReleaseColumn col) {
+			if (col.version != null && entry.releaseVersion() != col.version) {
 				return;
 			}
 			Class<? extends Feature.Status> status = entry.status();
@@ -63,7 +96,7 @@ class Table extends Model.Fields {
 		String featureColumn = "Feature";
 
 		@Directed(tag = "th")
-		List<ReleaseColumn> releaseColumns;
+		List<Column> columns;
 	}
 
 	@Directed(tag = "td")
@@ -83,8 +116,17 @@ class Table extends Model.Fields {
 		}
 	}
 
+	class Column extends Model.Fields {
+	}
+
 	@Directed
-	class ReleaseColumn extends Model.Fields {
+	class CoverageColumn extends Column {
+		@Directed
+		String name = "Test coverage";
+	}
+
+	@Directed
+	class ReleaseColumn extends Column {
 		Class<? extends Feature.ReleaseVersion> version;
 
 		@Directed
@@ -126,7 +168,7 @@ class Table extends Model.Fields {
 		Row(Entry entry) {
 			this.entry = entry;
 			featureCell = new FeatureCell(entry);
-			columns.releaseColumns.stream().map(col -> new Cell(entry, col))
+			columns.columns.stream().map(col -> new Cell(entry, col))
 					.forEach(cells::add);
 			updateSelected();
 		}
@@ -145,9 +187,12 @@ class Table extends Model.Fields {
 
 		void updateSelected() {
 			Place currentPlace = Client.currentPlace();
-			boolean selected = currentPlace instanceof FeaturePlace
-					&& ((FeaturePlace) currentPlace).feature == entry.feature;
+			boolean selected = FeatureTree.place().feature == entry.feature;
 			setSelected(selected);
+			if (selected) {
+				exec(() -> provideElement().scrollIntoView()).deferred()
+						.dispatch();
+			}
 		}
 	}
 }

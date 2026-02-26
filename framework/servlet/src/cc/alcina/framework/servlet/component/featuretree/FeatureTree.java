@@ -36,6 +36,11 @@ public class FeatureTree {
 			return (Ui) RemoteUi.get();
 		}
 
+		PackageProperties._FeatureTree_Ui.InstanceProperties
+				subtypeProperties() {
+			return PackageProperties.featureTree_ui.instance(this);
+		}
+
 		@Override
 		public Client createClient() {
 			return new TypedPlaceClient(FeaturePlace.class);
@@ -67,5 +72,9 @@ public class FeatureTree {
 
 	public interface CommandContext extends
 			cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext {
+	}
+
+	static FeaturePlace place() {
+		return Ui.get().place;
 	}
 }

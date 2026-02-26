@@ -36,7 +36,10 @@ public interface ContextService {
 	 * <p>
 	 * Originally, this was linked to runtime kit which performed service
 	 * creation - but since the Model needs to retain a reference to the
-	 * services anyway, manual registration is better (and simpler)
+	 * services anyway, manual registration is better (and simpler). It is not
+	 * required, but is a useful indicator of service scope, particularly if
+	 * different models register the same service interface (say
+	 * SequenceArea.Service)
 	 * 
 	 * <p>
 	 * Note - don't name subtypes "Provider" - rather "ServiceProvider"

@@ -59,7 +59,7 @@ public class SequenceArea extends Model.Fields
 	 * the directed paren t)
 	 */
 	public interface Service extends ContextService {
-		public interface ServiceProvider {
+		public interface ServiceProvider extends ContextService.Provider {
 		}
 
 		/**
