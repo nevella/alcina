@@ -269,33 +269,26 @@ public class EnvironmentRegistry extends Registry {
 			}
 		}
 
-		@Override
-		public void add(Class registeringClass, List<Class> keys,
-				Implementation implementation, Priority priority) {
-			delegate.add(registeringClass, keys, implementation, priority);
-		}
-
-		@Override
-		public void add(Class registeringClass, Registration registration) {
-			delegate.add(registeringClass, registration);
-		}
-
+		/*
+		 * This is reasonable - we want clients to be largely unaware of the
+		 * registry context, so they can (say) add defaults via
+		 * Registry.register().addDefault( to the registry _as long as_ there's
+		 * only ever one registered type per key path (during the server vm
+		 * lifetime)
+		 */
 		@Override
 		public void add(RegistryKey registeringClassKey, List<RegistryKey> keys,
 				Implementation implementation, Priority priority) {
-			delegate.add(registeringClassKey, keys, implementation, priority);
-		}
-
-		@Override
-		public void add(String registeringClassClassName, List<String> keys,
-				Implementation implementation, Priority priority) {
-			delegate.add(registeringClassClassName, keys, implementation,
-					priority);
-		}
-
-		@Override
-		public void addDefault(Class registeringClass, Class... keys) {
-			delegate.addDefault(registeringClass, keys);
+			Registry delegateRegistry = delegate();
+			Query query = delegateRegistry.query0(keys.get(0).clazz()).addKeys(
+					keys.stream().skip(1).map(RegistryKey::clazz).toList());
+			if (query.hasImplementation()) {
+				Class impl = query.registration();
+				Preconditions.checkState(impl == registeringClassKey.clazz());
+			} else {
+				delegate.add(registeringClassKey, keys, implementation,
+						priority);
+			}
 		}
 
 		@Override
