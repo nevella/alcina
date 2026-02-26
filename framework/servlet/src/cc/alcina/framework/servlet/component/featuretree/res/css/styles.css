@@ -1,11 +1,11 @@
-.ol-status {
+.dl-status {
   position: fixed;
   left: 0;
   bottom: 0;
   padding: 20px;
   z-index: 1;
 }
-.ol-status > .element {
+.dl-status > .element {
   display: block;
   background-color: #323232;
   color: #f1f1f1;
@@ -22,9 +22,9 @@
   cursor: default;
   white-space: pre-wrap;
   max-height: 70vh;
-  overflow: scroll;
+  overflow: auto;
 }
-.ol-status > .element.removing {
+.dl-status > .element.removing {
   transition: transform 0.5s, opacity 0.5s;
   opacity: 0;
   transform: translateX(-100%);
@@ -36,12 +36,33 @@ caught {
   white-space: pre-wrap;
 }
 
+status-reason {
+  display: block;
+}
+status-reason.ERROR {
+  color: #c33;
+  white-space: pre-wrap;
+}
+
 body > .overlay-container {
   position: absolute;
   z-index: 100;
   top: 0;
   left: 0;
   display: inline-block;
+  /* leaving the rest as an exercise
+  * */
+}
+body > .overlay-container.viewport-middle-center > * {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+body > .overlay-container.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
 }
 body > .overlay-container > overlay {
   display: flex;
@@ -67,15 +88,22 @@ body > overlay-container-modal {
   display: block;
   bottom: 0;
   right: 0;
+  /* leaving the rest as an exercise
+  * */
 }
 body > overlay-container-modal:last-of-type {
   background-color: rgba(0, 0, 0, 0.2);
 }
-body > overlay-container-modal.viewport-centered > * {
+body > overlay-container-modal.viewport-middle-center > * {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+body > overlay-container-modal.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
 }
 body > overlay-container-modal > overlay {
   background-color: white;
