@@ -123,7 +123,7 @@ public class EnvironmentRegistry extends Registry {
 		registrations = delegate().registrations;
 		implementations = delegate().implementations;
 		registryKeys = delegate().registryKeys;
-		register = new EnvironmentRegister(super.register0());
+		register = new EnvironmentRegister(delegate().register0());
 	}
 
 	class EnvironmentQuery<V> extends Registry.Query<V> {
