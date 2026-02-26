@@ -29,6 +29,8 @@ import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DateUtil;
 
 @MappedSuperclass
 /**
@@ -252,5 +254,33 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		return Ax.matches(getUserAgent(), "^(servlet|server).*")
 				? Ax.format("%s::%s", getId(), getUserAgent())
 				: idString;
+	}
+
+	public static class UserDayInstance {
+		public UserDayInstance() {
+		}
+
+		public UserDayInstance(ClientInstance record) {
+			userId = CommonUtils.lv(record.getUser_id());
+			tableId = record.getId();
+			Date date = record.getHelloDate();
+			if (date != null) {
+				dayMs = DateUtil.roundDateNonMutating(date, false).getTime();
+			}
+		}
+
+		public long userId;
+
+		public long dayMs;
+
+		public long tableId;
+
+		public long getTableId() {
+			return tableId;
+		}
+
+		public boolean isValid() {
+			return userId != 0 && dayMs != 0;
+		}
 	}
 }

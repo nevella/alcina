@@ -13,9 +13,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
+import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
-import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 
 public class StandardSchedules {
@@ -45,11 +45,26 @@ public class StandardSchedules {
 		}
 	}
 
+	public static class DailyLocalSchedule extends Schedule {
+		public DailyLocalSchedule() {
+			withNext(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+					.plusDays(1)).withVmLocal(true);
+		}
+	}
+
 	public static class DailyScheduleFactory
 			implements RegistryFactory<Schedule> {
 		@Override
 		public Schedule impl() {
 			return new StandardSchedules.DailySchedule();
+		}
+	}
+
+	public static class DailyLocalScheduleFactory
+			implements RegistryFactory<Schedule> {
+		@Override
+		public Schedule impl() {
+			return new StandardSchedules.DailyLocalSchedule();
 		}
 	}
 
