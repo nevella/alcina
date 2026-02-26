@@ -25,6 +25,7 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
+import cc.alcina.framework.common.client.logic.domain.HasValid;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -256,7 +257,7 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 				: idString;
 	}
 
-	public static class UserDayInstance {
+	public static class UserDayInstance implements HasValid {
 		public UserDayInstance() {
 		}
 
