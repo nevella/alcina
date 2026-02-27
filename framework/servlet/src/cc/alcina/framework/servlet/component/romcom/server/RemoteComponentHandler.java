@@ -146,7 +146,7 @@ public class RemoteComponentHandler {
 			String html = DirndlRenderer.instance().withRenderable(list)
 					.addStyleResource(getClass(), "EnvironmentList.css")
 					.asDocument().html().toHtml();
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 			Io.write().string(html).toStream(response.getOutputStream());
 		}
 
@@ -192,7 +192,7 @@ public class RemoteComponentHandler {
 		String suffix = path.replaceFirst(".+\\.(.+)", "$1");
 		switch (suffix) {
 		case "html":
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 			break;
 		case "json":
 			response.setContentType("application/json");

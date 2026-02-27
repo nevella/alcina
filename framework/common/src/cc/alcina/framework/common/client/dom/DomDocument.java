@@ -60,12 +60,14 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public static DomDocument basicHtmlDoc() {
 		return DomDocument.from(
-				"<html><head><meta charset=\"utf-8\" /></head><body></body></html>");
+				"<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\n"
+						+ "</head><body></body></html>");
 	}
 
 	public static DomDocument basicGwtHtmlDoc() {
 		return DomDocument.from(
-				"<html><head><meta charset=\"utf-8\" /></head><body></body></html>",
+				"<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\n"
+						+ "</head><body></body></html>",
 				true);
 	}
 
