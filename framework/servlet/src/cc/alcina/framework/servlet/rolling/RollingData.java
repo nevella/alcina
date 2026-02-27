@@ -22,6 +22,8 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 // REVIEW - lowpri - formal support for "go back a bit" in transform sequence -
 // probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {
+	public static final int MAX_CHUNK_SIZE = RollingData.MAX_CHUNK_SIZE;
+
 	protected String typeKey;
 
 	public RollingData(String typeKey) {
@@ -47,33 +49,39 @@ public abstract class RollingData<K extends Comparable, V> {
 		Class<? extends RollingDataItem> rdImplClass = PersistentImpl
 				.getImplementation(RollingDataItem.class);
 		Function<String, K> keyDeserializer = keyDeserializer();
-		List<? extends RollingDataItem> list = Domain.query(rdImplClass)
-				.contextTrue(
-						LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES)
-				.filter("typeKey", typeKey).list();
-		List<K> existingKeys = list.stream().map(RollingDataItem::getMaxKey)
-				.map(k -> keyDeserializer.apply(k))
-				.collect(Collectors.toList());
-		Optional<K> max = existingKeys.stream().max(Comparator.naturalOrder());
-		K from = max.orElse(earliestKey);
 		Function<V, K> keyMaker = keyMaker();
-		List<V> data = getData(from);
-		if (data.size() > 0) {
-			Transaction.endAndBeginNew();
-			Optional<K> maxRetrieved = data.stream().map(keyMaker)
+		List<? extends RollingDataItem> list = null;
+		for (;;) {
+			list = Domain.query(rdImplClass).contextTrue(
+					LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES)
+					.filter("typeKey", typeKey).list();
+			List<K> existingKeys = list.stream().map(RollingDataItem::getMaxKey)
+					.map(k -> keyDeserializer.apply(k))
+					.collect(Collectors.toList());
+			Optional<K> max = existingKeys.stream()
 					.max(Comparator.naturalOrder());
-			if (maxRetrieved.equals(max)) {
-			} else {
-				RollingDataItem toPersist = TransformManager.get()
-						.createDomainObject(rdImplClass);
-				toPersist.setTypeKey(typeKey);
-				String dataStr = serializer().apply(data);
-				toPersist.setData(dataStr);
-				toPersist.setDate(new Date());
-				if (maxRetrieved.isPresent()) {
-					toPersist.setMaxKey(maxRetrieved.get().toString());
+			K from = max.orElse(earliestKey);
+			List<V> data = getData(from);
+			if (data.size() > 0) {
+				Transaction.endAndBeginNew();
+				Optional<K> maxRetrieved = data.stream().map(keyMaker)
+						.max(Comparator.naturalOrder());
+				if (maxRetrieved.equals(max)) {
+				} else {
+					RollingDataItem toPersist = TransformManager.get()
+							.createDomainObject(rdImplClass);
+					toPersist.setTypeKey(typeKey);
+					String dataStr = serializer().apply(data);
+					toPersist.setData(dataStr);
+					toPersist.setDate(new Date());
+					if (maxRetrieved.isPresent()) {
+						toPersist.setMaxKey(maxRetrieved.get().toString());
+					}
+					Transaction.commit();
 				}
-				Transaction.commit();
+			}
+			if (data.size() != RollingDataItem.MAX_CHUNK_SIZE) {
+				break;
 			}
 		}
 		list = Domain.query(rdImplClass)
