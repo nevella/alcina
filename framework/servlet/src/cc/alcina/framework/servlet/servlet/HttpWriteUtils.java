@@ -20,7 +20,7 @@ public interface HttpWriteUtils {
 		if (response == null) {
 			System.out.println(CommonUtils.trimToWsChars(string, 1000));
 		} else {
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 			response.getWriter().write(string);
 		}
 	}

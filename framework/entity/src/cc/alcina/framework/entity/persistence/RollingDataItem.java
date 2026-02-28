@@ -30,6 +30,10 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 @DomainTransformPersistable
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class RollingDataItem extends Entity {
+	public static final int MAX_CHUNK_SIZE = 1000000;
+
+	public static final long DEFAULT_REWIND_COUNT = 500;
+
 	private String data;
 
 	private String maxKey;
