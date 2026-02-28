@@ -22,7 +22,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 // REVIEW - lowpri - formal support for "go back a bit" in transform sequence -
 // probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {
-	public static final int MAX_CHUNK_SIZE = RollingData.MAX_CHUNK_SIZE;
+	public static final int MAX_CHUNK_SIZE = RollingDataItem.MAX_CHUNK_SIZE;
 
 	protected String typeKey;
 
