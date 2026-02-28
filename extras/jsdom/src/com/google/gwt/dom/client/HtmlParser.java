@@ -14,6 +14,7 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
@@ -458,33 +459,9 @@ public class HtmlParser {
 
 	private Element parse0(String markup, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
-		/*
-		 * trim leading ws
-		 */
-		markup = markup.replaceFirst("^[\n \r\t]+", "");
-		/*
-		 * minimal 'make invalid markup parseable'
-		 */
-		if (markup.contains("\uFEFF")) {
-			markup = markup.replace("\uFEFF", " ");
+		if (!Al.isBrowser()) {
+			markup = cleanPreamble(markup);
 		}
-		/*
-		 * sky - instead, improve parser (to retain exact source refs)
-		 */
-		if (markup.contains("/>")) {
-			markup = DomUtils.expandEmptyElements(markup);
-		}
-		if (markup.matches("(?si)<!doctype.*")) {
-			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
-		}
-		if (markup.matches("(?si)<\\?xml.*")) {
-			markup = markup.replaceFirst("(?si)<\\?xml.*?\\?>", "");
-		}
-		markup = markup.replaceFirst("^[\n \r\t]+", "");
-		if (markup.matches("(?si)<!doctype.*")) {
-			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
-		}
-		markup = markup.replaceFirst("^[\n \r\t]+", "");
 		this.markup = markup;
 		this.replaceContents = replaceContents;
 		this.lineNumber = 1;
@@ -697,6 +674,37 @@ public class HtmlParser {
 		if (hasSyntheticContainer) {
 		}
 		return rootResult;
+	}
+
+	private String cleanPreamble(String markup) {
+		/*
+		 * trim leading ws
+		 */
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		/*
+		 * minimal 'make invalid markup parseable'
+		 */
+		if (markup.contains("\uFEFF")) {
+			markup = markup.replace("\uFEFF", " ");
+		}
+		/*
+		 * sky - instead, improve parser (to retain exact source refs)
+		 */
+		if (markup.contains("/>")) {
+			markup = DomUtils.expandEmptyElements(markup);
+		}
+		if (markup.matches("(?si)<!doctype.*")) {
+			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
+		}
+		if (markup.matches("(?si)<\\?xml.*")) {
+			markup = markup.replaceFirst("(?si)<\\?xml.*?\\?>", "");
+		}
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		if (markup.matches("(?si)<!doctype.*")) {
+			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
+		}
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		return markup;
 	}
 
 	void logInvalidMarkup(String tagLookahead) {

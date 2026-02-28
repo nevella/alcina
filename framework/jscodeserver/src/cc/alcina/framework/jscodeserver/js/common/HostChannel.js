@@ -56,7 +56,7 @@ class gwt_hm_HostChannel {
 				return false;
 		}
 		var self = this;
-		window.addEventListener("unload", function (event) {
+		window.addEventListener("beforeunload", function (event) {
 			self.disconnectFromHost();
 		});
 		return true;

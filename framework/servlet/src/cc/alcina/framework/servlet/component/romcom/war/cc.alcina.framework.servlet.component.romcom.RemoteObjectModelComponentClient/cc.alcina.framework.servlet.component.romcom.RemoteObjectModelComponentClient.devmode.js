@@ -451,16 +451,18 @@ function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePro
 		loadIframe("http://www.gwtproject.org/missing-plugin/");
 	} else {
 		// take over the onunload function, wrapping any existing call if it exists
-		var oldUnload = window.onunload;
-		window.onunload = function () {
-			// run wrapped unload first in case it is running gwt code
-			!!oldUnload && oldUnload();
-			try {
-				// wrap in try/catch since plugins are not required to supply this
-				plugin.disconnect();
-			} catch (e) {
-			}
-		};
+		if (window.location.protocol == "https") {
+			var oldUnload = window.onunload;
+			window.onunload = function () {
+				// run wrapped unload first in case it is running gwt code
+				!!oldUnload && oldUnload();
+				try {
+					// wrap in try/catch since plugins are not required to supply this
+					plugin.disconnect();
+				} catch (e) {
+				}
+			};
+		}
 	}
 }
 
@@ -1067,7 +1069,7 @@ class gwt_hm_HostChannel {
 				return false;
 		}
 		var self = this;
-		window.addEventListener("unload", function (event) {
+		window.addEventListener("beforeunload", function (event) {
 			self.disconnectFromHost();
 		});
 		return true;
