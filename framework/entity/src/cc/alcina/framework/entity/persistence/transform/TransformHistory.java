@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
@@ -34,7 +36,10 @@ public class TransformHistory {
 			List<? extends Entity> entities = stream.filter(Objects::nonNull)
 					.collect(Collectors.toList());
 			if (entities.size() > 0) {
-				TransformHistory info = get(entities.get(0).entityClass(),
+				Class firstEntityClass = entities.get(0).entityClass();
+				Preconditions.checkState(entities.stream()
+						.allMatch(e -> e.entityClass() == firstEntityClass));
+				TransformHistory info = get(firstEntityClass,
 						EntityHelper.toIdSet(entities));
 				for (Entity entity : entities) {
 					cache.get().put(entity.toLocator(), info.filter(entity));
