@@ -36,6 +36,8 @@ public abstract class StoryDocObservable
 
 	public String pointClassName;
 
+	public List<String> ancestorClassNames;
+
 	public long index;
 
 	static transient IdCounter counter = new IdCounter();
@@ -58,9 +60,11 @@ public abstract class StoryDocObservable
 		this.date = new Date();
 		this.visit = visit;
 		ancestorDisplayNames = new ArrayList<>();
+		ancestorClassNames = new ArrayList<>();
 		Visit cursor = visit;
 		while (cursor != null) {
 			ancestorDisplayNames.add(0, cursor.getDisplayName());
+			ancestorClassNames.add(0, cursor.point.getClass().getName());
 			Node parentNode = cursor.processNode().getParent();
 			Object value = parentNode == null ? null : parentNode.getValue();
 			if (value instanceof Visit) {

@@ -158,8 +158,7 @@ class ObservableRecorder {
 			RendererConfiguration rendererConfiguration = storyDoc.part.rendererConfiguration;
 			if (rendererConfiguration != null) {
 				List<StoryDocObservable> observables = storage.getObservables();
-				observables = observables.stream()
-						.filter(obv -> testPoint(obv.pointClassName))
+				observables = observables.stream().filter(obv -> testPoint(obv))
 						.collect(Collectors.toList());
 				Reflections.newInstance(rendererConfiguration.renderer)
 						.render(storyDoc.part, storage.folder, observables);
@@ -167,11 +166,12 @@ class ObservableRecorder {
 			storage.conditionallyCopyToPersistent();
 		}
 
-		boolean testPoint(String pointClassName) {
+		boolean testPoint(StoryDocObservable observable) {
 			RendererConfiguration rendererConfiguration = storyDoc.part.rendererConfiguration;
 			Class<? extends Point> pointFilter = rendererConfiguration.pointFilter;
 			if (pointFilter != null) {
-				return pointClassName.startsWith(pointFilter.getName());
+				return observable.ancestorClassNames
+						.contains(pointFilter.getName());
 			} else {
 				return true;
 			}
