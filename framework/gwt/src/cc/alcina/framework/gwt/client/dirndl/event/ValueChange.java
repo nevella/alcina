@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -91,9 +90,9 @@ public interface ValueChange {
 					ValueChange valueChange = (ValueChange) event;
 					Object newValue = valueChange.getNewValue();
 					/*
-					 * Because this property may be bound, enqueue the change
+					 * If in a layout cycle, defer the lambda
 					 */
-					Client.eventBus().queued().lambda(() -> {
+					Runnable lambda = () -> {
 						try {
 							LooseContext.push();
 							CONTEXT_EVENT_CAUSING_PROPERTY_CHANGE.set(event);
@@ -101,7 +100,8 @@ public interface ValueChange {
 						} finally {
 							LooseContext.pop();
 						}
-					}).dispatch();
+					};
+					previousNode.deferIfFiring(lambda);
 				} else {
 					event.bubble();
 				}

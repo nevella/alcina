@@ -1008,4 +1008,30 @@ public class ModelEvents {
 		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
+
+	/**
+	 * Instructs any editor (a model analagous to select, input etc) to commit
+	 * itself - i.e. to copy any pending (input) value to its value field
+	 */
+	public static class CommitEditor extends
+			ModelEvent.DescendantEvent<Object, CommitEditor.Handler, CommitEditor.Emitter> {
+		@Override
+		public void dispatch(CommitEditor.Handler handler) {
+			handler.onCommitEditor(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCommitEditor(CommitEditor event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onCommitEditor(CommitEditor event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
 }

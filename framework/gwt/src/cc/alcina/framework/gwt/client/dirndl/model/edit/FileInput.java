@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -28,8 +29,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
 
 /**
  * <p>
- * This class models an editable boolean field, rendering as a Checkbox DOM
- * element.
+ * This class models an editable file input
  *
  *
  * <p>
@@ -83,13 +83,18 @@ public class FileInput extends Model.Value<FileData>
 
 	@Override
 	public void onChange(Change event) {
-		JsArray<Html5File> files = getFiles(provideElement());
-		Preconditions.checkState(files.length() <= 1);
-		if (files.length() == 1) {
-			FileData.fromFile(files.get(0), fileData -> {
-				setValue(fileData);
-				event.reemitAs(this, ModelEvents.Change.class);
-			});
+		/*
+		 * FIXME - romcom
+		 */
+		if (Al.isBrowser()) {
+			JsArray<Html5File> files = getFiles(provideElement());
+			Preconditions.checkState(files.length() <= 1);
+			if (files.length() == 1) {
+				FileData.fromFile(files.get(0), fileData -> {
+					setValue(fileData);
+					event.reemitAs(this, ModelEvents.Change.class);
+				});
+			}
 		}
 	}
 

@@ -196,6 +196,10 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		return environment.access().getSession();
 	}
 
+	public void invokeInEnvironmentContext(Runnable runnable) {
+		environment.access().invoke(runnable);
+	}
+
 	protected AuthenticationTokenStore getAuthenticationTokenStore() {
 		return new RemoteAuthenticationStore(environment);
 	}

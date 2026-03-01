@@ -46,6 +46,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CommitEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -97,12 +98,12 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			ModelEvents.Commit.class })
 @TypeSerialization(reflectiveSerializable = false)
 @TypedProperties
-public class StringInput extends Model.Value<String>
-		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
-		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
-		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler,
-		DomEvents.KeyDown.Handler, ModelEvents.FormElementLabelClicked.Handler,
-		HasElementBehaviors, ModelEvents.FocusEditor.Handler {
+public class StringInput extends Model.Value<String> implements FocusOnBind,
+		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
+		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
+		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
+		ModelEvents.FormElementLabelClicked.Handler, HasElementBehaviors,
+		ModelEvents.FocusEditor.Handler, ModelEvents.CommitEditor.Handler {
 	PackageProperties._StringInput.InstanceProperties properties() {
 		return PackageProperties.stringInput.instance(this);
 	}
@@ -445,6 +446,9 @@ public class StringInput extends Model.Value<String>
 
 	@Override
 	public void setValue(String value) {
+		if (value != null && value.contains(".not")) {
+			int debug = 3;
+		}
 		if (provideIsBound() && !Objects.equals(value, currentValue)) {
 			provideElement().setPropertyString("value", value);
 			currentValue = value;
@@ -713,5 +717,10 @@ public class StringInput extends Model.Value<String>
 	public void onFocusEditor(FocusEditor event) {
 		setFocusOnBind(true);
 		Model.FocusOnBind.focusIfAttached(provideNode());
+	}
+
+	@Override
+	public void onCommitEditor(CommitEditor event) {
+		commitCurrentValue();
 	}
 }
