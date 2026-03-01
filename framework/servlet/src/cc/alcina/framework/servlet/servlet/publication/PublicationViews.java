@@ -64,96 +64,15 @@ public class PublicationViews {
 		DomNode script = body.builder().tag("script").append();
 		ContentRendererResults crr = publicationContentPersister
 				.getContentRendererResults(publication);
-		String nodeHtml = StringEscapeUtils.escapeJavaScript(crr.htmlContent);
+		String nodeHtml = crr.htmlContent;
+		nodeHtml = nodeHtml.replaceFirst("(?si)<html>(.+)</html>.*", "$1");
+		nodeHtml = StringEscapeUtils.escapeJavaScript(nodeHtml);
 		FormatBuilder fb = new FormatBuilder();
 		fb.line("var content=\"%s\";", nodeHtml);
 		fb.line("document.getElementById('content-frame').contentDocument.documentElement.innerHTML= content;");
-		script.setText(fb.toString());
-		// {
-		// DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
-		// builder.row().style("font-weight:bold").cell("Time").cell("Type")
-		// .cell("Details");
-		// String story = delta != null ? delta : userStory.getStory();
-		// ArrayNode details = storyNode.arrayNode();
-		// storyNode.set("details", details);
-		// List<ClientLogRecord> list = new ArrayList<>();
-		// for (String line : story.split("\\n")) {
-		// Object deser = AlcinaBeanSerializer.deserializeHolder(line);
-		// if (deser instanceof List) {
-		// list.addAll((List) deser);
-		// } else {
-		// ClientLogRecords records = (ClientLogRecords) deser;
-		// list.addAll(records.getLogRecords());
-		// }
-		// }
-		// int ctr = list.size();
-		// for (ClientLogRecord record : list) {
-		// ctr--;
-		// String messageTxt = Ax.nullSafe(record.getMessage());
-		// switch (Ax.nullSafe(record.getTopic()).toLowerCase()) {
-		// case "message":
-		// if (messageTxt.matches("Started logging.+")) {
-		// break;
-		// }
-		// case "restart":
-		// continue;
-		// case "history":
-		// if (messageTxt.equals("window closing") && ctr >= 10) {
-		// continue;
-		// }
-		// break;
-		// }
-		// DomNodeHtmlTableRowBuilder row = builder.row();
-		// String timestamp = CommonUtils.formatDate(record.getTime(),
-		// DateStyle.TIMESTAMP_NO_DAY);
-		// row.cell().text(timestamp).nowrap().cell();
-		// String topic = Ax.friendly(record.getTopic());
-		// row.cell(topic);
-		// DomNode td = row.getNode().builder().tag("td").append();
-		// Message message = parseMessage(record);
-		// if (message.path != null) {
-		// td.builder().tag("div")
-		// .text(Ax.format("Path: %s", message.path)).append();
-		// td.builder().tag("div")
-		// .text(Ax.format("%s: %s",
-		// message.textIsLocator ? "Near" : "Text",
-		// message.text))
-		// .append();
-		// } else {
-		// td.builder().tag("div").text(message.text).append();
-		// }
-		// ObjectNode detail = details.objectNode();
-		// detail.set("timestamp", storyNode.textNode(timestamp));
-		// detail.set("topic", storyNode.textNode(topic));
-		// if (message.path != null) {
-		// detail.set("path", storyNode.textNode(message.path));
-		// detail.set(message.textIsLocator ? "near" : "text",
-		// storyNode.textNode(message.text));
-		// } else {
-		// detail.set("value", storyNode.textNode(message.text));
-		// }
-		// details.add(detail);
-		// }
-		// builder.append();
-		// if (userStory.getCart() != null) {
-		// body.builder().tag("hr").append();
-		// body.builder().tag("h3").text("Cart...").append();
-		// ObjectMapper mapper = new ObjectMapper();
-		// try {
-		// ObjectNode node = (ObjectNode) mapper
-		// .readTree(userStory.getCart());
-		// ((ArrayNode) node.get("items")).forEach(
-		// n -> ((ObjectNode) n).remove("additional"));
-		// String pretty = mapper.writerWithDefaultPrettyPrinter()
-		// .writeValueAsString(node);
-		// body.builder().tag("pre").text(pretty).append();
-		// } catch (Exception e) {
-		// throw new WrappedRuntimeException(e);
-		// }
-		// }
-		// }
 		html = XmlUtils.streamNCleanForBrowserHtmlFragment(
 				doc.getDocumentElementNode().w3cNode());
+		html = html.replace("<script>", "<script>" + fb.toString());
 	}
 
 	protected Message parseMessage(ClientLogRecord record) {

@@ -308,8 +308,8 @@ public class Publisher {
 
 		public ContentRendererResults
 				getContentRendererResults(Publication publication) {
+			publication.domain().ensurePopulated();
 			if (publication.getSerializedPublication() != null) {
-				publication.domain().ensurePopulated();
 				return KryoUtils.deserializeFromBase64(
 						publication.getSerializedPublication(),
 						ContentRendererResults.class);
