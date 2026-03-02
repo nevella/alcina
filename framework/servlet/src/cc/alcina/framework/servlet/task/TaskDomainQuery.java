@@ -156,7 +156,13 @@ public class TaskDomainQuery extends PerformerTask.Fields
 
 		public String value(String key) {
 			ResultNode node = get(key);
-			return node == null ? null : node.value;
+			if (node == null) {
+				return null;
+			}
+			if (node.value == null) {
+				return null;
+			}
+			return node.value.replaceFirst("(?s)^\"(.+)\"$", "$1");
 		}
 
 		@Override
