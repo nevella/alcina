@@ -615,6 +615,8 @@ public abstract class Model extends Bindable implements
 	/**
 	 * Models implementing this type will not be bound to the node - so must be
 	 * pure data containers
+	 * 
+	 * Note that such models can't emit events (although their descendants can).
 	 */
 	public interface MultiNodeModel {
 	}
