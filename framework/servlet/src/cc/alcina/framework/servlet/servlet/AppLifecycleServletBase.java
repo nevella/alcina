@@ -40,7 +40,9 @@ import com.google.gwt.dom.client.LocalDom;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.job.Task.RemotePerformable;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
@@ -400,6 +402,25 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Mvcc.initialiseTransactionEnvironment();
 		ProcessObservable.Id.setGenerator(new AtomicSequentialIdGenerator());
 		initLoggers();
+		if (!Ax.isTest()) {
+			Registry.register().singleton(Task.RemotePerformer.class,
+					new RemotePerformerDirect());
+		}
+	}
+
+	public static class RemotePerformerDirect implements Task.RemotePerformer {
+		@Override
+		public long performRemote(RemotePerformable remotePerformable) {
+			Job job = ((Task) remotePerformable).schedule();
+			Transaction.commit();
+			return job.getId();
+		}
+
+		@Override
+		public String performRemoteSync(RemotePerformable remotePerformable) {
+			Job performed = ((Task) remotePerformable).perform();
+			return performed.getLog();
+		}
 	}
 
 	protected abstract void initEntityLayer() throws Exception;
