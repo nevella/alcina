@@ -282,10 +282,17 @@ public class EnvironmentRegistry extends Registry {
 			Registry delegateRegistry = delegate();
 			Query query = delegateRegistry.query0(keys.get(0).clazz()).addKeys(
 					keys.stream().skip(1).map(RegistryKey::clazz).toList());
+			boolean apply = true;
 			if (query.hasImplementation()) {
-				Class impl = query.registration();
-				Preconditions.checkState(impl == registeringClassKey.clazz());
-			} else {
+				Priority currentPriority = query.currentPriority();
+				if (currentPriority.compareTo(priority) >= 0) {
+					Class impl = query.registration();
+					Preconditions
+							.checkState(impl == registeringClassKey.clazz());
+					apply = false;
+				}
+			}
+			if (apply) {
 				delegate.add(registeringClassKey, keys, implementation,
 						priority);
 			}

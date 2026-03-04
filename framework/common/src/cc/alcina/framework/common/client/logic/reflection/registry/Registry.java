@@ -747,6 +747,11 @@ public class Registry {
 					true).registrationData.registeringClassKey.clazz();
 		}
 
+		public Priority currentPriority() {
+			return implementations.implementation(this, true,
+					true).registrationData.priority;
+		}
+
 		public Class<? extends V> registrationOrNull() {
 			ImplementationData data = implementations.implementation(this,
 					false, true);
