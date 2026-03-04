@@ -18,6 +18,7 @@ import cc.alcina.framework.servlet.environment.RemoteUi;
  */
 @Feature.Ref(Feature_FeatureTree.class)
 public class FeatureTree {
+	//
 	@Registration(RemoteComponent.class)
 	public static class Component implements RemoteComponent {
 		@Override

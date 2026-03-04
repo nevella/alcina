@@ -1061,7 +1061,7 @@ public interface Story {
 	 * 
 	 */
 	@Registration(Point.class)
-	public interface Point {
+	public interface Point extends Registration.AllSubtypes {
 		List<Class<? extends Story.State>> getRequires();
 
 		List<? extends Point> getChildren();
