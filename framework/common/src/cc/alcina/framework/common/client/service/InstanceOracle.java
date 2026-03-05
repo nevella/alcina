@@ -430,6 +430,7 @@ public class InstanceOracle {
 		synchronized void discardExistingInstance() {
 			instance = null;
 			exception = null;
+			provider = null;
 		}
 
 		/*
