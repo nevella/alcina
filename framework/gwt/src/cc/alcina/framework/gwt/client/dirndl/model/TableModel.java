@@ -821,8 +821,7 @@ public class TableModel extends Model
 
 	@Override
 	public void onNodeContext(NodeContext event) {
-		node.getResolver().registerService(NodeEditorContextService.class,
-				this);
+		event.registerService(NodeEditorContextService.class, this);
 	}
 
 	@Directed(reemits = { DomEvents.Click.class, TableEvents.RowClicked.class })

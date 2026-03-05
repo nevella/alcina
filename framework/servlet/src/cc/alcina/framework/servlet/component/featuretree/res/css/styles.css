@@ -171,6 +171,9 @@ body > page > main > feature-table > table td.open {
 body > page > main > feature-table > table td.test-coverage {
   background-color: #99cccc;
 }
+body > page > main > feature-table > table td.non-standard-test-coverage {
+  background-color: #9999cc;
+}
 body > page > main > feature-table > table td.container {
   background-color: #f7f7f7;
 }

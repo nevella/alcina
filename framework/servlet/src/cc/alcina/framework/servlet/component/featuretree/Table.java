@@ -78,6 +78,10 @@ class Table extends Model.Fields {
 					.hasTestCoverage(entry.feature)) {
 				statusName = "test-coverage";
 			}
+			if (service(FeatureTable.Service.class).getFeatures()
+					.hasNonStandardTestCoverage(entry.feature)) {
+				statusName = "non-standard-test-coverage";
+			}
 		}
 
 		void populateFromReleaseColulmn(ReleaseColumn col) {

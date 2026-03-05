@@ -21,6 +21,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.story.Story.Decl;
+import cc.alcina.framework.gwt.client.story.Story.Decl.Conditional.ExitOkOnFalse;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTree.Ui;
 
@@ -134,8 +136,15 @@ class FeatureTable extends Model.Fields {
 
 		Multimap<Class<? extends Feature>, List<Class<? extends Point>>> testPoints = new Multimap<>();
 
+		Multimap<Class<? extends Feature>, List<Class<? extends Point>>> nonStandardCoveragePoints = new Multimap<>();
+
 		public boolean hasTestCoverage(Class<? extends Feature> feature) {
 			return testPoints.containsKey(feature);
+		}
+
+		public boolean
+				hasNonStandardTestCoverage(Class<? extends Feature> feature) {
+			return nonStandardCoveragePoints.containsKey(feature);
 		}
 
 		public List<Class<? extends Point>>
@@ -162,6 +171,14 @@ class FeatureTable extends Model.Fields {
 					Arrays.stream(annotation.value())
 							.forEach(featureClass -> testPoints
 									.add(featureClass, (Class) clazz));
+					ExitOkOnFalse exitOk = Reflections.at(clazz)
+							.annotation(Decl.Conditional.ExitOkOnFalse.class);
+					if (exitOk != null && exitOk.value().getSimpleName()
+							.equals("CheckNonStandardTestFlag")) {
+						Arrays.stream(annotation.value()).forEach(
+								featureClass -> nonStandardCoveragePoints
+										.add(featureClass, (Class) clazz));
+					}
 				}
 			});
 		}

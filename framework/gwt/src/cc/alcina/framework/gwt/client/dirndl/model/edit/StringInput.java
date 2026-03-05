@@ -320,7 +320,9 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	protected void handleChange(NodeEvent event) {
 		currentValue = elementValue();
 		setValue(currentValue);
-		event.reemitAs(this, ModelEvents.Change.class, currentValue);
+		if (provideIsBound()) {
+			event.reemitAs(this, ModelEvents.Change.class, currentValue);
+		}
 	}
 
 	@Override
