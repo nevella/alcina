@@ -213,7 +213,9 @@ class Environment {
 			long start = System.currentTimeMillis();
 			do {
 				try {
-					timedOut = !handler.latch.await(1, TimeUnit.SECONDS);
+					boolean devmode = session.url.contains("gwt.l");
+					timedOut = !handler.latch.await(devmode ? 10 : 1,
+							TimeUnit.SECONDS);
 				} catch (Exception e) {
 					Ax.simpleExceptionOut(e);
 				}

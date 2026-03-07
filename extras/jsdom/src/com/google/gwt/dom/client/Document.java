@@ -967,7 +967,8 @@ public class Document extends Node implements ClientDomDocument,
 
 	@Override
 	public NodeList<Element> getElementsByTagName(String tagName) {
-		return remote.getElementsByTagName(tagName);
+		List<Node> list = stream().filter(n -> n.nameIs(tagName)).toList();
+		return new NodeList<>(new NodeListWrapped(list));
 	}
 
 	@Override

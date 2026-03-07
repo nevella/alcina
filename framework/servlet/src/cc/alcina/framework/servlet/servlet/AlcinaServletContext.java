@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.gwt.client.logic.ClientProperties;
@@ -43,6 +42,15 @@ public class AlcinaServletContext {
 	public static HttpContext httpContext() {
 		return contextServletContext.optional().map(ctx -> ctx.httpContext)
 				.orElse(null);
+	}
+
+	/**
+	 * For romcom contexts, to simulate a request environment
+	 */
+	public static void pushRequest(HttpServletRequest request) {
+		AlcinaServletContext context = new AlcinaServletContext();
+		context.httpContext = new HttpContext(request, null);
+		contextServletContext.set(context);
 	}
 
 	public static void removePerThreadContexts() {

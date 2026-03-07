@@ -69,12 +69,13 @@ public class RemoteWindowState implements InvokeProxy {
 			List<Class> argumentTypes, List<?> arguments, List<Flag> flags) {
 		if (windowState != null && argumentTypes == null) {
 			if (node != null) {
-				if (node instanceof DocumentAttachId) {
-					node = ((DocumentAttachId) node).documentFor()
+				NodeAttachId resolveStateNode = node;
+				if (resolveStateNode instanceof DocumentAttachId) {
+					resolveStateNode = ((DocumentAttachId) node).documentFor()
 							.getDocumentElement().implAccess().attachIdRemote();
 				}
 				NodeUiState nodeUiState = computeNodeUiState(
-						AttachId.forNode(node));
+						AttachId.forNode(resolveStateNode));
 				if (nodeUiState != null) {
 					switch (methodName) {
 					case "getScrollTop":
@@ -92,7 +93,7 @@ public class RemoteWindowState implements InvokeProxy {
 					switch (methodName) {
 					case "getBoundingClientRect":
 						logger.debug("get-bcr [not cached] {}",
-								node.node().toNameAttachId());
+								resolveStateNode.node().toNameAttachId());
 						break;
 					}
 				}
