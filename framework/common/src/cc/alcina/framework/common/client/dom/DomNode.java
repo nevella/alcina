@@ -730,7 +730,8 @@ public class DomNode {
 				gwtNode.getOwnerDocument().setWillReattach(null);
 			}
 			removeFromParent();
-			if (gwtNode != null) {
+			// may be stripping an empty
+			if (gwtNode != null && nodes.size() > 0) {
 				nodes.get(0).asLocation().getIndex();
 			}
 		} finally {

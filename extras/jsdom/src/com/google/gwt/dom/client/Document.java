@@ -110,6 +110,8 @@ public class Document extends Node implements ClientDomDocument,
 			switch (methodName) {
 			case "hasFocus":
 				return doc.hasFocus();
+			case "validateHtml":
+				return doc.jsoRemote().validateHtml((String) arguments.get(0));
 			default:
 				break;
 			}

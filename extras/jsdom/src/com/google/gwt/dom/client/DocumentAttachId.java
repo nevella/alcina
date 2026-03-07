@@ -686,6 +686,10 @@ public class DocumentAttachId extends NodeAttachId
 		return invokeSync("getClientHeight");
 	}
 
+	String validateHtml(String html) {
+		return invokeSync("validateHtml", List.of(String.class), List.of(html));
+	}
+
 	@Override
 	public int getClientWidth() {
 		return invokeSync("getClientWidth");

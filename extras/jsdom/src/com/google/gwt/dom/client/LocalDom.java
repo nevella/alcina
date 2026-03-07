@@ -33,6 +33,7 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -384,13 +385,15 @@ public class LocalDom implements ContextFrame {
 			if (Al.isBrowser()) {
 				return Document.get().jsoRemote().validateHtml(html);
 			} else {
-				// FIXME - romcom - but basically there's no quick way except
-				// pre-caching
-				return html;
+				return Registry.impl(MarkupValidator.class).validate(html);
 			}
 		} else {
 			return html;
 		}
+	}
+
+	public interface MarkupValidator {
+		String validate(String markup);
 	}
 
 	public static void verifyDomEquivalence(boolean fromUserGesture) {

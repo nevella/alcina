@@ -596,7 +596,7 @@ public final class ElementJso extends NodeJso implements ElementRemote {
 
 	@Override
 	public int getScrollLeft() {
-		return ClientDomElementStatic.getScrollLeft(this);
+		return toInt32(getSubPixelScrollLeft());
 	}
 
 	/**
@@ -670,6 +670,10 @@ public final class ElementJso extends NodeJso implements ElementRemote {
 
 	private native double getSubPixelScrollTop() /*-{
     return this.scrollTop || 0;
+	}-*/;
+
+	private native double getSubPixelScrollLeft() /*-{
+    return this.scrollLeft || 0;
 	}-*/;
 
 	private native double getSubPixelScrollWidth() /*-{
