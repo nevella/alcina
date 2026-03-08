@@ -24,7 +24,6 @@ import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComp
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -162,8 +161,8 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 				getLogger().debug("envelope returned :: {} :: {}/{}",
 						Ax.appMillis(), envelope.envelopeId,
 						response.messageEnvelope.envelopeId);
-				messageTransportLayerClient.willFinish |= response.messageEnvelope.packets
-						.stream().map(MessagePacket::message).anyMatch(
+				messageTransportLayerClient.willFinish |= response.messageEnvelope.messages
+						.stream().anyMatch(
 								ProtocolMessageHandlerClient::isClientFinished);
 				messageTransportLayerClient.onRequestReturnedPostFinishCheck();
 				messageTransportLayerClient.onComponentResponse(response);

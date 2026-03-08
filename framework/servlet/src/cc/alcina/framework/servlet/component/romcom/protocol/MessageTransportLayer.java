@@ -119,29 +119,6 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class MessagePacket {
-		public MessageId messageId;
-
-		public Message message;
-
-		public MessagePacket(MessageId messageId, Message message) {
-			this.messageId = messageId;
-			this.message = message;
-		}
-
-		public MessagePacket() {
-		}
-
-		public Message message() {
-			return message;
-		}
-
-		public MessageId messageId() {
-			return messageId;
-		}
-	}
-
-	@Bean(PropertySource.FIELDS)
 	public static class MessageId implements Comparable<MessageId> {
 		public SendChannelId sendChannelId;
 
@@ -353,18 +330,17 @@ public abstract class MessageTransportLayer {
 
 		public EnvelopeId highestReceivedEnvelopeId;
 
-		public List<MessagePacket> packets = new ArrayList<>();
+		public List<Message> messages = new ArrayList<>();
 
 		public List<TransportHistory> transportHistories = new ArrayList<>();
 
 		public String toMessageSummaryString() {
-			return packets.stream().map(MessagePacket::message)
-					.map(Object::toString).collect(Collectors.joining(","));
+			return messages.stream().map(Object::toString)
+					.collect(Collectors.joining(","));
 		}
 
 		public String toMessageDebugString() {
-			return packets.stream().map(MessagePacket::message)
-					.map(Message::toDebugString)
+			return messages.stream().map(Message::toDebugString)
 					.collect(Collectors.joining(","));
 		}
 
@@ -377,7 +353,7 @@ public abstract class MessageTransportLayer {
 			FormatBuilder format = new FormatBuilder().separator(" - ");
 			format.format("id: %s", envelopeId);
 			format.format("messageids: %s",
-					packets.stream().map(MessagePacket::messageId)
+					messages.stream().map(m -> m.messageId)
 							.map(Object::toString)
 							.collect(Collectors.joining(",")));
 			format.format("transport histories: %s",
@@ -406,7 +382,10 @@ public abstract class MessageTransportLayer {
 
 		transient int size = -1;
 
-		public MessageToken(Message message) {
+		MessageEnvelope envelope;
+
+		public MessageToken(Message message, MessageEnvelope envelope) {
+			this.envelope = envelope;
 			ensureMessageId(message);
 			this.message = message;
 			this.transportHistory.messageId = message.messageId;
@@ -517,6 +496,8 @@ public abstract class MessageTransportLayer {
 	public abstract class Channel {
 		protected List<MessageToken> activeMessages = new ArrayList<>();
 
+		List<MessageToken> removedMessages = new ArrayList<>();
+
 		protected Map<MessageId, MessageToken> messageIdActiveMessage = new LinkedHashMap<>();
 
 		public List<MessageToken> snapshotActiveMessages() {
@@ -566,6 +547,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		void removeMessage(MessageToken message) {
+			removedMessages.add(message);
 			activeMessages.remove(message);
 			messageIdActiveMessage.remove(message.transportHistory.messageId);
 			logger.debug("Message acknowledged + removed :: {}",
@@ -886,7 +868,7 @@ public abstract class MessageTransportLayer {
 
 		protected void send(List<Message> messages) {
 			messages.forEach(message -> {
-				bufferMessage(new MessageToken(message));
+				bufferMessage(new MessageToken(message, null));
 			});
 			conditionallySend();
 		}
@@ -933,6 +915,12 @@ public abstract class MessageTransportLayer {
 		void sendAcknowledgments() {
 			conditionallySend();
 		}
+
+		MessageToken getRemovedMessage(MessageId messageId) {
+			return removedMessages.stream()
+					.filter(m -> m.message.messageId.equals(messageId))
+					.findFirst().orElse(null);
+		}
 	}
 
 	public abstract class ReceiveChannel extends Channel {
@@ -959,6 +947,12 @@ public abstract class MessageTransportLayer {
 			addMessagesToActive(envelope);
 			publishSequentialMessages();
 			sendChannel().sendAcknowledgments();
+			clearRemovedBuffers();
+		}
+
+		void clearRemovedBuffers() {
+			sendChannel().removedMessages = new ArrayList<>();
+			receiveChannel().removedMessages = new ArrayList<>();
 		}
 
 		@Override
@@ -996,12 +990,12 @@ public abstract class MessageTransportLayer {
 			 * for both
 			 */
 			synchronized (activeMessages) {
-				envelope.packets.forEach(packet -> {
-					if (!receivedMessageIds.add(packet.messageId)) {
+				envelope.messages.forEach(message -> {
+					if (!receivedMessageIds.add(message.messageId)) {
 						return;
 					}
-					MessageToken activeMessageToken = new MessageToken(
-							packet.message);
+					MessageToken activeMessageToken = new MessageToken(message,
+							envelope);
 					activeMessageToken.transportHistory.received = new Date();
 					activeMessageToken.transportHistory.sent = envelope.dateSent;
 					bufferMessage(activeMessageToken);
@@ -1109,6 +1103,65 @@ public abstract class MessageTransportLayer {
 			MessageId messageId = new MessageId(sendChannelId(),
 					messageIdGenerator.incrementAndGetInt());
 			message.messageId = messageId;
+		}
+	}
+
+	public MessageHistory getMessageHistory(Message message) {
+		return new MessageHistory(message);
+	}
+
+	public class MessageHistory {
+		public Message message;
+
+		MessageToken activeMessage;
+
+		Message originatingEvent;
+
+		Date originatingEventSent;
+
+		Date originatingEventReceived;
+
+		Date originatingEventPublished;
+
+		Date messageProcessed = new Date();
+
+		MessageHistory(Message message) {
+			this.message = message;
+			activeMessage = receiveChannel()
+					.getActiveMessage(message.messageId);
+			SendChannelId thisChannel = activeMessage.message.messageId.sendChannelId;
+			List<TransportHistory> transportsFromThis = activeMessage.envelope.transportHistories
+					.stream()
+					.filter(th -> th.messageId.sendChannelId == thisChannel
+							.oppositeEndpointId())
+					.toList();
+			List<MessageToken> transportTokens = transportsFromThis.stream()
+					.map(th -> sendChannel().getRemovedMessage(th.messageId))
+					.toList();
+			MessageToken lastToken = Ax.last(transportTokens);
+			if (lastToken != null) {
+				originatingEventSent = lastToken.transportHistory.sent;
+				originatingEventReceived = lastToken.transportHistory.received;
+				originatingEventPublished = lastToken.transportHistory.published;
+			}
+			int debug = 3;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder format = new FormatBuilder();
+			format.appendKeyValues("Type", "MessageHistory", "Message",
+					message.toString());
+			format.newLine();
+			format.indent(2);
+			format.line("originatingEventSent: %s",
+					Ax.appMillis(originatingEventSent));
+			format.line("originatingEventReceived: %s",
+					Ax.appMillis(originatingEventReceived));
+			format.line("originatingEventPublished: %s",
+					Ax.appMillis(originatingEventPublished));
+			format.line("messageProcessed: %s", Ax.appMillis(messageProcessed));
+			return format.toString();
 		}
 	}
 }

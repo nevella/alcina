@@ -26,12 +26,10 @@ import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.SetCookieServerSide;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
@@ -325,8 +323,7 @@ public class RemoteComponentHandler {
 							false);
 					MessageId messageId = new MessageId(sendChannelId, -1);
 					message.messageId = messageId;
-					response.messageEnvelope.packets
-							.add(new MessagePacket(messageId, message));
+					response.messageEnvelope.messages.add(message);
 				}
 				logger.debug("{} dispatched response [#{}/#{}] - {}",
 						Ax.appMillis(),
@@ -352,8 +349,7 @@ public class RemoteComponentHandler {
 	void applyOutgoingMessagesToServletResponse(
 			HttpServletResponse servletResponse,
 			RemoteComponentResponse response) {
-		response.messageEnvelope.packets.forEach(packet -> {
-			Message message = packet.message;
+		response.messageEnvelope.messages.forEach(message -> {
 			if (message instanceof SetCookieServerSide) {
 				SetCookieServerSide cookieMessage = (SetCookieServerSide) message;
 				servletResponse.addCookie(

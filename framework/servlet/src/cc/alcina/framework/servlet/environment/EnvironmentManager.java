@@ -261,10 +261,10 @@ public class EnvironmentManager {
 			implements ProcessObserver<RemoteComponentEvent> {
 		@Override
 		public void topicPublished(RemoteComponentEvent message) {
-			List<Message> requestMessages = message.request.messageEnvelope.packets
-					.stream().map(p -> p.message).toList();
-			List<Message> responseMessages = message.response.messageEnvelope.packets
-					.stream().map(p -> p.message).toList();
+			List<Message> requestMessages = message.request.messageEnvelope.messages
+					.stream().toList();
+			List<Message> responseMessages = message.response.messageEnvelope.messages
+					.stream().toList();
 			List<Mutations> responseMutations = responseMessages.stream()
 					.filter(m -> m instanceof Mutations).map(m -> (Mutations) m)
 					.toList();

@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
@@ -17,6 +18,9 @@ import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
 public interface RemoteComponent {
+	static final Configuration.Key debugRomcomMetrics = Configuration
+			.key("debugRomcomMetrics");
+
 	default boolean isUseContextIdentity() {
 		return false;
 	}
@@ -58,6 +62,10 @@ public interface RemoteComponent {
 		}
 		session.componentPath = getPath();
 		session.componentClassName = ui.getClass().getName();
+		if (debugRomcomMetrics.is()) {
+			session.properties.put(RemoteComponentProtocol.FLAG_DEBUG_METRICS,
+					"true");
+		}
 		EnvironmentManager.get().register(ui, session,
 				getNonInteractionTimeout(session));
 		return session;

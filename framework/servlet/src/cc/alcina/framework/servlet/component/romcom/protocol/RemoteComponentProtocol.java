@@ -1,7 +1,9 @@
 package cc.alcina.framework.servlet.component.romcom.protocol;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 
 public class RemoteComponentProtocol {
+	public static final String FLAG_DEBUG_METRICS = "RemoteComponentProtocol.FLAG_DEBUG_METRICS";
+
 	@Bean
 	public static class InvalidAuthenticationException
 			extends ProtocolException {
@@ -493,6 +497,8 @@ public class RemoteComponentProtocol {
 		public String componentClassName;
 
 		public String componentPath;
+
+		public Map<String, String> properties = new LinkedHashMap<>();
 
 		// ipv4 address
 		@Property.Not

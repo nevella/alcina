@@ -119,8 +119,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			}
 
 			boolean isAwaiter() {
-				return token.request.messageEnvelope.packets.stream()
-						.anyMatch(pkt -> pkt.message instanceof AwaitRemote);
+				return token.request.messageEnvelope.messages.stream()
+						.anyMatch(message -> message instanceof AwaitRemote);
 			}
 		}
 
@@ -281,8 +281,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	 * sessions for the same logical Component, if any
 	 */
 	boolean isValidateClientInstanceUid(RemoteComponentRequest request) {
-		return request.messageEnvelope.packets.stream().anyMatch(
-				p -> handlerFor(p.message).isValidateClientInstanceUid());
+		return request.messageEnvelope.messages.stream().anyMatch(
+				message -> handlerFor(message).isValidateClientInstanceUid());
 	}
 
 	MessageHandlerServer<?> handlerFor(Message message) {

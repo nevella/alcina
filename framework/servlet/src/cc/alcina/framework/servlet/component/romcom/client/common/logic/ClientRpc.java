@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
@@ -27,12 +28,14 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AfterHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
@@ -178,11 +181,12 @@ public class ClientRpc {
 
 	ClientEventDispatch clientEventDispatch = new ClientEventDispatch();
 
+	RemoteComponentProtocol.Session session;
+
 	ClientRpc(RemoteComponentUi ui) {
 		this.ui = ui;
-		RemoteComponentProtocol.Session session = ReflectiveSerializer
-				.deserializeRpc(ClientUtils.wndString(
-						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
+		session = ReflectiveSerializer.deserializeRpc(ClientUtils.wndString(
+				RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
 		StringProtocol.Cache cacheFromLocalStorage = StringProtocol.Cache
 				.fromLocalStorage(session.componentPath);
 		transportLayer = new MessageTransportLayerClient(cacheFromLocalStorage);
@@ -191,6 +195,23 @@ public class ClientRpc {
 		exceptionHandler = new ExceptionHandler();
 		mutationConflictResolution = new MutationConflictResolutionClient();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
+		if (session.properties
+				.containsKey(RemoteComponentProtocol.FLAG_DEBUG_METRICS)) {
+			new MetricsLogger().bind();
+		}
+	}
+
+	class MetricsLogger implements
+			ProcessObserver<RemoteComponentProtocol.Message.AfterHandled> {
+		@Override
+		public void topicPublished(AfterHandled message) {
+			if (message.message instanceof Mutations) {
+				MessageHistory messageHistory = transportLayer
+						.getMessageHistory(message.message);
+				RemoteObjectModelComponentClient
+						.consoleLog(messageHistory.toString());
+			}
+		}
 	}
 
 	@Feature.Ref(Feature_Romcom_Impl._WindowState.class)

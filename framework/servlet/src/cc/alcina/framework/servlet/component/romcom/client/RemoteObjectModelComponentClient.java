@@ -25,6 +25,14 @@ public class RemoteObjectModelComponentClient implements EntryPoint {
     }
 	}-*/;
 
+	public static native void consoleLog(String s) /*-{
+    try {
+      $wnd.console.log(s);
+    } catch (e) {
+
+    }
+	}-*/;
+
 	private void init0() {
 		GWT.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 			@Override
