@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.protocol;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentSettings;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 
@@ -433,6 +435,30 @@ public class RemoteComponentProtocol {
 		 * Models the sequence index and the message source
 		 */
 		public MessageId messageId;
+
+		/*
+		 * Normally unused, for protocol/metrics debugging
+		 */
+		public MessageHistory messageHistory;
+
+		public Date creationDate;
+
+		public static class MessageCreated implements ContextObservable {
+			public Message message;
+
+			MessageCreated(Message message) {
+				this.message = message;
+			}
+		}
+
+		public Message() {
+			/*
+			 * used for history/metric/lifecycle tracing. The only current
+			 * observer is in the server environment context, which is *not*
+			 * where deseriailizaiton occurs
+			 */
+			new MessageCreated(this).publish();
+		}
 
 		public String toDebugString() {
 			return toString();

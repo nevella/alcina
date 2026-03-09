@@ -93,6 +93,9 @@ public class EnvironmentManager {
 	static Configuration.Key decoratorEventRecordingEnabled = Configuration
 			.key("decoratorEventRecordingEnabled");
 
+	public static final Configuration.Key debugRomcomMetrics = Configuration
+			.key("debugRomcomMetrics");
+
 	public static EnvironmentManager get() {
 		return Registry.impl(EnvironmentManager.class);
 	}

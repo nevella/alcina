@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -195,10 +196,14 @@ public class ClientRpc {
 		exceptionHandler = new ExceptionHandler();
 		mutationConflictResolution = new MutationConflictResolutionClient();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
-		if (session.properties
-				.containsKey(RemoteComponentProtocol.FLAG_DEBUG_METRICS)) {
+		if (isDebugMetrics()) {
 			new MetricsLogger().bind();
 		}
+	}
+
+	boolean isDebugMetrics() {
+		return session.properties
+				.containsKey(RemoteComponentProtocol.FLAG_DEBUG_METRICS);
 	}
 
 	class MetricsLogger implements
@@ -206,8 +211,9 @@ public class ClientRpc {
 		@Override
 		public void topicPublished(AfterHandled message) {
 			if (message.message instanceof Mutations) {
-				MessageHistory messageHistory = transportLayer
-						.getMessageHistory(message.message);
+				MessageHistory messageHistory = message.message.messageHistory;
+				messageHistory.thisMessageTransportHistory = transportLayer
+						.receiveChannel().getTransportHistory(message.message);
 				RemoteObjectModelComponentClient
 						.consoleLog(messageHistory.toString());
 			}
@@ -216,6 +222,9 @@ public class ClientRpc {
 
 	@Feature.Ref(Feature_Romcom_Impl._WindowState.class)
 	void prepareMessage(Message message) {
+		if (isDebugMetrics()) {
+			message.creationDate = new Date();
+		}
 		if (message instanceof Startup) {
 			((Startup) message).windowState = generateWindowState();
 		} else if (message instanceof Message.PrependWindowState) {

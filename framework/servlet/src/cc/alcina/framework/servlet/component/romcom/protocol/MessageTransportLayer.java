@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -320,6 +321,27 @@ public abstract class MessageTransportLayer {
 			}
 			return Ax.format("%s - %s", messageId, latestState);
 		}
+
+		public String toHistoryString(Date messageDate) {
+			FormatBuilder format = new FormatBuilder();
+			String latestState = "not sent";
+			if (sent != null) {
+				latestState = "sent";
+			}
+			if (received != null) {
+				latestState = "received";
+			}
+			if (published != null) {
+				latestState = "published";
+			}
+			format.line("%s - %s", messageId, latestState);
+			format.indent(2);
+			format.line("%s: %s", "created", Ax.appMillis(messageDate));
+			format.line("%s: %s", "sent", Ax.appMillis(sent));
+			format.line("%s: %s", "received", Ax.appMillis(received));
+			format.line("%s: %s", "published", Ax.appMillis(published));
+			return format.toString();
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)
@@ -570,6 +592,15 @@ public abstract class MessageTransportLayer {
 					toRemove.forEach(this::removeMessage);
 					new ActiveMessagesChanged().publish();
 				}
+			}
+		}
+
+		public TransportHistory getTransportHistory(Message message) {
+			synchronized (activeMessages) {
+				return activeMessages.stream()
+						.filter(m -> Objects.equals(m.message, message))
+						.map(mt -> mt.transportHistory).findFirst()
+						.orElse(null);
 			}
 		}
 	}
@@ -1106,61 +1137,61 @@ public abstract class MessageTransportLayer {
 		}
 	}
 
-	public MessageHistory getMessageHistory(Message message) {
-		return new MessageHistory(message);
-	}
+	/*
+@formatter:off
 
-	public class MessageHistory {
-		public Message message;
+Documents a client/server message lifecycle
 
-		MessageToken activeMessage;
+- originatingMessage (client event)
+  - event
+  - eventtime
+  - eventSent
+  - eventReceived
+  - eventPublished
+- thisMessage (server mutations)
+  - event
+  - eventtime
+  - eventSent
+  - eventReceived
+  - eventPublished [this last should be now when debugger is called]
+  
 
-		Message originatingEvent;
+@formatter:on
+ */
+	@Bean(PropertySource.FIELDS)
+	public static class MessageHistory {
+		public Message originatingMessage;
 
-		Date originatingEventSent;
+		public Message thisMessage;
 
-		Date originatingEventReceived;
+		public TransportHistory originatingMessageTransportHistory;
 
-		Date originatingEventPublished;
+		public TransportHistory thisMessageTransportHistory;
 
-		Date messageProcessed = new Date();
-
-		MessageHistory(Message message) {
-			this.message = message;
-			activeMessage = receiveChannel()
-					.getActiveMessage(message.messageId);
-			SendChannelId thisChannel = activeMessage.message.messageId.sendChannelId;
-			List<TransportHistory> transportsFromThis = activeMessage.envelope.transportHistories
-					.stream()
-					.filter(th -> th.messageId.sendChannelId == thisChannel
-							.oppositeEndpointId())
-					.toList();
-			List<MessageToken> transportTokens = transportsFromThis.stream()
-					.map(th -> sendChannel().getRemovedMessage(th.messageId))
-					.toList();
-			MessageToken lastToken = Ax.last(transportTokens);
-			if (lastToken != null) {
-				originatingEventSent = lastToken.transportHistory.sent;
-				originatingEventReceived = lastToken.transportHistory.received;
-				originatingEventPublished = lastToken.transportHistory.published;
-			}
-			int debug = 3;
+		public MessageHistory() {
 		}
 
 		@Override
 		public String toString() {
 			FormatBuilder format = new FormatBuilder();
-			format.appendKeyValues("Type", "MessageHistory", "Message",
-					message.toString());
+			format.appendKeyValues("Type", "MessageHistory");
 			format.newLine();
 			format.indent(2);
-			format.line("originatingEventSent: %s",
-					Ax.appMillis(originatingEventSent));
-			format.line("originatingEventReceived: %s",
-					Ax.appMillis(originatingEventReceived));
-			format.line("originatingEventPublished: %s",
-					Ax.appMillis(originatingEventPublished));
-			format.line("messageProcessed: %s", Ax.appMillis(messageProcessed));
+			format.appendKeyValues("Originating message",
+					originatingMessage == null ? "null" : originatingMessage);
+			format.newLine();
+			format.appendKeyValues("This message", thisMessage);
+			format.newLine();
+			format.appendKeyValues("Originating message history",
+					originatingMessageTransportHistory == null ? "null"
+							: originatingMessageTransportHistory
+									.toHistoryString(
+											originatingMessage.creationDate));
+			format.newLine();
+			format.appendKeyValues("This message history",
+					thisMessageTransportHistory == null ? "null"
+							: thisMessageTransportHistory
+									.toHistoryString(thisMessage.creationDate));
 			return format.toString();
 		}
 	}

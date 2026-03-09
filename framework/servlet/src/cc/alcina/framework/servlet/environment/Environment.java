@@ -55,6 +55,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.Resubmit;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
@@ -64,6 +65,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.MessageCreated;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolResponse;
@@ -823,12 +825,33 @@ class Environment {
 		queue.flush();
 	}
 
+	class MessageCreationObserver
+			implements ProcessObserver<Message.MessageCreated> {
+		@Override
+		public void topicPublished(MessageCreated messageCreated) {
+			if (!EnvironmentManager.debugRomcomMetrics.is()) {
+				return;
+			}
+			// check romcom thread
+			MessageHistory messageHistory = new MessageHistory();
+			Message message = messageCreated.message;
+			message.creationDate = new Date();
+			message.messageHistory = messageHistory;
+			messageHistory.thisMessage = message;
+			messageHistory.originatingMessage = queue.activeClientMessage;
+			messageHistory.originatingMessageTransportHistory = queue.transportLayer
+					.receiveChannel()
+					.getTransportHistory(queue.activeClientMessage);
+		}
+	}
+
 	private void enterContext() {
 		LooseContext.set(CONTEXT_ENVIRONMENT, this);
 		environmentRegistry = new EnvironmentRegistry();
 		EnvironmentRegistry.enter(environmentRegistry);
 		queue.transportLayer.registerInContext();
 		mutationConflictResolution = new MutationConflictResolutionServer();
+		new MessageCreationObserver().bind();
 		// the order - location, history, client, document - is necessary
 		location = Window.Location.contextProvider.createFrame(null);
 		navigator = Window.Navigator.contextProvider.createFrame(null);

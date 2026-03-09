@@ -232,6 +232,8 @@ class ClientExecutionQueue implements Runnable {
 
 	MessageId highestExecutingCounterpartId;
 
+	Message activeClientMessage;
+
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
 		StringProtocol.Cache cacheFromRegistry = StringProtocol.Cache
@@ -432,6 +434,7 @@ class ClientExecutionQueue implements Runnable {
 	void handleFromClientMessageOnThread(MessageProcessingToken token) {
 		try {
 			Message message = token.message;
+			this.activeClientMessage = message;
 			if (!message.sync) {
 				highestExecutingCounterpartId = message.messageId;
 			}
@@ -448,6 +451,8 @@ class ClientExecutionQueue implements Runnable {
 			logger.warn(
 					"Exception in server queue (in response to invokesync)");
 			onLoopException(e);
+		} finally {
+			this.activeClientMessage = null;
 		}
 		token.messageConsumed();
 	}
