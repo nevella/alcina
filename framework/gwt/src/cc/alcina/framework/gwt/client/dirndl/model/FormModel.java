@@ -69,7 +69,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
@@ -1058,8 +1057,8 @@ public class FormModel extends Model
 
 	@Override
 	public void onNodeContext(NodeContext event) {
-		node.getResolver().registerService(NodeEditorContextService.class,
-				this);
+		event.getContext().node.getResolver()
+				.registerService(NodeEditorContextService.class, this);
 	}
 
 	public static class LabelModel extends Model {

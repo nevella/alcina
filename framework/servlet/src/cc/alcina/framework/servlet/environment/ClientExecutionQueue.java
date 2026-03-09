@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.concurrent.BlockingQueue;
@@ -434,6 +435,9 @@ class ClientExecutionQueue implements Runnable {
 	void handleFromClientMessageOnThread(MessageProcessingToken token) {
 		try {
 			Message message = token.message;
+			if (EnvironmentManager.debugRomcomMetrics.is()) {
+				message.handlerStarted = new Date();
+			}
 			this.activeClientMessage = message;
 			if (!message.sync) {
 				highestExecutingCounterpartId = message.messageId;

@@ -443,6 +443,8 @@ public class RemoteComponentProtocol {
 
 		public Date creationDate;
 
+		public Date handlerStarted;
+
 		public static class MessageCreated implements ContextObservable {
 			public Message message;
 

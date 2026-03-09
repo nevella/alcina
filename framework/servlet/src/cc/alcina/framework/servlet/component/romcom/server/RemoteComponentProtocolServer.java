@@ -43,8 +43,6 @@ public class RemoteComponentProtocolServer {
 
 		public MessageProcessingToken(Message message) {
 			this.messageHandler = null;
-			// Registry.impl(Handler.class,
-			// message.getClass());
 			this.message = message;
 			this.latch = new CountDownLatch(1);
 		}

@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.ContextObservable;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -265,6 +266,8 @@ public abstract class MessageTransportLayer {
 
 		public Date published;
 
+		public Date handlerStarted;
+
 		public Date sendExceptionDate;
 
 		public void onBeforeSendReceivedMessageHistory(EnvelopeId envelopeId) {
@@ -309,6 +312,12 @@ public abstract class MessageTransportLayer {
 		}
 
 		String toTransportDebugString() {
+			String latestState = getLatestState();
+			return Ax.format("%s - %s", messageId, latestState);
+		}
+
+		@Property.Not
+		String getLatestState() {
 			String latestState = "not sent";
 			if (sent != null) {
 				latestState = "sent";
@@ -319,27 +328,23 @@ public abstract class MessageTransportLayer {
 			if (published != null) {
 				latestState = "published";
 			}
-			return Ax.format("%s - %s", messageId, latestState);
+			if (handlerStarted != null) {
+				latestState = "handlerStarted";
+			}
+			return latestState;
 		}
 
 		public String toHistoryString(Date messageDate) {
 			FormatBuilder format = new FormatBuilder();
-			String latestState = "not sent";
-			if (sent != null) {
-				latestState = "sent";
-			}
-			if (received != null) {
-				latestState = "received";
-			}
-			if (published != null) {
-				latestState = "published";
-			}
+			String latestState = getLatestState();
 			format.line("%s - %s", messageId, latestState);
 			format.indent(2);
 			format.line("%s: %s", "created", Ax.appMillis(messageDate));
 			format.line("%s: %s", "sent", Ax.appMillis(sent));
 			format.line("%s: %s", "received", Ax.appMillis(received));
 			format.line("%s: %s", "published", Ax.appMillis(published));
+			format.line("%s: %s", "handlerStarted",
+					Ax.appMillis(handlerStarted));
 			return format.toString();
 		}
 	}

@@ -63,9 +63,19 @@ public class OverlayPosition {
 			 */
 			@Override
 			void apply(OverlayPosition overlayPosition) {
+				if (!overlayPosition.toElement.isAttached()) {
+					return;
+				}
 				DomRect viewport = Window.getRect();
 				DomRect toRect = overlayPosition.toElement
 						.getBoundingClientRect();
+				/*
+				 * the checks are to handle element detach during the (async)
+				 * process
+				 */
+				if (toRect == null) {
+					return;
+				}
 				/*
 				 * x
 				 */
