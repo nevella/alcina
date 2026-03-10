@@ -389,11 +389,12 @@ public class Shell {
 					toHost = Configuration.get(RsyncCommand.class,
 							hostConfigKey);
 				}
-				to = Ax.format("root@%s:%s", toHost, to);
+				String user = toHost.contains("@") ? "" : "root@";
+				to = Ax.format("%s%s:%s", user, toHost, to);
 			}
 			if (fromHost != null) {
-				String sshConfigKey = "sshCommand." + toHost;
-				String hostConfigKey = "host." + toHost;
+				String sshConfigKey = "sshCommand." + fromHost;
+				String hostConfigKey = "host." + fromHost;
 				if (Configuration.has(RsyncCommand.class, sshConfigKey)) {
 					sshOptions = Configuration.get(RsyncCommand.class,
 							sshConfigKey);
@@ -402,7 +403,8 @@ public class Shell {
 					fromHost = Configuration.get(RsyncCommand.class,
 							hostConfigKey);
 				}
-				from = Ax.format("root@%s:%s", fromHost, from);
+				String user = fromHost.contains("@") ? "" : "root@";
+				from = Ax.format("%s%s:%s", user, fromHost, from);
 			}
 			String flags = "-av";
 			if (zip) {
@@ -440,7 +442,9 @@ public class Shell {
 			if (Ax.notBlank(sshOptions)) {
 				flags += " " + sshOptions;
 			}
-			Ax.out("rsync: %s -> %s", from, to);
+			if (!mute) {
+				Ax.out("rsync: %s -> %s", from, to);
+			}
 			String command = Ax.format("rsync %s %s %s;", flags, from, to);
 			return command;
 		}
@@ -598,9 +602,12 @@ public class Shell {
 			if (Configuration.has(SshCommand.class, hostConfigKey)) {
 				host = Configuration.get(SshCommand.class, hostConfigKey);
 			}
-			Ax.out("ssh : exec : %s -> %s", host, command);
-			String script = Ax.format("ssh %s root@%s \"%s\"",
-					Ax.blankToEmpty(sshOptions), host, command);
+			if (!mute) {
+				Ax.out("ssh : exec : %s -> %s", host, command);
+			}
+			String user = host.contains("@") ? "" : "root@";
+			String script = Ax.format("ssh %s %s%s \"%s\"",
+					Ax.blankToEmpty(sshOptions), user, host, command);
 			Shell shell = new Shell();
 			shell.logLaunchMessage = false;
 			if (mute) {
