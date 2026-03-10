@@ -2308,15 +2308,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		<T extends Entity> List<T> loadEntities() throws Exception {
 			boolean ignorePropertyChanges = TransformManager.get()
 					.isIgnorePropertyChanges();
+			boolean inLazyPropertyLoad = LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES
+					.is();
 			try {
 				connection = getConnection();
 				TransformManager.get().setIgnorePropertyChanges(true);
 				List<T> result = (List<T>) (List<?>) loadHasIds();
-				if (store.initialised || resolveRefs) {
-					entityRefs.resolve();
-				}
-				if (store.initialised) {
-					result.forEach(e -> store.index(e, true, null, true));
+				if (!inLazyPropertyLoad) {
+					if (store.initialised || resolveRefs) {
+						entityRefs.resolve();
+					}
+					if (store.initialised) {
+						result.forEach(e -> store.index(e, true, null, true));
+					}
 				}
 				return result;
 			} finally {
