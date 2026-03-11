@@ -20,7 +20,9 @@ public class SequenceComponentServer extends Model.Fields
 	}
 
 	@Override
-	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit) {
-		return component.provideFilteredSequenceElements(ignoreRowsLimit);
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit,
+			boolean onlySelectedIfAnySelected) {
+		return component.provideFilteredSequenceElements(ignoreRowsLimit,
+				onlySelectedIfAnySelected);
 	}
 }

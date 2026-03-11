@@ -319,7 +319,7 @@ public class SequenceArea extends Model.Fields
 	void putSequence(Sequence sequence) {
 		properties().sequence().set(sequence);
 		List<?> filteredSequenceElements = filteredSequenceElements(sequence,
-				false);
+				false, false);
 		properties().filteredSequenceElements()
 				.setIfNotEqual(filteredSequenceElements);
 		emitEvent(SequenceEvents.SequenceChanged.class, sequence);
@@ -385,8 +385,8 @@ public class SequenceArea extends Model.Fields
 		}
 	}
 
-	List<?> filteredSequenceElements(Sequence sequence,
-			boolean ignoreRowsLimit) {
+	List<?> filteredSequenceElements(Sequence sequence, boolean ignoreRowsLimit,
+			boolean onlySelectedIfAnySelected) {
 		Stream<?> stream = sequence.getElements().stream();
 		SequenceSearchDefinition search = getPlace().search;
 		if (search != null) {
@@ -411,6 +411,13 @@ public class SequenceArea extends Model.Fields
 				.filter(new IndexPredicate(getPlace().selectedRange))
 				.filter(e -> query.test(sequenceRowTransform.apply(e)))
 				.limit(limit).collect(Collectors.toList());
+		if (onlySelectedIfAnySelected) {
+			List<?> selectedElements = sequenceTable.selectionSupport
+					.getSelectedModels();
+			if (selectedElements.size() > 0) {
+				filteredElements = selectedElements;
+			}
+		}
 		return filteredElements;
 	}
 
@@ -437,8 +444,10 @@ public class SequenceArea extends Model.Fields
 	}
 
 	@Override
-	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit) {
-		return filteredSequenceElements(sequence, true);
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit,
+			boolean onlySelectedIfAnySelected) {
+		return filteredSequenceElements(sequence, true,
+				onlySelectedIfAnySelected);
 	}
 
 	@Property.Not
