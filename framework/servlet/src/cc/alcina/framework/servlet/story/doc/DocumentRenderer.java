@@ -86,17 +86,17 @@ public class DocumentRenderer implements StoryDocRenderer {
 		@Directed(tag = "doc-header")
 		class Header extends Model.All {
 			Header() {
-				heading2 = part.rendererConfiguration.storyTitle;
-				if (heading2 == null) {
+				heading = part.rendererConfiguration.storyTitle;
+				if (heading == null) {
 					if (observables.isEmpty()) {
-						heading2 = "[No observables]";
+						heading = "[No observables]";
 					} else {
-						heading2 = observables.get(0).path();
+						heading = observables.get(0).filterPathOrPath();
 					}
 				}
 			}
 
-			String heading2;
+			String heading;
 
 			@Directed(tag = "links")
 			@Directed(

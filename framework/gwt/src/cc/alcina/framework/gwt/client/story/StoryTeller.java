@@ -70,6 +70,133 @@ public class StoryTeller {
 	 */
 	public class Visit
 			implements HasProcessNode<Visit>, HasDisplayName, PathDisplayName {
+		public class Result {
+			public class Log {
+				public class Builder {
+					private Object[] args;
+
+					private String template;
+
+					public Builder level(Level level) {
+						Log.this.level = level;
+						return this;
+					}
+
+					public Builder throwable(Throwable throwable) {
+						Log.this.throwable = throwable;
+						return this;
+					}
+
+					public Builder template(String template) {
+						this.template = template;
+						return this;
+					}
+
+					public Builder args(Object... args) {
+						this.args = args;
+						return this;
+					}
+
+					public Builder types(LogType... types) {
+						Log.this.types = List.of(types);
+						return this;
+					}
+
+					public void log() {
+						Log.this.time = System.currentTimeMillis();
+						Log.this.message = Ax.format(template, args);
+						echo(Log.this);
+					}
+				}
+
+				public long time;
+
+				public System.Logger.Level level = Level.INFO;
+
+				public Throwable throwable;
+
+				public String message;
+
+				List<LogType> types;
+
+				Log() {
+				}
+
+				public Builder builder() {
+					return new Builder();
+				}
+
+				public Visit getVisit() {
+					return Visit.this;
+				}
+
+				public boolean hasType(LogType type) {
+					return types != null && types.contains(type);
+				}
+			}
+
+			public boolean ok = true;
+
+			public FilteredType filteredType = FilteredType.NOT;
+
+			public Boolean testResult;
+
+			public Throwable throwable;
+
+			public List<Log> logs = new ArrayList<>();
+
+			Result() {
+			}
+
+			public boolean isFiltered() {
+				return filteredType != FilteredType.NOT;
+			}
+
+			/**
+			 * The pattern used to emit log records is call this method,
+			 * populate the entry and call log - e.g.
+			 * 
+			 * <pre>
+			 * <code>
+			 * visit.result.logEntry().level(level).template(template).args(args)
+					.log();
+			 * </code>
+			 * </pre>
+			 * 
+			 * @return the Log.Builder builder instance
+			 */
+			public Log.Builder logEntry() {
+				Log log = new Log();
+				logs.add(log);
+				return log.builder();
+			}
+		}
+
+		public class Ancestors {
+			boolean includeSelf;
+
+			public Ancestors withIncludeSelf() {
+				includeSelf = true;
+				return this;
+			}
+
+			public Stream<Visit> stream() {
+				List<Visit> ancestors = new ArrayList<>();
+				Visit cursor = Visit.this;
+				while (cursor != null) {
+					if (includeSelf || cursor != Visit.this) {
+						ancestors.add(cursor);
+					}
+					cursor = cursor.getParent();
+				}
+				return ancestors.stream();
+			}
+
+			public boolean hasName(String name) {
+				return stream().anyMatch(v -> v.displayName().equals(name));
+			}
+		}
+
 		public Point point;
 
 		Node node;
@@ -77,6 +204,30 @@ public class StoryTeller {
 		private Iterator<? extends Point> childItr;
 
 		public Result result;
+
+		/**
+		 * A free-form collection for say routing screenshots to the
+		 * documentation generator
+		 */
+		public List<?> processOutputs = new ArrayList<>();
+
+		int requiresIdx = 0;
+
+		List<Class<? extends Story.State>> requires;
+
+		boolean addedChildOfCurrentVisist;
+
+		List<Visit> initialChildren = null;
+
+		Visit(Node parentNode, Point point) {
+			this.node = parentNode.add(this);
+			this.point = point;
+			result = new Result();
+		}
+
+		Visit(Visit parent, Point point) {
+			this(parent.node, point);
+		}
 
 		public String getDisplayName() {
 			return Ax.blankTo(point.getLabel(), point.getName());
@@ -90,114 +241,9 @@ public class StoryTeller {
 			return point.getDescription();
 		}
 
-		/**
-		 * A free-form collection for say routing screenshots to the
-		 * documentation generator
-		 */
-		public List<?> processOutputs = new ArrayList<>();
-
-		Visit(Node parentNode, Point point) {
-			this.node = parentNode.add(this);
-			this.point = point;
-			result = new Result();
-		}
-
-		Visit(Visit parent, Point point) {
-			this(parent.node, point);
-		}
-
 		@Override
 		public Node processNode() {
 			return node;
-		}
-
-		/*
-		 * return true if the action was performed
-		 */
-		boolean performAction() {
-			if (result.isFiltered()) {
-				return false;
-				//
-			} else {
-				new StoryPerformer().perform(this);
-				return true;
-			}
-		}
-
-		void add(Point point) {
-			// will be added to 'initialChildren' via processNode backing
-			// structure
-			Visit visit = new Visit(this, point);
-			if (initialChildren != null) {
-				addedChildOfCurrentVisist = true;
-				/* must also add to the traversal */
-				state.onChildOfCurrentVisitAdded(visit);
-			}
-		}
-
-		int requiresIdx = 0;
-
-		List<Class<? extends Story.State>> requires;
-
-		/*
-		 * For pre-story filter generation
-		 */
-		void populateDirectChildren() {
-			List<? extends Point> children = point.getChildren();
-			children.forEach(this::add);
-		}
-
-		void populateInitialChildren() {
-			/*
-			 * Make a copy, since it may be modified
-			 */
-			requires = point.getRequires().stream()
-					.collect(Collectors.toList());
-			List<? extends Point> children = point.getChildren();
-			if (requires == null) {
-				requires = List.of();
-			}
-			if (children == null) {
-				children = List.of();
-			}
-			childItr = children.iterator();
-			addPending();
-		}
-
-		boolean addedChildOfCurrentVisist;
-
-		/*
-		 * Either add the first unresolved dependency, or all children
-		 * 
-		 * Adding this way (rather than all at once) ensures that repeated
-		 * dependencies are evaluated in the correct order
-		 */
-		void addPending() {
-			while (requiresIdx < requires.size()) {
-				Class<? extends Story.State> requireElement = requires
-						.get(requiresIdx++);
-				if (!state.isResolved(requireElement)) {
-					Provider provider = context
-							.resolveSatisfies(requireElement);
-					provider.withContext(context);
-					add(provider);
-					return;
-				}
-			}
-			while (childItr.hasNext()) {
-				add(childItr.next());
-			}
-		}
-
-		List<Visit> initialChildren = null;
-
-		List<Visit> getInitialChildren() {
-			if (initialChildren == null) {
-				initialChildren = processNode().getChildren().stream()
-						.map(n -> (Visit) n.getValue())
-						.collect(Collectors.toList());
-			}
-			return initialChildren;
 		}
 
 		@Override
@@ -246,114 +292,8 @@ public class StoryTeller {
 			}
 		}
 
-		public class Result {
-			public boolean ok = true;
-
-			public FilteredType filteredType = FilteredType.NOT;
-
-			public boolean isFiltered() {
-				return filteredType != FilteredType.NOT;
-			}
-
-			public Boolean testResult;
-
-			public Throwable throwable;
-
-			public List<Log> logs = new ArrayList<>();
-
-			Result() {
-			}
-
-			/**
-			 * The pattern used to emit log records is call this method,
-			 * populate the entry and call log - e.g.
-			 * 
-			 * <pre>
-			 * <code>
-			 * visit.result.logEntry().level(level).template(template).args(args)
-					.log();
-			 * </code>
-			 * </pre>
-			 * 
-			 * @return the Log.Builder builder instance
-			 */
-			public Log.Builder logEntry() {
-				Log log = new Log();
-				logs.add(log);
-				return log.builder();
-			}
-
-			public class Log {
-				Log() {
-				}
-
-				public long time;
-
-				public System.Logger.Level level = Level.INFO;
-
-				public Throwable throwable;
-
-				public String message;
-
-				List<LogType> types;
-
-				public Builder builder() {
-					return new Builder();
-				}
-
-				public class Builder {
-					private Object[] args;
-
-					private String template;
-
-					public Builder level(Level level) {
-						Log.this.level = level;
-						return this;
-					}
-
-					public Builder throwable(Throwable throwable) {
-						Log.this.throwable = throwable;
-						return this;
-					}
-
-					public Builder template(String template) {
-						this.template = template;
-						return this;
-					}
-
-					public Builder args(Object... args) {
-						this.args = args;
-						return this;
-					}
-
-					public Builder types(LogType... types) {
-						Log.this.types = List.of(types);
-						return this;
-					}
-
-					public void log() {
-						Log.this.time = System.currentTimeMillis();
-						Log.this.message = Ax.format(template, args);
-						echo(Log.this);
-					}
-				}
-
-				public Visit getVisit() {
-					return Visit.this;
-				}
-
-				public boolean hasType(LogType type) {
-					return types != null && types.contains(type);
-				}
-			}
-		}
-
 		public int depth() {
 			return processNode().depth();
-		}
-
-		StoryTeller teller() {
-			return StoryTeller.this;
 		}
 
 		public void onActionTestResult(boolean testResult) {
@@ -409,37 +349,97 @@ public class StoryTeller {
 			return point.getClass();
 		}
 
-		public class Ancestors {
-			boolean includeSelf;
-
-			public Ancestors withIncludeSelf() {
-				includeSelf = true;
-				return this;
-			}
-
-			public Stream<Visit> stream() {
-				List<Visit> ancestors = new ArrayList<>();
-				Visit cursor = Visit.this;
-				while (cursor != null) {
-					if (includeSelf || cursor != Visit.this) {
-						ancestors.add(cursor);
-					}
-					cursor = cursor.getParent();
-				}
-				return ancestors.stream();
-			}
-
-			public boolean hasName(String name) {
-				return stream().anyMatch(v -> v.displayName().equals(name));
-			}
-		}
-
 		public Ancestors ancestors() {
 			return new Ancestors();
 		}
 
 		public void removeContextAttributes() {
 			new StoryPerformer().removeContextAttributes(this);
+		}
+
+		/*
+		 * return true if the action was performed
+		 */
+		boolean performAction() {
+			if (result.isFiltered()) {
+				return false;
+				//
+			} else {
+				new StoryPerformer().perform(this);
+				return true;
+			}
+		}
+
+		void add(Point point) {
+			// will be added to 'initialChildren' via processNode backing
+			// structure
+			Visit visit = new Visit(this, point);
+			if (initialChildren != null) {
+				addedChildOfCurrentVisist = true;
+				/* must also add to the traversal */
+				state.onChildOfCurrentVisitAdded(visit);
+			}
+		}
+
+		/*
+		 * For pre-story filter generation
+		 */
+		void populateDirectChildren() {
+			List<? extends Point> children = point.getChildren();
+			children.forEach(this::add);
+		}
+
+		void populateInitialChildren() {
+			/*
+			 * Make a copy, since it may be modified
+			 */
+			requires = point.getRequires().stream()
+					.collect(Collectors.toList());
+			List<? extends Point> children = point.getChildren();
+			if (requires == null) {
+				requires = List.of();
+			}
+			if (children == null) {
+				children = List.of();
+			}
+			childItr = children.iterator();
+			addPending();
+		}
+
+		/*
+		 * Either add the first unresolved dependency, or all children
+		 * 
+		 * Adding this way (rather than all at once) ensures that repeated
+		 * dependencies are evaluated in the correct order
+		 */
+		void addPending() {
+			while (requiresIdx < requires.size()) {
+				Class<? extends Story.State> requireElement = requires
+						.get(requiresIdx++);
+				if (!state.isResolved(requireElement)) {
+					Provider provider = context
+							.resolveSatisfies(requireElement);
+					provider.withContext(context);
+					add(provider);
+					return;
+				}
+			}
+			while (childItr.hasNext()) {
+				add(childItr.next());
+			}
+		}
+
+		List<Visit> getInitialChildren() {
+			if (initialChildren == null) {
+				initialChildren = processNode().getChildren().stream()
+						.map(n -> (Visit) n.getValue())
+						.collect(Collectors.toList());
+			}
+			return initialChildren;
+		}
+
+		public StoryTeller teller() {
+			return StoryTeller.this;
 		}
 	}
 
@@ -456,10 +456,6 @@ public class StoryTeller {
 	}
 
 	public class State {
-		public Story story;
-
-		SubtreeFilter subtreeFilter = new SubtreeFilter();
-
 		class SubtreeFilter {
 			List<Class<? extends Point>> restrictionAncestors = null;
 
@@ -521,6 +517,26 @@ public class StoryTeller {
 			}
 		}
 
+		class BeforeNodeExitListener implements TopicListener<Visit> {
+			@Override
+			public void topicPublished(Visit visit) {
+				updateLocation(visit);
+				performAction(visit);
+				removeContextAttributes(visit);
+			}
+		}
+
+		class AtEndOfNodeChildrenListener implements TopicListener<Visit> {
+			@Override
+			public void topicPublished(Visit visit) {
+				visit.addPending();
+			}
+		}
+
+		public Story story;
+
+		SubtreeFilter subtreeFilter = new SubtreeFilter();
+
 		long start;
 
 		DepthFirstTraversal<Visit> traversal;
@@ -539,22 +555,6 @@ public class StoryTeller {
 			return traversal.current();
 		}
 
-		class BeforeNodeExitListener implements TopicListener<Visit> {
-			@Override
-			public void topicPublished(Visit visit) {
-				updateLocation(visit);
-				performAction(visit);
-				removeContextAttributes(visit);
-			}
-		}
-
-		class AtEndOfNodeChildrenListener implements TopicListener<Visit> {
-			@Override
-			public void topicPublished(Visit visit) {
-				visit.addPending();
-			}
-		}
-
 		public <T> void setAttribute(Class<? extends Story.Attribute<T>> key,
 				T value) {
 			attributes.put(key, value);
@@ -562,23 +562,6 @@ public class StoryTeller {
 
 		public boolean isResolved(Class<? extends Story.State> requires) {
 			return resolvedStates.contains(requires);
-		}
-
-		void onChildOfCurrentVisitAdded(Visit visit) {
-			traversal.add(visit);
-		}
-
-		void init(Visit visit) {
-			traversal = new DepthFirstTraversal<>(visit,
-					v -> v.getInitialChildren());
-			traversal.topicAtEndOfChildIterator
-					.add(new AtEndOfNodeChildrenListener());
-			traversal.topicBeforeNodeExit.add(new BeforeNodeExitListener());
-		}
-
-		Visit next() {
-			traversal.next();
-			return current();
 		}
 
 		public void dependencyResolved(Provider provider) {
@@ -614,15 +597,30 @@ public class StoryTeller {
 		public void removeAttribute(Class<? extends Attribute<?>> clazz) {
 			attributes.remove(clazz);
 		}
+
+		void onChildOfCurrentVisitAdded(Visit visit) {
+			traversal.add(visit);
+		}
+
+		void init(Visit visit) {
+			traversal = new DepthFirstTraversal<>(visit,
+					v -> v.getInitialChildren());
+			traversal.topicAtEndOfChildIterator
+					.add(new AtEndOfNodeChildrenListener());
+			traversal.topicBeforeNodeExit.add(new BeforeNodeExitListener());
+		}
+
+		Visit next() {
+			traversal.next();
+			return current();
+		}
 	}
 
-	TellerContext context;
-
-	State state;
-
-	VisitFilter filter;
-
-	public Class<? extends Point> restrictToPoint;
+	public static class StoryIncomplete extends RuntimeException {
+		public StoryIncomplete(String message) {
+			super(message);
+		}
+	}
 
 	class VisitFilter {
 		/*
@@ -659,6 +657,14 @@ public class StoryTeller {
 			return parentVisit.isExitChildSequence(previousSiblingVisit);
 		}
 	}
+
+	TellerContext context;
+
+	State state;
+
+	VisitFilter filter;
+
+	public Class<? extends Point> restrictToPoint;
 
 	public StoryTeller(TellerContext context) {
 		this.context = context;
@@ -708,6 +714,11 @@ public class StoryTeller {
 		}
 	}
 
+	public <T> void setAttribute(Class<? extends Story.Attribute<T>> key,
+			T value) {
+		state.setAttribute(key, value);
+	}
+
 	void tell() {
 		state.start = System.currentTimeMillis();
 		new BeforeStory().publish();
@@ -740,12 +751,6 @@ public class StoryTeller {
 		}
 	}
 
-	public static class StoryIncomplete extends RuntimeException {
-		public StoryIncomplete(String message) {
-			super(message);
-		}
-	}
-
 	void updateLocation(Visit visit) {
 		Location location = visit.getLocation();
 		if (location != null) {
@@ -772,11 +777,6 @@ public class StoryTeller {
 		}
 		visit.result.ok = false;
 		state.exitVisit = visit;
-	}
-
-	public <T> void setAttribute(Class<? extends Story.Attribute<T>> key,
-			T value) {
-		state.setAttribute(key, value);
 	}
 
 	void removeContextAttributes(Visit visit) {

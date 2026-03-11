@@ -41,7 +41,7 @@ public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		}
 
 		@Decl.Location.CurrentFocus
-		@Decl.Action.UI.Keys(value = "a", clear = false)
+		@Decl.Action.UI.KeysWithClear("a")
 		static class SendNameChar2 extends Waypoint {
 		}
 

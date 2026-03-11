@@ -549,6 +549,23 @@ public interface Story {
 				@Documented
 				@Target({ ElementType.TYPE })
 				@Registration(DeclarativeAction.class)
+				public @interface KeysWithClear {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<KeysWithClear> {
+						@Override
+						public Story.Action convert(KeysWithClear ann) {
+							return new Story.Action.Ui.Keys().withClear(true)
+									.withText(ann.value());
+						}
+					}
+				}
+
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
 				public @interface KeyConstant {
 					SeleniumKeys value() default SeleniumKeys.NULL;
 

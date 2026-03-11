@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -448,9 +449,6 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 	@Override
 	public void setValue(String value) {
-		if (value != null && value.contains(".not")) {
-			int debug = 3;
-		}
 		if (provideIsBound() && !Objects.equals(value, currentValue)) {
 			provideElement().setPropertyString("value", value);
 			currentValue = value;
@@ -460,7 +458,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 	void updateSize() {
 		if (ensureContentVisible) {
-			Scheduler.get().scheduleDeferred(() -> {
+			Client.RenderState.queueWithRenderedState(() -> {
 				if (!provideIsBound()) {
 					return;
 				}

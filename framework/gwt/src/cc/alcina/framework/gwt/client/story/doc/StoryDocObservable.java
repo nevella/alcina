@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IdCounter;
+import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 
 @Bean(PropertySource.FIELDS)
@@ -38,6 +39,8 @@ public abstract class StoryDocObservable
 
 	public List<String> ancestorClassNames;
 
+	public List<String> filterPointDisplayNames;
+
 	public long index;
 
 	static transient IdCounter counter = new IdCounter();
@@ -61,10 +64,19 @@ public abstract class StoryDocObservable
 		this.visit = visit;
 		ancestorDisplayNames = new ArrayList<>();
 		ancestorClassNames = new ArrayList<>();
+		filterPointDisplayNames = new ArrayList<>();
 		Visit cursor = visit;
+		Class<? extends Point> restrictToPoint = visit.teller().restrictToPoint;
+		boolean seenPointRestriction = false;
 		while (cursor != null) {
 			ancestorDisplayNames.add(0, cursor.getDisplayName());
 			ancestorClassNames.add(0, cursor.point.getClass().getName());
+			if (cursor.point.getClass() == restrictToPoint) {
+				seenPointRestriction = true;
+			}
+			if (seenPointRestriction) {
+				filterPointDisplayNames.add(0, cursor.getDisplayName());
+			}
 			Node parentNode = cursor.processNode().getParent();
 			Object value = parentNode == null ? null : parentNode.getValue();
 			if (value instanceof Visit) {
@@ -91,5 +103,14 @@ public abstract class StoryDocObservable
 		}
 
 		public String message;
+	}
+
+	public String filterPathOrPath() {
+		if (filterPointDisplayNames.size() > 0) {
+			return filterPointDisplayNames.stream().skip(1)
+					.collect(Collectors.joining(" > "));
+		} else {
+			return path();
+		}
 	}
 }

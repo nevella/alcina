@@ -47,4 +47,14 @@ public class Waypoints {
 	@Decl.Action.UI.CloseWindow
 	public static class CloseWindow extends Waypoint {
 	}
+
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN)
+	public static class EnterEnter extends Waypoint {
+	}
+
+	@Decl.Location.Marked
+	@Decl.Action.UI.AwaitAbsent
+	public static class AwaitMarkRemoval extends Waypoint {
+	}
 }
