@@ -17,4 +17,6 @@ public class WdContextPart implements TellerContext.Part {
 	public int defaultTimeout = 5;
 
 	public boolean waitForEmptyRocomEventQueue = false;
+
+	public TellerContext.Device device = TellerContext.Device.Desktop;
 }

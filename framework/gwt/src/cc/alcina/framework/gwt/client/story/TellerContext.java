@@ -34,6 +34,13 @@ public interface TellerContext {
 	public interface Part {
 	}
 
+	/*
+	 * could be much larger obviously
+	 */
+	public enum Device {
+		Desktop, Tablet, Phone;
+	}
+
 	public interface PartConfigurable<P extends Part> {
 		void configure(StoryTeller teller, P part);
 	}

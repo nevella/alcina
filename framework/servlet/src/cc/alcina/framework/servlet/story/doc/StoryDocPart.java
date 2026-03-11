@@ -23,7 +23,7 @@ public class StoryDocPart implements TellerContext.Part {
 
 		public String storyTitle;
 
-		public String device = "Desktop";
+		public TellerContext.Device device = TellerContext.Device.Desktop;
 
 		public String build;
 

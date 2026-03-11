@@ -66,7 +66,7 @@ public class DocumentRenderer implements StoryDocRenderer {
 		@Directed.Transform(Tables.Single.class)
 		class ReportMetadata extends Model.All {
 			ReportMetadata() {
-				device = part.rendererConfiguration.device;
+				device = part.rendererConfiguration.device.toString();
 				build = part.rendererConfiguration.build;
 				date = part.rendererConfiguration.date;
 			}
