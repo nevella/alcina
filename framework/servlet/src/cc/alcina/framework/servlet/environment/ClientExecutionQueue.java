@@ -1,8 +1,9 @@
 package cc.alcina.framework.servlet.environment;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -14,9 +15,14 @@ import com.google.gwt.dom.client.LocalDom;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DatePair;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory.ExecutionQueueState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
@@ -235,6 +241,40 @@ class ClientExecutionQueue implements Runnable {
 
 	Message activeClientMessage;
 
+	class ProcessSnapshot extends Thread {
+		ProcessSnapshot() {
+			setDaemon(true);
+			setPriority(Thread.MAX_PRIORITY);
+			setName(executionThread.getName() + "-process-snapshot");
+		}
+
+		List<ExecutionQueueState> queueStates = new ArrayList<>();
+
+		synchronized List<ExecutionQueueState> getQueueStates(DatePair range) {
+			return queueStates.stream().filter(qs -> range.contains(qs.date))
+					.toList();
+		}
+
+		@Override
+		public void run() {
+			try {
+				while (!finished) {
+					ExecutionQueueState stackshot = new ExecutionQueueState();
+					stackshot.trace = SEUtilities
+							.dumpStackTrace(executionThread);
+					synchronized (this) {
+						queueStates.add(stackshot);
+					}
+					Thread.sleep(50);
+				}
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	ProcessSnapshot processSnapshot;
+
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
 		StringProtocol.Cache cacheFromRegistry = StringProtocol.Cache
@@ -286,11 +326,22 @@ class ClientExecutionQueue implements Runnable {
 		executionThread.setDaemon(true);
 		executionThread.setPriority(Thread.MAX_PRIORITY);
 		executionThread.start();
+		if (EnvironmentManager.debugRomcomMetrics.is()) {
+			processSnapshot = new ProcessSnapshot();
+			processSnapshot.start();
+		}
 	}
 
 	void onMessageReceived(Message message) {
 		MessageHandlerServer handler = MessageHandlerServer.forMessage(message);
 		MessageProcessingToken token = new MessageProcessingToken(message);
+		if (EnvironmentManager.debugRomcomMetrics.is()) {
+			message.messageHistory = new MessageHistory();
+			message.messageHistory.originatingMessage = message;
+			TransportHistory transportHistory = transportLayer.receiveChannel()
+					.getTransportHistory(message);
+			message.messageHistory.originatingMessageTransportHistory = transportHistory;
+		}
 		if (handler.isSynchronous()) {
 			handleFromClientMessageOnThread(token);
 		} else {
@@ -373,7 +424,9 @@ class ClientExecutionQueue implements Runnable {
 					 */
 					transportLayer.flush();
 					synchronized (asyncDispatchQueue) {
-						asyncDispatchQueue.wait(1000);
+						if (asyncDispatchQueue.isEmpty()) {
+							asyncDispatchQueue.wait(1000);
+						}
 					}
 				}
 			} catch (InterruptedException e) {
@@ -435,9 +488,6 @@ class ClientExecutionQueue implements Runnable {
 	void handleFromClientMessageOnThread(MessageProcessingToken token) {
 		try {
 			Message message = token.message;
-			if (EnvironmentManager.debugRomcomMetrics.is()) {
-				message.handlerStarted = new Date();
-			}
 			this.activeClientMessage = message;
 			if (!message.sync) {
 				highestExecutingCounterpartId = message.messageId;

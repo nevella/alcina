@@ -334,7 +334,8 @@ public abstract class MessageTransportLayer {
 			return latestState;
 		}
 
-		public String toHistoryString(Date messageDate) {
+		public String toHistoryString(Date messageDate, Date handlerStarted) {
+			this.handlerStarted = handlerStarted;
 			FormatBuilder format = new FormatBuilder();
 			String latestState = getLatestState();
 			format.line("%s - %s", messageId, latestState);
@@ -1173,6 +1174,24 @@ Documents a client/server message lifecycle
 
 		public TransportHistory thisMessageTransportHistory;
 
+		public List<ExecutionQueueState> executionQueueStates = new ArrayList<>();
+
+		@Bean(PropertySource.FIELDS)
+		public static class ExecutionQueueState {
+			public Date date = new Date();
+
+			public String trace;
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder();
+				format.line("[%s]", Ax.appMillis(date));
+				format.append(trace);
+				format.newLine();
+				return format.toString();
+			}
+		}
+
 		public MessageHistory() {
 		}
 
@@ -1191,12 +1210,24 @@ Documents a client/server message lifecycle
 					originatingMessageTransportHistory == null ? "null"
 							: originatingMessageTransportHistory
 									.toHistoryString(
-											originatingMessage.creationDate));
+											originatingMessage.creationDate,
+											originatingMessage.handlerStarted));
 			format.newLine();
 			format.appendKeyValues("This message history",
 					thisMessageTransportHistory == null ? "null"
-							: thisMessageTransportHistory
-									.toHistoryString(thisMessage.creationDate));
+							: thisMessageTransportHistory.toHistoryString(
+									thisMessage.creationDate,
+									thisMessage.handlerStarted));
+			List<ExecutionQueueState> executionQueueStates = this.executionQueueStates;
+			if (executionQueueStates.size() == 0 && originatingMessage != null
+					&& originatingMessage.messageHistory != null) {
+				executionQueueStates = originatingMessage.messageHistory.executionQueueStates;
+			}
+			if (executionQueueStates.size() > 0) {
+				format.newLine();
+				format.dashedLine();
+				executionQueueStates.forEach(format::line);
+			}
 			return format.toString();
 		}
 	}

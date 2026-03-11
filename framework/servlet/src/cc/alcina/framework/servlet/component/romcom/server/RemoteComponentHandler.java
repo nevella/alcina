@@ -30,6 +30,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.SetCookieServerSide;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
@@ -332,6 +333,13 @@ public class RemoteComponentHandler {
 						response.messageEnvelope.toMessageSummaryString());
 				new RemoteComponentEvent(request, response, start,
 						System.currentTimeMillis()).publish();
+				if (response.messageEnvelope.messages.size() > 0) {
+					List<Message> withOriginating = response.messageEnvelope.messages
+							.stream()
+							.filter(m -> m.messageHistory != null
+									&& m.messageHistory.originatingMessage != null)
+							.toList();
+				}
 				applyOutgoingMessagesToServletResponse(servletResponse,
 						response);
 				servletResponse.getWriter()

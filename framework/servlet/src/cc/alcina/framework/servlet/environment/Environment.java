@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.service.DispatchRefProvider;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.DatePair;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
@@ -60,6 +61,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.Resubmit;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AfterHandled;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
@@ -852,6 +855,7 @@ class Environment {
 		queue.transportLayer.registerInContext();
 		mutationConflictResolution = new MutationConflictResolutionServer();
 		new MessageCreationObserver().bind();
+		startMetricObservers();
 		// the order - location, history, client, document - is necessary
 		location = Window.Location.contextProvider.createFrame(null);
 		navigator = Window.Navigator.contextProvider.createFrame(null);
@@ -892,6 +896,36 @@ class Environment {
 		GWTBridgeHeadless.inClient.set(true);
 		Registry.register().singleton(Client.RenderState.RomcomImpl.class,
 				queue.renderStateImpl);
+	}
+
+	void startMetricObservers() {
+		if (EnvironmentManager.debugRomcomMetrics.is()) {
+			new HandlerStartedMetricObserver().bind();
+			new HandlerEndedMetricObserver().bind();
+		}
+	}
+
+	class HandlerStartedMetricObserver implements
+			ProcessObserver<RemoteComponentProtocol.Message.BeforeHandled> {
+		@Override
+		public void topicPublished(BeforeHandled message) {
+			message.message.handlerStarted = new Date();
+		}
+	}
+
+	class HandlerEndedMetricObserver implements
+			ProcessObserver<RemoteComponentProtocol.Message.AfterHandled> {
+		@Override
+		public void topicPublished(AfterHandled message) {
+			MessageHistory messageHistory = message.message.messageHistory;
+			Date published = messageHistory.originatingMessageTransportHistory.published;
+			DatePair sendTraces = new DatePair(published, new Date());
+			messageHistory.executionQueueStates = queue.processSnapshot
+					.getQueueStates(sendTraces);
+			if (messageHistory.executionQueueStates.size() > 1) {
+				int debug = 3;
+			}
+		}
 	}
 
 	private void exitContext() {
