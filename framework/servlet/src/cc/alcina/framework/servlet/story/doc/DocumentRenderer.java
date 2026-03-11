@@ -23,6 +23,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.story.doc.StoryDocObservable;
 import cc.alcina.framework.servlet.publication.DirndlRenderer;
 
+/*
+ * https://developer.chrome.com/docs/chromedriver/mobile-emulation
+ */
 public class DocumentRenderer implements StoryDocRenderer {
 	List<StoryDocObservable> observables;
 
@@ -70,7 +73,7 @@ public class DocumentRenderer implements StoryDocRenderer {
 		@Directed.Transform(Tables.Single.class)
 		class ReportMetadata extends Model.All {
 			ReportMetadata() {
-				device = part.rendererConfiguration.device;
+				device = part.rendererConfiguration.device.toString();
 				build = part.rendererConfiguration.build;
 				date = part.rendererConfiguration.date;
 			}

@@ -4,6 +4,7 @@ import java.util.Date;
 
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.TellerContext;
+import cc.alcina.framework.gwt.client.story.TellerContext.Device;
 
 public class StoryDocPart implements TellerContext.Part {
 	public String path;
@@ -23,7 +24,7 @@ public class StoryDocPart implements TellerContext.Part {
 
 		public String storyTitle;
 
-		public String device = "Desktop";
+		public TellerContext.Device device = Device.Desktop;
 
 		public String build;
 
