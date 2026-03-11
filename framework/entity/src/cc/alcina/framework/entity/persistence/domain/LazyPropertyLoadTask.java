@@ -59,7 +59,8 @@ public class LazyPropertyLoadTask<T extends Entity>
 			return;
 		}
 		try {
-			LooseContext.pushWithTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD.getPath());
+			LooseContext.push();
+			CONTEXT_IN_LAZY_PROPERTY_LOAD.setTrue();
 			String inClause = EntityPersistenceHelper.toInClause(objects);
 			String sqlFilter = String.format(" id in %s", inClause);
 			String key = Ax.format("load :: %s (%s) (%s)",
