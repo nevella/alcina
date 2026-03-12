@@ -132,6 +132,15 @@ class SequenceTable extends Model.Fields
 						newPlace);
 			}
 		}
+
+		public List<?> getSelectedModels() {
+			IntPair selected = rowsModel.getSelectedRowsRange();
+			if (selected != null) {
+				return filteredElements.subList(selected.i1, selected.i2 + 1);
+			} else {
+				return List.of();
+			}
+		}
 	}
 
 	@Directed

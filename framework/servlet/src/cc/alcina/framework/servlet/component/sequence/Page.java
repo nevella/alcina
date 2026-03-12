@@ -210,8 +210,10 @@ class Page extends Model.Fields
 	}
 
 	@Override
-	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit) {
-		return sequenceArea.provideFilteredSequenceElements(ignoreRowsLimit);
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit,
+			boolean onlySelectedIfAnySelected) {
+		return sequenceArea.provideFilteredSequenceElements(ignoreRowsLimit,
+				onlySelectedIfAnySelected);
 	}
 
 	PackageProperties._Page.InstanceProperties properties() {
