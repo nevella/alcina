@@ -36,7 +36,7 @@ public interface TellerContext {
 	}
 
 	/*
-	 * could be much larger obviously
+	 * could be much larger obviously. also used in WDConfiguration
 	 */
 	public enum Device {
 		Desktop, Tablet, Phone;

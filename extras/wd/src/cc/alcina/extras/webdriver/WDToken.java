@@ -7,6 +7,7 @@ import org.openqa.selenium.WebDriver;
 
 import cc.alcina.extras.webdriver.api.TestResult;
 import cc.alcina.extras.webdriver.api.WDWriter;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 
 /**
@@ -18,6 +19,9 @@ import cc.alcina.framework.common.client.util.StringMap;
  *
  */
 public class WDToken {
+	public static final transient LooseContext.Key<WDToken> CONTEXT_TOKEN = LooseContext
+			.key(WDToken.class, "CONTEXT_TOKEN");
+
 	private WebDriver webDriver;
 
 	private WDConfiguration configuration;

@@ -50,6 +50,7 @@ public class WdContext implements PerformerResource {
 			LooseContext.push();
 			LooseContext.set(WDDriverHandler.CONTEXT_REUSE_SESSION,
 					part.reuseSession);
+			WDToken.CONTEXT_TOKEN.set(token);
 			WebDriver driver = token.getDriverHandler().getDriver();
 			token.setWebDriver(driver);
 		} finally {

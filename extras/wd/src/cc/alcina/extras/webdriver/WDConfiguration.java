@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.gwt.client.story.TellerContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @Registration(JaxbContextRegistration.class)
@@ -43,6 +44,8 @@ public class WDConfiguration {
 	public transient long usedCacheIfFresherThan;
 
 	public transient StringMap properties = new StringMap();
+
+	public TellerContext.Device device = TellerContext.Device.Desktop;
 
 	public WDDriverHandler driverHandler() {
 		return WDDriverHandlerProvider.get().driverHandler(driverType);
