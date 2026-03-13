@@ -23,6 +23,10 @@ body[columns-view=on] sequence > visit > img {
   align-self: center;
 }
 
+body[device=Phone] sequence > visit {
+  grid-template-columns: 2fr 1fr;
+}
+
 sequence {
   display: flex;
   flex-direction: column;

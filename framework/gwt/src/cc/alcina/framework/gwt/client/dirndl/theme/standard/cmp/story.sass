@@ -49,6 +49,9 @@
   body[columns-view='on'] sequence > visit
     @include visit-columns
 
+  body[device='Phone'] sequence > visit
+    grid-template-columns: 2fr 1fr
+
 
 
 @mixin contents

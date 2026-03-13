@@ -230,6 +230,8 @@ class TrackingLocationContext implements LocationContext {
 			 * - but that'd be wrong because - when removing - location, if it
 			 * exists, is needed to determine if the DomMutation is an extension
 			 * of the current IndexMutation
+			 * 
+			 * wip - location - document when (if) the null check is required
 			 */
 			if (result != null) {
 				context.ensureCurrent(result);

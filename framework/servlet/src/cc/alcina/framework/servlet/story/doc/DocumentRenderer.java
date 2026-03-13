@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
@@ -45,7 +46,9 @@ public class DocumentRenderer implements StoryDocRenderer {
 		renderer.addScriptResource(
 				Io.read().resource("res/js/doc-renderer.js").asString());
 		renderer.withWrapStyleInCdata(true);
-		renderer.asDocument().html().body().setAttr("columns-view", "on");
+		DomNode body = renderer.asDocument().html().body();
+		body.setAttr("columns-view", "on");
+		body.setAttr("device", part.rendererConfiguration.device.toString());
 		String markup = renderer.asMarkup();
 		File out = FileUtils.child(outputFolder, "document.html");
 		Io.write().string(markup).toFile(out);
