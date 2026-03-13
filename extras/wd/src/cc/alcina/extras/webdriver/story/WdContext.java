@@ -43,6 +43,7 @@ public class WdContext implements PerformerResource {
 		}
 		WDConfiguration configuration = new WDConfiguration();
 		configuration.driverType = getDriverType();
+		configuration.device = part.device;
 		token = new WDToken();
 		token.setConfiguration(configuration);
 		token.setDriverHandler(configuration.driverHandler());

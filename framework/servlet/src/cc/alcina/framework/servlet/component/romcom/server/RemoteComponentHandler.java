@@ -245,6 +245,8 @@ public class RemoteComponentHandler {
 						featurePath);
 				bootstrapHtml = bootstrapHtml.replace("%%HISTORY_PUSHSTATE%%",
 						String.valueOf(component.isHistoryPushState()));
+				bootstrapHtml = bootstrapHtml.replace("%%COMPONENT_META%%",
+						component.getMetaMarkup());
 				bootstrapHtml = bootstrapHtml.replace(
 						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
 						websocketTransportClientPrefix);

@@ -165,21 +165,22 @@ class FeatureTable extends Model.Fields {
 						.forEach(entries::add);
 			}
 			Registry.query(Point.class).registrations().forEach(clazz -> {
-				Feature.Ref annotation = Reflections.at(clazz)
-						.annotation(Feature.Ref.class);
-				if (annotation != null) {
-					Arrays.stream(annotation.value())
-							.forEach(featureClass -> testPoints
-									.add(featureClass, (Class) clazz));
-					ExitOkOnFalse exitOk = Reflections.at(clazz)
-							.annotation(Decl.Conditional.ExitOkOnFalse.class);
-					if (exitOk != null && exitOk.value().getSimpleName()
-							.equals("CheckNonStandardTestFlag")) {
-						Arrays.stream(annotation.value()).forEach(
-								featureClass -> nonStandardCoveragePoints
-										.add(featureClass, (Class) clazz));
-					}
-				}
+				Reflections.at(clazz).annotations(Feature.Ref.class)
+						.forEach(ref -> {
+							Arrays.stream(ref.value())
+									.forEach(featureClass -> testPoints
+											.add(featureClass, (Class) clazz));
+							ExitOkOnFalse exitOk = Reflections.at(clazz)
+									.annotation(
+											Decl.Conditional.ExitOkOnFalse.class);
+							if (exitOk != null && exitOk.value().getSimpleName()
+									.equals("CheckNonStandardTestFlag")) {
+								Arrays.stream(ref.value()).forEach(
+										featureClass -> nonStandardCoveragePoints
+												.add(featureClass,
+														(Class) clazz));
+							}
+						});
 			});
 		}
 	}

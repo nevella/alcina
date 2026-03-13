@@ -103,4 +103,8 @@ public interface RemoteComponent {
 		return path == null || (getPath().isEmpty()
 				&& (path.isEmpty() || path.equals("/")));
 	}
+
+	default String getMetaMarkup() {
+		return "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
+	}
 }
