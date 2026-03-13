@@ -451,17 +451,10 @@ public interface LocationContext {
 	int getContentLength(DomNode domNode);
 
 	default public Location.Range asRange(DomNode domNode) {
-		Location start = asLocation(domNode);
-		Location end = null;
-		if (domNode.isText()) {
-			end = createTextRelativeLocation(start, getContentLength(domNode),
-					true);
-		} else {
-			end = asLocation(domNode).clone();
-			end.setIndex(end.getIndex() + getContentLength(domNode));
-			// only for non-text (text locations do not use after)
-			end.after = true;
-		}
+		Location start = domNode.asLocation();
+		Location end = new Location(start.getTreeIndex(),
+				start.getIndex() + getContentLength(domNode), false, domNode,
+				start.getLocationContext(), null);
 		return new Location.Range(start, end);
 	}
 

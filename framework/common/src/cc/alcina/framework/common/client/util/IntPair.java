@@ -453,6 +453,9 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		return Math.min(Math.abs(other.i1 - i2), Math.abs(other.i2 - i1));
 	}
 
+	/**
+	 * overlaps -but-does-not-contain (in either direction)
+	 */
 	public boolean overlapsWith(IntPair other) {
 		IntPair intersection = intersection(other);
 		return intersection != null && !Objects.equals(intersection, this)

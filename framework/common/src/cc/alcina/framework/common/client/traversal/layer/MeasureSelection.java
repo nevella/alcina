@@ -265,4 +265,12 @@ public class MeasureSelection extends AbstractSelection<Measure>
 				.toList();
 		new MeasureContainment(order, containers).dump();
 	}
+
+	public boolean overlapsWith(MeasureSelection otherSelection) {
+		return get().toIntPair().overlapsWith(otherSelection.get().toIntPair());
+	}
+
+	public boolean contains(MeasureSelection otherSelection) {
+		return get().toIntPair().contains(otherSelection.get().toIntPair());
+	}
 }

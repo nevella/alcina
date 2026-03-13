@@ -13,7 +13,6 @@ import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Ref;
