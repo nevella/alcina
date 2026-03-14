@@ -53,6 +53,8 @@ A: (simple)
  * @formatter:on
  */
 public class LocalMutations {
+	public static boolean debugValidateLocations;
+
 	public static class BehaviorAdded {
 		public Element element;
 
@@ -186,8 +188,9 @@ public class LocalMutations {
 
 	void validateLocations() {
 		Document document = mutationsAccess.getDocument();
-		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())) {
-			// document.domDocument.locations().validateLocations();
+		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())
+				&& debugValidateLocations) {
+			document.domDocument.locations().validateLocations();
 		}
 	}
 

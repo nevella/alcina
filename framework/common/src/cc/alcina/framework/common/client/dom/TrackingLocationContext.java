@@ -118,6 +118,10 @@ class TrackingLocationContext implements LocationContext {
 				DomNode toClear = mutationRecord.removedNodes.get(0).node
 						.asDomNode();
 				if (mutationGroup != null) {
+					/*
+					 * this is key - *don't* clear during complex (strip/wrap)
+					 * ops
+					 */
 					Document gwtDoc = (Document) toClear.document.w3cDoc();
 					List<Node> willReattach = gwtDoc.getWillReattach();
 					if (willReattach != null
@@ -125,7 +129,7 @@ class TrackingLocationContext implements LocationContext {
 						return;
 					}
 				}
-				toClear.location = null;
+				toClear.stream().forEach(n -> n.location = null);
 			}
 		}
 
@@ -351,10 +355,11 @@ class TrackingLocationContext implements LocationContext {
 				case wrap:
 					if (mutations.size() == 3) {
 						// wrappee
-						Location wrappeeLocation = mutation.addedNodes.get(0)
-								.node().asDomNode().asLocation();
-						wrappeeLocation.applyIndexDelta(
-								new IndexTuple(1, 0, true, null));
+						DomNode wrappeeNode = mutation.addedNodes.get(0).node()
+								.asDomNode();
+						wrappeeNode.stream()
+								.forEach(n -> n.asLocation().applyIndexDelta(
+										new IndexTuple(1, 0, true, null)));
 						lastMutation = true;
 					}
 					break;
@@ -366,8 +371,9 @@ class TrackingLocationContext implements LocationContext {
 						if (removedNode == stripee) {
 							lastMutation = true;
 						} else {
-							removedNode.asLocation().applyIndexDelta(
-									new IndexTuple(-1, 0, true, null));
+							removedNode.stream().forEach(
+									n -> n.asLocation().applyIndexDelta(
+											new IndexTuple(-1, 0, true, null)));
 						}
 					}
 					break;
@@ -377,20 +383,23 @@ class TrackingLocationContext implements LocationContext {
 				if (lastMutation) {
 					// remove from parent
 					mutationGroupTracker = null;
+					extendable = false;
 				}
 			}
 		}
 
 		/* only child list mutations in the same direction can be extended */
 		boolean extendWith(MutationRecord mutation) {
-			if (mutation.mutationGroup != null) {
-				addToGroupTracker(mutation);
-				addDomMutation(mutation);
-				return true;
-			}
 			if (!extendable
 					|| mutation.type == MutationRecord.Type.characterData) {
 				return false;
+			}
+			if (mutationGroup != null
+					&& mutation.mutationGroup == mutationGroup) {
+				clearLocationIfRemove(mutation);
+				addToGroupTracker(mutation);
+				addDomMutation(mutation);
+				return true;
 			}
 			Location affectedLocation = computeAffectedLocation(mutation);
 			int mutationDirection = mutation.addedNodes.size() > 0 ? 1 : -1;
@@ -843,9 +852,10 @@ class TrackingLocationContext implements LocationContext {
 			if (Objects.equals(locationTuple, cumulative)) {
 				cumulative = cumulative.add(1, n.textLengthSelf());
 			} else {
-				Ax.err("Location exception: [%s->%s] %s :: -> %s [correct: %s]",
+				Ax.err("Location exception: [%s->%s] %s :: -> %s [correct: %s] - node/attachid: %s/%s",
 						documentMutationPosition, getDocumentMutationPosition(),
-						preEnsure, locationTuple, cumulative);
+						preEnsure, locationTuple, cumulative, n.toIndexDebug(),
+						n.gwtNode().getAttachId());
 				validationLocation = locationClone.clone();
 				ensureCurrent(validationLocation, true);
 				throw new LocationValidationException();

@@ -938,7 +938,7 @@ public class Location implements Comparable<Location> {
 	private boolean start;
 
 	public boolean isStart() {
-		locationContext.ensureCurrent(this);
+		ensureCurrent();
 		return start;
 	}
 
@@ -1087,13 +1087,17 @@ public class Location implements Comparable<Location> {
 	}
 
 	public DomNode getContainingNode() {
-		locationContext.ensureCurrent(this);
+		ensureCurrent();
 		return containingNode;
 	}
 
 	public int getIndex() {
-		locationContext.ensureCurrent(this);
+		ensureCurrent();
 		return index;
+	}
+
+	void ensureCurrent() {
+		locationContext.ensureCurrent(this);
 	}
 
 	public LocationContext getLocationContext() {
@@ -1111,7 +1115,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public int getTreeIndex() {
-		locationContext.ensureCurrent(this);
+		ensureCurrent();
 		return treeIndex;
 	}
 
@@ -1183,7 +1187,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public Location toEndTextLocationIfAtStart() {
-		locationContext.ensureCurrent(this);
+		ensureCurrent();
 		if (isAtNodeStart() && index != 0) {
 			// the logic of text runs guarantees there will be a text
 			// nodeLocation ending at the index prior to this location

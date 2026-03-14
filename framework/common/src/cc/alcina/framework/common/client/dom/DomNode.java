@@ -716,6 +716,11 @@ public class DomNode {
 				List<com.google.gwt.dom.client.Node> gwtNodes = nodes.stream()
 						.map(DomNode::gwtNode).toList();
 				gwtNode.getOwnerDocument().setWillReattach(gwtNodes);
+				/*
+				 * the location mutations will operate directly on the stripped
+				 * subtree, so ensure current here
+				 */
+				stream().forEach(n -> n.asLocation().ensureCurrent());
 			}
 			/**
 			 * need to insert the children *after* the parent so the parent
@@ -730,10 +735,6 @@ public class DomNode {
 				gwtNode.getOwnerDocument().setWillReattach(null);
 			}
 			removeFromParent();
-			// may be stripping an empty
-			if (gwtNode != null && nodes.size() > 0) {
-				nodes.get(0).asLocation().getIndex();
-			}
 		} finally {
 			if (gwtNode != null) {
 				gwtNode.mutationGroups().exit();
@@ -2506,5 +2507,10 @@ public class DomNode {
 				? treeSubsequent.asLocation().getIndex()
 				: document.getDocumentElementNode().asRange().toIntPair().i2;
 		return new IntPair(asLocation().getIndex(), end);
+	}
+
+	public String toIndexDebug() {
+		return Ax.format("%s :: %s :: %s", asLocation().asIndexTuple(), name(),
+				asLocation().documentMutationPosition);
 	}
 }

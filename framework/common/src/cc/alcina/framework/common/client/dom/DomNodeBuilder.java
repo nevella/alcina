@@ -205,24 +205,25 @@ public class DomNodeBuilder {
 				: null;
 		try {
 			if (gwtNode != null) {
-				gwtNode.mutationGroups().enterStrip();
 				List<com.google.gwt.dom.client.Node> gwtNodes = Stream
 						.of(relativeTo).map(DomNode::gwtNode).toList();
 				gwtNode.getOwnerDocument().setWillReattach(gwtNodes);
-			}
-			if (gwtNode != null) {
 				gwtNode.mutationGroups().enterWrap();
+				/*
+				 * the location mutations will operate directly on the wrapped
+				 * subtree, so ensure current here
+				 */
+				relativeTo.stream()
+						.forEach(n -> n.asLocation().ensureCurrent());
 			}
 			DomNode node = build();
 			relativeTo.node.getParentNode().insertBefore(node.node,
 					relativeTo.node);
 			node.node.appendChild(relativeTo.node);
-			if (gwtNode != null) {
-				gwtNode.getOwnerDocument().setWillReattach(null);
-			}
 			return node;
 		} finally {
 			if (gwtNode != null) {
+				gwtNode.getOwnerDocument().setWillReattach(null);
 				gwtNode.mutationGroups().exit();
 			}
 		}
