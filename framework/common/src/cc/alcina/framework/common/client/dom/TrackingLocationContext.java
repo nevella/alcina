@@ -135,7 +135,8 @@ class TrackingLocationContext implements LocationContext {
 
 		void addDomMutation(MutationRecord mutation) {
 			domMutations.add(mutation);
-			if (mutation.type == Type.characterData) {
+			if (mutation.type == Type.characterData
+					&& mutationGroup != MutationGroup.split) {
 				extendable = false;
 			}
 		}
