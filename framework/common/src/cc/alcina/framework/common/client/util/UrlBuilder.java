@@ -29,6 +29,9 @@ public class UrlBuilder {
 	}
 
 	void appendToPath(StringBuilder sb) {
+		if (Ax.isBlank(host)) {
+			return;
+		}
 		if (protocol != null) {
 			sb.append(protocol);
 			sb.append("://");
