@@ -127,6 +127,13 @@ public interface RemoteUi {
 			Consumer<Runnable> uiDispatch = env.access()::invoke;
 			dispatch = Ref.of(uiDispatch);
 		}
+
+		public static class Default extends ContextResolver.Default {
+			@Override
+			public ContextResolver createResolver() {
+				return new RemoteResolver();
+			}
+		}
 	}
 
 	/**

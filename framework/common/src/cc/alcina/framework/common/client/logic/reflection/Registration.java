@@ -582,7 +582,8 @@ public @interface Registration {
 
 	/*
 	 * Marks a singleton as being required for each Environment (server-side
-	 * client emulation instance)
+	 * client emulation instance). Note that this must be on the exact
+	 * registration class (not a subclass)
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented

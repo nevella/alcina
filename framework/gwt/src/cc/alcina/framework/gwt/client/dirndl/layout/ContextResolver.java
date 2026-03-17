@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -180,15 +180,13 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	/**
 	 * Used for getting the default app top-level resolver
-	 *
-	 *
-	 *
 	 */
-	@Registration.Singleton
+	@EnvironmentRegistration
 	public static class Default {
 		public static ContextResolver.Default get() {
 			return Registry.impl(ContextResolver.Default.class);
 		}
+		//
 
 		private Class<? extends ContextResolver> defaultResolver = ContextResolver.class;
 

@@ -12,6 +12,7 @@ import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -21,6 +22,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
@@ -175,6 +177,8 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 			layout.layoutResult.getRoot().dispatch(eventType, null);
 		}, getCommandContextProvider());
 		Client.eventBus().addHandler(PlaceChangeEvent.TYPE, placeChangeHandler);
+		Registry.register().singleton(ContextResolver.Default.class,
+				new RemoteResolver.Default());
 		layout = render0();
 	}
 
