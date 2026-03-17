@@ -468,10 +468,10 @@ public interface LocationContext {
 
 	default public Location.Range asRange(DomNode domNode) {
 		Location start = domNode.asLocation();
-		boolean after = !domNode.isText();
+		boolean endIsStart = domNode.isText();
 		Location end = new Location(start.getTreeIndex(),
-				start.getIndex() + getContentLength(domNode), after, domNode,
-				start.getLocationContext(), null);
+				start.getIndex() + getContentLength(domNode), endIsStart,
+				domNode, start.getLocationContext(), null);
 		return new Location.Range(start, end);
 	}
 
