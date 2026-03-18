@@ -16,6 +16,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
@@ -71,6 +72,8 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * collections and potentially concurrent modifications is synchronized
  */
 @Registration.Singleton
+@Registration.EnvironmentSingleton
+@Reflected
 public class InstanceOracle {
 	@Registration.Self
 	public static class ProviderInvoker {
@@ -180,7 +183,11 @@ public class InstanceOracle {
 		@Override
 		public void unbind() {
 			bound = false;
-			InstanceOracle.get().checkEviction();
+			/*
+			 * can deadlock - so, rather, check at the end of
+			 * InstanceOracle.get().submit()
+			 */
+			// InstanceOracle.get().checkEviction();
 		}
 
 		public Query<T> withInstanceConsumer(Consumer<T> instanceConsumer) {
@@ -414,7 +421,12 @@ public class InstanceOracle {
 
 		/**
 		 * 
+		 * 
 		 * @return true if the instance has no awaiting queries
+		 */
+		/*
+		 * [Deadlock] Should only be called by a thread also holding the store
+		 * lock
 		 */
 		synchronized boolean checkEviction() {
 			if (firing) {
@@ -439,7 +451,10 @@ public class InstanceOracle {
 				awaitingQueries.forEach(QueryState::acceptInstanceOrException);
 			} finally {
 				firing = false;
-				checkEviction();
+				/*
+				 * can deadlock - so only
+				 */
+				// checkEviction();
 			}
 		}
 
@@ -453,13 +468,16 @@ public class InstanceOracle {
 				provider = Registry.query(InstanceProvider.class)
 						.addKeys(definingQuery.providerKeys).impl();
 				ensureLatch();
-				if (provider.isOneOff()) {
+				/*
+				 * In non-browser environments, this will run off-thread
+				 * 
+				 * In a browser environment, the provider code will necessarily
+				 * run same-thread, but will not return a result ()
+				 */
+				if (provider.isOneOff() || !Al.isPermitSameThreadAwait()) {
 					provider.provide(definingQuery, this::acceptInstance,
 							this::acceptException);
 				} else {
-					/*
-					 * In non-browser environments, this will run off-thread
-					 */
 					String name = Ax.format("instance-oracle::%s",
 							NestedName.get(provider));
 					Registry.impl(ProviderInvoker.class).invoke(name,
@@ -555,15 +573,12 @@ public class InstanceOracle {
 		query.bind();
 		ProviderQueries<T> providerQueries = store.getProviderQueries(query);
 		providerQueries.ensureSubmitted();
-		checkEviction();
+		store.checkEviction();
 		if (!query.async && !providerQueries.provider.isAsync()) {
 			providerQueries.await();
 		}
 		providerQueries.passToConsumers();
-		return providerQueries;
-	}
-
-	void checkEviction() {
 		store.checkEviction();
+		return providerQueries;
 	}
 }
