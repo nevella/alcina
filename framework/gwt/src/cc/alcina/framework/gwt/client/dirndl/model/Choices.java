@@ -855,16 +855,26 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onSelected(Selected event) {
-			if (event.checkReemitted(this)) {
+			/*
+			 * the latter will be from the deselect logic (lower)
+			 */
+			if (event.checkReemitted(this) || event.getModel() == null) {
+				event.bubble();
 				return;
 			}
 			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
+			boolean deselect = false;
 			if (deselectIfSelectedClicked && value == getSelectedValue()) {
+				deselect = true;
 				value = null;
 			}
 			provisionalValue = value;
-			event.reemit();
+			if (deselect) {
+				event.reemitAs(this, Selected.class, null);
+			} else {
+				event.reemit();
+			}
 			valueSelected.signal();
 			if (changeOnSelectionEvent) {
 				setSelectedValue(value);

@@ -314,7 +314,11 @@ public class Dropdown extends Model
 	 * <p>
 	 * Rarely - when you want a dropdown overlay to stay visible , and the
 	 * originating dropdown may disappear due to a rerender, set this somewhere
-	 * higher in the node/model ancestor chain
+	 * higher in the node/model ancestor chain. Note that the new logical parent
+	 * will then need to handle overlay close triggering setOpen(false)
+	 * <p>
+	 * To add a logical -style- parent (events will bubble), use
+	 * withLogicalAncestor
 	 */
 	public Dropdown withLogicalParent(Model logicalParent) {
 		this.logicalParent = logicalParent;
