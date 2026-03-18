@@ -183,7 +183,11 @@ public class InstanceOracle {
 		@Override
 		public void unbind() {
 			bound = false;
-			InstanceOracle.get().checkEviction();
+			/*
+			 * can deadlock - so, rather, check at the end of
+			 * InstanceOracle.get().submit()
+			 */
+			// InstanceOracle.get().checkEviction();
 		}
 
 		public Query<T> withInstanceConsumer(Consumer<T> instanceConsumer) {
@@ -417,7 +421,12 @@ public class InstanceOracle {
 
 		/**
 		 * 
+		 * 
 		 * @return true if the instance has no awaiting queries
+		 */
+		/*
+		 * [Deadlock] Should only be called by a thread also holding the store
+		 * lock
 		 */
 		synchronized boolean checkEviction() {
 			if (firing) {
@@ -442,7 +451,10 @@ public class InstanceOracle {
 				awaitingQueries.forEach(QueryState::acceptInstanceOrException);
 			} finally {
 				firing = false;
-				checkEviction();
+				/*
+				 * can deadlock - so only
+				 */
+				// checkEviction();
 			}
 		}
 
@@ -561,15 +573,12 @@ public class InstanceOracle {
 		query.bind();
 		ProviderQueries<T> providerQueries = store.getProviderQueries(query);
 		providerQueries.ensureSubmitted();
-		checkEviction();
+		store.checkEviction();
 		if (!query.async && !providerQueries.provider.isAsync()) {
 			providerQueries.await();
 		}
 		providerQueries.passToConsumers();
-		return providerQueries;
-	}
-
-	void checkEviction() {
 		store.checkEviction();
+		return providerQueries;
 	}
 }

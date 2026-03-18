@@ -891,7 +891,7 @@ public class SelectionTraversal
 
 		@Override
 		public void topicPublished(SuppressedException message) {
-			if (observed++ < 100) {
+			if (observed++ < 100 && logSuppressedExceptions) {
 				/*
 				 * Duplicate selections are quite possibly an issue with
 				 * external data rather than traversal logic - so don't
@@ -956,6 +956,8 @@ public class SelectionTraversal
 	 * are complete
 	 */
 	public boolean releaseResources = false;
+
+	public boolean logSuppressedExceptions = true;
 
 	Layers layers = new Layers();
 
