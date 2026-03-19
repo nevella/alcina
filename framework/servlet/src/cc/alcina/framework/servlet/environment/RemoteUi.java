@@ -14,8 +14,6 @@ import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -130,9 +128,6 @@ public interface RemoteUi {
 			dispatch = Ref.of(uiDispatch);
 		}
 
-		@Registration.Singleton(
-			value = ContextResolver.Default.class,
-			priority = Priority.REMOVE)
 		public static class Default extends ContextResolver.Default {
 			@Override
 			public ContextResolver createResolver() {
