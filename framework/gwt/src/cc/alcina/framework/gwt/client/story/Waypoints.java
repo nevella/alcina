@@ -53,6 +53,14 @@ public class Waypoints {
 	public static class EnterEnter extends Waypoint {
 	}
 
+	/*
+	 * Debugging aid
+	 */
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN)
+	public static class EnterEnter2 extends Waypoint {
+	}
+
 	@Decl.Location.Marked
 	@Decl.Action.UI.AwaitAbsent
 	public static class AwaitMarkRemoval extends Waypoint {
