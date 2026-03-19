@@ -5,6 +5,7 @@
 /bin
 /dist-extras
 /build
+/.gradle
 /tmp
 /bin2
 /dist-tasks
