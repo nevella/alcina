@@ -50,4 +50,8 @@ public interface TellerContext {
 
 	<V> Attribute.Entry<V, Attribute<V>>
 			getAttribute(Class<? extends Attribute<V>> clazz);
+
+	default boolean hasAttribute(Class<? extends Attribute> clazz) {
+		return getAttribute((Class) clazz).value != null;
+	}
 }

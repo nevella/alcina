@@ -1008,18 +1008,24 @@ public interface Story {
 
 			/**
 			 * <p>
-			 * Invert the test result for ascent propagation (e.g. if the point
-			 * is a dom existence test, the evaluated test result should be true
-			 * if the node <i>doesn't</i> exist)
-			 * 
-			 * <p>
-			 * TODO - speculative, maybe remove (since it may be simpler/more
-			 * reusable to invert elsewhere - such as TestAbsent/TestPresent)
+			 * Skip this child if the attribute has a value
 			 */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
-			public @interface Invert {
+			public @interface SkipIf {
+				Class<? extends Attribute> value();
+			}
+
+			/**
+			 * <p>
+			 * Skip this child if the attribute is unset
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface SkipIfNot {
+				Class<? extends Attribute> value();
 			}
 		}
 
@@ -1552,5 +1558,9 @@ public interface Story {
 	 */
 	public interface Conditional {
 		Set<Class<? extends Point>> exitOkOnFalse();
+
+		Set<Class<? extends Attribute>> getSkipIf();
+
+		Set<Class<? extends Attribute>> getSkipIfNot();
 	}
 }

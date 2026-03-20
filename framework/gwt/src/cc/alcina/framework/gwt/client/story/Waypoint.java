@@ -33,6 +33,18 @@ public class Waypoint implements Story.Point {
 	protected class ConditionalImpl implements Story.Conditional {
 		Set<Class<? extends Story.Point>> exitOkOnFalse = Set.of();
 
+		Set<Class<? extends Attribute>> skipIf = Set.of();
+
+		Set<Class<? extends Attribute>> skipIfNot = Set.of();
+
+		public Set<Class<? extends Attribute>> getSkipIf() {
+			return skipIf;
+		}
+
+		public Set<Class<? extends Attribute>> getSkipIfNot() {
+			return skipIfNot;
+		}
+
 		@Override
 		public Set<Class<? extends Story.Point>> exitOkOnFalse() {
 			return exitOkOnFalse;
@@ -117,6 +129,7 @@ public class Waypoint implements Story.Point {
 	}
 
 	public ConditionalImpl getConditional() {
+		ensurePopulated();
 		return conditional;
 	}
 
@@ -280,10 +293,27 @@ public class Waypoint implements Story.Point {
 		}
 		if (conditional == null) {
 			conditional = new ConditionalImpl();
-			Story.Decl.Conditional.ExitOkOnFalse exitOkOnFalseAnn = reflector
-					.annotation(Story.Decl.Conditional.ExitOkOnFalse.class);
-			if (exitOkOnFalseAnn != null) {
-				conditional.exitOkOnFalse = Set.of(exitOkOnFalseAnn.value());
+			{
+				Story.Decl.Conditional.ExitOkOnFalse exitOkOnFalseAnn = reflector
+						.annotation(Story.Decl.Conditional.ExitOkOnFalse.class);
+				if (exitOkOnFalseAnn != null) {
+					conditional.exitOkOnFalse = Set
+							.of(exitOkOnFalseAnn.value());
+				}
+			}
+			{
+				Story.Decl.Conditional.SkipIf skipIf = reflector
+						.annotation(Story.Decl.Conditional.SkipIf.class);
+				if (skipIf != null) {
+					conditional.skipIf = Set.of(skipIf.value());
+				}
+			}
+			{
+				Story.Decl.Conditional.SkipIfNot skipIfNot = reflector
+						.annotation(Story.Decl.Conditional.SkipIfNot.class);
+				if (skipIfNot != null) {
+					conditional.skipIfNot = Set.of(skipIfNot.value());
+				}
 			}
 		}
 		if (contextAttributes == null) {

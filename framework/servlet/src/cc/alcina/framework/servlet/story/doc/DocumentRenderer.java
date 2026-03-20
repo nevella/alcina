@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.FileUtils;
@@ -36,7 +37,13 @@ public class DocumentRenderer implements StoryDocRenderer {
 	public void render(StoryDocPart part, File outputFolder,
 			List<StoryDocObservable> observables) {
 		this.part = part;
-		this.observables = observables;
+		/*
+		 * currently, any StoryDocObservable is only rendered once
+		 */
+		this.observables = observables.stream()
+				.collect(AlcinaCollectors
+						.toKeyMultimap(StoryDocObservable::getPointClassName))
+				.allFirstItems();
 		Sequence sequence = new Sequence();
 		DirndlRenderer renderer = new DirndlRenderer().withRenderable(sequence)
 				.addStyleResource(DocumentRenderer.class, "res/css/styles.css");

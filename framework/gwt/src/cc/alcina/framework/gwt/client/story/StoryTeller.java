@@ -32,6 +32,7 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResour
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.Story.Attribute;
+import cc.alcina.framework.gwt.client.story.Story.Conditional;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
@@ -492,6 +493,21 @@ public class StoryTeller {
 			 * Return false if the visit should be skipped
 			 */
 			boolean test(Visit visit) {
+				Conditional conditional = visit.getConditional();
+				if (conditional != null) {
+					if (conditional.getSkipIf().size() > 0) {
+						if (conditional.getSkipIf().stream()
+								.anyMatch(context::hasAttribute)) {
+							return false;
+						}
+					}
+					if (conditional.getSkipIfNot().size() > 0) {
+						if (conditional.getSkipIfNot().stream().anyMatch(
+								clazz -> !context.hasAttribute(clazz))) {
+							return false;
+						}
+					}
+				}
 				if (restrictToPoint == null) {
 					return true;
 				}

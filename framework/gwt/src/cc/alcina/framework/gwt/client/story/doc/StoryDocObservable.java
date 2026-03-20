@@ -37,6 +37,10 @@ public abstract class StoryDocObservable
 
 	public String pointClassName;
 
+	public String getPointClassName() {
+		return pointClassName;
+	}
+
 	public List<String> ancestorClassNames;
 
 	public List<String> filterPointDisplayNames;
