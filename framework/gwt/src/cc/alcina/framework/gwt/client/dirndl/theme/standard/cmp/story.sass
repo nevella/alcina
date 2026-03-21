@@ -49,9 +49,13 @@
   body[columns-view='on'] sequence > visit
     @include visit-columns
 
-  body[device='Phone'] sequence > visit
-    grid-template-columns: 2fr 1fr
+  body[device='Phone']
+    sequence > visit
+      grid-template-columns: 2fr 1fr
 
+      > img
+        border: solid 4px #964b0026
+        border-radius: 4px
 
 
 @mixin contents

@@ -1,6 +1,8 @@
 package cc.alcina.framework.gwt.client.story;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.story.Story.Attribute;
+import cc.alcina.framework.gwt.client.story.Story.Decl.ContextEvaluator;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 
 public interface TellerContext {
@@ -53,5 +55,17 @@ public interface TellerContext {
 
 	default boolean hasAttribute(Class<? extends Attribute> clazz) {
 		return getAttribute((Class) clazz).value != null;
+	}
+
+	TellerContext.Device getDevice();
+
+	default boolean eveluateCondition(Story.Decl.Condition condition) {
+		if (condition.attr() != Attribute.class) {
+			return hasAttribute(condition.attr());
+		}
+		if (condition.evaluator() != ContextEvaluator.class) {
+			return Reflections.newInstance(condition.evaluator()).test(this);
+		}
+		return getDevice() == condition.device();
 	}
 }

@@ -38,6 +38,10 @@ public class StoryTellerPeer implements TellerContext {
 
 	protected TellerContext.Device device = Device.Desktop;
 
+	public TellerContext.Device getDevice() {
+		return device;
+	}
+
 	protected StoryTeller storyTeller;
 
 	protected DependencyResolver dependencyResolver;

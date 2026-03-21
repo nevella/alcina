@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
+import cc.alcina.framework.gwt.client.story.TellerContext.Device;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 /**
@@ -1014,7 +1015,7 @@ public interface Story {
 			@Documented
 			@Target({ ElementType.TYPE })
 			public @interface SkipIf {
-				Class<? extends Attribute> value();
+				Condition value();
 			}
 
 			/**
@@ -1025,7 +1026,7 @@ public interface Story {
 			@Documented
 			@Target({ ElementType.TYPE })
 			public @interface SkipIfNot {
-				Class<? extends Attribute> value();
+				Condition value();
 			}
 		}
 
@@ -1053,6 +1054,21 @@ public interface Story {
 					SetAttribute[] value();
 				}
 			}
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Condition {
+			Class<? extends Attribute> attr() default Attribute.class;
+
+			Class<? extends ContextEvaluator> evaluator() default ContextEvaluator.class;
+
+			Device device() default Device.Desktop;
+		}
+
+		public interface ContextEvaluator {
+			boolean test(TellerContext context);
 		}
 	}
 
@@ -1559,8 +1575,8 @@ public interface Story {
 	public interface Conditional {
 		Set<Class<? extends Point>> exitOkOnFalse();
 
-		Set<Class<? extends Attribute>> getSkipIf();
+		Set<Story.Decl.Condition> getSkipIf();
 
-		Set<Class<? extends Attribute>> getSkipIfNot();
+		Set<Story.Decl.Condition> getSkipIfNot();
 	}
 }

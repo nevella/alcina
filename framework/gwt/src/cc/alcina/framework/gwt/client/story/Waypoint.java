@@ -33,15 +33,15 @@ public class Waypoint implements Story.Point {
 	protected class ConditionalImpl implements Story.Conditional {
 		Set<Class<? extends Story.Point>> exitOkOnFalse = Set.of();
 
-		Set<Class<? extends Attribute>> skipIf = Set.of();
+		Set<Story.Decl.Condition> skipIf = Set.of();
 
-		Set<Class<? extends Attribute>> skipIfNot = Set.of();
+		Set<Story.Decl.Condition> skipIfNot = Set.of();
 
-		public Set<Class<? extends Attribute>> getSkipIf() {
+		public Set<Story.Decl.Condition> getSkipIf() {
 			return skipIf;
 		}
 
-		public Set<Class<? extends Attribute>> getSkipIfNot() {
+		public Set<Story.Decl.Condition> getSkipIfNot() {
 			return skipIfNot;
 		}
 

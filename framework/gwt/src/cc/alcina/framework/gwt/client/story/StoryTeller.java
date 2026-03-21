@@ -497,13 +497,14 @@ public class StoryTeller {
 				if (conditional != null) {
 					if (conditional.getSkipIf().size() > 0) {
 						if (conditional.getSkipIf().stream()
-								.anyMatch(context::hasAttribute)) {
+								.anyMatch(context::eveluateCondition)) {
 							return false;
 						}
 					}
 					if (conditional.getSkipIfNot().size() > 0) {
-						if (conditional.getSkipIfNot().stream().anyMatch(
-								clazz -> !context.hasAttribute(clazz))) {
+						if (conditional.getSkipIfNot().stream()
+								.anyMatch(condition -> !context
+										.eveluateCondition(condition))) {
 							return false;
 						}
 					}
