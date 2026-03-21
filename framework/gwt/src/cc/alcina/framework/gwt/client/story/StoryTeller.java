@@ -32,7 +32,6 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResour
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.Story.Attribute;
-import cc.alcina.framework.gwt.client.story.Story.Conditional;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
@@ -220,6 +219,8 @@ public class StoryTeller {
 
 		List<Visit> initialChildren = null;
 
+		public boolean actionPerformed;
+
 		Visit(Node parentNode, Point point) {
 			this.node = parentNode.add(this);
 			this.point = point;
@@ -291,6 +292,7 @@ public class StoryTeller {
 				Story.State.Provider provider = (Provider) point;
 				state.dependencyResolved(provider);
 			}
+			actionPerformed = true;
 		}
 
 		public int depth() {
@@ -324,7 +326,7 @@ public class StoryTeller {
 		}
 
 		public void evaluateFiltered() {
-			result.filteredType = filter.isFiltered(this);
+			result.filteredType = filter.getFilterType(this);
 		}
 
 		/**
@@ -451,7 +453,9 @@ public class StoryTeller {
 	public enum FilteredType {
 		NOT,
 		// a previous test correctly failed, branch should not continue
-		TEST,
+		EXIT_SEQUENCE,
+		// skipped due to a conditional
+		SKIP,
 		// filtered via subtree (story part) filtering
 		SUBTREE
 	}
@@ -493,22 +497,6 @@ public class StoryTeller {
 			 * Return false if the visit should be skipped
 			 */
 			boolean test(Visit visit) {
-				Conditional conditional = visit.getConditional();
-				if (conditional != null) {
-					if (conditional.getSkipIf().size() > 0) {
-						if (conditional.getSkipIf().stream()
-								.anyMatch(context::eveluateCondition)) {
-							return false;
-						}
-					}
-					if (conditional.getSkipIfNot().size() > 0) {
-						if (conditional.getSkipIfNot().stream()
-								.anyMatch(condition -> !context
-										.eveluateCondition(condition))) {
-							return false;
-						}
-					}
-				}
 				if (restrictToPoint == null) {
 					return true;
 				}
@@ -640,10 +628,33 @@ public class StoryTeller {
 	}
 
 	class VisitFilter {
+		boolean isConditionalFilter(Visit visit) {
+			Story.Conditional conditional = visit.getConditional();
+			if (conditional != null) {
+				if (conditional.getSkipIf().size() > 0) {
+					if (conditional.getSkipIf().stream()
+							.anyMatch(context::eveluateCondition)) {
+						return true;
+					}
+				}
+				if (conditional.getSkipIfNot().size() > 0) {
+					if (conditional.getSkipIfNot().stream()
+							.anyMatch(condition -> !context
+									.eveluateCondition(condition))) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
 		/*
 		 * Return true if the visit is filtered (should be skipped)
+		 * 
+		 * Order is important here - basically EXIT_SEQUENCE has to come
+		 * relatively early, since it's transmitted along the sequence
 		 */
-		FilteredType isFiltered(Visit visit) {
+		FilteredType getFilterType(Visit visit) {
 			if (visit.result.isFiltered()) {
 				return visit.result.filteredType;
 			}
@@ -651,23 +662,24 @@ public class StoryTeller {
 			if (parent == null) {
 				return FilteredType.NOT;
 			}
-			if (!state.subtreeFilter.test(visit)) {
-				return FilteredType.SUBTREE;
-			}
 			if (parent.result.isFiltered()) {
 				return parent.result.filteredType;
 			}
 			Visit previousSibling = visit.getPreviousSibling();
 			if (previousSibling != null) {
-				if (previousSibling.result.filteredType == FilteredType.TEST) {
+				if (previousSibling.result.filteredType == FilteredType.EXIT_SEQUENCE) {
 					return previousSibling.result.filteredType;
-				}
-				if (isSequenceExit(parent, previousSibling)) {
-					previousSibling.result.filteredType = FilteredType.TEST;
-					return previousSibling.result.filteredType;
+				} else if (isSequenceExit(parent, previousSibling)) {
+					return FilteredType.EXIT_SEQUENCE;
 				}
 			}
-			return FilteredType.NOT;
+			if (isConditionalFilter(visit)) {
+				return FilteredType.SKIP;
+			}
+			if (!state.subtreeFilter.test(visit)) {
+				return FilteredType.SUBTREE;
+			}
+			return visit.result.filteredType;
 		}
 
 		boolean isSequenceExit(Visit parentVisit, Visit previousSiblingVisit) {

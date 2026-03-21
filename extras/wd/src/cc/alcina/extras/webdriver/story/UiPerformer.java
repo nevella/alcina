@@ -162,7 +162,7 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				absent = !query.isPresent();
 			}
 			wdPerformer.context.getVisit().onActionTestResult(absent);
-			wdPerformer.context.log("TestAbsent --> %s", query);
+			wdPerformer.context.log("TestAbsent --> %s :: %s", absent, query);
 		}
 	}
 

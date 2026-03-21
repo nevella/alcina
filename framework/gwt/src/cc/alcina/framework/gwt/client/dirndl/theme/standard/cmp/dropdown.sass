@@ -1,11 +1,12 @@
 @use '../multi/base'
+@use '../multi/media'
+@use 'overlay'
 
 @mixin dropdown
   > button
     cursor: pointer
 
 @mixin overlay($background-color,$border,$border-radius,$color,$link-color,$link-hover-color,$font-size: 0)
-  max-height: 48rem
   width: auto
   background-color: $background-color
   border: $border
@@ -13,6 +14,7 @@
   color: $color
   padding: 0.8rem 0
   gap: 0.5rem 
+  @include overlay.fit-y
 
   > *
     white-space: nowrap
@@ -24,6 +26,9 @@
     width: calc(100% - 2rem)
     min-width: 7rem
     max-width: 30vw
+
+    @include media.phone
+      max-width: 70vw
     
   #{base.$a-tags}
     color: $link-color

@@ -128,11 +128,7 @@ class ObservableRecorder {
 			implements ProcessObserver<StoryTeller.BeforeVisit> {
 		@Override
 		public void topicPublished(BeforeVisit message) {
-			Visit visit = message.getVisit();
-			if (visit.getDescription() != null) {
-				storage.storeObservable(new StoryDocObservable.DocumentPoint(
-						visit, visit.getDescription()));
-			}
+			// noop
 		}
 	}
 
@@ -140,12 +136,20 @@ class ObservableRecorder {
 			implements ProcessObserver<StoryTeller.AfterPerformAction> {
 		@Override
 		public void topicPublished(AfterPerformAction message) {
-			byte[] screenshotBytes = message.getState()
-					.getAttribute(ScreenshotData.class).get();
-			if (screenshotBytes != null) {
-				message.getState().removeAttribute(ScreenshotData.class);
-				storage.updateCurrentObservable(
-						message.getVisit().displayName(), screenshotBytes);
+			Visit visit = message.getVisit();
+			if (visit.actionPerformed) {
+				if (visit.getDescription() != null) {
+					storage.storeObservable(
+							new StoryDocObservable.DocumentPoint(visit,
+									visit.getDescription()));
+				}
+				byte[] screenshotBytes = message.getState()
+						.getAttribute(ScreenshotData.class).get();
+				if (screenshotBytes != null) {
+					message.getState().removeAttribute(ScreenshotData.class);
+					storage.updateCurrentObservable(visit.displayName(),
+							screenshotBytes);
+				}
 			}
 		}
 	}
