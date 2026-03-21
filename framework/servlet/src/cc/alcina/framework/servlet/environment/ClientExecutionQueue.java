@@ -16,12 +16,14 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DatePair;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory.ExecutionQueueState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -83,7 +85,8 @@ class ClientExecutionQueue implements Runnable {
 		int lastMutationIdUpdateHandled;
 
 		synchronized void onMessageBuffered(Message message) {
-			if (message instanceof Mutations) {
+			if (message instanceof Mutations
+					&& message.messageId.sendChannelId == SendChannelId.SERVER_TO_CLIENT) {
 				lastMutationIdBuffered = message.messageId.number;
 			}
 		}
@@ -108,6 +111,13 @@ class ClientExecutionQueue implements Runnable {
 			result.lastMutationIdBuffered = lastMutationIdBuffered;
 			result.lastMutationIdUpdateHandled = lastMutationIdUpdateHandled;
 			return result;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format(
+					"[MutationMessageData] lastMutationIdBuffered: %s, lastMutationIdUpdateHandled: %s",
+					lastMutationIdBuffered, lastMutationIdUpdateHandled);
 		}
 	}
 
@@ -155,6 +165,14 @@ class ClientExecutionQueue implements Runnable {
 					return false;
 				}
 			}
+
+			@Override
+			public String toString() {
+				return Ax.format(
+						"[queued-runnable] messageId: %s, awaitNextMutationId: %s, runnable: %s]",
+						messageId, awaitNextMutationId,
+						NestedName.get(runnable));
+			}
 		}
 
 		Runnable flushLambda = this::flush;
@@ -183,7 +201,10 @@ class ClientExecutionQueue implements Runnable {
 			QueuedRunnable queuedRunnable = new QueuedRunnable(awaitId,
 					awaitNextMutationId, runnable);
 			pending.add(queuedRunnable);
+			//
 		}
+
+		int highestAwaiting = -1;
 
 		/*
 		 * queue + remove from pending any runnables which have rendered offset
@@ -197,19 +218,30 @@ class ClientExecutionQueue implements Runnable {
 					.snapshot();
 			pending.stream().filter(p -> p.awaitNextMutationId == true)
 					.forEach(p -> {
+						updateHighestAwaiting(p.messageId);
 						if (p.messageId < messageDataSnapshot.lastMutationIdBuffered) {
 							p.messageId = messageDataSnapshot.lastMutationIdBuffered;
 							p.awaitNextMutationId = false;
 						}
 					});
+			int awaitingNextMutationIdCount = (int) pending.stream()
+					.filter(p -> p.awaitNextMutationId == true).count();
 			Iterator<QueuedRunnable> itr = pending.iterator();
 			while (itr.hasNext()) {
 				QueuedRunnable next = itr.next();
-				if (!next.awaitNextMutationId
-						&& next.messageId <= messageDataSnapshot.lastMutationIdUpdateHandled) {
-					addDispatchable(new AsyncDispatchable(next.runnable));
-					itr.remove();
+				if (!next.awaitNextMutationId) {
+					updateHighestAwaiting(next.messageId);
+					if (next.messageId <= messageDataSnapshot.lastMutationIdUpdateHandled) {
+						addDispatchable(new AsyncDispatchable(next.runnable));
+						itr.remove();
+					}
 				}
+			}
+		}
+
+		void updateHighestAwaiting(int messageId) {
+			if (messageId > highestAwaiting) {
+				highestAwaiting = messageId;
 			}
 		}
 	}
