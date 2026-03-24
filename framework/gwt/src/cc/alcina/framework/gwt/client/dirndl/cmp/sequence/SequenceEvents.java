@@ -174,4 +174,23 @@ public class SequenceEvents {
 		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
+
+	public static class SequencePlaceChanged
+			extends ModelEvent<SequencePlace, SequencePlaceChanged.Handler> {
+		@Override
+		public void dispatch(SequencePlaceChanged.Handler handler) {
+			handler.onSequencePlaceChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSequencePlaceChanged(SequencePlaceChanged event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSequencePlaceChanged(SequencePlaceChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
 }

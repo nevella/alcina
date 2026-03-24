@@ -12,6 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NavigateToNewSequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.search.SearchDefinitionEditor;
 
 /*
  */
@@ -20,7 +21,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @ReflectiveSerializer.Checks(ignore = true)
 public class SequenceComponent extends Model.Fields implements
 		Binding.TabIndexZero, SequenceEvents.NavigateToNewSequencePlace.Handler,
-		HasFilteredSequenceElements, SequenceEvents.SequenceChanged.Emitter {
+		HasFilteredSequenceElements, SequenceEvents.SequenceChanged.Emitter,
+		SearchDefinitionEditor.Submit.Handler {
 	class SequenceAreaServiceImpl implements SequenceArea.Service {
 		SequenceAreaServiceImpl() {
 		}
@@ -88,5 +90,12 @@ public class SequenceComponent extends Model.Fields implements
 			boolean onlySelectedIfAnySelected) {
 		return sequenceArea.provideFilteredSequenceElements(ignoreRowsLimit,
 				onlySelectedIfAnySelected);
+	}
+
+	@Override
+	public void onSubmit(SearchDefinitionEditor.Submit event) {
+		SequencePlace place = serviceImpl.getPlaceProperty().get().copy();
+		place.updateInstanceQueryDef(event.getModel());
+		event.reemitAs(this, SequenceEvents.SequencePlaceChanged.class, place);
 	}
 }

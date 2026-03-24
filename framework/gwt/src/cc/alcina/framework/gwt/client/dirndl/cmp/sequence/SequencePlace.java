@@ -4,12 +4,14 @@ import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.service.InstanceQuery;
+import cc.alcina.framework.common.client.service.InstanceQuery.Parameter;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -145,5 +147,11 @@ public class SequencePlace extends BasePlace implements TreeSerializable {
 			selectedElementIdx = size == 0 ? -1 : 0;
 		}
 		return this;
+	}
+
+	public void updateInstanceQueryDef(SearchDefinition model) {
+		Parameter<SearchDefinition> parameter = (Parameter<SearchDefinition>) instanceQuery.parameters
+				.get(0);
+		parameter.setValue(model);
 	}
 }

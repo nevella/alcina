@@ -249,7 +249,7 @@ bean-editor.wide form textarea {
 bean-editor.wide form input,
 bean-editor.wide form select,
 bean-editor.wide form textarea {
-  width: 20em;
+  width: min(20em, 80vw);
 }
 bean-editor.wide form div.ol-select {
   display: inline-block;
@@ -268,6 +268,14 @@ bean-editor.grid > form > section > div, bean-editor.grid > form > section form-
 bean-editor.grid > form > section > div > label, bean-editor.grid > form > section form-element > label {
   white-space: nowrap;
   padding-right: 2em;
+}
+@media screen and (max-width: 640px) {
+  bean-editor.grid > form > section {
+    grid-template-columns: 1fr;
+  }
+  bean-editor.grid > form > section > label::not(::first-child) {
+    padding-top: 0.5rem;
+  }
 }
 bean-editor.grid.tight-rows {
   line-height: 1.2;
@@ -412,6 +420,16 @@ bean-editor > form > form-validation {
   background-color: transparent;
   color: #FF5030;
   margin-top: 2rem;
+}
+@media screen and (max-width: 640px) {
+  bean-editor {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  bean-editor form > section > form-element {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 /* will always have single-line bean-editor, pad label until we work out baseline alignment
@@ -751,9 +769,8 @@ gallery-sequence-area {
 }
 gallery-sequence-area > sequence-component {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: auto;
   grid-template-areas: "header header header header" "sequence sequence sequence detail";
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: min-content 1fr;
   height: 100vh;
   width: 100vw;
@@ -1068,7 +1085,7 @@ gallery-sequence-area > sequence-component > detail > properties.wide form texta
 gallery-sequence-area > sequence-component > detail > properties.wide form input,
 gallery-sequence-area > sequence-component > detail > properties.wide form select,
 gallery-sequence-area > sequence-component > detail > properties.wide form textarea {
-  width: 20em;
+  width: min(20em, 80vw);
 }
 gallery-sequence-area > sequence-component > detail > properties.wide form div.ol-select {
   display: inline-block;
@@ -1087,6 +1104,14 @@ gallery-sequence-area > sequence-component > detail > properties.grid > form > s
 gallery-sequence-area > sequence-component > detail > properties.grid > form > section > div > label, gallery-sequence-area > sequence-component > detail > properties.grid > form > section form-element > label {
   white-space: nowrap;
   padding-right: 2em;
+}
+@media screen and (max-width: 640px) {
+  gallery-sequence-area > sequence-component > detail > properties.grid > form > section {
+    grid-template-columns: 1fr;
+  }
+  gallery-sequence-area > sequence-component > detail > properties.grid > form > section > label::not(::first-child) {
+    padding-top: 0.5rem;
+  }
 }
 gallery-sequence-area > sequence-component > detail > properties.grid.tight-rows {
   line-height: 1.2;
@@ -1539,6 +1564,7 @@ app-suggestor {
   width: 34rem;
   font-family: Arial;
   background-color: #FFF;
+  box-sizing: border-box;
 }
 app-suggestor:focus-within {
   border-color: #bfbfbf;
@@ -1553,6 +1579,7 @@ app-suggestor > editor > input {
   outline: none;
   font-family: Arial;
   color: #555;
+  box-sizing: border-box;
 }
 app-suggestor > editor > input::placeholder {
   opacity: 0.6;
@@ -1644,6 +1671,11 @@ overlay.app-suggestor > results > choice > suggestion > app-suggestion > content
   display: block;
 }
 
+@media screen and (max-width: 640px) {
+  app-suggestor {
+    width: 100vw;
+  }
+}
 keyboard-shortcuts {
   background: white;
   user-select: none;
@@ -1819,12 +1851,15 @@ help sequence > visit {
   margin-bottom: 5rem;
 }
 help sequence > visit > path {
+  grid-area: path;
   font-weight: bold;
 }
 help sequence > visit > description {
+  grid-area: description;
   margin-bottom: 1rem;
 }
 help sequence > visit > img {
+  grid-area: img;
   max-width: 100%;
 }
 
@@ -1928,6 +1963,7 @@ overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-
 
 search-definition-editor {
   display: flex;
+  width: 100%;
 }
 search-definition-editor > choice-editor {
   flex-grow: 1;
@@ -1936,6 +1972,7 @@ search-definition-editor > choice-editor > edit {
   border: none;
   background: none;
   line-height: 2.2;
+  width: auto;
 }
 search-definition-editor > choice-editor > edit > * {
   line-height: 1.5;

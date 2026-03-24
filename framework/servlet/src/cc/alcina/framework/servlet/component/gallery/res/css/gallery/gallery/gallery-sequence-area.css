@@ -142,7 +142,7 @@ bean-editor.wide form textarea {
 bean-editor.wide form input,
 bean-editor.wide form select,
 bean-editor.wide form textarea {
-  width: 20em;
+  width: min(20em, 80vw);
 }
 bean-editor.wide form div.ol-select {
   display: inline-block;
@@ -161,6 +161,14 @@ bean-editor.grid > form > section > div, bean-editor.grid > form > section form-
 bean-editor.grid > form > section > div > label, bean-editor.grid > form > section form-element > label {
   white-space: nowrap;
   padding-right: 2em;
+}
+@media screen and (max-width: 640px) {
+  bean-editor.grid > form > section {
+    grid-template-columns: 1fr;
+  }
+  bean-editor.grid > form > section > label::not(::first-child) {
+    padding-top: 0.5rem;
+  }
 }
 bean-editor.grid.tight-rows {
   line-height: 1.2;
@@ -305,6 +313,16 @@ bean-editor > form > form-validation {
   background-color: transparent;
   color: #FF5030;
   margin-top: 2rem;
+}
+@media screen and (max-width: 640px) {
+  bean-editor {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  bean-editor form > section > form-element {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 /* will always have single-line bean-editor, pad label until we work out baseline alignment

@@ -867,6 +867,7 @@ class Environment {
 		History.addValueChangeHandler(this::onHistoryChange);
 		client = Client.contextProvider.createFrame(ui);
 		client.getPlaceController();
+		GWTBridgeHeadless.inClient.set(true);
 		client.setupPlaceMapping();
 		client.setupActivityManager();
 		scheduler = SchedulerFrame.contextProvider.createFrame(null);
@@ -881,7 +882,6 @@ class Environment {
 		LocalDom.initalizeDetachedSync();
 		// FIXME - locationcontext3 - remove
 		document.domDocument.asLocation();
-		GWTBridgeHeadless.inClient.set(true);
 		EnvironmentRegistry.enter(environmentRegistry);
 		Client.contextProvider.registerFrame(client);
 		History.contextProvider.registerFrame(history);
@@ -893,7 +893,6 @@ class Environment {
 		Document.contextProvider.registerFrame(document);
 		Document.get().onDocumentEventSystemInit();
 		DispatchRefProvider.context.set(new DispatchRefProviderImpl());
-		GWTBridgeHeadless.inClient.set(true);
 		Registry.register().singleton(Client.RenderState.RomcomImpl.class,
 				queue.renderStateImpl);
 	}
