@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.process;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -225,6 +226,30 @@ public class TreeProcess {
 
 	public interface SelectedProcessNodeProvider {
 		Node getSelectedProcessNode();
+	}
+
+	public static class TreeIndexPath implements Comparable<TreeIndexPath> {
+		List<Integer> indicies;
+
+		public static TreeIndexPath of(String path) {
+			return new TreeIndexPath(Arrays.stream(path.split("\\."))
+					.map(Integer::parseInt).toList());
+		}
+
+		public TreeIndexPath(List<Integer> indicies) {
+			this.indicies = indicies;
+		}
+
+		public int compareTo(TreeIndexPath other) {
+			for (int idx = 0; idx < indicies.size()
+					&& idx < other.indicies.size(); idx++) {
+				int cmp = indicies.get(idx) - other.indicies.get(idx);
+				if (cmp != 0) {
+					return cmp;
+				}
+			}
+			return indicies.size() - other.indicies.size();
+		}
 	}
 
 	public interface Node extends HasDisplayName {

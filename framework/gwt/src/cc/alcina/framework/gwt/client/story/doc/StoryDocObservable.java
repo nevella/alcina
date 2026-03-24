@@ -9,8 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.IdCounter;
+import cc.alcina.framework.common.client.process.TreeProcess.TreeIndexPath;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 
@@ -45,10 +44,6 @@ public abstract class StoryDocObservable
 
 	public List<String> filterPointDisplayNames;
 
-	public long index;
-
-	static transient IdCounter counter = new IdCounter();
-
 	public String path() {
 		return ancestorDisplayNames.stream().skip(1)
 				.collect(Collectors.joining(" > "));
@@ -59,11 +54,11 @@ public abstract class StoryDocObservable
 
 	@Override
 	public int compareTo(StoryDocObservable o) {
-		return CommonUtils.compareLongs(index, o.index);
+		return TreeIndexPath.of(treePath)
+				.compareTo(TreeIndexPath.of(o.treePath));
 	}
 
 	protected StoryDocObservable(Visit visit) {
-		index = counter.nextId();
 		this.date = new Date();
 		this.visit = visit;
 		ancestorDisplayNames = new ArrayList<>();

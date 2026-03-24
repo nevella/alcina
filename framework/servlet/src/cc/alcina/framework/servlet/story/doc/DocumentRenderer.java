@@ -43,7 +43,7 @@ public class DocumentRenderer implements StoryDocRenderer {
 		this.observables = observables.stream()
 				.collect(AlcinaCollectors
 						.toKeyMultimap(StoryDocObservable::getPointClassName))
-				.allFirstItems();
+				.allFirstItems().stream().sorted().toList();
 		Sequence sequence = new Sequence();
 		DirndlRenderer renderer = new DirndlRenderer().withRenderable(sequence)
 				.addStyleResource(DocumentRenderer.class, "res/css/styles.css");
