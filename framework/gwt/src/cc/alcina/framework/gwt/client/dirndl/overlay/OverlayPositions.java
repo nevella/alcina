@@ -29,6 +29,10 @@ public class OverlayPositions {
 
 	Map<Model, RenderedOverlay> openOverlays = AlcinaCollections.newUnqiueMap();
 
+	public boolean hasOpenOverlays() {
+		return openOverlays.size() > 0;
+	}
+
 	void hide(Overlay model, boolean allowReentrant) {
 		RenderedOverlay overlay = openOverlays.remove(model);
 		if (overlay != null) {

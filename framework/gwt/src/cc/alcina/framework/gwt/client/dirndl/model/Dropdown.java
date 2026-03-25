@@ -65,6 +65,13 @@ public class Dropdown extends Model
 
 	private boolean display = true;
 
+	private boolean parentFixed = false;
+
+	public Dropdown withParentFixed(boolean parentFixed) {
+		this.parentFixed = parentFixed;
+		return this;
+	}
+
 	@Binding(
 		transform = Binding.DisplayBlankNone.class,
 		type = Type.STYLE_ATTRIBUTE)
@@ -279,6 +286,7 @@ public class Dropdown extends Model
 				logicalParent = this;
 			}
 			attributes.withLogicalParent(logicalParent);
+			attributes.withParentFixed(parentFixed);
 			overlay = attributes.create();
 			overlay.open();
 		} else {

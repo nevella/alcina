@@ -53,6 +53,8 @@ public class OverlayPosition {
 	// FIXME - dirndl - another constraint?
 	public boolean equalWidths = false;
 
+	boolean parentFixed;
+
 	@Reflected
 	public enum ViewportConstraint {
 		ATTEMPT_VISIBLE {
@@ -64,6 +66,9 @@ public class OverlayPosition {
 			@Override
 			void apply(OverlayPosition overlayPosition) {
 				if (!overlayPosition.toElement.isAttached()) {
+					return;
+				}
+				if (overlayPosition.parentFixed) {
 					return;
 				}
 				DomRect viewport = Window.getRect();
@@ -159,8 +164,8 @@ public class OverlayPosition {
 			/*
 			 * correction - minus (scroll-coords)
 			 */
-			int scrollLeft = Window.getScrollLeft();
-			int scrollTop = Window.getScrollTop();
+			// int scrollLeft = Window.getScrollLeft();
+			// int scrollTop = Window.getScrollTop();
 			/*
 			 * FIXME - dirndl - not if [from] is absolute - I think there's some
 			 * confusion here
@@ -170,6 +175,9 @@ public class OverlayPosition {
 			// -scrollLeft, -scrollTop);
 		} else {
 			toRect = toElement.getBoundingClientRect();
+			if (parentFixed) {
+				toRect = DomRect.fromOrigin(toRect.width, toRect.height);
+			}
 		}
 		constraints.forEach(Constraint::apply);
 		/*
@@ -177,6 +185,10 @@ public class OverlayPosition {
 		 * to not defer). Note that it has no effect if the overlay isn't
 		 * constrained by the viewport
 		 */
+		if (parentFixed) {
+			toElement.getStyle().setPosition(
+					com.google.gwt.dom.client.Style.Position.FIXED);
+		}
 		Client.RenderState
 				.queueWithRenderedState(() -> viewportConstraint.apply(this));
 	}

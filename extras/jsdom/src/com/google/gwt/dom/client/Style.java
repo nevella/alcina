@@ -2047,7 +2047,8 @@ public class Style implements ClientDomStyle {
 				style.removeProperty((String) arguments.get(0));
 				return null;
 			default:
-				throw new UnsupportedOperationException();
+				return super.invoke(style, methodName, argumentTypes, arguments,
+						flags);
 			}
 		}
 	}

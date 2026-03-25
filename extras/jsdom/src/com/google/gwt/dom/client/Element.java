@@ -993,7 +993,10 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void scrollIntoView(int hPad, int vPad) {
-		runIfWithRemote(true, () -> remote().scrollIntoView(hPad, vPad));
+		runIfWithRemote(true, () -> {
+			Window.topicScrollTo().publish(new IntPair(0, 0));
+			remote().scrollIntoView(hPad, vPad);
+		});
 	}
 
 	@Override

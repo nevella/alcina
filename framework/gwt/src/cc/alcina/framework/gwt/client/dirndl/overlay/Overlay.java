@@ -312,6 +312,11 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			withCloseOnMouseDownOutside(true);
 			return this;
 		}
+
+		public Attributes withParentFixed(boolean parentFixed) {
+			position.parentFixed = parentFixed;
+			return this;
+		}
 	}
 
 	public static class Positioned

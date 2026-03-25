@@ -546,4 +546,8 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 	public boolean isContiguousWith(IntPair o) {
 		return i2 == o.i1;
 	}
+
+	public static double distance(IntPair pair1, IntPair pair2) {
+		return Math.sqrt((pair2.i2 - pair1.i2) ^ 2 + (pair2.i1 - pair1.i1) ^ 2);
+	}
 }

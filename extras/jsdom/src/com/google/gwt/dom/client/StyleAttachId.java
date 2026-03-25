@@ -720,7 +720,8 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setPosition(Position value) {
-		throw new UnsupportedOperationException();
+		element.invokeStyleAsync("setPosition", List.of(Position.class),
+				List.of(value));
 	}
 
 	@Override

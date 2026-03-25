@@ -598,6 +598,10 @@ public class Window {
 		return Resources.get().topicScrollTo;
 	}
 
+	public static IntPair getScrollPosition() {
+		return new IntPair(getScrollLeft(), getScrollTop());
+	}
+
 	public static void scrollTo(int left, int top, boolean smooth) {
 		topicScrollTo().publish(new IntPair(left, top));
 		Document.get().invoke(() -> scrollTo0(left, top, smooth), Window.class,
