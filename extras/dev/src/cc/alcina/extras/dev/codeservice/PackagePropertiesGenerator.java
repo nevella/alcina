@@ -19,6 +19,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 
+import cc.alcina.extras.dev.codeservice.CodeService.Context;
 import cc.alcina.extras.dev.codeservice.CodeService.Event;
 import cc.alcina.extras.dev.codeservice.CodeService.PackageEvent;
 import cc.alcina.extras.dev.codeservice.PackagePropertiesGenerator.PackagePropertiesUnitData.DeclarationProperties;
@@ -57,6 +58,8 @@ import cc.alcina.framework.entity.util.FileUtils;
  * also have used JavaParser - sourcewriter is a touch simpler
  */
 public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
+	public static final String PROP_EXCLUDE_PATHS = "PROP_EXCLUDE_PATHS";
+
 	@Override
 	public void handle(Event event) {
 		if (event instanceof PackageEvent) {
@@ -68,6 +71,8 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 		List<PackagePropertiesUnitData> packageTypeMetadataList = event
 				.packageUnits().units
 						.stream()
+						.filter(unitWrapper -> isNotFiltered(unitWrapper,
+								event.context))
 						.map(unitWrapper -> event.context.units.compilationUnits
 								.ensure(PackagePropertiesUnitData.class,
 										unitWrapper.getFile()))
@@ -78,6 +83,15 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	boolean isNotFiltered(CompilationUnitWrapper unitWrapper, Context context) {
+		String excludePaths = context.getProperty(PROP_EXCLUDE_PATHS);
+		// if(unitWrapper.path
+		if (Ax.notBlank(excludePaths)) {
+			return !unitWrapper.path.matches(excludePaths);
+		}
+		return true;
 	}
 
 	static class PackagePropertiesWriter {
