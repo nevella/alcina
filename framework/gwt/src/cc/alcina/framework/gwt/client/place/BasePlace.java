@@ -49,8 +49,8 @@ import cc.alcina.framework.gwt.client.history.push.CodeServerParameterHelper;
  */
 @Reflected
 @Registration(BasePlace.class)
-public abstract class BasePlace extends Place
-		implements Serializable, Registration.Ensure {
+public abstract class BasePlace
+		implements Serializable, Registration.Ensure, Place {
 	@Registration.Singleton
 	public static class BasePlaceAbsoluteHrefSupplier {
 		public String getHref(BasePlace basePlace) {
