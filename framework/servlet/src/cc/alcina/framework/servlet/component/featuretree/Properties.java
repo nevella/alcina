@@ -66,6 +66,9 @@ class Properties extends Model.All {
 			Features features = Properties.this
 					.service(FeatureTable.Service.class).getFeatures();
 			Entry entry = features.entriesByFeature.get(feature);
+			if (entry == null) {
+				return;
+			}
 			parent = entry.parent == null ? null : entry.parent.displayName();
 			name = entry.displayName();
 			internalName = entry.feature.getSimpleName();

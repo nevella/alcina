@@ -23,6 +23,11 @@ public class AlcinaDevConsole extends DevConsole {
 		}
 	}
 
+	@Override
+	public boolean hasDomainStore() {
+		return false;
+	}
+
 	public AlcinaDevConsole(String[] args) {
 		super(args);
 	}

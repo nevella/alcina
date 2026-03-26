@@ -91,6 +91,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -369,6 +370,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected abstract void initDataFolder();
 
 	public void postInitRegistry() {
+		RegistryHistoryMapper.registerDefaultMapper();
 	}
 
 	protected void initDevConsoleAndWebApp() {
@@ -402,10 +404,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Mvcc.initialiseTransactionEnvironment();
 		ProcessObservable.Id.setGenerator(new AtomicSequentialIdGenerator());
 		initLoggers();
-		if (!Ax.isTest()) {
-			Registry.register().singleton(Task.RemotePerformer.class,
-					new RemotePerformerDirect());
-		}
 	}
 
 	public static class RemotePerformerDirect implements Task.RemotePerformer {
@@ -656,6 +654,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void postInitEntityLayer() {
 		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+			RegistryHistoryMapper.registerDefaultMapper();
 			JobScheduler.onBeforeAppStartup();
 			BackendTransformQueue.get().start();
 			serializationSignatureListener = new SerializationSignatureListener();

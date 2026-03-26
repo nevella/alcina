@@ -101,7 +101,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -2418,5 +2417,12 @@ public class DomainStore implements IDomainStore {
 
 	public void releaseConnection(Connection conn) {
 		((DomainStoreLoaderDatabase) loader).releaseConn(conn);
+	}
+
+	//
+	public static boolean hasWriteableStore() {
+		return topicStoreLoadingComplete.wasPublished()
+				|| (topicStoreLoaded.wasPublished()
+						&& stores().stores.size() == 1);
 	}
 }
