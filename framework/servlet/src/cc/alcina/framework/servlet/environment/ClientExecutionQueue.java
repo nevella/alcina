@@ -82,6 +82,8 @@ class ClientExecutionQueue implements Runnable {
 			while (!finished) {
 				pumpMessage();
 			}
+		} catch (Throwable t) {
+			t.printStackTrace();
 		} finally {
 			environment.fromClientExecutionThreadAccess().exitContext();
 			LooseContext.pop();
