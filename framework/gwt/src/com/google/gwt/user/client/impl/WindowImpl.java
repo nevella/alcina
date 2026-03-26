@@ -54,19 +54,17 @@ public class WindowImpl {
       // returns undefined.
     };
     
-	if($wnd.location.protocol=="https"){
-		$wnd.onunload = $entry(function(evt) {
-		try {
-			@com.google.gwt.user.client.Window::onClosed()();
-		} finally {
-			oldOnUnload && oldOnUnload(evt);
-			$wnd.onresize = null;
-			$wnd.onscroll = null;
-			$wnd.onbeforeunload = null;
-			$wnd.onunload = null;
-		}
-		});
-	}
+    $wnd.onunload = $entry(function(evt) {
+      try {
+        @com.google.gwt.user.client.Window::onClosed()();
+      } finally {
+        oldOnUnload && oldOnUnload(evt);
+        $wnd.onresize = null;
+        $wnd.onscroll = null;
+        $wnd.onbeforeunload = null;
+        $wnd.onunload = null;
+      }
+    });
   }-*/;
 
 	public native void initWindowResizeHandler() /*-{
