@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.featuretree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -116,7 +117,10 @@ class FeatureTable extends Model.Fields {
 			}
 
 			List<Entry> sortedChildren() {
-				return children.stream().collect(Collectors.toList());
+				List<Entry> list = children.stream()
+						.sorted(Comparator.comparing(Entry::displayName))
+						.collect(Collectors.toList());
+				return list;
 			}
 
 			Class<? extends Status> status() {
