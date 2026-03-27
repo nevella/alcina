@@ -33,6 +33,8 @@ public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 
 	/*
 	 * A marker interface for generated classes containing typed properties
+	 * 
+	 * wip - ds.late - final review of non-instanceproperty PackageProperty refs
 	 */
 	public interface Container {
 	}
