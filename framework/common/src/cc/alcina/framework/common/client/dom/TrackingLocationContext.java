@@ -228,9 +228,9 @@ class TrackingLocationContext implements LocationContext {
 				}
 			}
 			/*
-			 * You'd think not required, not desirable - added is new (and so
-			 * current), removed is being removed so its location is undefined
-			 * after this mutation -
+			 * You'd think not required, not desirable - if the location is
+			 * being added, it's new (and so by definition current), removed is
+			 * being removed so its location is undefined after this mutation -
 			 * 
 			 * - but that'd be wrong because - when removing - location, if it
 			 * exists, is needed to determine if the DomMutation is an extension

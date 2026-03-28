@@ -231,10 +231,6 @@ public class MeasureOverlay {
 	}
 
 	public DomNode getPositioningElement() {
-		/*
-		 * wip - location - TrackingLocationContext should mean this is not
-		 * required
-		 */
 		Location loc = initialRange.start;
 		if (overlays.size() > 0) {
 			loc = overlays.get(0).start;
