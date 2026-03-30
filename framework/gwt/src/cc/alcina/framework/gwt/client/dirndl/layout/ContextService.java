@@ -61,6 +61,11 @@ public interface ContextService {
 
 		void emitEvent(Class<? extends ModelEvent> clazz, Object value);
 
+		default void reemitEvent(NodeEvent<?> nodeEvent,
+				Class<? extends ModelEvent> clazz) {
+			reemitEvent(nodeEvent, clazz, null);
+		}
+
 		void reemitEvent(NodeEvent<?> nodeEvent,
 				Class<? extends ModelEvent> clazz, Object value);
 

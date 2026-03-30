@@ -194,6 +194,29 @@ public class LayoutEvents {
 	}
 
 	/**
+	 * Fires just before Unbound (the node is still attached, events will
+	 * propagate)
+	 */
+	public static class BeforeUnbound
+			extends ModelEvent<Object, BeforeUnbound.Handler> {
+		@Override
+		public void dispatch(BeforeUnbound.Handler handler) {
+			handler.onBeforeUnbound(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeforeUnbound(BeforeUnbound event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onBeforeUnbound(BeforeUnbound event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	/**
 	 * The respective Handler methods are called directly during layout. Note
 	 * that getContext() only provides the Node corresponding to the model
 	 *

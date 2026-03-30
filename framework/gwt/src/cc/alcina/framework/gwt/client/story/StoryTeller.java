@@ -222,6 +222,10 @@ public class StoryTeller {
 		public boolean actionPerformed;
 
 		Visit(Node parentNode, Point point) {
+			if (parentNode.depth() > 100) {
+				throw new IllegalStateException(
+						"Story too deep - probably a recursive reference");
+			}
 			this.node = parentNode.add(this);
 			this.point = point;
 			result = new Result();

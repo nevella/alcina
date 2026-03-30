@@ -341,6 +341,9 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 
 	public void setTag(String tag) {
 		this.tag = tag;
+		if (!tag.equalsIgnoreCase("a")) {
+			withoutHref(true);
+		}
 	}
 
 	public void setTarget(String target) {

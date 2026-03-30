@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding;
 
 /**
  * <p>
@@ -29,6 +30,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @Registration(NodeEvent.class)
 public abstract class NodeEvent<H extends NodeEvent.Handler>
 		extends GwtEvent<H> {
+	public interface BindingLocation {
+		<E extends NodeEvent> StreamBinding<E> on(Class<E> nodeEventClass);
+	}
+
 	//
 	public static class Context {
 		/**

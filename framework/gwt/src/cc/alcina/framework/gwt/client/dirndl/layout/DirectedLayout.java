@@ -1424,6 +1424,7 @@ public class DirectedLayout implements AlcinaProcess {
 					// noop (to prevent multiple bind event firings on the same
 					// model)
 				} else {
+					fireEvent(new LayoutEvents.BeforeUnbound());
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, false));
 					fireEvent(new LayoutEvents.Unbound());

@@ -120,7 +120,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 	write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable
 		implements LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler,
-		LayoutEvents.NodeContext.Handler, HasNode {
+		LayoutEvents.NodeContext.Handler, HasNode, NodeEvent.BindingLocation {
 	protected transient DirectedLayout.Node node;
 
 	private transient Bindings bindings;
