@@ -69,7 +69,11 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 		if (copyContentToLargeResult || Ax.isTest()) {
 			JobContext.get().getJob().setLargeResult(result.getContent());
 		}
-		if (!Ax.isTest()) {
+		/*
+		 * Some publications produce no result (if the ContentModelHandler
+		 * returns no content)
+		 */
+		if (!Ax.isTest() && result != null) {
 			result.ensureMinimal();
 		}
 		JobContext.get().getJob().setResult(result);
