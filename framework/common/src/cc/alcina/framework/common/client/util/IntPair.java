@@ -184,6 +184,13 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		return result;
 	}
 
+	/**
+	 * 
+	 * @param ranges
+	 *            a non-overlapping (unchecked!) list of ranges
+	 * @param range
+	 * @return
+	 */
 	public static IntPair intersection(List<IntPair> ranges, IntPair range) {
 		for (IntPair intPair : ranges) {
 			IntPair intersection = range.intersection(intPair);
@@ -549,5 +556,41 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 
 	public static double distance(IntPair pair1, IntPair pair2) {
 		return Math.sqrt((pair2.i2 - pair1.i2) ^ 2 + (pair2.i1 - pair1.i1) ^ 2);
+	}
+
+	public enum IntersectionType {
+		none, partial, full
+	}
+
+	public IntersectionType intersectionType(IntPair other) {
+		if (contains(other)) {
+			return IntersectionType.full;
+		}
+		if (intersectsWithNonPoint(other)) {
+			return IntersectionType.partial;
+		}
+		return IntersectionType.none;
+	}
+
+	public IntersectionType intersectionType(List<IntPair> others) {
+		if (others.isEmpty()) {
+			return IntersectionType.none;
+		}
+		if (i2 <= others.getFirst().i1 || i1 >= others.getLast().i1) {
+			return IntersectionType.none;
+		}
+		/*
+		 * could be sped up with a binary search, if others > a threshold
+		 */
+		IntPair intersection = intersection(others, this);
+		if (intersection != null) {
+			if (intersection.equals(this)) {
+				return IntersectionType.full;
+			} else {
+				return IntersectionType.partial;
+			}
+		} else {
+			return IntersectionType.none;
+		}
 	}
 }

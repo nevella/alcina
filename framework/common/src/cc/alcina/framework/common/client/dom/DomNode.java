@@ -1987,6 +1987,10 @@ public class DomNode {
 		}
 	}
 
+	public DomNodeTraversal traversal() {
+		return new DomNodeTraversal(this);
+	}
+
 	public static class DomNodeTraversal extends DepthFirstTraversal<DomNode> {
 		public DomNodeTraversal(DomNode root) {
 			super(root, node -> node.children.nodes());

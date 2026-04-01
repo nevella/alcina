@@ -152,7 +152,14 @@ public class MeasureOverlay {
 				}
 				return builder.wrap();
 			}
+
+			@Override
+			public boolean isHighlit(DomNode node) {
+				return node.tagAndClassIs(tagName, className);
+			}
 		}
+
+		boolean isHighlit(DomNode node);
 	}
 
 	public void detach() {
