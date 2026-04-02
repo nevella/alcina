@@ -576,7 +576,7 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		if (others.isEmpty()) {
 			return IntersectionType.none;
 		}
-		if (i2 <= others.getFirst().i1 || i1 >= others.getLast().i1) {
+		if (i2 <= others.getFirst().i1 || i1 >= others.getLast().i2) {
 			return IntersectionType.none;
 		}
 		/*
