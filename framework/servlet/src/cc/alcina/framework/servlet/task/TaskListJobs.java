@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -43,6 +44,8 @@ import cc.alcina.framework.servlet.servlet.JobServlet;
 import cc.alcina.framework.servlet.servlet.TaskWithHtmlResult;
 
 public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
+	static Configuration.Key showTree = Configuration.key("showTree");
+
 	private String filterText;
 
 	private transient Pattern filterPattern;
@@ -429,7 +432,9 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 			});
 		}
 		addActive(doc, "top-level - active", Job::provideIsTopLevel, false);
-		addActive(doc, "top-level - tree", Job::provideIsTopLevel, true);
+		if (showTree.is()) {
+			addActive(doc, "top-level - tree", Job::provideIsTopLevel, true);
+		}
 		addActive(doc, "child - active", Job::provideIsNotTopLevel, false);
 		limit = Math.max(limit, 20);
 		addCompleted(doc, "top-level", true, limit);
