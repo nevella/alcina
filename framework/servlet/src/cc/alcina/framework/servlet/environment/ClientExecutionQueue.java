@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -387,9 +388,7 @@ class ClientExecutionQueue implements Runnable {
 		return executionThread != null;
 	}
 
-	void onLoopException(Exception e) {
-		transportLayer.sendMessage(ProcessingException.wrap(e,
-				environment.access().isSendFullExceptionMessage()));
+	void onLoopException(Throwable e) {
 		if (e instanceof InvokeException.PageHide) {
 			// unavoidable
 		} else {
@@ -397,6 +396,25 @@ class ClientExecutionQueue implements Runnable {
 					"loop exception:\n=====================================",
 					e);
 		}
+		if (isProtocolException(e)) {
+			transportLayer.sendMessage(ProcessingException.wrap(e,
+					environment.access().isSendFullExceptionMessage()));
+		} else {
+			GWT.getUncaughtExceptionHandler().onUncaughtException(e);
+		}
+	}
+
+	/*
+	 * 
+	 * wip - romcom - in general, exceptions on the execution thread shouldn't
+	 * cause the app to stop (they wouldn't, normally, in a js client app). The
+	 * exception is when the protocol/comms chain is broken due to a
+	 * framework-level comms error, but that's currently something really only
+	 * detected on the http/jetty thread - serialization failures, that sorta
+	 * whatsit
+	 */
+	boolean isProtocolException(Throwable e) {
+		return false;
 	}
 
 	/*
@@ -472,7 +490,7 @@ class ClientExecutionQueue implements Runnable {
 	void runCatchLoopException(Runnable runnable) {
 		try {
 			runnable.run();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			onLoopException(e);
 		}
 	}

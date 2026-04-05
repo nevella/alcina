@@ -33,7 +33,14 @@
 
           > operator
             display: inline-block
-            padding: 0 0.5rem
+
+            > rendered-operator
+              display: inline-block
+              padding: 0 0.5rem
+              cursor: pointer
+
+              &:hover
+                background-color: #ffffff80
 
           > value-editor
             display: inline-block

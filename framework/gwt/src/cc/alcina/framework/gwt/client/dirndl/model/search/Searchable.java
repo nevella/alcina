@@ -28,8 +28,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorSingle;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
@@ -65,7 +68,7 @@ class Searchable extends Model.Fields
 	@Binding(type = Type.PROPERTY)
 	String criterionClass;
 
-	@Directed
+	@Directed(tag = "operator")
 	Dropdown operatorDropdown;
 
 	@Directed
@@ -98,8 +101,10 @@ class Searchable extends Model.Fields
 	class OperatorSelector extends Model.Fields
 			implements ValueChange.Container {
 		@Directed.Transform(
-			value = Choices.Select.To.class,
+			// value = Choices.Select.To.class,
+			value = ChoicesEditorSingle.SingleSuggestions.To.class,
 			transformsNull = true)
+		@FocusOnBindMarker
 		@Choices.EnumValues(StandardSearchOperator.class)
 		StandardSearchOperator operator;
 
@@ -110,9 +115,13 @@ class Searchable extends Model.Fields
 
 		@Override
 		public void onNodeContext(NodeContext event) {
-			from(properties().operator())
-					.to(searchCriterion.searchCriterionProperties().operator())
-					.bidi();
+			from(searchCriterion.searchCriterionProperties().operator())
+					.to(properties().operator()).bidi();
+			from(properties().operator()).signal(() -> {
+				if (provideIsBound()) {
+					emitEvent(ModelEvents.Close.class);
+				}
+			});
 		}
 	}
 
@@ -125,7 +134,8 @@ class Searchable extends Model.Fields
 				.getClass().getSimpleName().replace("Criterion", ""));
 		renderedOperator = new RenderedOperator();
 		operatorDropdown = new Dropdown(renderedOperator,
-				() -> new OperatorSelector()).withLogicalParent(this);
+				() -> new OperatorSelector()).withLogicalAncestor(getClass())
+						.withXalign(Position.START);
 	}
 
 	PackageProperties._Searchable.InstanceProperties properties() {

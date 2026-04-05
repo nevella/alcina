@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -54,6 +55,8 @@ class SequenceTable extends Model.Fields
 			}
 			return super.contextAnnotation(reflector, clazz, resolutionContext);
 		}
+
+		CountingMap<AnnotationLocation> count = new CountingMap<>();
 
 		@Override
 		protected <A extends Annotation> List<A> resolveAnnotations0(

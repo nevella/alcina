@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.cmp.status;
 
+import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -14,15 +16,20 @@ import cc.alcina.framework.gwt.client.logic.CallManager;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 
-/*
+/**
+ * <p>
+ * A not-very-thoroughly scoped status/message system
+ * 
+ * <p>
  * FIXME - dirndl - CallManager conflates non-dismissable notifications
  * (messages) with dismissable (say 'running x' or 'searching'). Fix that by
  * changing the API from String to Notification (or Message) - and then refactor
  * callmanager, messagemanager and the status modules (in fact, the internal
  * refactor is done already done - But need to add 'DISMISS', 'UNDO' etc)
  *
- * dirndl app messsages should come via Notification, which routes to here via
- * (legacy) MessageManager
+ * <p>
+ * dirndl app messsages should come via {@link NotificationObservable}, which
+ * routes to here via (legacy) {@link MessageManager}
  *
  */
 @Registration.Singleton
@@ -62,10 +69,17 @@ public class StatusModule {
 			implements ProcessObserver<NotificationObservable> {
 		@Override
 		public void topicPublished(NotificationObservable message) {
-			if (message.level == LogLevel.DEBUG) {
+			switch (message.level) {
+			case DEBUG:
 				Ax.out(message);
-			} else {
+				break;
+			case ERROR:
+				showMessage(message.message,
+						Channel.EXCEPTION_MESSAGE_PUBLISHED);
+				break;
+			default:
 				showMessage(message.message, Channel.MESSAGE_PUBLISHED);
+				break;
 			}
 		}
 	}
@@ -142,5 +156,17 @@ public class StatusModule {
 
 	public void showMessageTransitional(String string) {
 		showMessage(string, Channel.MESSAGE_PUBLISHED);
+	}
+
+	public static UncaughtExceptionHandler createUncaughtExceptionHandler() {
+		return new UncaughtExceptionHandlerImpl();
+	}
+
+	static class UncaughtExceptionHandlerImpl
+			implements UncaughtExceptionHandler {
+		@Override
+		public void onUncaughtException(Throwable e) {
+			NotificationObservable.of(e).withLevel(LogLevel.ERROR).publish();
+		}
 	}
 }

@@ -326,6 +326,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	protected void validateSelection0() {
+		if (!((Model) decoratorParent).provideIsBound()) {
+			return;
+		}
 		EditSelection selection = new EditSelection();
 		if (!selection.hasSelection()) {
 			return;

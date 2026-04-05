@@ -198,6 +198,12 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		}
 
 		@Override
+		protected Property resolveDirectedProperty0(Property property) {
+			return field.getSharedAnnotationResolver()
+					.resolveDirectedProperty0(property);
+		}
+
+		@Override
 		public synchronized <A extends Annotation> List<A> resolveAnnotations(
 				Class<A> annotationClass, AnnotationLocation location) {
 			AnnotationLocation sharedLocation = location

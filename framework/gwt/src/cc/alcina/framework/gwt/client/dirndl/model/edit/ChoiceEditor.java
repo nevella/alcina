@@ -182,12 +182,22 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Override
 	protected void populateFromNodeContext(Node node,
 			Predicate<T> valueFilter) {
-		Optional<Class<? extends SuggestOracleRouter>> routerTypeOptional = node
-				.optional(RouterType.class).map(RouterType::value);
-		SuggestOracleRouter suggestOracleRouter = routerTypeOptional
-				.map(Reflections::newInstance).orElse(null);
-		if (suggestOracleRouter != null) {
-			this.suggestOracleRouter = suggestOracleRouter;
+		if (nodeContextPopulated) {
+			return;
+		}
+		{
+			Optional<Class<? extends SuggestOracleRouter>> routerTypeOptional = node
+					.optional(RouterType.class).map(RouterType::value);
+			SuggestOracleRouter suggestOracleRouter = routerTypeOptional
+					.map(Reflections::newInstance).orElse(null);
+			if (suggestOracleRouter != null) {
+				this.suggestOracleRouter = suggestOracleRouter;
+			}
+		}
+		{
+			boolean focusOnBind = node.optional(FocusOnBindMarker.class)
+					.isPresent();
+			editArea.focusOnBind = focusOnBind;
 		}
 		super.populateFromNodeContext(node, valueFilter);
 	}
@@ -276,15 +286,14 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.forEach(editArea.fragmentModel.getFragmentRoot()::append);
 	}
 
+	//
 	void updateAreaFromSelectedValue(T value) {
 		List<T> values = value == null ? List.of() : List.of(value);
-		Client.eventBus().queued()
-				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
+		exec(() -> updateAreaFromSelectedValues0(values)).dispatch();
 	}
 
 	void updateAreaFromSelectedValues(List<T> values) {
-		Client.eventBus().queued()
-				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
+		exec(() -> updateAreaFromSelectedValues0(values)).dispatch();
 	}
 
 	void areaContentsFromChoices0(List<Choice<?>> choices) {

@@ -303,7 +303,8 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 			setPattern(validation.pattern());
 		});
 		node.optional(InputType.class).ifPresent(type -> setType(type.value()));
-		node.optional(FocusOnBind.class).ifPresent(ann -> setFocusOnBind(true));
+		node.optional(FocusOnBindMarker.class)
+				.ifPresent(ann -> setFocusOnBind(true));
 		node.optional(TextArea.class).ifPresent(ann -> setTag("textarea"));
 	}
 
@@ -500,13 +501,6 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 				}
 			});
 		}
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface FocusOnBind {
 	}
 
 	@ClientVisible

@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -30,6 +31,11 @@ public class DelegatingContextResolver extends ContextResolver {
 	public synchronized <A extends Annotation> List<A> resolveAnnotations(
 			Class<A> annotationClass, AnnotationLocation location) {
 		return parent.resolveAnnotations(annotationClass, location);
+	}
+
+	@Override
+	public Resolver locationResolver() {
+		return parent;
 	}
 
 	@Override

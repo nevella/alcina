@@ -114,6 +114,13 @@ public enum StandardSearchOperator implements SearchOperator {
 			switch (operator) {
 			case EQUALS:
 				return ":";
+			case CONTAINS:
+			case AT_LEAST_ONE_OF:
+				return "\u220B";
+			case DOES_NOT_CONTAIN:
+				return "\u220C";
+			case ALL_OF:
+				return "\u2287";
 			default:
 				FilterOperator filterOperator = operator.toFilterOperator();
 				if (filterOperator != null) {

@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
 
 /*
  * There are a *few* bits copied from Choices.Single, but it's more different
@@ -99,7 +100,11 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 
 		@Override
 		public void onSelectionChanged(ModelEvents.SelectionChanged event) {
+			if (event.checkReemitted(this)) {
+				return;
+			}
 			setValue(editor.getSelectedValue());
+			event.reemit();
 		}
 	}
 
@@ -131,5 +136,15 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 	@Override
 	public void setValue(T t) {
 		setSelectedValue(t);
+	}
+
+	@Override
+	public void onDecoratorsChanged(DecoratorsChanged event) {
+		List<DecoratorNode> model = event.getModel();
+		List<T> decoratorChoiceValues = model.stream()
+				.map(n -> (T) n.getStringRepresentable()).toList();
+		if (decoratorChoiceValues.size() == 1) {
+			setValue(Ax.first(decoratorChoiceValues));
+		}
 	}
 }

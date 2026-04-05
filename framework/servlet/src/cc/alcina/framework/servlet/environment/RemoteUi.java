@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.google.gwt.activity.shared.ActivityMapper;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
@@ -207,6 +208,8 @@ public interface RemoteUi {
 		 * NotificationObservables at the correct context level
 		 */
 		StatusModule.get();
+		GWT.setUncaughtExceptionHandler(
+				StatusModule.createUncaughtExceptionHandler());
 	}
 
 	default boolean isSendFullExceptionMessage() {

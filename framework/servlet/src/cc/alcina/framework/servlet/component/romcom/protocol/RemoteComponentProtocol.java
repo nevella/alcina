@@ -316,7 +316,7 @@ public class RemoteComponentProtocol {
 		 */
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class ProcessingException extends Message {
-			public static ProcessingException wrap(Exception e,
+			public static ProcessingException wrap(Throwable e,
 					boolean includeFullTrace) {
 				Message.ProcessingException processingException = new Message.ProcessingException();
 				processingException.exceptionClassName = e.getClass().getName();

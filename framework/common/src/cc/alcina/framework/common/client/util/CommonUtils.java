@@ -1912,8 +1912,9 @@ public class CommonUtils {
 	}
 
 	public static String toSimpleExceptionMessage(Throwable caught) {
-		return format("%s:%s", caught.getClass().getSimpleName(),
-				caught.getMessage());
+		String message = caught.getMessage();
+		String name = NestedName.get(caught);
+		return Ax.isBlank(message) ? name : format("%s:%s", name, message);
 	}
 
 	public static String toUrlFragment(Object object) {

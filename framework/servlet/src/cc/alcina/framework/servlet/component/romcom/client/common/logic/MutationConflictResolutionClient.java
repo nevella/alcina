@@ -12,7 +12,7 @@ public class MutationConflictResolutionClient
 	}
 
 	MutationConflictResolutionClient() {
-		new TestRejectionObserver().bind();
-		new RejectHappensBeforeQueuedMutations().bind();
+		// new TestRejectionObserver().bind();
+		// new RejectHappensBeforeQueuedMutations().bind();
 	}
 }

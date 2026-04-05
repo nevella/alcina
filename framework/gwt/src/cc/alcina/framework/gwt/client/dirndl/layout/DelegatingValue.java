@@ -49,7 +49,7 @@ public class DelegatingValue extends Model.Value<Object>
 	 * 
 	 * FIXME - dirndl 3.0
 	 */
-	class ValueTransformerResolver extends ContextResolver {
+	class ValueTransformerResolver extends DelegatingContextResolver {
 		ValueTransformerResolver() {
 		}
 

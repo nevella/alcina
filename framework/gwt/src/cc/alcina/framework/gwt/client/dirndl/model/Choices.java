@@ -1083,6 +1083,11 @@ public abstract class Choices<T> extends Model implements
 
 	protected boolean changeOnSelectionEvent = true;
 
+	/*
+	 * prevent double-population from delegating constructs
+	 */
+	protected boolean nodeContextPopulated = false;
+
 	boolean hasValueSupplier;
 
 	public Choices() {
@@ -1189,6 +1194,10 @@ public abstract class Choices<T> extends Model implements
 		if (node == null) {
 			return;
 		}
+		if (nodeContextPopulated) {
+			return;
+		}
+		nodeContextPopulated = true;
 		node.optional(Categoriser.class)
 				.ifPresent(ann -> this.categoriser = (Function) Reflections
 						.newInstance(ann.value()));

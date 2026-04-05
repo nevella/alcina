@@ -57,8 +57,7 @@ public class FmsContextResolver extends ContextResolver {
 			outgoingLocation = new AnnotationLocation(modifiedClass,
 					location.property, this);
 			// note that we need to preserve the parent resolution state
-			outgoingLocation
-					.setResolutionState(location.ensureResolutionState());
+			outgoingLocation.setResolutionState(location.getResolutionState());
 		}
 		return resolveAnnotations0Super(annotationClass, outgoingLocation);
 	}
