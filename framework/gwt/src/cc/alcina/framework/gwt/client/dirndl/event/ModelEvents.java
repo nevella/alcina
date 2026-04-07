@@ -595,6 +595,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Save extends ModelEvent<Object, Save.Handler> {
+		@Override
+		public void dispatch(Save.Handler handler) {
+			handler.onSave(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSave(Save event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSave(Save event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Search extends ModelEvent<Object, Search.Handler> {
 		@Override
 		public void dispatch(Search.Handler handler) {
