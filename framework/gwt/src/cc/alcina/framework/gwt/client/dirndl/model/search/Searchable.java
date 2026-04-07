@@ -113,6 +113,18 @@ class Searchable extends Model.Fields
 		}
 	}
 
+	/*
+	@formatter:off
+	
+	Notes on model/overlays when editing the operator
+
+	Clicking on the dropdown opens the and overlay with contents OperatorSelector, which contains a 
+	contenteditable [EditArea]. OnBind, that editor displays a choice-suggestor - which does not have an input
+	(input comes from the EditArea), but does contain the results
+
+
+	@formatter:on
+	*/
 	@TypedProperties
 	class OperatorSelector extends Model.Fields
 			implements ValueChange.Container {
@@ -122,7 +134,7 @@ class Searchable extends Model.Fields
 			transformsNull = true)
 		@FocusOnBindMarker
 		@Choices.EnumValues(StandardSearchOperator.class)
-		@ValueTransformer(ChoiceRenderer.class)
+		@ValueTransformer(ChoiceRenderer.To.class)
 		StandardSearchOperator operator;
 
 		PackageProperties._Searchable_OperatorSelector.InstanceProperties
@@ -273,6 +285,8 @@ class Searchable extends Model.Fields
 			return "\u220C";
 		case ALL_OF:
 			return "\u2287";
+		case STARTS_WITH:
+			return "\u2288";
 		default:
 			FilterOperator filterOperator = operator.toFilterOperator();
 			if (filterOperator != null) {
@@ -298,27 +312,30 @@ class Searchable extends Model.Fields
 	}
 
 	@Reflected
-	static class ChoiceRenderer extends Model.All
-			implements Function<StandardSearchOperator, ChoiceRenderer> {
-		String operatorChar;
+	static class ChoiceRenderer extends Model.All {
+		static class To
+				implements Function<StandardSearchOperator, ChoiceRenderer> {
+			@Override
+			public ChoiceRenderer apply(StandardSearchOperator operator) {
+				return new ChoiceRenderer(operator);
+			}
+		}
 
-		String separator = ":";
+		String operatorChar;
 
 		String operatorName;
 
 		@Property.Not
 		StandardSearchOperator operator;
 
-		@Override
-		public ChoiceRenderer apply(StandardSearchOperator operator) {
+		ChoiceRenderer(StandardSearchOperator operator) {
 			this.operator = operator;
-			return this;
 		}
 
 		@Override
 		public void onNodeContext(NodeContext event) {
 			this.operatorChar = Searchable.operatorText(operator, node);
-			this.operatorName = operator.name();
+			this.operatorName = operator.getName();
 		}
 	}
 }

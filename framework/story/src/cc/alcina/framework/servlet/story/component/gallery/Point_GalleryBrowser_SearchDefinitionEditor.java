@@ -11,10 +11,13 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
  */
 @Decl.Require(Story_GalleryBrowser.State.Home.class)
 @Decl.Child(Point_GalleryBrowser_Home.ToSearchDefinitionEditor.class)
-@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionOperator.class)
+// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
 @Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
 public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String XPATH_CREATED_FROM_INPUT = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']//input";
+
+	static final String XPATH_CREATED_FROM_OPERATOR = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']//operator";
 
 	static final String XPATH_CURSOR_TARGET = "//search-definition-editor//suggesting-node";
 
@@ -25,6 +28,14 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String _REL_CHOICE_MUTATIONS = "//suggestion[contains(.,'mutations')]";
 
 	static final String XPATH_SELECT = "//search-definition-editor//searchable//select";
+
+	@Decl.Child(_DefinitionOperator.ClickCreatedFrom.class)
+	static class _DefinitionOperator extends Waypoint {
+		@Decl.Location.Xpath(XPATH_CREATED_FROM_OPERATOR)
+		@Decl.Action.UI.Click
+		static class ClickCreatedFrom extends Waypoint {
+		}
+	}
 
 	@Decl.Child(_DefinitionEditor.ClickCreatedFrom.class)
 	@Decl.Child(_DefinitionEditor.SetCreatedFromText.class)

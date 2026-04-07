@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValue;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.Markup;
@@ -495,6 +497,24 @@ public class Suggestor extends Model implements
 			@Override
 			public String toString() {
 				return model.toString();
+			}
+
+			public static class Rendered extends ModelSuggestion {
+				@Directed
+				public Model renderedModel;
+
+				public Rendered(Object model,
+						Function<Object, Model> valueTransformer) {
+					super(model);
+					renderedModel = valueTransformer
+							.apply(((Choice) model).getValue());
+				}
+
+				@Directed.Exclude
+				@Override
+				public Object getModel() {
+					return super.getModel();
+				}
 			}
 		}
 

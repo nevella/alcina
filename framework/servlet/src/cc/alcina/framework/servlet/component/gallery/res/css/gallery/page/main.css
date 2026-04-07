@@ -1994,7 +1994,14 @@ search-definition-editor > choice-editor > edit choice-node > searchable > name 
 }
 search-definition-editor > choice-editor > edit choice-node > searchable > operator {
   display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator {
+  display: inline-block;
   padding: 0 0.5rem;
+  cursor: pointer;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator:hover {
+  background-color: #ffffff80;
 }
 search-definition-editor > choice-editor > edit choice-node > searchable > value-editor {
   display: inline-block;
@@ -2019,6 +2026,17 @@ search-definition-editor > go-container > button:hover {
   color: #5070FF;
   background: white;
   border-color: transparent;
+}
+search-definition-editor[popups-open] > choice-editor {
+  background: white;
+}
+
+overlay.searchable.operator-selector suggestor > results choice-renderer {
+  display: flex;
+  gap: 0.8rem;
+}
+overlay.searchable.operator-selector suggestor > results choice-renderer > operator-char {
+  width: 1rem;
 }
 
 overlay.string-area string-area-expanded {

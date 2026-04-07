@@ -75,3 +75,13 @@
 @mixin tag
   search-definition-editor
     @include contents
+
+  overlay.searchable.operator-selector suggestor > results
+    choice-renderer
+      display: flex
+      gap: 0.8rem
+
+      > operator-char
+        width: 1rem
+
+      

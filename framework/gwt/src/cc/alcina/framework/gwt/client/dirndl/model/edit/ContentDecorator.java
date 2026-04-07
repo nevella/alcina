@@ -127,12 +127,18 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
 		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler,
 		DomEvents.Focusout.Handler {
-	public static class Builder<T> {
+	public static class Attributes<T> {
 		HasDecorators decoratorParent;
 
 		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
 
 		DecoratorNode.Descriptor<?, ?, ?> descriptor;
+
+		Model suggestorRelativeTo;
+
+		public void setSuggestorRelativeTo(Model suggestorRelativeTo) {
+			this.suggestorRelativeTo = suggestorRelativeTo;
+		}
 
 		public ContentDecorator build() {
 			Preconditions.checkNotNull(decoratorParent);
@@ -160,8 +166,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	class CancelledDecoratorSuggestion {
 	}
 
-	public static ContentDecorator.Builder builder() {
-		return new Builder();
+	public static ContentDecorator.Attributes attributes() {
+		return new Attributes();
 	}
 
 	/*
@@ -213,19 +219,22 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	DomNode overlayEditNode;
 
+	Model suggestorRelativeTo;
+
 	/**
 	 * Should only be called by the builder
 	 * 
-	 * @param builder
+	 * @param attributes
 	 */
-	private ContentDecorator(ContentDecorator.Builder builder) {
+	private ContentDecorator(ContentDecorator.Attributes attributes) {
 		/*
 		 * AttributeBehaviorHandler registration is required
 		 */
 		Preconditions.checkState(BehaviorRegistry.isInitialised());
-		this.descriptor = builder.descriptor;
-		this.suggestorProvider = builder.suggestorProvider;
-		this.decoratorParent = builder.decoratorParent;
+		this.descriptor = attributes.descriptor;
+		this.suggestorProvider = attributes.suggestorProvider;
+		this.decoratorParent = attributes.decoratorParent;
+		this.suggestorRelativeTo = attributes.suggestorRelativeTo;
 	}
 
 	public boolean isActive() {
@@ -487,17 +496,19 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			// Webkit style-preserving?
 		}
 		Overlay.Attributes attributes = Overlay.attributes();
-		Element domElement = (Element) decoratorDomNode.w3cElement();
+		Element rectElement = suggestorRelativeTo != null
+				? suggestorRelativeTo.provideElement()
+				: (Element) decoratorDomNode.w3cElement();
 		suggestor = suggestorProvider.apply(this, decoratorDomNode);
 		attributes.withCssClass("decorator-suggestor");
 		attributes.withConsumeSubmit(true).withFocusOnBind(false);
 		try {
-			DomRect boundingClientRect = domElement.getBoundingClientRect();
+			DomRect boundingClientRect = rectElement.getBoundingClientRect();
 			overlay = attributes
 					.dropdown(OverlayPosition.Position.START,
 							boundingClientRect, (Model) decoratorParent,
 							suggestor)
-					.withRectSourceElement(domElement)
+					.withRectSourceElement(rectElement)
 					.withPeerModels(List.of(this.suggestingNode)).create();
 			new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
 					.publish();

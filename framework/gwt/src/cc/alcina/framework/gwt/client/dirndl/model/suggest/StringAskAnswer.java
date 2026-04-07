@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.SuggestOracle;
 
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion;
@@ -26,17 +27,30 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 public class StringAskAnswer<T> {
 	public Suggestor.Answers ask(Suggestor.StringAsk ask, List<T> models,
 			Function<T, String> stringRepresentation) {
+		return ask(ask, models, stringRepresentation, null);
+	}
+
+	public Suggestor.Answers ask(Suggestor.StringAsk ask, List<T> models,
+			Function<T, String> stringRepresentation,
+			Function<Object, Model> valueTransformer) {
 		Suggestor.Answers result = new Answers(ask);
 		result.ask = ask;
 		models.stream().map(model -> {
 			String string = stringRepresentation.apply(model);
 			MarkupMatch match = new MarkupMatch(string, ask.getValue());
 			if (match.hasMatches()) {
-				Suggestion.Markup suggestion = new Suggestion.Markup();
-				suggestion.setMarkup(match.toMarkup());
-				suggestion.setMatch(true);
-				suggestion.setModel(model);
-				return suggestion;
+				if (valueTransformer != null) {
+					Suggestion.ModelSuggestion suggestion = new Suggestion.ModelSuggestion.Rendered(
+							model, valueTransformer);
+					suggestion.match = true;
+					return suggestion;
+				} else {
+					Suggestion.Markup suggestion = new Suggestion.Markup();
+					suggestion.setMarkup(match.toMarkup());
+					suggestion.setMatch(true);
+					suggestion.setModel(model);
+					return suggestion;
+				}
 			} else {
 				return null;
 			}

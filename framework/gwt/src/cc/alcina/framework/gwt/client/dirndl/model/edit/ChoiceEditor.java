@@ -33,6 +33,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
@@ -167,7 +168,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		keyboardNavigation = new KeyboardNavigation(this);
 		from(editArea).on(EditArea.properties.value).withSetOnInitialise(false)
 				.signal(this::onEditCommit);
-		decorators.add(createChoiceDecorator());
 	}
 
 	/*
@@ -194,11 +194,20 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				this.suggestOracleRouter = suggestOracleRouter;
 			}
 		}
+		Function valueTransformer = null;
+		{
+			Optional<Class<? extends Function>> valueTransformerOptional = node
+					.optional(ValueTransformer.class)
+					.map(ValueTransformer::value);
+			valueTransformer = valueTransformerOptional
+					.map(Reflections::newInstance).orElse(null);
+		}
 		{
 			boolean focusOnBind = node.optional(FocusOnBindMarker.class)
 					.isPresent();
 			editArea.focusOnBind = focusOnBind;
 		}
+		decorators.add(createChoiceDecorator(valueTransformer));
 		super.populateFromNodeContext(node, valueFilter);
 	}
 
@@ -266,14 +275,16 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.collect(Collectors.toList());
 	}
 
-	ContentDecorator createChoiceDecorator() {
-		ContentDecorator.Builder<Choice> builder = ContentDecorator.builder();
-		builder.setSuggestorProvider(
+	ContentDecorator createChoiceDecorator(Function valueTransformer) {
+		ContentDecorator.Attributes<Choice> attributes = ContentDecorator
+				.attributes();
+		attributes.setSuggestorProvider(
 				(decorator, decoratorNode) -> new ChoiceSuggestor(this,
-						decorator, decoratorNode));
-		builder.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
-		builder.setDecoratorParent(this);
-		return builder.build();
+						decorator, decoratorNode, valueTransformer));
+		attributes.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
+		attributes.setDecoratorParent(this);
+		attributes.setSuggestorRelativeTo(this);
+		return attributes.build();
 	}
 
 	// FIXME - fragmentNode - can this initial deferral be avoided?
