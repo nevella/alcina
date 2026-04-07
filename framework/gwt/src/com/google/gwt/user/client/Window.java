@@ -1289,4 +1289,24 @@ public class Window {
 	public static DomRect getRect() {
 		return DomRect.fromOrigin(getClientWidth(), getClientHeight());
 	}
+
+	private static native void copyString0(String value) /*-{
+	$wnd.navigator.clipboard.writeText(value);
+	}-*/;
+
+	/**
+	 * Utility methods, easier than say adding a ContextFrame for
+	 * Window.Navigator.Clipboard
+	 */
+	public static class Util {
+		/**
+		 * Copy the value to the clipboard
+		 * 
+		 * @param value
+		 */
+		public static void copyString(String value) {
+			Document.get().invoke(() -> Window.copyString0(value), Window.class,
+					"copyString0", null, List.of(value), false);
+		}
+	}
 }
