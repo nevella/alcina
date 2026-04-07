@@ -129,11 +129,15 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		}
 
 		public GwtEvent getOriginatingGwtEvent() {
+			return getOriginatingContext().gwtEvent;
+		}
+
+		public Context getOriginatingContext() {
 			Context cursor = this;
 			while (cursor.previous != null) {
 				cursor = cursor.previous;
 			}
-			return cursor.gwtEvent;
+			return cursor;
 		}
 
 		public NativeEvent getOriginatingNativeEvent() {

@@ -1214,6 +1214,9 @@ body > page > header > search > search-definition-editor > go-container > button
   background: white;
   border-color: transparent;
 }
+body > page > header > search > search-definition-editor[popups-open] > choice-editor {
+  background: white;
+}
 body > page > header > search > search-definition-editor edit {
   width: auto;
 }

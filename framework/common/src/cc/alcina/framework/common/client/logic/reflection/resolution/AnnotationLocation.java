@@ -4,11 +4,9 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
@@ -212,7 +210,6 @@ public class AnnotationLocation {
 
 	@Override
 	public int hashCode() {
-		long n1 = System.nanoTime();
 		if (hash == 0) {
 			hash ^= property == null ? 0 : property.hashCode();
 			hash ^= classLocation == null ? 0 : classLocation.hashCode();
@@ -438,36 +435,8 @@ public class AnnotationLocation {
 			return (A) Ax.first(resolveAnnotations(annotationClass, location));
 		}
 
-		static Set<AnnotationLocation> locationDebug = Collections
-				.synchronizedSet(new HashSet<>());
-
 		public synchronized <A extends Annotation> List<A> resolveAnnotations(
 				Class<A> annotationClass, AnnotationLocation location) {
-			if (!resolvedCache().delegate().containsKey(location)) {
-				location.hashCode();
-				if (location.toString().contains("TableRow.cells")) {
-					int debug = 3;
-				}
-				boolean dump = false;
-				if (dump) {
-					resolvedCache.delegate().keySet()
-							.forEach(k -> Ax.out("%s :: %s", k, k.hashCode()));
-					List list = resolvedCache
-							.delegate().keySet().stream().filter(k -> k
-									.toString().equals(location.toString()))
-							.toList();
-					int debug = 3;
-					location.equals(list.get(0));
-				}
-			}
-			if (locationDebug.add(location)) {
-				if (locationDebug.size() % 500 == 0) {
-					if (location.toString().contains("TextTitle.text")) {
-						int debug = 3;
-					}
-					Ax.out("FMS::%s::%s", locationDebug.size(), location);
-				}
-			}
 			return (List<A>) resolvedCache().ensure(() -> {
 				return resolveAnnotations0(annotationClass, location);
 			}, location, annotationClass);

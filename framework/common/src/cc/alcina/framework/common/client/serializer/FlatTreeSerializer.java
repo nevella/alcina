@@ -1518,7 +1518,6 @@ public class FlatTreeSerializer {
 					return String.valueOf(((Date) value).getTime());
 				}
 			} else if (value instanceof String) {
-				String escapedValue = escapeValue(value.toString());
 				return escapeValue(value.toString());
 			} else if (value instanceof Entity) {
 				Entity entity = (Entity) value;

@@ -220,6 +220,7 @@ public class Dropdown extends Model
 		closedOverlayData = new ClosedOverlayData(event);
 		// the popup closed, so change the corresponding state
 		setOpen(false);
+		event.bubble();
 	}
 
 	@Override

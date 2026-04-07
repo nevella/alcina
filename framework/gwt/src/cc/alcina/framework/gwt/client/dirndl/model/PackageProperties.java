@@ -92,6 +92,7 @@ public class PackageProperties {
       public TypedProperty<Choices.MultipleSelect, List> elements = new TypedProperty<>(Choices.MultipleSelect.class, "elements");
       public TypedProperty<Choices.MultipleSelect, Boolean> hasValueSupplier = new TypedProperty<>(Choices.MultipleSelect.class, "hasValueSupplier");
       public TypedProperty<Choices.MultipleSelect, Boolean> multiple = new TypedProperty<>(Choices.MultipleSelect.class, "multiple");
+      public TypedProperty<Choices.MultipleSelect, Boolean> nodeContextPopulated = new TypedProperty<>(Choices.MultipleSelect.class, "nodeContextPopulated");
       public TypedProperty<Choices.MultipleSelect, Boolean> repeatableChoices = new TypedProperty<>(Choices.MultipleSelect.class, "repeatableChoices");
       public TypedProperty<Choices.MultipleSelect, List> selectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "selectedValues");
       public TypedProperty<Choices.MultipleSelect, List> unboundSelectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "unboundSelectedValues");
@@ -104,6 +105,7 @@ public class PackageProperties {
         public InstanceProperty<Choices.MultipleSelect, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.elements);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> hasValueSupplier(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.hasValueSupplier);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> multiple(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.multiple);}
+        public InstanceProperty<Choices.MultipleSelect, Boolean> nodeContextPopulated(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.nodeContextPopulated);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.repeatableChoices);}
         public InstanceProperty<Choices.MultipleSelect, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.selectedValues);}
         public InstanceProperty<Choices.MultipleSelect, List> unboundSelectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.unboundSelectedValues);}

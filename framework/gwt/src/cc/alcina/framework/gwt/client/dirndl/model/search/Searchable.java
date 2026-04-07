@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
+import java.util.function.Function;
+
 import com.google.gwt.dom.client.EventBehavior;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.totsp.gwittir.client.ui.table.Field;
@@ -25,6 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
@@ -34,6 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
+import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorSingle;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
@@ -88,7 +92,9 @@ class Searchable extends Model.Fields
 
 	@TypedProperties
 	class RenderedOperator extends Model.Fields {
-		@Directed.Transform(value = SimpleRenderer.class, transformsNull = true)
+		@Directed.Transform(
+			value = OperatorRenderer.class,
+			transformsNull = true)
 		StandardSearchOperator operator;
 
 		PackageProperties._Searchable_RenderedOperator.InstanceProperties
@@ -116,6 +122,7 @@ class Searchable extends Model.Fields
 			transformsNull = true)
 		@FocusOnBindMarker
 		@Choices.EnumValues(StandardSearchOperator.class)
+		@ValueTransformer(ChoiceRenderer.class)
 		StandardSearchOperator operator;
 
 		PackageProperties._Searchable_OperatorSelector.InstanceProperties
@@ -245,36 +252,41 @@ class Searchable extends Model.Fields
 		return true;
 	}
 
+	static String operatorText(StandardSearchOperator operator,
+			DirectedLayout.Node node) {
+		if (operator == null) {
+			return ":";
+		}
+		SearchCriterion searchCriterion = node.service(Service.class)
+				.getSearchCriterion();
+		if (Reflections.newInstance(searchCriterion.getClass())
+				.getOperator() == operator) {
+			return ":";
+		}
+		switch (operator) {
+		case EQUALS:
+			return "=";
+		case CONTAINS:
+		case AT_LEAST_ONE_OF:
+			return "\u220B";
+		case DOES_NOT_CONTAIN:
+			return "\u220C";
+		case ALL_OF:
+			return "\u2287";
+		default:
+			FilterOperator filterOperator = operator.toFilterOperator();
+			if (filterOperator != null) {
+				return filterOperator.operationText();
+			}
+			return Ax.friendly(operator);
+		}
+	}
+
 	@Reflected
-	static class SimpleRenderer extends
+	static class OperatorRenderer extends
 			AbstractContextSensitiveModelTransform<StandardSearchOperator, LeafModel.TextTitle> {
 		String operatorText(StandardSearchOperator operator) {
-			if (operator == null) {
-				return ":";
-			}
-			SearchCriterion searchCriterion = node.service(Service.class)
-					.getSearchCriterion();
-			if (Reflections.newInstance(searchCriterion.getClass())
-					.getOperator() == operator) {
-				return ":";
-			}
-			switch (operator) {
-			case EQUALS:
-				return "=";
-			case CONTAINS:
-			case AT_LEAST_ONE_OF:
-				return "\u220B";
-			case DOES_NOT_CONTAIN:
-				return "\u220C";
-			case ALL_OF:
-				return "\u2287";
-			default:
-				FilterOperator filterOperator = operator.toFilterOperator();
-				if (filterOperator != null) {
-					return filterOperator.operationText();
-				}
-				return Ax.friendly(operator);
-			}
+			return Searchable.operatorText(operator, node);
 		}
 
 		@Override
@@ -282,6 +294,31 @@ class Searchable extends Model.Fields
 			TextTitle result = new TextTitle(operatorText(t),
 					t == null ? "" : t.getName());
 			return result;
+		}
+	}
+
+	@Reflected
+	static class ChoiceRenderer extends Model.All
+			implements Function<StandardSearchOperator, ChoiceRenderer> {
+		String operatorChar;
+
+		String separator = ":";
+
+		String operatorName;
+
+		@Property.Not
+		StandardSearchOperator operator;
+
+		@Override
+		public ChoiceRenderer apply(StandardSearchOperator operator) {
+			this.operator = operator;
+			return this;
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			this.operatorChar = Searchable.operatorText(operator, node);
+			this.operatorName = operator.name();
 		}
 	}
 }

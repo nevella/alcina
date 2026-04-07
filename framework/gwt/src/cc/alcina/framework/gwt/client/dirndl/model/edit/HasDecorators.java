@@ -116,7 +116,12 @@ public interface HasDecorators
 
 	@Override
 	default void onClosed(Closed event) {
+		/*
+		 * wip - dirndl - check the closed event is from this editor's overlay
+		 * (and not a descendant's)
+		 */
 		getDecorators().forEach(d -> d.onClosed(null));
+		event.bubble();
 	}
 
 	@Override
