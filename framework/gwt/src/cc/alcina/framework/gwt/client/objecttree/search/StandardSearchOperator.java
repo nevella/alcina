@@ -3,11 +3,9 @@ package cc.alcina.framework.gwt.client.objecttree.search;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Reflected
@@ -94,40 +92,6 @@ public enum StandardSearchOperator implements SearchOperator {
 			return FilterOperator.LT_EQ;
 		default:
 			throw new UnsupportedOperationException();
-		}
-	}
-
-	/**
-	 * wip - search - 'simple' rendering actually depends on the set of values
-	 * available to the operator - so replace with a context-aware renderer
-	 * 
-	 * 
-	 */
-	@Reflected
-	public static class SimpleRenderer
-			implements Function<StandardSearchOperator, String> {
-		@Override
-		public String apply(StandardSearchOperator operator) {
-			if (operator == null) {
-				return ":";
-			}
-			switch (operator) {
-			case EQUALS:
-				return ":";
-			case CONTAINS:
-			case AT_LEAST_ONE_OF:
-				return "\u220B";
-			case DOES_NOT_CONTAIN:
-				return "\u220C";
-			case ALL_OF:
-				return "\u2287";
-			default:
-				FilterOperator filterOperator = operator.toFilterOperator();
-				if (filterOperator != null) {
-					return filterOperator.operationText();
-				}
-				return Ax.friendly(operator);
-			}
 		}
 	}
 }

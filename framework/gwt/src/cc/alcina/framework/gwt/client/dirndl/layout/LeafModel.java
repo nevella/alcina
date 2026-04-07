@@ -468,4 +468,16 @@ public interface LeafModel {
 			return new Toggle(body);
 		}
 	}
+
+	public static class LabelText extends Model.All
+			implements Directed.NonClassTag {
+		public String label;
+
+		public String text;
+
+		public LabelText(String label, String text) {
+			this.label = label;
+			this.text = text;
+		}
+	}
 }

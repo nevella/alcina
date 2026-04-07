@@ -4,9 +4,11 @@ import com.google.gwt.dom.client.EventBehavior;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.totsp.gwittir.client.ui.table.Field;
 
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasObject;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -22,6 +24,10 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
@@ -57,6 +63,12 @@ class Searchable extends Model.Fields
 
 	SearchCriterion searchCriterion;
 
+	class Service implements ContextService {
+		public SearchCriterion getSearchCriterion() {
+			return searchCriterion;
+		}
+	}
+
 	// for methodHandle
 	SearchCriterion searchCriterion() {
 		return searchCriterion;
@@ -76,9 +88,7 @@ class Searchable extends Model.Fields
 
 	@TypedProperties
 	class RenderedOperator extends Model.Fields {
-		@Directed.Transform(
-			value = StandardSearchOperator.SimpleRenderer.class,
-			transformsNull = true)
+		@Directed.Transform(value = SimpleRenderer.class, transformsNull = true)
 		StandardSearchOperator operator;
 
 		PackageProperties._Searchable_RenderedOperator.InstanceProperties
@@ -156,6 +166,7 @@ class Searchable extends Model.Fields
 	public void onNodeContext(NodeContext event) {
 		node.getResolver().registerService(StringInput.Service.class,
 				new StringInputServiceImpl());
+		node.getResolver().registerService(Service.class, new Service());
 		properties().valueEditor().set(new ValueEditor());
 		if (service(SearchDefinitionEditor.Service.class)
 				.isInitialRenderComplete()) {
@@ -232,5 +243,45 @@ class Searchable extends Model.Fields
 	@Override
 	public boolean isEditableDecoratorContents() {
 		return true;
+	}
+
+	@Reflected
+	static class SimpleRenderer extends
+			AbstractContextSensitiveModelTransform<StandardSearchOperator, LeafModel.TextTitle> {
+		String operatorText(StandardSearchOperator operator) {
+			if (operator == null) {
+				return ":";
+			}
+			SearchCriterion searchCriterion = node.service(Service.class)
+					.getSearchCriterion();
+			if (Reflections.newInstance(searchCriterion.getClass())
+					.getOperator() == operator) {
+				return ":";
+			}
+			switch (operator) {
+			case EQUALS:
+				return "=";
+			case CONTAINS:
+			case AT_LEAST_ONE_OF:
+				return "\u220B";
+			case DOES_NOT_CONTAIN:
+				return "\u220C";
+			case ALL_OF:
+				return "\u2287";
+			default:
+				FilterOperator filterOperator = operator.toFilterOperator();
+				if (filterOperator != null) {
+					return filterOperator.operationText();
+				}
+				return Ax.friendly(operator);
+			}
+		}
+
+		@Override
+		public TextTitle apply(StandardSearchOperator t) {
+			TextTitle result = new TextTitle(operatorText(t),
+					t == null ? "" : t.getName());
+			return result;
+		}
 	}
 }
