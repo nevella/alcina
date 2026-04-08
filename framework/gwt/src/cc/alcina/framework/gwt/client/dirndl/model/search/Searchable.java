@@ -46,6 +46,11 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
+/*
+ * wip - ds - late - the choice edtior edit width should be determined by the
+ * max popup width? possibly hardcoded *is* better. see
+ * search-definition-editor.sass
+ */
 @TypedProperties
 @DirectedContextResolver
 class Searchable extends Model.Fields

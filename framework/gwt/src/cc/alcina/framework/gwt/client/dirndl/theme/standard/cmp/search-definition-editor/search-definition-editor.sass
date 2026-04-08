@@ -76,12 +76,23 @@
   search-definition-editor
     @include contents
 
-  overlay.searchable.operator-selector suggestor > results
-    choice-renderer
-      display: flex
-      gap: 0.8rem
+  overlay > choice-suggestor.decorator-suggestor
+    border-color: #ffffff00
+    box-shadow: none
 
-      > operator-char
-        width: 1rem
+  overlay.searchable.operator-selector
+    background-color: white
+
+    choice-editor > edit
+      width: 20.2rem
+      border-color: #ccc
+
+    suggestor > results
+      choice-renderer
+        display: flex
+        gap: 0.8rem
+
+        > operator-char
+          width: 1rem
 
       

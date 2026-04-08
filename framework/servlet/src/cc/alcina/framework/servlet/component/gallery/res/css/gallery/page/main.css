@@ -2031,6 +2031,18 @@ search-definition-editor[popups-open] > choice-editor {
   background: white;
 }
 
+overlay > choice-suggestor.decorator-suggestor {
+  border-color: #ffffff00;
+  box-shadow: none;
+}
+
+overlay.searchable.operator-selector {
+  background-color: white;
+}
+overlay.searchable.operator-selector choice-editor > edit {
+  width: 20.2rem;
+  border-color: #ccc;
+}
 overlay.searchable.operator-selector suggestor > results choice-renderer {
   display: flex;
   gap: 0.8rem;
