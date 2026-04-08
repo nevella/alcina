@@ -531,11 +531,12 @@ public class DomNode {
 	}
 
 	public boolean isNonWhitespaceTextContent() {
-		return ntc().length() > 0;
+		return stream().anyMatch(n -> n.isText()
+				&& !TextUtils.isWhitespaceOrEmpty(n.textContent()));
 	}
 
 	public boolean isNonWhitespaceTextOrElement() {
-		return isElement() || ntc().length() > 0;
+		return isElement() || isNonWhitespaceTextContent();
 	}
 
 	public boolean isProcessingInstruction() {
