@@ -24,12 +24,16 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -82,15 +86,29 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			}
 
 			@Override
-			public Function<Choice, ?> itemRenderer() {
-				return choice -> {
+			public ItemRenderer<Choice> itemRenderer() {
+				return (node, choice) -> {
+					if (node == null) {
+						int debug = 3;
+					}
+					Function valueTransformer = node == null ? null
+							: node.service(ChoiceEditor.Service.class)
+									.getValueTransformer();
 					Object value = choice.getValue();
 					if (value instanceof Model) {
 						return value;
 					} else {
-						return choiceToString(choice);
+						if (valueTransformer != null) {
+							return valueTransformer.apply(choice.getValue());
+						} else {
+							return choiceToString(choice);
+						}
 					}
 				};
+			}
+
+			static String choiceToString(Choice choice) {
+				return CommonUtils.nullSafeToString(choice.getValue());
 			}
 
 			public void onCommit(Commit event) {
@@ -114,16 +132,25 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			}
 		}
 
+		Choice choice;
+
 		ChoiceNode() {
 		}
 
 		ChoiceNode(Choice choice) {
-			putReferenced(choice);
+			this.choice = choice;
 		}
 
 		@Override
 		public DecoratorNode.Descriptor<Choice, Object, ?> getDescriptor() {
 			return new ChoiceNode.Descriptor();
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			if (choice != null) {
+				putReferenced(node, choice);
+			}
 		}
 
 		/**
@@ -140,18 +167,30 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		}
 	}
 
-	static String choiceToString(Choice choice) {
-		return CommonUtils.nullSafeToString(choice.getValue());
-	}
-
 	@Directed
 	EditArea editArea;
+
+	@Binding(type = Type.CSS_CLASS)
+	protected boolean single;
 
 	List<ContentDecorator> decorators = new ArrayList<>();
 
 	transient KeyboardNavigation keyboardNavigation;
 
 	SuggestOracleRouter suggestOracleRouter;
+
+	Function valueTransformerFunction;
+
+	class Service implements ContextService {
+		public Function getValueTransformer() {
+			return valueTransformerFunction;
+		}
+	}
+
+	@Override
+	public void onNodeContext(NodeContext event) {
+		event.registerService(Service.class, new Service());
+	}
 
 	@Override
 	public void onDecoratorsChanged(DecoratorsChanged event) {
@@ -166,7 +205,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		editArea = new EditArea();
 		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
 		keyboardNavigation = new KeyboardNavigation(this);
-		from(editArea).on(EditArea.properties.value).withSetOnInitialise(false)
+		from(editArea.properties().value()).withSetOnInitialise(false)
 				.signal(this::onEditCommit);
 	}
 
@@ -194,12 +233,11 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				this.suggestOracleRouter = suggestOracleRouter;
 			}
 		}
-		Function valueTransformer = null;
 		{
 			Optional<Class<? extends Function>> valueTransformerOptional = node
 					.optional(ValueTransformer.class)
 					.map(ValueTransformer::value);
-			valueTransformer = valueTransformerOptional
+			valueTransformerFunction = valueTransformerOptional
 					.map(Reflections::newInstance).orElse(null);
 		}
 		{
@@ -207,7 +245,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 					.isPresent();
 			editArea.focusOnBind = focusOnBind;
 		}
-		decorators.add(createChoiceDecorator(valueTransformer));
+		decorators.add(createChoiceDecorator());
 		super.populateFromNodeContext(node, valueFilter);
 	}
 
@@ -275,12 +313,12 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.collect(Collectors.toList());
 	}
 
-	ContentDecorator createChoiceDecorator(Function valueTransformer) {
+	ContentDecorator createChoiceDecorator() {
 		ContentDecorator.Attributes<Choice> attributes = ContentDecorator
 				.attributes();
 		attributes.setSuggestorProvider(
 				(decorator, decoratorNode) -> new ChoiceSuggestor(this,
-						decorator, decoratorNode, valueTransformer));
+						decorator, decoratorNode, valueTransformerFunction));
 		attributes.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
 		attributes.setDecoratorParent(this);
 		attributes.setSuggestorRelativeTo(this);
@@ -310,7 +348,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	void areaContentsFromChoices0(List<Choice<?>> choices) {
 		choices.forEach(choice -> {
 			ChoiceNode choiceNode = new ChoiceNode();
-			choiceNode.putReferenced(choice);
+			choiceNode.putReferenced(node, choice);
 			editArea.fragmentModel.getFragmentRoot().append(choiceNode);
 		});
 	}

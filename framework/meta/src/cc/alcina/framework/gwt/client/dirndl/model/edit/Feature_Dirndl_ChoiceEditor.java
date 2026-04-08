@@ -30,7 +30,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
   - if an unorderered editor, keyboard input is only allowed at the end of the editable (affects keyboard, pointer selection)
 - focus handling (editor) - delete uncommitted editors on focusout (ContentEditor unwraps but does not delete)
   - impl note: OnFocusLossUnwrapUncommittedDecorators behaviour
-- commit behavior - unlike jira, focusout commits and [esc] cancels
+- commit behavior - unlike jira, focusout commits (if changed) and [esc] cancels
+- single-selection:
+  - existing values are hidden (display none) if the editor is input-dirty
+  
 
 
   

@@ -1927,6 +1927,12 @@ choice-editor > edit choice-node.selected::selection, choice-editor > edit choic
 choice-editor > edit suggesting-node + choice-node {
   margin-left: 3px;
 }
+choice-editor.single edit > .decorator-node {
+  border: none;
+}
+choice-editor.single edit[input-dirty] > .decorator-node {
+  display: none;
+}
 
 overlay > .decorator-suggestor {
   background: white;
@@ -2043,11 +2049,11 @@ overlay.searchable.operator-selector choice-editor > edit {
   width: 20.2rem;
   border-color: #ccc;
 }
-overlay.searchable.operator-selector suggestor > results choice-renderer {
-  display: flex;
+overlay.searchable.operator-selector choice-renderer {
+  display: inline-flex;
   gap: 0.8rem;
 }
-overlay.searchable.operator-selector suggestor > results choice-renderer > operator-char {
+overlay.searchable.operator-selector choice-renderer > operator-char {
   width: 1rem;
 }
 

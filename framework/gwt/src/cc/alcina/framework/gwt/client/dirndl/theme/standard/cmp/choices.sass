@@ -82,6 +82,16 @@ $selected-editor-choice: #77e
 @mixin choice-editor-tag
   choice-editor
     @include suggestions
+
+    &.single
+      edit
+        > .decorator-node
+          border: none
+
+        &[input-dirty]
+          > .decorator-node
+            display: none
+
     
 @mixin decorator-suggestor
   overlay 

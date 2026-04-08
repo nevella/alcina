@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.EditArea;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
@@ -16,6 +17,7 @@ import java.lang.Object;
 import java.lang.String;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Function;
 
 public class PackageProperties {
     // auto-generated, do not modify
@@ -42,8 +44,10 @@ public class PackageProperties {
       public TypedProperty<ChoiceEditor, EditArea> editArea = new TypedProperty<>(ChoiceEditor.class, "editArea");
       public TypedProperty<ChoiceEditor, List> elements = new TypedProperty<>(ChoiceEditor.class, "elements");
       public TypedProperty<ChoiceEditor, Boolean> repeatableChoices = new TypedProperty<>(ChoiceEditor.class, "repeatableChoices");
+      public TypedProperty<ChoiceEditor, Boolean> single = new TypedProperty<>(ChoiceEditor.class, "single");
       public TypedProperty<ChoiceEditor, Suggestor.SuggestOracleRouter> suggestOracleRouter = new TypedProperty<>(ChoiceEditor.class, "suggestOracleRouter");
       public TypedProperty<ChoiceEditor, Class> valueTransformer = new TypedProperty<>(ChoiceEditor.class, "valueTransformer");
+      public TypedProperty<ChoiceEditor, Function> valueTransformerFunction = new TypedProperty<>(ChoiceEditor.class, "valueTransformerFunction");
       public TypedProperty<ChoiceEditor, List> values = new TypedProperty<>(ChoiceEditor.class, "values");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoiceEditor> {
         public  InstanceProperties(ChoiceEditor source){super(source);}
@@ -53,8 +57,10 @@ public class PackageProperties {
         public InstanceProperty<ChoiceEditor, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.editArea);}
         public InstanceProperty<ChoiceEditor, List> elements(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.elements);}
         public InstanceProperty<ChoiceEditor, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.repeatableChoices);}
+        public InstanceProperty<ChoiceEditor, Boolean> single(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.single);}
         public InstanceProperty<ChoiceEditor, Suggestor.SuggestOracleRouter> suggestOracleRouter(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.suggestOracleRouter);}
         public InstanceProperty<ChoiceEditor, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.valueTransformer);}
+        public InstanceProperty<ChoiceEditor, Function> valueTransformerFunction(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.valueTransformerFunction);}
         public InstanceProperty<ChoiceEditor, List> values(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.values);}
       }
       
@@ -66,6 +72,7 @@ public class PackageProperties {
     
     static class _ChoiceEditor_ChoiceNode implements TypedProperty.Container {
       TypedProperty<ChoiceEditor.ChoiceNode, List> behaviors = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "behaviors");
+      TypedProperty<ChoiceEditor.ChoiceNode, Choices.Choice> choice = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "choice");
       TypedProperty<ChoiceEditor.ChoiceNode, Object> content = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "content");
       TypedProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "contentEditable");
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "descriptor");
@@ -75,6 +82,7 @@ public class PackageProperties {
       static class InstanceProperties extends 	InstanceProperty.Container<ChoiceEditor.ChoiceNode> {
          InstanceProperties(ChoiceEditor.ChoiceNode source){super(source);}
         InstanceProperty<ChoiceEditor.ChoiceNode, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.behaviors);}
+        InstanceProperty<ChoiceEditor.ChoiceNode, Choices.Choice> choice(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.choice);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Object> content(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.content);}
         InstanceProperty<ChoiceEditor.ChoiceNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.contentEditable);}
         InstanceProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor(){return new InstanceProperty<>(source,PackageProperties.choiceEditor_choiceNode.descriptor);}
@@ -97,8 +105,10 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorMultiple, List> elements = new TypedProperty<>(ChoicesEditorMultiple.class, "elements");
       public TypedProperty<ChoicesEditorMultiple, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorMultiple.class, "repeatableChoices");
       public TypedProperty<ChoicesEditorMultiple, List> selectedValues = new TypedProperty<>(ChoicesEditorMultiple.class, "selectedValues");
+      public TypedProperty<ChoicesEditorMultiple, Boolean> single = new TypedProperty<>(ChoicesEditorMultiple.class, "single");
       public TypedProperty<ChoicesEditorMultiple, Suggestor.SuggestOracleRouter> suggestOracleRouter = new TypedProperty<>(ChoicesEditorMultiple.class, "suggestOracleRouter");
       public TypedProperty<ChoicesEditorMultiple, Class> valueTransformer = new TypedProperty<>(ChoicesEditorMultiple.class, "valueTransformer");
+      public TypedProperty<ChoicesEditorMultiple, Function> valueTransformerFunction = new TypedProperty<>(ChoicesEditorMultiple.class, "valueTransformerFunction");
       public TypedProperty<ChoicesEditorMultiple, List> values = new TypedProperty<>(ChoicesEditorMultiple.class, "values");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoicesEditorMultiple> {
         public  InstanceProperties(ChoicesEditorMultiple source){super(source);}
@@ -109,8 +119,10 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorMultiple, List> elements(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.elements);}
         public InstanceProperty<ChoicesEditorMultiple, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.repeatableChoices);}
         public InstanceProperty<ChoicesEditorMultiple, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.selectedValues);}
+        public InstanceProperty<ChoicesEditorMultiple, Boolean> single(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.single);}
         public InstanceProperty<ChoicesEditorMultiple, Suggestor.SuggestOracleRouter> suggestOracleRouter(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.suggestOracleRouter);}
         public InstanceProperty<ChoicesEditorMultiple, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.valueTransformer);}
+        public InstanceProperty<ChoicesEditorMultiple, Function> valueTransformerFunction(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.valueTransformerFunction);}
         public InstanceProperty<ChoicesEditorMultiple, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.values);}
       }
       
@@ -128,9 +140,11 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorSingle, List> elements = new TypedProperty<>(ChoicesEditorSingle.class, "elements");
       public TypedProperty<ChoicesEditorSingle, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorSingle.class, "repeatableChoices");
       public TypedProperty<ChoicesEditorSingle, Object> selectedValue = new TypedProperty<>(ChoicesEditorSingle.class, "selectedValue");
+      public TypedProperty<ChoicesEditorSingle, Boolean> single = new TypedProperty<>(ChoicesEditorSingle.class, "single");
       public TypedProperty<ChoicesEditorSingle, Suggestor.SuggestOracleRouter> suggestOracleRouter = new TypedProperty<>(ChoicesEditorSingle.class, "suggestOracleRouter");
       public TypedProperty<ChoicesEditorSingle, Object> value = new TypedProperty<>(ChoicesEditorSingle.class, "value");
       public TypedProperty<ChoicesEditorSingle, Class> valueTransformer = new TypedProperty<>(ChoicesEditorSingle.class, "valueTransformer");
+      public TypedProperty<ChoicesEditorSingle, Function> valueTransformerFunction = new TypedProperty<>(ChoicesEditorSingle.class, "valueTransformerFunction");
       public TypedProperty<ChoicesEditorSingle, List> values = new TypedProperty<>(ChoicesEditorSingle.class, "values");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoicesEditorSingle> {
         public  InstanceProperties(ChoicesEditorSingle source){super(source);}
@@ -141,9 +155,11 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorSingle, List> elements(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.elements);}
         public InstanceProperty<ChoicesEditorSingle, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.repeatableChoices);}
         public InstanceProperty<ChoicesEditorSingle, Object> selectedValue(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.selectedValue);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> single(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.single);}
         public InstanceProperty<ChoicesEditorSingle, Suggestor.SuggestOracleRouter> suggestOracleRouter(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.suggestOracleRouter);}
         public InstanceProperty<ChoicesEditorSingle, Object> value(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.value);}
         public InstanceProperty<ChoicesEditorSingle, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.valueTransformer);}
+        public InstanceProperty<ChoicesEditorSingle, Function> valueTransformerFunction(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.valueTransformerFunction);}
         public InstanceProperty<ChoicesEditorSingle, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.values);}
       }
       
@@ -184,6 +200,7 @@ public class PackageProperties {
       public TypedProperty<EditArea, String> currentValue = new TypedProperty<>(EditArea.class, "currentValue");
       public TypedProperty<EditArea, Boolean> focusOnBind = new TypedProperty<>(EditArea.class, "focusOnBind");
       public TypedProperty<EditArea, FragmentModel> fragmentModel = new TypedProperty<>(EditArea.class, "fragmentModel");
+      public TypedProperty<EditArea, Boolean> inputDirty = new TypedProperty<>(EditArea.class, "inputDirty");
       public TypedProperty<EditArea, Boolean> insertEditorStartCursorTarget = new TypedProperty<>(EditArea.class, "insertEditorStartCursorTarget");
       public TypedProperty<EditArea, Boolean> insertInterNonEditableCursorTargets = new TypedProperty<>(EditArea.class, "insertInterNonEditableCursorTargets");
       public TypedProperty<EditArea, List> lastPublishedDecorators = new TypedProperty<>(EditArea.class, "lastPublishedDecorators");
@@ -198,6 +215,7 @@ public class PackageProperties {
         public InstanceProperty<EditArea, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.editArea.currentValue);}
         public InstanceProperty<EditArea, Boolean> focusOnBind(){return new InstanceProperty<>(source,PackageProperties.editArea.focusOnBind);}
         public InstanceProperty<EditArea, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.editArea.fragmentModel);}
+        public InstanceProperty<EditArea, Boolean> inputDirty(){return new InstanceProperty<>(source,PackageProperties.editArea.inputDirty);}
         public InstanceProperty<EditArea, Boolean> insertEditorStartCursorTarget(){return new InstanceProperty<>(source,PackageProperties.editArea.insertEditorStartCursorTarget);}
         public InstanceProperty<EditArea, Boolean> insertInterNonEditableCursorTargets(){return new InstanceProperty<>(source,PackageProperties.editArea.insertInterNonEditableCursorTargets);}
         public InstanceProperty<EditArea, List> lastPublishedDecorators(){return new InstanceProperty<>(source,PackageProperties.editArea.lastPublishedDecorators);}

@@ -270,14 +270,14 @@ class Searchable extends Model.Fields
 	}
 
 	static String operatorText(StandardSearchOperator operator,
-			DirectedLayout.Node node) {
+			DirectedLayout.Node node, boolean colonIfDefault) {
 		if (operator == null) {
 			return ":";
 		}
 		SearchCriterion searchCriterion = node.service(Service.class)
 				.getSearchCriterion();
 		if (Reflections.newInstance(searchCriterion.getClass())
-				.getOperator() == operator) {
+				.getOperator() == operator && colonIfDefault) {
 			return ":";
 		}
 		switch (operator) {
@@ -305,7 +305,7 @@ class Searchable extends Model.Fields
 	static class OperatorRenderer extends
 			AbstractContextSensitiveModelTransform<StandardSearchOperator, LeafModel.TextTitle> {
 		String operatorText(StandardSearchOperator operator) {
-			return Searchable.operatorText(operator, node);
+			return Searchable.operatorText(operator, node, true);
 		}
 
 		@Override
@@ -339,7 +339,7 @@ class Searchable extends Model.Fields
 
 		@Override
 		public void onNodeContext(NodeContext event) {
-			this.operatorChar = Searchable.operatorText(operator, node);
+			this.operatorChar = Searchable.operatorText(operator, node, false);
 			this.operatorName = operator.getName();
 		}
 	}

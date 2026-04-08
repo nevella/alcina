@@ -1941,8 +1941,13 @@ public class DirectedLayout implements AlcinaProcess {
 		 * Use to dispatch a runnable if it may cause layout (but simplifies the
 		 * sequencing by non-deferrred execution if layout is not in progress)
 		 * 
+		 * wip - ds.- late add to 'exec' - generally this should not fire if the
+		 * source node is removed
+		 * 
 		 * @param runnable
 		 *            the runnable to execute which may cause layout
+		 * 
+		 * 
 		 */
 		public void deferIfFiring(Runnable runnable) {
 			getResolver().layout.deferIfFiring(runnable);

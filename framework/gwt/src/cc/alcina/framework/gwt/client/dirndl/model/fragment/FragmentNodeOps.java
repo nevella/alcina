@@ -26,6 +26,10 @@ public interface FragmentNodeOps {
 		return byType(clazz).collect(Collectors.toList());
 	}
 
+	default List<Class<? extends FragmentNode>> listTypes() {
+		return (List) stream().map(Object::getClass).distinct().toList();
+	}
+
 	default <N extends FragmentNode> N byTypeNode(Class<N> clazz) {
 		return byType(clazz).findFirst().orElse(null);
 	}

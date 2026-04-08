@@ -306,7 +306,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	public void onReferenceSelected(ReferenceSelected event) {
 		if (event.getContext().getPrevious().node.getModel() == suggestor) {
 			DecoratorNode decorator = descriptor.createNode();
-			decorator.putReferenced(event.getModel());
+			decorator.putReferenced(((Model) decoratorParent).provideNode(),
+					event.getModel());
 			suggestingNode.nodes().insertAfterThis(decorator);
 			suggestingNode.nodes().removeFromParent();
 			if (decorator.isPositionPostDecoratorOnCreate()) {

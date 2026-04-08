@@ -59,7 +59,9 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
 		InferredDomEvents.SelectionChanged.Handler, FragmentModel.Has,
 		ModelMutation.Handler, HasElementBehaviors, Binding.TabIndexZero {
-	public static transient PackageProperties._EditArea properties = PackageProperties.editArea;
+	PackageProperties._EditArea.InstanceProperties properties() {
+		return PackageProperties.editArea.instance(this);
+	}
 
 	@Binding(type = Type.INNER_HTML)
 	public String value;
@@ -77,6 +79,12 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 
 	@Binding(type = Type.PROPERTY, to = "contenteditable")
 	public boolean contentEditable = true;
+
+	/*
+	 * true if the user has entered text - used by single-selection
+	 */
+	@Binding(type = Type.PROPERTY)
+	boolean inputDirty;
 
 	FragmentModel fragmentModel;
 
@@ -171,10 +179,12 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 			elementValue = "";
 		}
 		try {
-			provideNode().setBindingsDisabled(bindingsDisabled);
+			node.setBindingsDisabled(bindingsDisabled);
 			setValue(elementValue);
 		} finally {
-			provideNode().setBindingsDisabled(false);
+			if (node != null) {
+				node.setBindingsDisabled(false);
+			}
 		}
 		/*
 		 * fixme - edit - this should fire unbound on SN (but doesn't)
@@ -234,6 +244,9 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Override
 	public void onModelMutation(ModelMutation event) {
 		provideNode().deferIfFiring(() -> {
+			if (provideIsUnbound()) {
+				return;
+			}
 			new CursorTargetConstraint().alignWithConstraint();
 			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
 			List<DecoratorNode> decorators = getDecoratorNodes();
@@ -241,6 +254,14 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 				lastPublishedDecorators = decorators;
 				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
 			}
+			if (provideIsUnbound()) {
+				return;
+			}
+			boolean inputDirty = fragmentModel.byTypeAssignable(TextNode.class)
+					.anyMatch(tn -> tn.domNode().isNonWhitespaceTextContent()
+							&& !tn.ancestors()
+									.has(n -> n instanceof DecoratorNode));
+			properties().inputDirty().set(inputDirty);
 		});
 	}
 
@@ -371,7 +392,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		 * wip - decorator - shouldn't be needed - is because browser
 		 * synchronous attr change isn't syncing?
 		 */
-		properties.contentEditable.set(this, false);
-		properties.contentEditable.set(this, true);
+		properties().contentEditable().set(false);
+		properties().contentEditable().set(true);
 	}
 }

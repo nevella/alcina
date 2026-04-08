@@ -39,6 +39,7 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 	public ChoicesEditorSingle() {
 		from(properties().selectedValue())
 				.accept(value -> this.updateAreaFromSelectedValue((T) value));
+		single = true;
 	}
 
 	private T selectedValue;
@@ -95,6 +96,8 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 			editor = new ChoicesEditorSingle<>();
 			// populate the delegate values from this node's AnnotationLocation
 			editor.populateFromNodeContext(node, null);
+			// push to editor
+			setValue(value);
 			value = editor.getSelectedValue();
 		}
 
@@ -143,7 +146,7 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 		List<DecoratorNode> model = event.getModel();
 		List<T> decoratorChoiceValues = model.stream()
 				.map(n -> (T) n.getStringRepresentable()).toList();
-		if (decoratorChoiceValues.size() == 1) {
+		if (decoratorChoiceValues.size() >= 1) {
 			setValue(Ax.first(decoratorChoiceValues));
 		}
 	}
