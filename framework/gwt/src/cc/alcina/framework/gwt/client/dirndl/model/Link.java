@@ -94,6 +94,16 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 			}
 			return new Link().withPlace(place).withText(place.toNameString());
 		}
+
+		public static class NewTab extends PlaceTransform {
+			@Override
+			public Link apply(BasePlace place) {
+				if (place == null) {
+					return null;
+				}
+				return super.apply(place).withNewTab(true);
+			}
+		}
 	}
 
 	private static final transient String INITIAL_HREF = "#";
