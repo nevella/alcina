@@ -318,6 +318,7 @@ class Searchable extends Model.Fields
 
 	@Reflected
 	static class ChoiceRenderer extends Model.All {
+		@Reflected
 		static class To
 				implements Function<StandardSearchOperator, ChoiceRenderer> {
 			@Override
