@@ -367,9 +367,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 	 * @return true if closed
 	 */
 	public boolean close(GwtEvent from, boolean submit) {
-		if ("".isEmpty()) {
-			return false;
-		}
 		if (!open) {
 			return true;
 		}
