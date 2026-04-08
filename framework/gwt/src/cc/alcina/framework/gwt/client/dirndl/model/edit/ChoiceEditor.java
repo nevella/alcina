@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -179,6 +180,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	SuggestOracleRouter suggestOracleRouter;
 
+	@ReflectiveSerializer.Checks(ignore = true)
 	Function valueTransformerFunction;
 
 	class Service implements ContextService {
