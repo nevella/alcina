@@ -408,6 +408,7 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void setSelectedValues(List<T> values) {
+			Ax.out("set-sel: %s", values);
 			super.setSelectedValues(values);
 			if (provideIsBound()) {
 				DirectedLayout.Node mostSpecficNode = node
@@ -618,6 +619,14 @@ public abstract class Choices<T> extends Model implements
 					option.setSelected(choice.isSelected());
 					return option;
 				}
+			}
+
+			/*
+			 * must allow default behavior
+			 */
+			@Override
+			public List<ElementBehavior> getBehaviors() {
+				return List.of();
 			}
 
 			public Option(String displayName) {
