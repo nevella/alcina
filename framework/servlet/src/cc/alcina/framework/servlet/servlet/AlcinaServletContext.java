@@ -166,7 +166,6 @@ public class AlcinaServletContext {
 			if (TransformManager.hasInstance()) {
 				while (permissionsContextsPushed-- > 0) {
 					Permissions.popContext();
-					Permissions.popContext();
 				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				Permissions.confirmDepth(permissionsDepth);
