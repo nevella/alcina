@@ -289,11 +289,12 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 				event.reemitAs(this, modelEvent, modelEventData);
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
+				EntityPlace entityPlace = (EntityPlace) Client.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(
 						((DirectedLayout.Node) event.getSource()).getRendered()
 								.as(Widget.class),
 						Reflections.newInstance(nonStandardObjectAction),
-						((EntityPlace) Client.currentPlace()).provideEntity());
+						entityPlace.provideEntity());
 			} else {
 				// propagate href (not squelched)
 				if (Ax.notBlank(href)) {

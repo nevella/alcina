@@ -260,7 +260,10 @@ public class RemoteComponentHandler {
 						.toStream(response.getOutputStream());
 			} else {
 				response.setContentType("text/plain");
-				Io.write().string(sessionCreationException.getMessage())
+				Io.write()
+						.string(Ax.blankTo(
+								sessionCreationException.getMessage(),
+								"session creation issue"))
 						.toStream(response.getOutputStream());
 			}
 		} else {
