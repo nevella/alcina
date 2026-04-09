@@ -183,6 +183,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@ReflectiveSerializer.Checks(ignore = true)
 	Function valueTransformerFunction;
 
+	boolean widthConstrained;
+
 	class Service implements ContextService {
 		public Function getValueTransformer() {
 			return valueTransformerFunction;
@@ -247,6 +249,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 					.isPresent();
 			editArea.focusOnBind = focusOnBind;
 		}
+		this.widthConstrained = node.annotation(WidthConstrained.class) != null;
 		decorators.add(createChoiceDecorator());
 		super.populateFromNodeContext(node, valueFilter);
 	}
@@ -260,6 +263,17 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		 * The answer type
 		 */
 		Class<? extends SuggestOracleRouter> value();
+	}
+
+	/**
+	 * If constrained, suggestions will be rendered relative to the editor, not
+	 * the suggesting node
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface WidthConstrained {
 	}
 
 	@Override
@@ -323,7 +337,9 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 						decorator, decoratorNode, valueTransformerFunction));
 		attributes.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
 		attributes.setDecoratorParent(this);
-		attributes.setSuggestorRelativeTo(this);
+		if (widthConstrained) {
+			attributes.setSuggestorRelativeTo(this);
+		}
 		return attributes.build();
 	}
 

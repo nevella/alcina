@@ -381,6 +381,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				&& characterString.matches("[ \\u200B({\\[]");
 	}
 
+	/**
+	 * determine if a suggestor overlay should be displayed
+	 */
 	void checkTrigger() {
 		/*
 		 * handling requires mutations to be processed (and FN mutations), so
@@ -393,6 +396,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				.deferred().dispatch();
 	}
 
+	/**
+	 * determine if a suggestor overlay should be displayed (filtered)
+	 */
 	/*
  * @formatter:off
  * 
@@ -433,9 +439,16 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			if (focussedFragment != null
 					&& focussedFragment.ancestors().has(SuggestingNode.class)) {
 				/*
-				 * transitional, transforming from accepted suggesing to
+				 * transitional, transforming from accepted suggesting to
 				 * decorator
 				 */
+				/*
+				 * actually - that depends. for the moment, *don't* exit here.
+				 */
+				// return;
+				suggestingNode = focussedFragment.ancestors()
+						.get(SuggestingNode.class);
+				showOverlay(suggestingNode.domNode());
 				return;
 			}
 			validateSelection0();

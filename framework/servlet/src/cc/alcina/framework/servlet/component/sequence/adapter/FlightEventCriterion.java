@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.sequence.adapter;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlType;
 
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
@@ -16,6 +18,7 @@ import cc.alcina.framework.common.client.search.SelfNamingCriterion;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class FlightEventCriterion {
 	@TypeSerialization(
@@ -41,6 +44,12 @@ public class FlightEventCriterion {
 		@Override
 		public String toString() {
 			return toStringWithDisplayName(true);
+		}
+
+		@Override
+		public List<StandardSearchOperator> getApplicableOperators() {
+			return List.of(StandardSearchOperator.EQUALS,
+					StandardSearchOperator.DOES_NOT_EQUAL);
 		}
 	}
 

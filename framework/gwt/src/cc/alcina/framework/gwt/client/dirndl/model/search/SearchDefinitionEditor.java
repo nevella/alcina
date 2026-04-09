@@ -107,7 +107,7 @@ public class SearchDefinitionEditor extends Model.Fields
 		@Override
 		public void ask(Node node, StringAsk ask,
 				Consumer<SuggestOracle.Response> responseHandler) {
-			Service service = node.getResolver().service(Service.class);
+			Service service = node.service(Service.class);
 			SearchDefinition searchDefinition = service.getSearchDefinition();
 			if (searchDefinition != null) {
 				EditSupport editSupport = searchDefinition.editSupport();

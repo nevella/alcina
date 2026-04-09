@@ -2000,10 +2000,11 @@ search-definition-editor > choice-editor > edit choice-node > searchable > name 
 }
 search-definition-editor > choice-editor > edit choice-node > searchable > operator {
   display: inline-block;
+  width: 1.5rem;
+  text-align: center;
 }
 search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator {
   display: inline-block;
-  padding: 0 0.5rem;
   cursor: pointer;
 }
 search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator:hover {

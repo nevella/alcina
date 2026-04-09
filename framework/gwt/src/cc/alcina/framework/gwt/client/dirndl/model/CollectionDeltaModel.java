@@ -110,7 +110,7 @@ public class CollectionDeltaModel<T> extends Model.Fields {
 			extends AbstractContextSensitiveModelTransform<Object, Object> {
 		@Override
 		public Object apply(Object t) {
-			TransformElements transformElements = node.getResolver()
+			TransformElements transformElements = node
 					.service(DeltaModelService.class).getTransformElements();
 			if (transformElements != null) {
 				return Reflections.newInstance(transformElements.value())

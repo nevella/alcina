@@ -315,6 +315,12 @@ public abstract class FragmentNode extends Model.Fields
 			return stream().filter(test::test).findFirst().orElse(null);
 		}
 
+		public <T extends FragmentNode> T get(Class<T> test) {
+			return (T) stream().filter(
+					n -> Reflections.isAssignableFrom(test, n.getClass()))
+					.findFirst().orElse(null);
+		}
+
 		public Stream<FragmentNode> stream() {
 			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
 					new Itr(), Spliterator.ORDERED), false);

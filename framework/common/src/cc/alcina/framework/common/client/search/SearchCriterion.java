@@ -14,9 +14,12 @@
 package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -30,6 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
@@ -210,5 +214,12 @@ public abstract class SearchCriterion extends Bindable
 			return targetPropertyName;
 		}
 		return "t." + targetPropertyName;
+	}
+
+	@Property.Not
+	@XmlTransient
+	@JsonIgnore
+	public List<StandardSearchOperator> getApplicableOperators() {
+		return List.of(StandardSearchOperator.EQUALS);
 	}
 }

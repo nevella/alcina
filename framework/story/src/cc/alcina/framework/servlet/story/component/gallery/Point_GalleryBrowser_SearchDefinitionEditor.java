@@ -5,14 +5,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.search.Feature_Dirndl_SearchD
 import cc.alcina.framework.gwt.client.story.SeleniumKeys;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
+import cc.alcina.framework.gwt.client.story.Waypoints;
 
 /*
  * This tests the SearchDefinitionEditor gallery page
  */
 @Decl.Require(Story_GalleryBrowser.State.Home.class)
 @Decl.Child(Point_GalleryBrowser_Home.ToSearchDefinitionEditor.class)
-@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionOperator.class)
-// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
+// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionOperator.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
 @Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
 public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String XPATH_CREATED_FROM_INPUT = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']//input";
@@ -38,6 +39,16 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	}
 
 	@Decl.Child(_DefinitionEditor.ClickCreatedFrom.class)
+	/*
+	 * ensure at start of date inpuut
+	 */
+	@Decl.Child(Waypoints.EnterLeftArrow.class)
+	@Decl.Child(Waypoints.EnterLeftArrow.class)
+	/*
+	 * note that if current date is '0x/mm/yyyy', entering '01-aa-bbbb' will
+	 * reset everything so a date of say '11-11-2025' is required (no leading
+	 * zeroes)
+	 */
 	@Decl.Child(_DefinitionEditor.SetCreatedFromText.class)
 	@Decl.Child(_DefinitionEditor.EnterOnCreatedFromText.class)
 	@Decl.Child(_DefinitionEditor.TestFocusIsCursorTarget.class)
@@ -46,9 +57,15 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	@Decl.Child(_DefinitionEditor.ClickMutations.class)
 	@Decl.Child(_DefinitionEditor.AwaitSelectFocus.class)
 	@Decl.Child(_DefinitionEditor.SelectTrue.class)
-	// @Decl.Child(_DefinitionEditor.TestGoButtonIsEnabled.class)
+	@Decl.Child(_DefinitionEditor.TestGoButtonIsEnabled.class)
+	/*
+	 * temp, until we sort the select ui commit/focus
+	 */
 	// @Decl.Child(_DefinitionEditor.EnterOnCurrentFocus.class)
-	// @Decl.Child(_DefinitionEditor.TestGoButtonIsDisabled.class)
+	@Decl.Child(_DefinitionEditor.ClickCreatedFrom.class)
+	@Decl.Child(_DefinitionEditor.EnterOnCreatedFromText.class)
+	@Decl.Child(_DefinitionEditor.EnterOnCurrentFocus.class)
+	@Decl.Child(_DefinitionEditor.TestGoButtonIsDisabled.class)
 	static class _DefinitionEditor extends Waypoint {
 		@Decl.Location.Xpath(XPATH_CREATED_FROM_INPUT)
 		@Decl.Action.UI.Click
@@ -56,8 +73,15 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 		}
 
 		@Decl.Location.Xpath(XPATH_CREATED_FROM_INPUT)
-		@Decl.Action.UI.Keys("01-01-2025")
+		@Decl.Location.CurrentFocus
+		@Decl.Action.UI.Keys("11-11-2025")
 		static class SetCreatedFromText extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_CREATED_FROM_INPUT)
+		@Decl.Location.CurrentFocus
+		@Decl.Action.UI.Keys("11-11-2024")
+		static class SetCreatedFromText2 extends Waypoint {
 		}
 
 		@Feature.Parent(Feature_Dirndl_SearchDefinitionEditor._EnterBehaviour.class)

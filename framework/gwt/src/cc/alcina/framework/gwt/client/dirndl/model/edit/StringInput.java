@@ -306,6 +306,10 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		node.optional(FocusOnBindMarker.class)
 				.ifPresent(ann -> setFocusOnBind(true));
 		node.optional(TextArea.class).ifPresent(ann -> setTag("textarea"));
+		Service service = service(Service.class);
+		if (service != null) {
+			setCommitOnEnter(service.isCommitOnEnter());
+		}
 	}
 
 	@Override

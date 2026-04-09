@@ -53,6 +53,11 @@ public class Waypoints {
 	public static class EnterEnter extends Waypoint {
 	}
 
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.LEFT)
+	public static class EnterLeftArrow extends Waypoint {
+	}
+
 	/*
 	 * Debugging aid
 	 */

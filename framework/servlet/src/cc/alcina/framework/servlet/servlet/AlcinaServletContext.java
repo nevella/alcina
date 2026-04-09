@@ -77,6 +77,8 @@ public class AlcinaServletContext {
 
 	private HttpContext httpContext;
 
+	private int permissionsContextsPushed = 0;
+
 	/**
 	 * Refuse all requests, in the case of a malfunctioning (e.g. deadlocked)
 	 * server
@@ -129,20 +131,22 @@ public class AlcinaServletContext {
 			Transaction.begin();
 		}
 		if (TransformManager.hasInstance()) {
+			permissionsDepth = Permissions.depth();
 			PermissionsContext permissionsContext = AuthenticationManager.get()
 					.getPermissionsContext();
-			permissionsDepth = Permissions.depth();
 			/*
 			 * Two contexts - the outer context guarantees a clientinstance for
 			 * transforms to attach to
 			 */
 			Permissions.pushSystemUser();
+			permissionsContextsPushed++;
 			AuthenticationManager.get().initialiseContext(httpContext);
 			if (rootPermissions) {
 				Permissions.pushSystemUser();
 			} else {
 				Permissions.pushContext(permissionsContext);
 			}
+			permissionsContextsPushed++;
 		}
 	}
 
@@ -160,8 +164,10 @@ public class AlcinaServletContext {
 			LooseContext.allowUnbalancedFrameRemoval(AlcinaServletContext.class,
 					"begin");
 			if (TransformManager.hasInstance()) {
-				Permissions.popContext();
-				Permissions.popContext();
+				while (permissionsContextsPushed-- > 0) {
+					Permissions.popContext();
+					Permissions.popContext();
+				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				Permissions.confirmDepth(permissionsDepth);
 				Permissions.get().reset();

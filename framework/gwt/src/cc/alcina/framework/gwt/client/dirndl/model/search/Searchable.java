@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
+import java.util.List;
 import java.util.function.Function;
 
 import com.google.gwt.dom.client.EventBehavior;
@@ -32,12 +33,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices.Values;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorSingle;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
@@ -90,7 +93,7 @@ class Searchable extends Model.Fields
 	String criterionClass;
 
 	@Directed(tag = "operator")
-	Dropdown operatorDropdown;
+	Object operator;
 
 	@Directed
 	ValueEditor valueEditor;
@@ -138,8 +141,9 @@ class Searchable extends Model.Fields
 			value = ChoicesEditorSingle.SingleSuggestions.To.class,
 			transformsNull = true)
 		@FocusOnBindMarker
-		@Choices.EnumValues(StandardSearchOperator.class)
+		@Choices.Values(AvailableOperators.class)
 		@ValueTransformer(ChoiceRenderer.To.class)
+		@ChoiceEditor.WidthConstrained
 		StandardSearchOperator operator;
 
 		PackageProperties._Searchable_OperatorSelector.InstanceProperties
@@ -167,9 +171,16 @@ class Searchable extends Model.Fields
 		this.name = Ax.blankTo(searchCriterion.getDisplayName(), searchCriterion
 				.getClass().getSimpleName().replace("Criterion", ""));
 		renderedOperator = new RenderedOperator();
-		operatorDropdown = new Dropdown(renderedOperator,
-				() -> new OperatorSelector()).withLogicalAncestor(getClass())
-						.withXalign(Position.START);
+		List<StandardSearchOperator> applicableOperators = searchCriterion
+				.getApplicableOperators();
+		if (applicableOperators.size() == 1) {
+			operator = ":";
+		} else {
+			operator = new Dropdown(renderedOperator,
+					() -> new OperatorSelector())
+							.withLogicalAncestor(getClass())
+							.withXalign(Position.START);
+		}
 	}
 
 	PackageProperties._Searchable.InstanceProperties properties() {
@@ -342,6 +353,16 @@ class Searchable extends Model.Fields
 		public void onNodeContext(NodeContext event) {
 			this.operatorChar = Searchable.operatorText(operator, node, false);
 			this.operatorName = operator.getName();
+		}
+	}
+
+	@Reflected
+	static class AvailableOperators
+			implements Choices.Values.ValueSupplier.ContextSensitive {
+		@Override
+		public List<?> apply(DirectedLayout.Node contextNode, Values t) {
+			return contextNode.service(Service.class).getSearchCriterion()
+					.getApplicableOperators();
 		}
 	}
 }
