@@ -419,7 +419,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			if (parent != null) {
 				dispatch = parent.dispatch();
 			} else {
-				dispatch = new Ref<>();
+				dispatch = Ref.of(Runnable::run);
 			}
 		}
 		return dispatch;
