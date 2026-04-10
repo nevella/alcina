@@ -59,7 +59,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
  * <p>
  * Note: this doesn't share much implementation with other {@link Choices}
  * subtypes, but very much shares behavior, so I'm happy with the type structure
- * (sure, Choices could be abstracted further to an interface, but...)
+ * (sure, Choices could be abstracted further to an interface, but...). It
+ * *does* clone some implementation with the (more general)
+ * {@link ContentEditor} - but most of the shared behavior is encapsulated in
+ * {@link HasDecorators}, which both implement
  * 
  * <p>
  * This will emit a Commit event if enter is pressed with no choice selected

@@ -50,12 +50,17 @@ public class Waypoints {
 
 	@Decl.Location.CurrentFocus
 	@Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN)
-	public static class EnterEnter extends Waypoint {
+	public static class SendKeyEnter extends Waypoint {
 	}
 
 	@Decl.Location.CurrentFocus
 	@Decl.Action.UI.KeyConstant(SeleniumKeys.LEFT)
-	public static class EnterLeftArrow extends Waypoint {
+	public static class SendKeyLeftArrow extends Waypoint {
+	}
+
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.DELETE)
+	public static class SendKeyDelete extends Waypoint {
 	}
 
 	/*
@@ -63,11 +68,18 @@ public class Waypoints {
 	 */
 	@Decl.Location.CurrentFocus
 	@Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN)
-	public static class EnterEnter2 extends Waypoint {
+	public static class SendKeyEnter2 extends Waypoint {
 	}
 
 	@Decl.Location.Marked
 	@Decl.Action.UI.AwaitAbsent
 	public static class AwaitMarkRemoval extends Waypoint {
+	}
+
+	public static class Debug extends Waypoint.Code {
+		@Override
+		public void perform(Context context) throws Exception {
+			int debug = 4;
+		}
 	}
 }

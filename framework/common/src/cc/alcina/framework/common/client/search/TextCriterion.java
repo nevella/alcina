@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
@@ -109,5 +111,10 @@ public class TextCriterion extends SearchCriterion implements HasValue<String> {
 	@Reflected
 	public static enum TextCriterionType {
 		CONTAINS, EQUALS, EQUALS_OR_LIKE
+	}
+
+	@Override
+	public List<StandardSearchOperator> getApplicableOperators() {
+		return StandardSearchOperator.TEXT;
 	}
 }

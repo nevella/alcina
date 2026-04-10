@@ -299,10 +299,13 @@ class Searchable extends Model.Fields
 			return "\u220B";
 		case DOES_NOT_CONTAIN:
 			return "\u220C";
+		/*
+		 * both the same (superset/equals) - treating a string as an ordered set
+		 * // of chars. yeah sure, so does contains...
+		 */
 		case ALL_OF:
-			return "\u2287";
 		case STARTS_WITH:
-			return "\u2288";
+			return "\u2287";
 		default:
 			FilterOperator filterOperator = operator.toFilterOperator();
 			if (filterOperator != null) {

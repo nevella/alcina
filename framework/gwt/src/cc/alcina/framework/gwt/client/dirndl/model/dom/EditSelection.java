@@ -17,13 +17,18 @@ import cc.alcina.framework.common.client.util.NestedName;
 /**
  * A utility wrapper around a DOM Selection, for use by annotators and
  * decorators
+ * 
+ * Note re cursors - a cursor (in DOM-land) is positioned at the start of the
+ * next text node via user-select: all (at least around editable regiones)
+ * 
+ * 
  */
 public class EditSelection {
 	Selection selection;
 
 	boolean triggerable;
 
-	Location.Range range;
+	public Location.Range range;
 
 	/*
 	 * the range from the start of the caret textnode to the caret, if any
@@ -44,9 +49,13 @@ public class EditSelection {
 	 */
 	public EditSelection() {
 		selection = Document.get().getSelection();
-		if (!selection.hasSelection() || selection.getFocusLocation() == null
-				|| !selection.getFocusLocation().getContainingNode()
-						.isAttached()) {
+		if (!selection.hasSelection() || selection.getFocusLocation() == null) {
+			return;
+		}
+		if (!selection.getFocusNode().isAttached()) {
+			return;
+		}
+		if (!selection.getAnchorNode().isAttached()) {
 			return;
 		}
 		hasEditSelection = true;
@@ -134,6 +143,12 @@ public class EditSelection {
 	public DomNode focusNode() {
 		Location focusLocation = selection.getFocusLocation();
 		return focusLocation == null ? null : focusLocation.getContainingNode();
+	}
+
+	public DomNode anchorNode() {
+		Location anchorLocation = selection.getAnchorLocation();
+		return anchorLocation == null ? null
+				: anchorLocation.getContainingNode();
 	}
 
 	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(

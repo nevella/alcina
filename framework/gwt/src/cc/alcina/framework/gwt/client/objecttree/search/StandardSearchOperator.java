@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,22 +9,26 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Reflected
 public enum StandardSearchOperator implements SearchOperator {
-	CONTAINS, DOES_NOT_CONTAIN, EQUALS, LESS_THAN, GREATER_THAN, ALL_OF,
-	AT_LEAST_ONE_OF, DOES_NOT_EQUAL, STARTS_WITH, LESS_THAN_OR_EQUAL_TO,
-	GREATER_THAN_OR_EQUAL_TO;
+	CONTAINS, DOES_NOT_CONTAIN, EQUALS, DOES_NOT_EQUAL, LESS_THAN,
+	LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO, ALL_OF,
+	AT_LEAST_ONE_OF, STARTS_WITH;
 
-	public static transient List LINEAR = Arrays.asList(EQUALS, LESS_THAN,
+	public static transient List<StandardSearchOperator> TEXT = List.of(
+			CONTAINS, DOES_NOT_CONTAIN, EQUALS, DOES_NOT_EQUAL, STARTS_WITH,
+			LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN,
+			GREATER_THAN_OR_EQUAL_TO);
+
+	public static transient List LINEAR = List.of(EQUALS, LESS_THAN,
 			GREATER_THAN);
 
-	public static transient List EQUAL_OR_NOT = Arrays.asList(EQUALS,
-			DOES_NOT_EQUAL);
+	public static transient List EQUAL_OR_NOT = List.of(EQUALS, DOES_NOT_EQUAL);
 
-	public static transient List EQUAL = Arrays.asList(EQUALS);
+	public static transient List EQUAL = List.of(EQUALS);
 
-	public static transient List CONTAINS_AND_ALL_OF = Arrays.asList(CONTAINS,
+	public static transient List CONTAINS_AND_ALL_OF = List.of(CONTAINS,
 			ALL_OF);
 
-	public static transient List MEMBERSHIP = Arrays.asList(CONTAINS, ALL_OF,
+	public static transient List MEMBERSHIP = List.of(CONTAINS, ALL_OF,
 			DOES_NOT_CONTAIN);
 
 	private String displayName;

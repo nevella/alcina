@@ -8,14 +8,16 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.gwt.client.story.Waypoints;
 
 /*
- * This tests the SearchDefinitionEditor gallery page
+ * This tests the SearchDefinitionEditor gallery page. Each child resets the
+ * initial state
  */
-@Decl.Require(Story_GalleryBrowser.State.Home.class)
-@Decl.Child(Point_GalleryBrowser_Home.ToSearchDefinitionEditor.class)
 // @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionOperator.class)
-@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
+// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._CriterionSelectDelete.class)
 @Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
 public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
+	static final String XPATH_CREATED_FROM_TITLE = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']/name";
+
 	static final String XPATH_CREATED_FROM_INPUT = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']//input";
 
 	static final String XPATH_CREATED_FROM_OPERATOR = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']//operator";
@@ -30,20 +32,47 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 
 	static final String XPATH_SELECT = "//search-definition-editor//searchable//select";
 
-	@Decl.Child(_DefinitionOperator.ClickCreatedFrom.class)
+	@Decl.Require(Story_GalleryBrowser.State.Home.class)
+	@Decl.Child(Point_GalleryBrowser_Home.ToSearchDefinitionEditor.class)
+	static class _Reset extends Waypoint {
+	}
+
+	@Decl.Child(_Reset.class)
+	@Decl.Child(_DefinitionOperator.ClickCreatedFromOperator.class)
 	static class _DefinitionOperator extends Waypoint {
 		@Decl.Location.Xpath(XPATH_CREATED_FROM_OPERATOR)
 		@Decl.Action.UI.Click
-		static class ClickCreatedFrom extends Waypoint {
+		static class ClickCreatedFromOperator extends Waypoint {
 		}
 	}
 
+	@Decl.Child(_Reset.class)
+	@Decl.Child(_CriterionSelectDelete.ClickCreatedFrom.class)
+	@Decl.Child(Waypoints.Debug.class)
+	@Decl.Child(Waypoints.SendKeyDelete.class)
+	@Decl.Child(_CriterionSelectDelete.AwaitCreatedFromAbsent.class)
+	/*
+	 * restore
+	 */
+	static class _CriterionSelectDelete extends Waypoint {
+		@Decl.Location.Xpath(XPATH_CREATED_FROM_TITLE)
+		@Decl.Action.UI.Click
+		static class ClickCreatedFrom extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_CREATED_FROM_TITLE)
+		@Decl.Action.UI.AwaitAbsent
+		static class AwaitCreatedFromAbsent extends Waypoint {
+		}
+	}
+
+	@Decl.Child(_Reset.class)
 	@Decl.Child(_DefinitionEditor.ClickCreatedFrom.class)
 	/*
 	 * ensure at start of date inpuut
 	 */
-	@Decl.Child(Waypoints.EnterLeftArrow.class)
-	@Decl.Child(Waypoints.EnterLeftArrow.class)
+	@Decl.Child(Waypoints.SendKeyLeftArrow.class)
+	@Decl.Child(Waypoints.SendKeyLeftArrow.class)
 	/*
 	 * note that if current date is '0x/mm/yyyy', entering '01-aa-bbbb' will
 	 * reset everything so a date of say '11-11-2025' is required (no leading

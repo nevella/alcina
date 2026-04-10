@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -16,6 +17,8 @@ import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
+import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
@@ -569,6 +572,50 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			}
 			if (!retain) {
 				closeOverlay();
+			}
+		}
+	}
+
+	void deleteIfSingleDecoratorSelected() {
+		EditSelection editSelection = new EditSelection();
+		DomNode focusNode = editSelection.focusNode();
+		DomNode anchorNode = editSelection.anchorNode();
+		if (focusNode == null) {
+			return;
+		}
+		if (Document.get().getSelection().isCollapsed()) {
+			return;
+		}
+		/*
+		 * ensure start before end
+		 */
+		Range orderedRange = editSelection.range.asOrderedRange();
+		if (orderedRange.end.isAtNodeStart()) {
+			/*
+			 * handle browser interpretation of 'user-select: all' - which
+			 * positions the focus on the next non-editable (somehow)
+			 * 
+			 * this isn't perfect, but does check that the only selected text is
+			 * in the one decorator-node
+			 */
+			DomNode cursor = orderedRange.end.getContainingNode().relative()
+					.treePreviousNode();
+			while (!cursor.isText() || cursor.textContent().isEmpty()) {
+				cursor = cursor.relative().treePreviousNode();
+			}
+			orderedRange = new Location.Range(orderedRange.start,
+					cursor.asRange().end);
+		}
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		FragmentNode startFragment = fragmentModel
+				.getFragmentContaining(orderedRange.start.getContainingNode());
+		FragmentNode endFragment = fragmentModel
+				.getFragmentContaining(orderedRange.end.getContainingNode());
+		if (startFragment instanceof DecoratorNode
+				&& endFragment == startFragment) {
+			if (Objects.equals(editSelection.range.toIntPair(),
+					startFragment.domNode().asRange().toIntPair())) {
+				startFragment.nodes().removeFromParent();
 			}
 		}
 	}

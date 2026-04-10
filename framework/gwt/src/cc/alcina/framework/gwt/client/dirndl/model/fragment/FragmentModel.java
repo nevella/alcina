@@ -258,6 +258,23 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		}
 	}
 
+	/*
+	 * For nested Fragments (FragmentIsolates)
+	 */
+	public FragmentNode getFragmentContaining(DomNode node) {
+		DomNode cursor = node;
+		for (;;) {
+			FragmentNode fragmentNode = getFragmentNode(cursor);
+			if (fragmentNode != null) {
+				return fragmentNode;
+			}
+			if (cursor == rootModel.provideElement().asDomNode()) {
+				return null;
+			}
+			cursor = cursor.parent();
+		}
+	}
+
 	public FragmentRoot getFragmentRoot() {
 		return this.fragmentRoot;
 	}

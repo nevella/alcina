@@ -5,6 +5,8 @@ import java.util.List;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyUpEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -13,11 +15,13 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyUp;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
@@ -58,6 +62,8 @@ public interface HasDecorators
 		ModelEvents.Commit.Handler,
 		// routes keydown events to the keyboardNavigation and decorators
 		DomEvents.KeyDown.Handler,
+		// handle deletes if a non-editable (decoratornode) is selected
+		DomEvents.KeyUp.Handler,
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
 		FragmentModel.Has, DomEvents.Focusout.Handler, HasElementBehaviors {
@@ -167,5 +173,18 @@ public interface HasDecorators
 	@Override
 	default void onFocusout(Focusout event) {
 		getDecorators().forEach(d -> d.onFocusout(event));
+	}
+
+	@Override
+	default void onKeyUp(KeyUp event) {
+		NodeEvent.Context context = event.getContext();
+		KeyUpEvent domEvent = (KeyUpEvent) context.getGwtEvent();
+		switch (domEvent.getNativeKeyCode()) {
+		case KeyCodes.KEY_DELETE:
+		case KeyCodes.KEY_BACKSPACE:
+			getDecorators()
+					.forEach(ContentDecorator::deleteIfSingleDecoratorSelected);
+			break;
+		}
 	}
 }

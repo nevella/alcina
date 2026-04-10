@@ -51,7 +51,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CommitEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
@@ -374,7 +373,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 	@Override
 	public void onKeyDown(KeyDown event) {
-		Context context = event.getContext();
+		NodeEvent.Context context = event.getContext();
 		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
 		switch (domEvent.getNativeKeyCode()) {
 		case KeyCodes.KEY_ENTER:
