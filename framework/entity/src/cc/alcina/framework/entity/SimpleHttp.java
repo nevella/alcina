@@ -384,7 +384,7 @@ public class SimpleHttp {
 	 * Set read/connect timeout for this request
 	 *
 	 * @param timeout
-	 *            Timeout to set
+	 *            Timeout to set in milliseconds
 	 * @return this SimpleHttp object
 	 */
 	public SimpleHttp withTimeout(int timeout) {
