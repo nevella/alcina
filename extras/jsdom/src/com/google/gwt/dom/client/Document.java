@@ -1319,7 +1319,8 @@ public class Document extends Node implements ClientDomDocument,
 
 	public void writeClipboardText(String clipboardText) {
 		invoke(() -> writeClipboardText0(clipboardText), Document.class,
-				"writeClipboardText0", null, List.of(clipboardText), false);
+				"writeClipboardText0", List.of(String.class),
+				List.of(clipboardText), false);
 	}
 
 	public void addUnbatchedLocalMutationListener(
