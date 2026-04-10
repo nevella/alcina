@@ -355,6 +355,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LooseContext.register(ttmInstance);
 		JvmReflections.initJvmServices();
 		EnvironmentManager.registerEnvironmentSensitiveTimerProvider();
+		Registry.register().singleton(Task.RemotePerformer.class,
+				new RemotePerformerDirect());
 	}
 
 	protected abstract void initContainerBridge();
