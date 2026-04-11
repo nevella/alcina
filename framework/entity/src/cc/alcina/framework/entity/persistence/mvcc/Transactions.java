@@ -71,8 +71,8 @@ public class Transactions {
 		((MvccObjectVersionsEntity) versions).copyIdFieldsToCurrentVersion();
 	}
 
-	static <T extends MvccObject> T copyObject(T from,
-			boolean withFieldValues) {
+	static <T extends MvccObject> T copyObject(T from, boolean withFieldValues,
+			Set<String> ignoreFields) {
 		T clone = null;
 		try {
 			if (from instanceof TransactionalSet) {
@@ -98,7 +98,7 @@ public class Transactions {
 			throw new WrappedRuntimeException(e);
 		}
 		if (withFieldValues) {
-			ObjectUtil.fieldwiseCopy(from, clone, false, true);
+			copyObjectFields(from, clone, ignoreFields);
 		}
 		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
 		clone.__setMvccVersions__(__getMvccVersions__);

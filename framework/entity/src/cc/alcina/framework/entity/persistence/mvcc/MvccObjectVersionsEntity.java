@@ -42,12 +42,14 @@ class MvccObjectVersionsEntity<T extends Entity>
 		return result;
 	}
 
+	Set<String> getLazyFieldNames(T object) {
+		return Mvcc.getLazyFieldNames(object.entityClass());
+	}
+
 	@Override
 	protected void copyObject(T fromObject, T domainIdentityObject) {
-		Set lazyFieldNames = Mvcc
-				.getLazyFieldNames(domainIdentityObject.entityClass());
 		Transactions.copyObjectFields(fromObject, domainIdentityObject,
-				lazyFieldNames);
+				getLazyFieldNames(domainIdentityObject));
 		ProcessObservers.publish(VersionCopiedToDomainIdentityEvent.class,
 				() -> new VersionCopiedToDomainIdentityEvent(this, fromObject,
 						domainIdentityObject));
