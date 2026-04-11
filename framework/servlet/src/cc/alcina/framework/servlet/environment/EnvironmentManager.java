@@ -243,8 +243,8 @@ public class EnvironmentManager {
 		}
 
 		@Override
-		public void ensurePopulated(Entity<?> entity) {
-			handler().ensurePopulated(entity);
+		public void ensurePopulated(List<? extends Entity> entities) {
+			handler().ensurePopulated(entities);
 		}
 
 		EnvironmentHandler() {

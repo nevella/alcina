@@ -2294,4 +2294,27 @@ public class CommonUtils {
 			return headSet.isEmpty() ? null : headSet.last();
 		}
 	}
+
+	/**
+	 * A wrapper to handle contains tests for immutable collections, optimise
+	 * for large lists
+	 */
+	public static class ContainsTest {
+		Collection testCollection;
+
+		public ContainsTest(Collection coll) {
+			if (coll.size() < 6 || coll instanceof Set) {
+				testCollection = coll;
+			} else {
+				testCollection = new HashSet<>(coll);
+			}
+		}
+
+		public boolean contains(Object object) {
+			if (object == null) {
+				return false;
+			}
+			return testCollection.contains(object);
+		}
+	}
 }

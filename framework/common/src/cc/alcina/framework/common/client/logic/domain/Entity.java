@@ -401,7 +401,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		 * 
 		 */
 		public void ensurePopulated() {
-			Domain.ensurePopulated(Entity.this);
+			Domain.ensurePopulated(List.of(Entity.this));
 		}
 
 		public long getIdOrLocalIdIfZero() {

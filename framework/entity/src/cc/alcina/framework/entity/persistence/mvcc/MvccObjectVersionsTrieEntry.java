@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.Set;
+
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
 
 public class MvccObjectVersionsTrieEntry
@@ -12,6 +14,6 @@ public class MvccObjectVersionsTrieEntry
 	@Override
 	protected void copyObject(TransactionalTrieEntry fromObject,
 			TransactionalTrieEntry baseObject) {
-		Transactions.copyObjectFields(fromObject, baseObject);
+		Transactions.copyObjectFields(fromObject, baseObject, Set.of());
 	}
 }

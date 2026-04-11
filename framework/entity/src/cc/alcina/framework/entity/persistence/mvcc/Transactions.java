@@ -105,8 +105,8 @@ public class Transactions {
 		return clone;
 	}
 
-	static <T> void copyObjectFields(T from, T to) {
-		ObjectUtil.fieldwiseCopy(from, to, false, true);
+	static <T> void copyObjectFields(T from, T to, Set<String> ignoreFields) {
+		ObjectUtil.fieldwiseCopy(from, to, false, true, ignoreFields);
 	}
 
 	public static void enqueueLazyLoad(EntityLocator locator) {
@@ -315,7 +315,8 @@ public class Transactions {
 		try {
 			LooseContext.push();
 			LooseContext.setTrue(CONTEXT_REVERTING_TO_DEFAULTS);
-			copyObjectFields(defaults, entity);
+			copyObjectFields(defaults, entity,
+					Mvcc.getLazyFieldNames(entity.entityClass()));
 			MvccObjectVersions versions = ((MvccObject) entity)
 					.__getMvccVersions__();
 			ProcessObservers.publish(RevertDomainIdentityEvent.class,
