@@ -2365,6 +2365,10 @@ public class DomainStore implements IDomainStore {
 				ClientInstance clientInstance) {
 			Entity promoted = getObjectForCreationTransform(transform, true);
 			// key, since these shoud only be transactinal
+			/*
+			 * wip - mvcc - general policy on when lazy properties require
+			 * clearance.
+			 */
 			Mvcc.clearLazyProperties(promoted);
 			EntityLocator locator = new EntityLocator();
 			locator.setLocalId(transform.getObjectLocalId());
