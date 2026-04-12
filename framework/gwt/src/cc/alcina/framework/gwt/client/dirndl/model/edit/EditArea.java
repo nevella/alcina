@@ -205,8 +205,8 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Override
 	public void onMutation(Mutation event) {
 		/*
-		 * This is intended only for romcom (which has a configurable observer
-		 * for DecoratorEvent)
+		 * This observer is intended only for romcom (which has a configurable
+		 * observer for DecoratorEvent)
 		 */
 		ProcessObservers.publish(DecoratorEvent.class, () -> {
 			DecoratorEvent decoratorEvent = new DecoratorEvent()

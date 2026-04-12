@@ -49,6 +49,7 @@ public class PackageProperties {
       public TypedProperty<ChoiceEditor, Class> valueTransformer = new TypedProperty<>(ChoiceEditor.class, "valueTransformer");
       public TypedProperty<ChoiceEditor, Function> valueTransformerFunction = new TypedProperty<>(ChoiceEditor.class, "valueTransformerFunction");
       public TypedProperty<ChoiceEditor, List> values = new TypedProperty<>(ChoiceEditor.class, "values");
+      public TypedProperty<ChoiceEditor, Boolean> widthConstrained = new TypedProperty<>(ChoiceEditor.class, "widthConstrained");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoiceEditor> {
         public  InstanceProperties(ChoiceEditor source){super(source);}
         public InstanceProperty<ChoiceEditor, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.changeOnSelectionEvent);}
@@ -62,6 +63,7 @@ public class PackageProperties {
         public InstanceProperty<ChoiceEditor, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.valueTransformer);}
         public InstanceProperty<ChoiceEditor, Function> valueTransformerFunction(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.valueTransformerFunction);}
         public InstanceProperty<ChoiceEditor, List> values(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.values);}
+        public InstanceProperty<ChoiceEditor, Boolean> widthConstrained(){return new InstanceProperty<>(source,PackageProperties.choiceEditor.widthConstrained);}
       }
       
       public  InstanceProperties instance(ChoiceEditor instance) {
@@ -110,6 +112,7 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorMultiple, Class> valueTransformer = new TypedProperty<>(ChoicesEditorMultiple.class, "valueTransformer");
       public TypedProperty<ChoicesEditorMultiple, Function> valueTransformerFunction = new TypedProperty<>(ChoicesEditorMultiple.class, "valueTransformerFunction");
       public TypedProperty<ChoicesEditorMultiple, List> values = new TypedProperty<>(ChoicesEditorMultiple.class, "values");
+      public TypedProperty<ChoicesEditorMultiple, Boolean> widthConstrained = new TypedProperty<>(ChoicesEditorMultiple.class, "widthConstrained");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoicesEditorMultiple> {
         public  InstanceProperties(ChoicesEditorMultiple source){super(source);}
         public InstanceProperty<ChoicesEditorMultiple, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.changeOnSelectionEvent);}
@@ -124,6 +127,7 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorMultiple, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.valueTransformer);}
         public InstanceProperty<ChoicesEditorMultiple, Function> valueTransformerFunction(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.valueTransformerFunction);}
         public InstanceProperty<ChoicesEditorMultiple, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.values);}
+        public InstanceProperty<ChoicesEditorMultiple, Boolean> widthConstrained(){return new InstanceProperty<>(source,PackageProperties.choicesEditorMultiple.widthConstrained);}
       }
       
       public  InstanceProperties instance(ChoicesEditorMultiple instance) {
@@ -146,6 +150,7 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorSingle, Class> valueTransformer = new TypedProperty<>(ChoicesEditorSingle.class, "valueTransformer");
       public TypedProperty<ChoicesEditorSingle, Function> valueTransformerFunction = new TypedProperty<>(ChoicesEditorSingle.class, "valueTransformerFunction");
       public TypedProperty<ChoicesEditorSingle, List> values = new TypedProperty<>(ChoicesEditorSingle.class, "values");
+      public TypedProperty<ChoicesEditorSingle, Boolean> widthConstrained = new TypedProperty<>(ChoicesEditorSingle.class, "widthConstrained");
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoicesEditorSingle> {
         public  InstanceProperties(ChoicesEditorSingle source){super(source);}
         public InstanceProperty<ChoicesEditorSingle, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.changeOnSelectionEvent);}
@@ -161,6 +166,7 @@ public class PackageProperties {
         public InstanceProperty<ChoicesEditorSingle, Class> valueTransformer(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.valueTransformer);}
         public InstanceProperty<ChoicesEditorSingle, Function> valueTransformerFunction(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.valueTransformerFunction);}
         public InstanceProperty<ChoicesEditorSingle, List> values(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.values);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> widthConstrained(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.widthConstrained);}
       }
       
       public  InstanceProperties instance(ChoicesEditorSingle instance) {

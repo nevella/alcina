@@ -143,6 +143,9 @@ public class SearchDefinitionEditor extends Model.Fields
 	@Binding(type = Type.PROPERTY)
 	boolean popupsOpen;
 
+	@Binding(type = Type.PROPERTY)
+	boolean modified;
+
 	@Property.Not
 	SearchDefinition originalDefinition;
 
@@ -220,8 +223,10 @@ public class SearchDefinitionEditor extends Model.Fields
 	void updateGoState() {
 		String renderedDefinitionSerialized = FlatTreeSerializer
 				.serializeElided(renderedDefinition);
-		go.properties().disabled().set(Objects.equals(
-				initialSerializedDefinition, renderedDefinitionSerialized));
+		boolean modified = !Objects.equals(initialSerializedDefinition,
+				renderedDefinitionSerialized);
+		go.properties().disabled().set(!modified);
+		properties().modified().set(modified);
 	}
 
 	void onPropertyGraphChange(PropertyGraphListener.ChangeEvent changeEvent) {

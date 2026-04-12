@@ -54,8 +54,6 @@ class ClientEventDispatch {
 		if (preview) {
 			switch (typeName) {
 			case "selectionchange":
-				int debug = 3;
-				return;
 			case "mouseout":
 			case "mouseenter":
 			case "mouseleave":

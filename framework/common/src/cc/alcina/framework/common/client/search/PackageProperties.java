@@ -16,6 +16,7 @@ import java.lang.Enum;
 import java.lang.Long;
 import java.lang.String;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
@@ -349,6 +350,7 @@ public class PackageProperties {
     }
     
     public static class _TextCriterion implements TypedProperty.Container {
+      public TypedProperty<TextCriterion, List> applicableOperators = new TypedProperty<>(TextCriterion.class, "applicableOperators");
       public TypedProperty<TextCriterion, String> displayName = new TypedProperty<>(TextCriterion.class, "displayName");
       public TypedProperty<TextCriterion, StandardSearchOperator> operator = new TypedProperty<>(TextCriterion.class, "operator");
       public TypedProperty<TextCriterion, String> targetPropertyName = new TypedProperty<>(TextCriterion.class, "targetPropertyName");
@@ -356,6 +358,7 @@ public class PackageProperties {
       public TypedProperty<TextCriterion, String> value = new TypedProperty<>(TextCriterion.class, "value");
       public static class InstanceProperties extends 	InstanceProperty.Container<TextCriterion> {
         public  InstanceProperties(TextCriterion source){super(source);}
+        public InstanceProperty<TextCriterion, List> applicableOperators(){return new InstanceProperty<>(source,PackageProperties.textCriterion.applicableOperators);}
         public InstanceProperty<TextCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.textCriterion.displayName);}
         public InstanceProperty<TextCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.textCriterion.operator);}
         public InstanceProperty<TextCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.textCriterion.targetPropertyName);}

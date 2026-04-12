@@ -1,8 +1,17 @@
 @use '../../../theme/theme'
 
+@mixin hint
+  > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after
+    content:'Type, or [Enter] to search'
+
+  &[modified] > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after
+    content:'[Enter] to search'
+  
 @mixin contents
   display: flex
   width: 100%
+
+  @include hint
 
   > choice-editor
     flex-grow: 1
@@ -55,7 +64,6 @@
             > value-editor
               > select, > input
                 background-color: white
-
 
   > go-container
     display: block

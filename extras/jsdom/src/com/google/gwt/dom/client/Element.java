@@ -900,6 +900,9 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void removeAttribute(String name) {
+		// if (!local().hasAttribute(name)) {
+		// return;
+		// }
 		local().removeAttribute(name);
 		// FIXME - dirndl - doesn't actually remove. To remove via mutation
 		// (which isn't really covered in the w3c DomMutation) spec, possibly

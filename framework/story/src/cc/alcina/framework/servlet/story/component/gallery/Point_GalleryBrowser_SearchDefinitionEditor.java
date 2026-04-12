@@ -13,7 +13,8 @@ import cc.alcina.framework.gwt.client.story.Waypoints;
  */
 // @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionOperator.class)
 // @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
-@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._CriterionSelectDelete.class)
+// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._CriterionSelectDelete.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._HintBehavior.class)
 @Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
 public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String XPATH_CREATED_FROM_TITLE = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']/name";
@@ -23,6 +24,8 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String XPATH_CREATED_FROM_OPERATOR = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']//operator";
 
 	static final String XPATH_CURSOR_TARGET = "//search-definition-editor//suggesting-node";
+
+	static final String XPATH_EDIT_AREA = "//search-definition-editor//edit";
 
 	static final String XPATH_GO_BUTTON_DISABLED = "//search-definition-editor//button[.='Go'][@disabled='true']";
 
@@ -43,6 +46,15 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 		@Decl.Location.Xpath(XPATH_CREATED_FROM_OPERATOR)
 		@Decl.Action.UI.Click
 		static class ClickCreatedFromOperator extends Waypoint {
+		}
+	}
+
+	@Decl.Child(_Reset.class)
+	@Decl.Child(_HintBehavior.ClickEditArea.class)
+	static class _HintBehavior extends Waypoint {
+		@Decl.Location.Xpath(XPATH_EDIT_AREA)
+		@Decl.Action.UI.SelectArea(fromX = 300, fromY = -5, toX = 340, toY = 10)
+		static class ClickEditArea extends Waypoint {
 		}
 	}
 

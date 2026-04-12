@@ -1908,6 +1908,11 @@ choice-editor > edit suggesting-node {
   min-height: 16px;
   padding-right: 1px;
 }
+choice-editor > edit suggesting-node:empty:after {
+  content: " ";
+  display: inline-block;
+  color: #aaa;
+}
 choice-editor > edit choice-node {
   background: none;
   border-radius: 4px;
@@ -1970,6 +1975,12 @@ overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-
 search-definition-editor {
   display: flex;
   width: 100%;
+}
+search-definition-editor > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
+  content: "Type, or [Enter] to search";
+}
+search-definition-editor[modified] > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
+  content: "[Enter] to search";
 }
 search-definition-editor > choice-editor {
   flex-grow: 1;

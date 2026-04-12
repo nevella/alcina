@@ -37,6 +37,7 @@ $selected-editor-choice: #77e
     &[_selected]
       text-decoration: underline
 
+
 @mixin suggestions
   > edit
     @include form.fancy-input
@@ -58,6 +59,11 @@ $selected-editor-choice: #77e
       display: inline-block
       min-height: 16px
       padding-right: 1px
+
+      &:empty:after
+        content:' '
+        display: inline-block
+        color: #aaa
 
     choice-node
       background: none
