@@ -247,7 +247,7 @@ public class Mvcc {
 
 	static Set<String> getLTransientFieldNamesForClear(
 			Class<? extends Entity> entityClass) {
-		return getStore(entityClass).getLTransientFieldNames(entityClass,
+		return getStore(entityClass).getTransientFieldNames(entityClass,
 				Set.of(MvccObjectVersions.MVCC_OBJECT_FIELD_NAME));
 	}
 

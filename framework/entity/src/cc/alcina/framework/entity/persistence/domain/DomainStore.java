@@ -113,6 +113,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -1011,7 +1012,21 @@ public class DomainStore implements IDomainStore {
 
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
 		try {
-			Class clazz = classDescriptor.clazz;
+			Class<? extends Entity> clazz = classDescriptor.clazz;
+			Set<String> transientFieldNames = getTransientFieldNames(clazz,
+					Set.of());
+			transientFieldNames.forEach(fn -> {
+				try {
+					Field field = clazz.getDeclaredField(fn);
+					if (field.getType().isPrimitive()) {
+						throw new IllegalStateException(Ax.format(
+								"Field %s.%s must be nullable ",
+								NestedName.get(clazz), field.getName()));
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
 			classDescriptor.setDomainDescriptor(domainDescriptor);
 			for (PropertyDescriptor pd : SEUtilities
 					.getPropertyDescriptorsSortedByName(clazz)) {
@@ -2456,7 +2471,7 @@ public class DomainStore implements IDomainStore {
 		});
 	}
 
-	public Set<String> getLTransientFieldNames(
+	public Set<String> getTransientFieldNames(
 			Class<? extends Entity> entityClass, Set<String> excludingNames) {
 		return transientFieldNames.computeIfAbsent(entityClass, clazz -> {
 			Set<String> names = GraphProjection
