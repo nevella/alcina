@@ -115,6 +115,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 */
 	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
 
+	static final String MVCC_OBJECT_FIELD_NAME = "__mvccObjectVersions__";
+
 	// called in a synchronized block (synchronized on domainIdentity) -- or --
 	// domainIdentity is unreachable(unreachable from other txs)
 	static <E extends Entity> MvccObjectVersions<E> createEntityVersions(

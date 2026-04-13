@@ -616,6 +616,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			if (Objects.equals(editSelection.range.toIntPair(),
 					startFragment.domNode().asRange().toIntPair())) {
 				startFragment.nodes().removeFromParent();
+				((Model) decoratorParent).emitEvent(
+						DecoratorEvents.SelectedDecoratorDeleted.class);
 			}
 		}
 	}

@@ -317,6 +317,8 @@ public class Transactions {
 			LooseContext.setTrue(CONTEXT_REVERTING_TO_DEFAULTS);
 			copyObjectFields(defaults, entity,
 					Mvcc.getLazyFieldNames(entity.entityClass()));
+			Mvcc.clearLazyProperties(entity);
+			Mvcc.clearTransients(entity);
 			MvccObjectVersions versions = ((MvccObject) entity)
 					.__getMvccVersions__();
 			ProcessObservers.publish(RevertDomainIdentityEvent.class,

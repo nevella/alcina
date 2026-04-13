@@ -48,6 +48,9 @@ $selected-editor-choice: #77e
     line-height: 145%
     width: 30rem
 
+    &:focus-within, &:hover
+       outline: solid 1px rgb(0, 95, 204)
+
     //browsers are weird around that very first choice (with empty text child)  
     // min-height is sensitive (it affects cursor size + overall line height)
     // so override if the editor font size changes
@@ -59,6 +62,7 @@ $selected-editor-choice: #77e
       display: inline-block
       min-height: 16px
       padding-right: 1px
+      cursor: text
 
       &:empty:after
         content:' '

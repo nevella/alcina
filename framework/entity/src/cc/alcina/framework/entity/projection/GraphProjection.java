@@ -585,15 +585,23 @@ public class GraphProjection {
 		return true;
 	}
 
-	private List<Field> ensureDeclaredNonStaticFields(Class c) {
-		if (!perClassDeclaredFields.containsKey(c)) {
-			Field[] fields = c.getDeclaredFields();
+	public static List<Field> getDeclaredNonStaticFields(Class clazz) {
+		List<Field> result = perClassDeclaredFields.get(clazz);
+		if (result == null) {
+			result = new GraphProjection().ensureDeclaredNonStaticFields(clazz);
+		}
+		return result;
+	}
+
+	private List<Field> ensureDeclaredNonStaticFields(Class clazz) {
+		if (!perClassDeclaredFields.containsKey(clazz)) {
+			Field[] fields = clazz.getDeclaredFields();
 			List<Field> nonStatic = new ArrayList<Field>();
 			for (Field field : fields) {
 				if (Modifier.isStatic(field.getModifiers())) {
 					continue;
 				}
-				boolean open = c.getModule().isOpen(c.getPackageName());
+				boolean open = clazz.getModule().isOpen(clazz.getPackageName());
 				if (!attemptToProjectModuleFields && !open) {
 					continue;
 				} else {
@@ -602,8 +610,8 @@ public class GraphProjection {
 							field.setAccessible(true);
 							nonStatic.add(field);
 						} catch (Exception e) {
-							Ax.out("Not accessible: %s.%s", c.getSimpleName(),
-									field.getName());
+							Ax.out("Not accessible: %s.%s",
+									clazz.getSimpleName(), field.getName());
 						}
 					} else {
 						field.setAccessible(true);
@@ -611,9 +619,9 @@ public class GraphProjection {
 					}
 				}
 			}
-			perClassDeclaredFields.put(c, nonStatic);
+			perClassDeclaredFields.put(clazz, nonStatic);
 		}
-		return perClassDeclaredFields.get(c);
+		return perClassDeclaredFields.get(clazz);
 	}
 
 	private Permission

@@ -768,6 +768,36 @@ public abstract class DevConsoleCommand {
 		}
 	}
 
+	public static class CmdExtractRegexList extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "tidle" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "extract a regex list from clipboard text";
+		}
+
+		@Override
+		public String getUsage() {
+			return "tidle {-r :: randomise} (from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			boolean random = argv.length == 1 && argv[0].equals("-r");
+			String idle = console.getMultilineInput(
+					"Enter the id list text, or blank for clipboard: ");
+			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
+			String list = idle.replace("\n", "|");
+			System.out.println(list);
+			console.setClipboardContents(list);
+			System.out.println("\n");
+			return "";
+		}
+	}
+
 	public static class CmdHelp extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {

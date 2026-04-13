@@ -241,13 +241,22 @@ public class Mvcc {
 		}
 	}
 
-	public static Set<String>
-			getLazyFieldNames(Class<? extends Entity> entityClass) {
+	static Set<String> getLazyFieldNames(Class<? extends Entity> entityClass) {
 		return getStore(entityClass).getLazyFieldNames(entityClass);
 	}
 
-	public static void clearLazyProperties(Entity newlyPromoted) {
-		ObjectUtil.nullFields(newlyPromoted,
-				getLazyFieldNames(newlyPromoted.entityClass()));
+	static Set<String> getLTransientFieldNamesForClear(
+			Class<? extends Entity> entityClass) {
+		return getStore(entityClass).getLTransientFieldNames(entityClass,
+				Set.of(MvccObjectVersions.MVCC_OBJECT_FIELD_NAME));
+	}
+
+	public static void clearLazyProperties(Entity entity) {
+		ObjectUtil.nullFields(entity, getLazyFieldNames(entity.entityClass()));
+	}
+
+	public static void clearTransients(Entity entity) {
+		ObjectUtil.nullFields(entity,
+				getLTransientFieldNamesForClear(entity.entityClass()));
 	}
 }

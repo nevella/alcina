@@ -44,4 +44,43 @@ public class DecoratorEvents {
 			}
 		}
 	}
+
+	public static class EditNodesChanged
+			extends ModelEvent<List<EditNode>, EditNodesChanged.Handler> {
+		@Override
+		public void dispatch(EditNodesChanged.Handler handler) {
+			handler.onEditNodesChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEditNodesChanged(EditNodesChanged event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onEditNodesChanged(EditNodesChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	public static class SelectedDecoratorDeleted
+			extends ModelEvent<Object, SelectedDecoratorDeleted.Handler> {
+		@Override
+		public void dispatch(SelectedDecoratorDeleted.Handler handler) {
+			handler.onSelectedDecoratorDeleted(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectedDecoratorDeleted(SelectedDecoratorDeleted event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void
+					onSelectedDecoratorDeleted(SelectedDecoratorDeleted event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
 }

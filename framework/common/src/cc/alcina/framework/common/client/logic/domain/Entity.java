@@ -70,6 +70,14 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * 
  * </code>
  * </pre>
+ * 
+ * </li>
+ * <li><b>Transience, lazy properties and transactional versions</b> basically
+ * 'it works' - transients should be attached to versions. In the case of where
+ * a transient helper modifies (say) a backing domainidentity version property,
+ * they should invalidate *themselves* (better, not cause any changes to
+ * non-local variables) so that a reget (or concurrent other-thread get) will
+ * behave correctly
  * </ul>
  */
 @MappedSuperclass

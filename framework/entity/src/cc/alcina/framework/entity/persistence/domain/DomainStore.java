@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.persistence.domain;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -330,6 +331,8 @@ public class DomainStore implements IDomainStore {
 	private ConcurrentHashMap<EntityLocator, Entity> promotedEntitiesByPrePromotion = new ConcurrentHashMap<>();
 
 	ConcurrentHashMap<Class<? extends Entity>, Set<String>> lazyFieldNames = new ConcurrentHashMap<>();
+
+	ConcurrentHashMap<Class<? extends Entity>, Set<String>> transientFieldNames = new ConcurrentHashMap<>();
 
 	/*
 	 * lock the post-process processing (index mutation etc)
@@ -2370,6 +2373,7 @@ public class DomainStore implements IDomainStore {
 			 * clearance.
 			 */
 			Mvcc.clearLazyProperties(promoted);
+			Mvcc.clearTransients(promoted);
 			EntityLocator locator = new EntityLocator();
 			locator.setLocalId(transform.getObjectLocalId());
 			locator.setClientInstanceId(clientInstance.getId());
@@ -2448,6 +2452,19 @@ public class DomainStore implements IDomainStore {
 						return dsp != null && dsp
 								.loadType() == DomainStorePropertyLoadType.LAZY;
 					}).collect(Collectors.toSet());
+			return names;
+		});
+	}
+
+	public Set<String> getLTransientFieldNames(
+			Class<? extends Entity> entityClass, Set<String> excludingNames) {
+		return transientFieldNames.computeIfAbsent(entityClass, clazz -> {
+			Set<String> names = GraphProjection
+					.getDeclaredNonStaticFields(clazz).stream()
+					.filter(f -> Modifier.isTransient(f.getModifiers()))
+					.map(Field::getName)
+					.filter(name -> !excludingNames.contains(name))
+					.collect(Collectors.toSet());
 			return names;
 		});
 	}

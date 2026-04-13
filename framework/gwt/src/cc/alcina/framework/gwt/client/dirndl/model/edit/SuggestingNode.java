@@ -2,13 +2,18 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
 
+import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focus;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 
@@ -18,7 +23,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 @Directed(className = "suggesting-node")
 @TypedProperties
 public class SuggestingNode extends EditNode
-		implements Binding.TabIndexMinusOne, HasElementBehaviors {
+		implements Binding.TabIndexMinusOne, HasElementBehaviors,
+		DomEvents.Focus.Handler, DomEvents.Focusin.Handler {
 	protected PackageProperties._SuggestingNode.InstanceProperties
 			properties() {
 		return PackageProperties.suggestingNode.instance(this);
@@ -27,6 +33,9 @@ public class SuggestingNode extends EditNode
 	DecoratorNode.Descriptor decoratorDescriptor;
 
 	TextNode textFragment;
+
+	@Binding(to = "tabIndex", type = Binding.Type.PROPERTY)
+	int tabIndex = -1;
 
 	public SuggestingNode() {
 		contentEditable = true;
@@ -69,5 +78,28 @@ public class SuggestingNode extends EditNode
 	@Override
 	public boolean isValid() {
 		return decoratorDescriptor != null;
+	}
+
+	@Override
+	public void onFocus(Focus event) {
+		collapseSelectionToStart();
+	}
+
+	@Override
+	public void onFocusin(Focusin event) {
+		collapseSelectionToStart();
+	}
+
+	void collapseSelectionToStart() {
+		if (!provideIsBound()) {
+			return;
+		}
+		DomNode domNode = provideElement().asDomNode();
+		Selection selection = domNode.gwtNode().getOwnerDocument()
+				.getSelection();
+		if (selection.hasSelection()
+				&& !domNode.asRange().contains(selection.getFocusLocation())) {
+			selection.collapse(domNode.asLocation());
+		}
 	}
 }

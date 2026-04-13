@@ -254,6 +254,11 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 				lastPublishedDecorators = decorators;
 				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
 			}
+			List<EditNode> editNodes = getEditNodes();
+			if (!Objects.equals(editNodes, lastPublishedEditNodes)) {
+				lastPublishedEditNodes = editNodes;
+				emitEvent(DecoratorEvents.EditNodesChanged.class, editNodes);
+			}
 			if (provideIsUnbound()) {
 				return;
 			}
@@ -270,7 +275,14 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		return fragmentModel.byTypeAssignable(DecoratorNode.class).toList();
 	}
 
+	@Property.Not
+	List<EditNode> getEditNodes() {
+		return fragmentModel.byTypeAssignable(EditNode.class).toList();
+	}
+
 	List<DecoratorNode> lastPublishedDecorators;
+
+	List<EditNode> lastPublishedEditNodes;
 
 	/**
 	 * 
@@ -394,5 +406,18 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		 */
 		properties().contentEditable().set(false);
 		properties().contentEditable().set(true);
+	}
+
+	void focusLastSuggestingDecorator() {
+		fragmentModel.byTypeAssignable(SuggestingNode.class).reduce(Ax.last())
+				.ifPresent(SuggestingNode::collapseSelectionToStart);
+	}
+
+	public void makeLastSuggestingNodeTabbable() {
+		List<SuggestingNode> suggestings = fragmentModel
+				.byTypeAssignable(SuggestingNode.class).toList();
+		SuggestingNode last = Ax.last(suggestings);
+		suggestings.forEach(
+				sn -> sn.properties().tabIndex().set(sn == last ? 0 : -1));
 	}
 }

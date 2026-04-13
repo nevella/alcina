@@ -40,6 +40,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.EditNodesChanged;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.SelectedDecoratorDeleted;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 
@@ -75,7 +77,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
 @Directed(tag = "choice-editor")
 public abstract class ChoiceEditor<T> extends Choices<T>
 		implements HasDecorators, DecoratorEvents.DecoratorsChanged.Handler,
-		ModelEvents.Commit.Handler, Choices.CommitWithNoSelectedChoice.Handler {
+		DecoratorEvents.EditNodesChanged.Handler, ModelEvents.Commit.Handler,
+		Choices.CommitWithNoSelectedChoice.Handler,
+		DecoratorEvents.SelectedDecoratorDeleted.Handler {
 	@Directed(tag = "choice-node")
 	@Bean(PropertySource.FIELDS)
 	static class ChoiceNode extends DecoratorNode<Choice, Object>
@@ -206,6 +210,11 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.map(n -> (T) n.getStringRepresentable()).toList();
 		event.reemitAs(this, ModelEvents.SelectionDirty.class,
 				decoratorChoiceValues);
+	}
+
+	@Override
+	public void onEditNodesChanged(EditNodesChanged event) {
+		editArea.makeLastSuggestingNodeTabbable();
 	}
 
 	public ChoiceEditor() {
@@ -395,5 +404,10 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Override
 	public void onCommitWithNoSelectedChoice(CommitWithNoSelectedChoice event) {
 		event.reemitAs(this, Commit.class, this);
+	}
+
+	@Override
+	public void onSelectedDecoratorDeleted(SelectedDecoratorDeleted event) {
+		exec(editArea::focusLastSuggestingDecorator).dispatch();
 	}
 }

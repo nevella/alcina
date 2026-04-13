@@ -1901,12 +1901,16 @@ choice-editor > edit:focus {
   border-color: #555;
   background-color: #FFF;
 }
+choice-editor > edit:focus-within, choice-editor > edit:hover {
+  outline: solid 1px #005fcc;
+}
 choice-editor > edit suggesting-node {
   display: inline-block;
   white-space: nowrap;
   display: inline-block;
   min-height: 16px;
   padding-right: 1px;
+  cursor: text;
 }
 choice-editor > edit suggesting-node:empty:after {
   content: " ";

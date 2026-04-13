@@ -50,6 +50,8 @@ class MvccObjectVersionsEntity<T extends Entity>
 	protected void copyObject(T fromObject, T domainIdentityObject) {
 		Transactions.copyObjectFields(fromObject, domainIdentityObject,
 				getLazyFieldNames(domainIdentityObject));
+		Mvcc.clearLazyProperties(domainIdentityObject);
+		Mvcc.clearTransients(domainIdentityObject);
 		ProcessObservers.publish(VersionCopiedToDomainIdentityEvent.class,
 				() -> new VersionCopiedToDomainIdentityEvent(this, fromObject,
 						domainIdentityObject));

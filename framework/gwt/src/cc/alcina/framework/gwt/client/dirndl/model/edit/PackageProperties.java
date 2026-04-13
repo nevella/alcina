@@ -210,6 +210,7 @@ public class PackageProperties {
       public TypedProperty<EditArea, Boolean> insertEditorStartCursorTarget = new TypedProperty<>(EditArea.class, "insertEditorStartCursorTarget");
       public TypedProperty<EditArea, Boolean> insertInterNonEditableCursorTargets = new TypedProperty<>(EditArea.class, "insertInterNonEditableCursorTargets");
       public TypedProperty<EditArea, List> lastPublishedDecorators = new TypedProperty<>(EditArea.class, "lastPublishedDecorators");
+      public TypedProperty<EditArea, List> lastPublishedEditNodes = new TypedProperty<>(EditArea.class, "lastPublishedEditNodes");
       public TypedProperty<EditArea, String> placeholder = new TypedProperty<>(EditArea.class, "placeholder");
       public TypedProperty<EditArea, Boolean> stripFontTagsOnInput = new TypedProperty<>(EditArea.class, "stripFontTagsOnInput");
       public TypedProperty<EditArea, String> tag = new TypedProperty<>(EditArea.class, "tag");
@@ -225,6 +226,7 @@ public class PackageProperties {
         public InstanceProperty<EditArea, Boolean> insertEditorStartCursorTarget(){return new InstanceProperty<>(source,PackageProperties.editArea.insertEditorStartCursorTarget);}
         public InstanceProperty<EditArea, Boolean> insertInterNonEditableCursorTargets(){return new InstanceProperty<>(source,PackageProperties.editArea.insertInterNonEditableCursorTargets);}
         public InstanceProperty<EditArea, List> lastPublishedDecorators(){return new InstanceProperty<>(source,PackageProperties.editArea.lastPublishedDecorators);}
+        public InstanceProperty<EditArea, List> lastPublishedEditNodes(){return new InstanceProperty<>(source,PackageProperties.editArea.lastPublishedEditNodes);}
         public InstanceProperty<EditArea, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.editArea.placeholder);}
         public InstanceProperty<EditArea, Boolean> stripFontTagsOnInput(){return new InstanceProperty<>(source,PackageProperties.editArea.stripFontTagsOnInput);}
         public InstanceProperty<EditArea, String> tag(){return new InstanceProperty<>(source,PackageProperties.editArea.tag);}
@@ -452,6 +454,7 @@ public class PackageProperties {
       public TypedProperty<SuggestingNode, Boolean> contentEditable = new TypedProperty<>(SuggestingNode.class, "contentEditable");
       public TypedProperty<SuggestingNode, DecoratorNode.Descriptor> decoratorDescriptor = new TypedProperty<>(SuggestingNode.class, "decoratorDescriptor");
       public TypedProperty<SuggestingNode, Boolean> selected = new TypedProperty<>(SuggestingNode.class, "selected");
+      public TypedProperty<SuggestingNode, Integer> tabIndex = new TypedProperty<>(SuggestingNode.class, "tabIndex");
       public TypedProperty<SuggestingNode, TextNode> textFragment = new TypedProperty<>(SuggestingNode.class, "textFragment");
       public TypedProperty<SuggestingNode, Boolean> valid = new TypedProperty<>(SuggestingNode.class, "valid");
       public static class InstanceProperties extends 	InstanceProperty.Container<SuggestingNode> {
@@ -460,6 +463,7 @@ public class PackageProperties {
         public InstanceProperty<SuggestingNode, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.contentEditable);}
         public InstanceProperty<SuggestingNode, DecoratorNode.Descriptor> decoratorDescriptor(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.decoratorDescriptor);}
         public InstanceProperty<SuggestingNode, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.selected);}
+        public InstanceProperty<SuggestingNode, Integer> tabIndex(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.tabIndex);}
         public InstanceProperty<SuggestingNode, TextNode> textFragment(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.textFragment);}
         public InstanceProperty<SuggestingNode, Boolean> valid(){return new InstanceProperty<>(source,PackageProperties.suggestingNode.valid);}
       }
