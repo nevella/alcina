@@ -68,9 +68,13 @@ public class HttpContext implements AuthenticationTokenStore {
 
 	@Override
 	public void setCookieValue(String name, String value) {
+		setCookieValue(name, value, 86400 * 365 * 10);
+	}
+
+	public void setCookieValue(String name, String value, int maxAge) {
 		Cookie cookie = new Cookie(name, value);
 		cookie.setPath("/");
-		cookie.setMaxAge(86400 * 365 * 10);
+		cookie.setMaxAge(maxAge);
 		cookie.setHttpOnly(true);
 		cookie.setSecure(isSecure());
 		CookieUtils.addToRequestAndResponse(request, response, cookie);
