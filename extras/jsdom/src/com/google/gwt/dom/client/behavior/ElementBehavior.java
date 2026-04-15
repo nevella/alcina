@@ -132,11 +132,15 @@ public interface ElementBehavior extends EventBehavior {
 				Element registeredElement,
 				RegisterAllEvents registerAllEvents) {
 			Selection selection = Document.get().getSelection();
-			IntPair elementPair = registeredElement.asDomNode().asRange()
-					.toIntPair();
-			int selectionIndex = selection.getFocusLocation().getIndex();
-			boolean contains = elementPair.containsExEnd(selectionIndex)
-					|| elementPair.i1 == selectionIndex;
+			boolean contains = false;
+			if (selection.hasAttachedSelection()) {
+				IntPair elementPair = registeredElement.asDomNode().asRange()
+						.toIntPair();
+				int selectionIndex = selection.getFocusLocation().getIndex();
+				contains = elementPair.containsExBoundaries(selectionIndex)
+						|| selection.isCollapsed()
+								&& elementPair.i1 == selectionIndex;
+			}
 			if (contains) {
 				registeredElement.setAttribute(CONTAINS_CURSOR, "true");
 				registerAllEvents.registerAllEvents(registeredElement, this,

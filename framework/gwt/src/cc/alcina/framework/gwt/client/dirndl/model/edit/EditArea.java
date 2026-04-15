@@ -2,8 +2,10 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
@@ -251,8 +253,10 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
 			List<DecoratorNode> decorators = getDecoratorNodes();
 			if (!Objects.equals(decorators, lastPublishedDecorators)) {
+				DecoratorEvents.DecoratorsChanged.Data data = new DecoratorEvents.DecoratorsChanged.Data(
+						lastPublishedDecorators, decorators);
 				lastPublishedDecorators = decorators;
-				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
+				emitEvent(DecoratorEvents.DecoratorsChanged.class, data);
 			}
 			List<EditNode> editNodes = getEditNodes();
 			if (!Objects.equals(editNodes, lastPublishedEditNodes)) {
@@ -408,11 +412,24 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		properties().contentEditable().set(true);
 	}
 
+	/*
+	 * wip - editarea - behavior - this should probably be a behavior for
+	 * ChoiceEditor, 'ensureFinalSuggestionNodeIfActive' - where active is
+	 * [focus|desc-overlay-focussed]
+	 */
 	void focusLastSuggestingDecorator() {
-		fragmentModel.byTypeAssignable(SuggestingNode.class).reduce(Ax.last())
-				.ifPresent(SuggestingNode::collapseSelectionToStart);
+		Optional<SuggestingNode> last = fragmentModel
+				.byTypeAssignable(SuggestingNode.class).reduce(Ax.last());
+		last.ifPresentOrElse(SuggestingNode::collapseSelectionToStart, () -> {
+			DomNode lastDescendant = provideElement().asDomNode().relative()
+					.lastDescendant();
+			Document.get().getSelection().collapse(lastDescendant.gwtNode());
+		});
 	}
 
+	/*
+	 * wip - editarea - behavior
+	 */
 	public void makeLastSuggestingNodeTabbable() {
 		List<SuggestingNode> suggestings = fragmentModel
 				.byTypeAssignable(SuggestingNode.class).toList();

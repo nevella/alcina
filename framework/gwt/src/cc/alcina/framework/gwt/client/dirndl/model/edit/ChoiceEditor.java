@@ -205,8 +205,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	@Override
 	public void onDecoratorsChanged(DecoratorsChanged event) {
-		List<DecoratorNode> model = event.getModel();
-		List<T> decoratorChoiceValues = model.stream()
+		DecoratorsChanged.Data model = event.getModel();
+		List<T> decoratorChoiceValues = model.newValue.stream()
 				.map(n -> (T) n.getStringRepresentable()).toList();
 		event.reemitAs(this, ModelEvents.SelectionDirty.class,
 				decoratorChoiceValues);

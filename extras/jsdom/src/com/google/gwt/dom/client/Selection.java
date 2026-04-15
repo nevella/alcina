@@ -154,6 +154,11 @@ public class Selection implements ClientDomSelection {
 		return !Objects.equals("None", getType());
 	}
 
+	public boolean hasAttachedSelection() {
+		return hasSelection() && getFocusNode() != null
+				&& getFocusLocation().isAttached();
+	}
+
 	public void validate() {
 		local.validate();
 	}

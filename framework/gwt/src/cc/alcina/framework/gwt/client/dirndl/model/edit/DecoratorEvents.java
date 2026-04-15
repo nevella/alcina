@@ -26,8 +26,8 @@ public class DecoratorEvents {
 		}
 	}
 
-	public static class DecoratorsChanged
-			extends ModelEvent<List<DecoratorNode>, DecoratorsChanged.Handler> {
+	public static class DecoratorsChanged extends
+			ModelEvent<DecoratorsChanged.Data, DecoratorsChanged.Handler> {
 		@Override
 		public void dispatch(DecoratorsChanged.Handler handler) {
 			handler.onDecoratorsChanged(this);
@@ -41,6 +41,18 @@ public class DecoratorEvents {
 			@Override
 			default void onDecoratorsChanged(DecoratorsChanged event) {
 				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public static class Data {
+			public List<DecoratorNode> oldValue;
+
+			public List<DecoratorNode> newValue;
+
+			public Data(List<DecoratorNode> oldValue,
+					List<DecoratorNode> newValue) {
+				this.oldValue = oldValue;
+				this.newValue = newValue;
 			}
 		}
 	}

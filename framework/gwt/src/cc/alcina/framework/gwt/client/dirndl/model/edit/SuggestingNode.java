@@ -97,8 +97,9 @@ public class SuggestingNode extends EditNode
 		DomNode domNode = provideElement().asDomNode();
 		Selection selection = domNode.gwtNode().getOwnerDocument()
 				.getSelection();
-		if (selection.hasSelection()
-				&& !domNode.asRange().contains(selection.getFocusLocation())) {
+		boolean collapse = !selection.hasAttachedSelection()
+				|| !domNode.asRange().contains(selection.getFocusLocation());
+		if (collapse) {
 			selection.collapse(domNode.asLocation());
 		}
 	}

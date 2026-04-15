@@ -339,6 +339,10 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		return contains(other) && i1 < other.i1 && i2 > other.i2;
 	}
 
+	public boolean containsExBoundaries(int i) {
+		return contains(i) && i1 < i && i2 > i;
+	}
+
 	public boolean containsExEnd(int i) {
 		return i >= i1 && i < i2;
 	}
