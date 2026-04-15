@@ -9,6 +9,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.servlet.http.Cookie;
+
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
@@ -451,5 +453,11 @@ public class EnvironmentManager {
 
 	public Debug debug() {
 		return new Debug();
+	}
+
+	public static class HttpContextEnv {
+		public static Cookie[] getCookies() {
+			return Environment.get().access().getCookies();
+		}
 	}
 }

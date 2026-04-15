@@ -29,6 +29,10 @@ import cc.alcina.framework.common.client.util.StringMap;
 public class HttpServletRequestShell implements HttpServletRequest {
 	public StringMap parameters = new StringMap();
 
+	public Cookie[] cookies;
+
+	public StringMap headers = new StringMap();
+
 	@Override
 	public boolean authenticate(HttpServletResponse arg0)
 			throws IOException, ServletException {
@@ -87,7 +91,7 @@ public class HttpServletRequestShell implements HttpServletRequest {
 
 	@Override
 	public Cookie[] getCookies() {
-		return null;
+		return cookies;
 	}
 
 	@Override
