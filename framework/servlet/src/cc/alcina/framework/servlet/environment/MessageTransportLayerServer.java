@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.Cookie;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -17,6 +19,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
+import cc.alcina.framework.servlet.environment.MessageTransportLayerServer.AggregateDispatcher.DispatchableToken;
 
 /**
  * <p>
@@ -383,5 +386,18 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			format.line(envelopeDispatcher().toDebugString());
 		}
 		return format.toString();
+	}
+
+	/*
+	 * FIXME - romcom/http - this should be extended?
+	 */
+	public Cookie[] getCookies() {
+		DispatchableToken token = aggregateDispatcher
+				.getPreferredDispatchableToken();
+		if (token != null) {
+			return token.token.servletRequest.getCookies();
+		} else {
+			return null;
+		}
 	}
 }

@@ -2,6 +2,9 @@ package cc.alcina.framework.servlet.component.romcom.server;
 
 import java.util.concurrent.CountDownLatch;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,11 +63,19 @@ public class RemoteComponentProtocolServer {
 
 		public final String requestJson;
 
+		public final HttpServletRequest servletRequest;
+
+		public final HttpServletResponse servletResponse;
+
 		public RequestToken(String requestJson, RemoteComponentRequest request,
-				RemoteComponentResponse response) {
+				RemoteComponentResponse response,
+				HttpServletRequest servletRequest,
+				HttpServletResponse servletResponse) {
 			this.requestJson = requestJson;
 			this.request = request;
 			this.response = response;
+			this.servletRequest = servletRequest;
+			this.servletResponse = servletResponse;
 			this.latch = new CountDownLatch(1);
 		}
 

@@ -295,7 +295,7 @@ public class RemoteComponentHandler {
 						request.messageEnvelope.toMessageDebugString());
 				try {
 					RequestToken token = new RequestToken(requestJson, request,
-							response);
+							response, servletRequest, servletResponse);
 					EnvironmentManager.get().acceptRequest(token);
 					token.latch.await();
 				} catch (Exception e) {

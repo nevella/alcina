@@ -11,6 +11,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+import javax.servlet.http.Cookie;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -652,6 +654,10 @@ class Environment {
 					mutationProxy.emitStringProtocolInvalidation(entry.key);
 				}
 			});
+		}
+
+		Cookie[] getCookies() {
+			return queue.transportLayer.getCookies();
 		}
 	}
 
