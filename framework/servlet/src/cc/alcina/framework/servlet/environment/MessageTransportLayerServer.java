@@ -14,6 +14,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
@@ -372,6 +373,10 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		synchronized void add(Message message) {
 			messages.add(message);
 		}
+
+		synchronized boolean hasPendingMutations() {
+			return messages.stream().anyMatch(m -> m instanceof Mutations);
+		}
 	}
 
 	String toStateDebugString() {
@@ -399,5 +404,9 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		} else {
 			return null;
 		}
+	}
+
+	boolean hasPendingMutations() {
+		return batcher.hasPendingMutations();
 	}
 }

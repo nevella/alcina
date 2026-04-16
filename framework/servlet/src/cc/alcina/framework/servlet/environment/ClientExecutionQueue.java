@@ -185,7 +185,8 @@ class ClientExecutionQueue implements Runnable {
 			int awaitId = mutationMessageData.lastMutationIdBuffered;
 			boolean awaitNextMutationId = false;
 			if (LocalDom.hasPending()
-					|| environment.access().hasPendingMutations()) {
+					|| environment.access().hasPendingMutations()
+					|| transportLayer.hasPendingMutations()) {
 				if (!transportLayer.sendChannel.hasMessagesPendingDispatch()) {
 					// await return of the *next* message (which will include
 					// mutations)
