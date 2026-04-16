@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -280,6 +281,10 @@ class NodeEventBinding {
 	 * *as a finally* - note the risk of memory leaks is really pretty remote
 	 * here, since whatever's reachable from the event should be reachable to
 	 * the firing model
+	 * 
+	 * <p>
+	 * In cases where this behavior is not desired, the event should implement
+	 * DescendantEvent.NotStored
 	 */
 	class DescendantBindings {
 		Set<NodeEventBinding> handlers = GWT.isScript()
@@ -311,7 +316,9 @@ class NodeEventBinding {
 		}
 
 		void dispatch(ModelEvent modelEvent) {
-			lastDispatched = modelEvent;
+			if (!(modelEvent instanceof DescendantEvent.NotStored)) {
+				lastDispatched = modelEvent;
+			}
 			/*
 			 * it's guaranteed that the handler NodeEventBinding is the right
 			 * type

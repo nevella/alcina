@@ -924,9 +924,19 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void setValues(List<T> values) {
+			T preChangeSelectedValue = choices == null ? null
+					: getSelectedValue();
 			super.setValues(values);
-			choices.forEach(c -> c
-					.setSelected(Objects.equals(c.value, lastSelectedValue)));
+			/* preserve existing choice if possible */
+			boolean newChoicesContainsCurrentSelectedValue = choices.stream()
+					.anyMatch(c -> Objects.equals(c.value,
+							preChangeSelectedValue));
+			if (newChoicesContainsCurrentSelectedValue) {
+				choices.forEach(c -> c.setSelected(
+						Objects.equals(c.value, lastSelectedValue)));
+			} else {
+				setSelectedValue(null);
+			}
 		}
 
 		public ListenerReference subscribeSelectionChanged(Runnable runnable) {

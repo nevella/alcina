@@ -203,6 +203,12 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		public Class<E> getEmitterClass() {
 			return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
 		}
+
+		/*
+		 * don't dispatch this on attach of subsequent listeners
+		 */
+		public interface NotStored {
+		}
 	}
 
 	// Marker interface - for descendant events, the receiver (handler) will
