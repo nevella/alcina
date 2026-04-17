@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DoublePair;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * Note - it's really rare that x!=left, y!=top - but they differ when
@@ -129,5 +130,10 @@ public final class DomRect implements Serializable {
 		rounded.right = Math.round(right);
 		rounded.computeFromTLBR();
 		return rounded;
+	}
+
+	public DomRect translate(IntPair offsets) {
+		return ofCoordinatePairs(x + offsets.i1, y + offsets.i2,
+				x + offsets.i1 + width, y + offsets.i2 + height);
 	}
 }

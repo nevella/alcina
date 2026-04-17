@@ -11,6 +11,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.DoublePair;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
@@ -26,6 +27,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  */
 /*
+ *
+ * Note that boundingclientrect coordinates are used (rather than say
+ * abosluteclientrect)
+ *
  * FIX - auto tracking of source rect-relative positioning via mutation observer
  */
 public class OverlayPosition {
@@ -177,6 +182,7 @@ public class OverlayPosition {
 			toRect = toElement.getBoundingClientRect();
 			if (parentFixed) {
 				toRect = DomRect.fromOrigin(toRect.width, toRect.height);
+			} else {
 			}
 		}
 		constraints.forEach(Constraint::apply);
@@ -189,8 +195,13 @@ public class OverlayPosition {
 			toElement.getStyle().setPosition(
 					com.google.gwt.dom.client.Style.Position.FIXED);
 		}
-		Client.RenderState
-				.queueWithRenderedState(() -> viewportConstraint.apply(this));
+		/*
+		 * wip - romcom - doesn't play nice with romcom yet
+		 */
+		if (!Al.isRomcom()) {
+			Client.RenderState.queueWithRenderedState(
+					() -> viewportConstraint.apply(this));
+		}
 	}
 
 	public void dropdown(Position xalign, DomRect rect, Model rectSource,
