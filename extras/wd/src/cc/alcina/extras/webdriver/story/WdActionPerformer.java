@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
-import cc.alcina.framework.gwt.client.story.StoryPerformer;
 import cc.alcina.framework.gwt.client.story.StoryPerformer.ActionTypePerformer;
 
 /*
@@ -26,6 +25,13 @@ public abstract class WdActionPerformer<A extends Story.Action>
 		// retrieved
 		public static interface MarkedElement
 				extends PerformerAttribute<WebElement> {
+		}
+
+		public static interface Timeout extends PerformerAttribute<Integer> {
+		}
+
+		public static interface RomcomMessageQueueAwaitDisabled
+				extends PerformerAttribute<Boolean> {
 		}
 	}
 
@@ -67,8 +73,7 @@ public abstract class WdActionPerformer<A extends Story.Action>
 			return ElementQuery.fromElement(markedElement);
 		} else if (xpath != null) {
 			int timeout = wdPerformer.context
-					.getAttribute(
-							StoryPerformer.PerformerAttribute.Timeout.class)
+					.getAttribute(PerformerAttribute.Timeout.class)
 					.orElse(wdPerformer.wdContext.getDefaultTimeout());
 			return ElementQuery
 					.xpath(wdPerformer.wdContext.token.getWebDriver(),

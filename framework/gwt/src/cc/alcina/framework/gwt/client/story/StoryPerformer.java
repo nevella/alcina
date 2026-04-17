@@ -21,15 +21,6 @@ import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class StoryPerformer {
-	public interface PerformerAttribute<T> extends Story.Attribute<T> {
-		public static interface Timeout extends PerformerAttribute<Integer> {
-		}
-
-		public static interface RomcomMessageQueueAwaitDisabled
-				extends PerformerAttribute<Boolean> {
-		}
-	}
-
 	private ContextImpl context;
 
 	public class ContextImpl implements Story.Action.Context {

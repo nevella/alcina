@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.story;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Attribute;
 import cc.alcina.framework.gwt.client.story.Story.Decl.ContextEvaluator;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
@@ -68,4 +69,6 @@ public interface TellerContext {
 		}
 		return getDevice() == condition.device();
 	}
+
+	void updateLocation(Location location);
 }

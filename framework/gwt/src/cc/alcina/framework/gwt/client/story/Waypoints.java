@@ -82,4 +82,11 @@ public class Waypoints {
 			int debug = 4;
 		}
 	}
+
+	/*
+	 * click the previously set location
+	 */
+	@Decl.Action.UI.Click
+	public static class Click extends Waypoint {
+	}
 }

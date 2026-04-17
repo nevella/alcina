@@ -93,7 +93,7 @@ public class WdContext implements PerformerResource {
 		@Override
 		public void topicPublished(StoryPerformer.ActionPerformed action) {
 			boolean disabled = action.context.getAttribute(
-					StoryPerformer.PerformerAttribute.RomcomMessageQueueAwaitDisabled.class)
+					WdActionPerformer.PerformerAttribute.RomcomMessageQueueAwaitDisabled.class)
 					.orElse(false);
 			if (disabled) {
 				return;
