@@ -61,10 +61,14 @@ public class Url {
 			// no encoding (yet)
 			Stream.of(queryString.split("&")).forEach(pair -> {
 				int idx = pair.indexOf("=");
-				String key = pair.substring(0, idx);
-				String value = pair.substring(idx + 1);
-				queryParameters.put(key,
-						Registry.impl(UrlComponentEncoder.class).decode(value));
+				if (idx == -1) {
+					queryParameters.put(pair, "");
+				} else {
+					String key = pair.substring(0, idx);
+					String value = pair.substring(idx + 1);
+					queryParameters.put(key, Registry
+							.impl(UrlComponentEncoder.class).decode(value));
+				}
 			});
 		}
 		this.queryParameters = Collections.unmodifiableMap(queryParameters);
