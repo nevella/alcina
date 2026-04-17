@@ -67,6 +67,13 @@ import cc.alcina.framework.common.client.util.IntPair;
  */
 public class Element extends Node implements ClientDomElement,
 		org.w3c.dom.Element, EventListener, HasHandlers {
+	/*
+	 * merker for table structural elements, indicating their content cannot
+	 * include arbitrary elements
+	 */
+	public interface RestrictedElementContent {
+	}
+
 	public static boolean useDomRectForOffsets = false;
 
 	public static final Predicate<Element> DISPLAY_NONE = e -> {

@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal.layer.overlay;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.gwt.dom.client.Element;
 
@@ -197,11 +198,16 @@ public class MeasureOverlay {
 	public void attach() {
 		if (highlighter != null) {
 			containedTexts().stream().map(node -> {
+				com.google.gwt.dom.client.Node parentNode = node.gwtNode()
+						.getParentNode();
+				if (parentNode instanceof Element.RestrictedElementContent) {
+					return null;
+				}
 				DomNode highlit = highlighter.highlight(node);
 				Measure measure = Measure.fromNode(highlit, HighlightToken.TYPE)
 						.withData(highlighter);
 				return measure;
-			}).forEach(overlays::add);
+			}).filter(Objects::nonNull).forEach(overlays::add);
 		}
 	}
 
