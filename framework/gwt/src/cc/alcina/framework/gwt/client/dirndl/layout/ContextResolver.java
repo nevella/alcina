@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -252,9 +253,12 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 			A replacementValue;
 
+			Class<? extends Function> modelTransformer;
+
 			/*
 			 * locationClass null matches all classes - propertyName '*' matches
-			 * all properties
+			 * all properties - null annotationClass matches the model rather
+			 * than an annotation
 			 */
 			Customisation(Class locationClass, String propertyName,
 					Class<A> annotationClass) {
@@ -274,10 +278,26 @@ public class ContextResolver extends AnnotationLocation.Resolver
 				this.replacementValue = replacementValue;
 			}
 
+			public void asModelTransformer(
+					Class<? extends Function> modelTransformer) {
+				this.modelTransformer = modelTransformer;
+			}
+
 			public boolean matches(HasAnnotations reflector, Class<?> clazz) {
 				return clazz == annotationClass && (reflector
 						.isProperty(locationClass, propertyName)
 						|| reflector.isClass(locationClass, propertyName));
+			}
+
+			public boolean matchesTransform(AnnotationLocation location) {
+				if (annotationClass != null) {
+					return false;
+				}
+				return location.isAt(locationClass, propertyName);
+			}
+
+			public Object transformModel(Object model) {
+				return Reflections.newInstance(modelTransformer).apply(model);
 			}
 		}
 
@@ -297,6 +317,17 @@ public class ContextResolver extends AnnotationLocation.Resolver
 				}
 			}
 			return super.contextAnnotation(reflector, clazz, resolutionContext);
+		}
+
+		@Override
+		protected Object resolveModel(Node parentNode,
+				AnnotationLocation location, Object model) {
+			for (Customisation<?> customisation : customisations) {
+				if (customisation.matchesTransform(location)) {
+					return customisation.transformModel(model);
+				}
+			}
+			return super.resolveModel(parentNode, location, model);
 		}
 
 		protected <A extends Annotation> Customisation<A> resolve(

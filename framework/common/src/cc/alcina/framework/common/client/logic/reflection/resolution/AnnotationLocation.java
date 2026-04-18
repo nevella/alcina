@@ -466,4 +466,9 @@ public class AnnotationLocation {
 	public boolean hasProperty() {
 		return property != null;
 	}
+
+	public boolean isAt(Class locationClass, String propertyName) {
+		return property != null && property.getOwningType() == locationClass
+				&& property.getName().equals(propertyName);
+	}
 }
