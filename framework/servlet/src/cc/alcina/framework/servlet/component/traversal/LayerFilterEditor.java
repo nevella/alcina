@@ -104,7 +104,7 @@ class LayerFilterEditor extends Model.All
 					.provideSelectedValue();
 			// emit cleanup
 			suggestor.closeSuggestions();
-			suggestor.setValue(null);
+			suggestor.properties().value().set(null);
 			event.reemitAs(this, SuggestionSelected.class);
 			// *then* global state change
 			if (suggestion.url() != null) {

@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Timer;
@@ -67,7 +68,8 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 				overlay = attributes.create();
 				overlay.open();
 			} else {
-				suggestor.setNonOverlaySuggestionResults(contents);
+				suggestor.properties().nonOverlaySuggestionResults()
+						.set(contents);
 			}
 		} else {
 			Scheduler.get().scheduleDeferred(() -> {
@@ -75,7 +77,8 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 					overlay.close(null, false);
 					overlay = null;
 				} else {
-					suggestor.setNonOverlaySuggestionResults(null);
+					suggestor.properties().nonOverlaySuggestionResults()
+							.set(null);
 				}
 			});
 			visible = false;
@@ -90,7 +93,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		int initialIndexSelectionIndex = answers.ask.isEmpty() ? -1 : 0;
 		choices = new Choices.Single.Delegating<>(answers.getSuggestions(),
 				initialIndexSelectionIndex);
-		contents.setModel(choices);
+		contents.properties().model().set(choices);
 		if (choices.getValues().size() > 0
 				&& suggestor.attributes.isInputEditorKeyboardNavigationEnabled()
 				&& !answers.ask.isEmpty()) {
@@ -109,7 +112,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 			return;
 		}
 		// FIXME - design
-		contents.setModel(
+		contents.properties().model().set(
 				new String(CommonUtils.toSimpleExceptionMessage(throwsable)));
 	}
 
@@ -165,7 +168,8 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		case LOADING:
 			Timer timer = Timer.Provider.get().getTimer(() -> {
 				if (SuggestionChoices.this.state == State.LOADING) {
-					contents.setModel(Spinner.builder().generate());
+					contents.properties().model()
+							.set(Spinner.builder().generate());
 				}
 			});
 			timer.schedule(suggestor.attributes.showSpinnerDelay);
@@ -178,19 +182,13 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 	}
 
 	@Directed
-	public static class Results extends Model {
-		private Object model;
-
-		@Directed
-		public Object getModel() {
-			return this.model;
+	@TypedProperties
+	public static class Results extends Model.All {
+		public PackageProperties._SuggestionChoices_Results.InstanceProperties
+				properties() {
+			return PackageProperties.suggestionChoices_results.instance(this);
 		}
 
-		public void setModel(Object model) {
-			var old_model = this.model;
-			this.model = model;
-			propertyChangeSupport().firePropertyChange("model", old_model,
-					model);
-		}
+		public Object model;
 	}
 }

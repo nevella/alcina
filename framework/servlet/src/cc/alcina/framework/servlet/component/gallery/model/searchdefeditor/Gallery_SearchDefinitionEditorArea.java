@@ -31,9 +31,9 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 class Gallery_SearchDefinitionEditorArea
 		extends GalleryContents<SearchDefinitionEditorGalleryPlace>
 		implements SearchDefinitionEditor.Submit.Handler {
-	PackageProperties._SearchDefinitionEditorGalleryArea.InstanceProperties
+	PackageProperties._Gallery_SearchDefinitionEditorArea.InstanceProperties
 			subtypeProperties() {
-		return PackageProperties.searchDefinitionEditorGalleryArea
+		return PackageProperties.gallery_searchDefinitionEditorArea
 				.instance(this);
 	}
 

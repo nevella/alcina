@@ -220,11 +220,11 @@ public class AppSuggestor extends Model.Fields
 	 * This text will not cause an Ask to be emitted
 	 */
 	public void setAcceptedFilterText(String acceptedFilterText) {
-		suggestor.getEditor().setAcceptedFilterText(acceptedFilterText);
+		suggestor.editor.setAcceptedFilterText(acceptedFilterText);
 	}
 
 	public void setFilterText(String filterText) {
-		suggestor.getEditor().setFilterText(filterText);
+		suggestor.editor.setFilterText(filterText);
 	}
 
 	@Override
@@ -275,7 +275,7 @@ public class AppSuggestor extends Model.Fields
 
 	protected void closeAndCleanup(ModelEvent event) {
 		suggestor.closeSuggestions();
-		suggestor.setValue(null);
+		suggestor.properties().value().set(null);
 		event.reemitAs(this, SuggestionSelected.class);
 	}
 }

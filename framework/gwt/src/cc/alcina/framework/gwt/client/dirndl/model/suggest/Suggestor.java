@@ -59,7 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  */
 @Directed(emits = ModelEvents.SelectionChanged.class)
 @TypedProperties
-public class Suggestor extends Model implements
+public class Suggestor extends Model.Fields implements
 		SuggestorEvents.EditorAsk.Handler, ModelEvents.SelectionChanged.Handler,
 		HasSelectedValue, KeyboardNavigation.Navigation.Handler,
 		ModelEvents.Closed.Handler, Model.TransmitState {
@@ -561,20 +561,28 @@ public class Suggestor extends Model implements
 
 	public static transient PackageProperties._Suggestor properties = PackageProperties.suggestor;
 
+	public PackageProperties._Suggestor.InstanceProperties properties() {
+		return PackageProperties.suggestor.instance(this);
+	}
+
 	public static Attributes attributes() {
 		return new Attributes();
 	}
 
-	protected Editor editor;
+	@Directed(tag = "editor")
+	public Editor editor;
 
-	protected Suggestions suggestions;
+	@Directed
+	public Object nonOverlaySuggestionResults;
 
-	Object nonOverlaySuggestionResults;
+	@Property.Not
+	public final Attributes attributes;
 
-	Attributes attributes;
+	public Object value;
 
-	private Object value;
+	Suggestions suggestions;
 
+	@Property.Not
 	EditorAsk lastAsk;
 
 	private Suggestor(Attributes attributes) {
@@ -596,24 +604,6 @@ public class Suggestor extends Model implements
 
 	public void focus() {
 		editor.focus();
-	}
-
-	public Attributes getAttributes() {
-		return this.attributes;
-	}
-
-	@Directed(tag = "editor")
-	public Editor getEditor() {
-		return this.editor;
-	}
-
-	@Directed
-	public Object getNonOverlaySuggestionResults() {
-		return this.nonOverlaySuggestionResults;
-	}
-
-	public Suggestions getSuggestions() {
-		return this.suggestions;
 	}
 
 	/**
@@ -707,19 +697,6 @@ public class Suggestor extends Model implements
 		return getValue();
 	}
 
-	public void
-			setNonOverlaySuggestionResults(Object nonOverlaySuggestionResults) {
-		set("nonOverlaySuggestionResults", this.nonOverlaySuggestionResults,
-				nonOverlaySuggestionResults,
-				() -> this.nonOverlaySuggestionResults = nonOverlaySuggestionResults);
-	}
-
-	public void setValue(Object value) {
-		var old_value = this.value;
-		this.value = value;
-		propertyChangeSupport().firePropertyChange("value", old_value, value);
-	}
-
 	protected void initFields() {
 		editor = attributes.editorSupplier.get();
 		editor.withSuggestor(this);
@@ -738,11 +715,11 @@ public class Suggestor extends Model implements
 
 	void setChosenSuggestions(Object value) {
 		if (value == null) {
-			setValue(null);
+			properties().value().set(null);
 		} else if (value instanceof Suggestion) {
-			setValue(((Suggestion) value).getModel());
+			properties().value().set(((Suggestion) value).getModel());
 		} else {
-			setValue(((List<Suggestion>) value).stream()
+			properties().value().set(((List<Suggestion>) value).stream()
 					.map(Suggestion::getModel).collect(Collectors.toList()));
 		}
 	}
