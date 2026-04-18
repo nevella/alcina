@@ -18,6 +18,10 @@ public class Point_GalleryBrowser_Home extends Waypoint {
 
 	static final String XPATH_SEARCHDEF_MODEL = "//search-definition-editor-gallery";
 
+	static final String XPATH_SEQUENCE_COMPONENT_LINK = "//a[.='Gallery sequence area report']";
+
+	static final String XPATH_SEQUENCE_COMPONENT_MODEL = "//gallery-sequence-area/sequence-component";
+
 	@Decl.Child(ToChoiceEditor.class)
 	static class Cards extends Waypoint {
 	}
@@ -45,6 +49,20 @@ public class Point_GalleryBrowser_Home extends Waypoint {
 		}
 
 		@Decl.Location.Xpath(XPATH_SEARCHDEF_MODEL)
+		@Decl.Action.UI.AwaitPresent
+		static class AwaitGalleryArea extends Waypoint {
+		}
+	}
+
+	@Decl.Child(ToSequenceComponent.ClickAreaLink.class)
+	@Decl.Child(ToSequenceComponent.AwaitGalleryArea.class)
+	static class ToSequenceComponent extends Waypoint {
+		@Decl.Location.Xpath(XPATH_SEQUENCE_COMPONENT_LINK)
+		@Decl.Action.UI.Click
+		static class ClickAreaLink extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_SEQUENCE_COMPONENT_MODEL)
 		@Decl.Action.UI.AwaitPresent
 		static class AwaitGalleryArea extends Waypoint {
 		}

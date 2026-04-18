@@ -149,9 +149,18 @@ public class SequencePlace extends BasePlace implements TreeSerializable {
 		return this;
 	}
 
-	public void updateInstanceQueryDef(SearchDefinition model) {
-		Parameter<SearchDefinition> parameter = (Parameter<SearchDefinition>) instanceQuery.parameters
-				.get(0);
-		parameter.setValue(model);
+	/*
+	 * Modify the place depending on whether the search is best handled by a
+	 * sequence regeneration (in which case there will be an appropriate
+	 * instanceQuery parameter)
+	 */
+	public void updateInstanceQueryDef(SearchDefinition searchDefinition) {
+		Parameter<SearchDefinition> parameter = instanceQuery
+				.typeAssignableParameter(SearchDefinition.class);
+		if (parameter != null) {
+			parameter.setValue(searchDefinition);
+		} else {
+			this.search = (SequenceSearchDefinition) searchDefinition;
+		}
 	}
 }

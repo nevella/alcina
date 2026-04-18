@@ -17,11 +17,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefiniti
 		types = FlightEventCriterion.FlightEventCriteriaGroup.class,
 		defaultProperty = true) })
 public class FlightEventSearchDefinition extends SequenceSearchDefinition {
-	@TypeSerialization("flighteventsearchdefinition")
-	public static class Parameter extends
-			SequenceSearchDefinition.BaseParameter<FlightEventSearchDefinition> {
-	}
-
 	@Override
 	public TreeSerializable.Customiser treeSerializationCustomiser() {
 		return new CustomiserImpl(this);

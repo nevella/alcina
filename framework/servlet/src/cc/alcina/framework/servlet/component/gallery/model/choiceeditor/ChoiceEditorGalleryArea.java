@@ -31,7 +31,8 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 @TypedProperties
 class ChoiceEditorGalleryArea extends GalleryContents<ChoiceEditorGalleryPlace>
 		implements ModelEvents.Submit.Handler {
-	PackageProperties._ChoiceEditorGalleryArea.InstanceProperties properties() {
+	PackageProperties._ChoiceEditorGalleryArea.InstanceProperties
+			subtypeProperties() {
 		return PackageProperties.choiceEditorGalleryArea.instance(this);
 	}
 
@@ -46,12 +47,12 @@ class ChoiceEditorGalleryArea extends GalleryContents<ChoiceEditorGalleryPlace>
 	InfoModel model;
 
 	ChoiceEditorGalleryArea() {
-		from(properties().place()).typed(ChoiceEditorGalleryPlace.class)
+		from(subtypeProperties().place()).typed(ChoiceEditorGalleryPlace.class)
 				.map(place -> place.copy().definition)
-				.to(properties().definition()).oneWay();
-		from(properties().place()).typed(ChoiceEditorGalleryPlace.class)
+				.to(subtypeProperties().definition()).oneWay();
+		from(subtypeProperties().place()).typed(ChoiceEditorGalleryPlace.class)
 				.filter(place -> place.definition.isRenderable())
-				.map(InfoModel::new).to(properties().model()).oneWay();
+				.map(InfoModel::new).to(subtypeProperties().model()).oneWay();
 	}
 
 	@Override

@@ -4,6 +4,8 @@ import java.beans.PropertyChangeListener;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * Access like so:
  * 
@@ -62,5 +64,10 @@ public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
 		source.addPropertyChangeListener(listener);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("InstanceProperty :: %s :: %s", property, source);
 	}
 }

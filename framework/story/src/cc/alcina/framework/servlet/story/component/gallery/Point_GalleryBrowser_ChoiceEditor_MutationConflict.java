@@ -21,7 +21,7 @@ import cc.alcina.framework.servlet.story.component.gallery.Point_GalleryBrowser_
 @Feature.Parent(Feature_Dirndl_ChoiceEditor.class)
 public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		extends Waypoint {
-	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.ClickSuggestionsArea.class)
+	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._ChoiceEditor.ClickSuggestionsArea.class)
 	/*
 	 * don't await the overlay - deliberately cause a server mutation to be sent
 	 * between SendNameChar1 and SendNameChar2
@@ -33,7 +33,7 @@ public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 	@Decl.Child(SetDelayConfigurationOff.class)
 	@Decl.Child(Wait1000.class)
 	@Decl.Child(_DefinitionEditor.VerifySuggestingNode.class)
-	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.ClickLars.class)
+	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._ChoiceEditor.ClickLars.class)
 	static class _DefinitionEditor extends Waypoint {
 		@Decl.Location.CurrentFocus
 		@Decl.Action.UI.Keys("l")

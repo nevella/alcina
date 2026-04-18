@@ -11,11 +11,11 @@ import cc.alcina.framework.gwt.client.story.Waypoints;
  * This tests the SearchDefinitionEditor gallery page. Each child resets the
  * initial state
  */
-// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionOperator.class)
-// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
-// @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._CriterionSelectDelete.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionOperator.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._CriterionSelectDelete.class)
 @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._HintBehavior.class)
-@Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
+@Feature.Ref(Feature_Dirndl_SearchDefinitionEditor.class)
 public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String XPATH_CREATED_FROM_TITLE = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']/name";
 

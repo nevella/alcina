@@ -4,7 +4,10 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SequencePlaceChanged;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.model.Feature_Dirndl_TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -21,10 +24,19 @@ import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSearchD
 @TypedProperties
 @Directed(tag = "gallery-sequence-area")
 class Gallery_SequenceAreaReportArea
-		extends GalleryContents<GallerySequenceAreaReportPlace> {
+		extends GalleryContents<GallerySequenceAreaReportPlace>
+		implements SequenceEvents.SequencePlaceChanged.Handler {
 	PackageProperties._Gallery_SequenceAreaReportArea.InstanceProperties
-			properties() {
+			subtypeProperties() {
 		return PackageProperties.gallery_sequenceAreaReportArea.instance(this);
+	}
+
+	@Override
+	public void onSequencePlaceChanged(SequencePlaceChanged event) {
+		GallerySequenceAreaReportPlace to = place.copy();
+		SequencePlace model = event.getModel();
+		to.sequencePlace = model;
+		Client.refreshOrGoTo(to);
 	}
 
 	@TypedProperties
@@ -53,27 +65,22 @@ class Gallery_SequenceAreaReportArea
 	Header header = new Header();
 
 	Gallery_SequenceAreaReportArea() {
-		bindings().from(properties().place())
+		bindings().from(subtypeProperties().place())
 				.typed(GallerySequenceAreaReportPlace.class)
 				.accept(this::updateDefinition);
-		from(properties().sequencePlace())
+		from(subtypeProperties().sequencePlace())
 				.map(GallerySequenceAreaReportPlace::new).accept(BasePlace::go);
 		model = new SequenceComponentServer(header,
-				properties().sequencePlace());
+				subtypeProperties().sequencePlace());
 	}
 
 	void updateDefinition(GallerySequenceAreaReportPlace place) {
 		SequencePlace sequencePlace = place.sequencePlace;
-		properties().sequencePlace().set(sequencePlace);
-		FlightEventSearchDefinition.Parameter typedParameter = sequencePlace.instanceQuery
-				.typedParameter(FlightEventSearchDefinition.Parameter.class);
-		if (typedParameter == null) {
-			FlightEventSearchDefinition def = new FlightEventSearchDefinition();
-			typedParameter = new FlightEventSearchDefinition.Parameter();
-			typedParameter.withValue(def);
-			sequencePlace.instanceQuery.addParameters(typedParameter);
+		subtypeProperties().sequencePlace().set(sequencePlace);
+		FlightEventSearchDefinition def = (FlightEventSearchDefinition) sequencePlace.search;
+		if (def == null) {
+			def = new FlightEventSearchDefinition();
 		}
-		FlightEventSearchDefinition def = typedParameter.getValue();
 		header.properties().searchDefinition().set(def);
 	}
 }

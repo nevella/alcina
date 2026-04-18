@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.gallery.model.searchdefeditor;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
@@ -27,11 +28,11 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 @Registration({ GalleryContents.class,
 		SearchDefinitionEditorGalleryPlace.class })
 @TypedProperties
-class SearchDefinitionEditorGalleryArea
+class Gallery_SearchDefinitionEditorArea
 		extends GalleryContents<SearchDefinitionEditorGalleryPlace>
 		implements SearchDefinitionEditor.Submit.Handler {
 	PackageProperties._SearchDefinitionEditorGalleryArea.InstanceProperties
-			properties() {
+			subtypeProperties() {
 		return PackageProperties.searchDefinitionEditorGalleryArea
 				.instance(this);
 	}
@@ -43,14 +44,18 @@ class SearchDefinitionEditorGalleryArea
 
 	InfoModel model;
 
-	SearchDefinitionEditorGalleryArea() {
-		bindings().from(properties().place())
+	Gallery_SearchDefinitionEditorArea() {
+		bindings().from(subtypeProperties().place()).acceptChange((o, n) -> {
+			Ax.out("place changed :: %s -> %s", System.identityHashCode(o),
+					System.identityHashCode(n));
+		});
+		bindings().from(subtypeProperties().place())
 				.typed(SearchDefinitionEditorGalleryPlace.class)
 				.map(place -> place.copy().definition)
-				.to(properties().definition()).oneWay();
-		bindings().from(properties().place())
+				.to(subtypeProperties().definition()).oneWay();
+		bindings().from(subtypeProperties().place())
 				.typed(SearchDefinitionEditorGalleryPlace.class)
-				.map(InfoModel::new).to(properties().model()).oneWay();
+				.map(InfoModel::new).to(subtypeProperties().model()).oneWay();
 	}
 
 	@Override
