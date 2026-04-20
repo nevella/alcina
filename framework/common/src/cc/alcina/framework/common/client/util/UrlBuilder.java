@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -138,7 +140,13 @@ public class UrlBuilder {
 		if (url.path != null) {
 			this.path = url.path;
 		}
-		if (url.queryParameters != null) {
+		boolean useRawQueryString = url.queryParameters != null
+				&& url.queryString != null && url.queryParameters.size() == 1
+				&& Ax.isBlank(url.queryParameters.values().iterator().next())
+				&& Objects.equals(
+						url.queryParameters.keySet().iterator().next(),
+						url.queryString);
+		if (url.queryParameters != null && !useRawQueryString) {
 			this.qsParams = new StringMap(url.queryParameters);
 		} else if (url.queryString != null) {
 			this.queryString = url.queryString;
