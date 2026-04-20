@@ -791,7 +791,6 @@ public final class ElementJso extends NodeJso implements ElementRemote {
       left -= elem.parentNode.offsetLeft;
       top -= elem.parentNode.offsetTop;
     }
-
     var cur = elem.parentNode;
     while (cur && (cur.nodeType == 1)) {
       // modified from the gwt version, prefer keeping [left,top] unchanged (and visible) - so compute left after left+width, etc
@@ -801,12 +800,22 @@ public final class ElementJso extends NodeJso implements ElementRemote {
 	  if (left < cur.scrollLeft) {
         cur.scrollLeft = left;
       }
-      if (top + height+vPad > cur.scrollTop + cur.clientHeight) {
-        cur.scrollTop = (top + height) - cur.clientHeight +vPad;
+		//note setting of scrollleft/top will have no effect if the elem has no scroll behavior - i.e. browser will ignore them, next 
+		// get (x = cur.scrollTop) will just return 0
+		//
+		// the below *don't* attempt to minimise change, rather to always position the elt at vpad from top if out of viewport
+	  var shiftY = false;
+      if (top + height > cur.scrollTop + cur.clientHeight) {
+	  // bottom is below viewport and
+	  shiftY = true;
       }
-	  if (top-vPad < cur.scrollTop) {
-        cur.scrollTop = top-vPad;
-      }
+	  
+	  if (top + vPad < cur.scrollTop) {
+        shiftY = true;
+	  }
+		if(shiftY){
+		cur.scrollTop = top - vPad;
+		}
 
       var offsetLeft = cur.offsetLeft, offsetTop = cur.offsetTop;
       if (cur.parentNode != cur.offsetParent) {
