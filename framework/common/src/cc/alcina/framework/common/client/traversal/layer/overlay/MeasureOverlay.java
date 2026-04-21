@@ -60,6 +60,13 @@ public class MeasureOverlay {
 		}
 	}
 
+	public static class GenericToken implements Measure.Token {
+		public static GenericToken TYPE = new GenericToken();
+
+		private GenericToken() {
+		}
+	}
+
 	public static class ExtractToken implements Measure.Token {
 		public static ExtractToken TYPE = new ExtractToken();
 
@@ -208,6 +215,20 @@ public class MeasureOverlay {
 						.withData(highlighter);
 				return measure;
 			}).filter(Objects::nonNull).forEach(overlays::add);
+		} else {
+			/*
+			 * add the first text (if any) for accurate positioining
+			 */
+			containedTexts().stream().map(node -> {
+				com.google.gwt.dom.client.Node parentNode = node.gwtNode()
+						.getParentNode();
+				if (parentNode instanceof Element.RestrictedElementContent) {
+					return null;
+				}
+				Measure measure = Measure.fromNode(node.asDomNode(),
+						GenericToken.TYPE);
+				return measure;
+			}).filter(Objects::nonNull).findFirst().ifPresent(overlays::add);
 		}
 	}
 
