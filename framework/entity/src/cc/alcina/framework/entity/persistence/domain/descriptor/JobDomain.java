@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -1454,6 +1455,17 @@ public class JobDomain {
 				return result;
 			}
 		}
+
+		Set<Class<? extends Task>> getTaskClasses() {
+			Set<String> keys = getLookupFor("taskClassName").keys();
+			return (Set) keys.stream().map(name -> {
+				try {
+					return Reflections.forName(name);
+				} catch (Exception e) {
+					return null;
+				}
+			}).filter(Objects::nonNull).collect(Collectors.toSet());
+		}
 	}
 
 	public static class RelatedJobCompletion {
@@ -1492,5 +1504,9 @@ public class JobDomain {
 
 	public static enum SubqueuePhase {
 		Self, Child, Sequence, Complete
+	}
+
+	public Set<Class<? extends Task>> getTaskClasses() {
+		return jobDescriptor.getTaskClasses();
 	}
 }

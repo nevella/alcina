@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -210,6 +211,11 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 					.getRecentlyCompletedJobs(topLevel);
 			if (filter.active) {
 				recentlyCompletedJobs = recentlyCompletedJobs.parallel();
+			}
+			if (filter.matchesTaskClass()) {
+				recentlyCompletedJobs = filter.getRecentlyCompletedJobs()
+						.filter(job -> topLevel
+								^ job.provideParent().isPresent());
 			}
 			Stream<? extends Job> stream = recentlyCompletedJobs
 					.filter(textFilter).filter((Predicate) topLevelAdditional)
@@ -508,6 +514,29 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 					cumulative = cumulative.and(filters.get(idx));
 				}
 			}
+		}
+
+		public Stream<? extends Job> getRecentlyCompletedJobs() {
+			return JobDomain.get().getJobsForTask(getTaskClass())
+					.filter(job -> job.provideIsCompleteWithEndTime())
+					.sorted(Comparator.comparing(Job::getEndTime).reversed());
+		}
+
+		public Class<? extends Task> getTaskClass() {
+			if (Ax.notBlank(filterText)) {
+				Set<Class<? extends Task>> taskClasses = JobDomain.get()
+						.getTaskClasses();
+				return taskClasses.stream()
+						.filter(clazz -> clazz.getName().equals(filterText)
+								|| clazz.getSimpleName().equals(filterText))
+						.findFirst().orElse(null);
+			} else {
+				return null;
+			}
+		}
+
+		public boolean matchesTaskClass() {
+			return getTaskClass() != null;
 		}
 
 		@Override
