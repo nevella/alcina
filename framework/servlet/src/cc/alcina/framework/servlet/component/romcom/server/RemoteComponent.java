@@ -23,7 +23,8 @@ public interface RemoteComponent {
 
 	default RemoteComponentProtocol.Session createEnvironment(
 			HttpServletRequest request, HttpServletResponse response) {
-		if (isUseContextIdentity()) {
+		if (isUseContextIdentity()
+				&& AlcinaServletContext.httpContext() == null) {
 			InstanceOracle.query(DomainStore.class).await();
 			AlcinaServletContext alcinaContext = new AlcinaServletContext();
 			try {

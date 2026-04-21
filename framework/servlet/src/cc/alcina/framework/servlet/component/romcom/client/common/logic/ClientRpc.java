@@ -184,13 +184,18 @@ public class ClientRpc {
 
 	RemoteComponentProtocol.Session session;
 
+	String remotePath;
+
 	ClientRpc(RemoteComponentUi ui) {
 		this.ui = ui;
 		session = ReflectiveSerializer.deserializeRpc(ClientUtils.wndString(
 				RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
+		remotePath = ClientUtils
+				.wndString(RemoteComponentProtocolServer.ROMCOM_REMOTE_PATH);
 		StringProtocol.Cache cacheFromLocalStorage = StringProtocol.Cache
 				.fromLocalStorage(session.componentPath);
-		transportLayer = new MessageTransportLayerClient(cacheFromLocalStorage);
+		transportLayer = new MessageTransportLayerClient(cacheFromLocalStorage,
+				remotePath);
 		transportLayer.registerInContext();
 		transportLayer.session = session;
 		exceptionHandler = new ExceptionHandler();

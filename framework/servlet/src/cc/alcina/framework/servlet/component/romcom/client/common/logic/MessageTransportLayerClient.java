@@ -106,12 +106,16 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 
 	StringProtocol.Cache stringProtocolCache;
 
+	String remotePath;
+
 	public StringProtocol.Cache getStringProtocolCache() {
 		return stringProtocolCache;
 	}
 
-	MessageTransportLayerClient(StringProtocol.Cache stringProtocolCache) {
+	MessageTransportLayerClient(StringProtocol.Cache stringProtocolCache,
+			String remotePath) {
 		this.stringProtocolCache = stringProtocolCache;
+		this.remotePath = remotePath;
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
 		envelopeDispatcher = new EnvelopeDispatcherClient(this);

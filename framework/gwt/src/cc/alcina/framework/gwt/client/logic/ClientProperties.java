@@ -76,6 +76,7 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
  */
 @Reflected
 @Registration.Singleton
+@Registration.EnvironmentSingleton
 public class ClientProperties {
 	/**
 	 * Fetch singleton instance
@@ -188,22 +189,31 @@ public class ClientProperties {
 	 * Initialise ClientProperties from GWT client stores
 	 */
 	public ClientProperties() {
-		if (Al.isBrowser()) {
-			// Get properties stored on the ClientProperties cookie
-			String cookie = Cookies.getCookie(ClientProperties.class.getName());
-			if (Ax.notBlank(cookie)) {
-				cookie = UrlComponentEncoder.get().decode(cookie);
-				cookieMap = StringMap.fromPropertyString(cookie);
+		if (GWT.isClient()) {
+			if (Al.isBrowser()) {
+				// Get properties stored on the ClientProperties cookie
+				String cookieValue = Cookies.getCookie(getCookieName());
+				init(cookieValue);
+			} else {
 			}
-			// Get properties serialized on GeneralProperties.clientProperties
-			GeneralProperties generalProperties = GeneralProperties.get();
-			if (generalProperties != null
-					&& generalProperties.getClientProperties() != null) {
-				userPropertiesMap = StringMap.fromPropertyString(
-						generalProperties.getClientProperties());
-			}
-		} else {
-			//
+		}
+	}
+
+	public static final String getCookieName() {
+		return ClientProperties.class.getName();
+	}
+
+	void init(String cookieValue) {
+		if (Ax.notBlank(cookieValue)) {
+			cookieValue = UrlComponentEncoder.get().decode(cookieValue);
+			cookieMap = StringMap.fromPropertyString(cookieValue);
+		}
+		// Get properties serialized on GeneralProperties.clientProperties
+		GeneralProperties generalProperties = GeneralProperties.get();
+		if (generalProperties != null
+				&& generalProperties.getClientProperties() != null) {
+			userPropertiesMap = StringMap.fromPropertyString(
+					generalProperties.getClientProperties());
 		}
 	}
 
@@ -260,5 +270,9 @@ public class ClientProperties {
 	@Registration(NonClientCookies.class)
 	public interface NonClientCookies {
 		Map<String, String> getCookieMap();
+	}
+
+	public static void populate(String cookieValue) {
+		get().init(cookieValue);
 	}
 }

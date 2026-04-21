@@ -86,7 +86,7 @@ public class RemoteComponentHandler {
 					&& Ax.notBlank(request.getParameter("action"))) {
 				serveQuery(request, response);
 			} else {
-				serveFile(request, response, null);
+				serveFile(request, response, null, "");
 			}
 			break;
 		case "POST":
@@ -163,8 +163,8 @@ public class RemoteComponentHandler {
 
 	public void serveFile(HttpServletRequest request,
 			HttpServletResponse response,
-			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser)
-			throws IOException {
+			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser,
+			String remotePath) throws IOException {
 		String path = request.getPathInfo();
 		boolean injectSession = false;
 		if (component.isApplicationPath(path)) {
@@ -243,6 +243,8 @@ public class RemoteComponentHandler {
 						nocacheJs);
 				bootstrapHtml = bootstrapHtml.replace("%%FEATURE_PATH%%",
 						featurePath);
+				bootstrapHtml = bootstrapHtml.replace("%%REMOTE_PATH%%",
+						remotePath);
 				bootstrapHtml = bootstrapHtml.replace("%%HISTORY_PUSHSTATE%%",
 						String.valueOf(component.isHistoryPushState()));
 				bootstrapHtml = bootstrapHtml.replace("%%COMPONENT_META%%",

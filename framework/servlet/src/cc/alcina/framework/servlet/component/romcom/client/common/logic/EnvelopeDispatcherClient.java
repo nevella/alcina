@@ -125,7 +125,8 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 		 * serialize, send as RPC
 		 */
 		String payload = ReflectiveSerializer.serializeForRpc(request);
-		String path = Window.Location.getPath();
+		String path = Ax.blankTo(messageTransportLayerClient.remotePath,
+				Window.Location.getPath());
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
 		Date sendTime = new Date();
 		RequestCallback callback = new RequestCallback() {
