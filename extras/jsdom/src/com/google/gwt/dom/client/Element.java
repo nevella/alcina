@@ -1427,6 +1427,10 @@ public class Element extends Node implements ClientDomElement,
 				Preconditions.checkArgument(argumentTypes.isEmpty());
 				elem.focus();
 				return null;
+			case "blur":
+				Preconditions.checkArgument(argumentTypes.isEmpty());
+				elem.blur();
+				return null;
 			case "scrollIntoView":
 				if (argumentTypes.size() == 2) {
 					elem.scrollIntoView((int) arguments.get(0),
