@@ -12,5 +12,10 @@
  * <li>There needs to be a generalised invokejs method (for iframe opts,
  * basically)...coming soon
  * </ul>
+ * <p>
+ * <b>Transport</b>This is currently http rather than ws - it's more pricey, but
+ * it means the code has greater control over scheduling, and doesn't have to
+ * worry about different browser WS connection issue handling policies. This
+ * decision -may- be revisited
  */
 package cc.alcina.framework.servlet.component.romcom.protocol;
