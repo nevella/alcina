@@ -31,8 +31,8 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.Highlig
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.NextSelectable;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.PreviousSelectable;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SetSettingMaxElementRows;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 /*
- * wip - ds - add orderservice.provider interface
+ * wip - ds.late - add orderservice.provider interface
  */
 @TypedProperties
 @Directed.Delegating
@@ -59,29 +59,15 @@ public class SequenceArea extends Model.Fields
 	 * the directed paren t)
 	 */
 	public interface Service extends ContextService {
+		public interface ServiceProvider extends ContextService.Provider {
+		}
+
 		/**
 		 * Return the definition editor/viewer, rendered as a header
 		 */
 		Model getSequenceDefinitionHeader();
 
 		InstanceProperty<?, SequencePlace> getPlaceProperty();
-
-		public interface Provider extends ContextService.Provider {
-			Service getSequenceAreaService();
-		}
-
-		static class ProviderInvoker
-				implements ContextService.ProviderInvoker<Service.Provider> {
-			@Override
-			public ContextService get(Provider provider) {
-				return ((Service.Provider) provider).getSequenceAreaService();
-			}
-
-			@Override
-			public Class<? extends ContextService> getServiceClass() {
-				return Service.class;
-			}
-		}
 
 		InstanceQuery getInstanceQuery();
 
@@ -155,10 +141,10 @@ public class SequenceArea extends Model.Fields
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		event.node.getResolver().registerService(TableModel.OrderService.class,
+	public void onNodeContext(NodeContext event) {
+		event.registerService(TableModel.OrderService.class,
 				new OrderServiceImpl());
-		service = event.node.getResolver().getService(Service.class).get();
+		service = service(Service.class);
 		definitionHeader = service.getSequenceDefinitionHeader();
 		from(service.getPlaceProperty())
 				// todo - add ignoreable change filter
@@ -188,7 +174,6 @@ public class SequenceArea extends Model.Fields
 		 * checks throughout
 		 */
 		putSequence(Sequence.Blank.createInstance());
-		super.onBeforeRender(event);
 	}
 
 	@Override

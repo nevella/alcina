@@ -70,8 +70,11 @@ public interface HasFilterableText {
 
 		String normalisedString;
 
+		boolean empty;
+
 		public Query(String query) {
 			this.query = Ax.blankToEmpty(query);
+			this.empty = Ax.isBlank(query);
 			this.resolvedQuery = query;
 		}
 
@@ -95,6 +98,9 @@ public interface HasFilterableText {
 		String resolvedQuery;
 
 		public boolean test(Object o) {
+			if (empty) {
+				return true;
+			}
 			HasFilterableText filterable = HasFilterableText.to(o);
 			return filterable.toFilterableStrings().filter(Objects::nonNull)
 					.anyMatch(s -> next(s) != null);

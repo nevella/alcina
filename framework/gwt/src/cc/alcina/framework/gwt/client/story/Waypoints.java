@@ -39,4 +39,54 @@ public class Waypoints {
 	@Decl.Action.UI.Wait(5000)
 	public static class Wait5000 extends Waypoint {
 	}
+
+	@Decl.Action.UI.FocusWindow
+	public static class FocusWindow extends Waypoint {
+	}
+
+	@Decl.Action.UI.CloseWindow
+	public static class CloseWindow extends Waypoint {
+	}
+
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN)
+	public static class SendKeyEnter extends Waypoint {
+	}
+
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.LEFT)
+	public static class SendKeyLeftArrow extends Waypoint {
+	}
+
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.DELETE)
+	public static class SendKeyDelete extends Waypoint {
+	}
+
+	/*
+	 * Debugging aid
+	 */
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN)
+	public static class SendKeyEnter2 extends Waypoint {
+	}
+
+	@Decl.Location.Marked
+	@Decl.Action.UI.AwaitAbsent
+	public static class AwaitMarkRemoval extends Waypoint {
+	}
+
+	public static class Debug extends Waypoint.Code {
+		@Override
+		public void perform(Context context) throws Exception {
+			int debug = 4;
+		}
+	}
+
+	/*
+	 * click the previously set location
+	 */
+	@Decl.Action.UI.Click
+	public static class Click extends Waypoint {
+	}
 }

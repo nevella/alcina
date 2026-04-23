@@ -1,7 +1,10 @@
 package cc.alcina.framework.servlet.component.romcom.protocol;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -32,9 +35,13 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentSettings;
-import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.MutationId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 
 public class RemoteComponentProtocol {
+	public static final String FLAG_DEBUG_METRICS = "RemoteComponentProtocol.FLAG_DEBUG_METRICS";
+
 	@Bean
 	public static class InvalidAuthenticationException
 			extends ProtocolException {
@@ -72,6 +79,16 @@ public class RemoteComponentProtocol {
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Message {
 		/**
+		 * Consumers of subtypes may require visibility data for both timelines
+		 */
+		public interface HasTimeline {
+			void setCounterpartProcessingId(
+					MessageId highestProcessingCounterpartId);
+
+			MessageId getCounterpartProcessingId();
+		}
+
+		/**
 		 * BeforeHandled and AfterHandled are used to handle the processes
 		 * supporting mutation conflict resolution, client and server side
 		 */
@@ -97,7 +114,21 @@ public class RemoteComponentProtocol {
 		public static class OnQueued implements ContextObservable.Base {
 			public Message message;
 
-			public OnQueued(Message message) {
+			public SendChannelId sendChannelId;
+
+			public OnQueued(SendChannelId sendChannelId, Message message) {
+				this.sendChannelId = sendChannelId;
+				this.message = message;
+			}
+		}
+
+		public static class OnProcessed implements ContextObservable.Base {
+			public Message message;
+
+			public SendChannelId sendChannelId;
+
+			public OnProcessed(SendChannelId sendChannelId, Message message) {
+				this.sendChannelId = sendChannelId;
 				this.message = message;
 			}
 		}
@@ -240,11 +271,15 @@ public class RemoteComponentProtocol {
 
 			public Object response;
 
+			/**
+			 * this encapsulates both any unexpected exception, and handleable
+			 * exceptions such as NodeNotFound
+			 */
 			public ExceptionTransport exception;
 		}
 
 		public static class RejectMutation extends Message {
-			public MutationId counterpartId;
+			public MessageId counterpartId;
 		}
 
 		public static class ExceptionTransport extends Bindable.Fields {
@@ -281,7 +316,7 @@ public class RemoteComponentProtocol {
 		 */
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class ProcessingException extends Message {
-			public static ProcessingException wrap(Exception e,
+			public static ProcessingException wrap(Throwable e,
 					boolean includeFullTrace) {
 				Message.ProcessingException processingException = new Message.ProcessingException();
 				processingException.exceptionClassName = e.getClass().getName();
@@ -320,18 +355,35 @@ public class RemoteComponentProtocol {
 		public interface PrependWindowState {
 		}
 
-		public static class WindowStateUpdate extends Message {
+		public static class WindowStateUpdate extends Message
+				implements Message.HasTimeline {
 			public WindowState windowState;
 
 			public SelectionRecord selectionRecord;
 
 			public ElementSelectionRangeRecord elementSelectionRangeRecord;
+			/*
+			 * Another way to handle this would be to track (on the server)
+			 * which ids have been processed when this was emitted, using the
+			 * transporthistory. Even though this has a bit of doubling-up
+			 * though - it's a *lot* clearer/simpler to understand
+			 */
+
+			public MessageId counterpartProcessingId;
+
+			public MessageId getCounterpartProcessingId() {
+				return counterpartProcessingId;
+			}
+
+			@Override
+			public void setCounterpartProcessingId(
+					MessageId counterpartProcessingId) {
+				this.counterpartProcessingId = counterpartProcessingId;
+			}
 
 			@Override
 			protected String provideMessageData() {
 				FormatBuilder format = new FormatBuilder().separator(" - ");
-				format.format("[node offsets: %s]",
-						windowState.nodeUiStates.size());
 				if (selectionRecord != null) {
 					format.format("[selection: %s]", selectionRecord);
 				}
@@ -354,6 +406,8 @@ public class RemoteComponentProtocol {
 					result.settingsException = CommonUtils
 							.getFullExceptionMessage(e);
 				}
+				result.stringMetadata = MessageTransportLayer.get()
+						.getStringProtocolCache().toMetadata();
 				return result;
 			}
 
@@ -366,6 +420,8 @@ public class RemoteComponentProtocol {
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
 			public String settings;
+
+			public StringProtocol.State stringMetadata;
 		}
 
 		/*
@@ -376,9 +432,35 @@ public class RemoteComponentProtocol {
 		public boolean sync;
 
 		/*
-		 * Client -> server; incremental.
+		 * Models the sequence index and the message source
 		 */
-		public int messageId;
+		public MessageId messageId;
+
+		/*
+		 * Normally unused, for protocol/metrics debugging
+		 */
+		public MessageHistory messageHistory;
+
+		public Date creationDate;
+
+		public Date handlerStarted;
+
+		public static class MessageCreated implements ContextObservable {
+			public Message message;
+
+			MessageCreated(Message message) {
+				this.message = message;
+			}
+		}
+
+		public Message() {
+			/*
+			 * used for history/metric/lifecycle tracing. The only current
+			 * observer is in the server environment context, which is *not*
+			 * where deseriailizaiton occurs
+			 */
+			new MessageCreated(this).publish();
+		}
 
 		public String toDebugString() {
 			return toString();
@@ -433,7 +515,7 @@ public class RemoteComponentProtocol {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class Session {
+	public static final class Session {
 		public String id;
 
 		public String auth;
@@ -441,6 +523,10 @@ public class RemoteComponentProtocol {
 		public String url;
 
 		public String componentClassName;
+
+		public String componentPath;
+
+		public Map<String, String> properties = new LinkedHashMap<>();
 
 		// ipv4 address
 		@Property.Not

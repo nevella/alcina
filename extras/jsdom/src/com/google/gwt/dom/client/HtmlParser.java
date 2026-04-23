@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.w3c.dom.CDATASection;
@@ -13,8 +14,10 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils;
@@ -228,6 +231,8 @@ public class HtmlParser {
 
 	private List<Element> syntheticElements = new ArrayList<>();
 
+	private CountingMap<String> ignoreClose = null;
+
 	int debugCursorDepth = 0;
 
 	private int lineNumber;
@@ -264,9 +269,11 @@ public class HtmlParser {
 			}
 		}
 		if (!closeTag) {
+			closeToValidateOutput(tag);
 			emitStartElement(tag);
 		}
-		selfCloseTag |= isSelfClosingTagLc(tag);
+		// selfCloseTag |= !closeTag && isSelfClosingTagLcRead(tag);
+		selfCloseTag = isSelfClosingTagLc(tag);
 		if (closeTag && selfCloseTag) {
 			// exclusive or really. we'll have already emitted the close here,
 			// so ignore
@@ -303,6 +310,41 @@ public class HtmlParser {
 		selfCloseTag = false;
 	}
 
+	private void closeToValidateOutput(String tag) {
+		if (cursor == null) {
+			return;
+		}
+		Element closeTo = null;
+		if (tag.equals("a")) {
+			closeTo = cursor.firstInAncestry(e -> e.nameIs("a")).orElse(null);
+		}
+		if (tag.equals("p")) {
+			closeTo = cursor.firstInAncestry(e -> e.nameIs("p")).orElse(null);
+		}
+		if (closeTo != null) {
+			/*
+			 * close up to the invalid container, then reopen. Add closeTo to
+			 * the list of
+			 */
+			List<Element> reopen = new ArrayList<>();
+			Element closeCursor = cursor;
+			for (;;) {
+				emitEndElement(closeCursor.getTagName());
+				if (closeCursor == closeTo) {
+					break;
+				}
+				reopen.add(closeCursor);
+				closeCursor = closeCursor.getParentElement();
+			}
+			Collections.reverse(reopen);
+			reopen.forEach(e -> emitStartElement(e.getTagName()));
+			if (ignoreClose == null) {
+				ignoreClose = new CountingMap<>();
+			}
+			ignoreClose.add(closeTo.getTagName());
+		}
+	}
+
 	private void emitEndElement(String tag) {
 		if (!emitHtmlHeadBodyTags) {
 			switch (tag) {
@@ -310,6 +352,20 @@ public class HtmlParser {
 			case "head":
 			case "body":
 				return;
+			}
+		}
+		if (ignoreClose != null) {
+			Integer ignoreCount = ignoreClose.get(tag);
+			if (ignoreCount != null) {
+				if (ignoreCount == 0) {
+					ignoreClose.remove(tag);
+					if (ignoreClose.isEmpty()) {
+						ignoreClose = null;
+					}
+					return;
+				} else {
+					ignoreClose.add(tag, -1);
+				}
 			}
 		}
 		setCursor(cursor.getParentElement(), tag, -1);
@@ -403,23 +459,8 @@ public class HtmlParser {
 
 	private Element parse0(String markup, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
-		/*
-		 * minimal 'make invalid markup parseable'
-		 */
-		if (markup.contains("\uFEFF")) {
-			markup = markup.replace("\uFEFF", " ");
-		}
-		/*
-		 * sky - instead, improve parser (to retain exact source refs)
-		 */
-		if (markup.contains("/>")) {
-			markup = DomUtils.expandEmptyElements(markup);
-		}
-		if (markup.startsWith("<?xml")) {
-			markup = markup.replaceFirst("<\\?xml.*?\\?>", "");
-		}
-		if (markup.startsWith("<!doctype")) {
-			markup = markup.replaceFirst("<!doctype.+>\n?", "");
+		if (!Al.isBrowser()) {
+			markup = cleanPreamble(markup);
 		}
 		this.markup = markup;
 		this.replaceContents = replaceContents;
@@ -633,6 +674,37 @@ public class HtmlParser {
 		if (hasSyntheticContainer) {
 		}
 		return rootResult;
+	}
+
+	private String cleanPreamble(String markup) {
+		/*
+		 * trim leading ws
+		 */
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		/*
+		 * minimal 'make invalid markup parseable'
+		 */
+		if (markup.contains("\uFEFF")) {
+			markup = markup.replace("\uFEFF", " ");
+		}
+		/*
+		 * sky - instead, improve parser (to retain exact source refs)
+		 */
+		if (markup.contains("/>")) {
+			markup = DomUtils.expandEmptyElements(markup);
+		}
+		if (markup.matches("(?si)<!doctype.*")) {
+			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
+		}
+		if (markup.matches("(?si)<\\?xml.*")) {
+			markup = markup.replaceFirst("(?si)<\\?xml.*?\\?>", "");
+		}
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		if (markup.matches("(?si)<!doctype.*")) {
+			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");
+		}
+		markup = markup.replaceFirst("^[\n \r\t]+", "");
+		return markup;
 	}
 
 	void logInvalidMarkup(String tagLookahead) {

@@ -6,7 +6,7 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.HasSelectedValues;
@@ -18,10 +18,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 		implements HasSelectedValues<T> {
-	static PackageProperties._ChoicesEditorMultiple properties = PackageProperties.choicesEditorMultiple;
+	PackageProperties._ChoicesEditorMultiple.InstanceProperties properties() {
+		return PackageProperties.choicesEditorMultiple.instance(this);
+	}
 
 	public ChoicesEditorMultiple() {
-		bindings().from(this).on(properties.selectedValues)
+		from(properties().selectedValues())
 				.accept(this::updateAreaFromSelectedValues);
 	}
 
@@ -51,12 +53,11 @@ public class ChoicesEditorMultiple<T> extends ChoiceEditor<T>
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			editor = new ChoicesEditorMultiple<>();
 			// populate the delegate values from this node's AnnotationLocation
-			editor.populateFromNodeContext(event.node, null);
+			editor.populateFromNodeContext(node, null);
 			editor.setSelectedValues(value);
-			super.onBeforeRender(event);
 		}
 
 		@Override

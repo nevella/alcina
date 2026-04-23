@@ -69,8 +69,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
@@ -107,7 +107,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * <code>
 class PropertiesArea extends Model.Fields {
 ...
-_at_Directed.Transform(BeanForm.Viewer.class)
+-at-Directed.Transform(BeanForm.Viewer.class)
 static class SelectionArea
 </code>
  * </pre>
@@ -1056,10 +1056,9 @@ public class FormModel extends Model
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		event.node.getResolver().registerService(NodeEditorContextService.class,
-				this);
-		super.onBeforeRender(event);
+	public void onNodeContext(NodeContext event) {
+		event.getContext().node.getResolver()
+				.registerService(NodeEditorContextService.class, this);
 	}
 
 	public static class LabelModel extends Model {

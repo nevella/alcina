@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -642,7 +643,9 @@ public class ClientUtils {
 			}-*/;
 
 	public static void consoleInfo(String template, Object... args) {
-		consoleInfo0(Ax.format(template, args));
+		String message = Ax.format(template, args);
+		Ax.out(message);
+		consoleInfo0(message);
 	}
 
 	static native void consoleInfo0(String s) /*-{
@@ -662,4 +665,19 @@ public class ClientUtils {
 		}
 		return result;
 	}
+
+	public static void consoleLog(String message, boolean error) {
+		Ax.sysLogHigh(message);
+		if (Al.isBrowser()) {
+			consoleLog0(message, error);
+		}
+	}
+
+	static native void consoleLog0(String message, boolean error) /*-{
+    if (error) {
+      console.error(message);
+    } else {
+      console.log(message);
+    }
+	}-*/;;
 }

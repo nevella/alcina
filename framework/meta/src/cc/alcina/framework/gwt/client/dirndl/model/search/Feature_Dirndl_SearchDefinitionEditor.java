@@ -42,4 +42,20 @@ public interface Feature_Dirndl_SearchDefinitionEditor extends Feature {
 	@Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
 	public interface _EnterBehaviour extends Feature {
 	}
+
+	/**
+	 * If.a criteria can have multiple operators, render as a dropdown,
+	 * otherwise just as a ':'
+	 */
+	@Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
+	public interface _CriterionOperatorBehaviour extends Feature {
+	}
+
+	/**
+	 * - multi initial focus (click or auto) shows dropdown [hint1], post-edit
+	 * focus shows hint2, no dropdown
+	 */
+	@Feature.Parent(Feature_Dirndl_SearchDefinitionEditor.class)
+	public interface _HintBehaviour extends Feature {
+	}
 }

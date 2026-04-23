@@ -24,33 +24,33 @@
         padding-right: 0.5rem
 
       > column-filter, > sort-direction
-        @include action.content(16px)
+        @include action.contents(16px)
         visibility: hidden
         
       > column-filter
         padding-right: 0.5rem
-        @include filter-circle.content
+        @include filter-circle.contents
 
         &[filtered], &[filter-open]
           visibility: visible
 
       > sort-direction
-        @include chevron-up-down.content
+        @include chevron-up-down.contents
 
         &[direction]
           visibility: visible
 
         &[direction='DESCENDING']
-          @include chevron-down.content
+          @include chevron-down.contents
           
           &:hover
-            @include chevron-down-hover.content
+            @include chevron-down-hover.contents
 
         &[direction='ASCENDING']
-          @include chevron-up.content
+          @include chevron-up.contents
 
           &:hover
-            @include chevron-up-hover.content
+            @include chevron-up-hover.contents
 
       &:hover
         cursor: pointer

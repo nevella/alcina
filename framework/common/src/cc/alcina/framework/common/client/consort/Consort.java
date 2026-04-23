@@ -6,12 +6,14 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -50,7 +52,14 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * HanshakeConsort, SetupAfterObjectsPlayer handles the change from state
  * OBJECTS_UNWRAPPED_AND_REGISTERED to SETUP_AFTER_OBJECTS_LOADED.
  *
- * 
+ * <p>
+ * FIXMEs
+ * <ul>
+ * <li>simplify the player structure (are async players needed?) *
+ * <li>where possible, use enum values rather than classes
+ * <li>switch wasPlayed() to a builder approach - since non-players can report
+ * that 'state x was reached'
+ * </ul>
  *
  */
 /*
@@ -100,6 +109,8 @@ public class Consort<D> implements AlcinaProcess {
 	private String lastInfoLogMessage = null;
 
 	protected TopicChannel exitChannel;
+
+	public boolean allowFireOfNonPlayingStates = false;
 
 	public void addEndpointPlayer() {
 		addEndpointPlayer(null, true);
@@ -642,13 +653,28 @@ public class Consort<D> implements AlcinaProcess {
 	// sort of threaded
 	// queue/consumer model - but it ain't so pretty
 	//
+	/**
+	 * 
+	 * @param player
+	 *            Can be null, in which case it is computed as the sole active
+	 *            player providing resultantStates
+	 * @param resultantStates
+	 * @param keepGoing
+	 */
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates,
 			boolean keepGoing) {
 		if (!isRunning()) {
 			return;
 		}
+		if (player == null) {
+			Preconditions.checkArgument(resultantStates.size() > 0);
+			player = playing.stream().filter(
+					p -> Objects.equals(p.getProvides(), resultantStates))
+					.findFirst().orElse(null);
+		}
 		if (!playing.contains(player)) {
-			if (LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {
+			if (allowFireOfNonPlayingStates
+					|| LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {
 				return;
 			}
 		}

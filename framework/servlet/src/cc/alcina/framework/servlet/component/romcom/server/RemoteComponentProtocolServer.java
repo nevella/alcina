@@ -17,6 +17,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
 public class RemoteComponentProtocolServer {
 	public static final transient String ROMCOM_SERIALIZED_SESSION_KEY = "__alc_romcom_session";
 
+	public static final transient String ROMCOM_REMOTE_PATH = "__alc_remote_path";
+
 	public static final transient String ROMCOM_HISTORY_PUSHSTATE = "__alc_romcom_history_pushstate";
 
 	static Logger logger = LoggerFactory
@@ -46,16 +48,8 @@ public class RemoteComponentProtocolServer {
 
 		public MessageProcessingToken(Message message) {
 			this.messageHandler = null;
-			// Registry.impl(Handler.class,
-			// message.getClass());
 			this.message = message;
 			this.latch = new CountDownLatch(1);
-		}
-
-		public boolean provideIsPageHideEvent() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'provideIsPageHideEvent'");
 		}
 	}
 

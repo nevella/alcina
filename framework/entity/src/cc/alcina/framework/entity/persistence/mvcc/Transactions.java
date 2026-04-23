@@ -71,8 +71,8 @@ public class Transactions {
 		((MvccObjectVersionsEntity) versions).copyIdFieldsToCurrentVersion();
 	}
 
-	static <T extends MvccObject> T copyObject(T from,
-			boolean withFieldValues) {
+	static <T extends MvccObject> T copyObject(T from, boolean withFieldValues,
+			Set<String> ignoreFields) {
 		T clone = null;
 		try {
 			if (from instanceof TransactionalSet) {
@@ -98,15 +98,15 @@ public class Transactions {
 			throw new WrappedRuntimeException(e);
 		}
 		if (withFieldValues) {
-			ObjectUtil.fieldwiseCopy(from, clone, false, true);
+			copyObjectFields(from, clone, ignoreFields);
 		}
 		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
 		clone.__setMvccVersions__(__getMvccVersions__);
 		return clone;
 	}
 
-	static <T> void copyObjectFields(T from, T to) {
-		ObjectUtil.fieldwiseCopy(from, to, false, true);
+	static <T> void copyObjectFields(T from, T to, Set<String> ignoreFields) {
+		ObjectUtil.fieldwiseCopy(from, to, false, true, ignoreFields);
 	}
 
 	public static void enqueueLazyLoad(EntityLocator locator) {
@@ -315,7 +315,10 @@ public class Transactions {
 		try {
 			LooseContext.push();
 			LooseContext.setTrue(CONTEXT_REVERTING_TO_DEFAULTS);
-			copyObjectFields(defaults, entity);
+			copyObjectFields(defaults, entity,
+					Mvcc.getLazyFieldNames(entity.entityClass()));
+			Mvcc.clearLazyProperties(entity);
+			Mvcc.clearTransients(entity);
 			MvccObjectVersions versions = ((MvccObject) entity)
 					.__getMvccVersions__();
 			ProcessObservers.publish(RevertDomainIdentityEvent.class,

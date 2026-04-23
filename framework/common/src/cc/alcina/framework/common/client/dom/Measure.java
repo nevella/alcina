@@ -154,13 +154,18 @@ public class Measure extends Location.Range {
 	public Measure subMeasure(int startOffset, int endOffset, Token token,
 			boolean toTextLocations) {
 		Location subStart = this.start.textRelativeLocation(startOffset, false)
-				.toTextLocation(toTextLocations).toStartTextLocationIfAtEnd();
+				.toTextLocation(toTextLocations);
+		if (toTextLocations) {
+			subStart = subStart.toStartTextLocationIfAtEnd();
+		}
 		Location subEnd = endOffset == length()
 				? this.end.toTextLocation(toTextLocations)
 				: this.start.textRelativeLocation(endOffset, false);
 		if (startOffset != endOffset) {
-			subEnd = subEnd.toTextLocation(toTextLocations)
-					.toEndTextLocationIfAtStart();
+			subEnd = subEnd.toTextLocation(toTextLocations);
+			if (toTextLocations) {
+				subEnd = subEnd.toEndTextLocationIfAtStart();
+			}
 		}
 		Measure subMeasure = new Measure(subStart, subEnd, token);
 		return subMeasure;
@@ -232,14 +237,6 @@ public class Measure extends Location.Range {
 	 *
 	 */
 	public interface Token {
-		/*
-		 * Logical boundary tokens are non-dom - when matched, they do not move
-		 * the match cursor forward
-		 */
-		default boolean isNonDomToken() {
-			return false;
-		}
-
 		/**
 		 * This will be overridden if the token is an enum
 		 * 
@@ -346,6 +343,16 @@ public class Measure extends Location.Range {
 		}
 
 		public interface IgnoreEmptyText {
+		}
+
+		/**
+		 * For future use, a token which specifies the corresponding measure
+		 * data
+		 */
+		public interface Typed<T> extends Token {
+			default T measureData(Measure measure) {
+				return (T) measure.typedData();
+			}
 		}
 	}
 

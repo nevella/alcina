@@ -90,8 +90,9 @@ public class FmsContentCells {
 					outgoingLocation = new AnnotationLocation(modifiedClass,
 							location.property, this);
 					// note that we need to preserve the parent resolution state
-					outgoingLocation.setResolutionState(
-							location.ensureResolutionState());
+					// (if amy)
+					outgoingLocation
+							.setResolutionState(location.getResolutionState());
 				}
 				return super.resolveAnnotations0(annotationClass,
 						outgoingLocation);

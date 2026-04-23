@@ -36,7 +36,7 @@ public class CheckOfflineSufficentPlayer
 			List<LoadObjectDataState> states = Arrays.asList(
 					LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY,
 					LoadObjectDataState.OBJECT_DATA_LOADED);
-			consort.wasPlayed(this, states);
+			getConsort().wasPlayed(this, states);
 		} else {
 			wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 		}

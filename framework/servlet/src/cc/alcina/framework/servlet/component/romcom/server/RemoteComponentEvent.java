@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
@@ -58,6 +57,11 @@ public class RemoteComponentEvent
 		return Ax.format("%s --> %s",
 				request.messageEnvelope.toMessageSummaryString(),
 				response.messageEnvelope.toMessageSummaryString());
+	}
+
+	@Override
+	public String provideSubcategory() {
+		return null;
 	}
 
 	@Override

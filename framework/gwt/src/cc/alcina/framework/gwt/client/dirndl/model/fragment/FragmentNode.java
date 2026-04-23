@@ -6,6 +6,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -198,6 +199,11 @@ public abstract class FragmentNode extends Model.Fields
 
 	@Override
 	public void onBind(Bind event) {
+		if (event.isBound()) {
+			if (node == null) {
+				node = event.getContext().node;
+			}
+		}
 		super.onBind(event);
 		if (event.isBound()) {
 			domNode = provideNode().getRendered().asDomNode();
@@ -207,8 +213,13 @@ public abstract class FragmentNode extends Model.Fields
 	}
 
 	/**
+	 * <p>
 	 * Allow subclasses to populate children *in a node context*. This is the
 	 * way that fragment nodes should construct their own subtrees
+	 * 
+	 * <p>
+	 * Note that this is only called once - even if the node is detached then
+	 * subsequently reattached
 	 */
 	public void onFragmentRegistration() {
 	}
@@ -234,7 +245,8 @@ public abstract class FragmentNode extends Model.Fields
 	 * FIXME - remove
 	 */
 	public NotifyingList<Node> provideChildNodes() {
-		return FragmentNodeAccess.ensureChildren(provideNode());
+		return isDetached() ? new NotifyingList<>(new ArrayList<>())
+				: FragmentNodeAccess.ensureChildren(provideNode());
 	}
 
 	Node provideParentNode() {
@@ -303,6 +315,12 @@ public abstract class FragmentNode extends Model.Fields
 			return stream().filter(test::test).findFirst().orElse(null);
 		}
 
+		public <T extends FragmentNode> T get(Class<T> test) {
+			return (T) stream().filter(
+					n -> Reflections.isAssignableFrom(test, n.getClass()))
+					.findFirst().orElse(null);
+		}
+
 		public Stream<FragmentNode> stream() {
 			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
 					new Itr(), Spliterator.ORDERED), false);
@@ -320,7 +338,7 @@ public abstract class FragmentNode extends Model.Fields
 
 			@Override
 			public boolean hasNext() {
-				return cursor != null;
+				return cursor != null && !cursor.isDetached();
 			}
 
 			@Override

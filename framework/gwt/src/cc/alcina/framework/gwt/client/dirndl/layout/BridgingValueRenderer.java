@@ -93,7 +93,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 	protected void render(RendererInput input) {
 		this.input = input;
 		node = input.node;
-		editorContext = node.service(NodeEditorContextService.class);
+		editorContext = node.getResolver()
+				.service(NodeEditorContextService.class);
 		valueModel = (ValueModel) node.getModel();
 		field = valueModel.getField();
 		target = null;
@@ -153,7 +154,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			extends AbstractContextSensitiveModelTransform<Object, Model> {
 		@Override
 		public Model apply(Object t) {
-			NodeEditorContextService editorContext = node
+			NodeEditorContextService editorContext = node.getResolver()
 					.service(NodeEditorContextService.class);
 			Property property = ((ValueResolver) node.resolver).valueLocation.property;
 			Class marker = editorContext.isEditable() ? FormModel.Editor.class
@@ -194,6 +195,12 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		@Override
 		protected MultikeyMap<List<? extends Annotation>> resolvedCache() {
 			return field.getSharedAnnotationResolver().resolvedCache();
+		}
+
+		@Override
+		protected Property resolveDirectedProperty0(Property property) {
+			return field.getSharedAnnotationResolver()
+					.resolveDirectedProperty0(property);
 		}
 
 		@Override
@@ -303,8 +310,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 
 		@Override
 		public void onBeforeRender(BeforeRender event) {
-			NodeEditorContextService ancestorContext = getService(
-					NodeEditorContextService.class).get();
+			NodeEditorContextService ancestorContext = service(
+					NodeEditorContextService.class);
 			registerService(NodeEditorContextService.class,
 					new Context(ancestorContext));
 			Node node = event.getContext().node;

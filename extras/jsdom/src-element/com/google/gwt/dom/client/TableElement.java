@@ -34,7 +34,8 @@ import cc.alcina.framework.common.client.util.Ax;
  *      W3C HTML Specification</a>
  */
 @TagName(TableElement.TAG)
-public class TableElement extends Element {
+public class TableElement extends Element
+		implements Element.RestrictedElementContent {
 	public static final String TAG = "table";
 
 	/**

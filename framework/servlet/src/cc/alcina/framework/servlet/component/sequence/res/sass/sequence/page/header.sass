@@ -83,11 +83,11 @@ $item-gap: 2.5rem
 
       > button
         filter: invert(1)
-        @include action.content
+        @include action.contents
         cursor: pointer
 
         &.dotburger
-          @include ellipsis-vertical.content
+          @include ellipsis-vertical.contents
 
   > search
     grid-area: search
@@ -99,7 +99,6 @@ $item-gap: 2.5rem
       transition: all 0.3s
 
     > search-definition-editor
-      @include search-definition-editor.contents
       padding-top: $vertical-gap
       
       edit

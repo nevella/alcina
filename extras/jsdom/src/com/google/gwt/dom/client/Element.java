@@ -67,6 +67,13 @@ import cc.alcina.framework.common.client.util.IntPair;
  */
 public class Element extends Node implements ClientDomElement,
 		org.w3c.dom.Element, EventListener, HasHandlers {
+	/*
+	 * merker for table structural elements, indicating their content cannot
+	 * include arbitrary elements
+	 */
+	public interface RestrictedElementContent {
+	}
+
 	public static boolean useDomRectForOffsets = false;
 
 	public static final Predicate<Element> DISPLAY_NONE = e -> {
@@ -401,6 +408,9 @@ public class Element extends Node implements ClientDomElement,
 		return local().getAttributes();
 	}
 
+	/**
+	 * In general, getAbsoluteXxx may be better
+	 */
 	@Override
 	public DomRect getBoundingClientRect() {
 		return callWithRemoteOrDefault(true,
@@ -847,9 +857,10 @@ public class Element extends Node implements ClientDomElement,
 		return (ElementAttachId) remote();
 	}
 
-	public boolean provideIsAncestorOf(Element potentialChild,
+	public boolean provideIsAncestorOf(Node potentialChild,
 			boolean includeSelf) {
-		return potentialChild
+		Element testElement = potentialChild.selfOrParentElement();
+		return testElement
 				.firstInAncestry(
 						e -> e == this && (e != potentialChild || includeSelf))
 				.isPresent();
@@ -896,8 +907,11 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void removeAttribute(String name) {
+		// if (!local().hasAttribute(name)) {
+		// return;
+		// }
 		local().removeAttribute(name);
-		// FIXME - dirndl - dodesn't actually remove. To remove via mutation
+		// FIXME - dirndl - doesn't actually remove. To remove via mutation
 		// (which isn't really covered in the w3c DomMutation) spec, possibly
 		// add another field to the Mutation API
 		mutations().notifyAttributeModification(this, name, "");
@@ -989,7 +1003,10 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void scrollIntoView(int hPad, int vPad) {
-		runIfWithRemote(true, () -> remote().scrollIntoView(hPad, vPad));
+		runIfWithRemote(true, () -> {
+			Window.topicScrollTo().publish(new IntPair(0, 0));
+			remote().scrollIntoView(hPad, vPad);
+		});
 	}
 
 	@Override
@@ -1409,6 +1426,10 @@ public class Element extends Node implements ClientDomElement,
 			case "focus":
 				Preconditions.checkArgument(argumentTypes.isEmpty());
 				elem.focus();
+				return null;
+			case "blur":
+				Preconditions.checkArgument(argumentTypes.isEmpty());
+				elem.blur();
 				return null;
 			case "scrollIntoView":
 				if (argumentTypes.size() == 2) {

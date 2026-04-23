@@ -37,8 +37,8 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
@@ -130,10 +130,9 @@ class Page extends Model.All
 		Model eventHandlerCustomisation;
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			page = new Page();
 			eventHandlerCustomisation = Ui.get().getEventHandlerCustomisation();
-			super.onBeforeRender(event);
 		}
 
 		@Override
@@ -150,7 +149,9 @@ class Page extends Model.All
 		}
 	}
 
-	static PackageProperties._Page properties = PackageProperties.page;
+	PackageProperties._Page.InstanceProperties properties() {
+		return PackageProperties.page.instance(this);
+	}
 
 	Header header;
 
@@ -197,51 +198,43 @@ class Page extends Model.All
 		 */
 		String traversalPath = Ui.get().getTraversalPath();
 		// one-off (to get the initial value)
-		TraversalObserver.get().subscribe(traversalPath, this::setHistory)
-				.remove();
+		TraversalObserver.get()
+				.subscribe(traversalPath, properties().history()::set).remove();
 		/*
 		 * logging
 		 */
-		bindings().from(this).on(properties.history).accept(
+		from(properties().history()).accept(
 				history -> logger.info("history change :: {}", history));
-		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
+		from(ui.properties().place()).typed(TraversalPlace.class)
 				.accept(place -> logger.info("place change :: {}", place));
 		bindings().addListener(() -> TraversalObserver.get()
-				.subscribe(traversalPath, this::setHistory));
-		bindings().from(this).on(properties.history)
-				.map(ObservableEntry::getObservable)
-				.typed(SelectionTraversal.class).to(ui)
-				.on(Ui.properties.traversal).oneWay();
+				.subscribe(traversalPath, properties().history()::set));
+		from(properties().history()).map(ObservableEntry::getObservable)
+				.typed(SelectionTraversal.class)
+				.to(ui.subclassProperties().traversal()).oneWay();
 		// place selections will be invalid if history changes
-		bindings().from(this).on(properties.history)
-				.signal(this::clearPlaceSelections);
-		bindings().from(this).on(properties.history).value(this)
-				.map(PropertiesArea::new).to(this).on(properties.propertiesArea)
-				.oneWay();
-		bindings().from(TraversalSettings.get())
-				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+		from(properties().history()).signal(this::clearPlaceSelections);
+		from(properties().history()).value(this).map(PropertiesArea::new)
+				.to(properties().propertiesArea()).oneWay();
+		from(TraversalSettings.get().properties().secondaryAreaDisplayMode())
 				.value(() -> renderedSelectionsIfVisible(SecondaryArea.INPUT))
-				.to(this).on(properties.input).oneWay();
-		bindings().from(TraversalSettings.get())
-				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.to(properties().input()).oneWay();
+		from(TraversalSettings.get().properties().secondaryAreaDisplayMode())
 				.value(() -> renderedSelectionsIfVisible(SecondaryArea.OUTPUT))
-				.to(this).on(properties.output).oneWay();
-		bindings().from(TraversalSettings.get())
-				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.to(properties().output()).oneWay();
+		from(TraversalSettings.get().properties().secondaryAreaDisplayMode())
 				.value(() -> renderedSelectionsIfVisible(SecondaryArea.TABLE))
-				.to(this).on(properties.table).oneWay();
-		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
-				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
-				.on(AppSuggestor.properties.acceptedFilterText).withFireOnce()
-				.oneWay();
-		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
-				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
-				.on(AppSuggestor.properties.filterText).oneWay();
-		bindings().from(ui).on(Ui.properties.place)
-				.value(() -> new SelectionLayers(this)).to(this)
-				.on(properties.layers).oneWay();
-		bindings().from(TraversalBrowser.Ui.get().settings)
-				.accept(this::updateStyles);
+				.to(properties().table()).oneWay();
+		from(ui.properties().place()).typed(TraversalPlace.class)
+				.map(TraversalPlace::getTextFilter)
+				.to(header.mid.suggestor.properties().acceptedFilterText())
+				.withFireOnce().oneWay();
+		from(ui.properties().place()).typed(TraversalPlace.class)
+				.map(TraversalPlace::getTextFilter)
+				.to(header.mid.suggestor.properties().filterText()).oneWay();
+		from(ui.properties().place()).value(() -> new SelectionLayers(this))
+				.to(properties().layers()).oneWay();
+		from(TraversalBrowser.Ui.get().settings).accept(this::updateStyles);
 	}
 
 	public Page providePage() {
@@ -498,12 +491,6 @@ class Page extends Model.All
 		}
 		TraversalPlace to = place().copy().withSelectionType(selectionType);
 		goPreserveScrollPosition(to);
-	}
-
-	void setHistory(
-			RemoteComponentObservables<SelectionTraversal>.ObservableEntry history) {
-		set(properties.history, this.history, history,
-				() -> this.history = history);
 	}
 
 	void observableAccessed() {

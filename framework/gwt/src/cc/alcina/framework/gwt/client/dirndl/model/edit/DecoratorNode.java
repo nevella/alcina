@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
@@ -61,7 +62,23 @@ public abstract class DecoratorNode<WT, SR> extends EditNode implements
 			implements ModelEvents.Commit.Handler {
 		public abstract DN createNode();
 
-		public abstract Function<WT, ?> itemRenderer();
+		public interface ItemRenderer<WT> {
+			Object render(DirectedLayout.Node node, WT value);
+
+			public static class ContextFree<WT> implements ItemRenderer<WT> {
+				Function<WT, ?> function;
+
+				public ContextFree(Function<WT, ?> function) {
+					this.function = function;
+				}
+
+				public Object render(DirectedLayout.Node node, WT value) {
+					return function.apply(value);
+				}
+			}
+		}
+
+		public abstract ItemRenderer<WT> itemRenderer();
 
 		@Override
 		public abstract void onCommit(Commit event);
@@ -153,12 +170,12 @@ public abstract class DecoratorNode<WT, SR> extends EditNode implements
 
 	public abstract Descriptor<WT, SR, ?> getDescriptor();
 
-	public void putReferenced(WT referenced) {
+	public void putReferenced(DirectedLayout.Node contextNode, WT referenced) {
 		properties().stringRepresentable()
 				.set(getDescriptor().toStringRepresentable(referenced));
 		String triggerSequence = getDescriptor().triggerSequence();
-		Object renderedReferenced = ((Function) getDescriptor().itemRenderer())
-				.apply(referenced);
+		Object renderedReferenced = getDescriptor().itemRenderer()
+				.render(contextNode, referenced);
 		if (renderedReferenced instanceof String) {
 			String text = triggerSequence + renderedReferenced;
 			properties().content().set(text);

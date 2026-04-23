@@ -106,7 +106,7 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	public void withSuggestor(Suggestor suggestor) {
 		this.suggestor = suggestor;
 		input = new StringInput();
-		Suggestor.Attributes attributes = suggestor.getAttributes();
+		Suggestor.Attributes attributes = suggestor.attributes;
 		input.setPlaceholder(attributes.getInputPrompt());
 		if (Ax.notBlank(attributes.getInputText())) {
 			input.setValue(attributes.getInputText());

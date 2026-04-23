@@ -518,7 +518,9 @@ public class DomainStoreQueryTranslator {
 			}
 			if (!ignore) {
 				if (projectionHelper.isCount()) {
-					groupedValues.get(index).incrementCount();
+					if (obj != null) {
+						groupedValues.get(index).incrementCount();
+					}
 				} else {
 					groupedValues.get(index).value = value;
 					handledCount++;

@@ -424,6 +424,10 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		return data.type;
 	}
 
+	public final long getEventTime() {
+		return data.eventTime;
+	}
+
 	/**
 	 * Prevents the browser from taking its default action for the given event.
 	 */
@@ -498,6 +502,8 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 	@Bean(PropertySource.FIELDS)
 	public static class Data {
+		long eventTime = System.currentTimeMillis();
+
 		int jsoId;
 
 		String type;

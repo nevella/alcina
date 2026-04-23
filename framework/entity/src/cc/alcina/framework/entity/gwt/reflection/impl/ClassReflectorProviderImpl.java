@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationExistenceResolver;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
@@ -42,6 +43,9 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 	}
 
 	private ClassReflector getClassReflector0(Class clazz) throws Exception {
+		if (ClassUtil.isEnumSubclass(clazz)) {
+			clazz = clazz.getSuperclass();
+		}
 		JType type = typeOracle.getType(clazz);
 		ClassReflector reflector = null;
 		ClassReflection reflection = new ClassReflection(type,

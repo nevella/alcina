@@ -9,10 +9,11 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
 
 /*
  * There are a *few* bits copied from Choices.Single, but it's more different
@@ -31,11 +32,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 		implements HasValue<T> {
-	static PackageProperties._ChoicesEditorSingle properties = PackageProperties.choicesEditorSingle;
+	PackageProperties._ChoicesEditorSingle.InstanceProperties properties() {
+		return PackageProperties.choicesEditorSingle.instance(this);
+	}
 
 	public ChoicesEditorSingle() {
-		bindings().from(this).on(properties.selectedValue)
+		from(properties().selectedValue())
 				.accept(value -> this.updateAreaFromSelectedValue((T) value));
+		single = true;
 	}
 
 	private T selectedValue;
@@ -88,17 +92,22 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			editor = new ChoicesEditorSingle<>();
 			// populate the delegate values from this node's AnnotationLocation
-			editor.populateFromNodeContext(event.node, null);
+			editor.populateFromNodeContext(node, null);
+			// push to editor
+			setValue(value);
 			value = editor.getSelectedValue();
-			super.onBeforeRender(event);
 		}
 
 		@Override
 		public void onSelectionChanged(ModelEvents.SelectionChanged event) {
+			if (event.checkReemitted(this)) {
+				return;
+			}
 			setValue(editor.getSelectedValue());
+			event.reemit();
 		}
 	}
 
@@ -130,5 +139,15 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 	@Override
 	public void setValue(T t) {
 		setSelectedValue(t);
+	}
+
+	@Override
+	public void onDecoratorsChanged(DecoratorsChanged event) {
+		List<DecoratorNode> model = event.getModel();
+		List<T> decoratorChoiceValues = model.stream()
+				.map(n -> (T) n.getStringRepresentable()).toList();
+		if (decoratorChoiceValues.size() >= 1) {
+			setValue(Ax.first(decoratorChoiceValues));
+		}
 	}
 }

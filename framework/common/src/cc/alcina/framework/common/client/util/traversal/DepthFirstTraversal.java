@@ -73,6 +73,10 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 		current.add(t, true);
 	}
 
+	public void skipCurrentChildren() {
+		current.skipChildren();
+	}
+
 	@Override
 	public boolean hasNext() {
 		if (current != null && current.modifiedSinceLastNext) {
@@ -150,7 +154,7 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 	// so named because often T is named Node
 	class TraversalNode {
-		private T value;
+		T value;
 
 		List<TraversalNode> children;
 
@@ -164,6 +168,11 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 		TraversalNode(T value) {
 			this.value = value;
+		}
+
+		void skipChildren() {
+			Preconditions.checkState(children == null);
+			children = new ArrayList<>();
 		}
 
 		public void add(T t, boolean duringIteration) {

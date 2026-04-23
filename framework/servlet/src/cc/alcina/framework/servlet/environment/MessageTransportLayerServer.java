@@ -14,9 +14,11 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.environment.MessageTransportLayerServer.AggregateDispatcher.DispatchableToken;
 
@@ -56,7 +58,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 
 		/*
-		 * re-implement to allow MessageBatcherServer to access this method
+		 * future - re-implement to allow MessageBatcherServer to access this
+		 * method
 		 */
 		protected void send(List<Message> messages) {
 			super.send(messages);
@@ -120,8 +123,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			}
 
 			boolean isAwaiter() {
-				return token.request.messageEnvelope.packets.stream()
-						.anyMatch(pkt -> pkt.message instanceof AwaitRemote);
+				return token.request.messageEnvelope.messages.stream()
+						.anyMatch(message -> message instanceof AwaitRemote);
 			}
 		}
 
@@ -230,7 +233,14 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 	MessageBatcherServer batcher;
 
-	MessageTransportLayerServer() {
+	StringProtocol.Cache stringProtocolCache;
+
+	public StringProtocol.Cache getStringProtocolCache() {
+		return stringProtocolCache;
+	}
+
+	MessageTransportLayerServer(StringProtocol.Cache stringProtocolCache) {
+		this.stringProtocolCache = stringProtocolCache;
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
 		aggregateDispatcher = new AggregateDispatcher(this);
@@ -275,8 +285,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	 * sessions for the same logical Component, if any
 	 */
 	boolean isValidateClientInstanceUid(RemoteComponentRequest request) {
-		return request.messageEnvelope.packets.stream().anyMatch(
-				p -> handlerFor(p.message).isValidateClientInstanceUid());
+		return request.messageEnvelope.messages.stream().anyMatch(
+				message -> handlerFor(message).isValidateClientInstanceUid());
 	}
 
 	MessageHandlerServer<?> handlerFor(Message message) {
@@ -363,6 +373,10 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		synchronized void add(Message message) {
 			messages.add(message);
 		}
+
+		synchronized boolean hasPendingMutations() {
+			return messages.stream().anyMatch(m -> m instanceof Mutations);
+		}
 	}
 
 	String toStateDebugString() {
@@ -390,5 +404,9 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		} else {
 			return null;
 		}
+	}
+
+	boolean hasPendingMutations() {
+		return batcher.hasPendingMutations();
 	}
 }

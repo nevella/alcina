@@ -23,7 +23,7 @@ public class PackageProperties {
       public TypedProperty<Configuration.PropertyTree.PropertyNode, Boolean> open = new TypedProperty<>(Configuration.PropertyTree.PropertyNode.class, "open");
       public TypedProperty<Configuration.PropertyTree.PropertyNode, Configuration.PropertyTree.PropertyNode> parent = new TypedProperty<>(Configuration.PropertyTree.PropertyNode.class, "parent");
       public TypedProperty<Configuration.PropertyTree.PropertyNode, Boolean> selected = new TypedProperty<>(Configuration.PropertyTree.PropertyNode.class, "selected");
-      public static class InstanceProperties extends InstanceProperty.Container<Configuration.PropertyTree.PropertyNode> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<Configuration.PropertyTree.PropertyNode> {
         public  InstanceProperties(Configuration.PropertyTree.PropertyNode source){super(source);}
         public InstanceProperty<Configuration.PropertyTree.PropertyNode, List> children(){return new InstanceProperty<>(source,PackageProperties.configuration_propertyTree_propertyNode.children);}
         public InstanceProperty<Configuration.PropertyTree.PropertyNode, Bindable> contents(){return new InstanceProperty<>(source,PackageProperties.configuration_propertyTree_propertyNode.contents);}

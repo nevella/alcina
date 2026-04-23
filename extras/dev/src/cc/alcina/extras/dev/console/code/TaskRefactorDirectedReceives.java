@@ -115,7 +115,7 @@ public class TaskRefactorDirectedReceives extends PerformerTask {
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
 				DeclarationVisitor::new, refresh);
-		compUnits.declarations.values().stream().filter(dec -> dec.hasFlags())
+		compUnits.unitTypes.values().stream().filter(dec -> dec.hasFlags())
 				.forEach(type -> {
 					switch (action) {
 					case LIST_INTERESTING: {

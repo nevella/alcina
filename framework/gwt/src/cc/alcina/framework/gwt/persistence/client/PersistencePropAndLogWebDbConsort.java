@@ -85,7 +85,7 @@ public class PersistencePropAndLogWebDbConsort
 						5000000);
 			} catch (DatabaseException e) {
 				// no db access
-				consort.finished();
+				getConsort().finished();
 				return;
 			}
 			propImpl = new ObjectStoreWebDbImpl(db, "PropertyStore", this);

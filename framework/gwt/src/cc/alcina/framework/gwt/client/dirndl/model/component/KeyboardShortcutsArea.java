@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl_Documentation;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
@@ -40,7 +41,7 @@ public class KeyboardShortcutsArea extends Model.All
 		implements ModelEvents.Filter.Emitter {
 	public Heading heading = new Heading("Keyboard Shortcuts");
 
-	@StringInput.FocusOnBind
+	@FocusOnBindMarker
 	@Directed(tag = "contents-filter")
 	@Directed(reemits = { ModelEvents.Input.class, ModelEvents.Filter.class })
 	public StringInput filter;

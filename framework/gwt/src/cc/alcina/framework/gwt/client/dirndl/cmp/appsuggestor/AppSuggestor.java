@@ -42,7 +42,9 @@ public class AppSuggestor extends Model.Fields
 		implements ModelEvents.SelectionChanged.Handler,
 		ModelEvents.Closed.Handler, ModelEvents.Opened.Handler,
 		AppSuggestorEvents.Close.Handler, ModelEvents.SelectionHandled.Handler {
-	public static transient PackageProperties._AppSuggestor properties = PackageProperties.appSuggestor;
+	public PackageProperties._AppSuggestor.InstanceProperties properties() {
+		return PackageProperties.appSuggestor.instance(this);
+	}
 
 	public static class Attributes {
 		public final AnswerSupplier answerSupplier;
@@ -218,11 +220,11 @@ public class AppSuggestor extends Model.Fields
 	 * This text will not cause an Ask to be emitted
 	 */
 	public void setAcceptedFilterText(String acceptedFilterText) {
-		suggestor.getEditor().setAcceptedFilterText(acceptedFilterText);
+		suggestor.editor.setAcceptedFilterText(acceptedFilterText);
 	}
 
 	public void setFilterText(String filterText) {
-		suggestor.getEditor().setFilterText(filterText);
+		suggestor.editor.setFilterText(filterText);
 	}
 
 	@Override
@@ -273,7 +275,7 @@ public class AppSuggestor extends Model.Fields
 
 	protected void closeAndCleanup(ModelEvent event) {
 		suggestor.closeSuggestions();
-		suggestor.setValue(null);
+		suggestor.properties().value().set(null);
 		event.reemitAs(this, SuggestionSelected.class);
 	}
 }

@@ -40,10 +40,10 @@ public interface SequenceExecCommand<T> extends ExecCommand<T> {
 		public void execCommand(ModelEvent event, List filteredElements) {
 			String csvText = Csv.fromCollection(filteredElements)
 					.toOutputString();
-			event.reemitAs(event.getContext().node.getModel(),
-					CopyToClipboard.class, csvText);
 			String path = "/tmp/sequence.csv";
 			Io.write().string(csvText).toPath(path);
+			event.reemitAs(event.getContext().node.getModel(),
+					CopyToClipboard.class, csvText);
 			NotificationObservable
 					.of("CSV copied to clipboard and written to %s", path)
 					.publish();
@@ -60,10 +60,10 @@ public interface SequenceExecCommand<T> extends ExecCommand<T> {
 		public void execCommand(ModelEvent event, List filteredElements) {
 			String csvText = Csv.fromCollection(filteredElements).withTsv(true)
 					.toOutputString();
-			event.reemitAs(event.getContext().node.getModel(),
-					CopyToClipboard.class, csvText);
 			String path = "/tmp/sequence.tsv";
 			Io.write().string(csvText).toPath(path);
+			event.reemitAs(event.getContext().node.getModel(),
+					CopyToClipboard.class, csvText);
 			NotificationObservable
 					.of("TSV copied to clipboard and written to %s", path)
 					.publish();

@@ -24,7 +24,6 @@ import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComp
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -49,7 +48,7 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 	 * dubious)
 	 */
 	@Override
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientEventThrottling.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientEventThrottling.class)
 	protected boolean isDispatchAvailable() {
 		boolean finished = (RemoteObjectModelComponentState.get().finished
 				|| this.messageTransportLayerClient.willFinish);
@@ -126,7 +125,8 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 		 * serialize, send as RPC
 		 */
 		String payload = ReflectiveSerializer.serializeForRpc(request);
-		String path = Window.Location.getPath();
+		String path = Ax.blankTo(messageTransportLayerClient.remotePath,
+				Window.Location.getPath());
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
 		Date sendTime = new Date();
 		RequestCallback callback = new RequestCallback() {
@@ -162,8 +162,8 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 				getLogger().debug("envelope returned :: {} :: {}/{}",
 						Ax.appMillis(), envelope.envelopeId,
 						response.messageEnvelope.envelopeId);
-				messageTransportLayerClient.willFinish |= response.messageEnvelope.packets
-						.stream().map(MessagePacket::message).anyMatch(
+				messageTransportLayerClient.willFinish |= response.messageEnvelope.messages
+						.stream().anyMatch(
 								ProtocolMessageHandlerClient::isClientFinished);
 				messageTransportLayerClient.onRequestReturnedPostFinishCheck();
 				messageTransportLayerClient.onComponentResponse(response);

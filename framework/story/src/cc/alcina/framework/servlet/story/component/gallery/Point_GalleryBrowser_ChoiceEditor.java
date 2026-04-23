@@ -10,22 +10,27 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
  */
 @Decl.Require(Story_GalleryBrowser.State.Home.class)
 @Decl.Child(Point_GalleryBrowser_Home.ToChoiceEditor.class)
-@Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.class)
+@Decl.Child(Point_GalleryBrowser_ChoiceEditor._ChoiceEditor.class)
 @Feature.Parent(Feature_Dirndl_ChoiceEditor.class)
 public class Point_GalleryBrowser_ChoiceEditor extends Waypoint {
 	static final String XPATH_USER_EDITOR = "//definition-editor//choice-editor/edit";
 
 	static final String XPATH_OVERLAY = "//overlay[contains(@class,'choices-editor-multiple')]";
 
-	static final String _REL_EDIT_ENTRY = "//suggesting-node";
+	static final String _REL_EDIT_ENTRY = "//suggesting-node[@contains-cursor]";
 
 	static final String _REL_CHOICE_LARS = "//suggestion[.='lars']";
 
-	@Decl.Child(_DefinitionEditor.ClickSuggestionsArea.class)
-	@Decl.Child(_DefinitionEditor.AwaitOverlay.class)
-	@Decl.Child(_DefinitionEditor.SendName.class)
-	@Decl.Child(_DefinitionEditor.ClickLars.class)
-	static class _DefinitionEditor extends Waypoint {
+	@Decl.Location.Xpath(_REL_EDIT_ENTRY)
+	@Decl.Action.UI.AwaitPresent
+	public static class AwaitSuggestingNodeFocus extends Waypoint {
+	}
+
+	@Decl.Child(_ChoiceEditor.ClickSuggestionsArea.class)
+	@Decl.Child(_ChoiceEditor.AwaitOverlay.class)
+	@Decl.Child(_ChoiceEditor.SendName.class)
+	@Decl.Child(_ChoiceEditor.ClickLars.class)
+	static class _ChoiceEditor extends Waypoint {
 		@Decl.Location.Xpath(XPATH_USER_EDITOR)
 		@Decl.Action.UI.Click
 		static class ClickSuggestionsArea extends Waypoint {

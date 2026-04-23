@@ -9,7 +9,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
  * 
  * <p>
  * This is a fairly key UI optimisation - see the Traversal Browser and
- * integration with {@link ModelBinding}
+ * integration with {@link StreamBinding}
  * 
  * 
  * 

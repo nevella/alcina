@@ -1,6 +1,7 @@
 @use '../../theme/theme'  
 @use '../../theme/color'
 @use '../../dirndl/cmp/context-menu'
+@use '_phone/_app-suggestor-phone' as phone
 
 $box-shadow-bottom: theme.$app-suggestor-box-shadow-bottom
 $suggestor-width: theme.$app-suggestor-width
@@ -57,6 +58,7 @@ $second-color: theme.$app-suggestor-second-color
     width: $suggestor-width 
     font-family: theme.$app-suggestor-font-family
     background-color: color.$white
+    box-sizing: border-box
 
     &:focus-within
       border-color: theme.$app-suggestor-border-color
@@ -71,6 +73,7 @@ $second-color: theme.$app-suggestor-second-color
       outline: none  
       font-family: Arial
       color: theme.$app-suggestor-input-color
+      box-sizing: border-box
 
       &::placeholder
         opacity: 0.6
@@ -83,4 +86,6 @@ $second-color: theme.$app-suggestor-second-color
     width: $suggestor-width
     border: solid 1px theme.$app-suggestor-unfocussed-border-color
     background: white
+
+  @include phone.contents
       

@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -20,23 +21,30 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
-import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
+import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AfterHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.WindowStateUpdate;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
 
 /*
  * Nice thing about statics is they *ensure* statelessness
@@ -44,8 +52,71 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
  * TODO - romcom - handle network issue retry (client and server)
  */
 @Registration.Singleton
-public class ClientRpc implements HandlerContext {
-	int awaitDelay = 0;
+public class ClientRpc {
+	enum ExceptionState {
+		ok, err_recoverable, err_finished
+	}
+
+	class ExceptionHandler
+			implements BiConsumer<RemoteComponentRequest, Throwable> {
+		ExceptionState state = ExceptionState.ok;
+
+		@Override
+		public void accept(RemoteComponentRequest t, Throwable u) {
+			if (u instanceof StatusCodeException) {
+				int statusCode = ((StatusCodeException) u).httpResponse
+						.getStatusCode();
+				switch (statusCode) {
+				case 0:
+				case 404:
+					setState(ExceptionState.err_recoverable);
+					get().awaitDelay++;
+					break;
+				default:
+					setState(ExceptionState.err_finished);
+					RemoteObjectModelComponentState.get().finished = true;
+					break;
+				}
+			}
+		}
+
+		void setState(ExceptionState state) {
+			ExceptionState old_state = this.state;
+			this.state = state;
+			if (state != old_state) {
+				ui.messageStateRouter.clearRpcStateMessage();
+				String message = null;
+				switch (state) {
+				case ok:
+					// just remove, as above
+					break;
+				case err_finished:
+					message = "Unrecoverable exception";
+					break;
+				case err_recoverable:
+					message = "Network/host unreachable";
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+				if (message != null) {
+					ui.messageStateRouter.displayRpcStateMessage(message);
+				}
+			}
+		}
+
+		void onSuccessReceived() {
+			setState(ExceptionState.ok);
+		}
+	}
+
+	static class StatusCodeException extends Exception {
+		Response httpResponse;
+
+		StatusCodeException(Response httpResponse) {
+			this.httpResponse = httpResponse;
+		}
+	}
 
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
@@ -84,21 +155,99 @@ public class ClientRpc implements HandlerContext {
 		get().transportLayer.sendMessage(message);
 	}
 
+	/*
+	 * probably move all this to the transport...
+	 */
+	static Request submitRequest(RemoteComponentRequest request,
+			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
+			Topic<Request> calledSignal) {
+		return get().submitRequest0(request, errorHandler, calledSignal);
+	}
+
+	int awaitDelay = 0;
+
+	ElementSelectionRangeRecord lastElementSelectionRangeMutation;
+
+	SelectionRecord lastSelectionRecord;
+
+	MessageTransportLayerClient transportLayer;
+
+	ExceptionHandler exceptionHandler;
+
+	RemoteComponentUi ui;
+
+	OffsetProtocol.OffsetRegistry offsetRegistry = new OffsetProtocol.OffsetRegistry();
+
+	MutationConflictResolution mutationConflictResolution;
+
+	ClientEventDispatch clientEventDispatch = new ClientEventDispatch();
+
+	RemoteComponentProtocol.Session session;
+
+	String remotePath;
+
+	ClientRpc(RemoteComponentUi ui) {
+		this.ui = ui;
+		session = ReflectiveSerializer.deserializeRpc(ClientUtils.wndString(
+				RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
+		remotePath = ClientUtils
+				.wndString(RemoteComponentProtocolServer.ROMCOM_REMOTE_PATH);
+		StringProtocol.Cache cacheFromLocalStorage = StringProtocol.Cache
+				.fromLocalStorage(session.componentPath);
+		transportLayer = new MessageTransportLayerClient(cacheFromLocalStorage,
+				remotePath);
+		transportLayer.registerInContext();
+		transportLayer.session = session;
+		exceptionHandler = new ExceptionHandler();
+		mutationConflictResolution = new MutationConflictResolutionClient();
+		transportLayer.topicMessageReceived.add(this::onMessageReceived);
+		if (isDebugMetrics()) {
+			new MetricsLogger().bind();
+		}
+	}
+
+	boolean isDebugMetrics() {
+		return session.properties
+				.containsKey(RemoteComponentProtocol.FLAG_DEBUG_METRICS);
+	}
+
+	class MetricsLogger implements
+			ProcessObserver<RemoteComponentProtocol.Message.AfterHandled> {
+		@Override
+		public void topicPublished(AfterHandled message) {
+			if (message.message instanceof Mutations) {
+				MessageHistory messageHistory = message.message.messageHistory;
+				messageHistory.thisMessageTransportHistory = transportLayer
+						.receiveChannel().getTransportHistory(message.message);
+				RemoteObjectModelComponentClient
+						.consoleLog(messageHistory.toString());
+			}
+		}
+	}
+
 	@Feature.Ref(Feature_Romcom_Impl._WindowState.class)
 	void prepareMessage(Message message) {
+		if (isDebugMetrics()) {
+			message.creationDate = new Date();
+		}
 		if (message instanceof Startup) {
 			((Startup) message).windowState = generateWindowState();
 		} else if (message instanceof Message.PrependWindowState) {
 			WindowStateUpdate windowStateUpdate = new WindowStateUpdate();
 			/*
 			 * mutations sends the selection delta itself (not prepended)
+			 * 
+			 * (FIMXE - why? ordering? probably, since mutation will require
+			 * exec before selection. Probably WindowStateUpdate should come
+			 * *after* mutations)
 			 */
 			if (!(message instanceof Mutations)) {
 				windowStateUpdate.selectionRecord = generateSelectionMutation();
 			}
 			send(windowStateUpdate);
 		} else if (message instanceof Message.WindowStateUpdate) {
-			((WindowStateUpdate) message).windowState = generateWindowState();
+			WindowStateUpdate windowStateUpdate = (WindowStateUpdate) message;
+			windowStateUpdate.windowState = generateWindowState();
 		}
 	}
 
@@ -117,38 +266,22 @@ public class ClientRpc implements HandlerContext {
 
 	WindowState generateWindowState() {
 		WindowState windowState = new WindowStateGenerator(
-				ui.offsetObservedElements).generate();
+				ui.offsetObservedElements, offsetRegistry).generate();
 		return windowState;
-	}
-
-	ElementSelectionRangeRecord lastElementSelectionRangeMutation;
-
-	SelectionRecord lastSelectionRecord;
-
-	MessageTransportLayerClient transportLayer;
-
-	ExceptionHandler exceptionHandler;
-
-	RemoteComponentUi ui;
-
-	MutationConflictResolution mutationConflictResolution;
-
-	ClientRpc(RemoteComponentUi ui) {
-		this.ui = ui;
-		transportLayer = new MessageTransportLayerClient();
-		exceptionHandler = new ExceptionHandler();
-		mutationConflictResolution = new MutationConflictResolution(false);
-		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 	}
 
 	void onMessageReceived(Message message) {
 		try {
+			if (!message.sync) {
+				transportLayer
+						.setHighestProcessingCounterpartId(message.messageId);
+			}
 			BeforeHandled beforeHandled = new Message.BeforeHandled(message);
 			beforeHandled.publish();
 			if (!beforeHandled.cancelled) {
 				ProtocolMessageHandlerClient handler = Registry.impl(
 						ProtocolMessageHandlerClient.class, message.getClass());
-				handler.handle(this, message);
+				handler.handle(message);
 				new Message.AfterHandled(message).publish();
 			}
 		} catch (Throwable e) {
@@ -159,15 +292,6 @@ public class ClientRpc implements HandlerContext {
 					+ "================\nSerialized form:\n%s", message, "??");
 			e.printStackTrace();
 		}
-	}
-
-	/*
-	 * probably move all this to the transport...
-	 */
-	static Request submitRequest(RemoteComponentRequest request,
-			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
-			Topic<Request> calledSignal) {
-		return get().submitRequest0(request, errorHandler, calledSignal);
 	}
 
 	Request submitRequest0(RemoteComponentRequest request,
@@ -181,12 +305,6 @@ public class ClientRpc implements HandlerContext {
 			public void onError(Request httpRequest, Throwable exception) {
 				exceptionHandler.accept(request, exception);
 				signalCalled(httpRequest);
-			}
-
-			void signalCalled(Request httpRequest) {
-				if (calledSignal != null) {
-					calledSignal.publish(httpRequest);
-				}
 			}
 
 			@Override
@@ -203,76 +321,17 @@ public class ClientRpc implements HandlerContext {
 				RemoteComponentResponse response = text.isEmpty() ? null
 						: ReflectiveSerializer.deserializeRpc(text);
 			}
+
+			void signalCalled(Request httpRequest) {
+				if (calledSignal != null) {
+					calledSignal.publish(httpRequest);
+				}
+			}
 		};
 		try {
 			return builder.sendRequest(payload, callback);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	enum ExceptionState {
-		ok, err_recoverable, err_finished
-	}
-
-	class ExceptionHandler
-			implements BiConsumer<RemoteComponentRequest, Throwable> {
-		@Override
-		public void accept(RemoteComponentRequest t, Throwable u) {
-			if (u instanceof StatusCodeException) {
-				int statusCode = ((StatusCodeException) u).httpResponse
-						.getStatusCode();
-				switch (statusCode) {
-				case 0:
-				case 404:
-					setState(ExceptionState.err_recoverable);
-					get().awaitDelay++;
-					break;
-				default:
-					setState(ExceptionState.err_finished);
-					RemoteObjectModelComponentState.get().finished = true;
-					break;
-				}
-			}
-		}
-
-		ExceptionState state = ExceptionState.ok;
-
-		void setState(ExceptionState state) {
-			ExceptionState old_state = this.state;
-			this.state = state;
-			if (state != old_state) {
-				ui.messageStateRouter.clearRpcStateMessage();
-				String message = null;
-				switch (state) {
-				case ok:
-					// just remove, as above
-					break;
-				case err_finished:
-					message = "Unrecoverable exception";
-					break;
-				case err_recoverable:
-					message = "Network/host unreachable";
-					break;
-				default:
-					throw new UnsupportedOperationException();
-				}
-				if (message != null) {
-					ui.messageStateRouter.displayRpcStateMessage(message);
-				}
-			}
-		}
-
-		void onSuccessReceived() {
-			setState(ExceptionState.ok);
-		}
-	}
-
-	static class StatusCodeException extends Exception {
-		Response httpResponse;
-
-		StatusCodeException(Response httpResponse) {
-			this.httpResponse = httpResponse;
 		}
 	}
 

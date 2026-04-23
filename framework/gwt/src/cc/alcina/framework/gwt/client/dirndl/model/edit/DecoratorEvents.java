@@ -26,8 +26,8 @@ public class DecoratorEvents {
 		}
 	}
 
-	public static class DecoratorsChanged
-			extends ModelEvent<List<DecoratorNode>, DecoratorsChanged.Handler> {
+	public static class DecoratorsChanged extends
+			ModelEvent<DecoratorsChanged.Data, DecoratorsChanged.Handler> {
 		@Override
 		public void dispatch(DecoratorsChanged.Handler handler) {
 			handler.onDecoratorsChanged(this);
@@ -40,6 +40,57 @@ public class DecoratorEvents {
 		public interface Binding extends Handler {
 			@Override
 			default void onDecoratorsChanged(DecoratorsChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public static class Data {
+			public List<DecoratorNode> oldValue;
+
+			public List<DecoratorNode> newValue;
+
+			public Data(List<DecoratorNode> oldValue,
+					List<DecoratorNode> newValue) {
+				this.oldValue = oldValue;
+				this.newValue = newValue;
+			}
+		}
+	}
+
+	public static class EditNodesChanged
+			extends ModelEvent<List<EditNode>, EditNodesChanged.Handler> {
+		@Override
+		public void dispatch(EditNodesChanged.Handler handler) {
+			handler.onEditNodesChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEditNodesChanged(EditNodesChanged event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onEditNodesChanged(EditNodesChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	public static class SelectedDecoratorDeleted
+			extends ModelEvent<Object, SelectedDecoratorDeleted.Handler> {
+		@Override
+		public void dispatch(SelectedDecoratorDeleted.Handler handler) {
+			handler.onSelectedDecoratorDeleted(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectedDecoratorDeleted(SelectedDecoratorDeleted event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void
+					onSelectedDecoratorDeleted(SelectedDecoratorDeleted event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}

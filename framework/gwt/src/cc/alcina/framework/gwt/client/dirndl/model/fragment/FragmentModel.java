@@ -147,7 +147,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	void addDescent(DomNode node) {
-		DomNode.DomNodeTraversal traversal = new DomNode.DomNodeTraversal(node);
+		DomNode.DomNodeTraversal traversal = node.traversal();
 		traversal.forEach(n -> {
 			NodeTransformer transformer = domNodeTransformer.get(n);
 			if (transformer == null) {
@@ -258,6 +258,23 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		}
 	}
 
+	/*
+	 * For nested Fragments (FragmentIsolates)
+	 */
+	public FragmentNode getFragmentContaining(DomNode node) {
+		DomNode cursor = node;
+		for (;;) {
+			FragmentNode fragmentNode = getFragmentNode(cursor);
+			if (fragmentNode != null) {
+				return fragmentNode;
+			}
+			if (cursor == rootModel.provideElement().asDomNode()) {
+				return null;
+			}
+			cursor = cursor.parent();
+		}
+	}
+
 	public FragmentRoot getFragmentRoot() {
 		return this.fragmentRoot;
 	}
@@ -349,7 +366,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	void removeDescent(DomNode node) {
-		DomNode.DomNodeTraversal traversal = new DomNode.DomNodeTraversal(node);
+		DomNode.DomNodeTraversal traversal = node.traversal();
 		NodeTransformer topTransformer = domNodeTransformer.get(node);
 		// FIXME - fm - should this ever be null? can reproduce by deleting
 		// from a structured contenteditor

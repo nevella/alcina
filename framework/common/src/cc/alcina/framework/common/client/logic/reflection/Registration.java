@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
@@ -580,9 +581,16 @@ public @interface Registration {
 		}
 	}
 
-	/*
+	/**
+	 * <p>
 	 * Marks a singleton as being required for each Environment (server-side
-	 * client emulation instance)
+	 * client emulation instance). Note that this must be on the exact
+	 * registration class (not a subclass)
+	 * 
+	 * <p>
+	 * As per {@link EnvironmentRegistry} - *don't* use this if different
+	 * components will use subclasses of the annotated type - in that case use
+	 * {@link EnvironmentRegistration}
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -591,9 +599,13 @@ public @interface Registration {
 	public @interface EnvironmentSingleton {
 	}
 
-	/*
+	/**
 	 * Marks a registration key as being required for each Environment
-	 * (server-side client emulation instance)
+	 * (server-side client emulation instance). Note that if entirely different
+	 * behaviour is required depending on whether the environment is browser or
+	 * romcom, currently use the if/else logic in say
+	 * Client.RenderState.queueWithRenderedState - even though it's very much
+	 * not ideal
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented

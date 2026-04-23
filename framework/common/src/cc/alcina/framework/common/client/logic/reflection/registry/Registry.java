@@ -744,6 +744,11 @@ public class Registry {
 					true).registrationData.registeringClassKey.clazz();
 		}
 
+		public Priority currentPriority() {
+			return implementations.implementation(this, true,
+					true).registrationData.priority;
+		}
+
 		public Class<? extends V> registrationOrNull() {
 			ImplementationData data = implementations.implementation(this,
 					false, true);
@@ -803,11 +808,10 @@ public class Registry {
 		public void add(Class registeringClass, List<Class> keys,
 				Registration.Implementation implementation,
 				Registration.Priority priority) {
-			registrations
-					.register(registryKeys.get(registeringClass),
-							keys.stream().map(registryKeys::get)
-									.collect(Collectors.toList()),
-							implementation, priority);
+			List<RegistryKey> registrationKeys = keys.stream()
+					.map(registryKeys::get).collect(Collectors.toList());
+			add(registryKeys.get(registeringClass), registrationKeys,
+					implementation, priority);
 		}
 
 		public void add(Class registeringClass, Registration registration) {

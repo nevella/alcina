@@ -8,4 +8,6 @@ public interface HasElement {
 	boolean provideIsBound();
 
 	boolean provideIsUnbound();
+
+	boolean hasElement();
 }

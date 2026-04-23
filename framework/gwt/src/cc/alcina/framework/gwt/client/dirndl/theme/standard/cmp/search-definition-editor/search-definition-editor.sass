@@ -1,7 +1,18 @@
 @use '../../../theme/theme'
 
+@mixin hint
+  > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after
+    content:'Type, or [Enter] to search'
+
+  &[modified] > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after
+    content:'[Enter] to search'
+  
 @mixin contents
   display: flex
+  width: 100%
+
+  @include hint
+
   > choice-editor
     flex-grow: 1
 
@@ -9,6 +20,7 @@
       border: none
       background: none
       line-height: 2.2
+      width: auto
 
       > *
         line-height: 1.5
@@ -30,7 +42,15 @@
 
           > operator
             display: inline-block
-            padding: 0 0.5rem
+            width: 1.5rem
+            text-align: center
+
+            > rendered-operator
+              display: inline-block
+              cursor: pointer
+
+              &:hover
+                background-color: #ffffff80
 
           > value-editor
             display: inline-block
@@ -45,7 +65,6 @@
               > select, > input
                 background-color: white
 
-
   > go-container
     display: block
     line-height: 145%
@@ -59,6 +78,29 @@
         background: white
         border-color: transparent
 
+  &[popups-open] > choice-editor
+    background: white
+
 @mixin tag
   search-definition-editor
     @include contents
+
+  overlay > choice-suggestor.decorator-suggestor
+    border-color: #ffffff00
+    box-shadow: none
+
+  overlay.searchable.operator-selector
+    background-color: white
+
+    choice-editor > edit
+      width: 20.2rem
+      border-color: #ccc
+
+    choice-renderer
+      display: inline-flex
+      gap: 0.8rem
+
+      > operator-char
+        width: 1rem
+
+      

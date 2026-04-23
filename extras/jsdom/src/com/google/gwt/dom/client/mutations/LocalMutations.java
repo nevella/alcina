@@ -53,6 +53,8 @@ A: (simple)
  * @formatter:on
  */
 public class LocalMutations {
+	public static boolean debugValidateLocations;
+
 	public static class BehaviorAdded {
 		public Element element;
 
@@ -123,6 +125,7 @@ public class LocalMutations {
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.attributes;
 		record.target = MutationNode.forNode(target);
+		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.attributeName = name;
 		record.newValue = data;
 		addMutation(record);
@@ -137,6 +140,7 @@ public class LocalMutations {
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.characterData;
 		record.target = MutationNode.forNode(target);
+		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.oldValue = previousValue;
 		record.newValue = newValue;
 		addMutation(record);
@@ -149,6 +153,7 @@ public class LocalMutations {
 			record.mutationsAccess = mutationsAccess;
 			record.type = Type.childList;
 			record.target = MutationNode.forNode(target);
+			record.mutationGroup = target.mutationGroups().getActiveGroup();
 			record.previousSibling = MutationNode.forNode(previousSibling);
 			record.nextSibling = MutationNode.forNode(nextSibling);
 			record.addedNodes.add(MutationNode.forNode(child));
@@ -164,6 +169,7 @@ public class LocalMutations {
 				record.mutationsAccess = mutationsAccess;
 				record.type = Type.childList;
 				record.target = MutationNode.forNode(target);
+				record.mutationGroup = target.mutationGroups().getActiveGroup();
 				record.previousSibling = MutationNode.forNode(previousSibling);
 				record.nextSibling = MutationNode.forNode(nextSibling);
 				record.removedNodes.add(MutationNode.forNode(child));
@@ -182,8 +188,9 @@ public class LocalMutations {
 
 	void validateLocations() {
 		Document document = mutationsAccess.getDocument();
-		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())) {
-			// document.domDocument.locations().validateLocations();
+		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())
+				&& debugValidateLocations) {
+			document.domDocument.locations().validateLocations();
 		}
 	}
 
@@ -192,10 +199,14 @@ public class LocalMutations {
 				MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
 				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
 		topicUnbatchedUnattachedMutations.publish(record);
-		// validateLocations();
 		if (record.target.node().isAttached()) {
 			mutations.add(record);
 			topicUnbatchedAttachedMutations.publish(record);
+			if (record.removedNodes.isEmpty() && record.mutationGroup == null) {
+				// removed notifications fire before dom modify, so cannot
+				// validate. ditto mutationgroup vals
+				validateLocations();
+			}
 			if (GWT.isClient() && finallyCommand == null) {
 				finallyCommand = this::fireMutations;
 				Scheduler.get().scheduleFinally(finallyCommand);

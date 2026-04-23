@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -114,6 +115,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 */
 	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
 
+	static final String MVCC_OBJECT_FIELD_NAME = "__mvccObjectVersions__";
+
 	// called in a synchronized block (synchronized on domainIdentity) -- or --
 	// domainIdentity is unreachable(unreachable from other txs)
 	static <E extends Entity> MvccObjectVersions<E> createEntityVersions(
@@ -212,13 +215,18 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected T copyObject(T mostRecentObject) {
 		if (mostRecentObject == null) {
 			T result = (T) Transactions.copyObject((MvccObject) domainIdentity,
-					false);
+					false, null);
 			return result;
 		} else {
-			T result = (T) Transactions
-					.copyObject((MvccObject) mostRecentObject, true);
+			T result = (T) Transactions.copyObject(
+					(MvccObject) mostRecentObject, true,
+					getLazyFieldNames(mostRecentObject));
 			return result;
 		}
+	}
+
+	Set<String> getLazyFieldNames(T mostRecentObject) {
+		return null;
 	}
 
 	protected abstract void copyObject(T fromObject, T domainIdenttyObject);

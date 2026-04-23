@@ -85,4 +85,8 @@ public class DatePair
 	public int toDayCount() {
 		return DateUtil.ageInDays(d2) - DateUtil.ageInDays(d1);
 	}
+
+	public static DatePair sinceDays(int days) {
+		return since(TimeConstants.nowMinusDays(days));
+	}
 }

@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.persistence.domain;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -61,6 +62,7 @@ import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.DomainQuery.Hint;
 import cc.alcina.framework.common.client.domain.DomainQuery.HintResolver;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.domain.FilterCost;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.IndexedValueProvider;
@@ -101,7 +103,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -112,6 +113,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -303,6 +305,7 @@ public class DomainStore implements IDomainStore {
 
 	DomainStoreLoader loader;
 
+	/* entityClass -> name :: DomainStoreProperty */
 	UnsortedMultikeyMap<DomainStoreProperty> domainStoreProperties = new UnsortedMultikeyMap<>(
 			2);
 
@@ -327,6 +330,10 @@ public class DomainStore implements IDomainStore {
 	public DomainStore reuseTransformerStore;
 
 	private ConcurrentHashMap<EntityLocator, Entity> promotedEntitiesByPrePromotion = new ConcurrentHashMap<>();
+
+	ConcurrentHashMap<Class<? extends Entity>, Set<String>> lazyFieldNames = new ConcurrentHashMap<>();
+
+	ConcurrentHashMap<Class<? extends Entity>, Set<String>> transientFieldNames = new ConcurrentHashMap<>();
 
 	/*
 	 * lock the post-process processing (index mutation etc)
@@ -1005,7 +1012,21 @@ public class DomainStore implements IDomainStore {
 
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
 		try {
-			Class clazz = classDescriptor.clazz;
+			Class<? extends Entity> clazz = classDescriptor.clazz;
+			Set<String> transientFieldNames = getTransientFieldNames(clazz,
+					Set.of());
+			transientFieldNames.forEach(fn -> {
+				try {
+					Field field = clazz.getDeclaredField(fn);
+					if (field.getType().isPrimitive()) {
+						throw new IllegalStateException(Ax.format(
+								"Field %s.%s must be nullable ",
+								NestedName.get(clazz), field.getName()));
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
 			classDescriptor.setDomainDescriptor(domainDescriptor);
 			for (PropertyDescriptor pd : SEUtilities
 					.getPropertyDescriptorsSortedByName(clazz)) {
@@ -1488,14 +1509,17 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public void ensurePopulated(Entity<?> entity) {
+		public void ensurePopulated(List<? extends Entity> entities) {
 			LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES
 					.runWithTrue(() -> {
-						Class<? extends Entity> clazz = entity.entityClass();
+						List<Class<? extends Entity>> types = (List) entities
+								.stream().map(Entity::entityClass).distinct()
+								.toList();
+						Preconditions.checkState(types.size() == 1);
+						Class<? extends Entity> clazz = types.get(0);
 						for (PreProvideTask task : domainDescriptor
 								.getPreProvideTasks(clazz)) {
-							task.run(clazz, Collections.singletonList(entity),
-									true);
+							task.run(clazz, entities, true);
 						}
 					});
 		}
@@ -1953,9 +1977,9 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public void ensurePopulated(Entity<?> entity) {
-				Class clazz = entity.entityClass();
-				storeHandler(clazz).ensurePopulated(entity);
+			public void ensurePopulated(List<? extends Entity> entities) {
+				Class clazz = entities.get(0).entityClass();
+				storeHandler(clazz).ensurePopulated(entities);
 			}
 		}
 
@@ -2358,6 +2382,13 @@ public class DomainStore implements IDomainStore {
 				DomainTransformEventPersistent transform,
 				ClientInstance clientInstance) {
 			Entity promoted = getObjectForCreationTransform(transform, true);
+			// key, since these shoud only be transactinal
+			/*
+			 * wip - mvcc - general policy on when lazy properties require
+			 * clearance.
+			 */
+			Mvcc.clearLazyProperties(promoted);
+			Mvcc.clearTransients(promoted);
 			EntityLocator locator = new EntityLocator();
 			locator.setLocalId(transform.getObjectLocalId());
 			locator.setClientInstanceId(clientInstance.getId());
@@ -2418,5 +2449,38 @@ public class DomainStore implements IDomainStore {
 
 	public void releaseConnection(Connection conn) {
 		((DomainStoreLoaderDatabase) loader).releaseConn(conn);
+	}
+
+	//
+	public static boolean hasWriteableStore() {
+		return topicStoreLoadingComplete.wasPublished()
+				|| (topicStoreLoaded.wasPublished()
+						&& stores().stores.size() == 1);
+	}
+
+	public Set<String> getLazyFieldNames(Class<? extends Entity> entityClass) {
+		return lazyFieldNames.computeIfAbsent(entityClass, clazz -> {
+			Set<String> names = Reflections.at(clazz).properties().stream()
+					.map(Property::getName).filter(name -> {
+						DomainStoreProperty dsp = domainStoreProperties
+								.get(entityClass, name);
+						return dsp != null && dsp
+								.loadType() == DomainStorePropertyLoadType.LAZY;
+					}).collect(Collectors.toSet());
+			return names;
+		});
+	}
+
+	public Set<String> getTransientFieldNames(
+			Class<? extends Entity> entityClass, Set<String> excludingNames) {
+		return transientFieldNames.computeIfAbsent(entityClass, clazz -> {
+			Set<String> names = GraphProjection
+					.getDeclaredNonStaticFields(clazz).stream()
+					.filter(f -> Modifier.isTransient(f.getModifiers()))
+					.map(Field::getName)
+					.filter(name -> !excludingNames.contains(name))
+					.collect(Collectors.toSet());
+			return names;
+		});
 	}
 }

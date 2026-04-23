@@ -9,13 +9,22 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.TransformElements;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 
 /**
  * <p>
@@ -41,16 +50,48 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
  * 
  * <p>
  * FIXME - pruneredundant - if setnull, remove parent?
+ * 
+ * <p>
+ * Note that an alternative would be to update DirectedLayout/CollectionRenderer
+ * to be more discerning with collection updates. But that's deeper work, and in
+ * some cases will be actually more CPU intensive since there are more DOM
+ * updates (as opposed to a single setInnertHTML). This approach allows the dev
+ * to choose incremental updates
+ * <p>
+ * You normally want to use {@link #updatePreserveExistingEqual} rather than
+ * just setting the collection property - this is deliberately not done as a
+ * cascade from a {@link #collection} property change because quite possibly the
+ * caller should update its collection to preserve the pre-existing elements in
+ * the delta model - but that's a per-caller decision
  */
 @TypedProperties
 @Directed.Delegating
-public class CollectionDeltaModel extends Model.Fields {
-	public static transient PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
+@DirectedContextResolver(CollectionDeltaModel.Resolver.class)
+public class CollectionDeltaModel<T> extends Model.Fields {
+	@Reflected
+	static class Resolver extends ContextResolver implements DeltaModelService {
+		@Override
+		protected void init(ContextResolver parent, DirectedLayout layout,
+				Object rootModel) {
+			super.init(parent, layout, rootModel);
+			registerService(DeltaModelService.class, this);
+		}
 
-	/*
-	 * FIXME - jdk16 - move to static member of inner class
-	 */
-	static PackageProperties._CollectionDeltaModel_RelativeInsert RelativeInsert_properties = PackageProperties.collectionDeltaModel_relativeInsert;
+		@Override
+		public TransformElements getTransformElements() {
+			return ((Model) getRootModel()).provideNode()
+					.annotation(TransformElements.class);
+		}
+	}
+
+	interface DeltaModelService extends ContextService {
+		Directed.TransformElements getTransformElements();
+	}
+
+	public PackageProperties._CollectionDeltaModel.InstanceProperties
+			properties() {
+		return PackageProperties.collectionDeltaModel.instance(this);
+	}
 
 	enum InsertDirection {
 		/*
@@ -65,6 +106,21 @@ public class CollectionDeltaModel extends Model.Fields {
 		after
 	}
 
+	static class ElementTransform
+			extends AbstractContextSensitiveModelTransform<Object, Object> {
+		@Override
+		public Object apply(Object t) {
+			TransformElements transformElements = node
+					.service(DeltaModelService.class).getTransformElements();
+			if (transformElements != null) {
+				return Reflections.newInstance(transformElements.value())
+						.apply(t);
+			} else {
+				return t;
+			}
+		}
+	}
+
 	/**
 	 * See {@link #next()} for the structure that these instances create.
 	 * Essentially it's a tree - but optimised for the common case of 'insert a
@@ -74,6 +130,12 @@ public class CollectionDeltaModel extends Model.Fields {
 	@TypedProperties
 	@Directed.Delegating
 	class RelativeInsert extends Model.All {
+		PackageProperties._CollectionDeltaModel_RelativeInsert.InstanceProperties
+				properties() {
+			return PackageProperties.collectionDeltaModel_relativeInsert
+					.instance(this);
+		}
+
 		RelativeInsert(RelativeInsert parent) {
 			this.parent = parent;
 		}
@@ -83,6 +145,8 @@ public class CollectionDeltaModel extends Model.Fields {
 		/*
 		 * Note that only one of {element, contents} can be non-null.
 		 */
+		@Directed.Transform(ElementTransform.class)
+		@Directed(bindToModel = false, bindDomEvents = false)
 		Object element;
 
 		/*
@@ -99,7 +163,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		RelativeInsert after;
 
 		/*
-		 * a node is the parent of before, the {elements of contents/contnets}
+		 * a node is the parent of before, the {elements of contents/contents}
 		 * and after
 		 */
 		@Property.Not
@@ -129,7 +193,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		RelativeInsert validatingNext() {
 			RelativeInsert next = next();
 			if (element != null && !Objects.equals(element, update.current)) {
-				RelativeInsert_properties.element.set(this, null);
+				properties().element().set(null);
 			}
 			/*
 			 * in the future, could *possibly* simplify the RelativeInsert
@@ -173,7 +237,7 @@ public class CollectionDeltaModel extends Model.Fields {
 						if (after == null) {
 							RelativeInsert child = new RelativeInsert(this);
 							RelativeInsert grand = child.append(object);
-							RelativeInsert_properties.after.set(this, child);
+							properties().after().set(child);
 							return grand;
 						} else {
 							RelativeInsert firstDescendantOrSelfOfAfter = after
@@ -186,8 +250,8 @@ public class CollectionDeltaModel extends Model.Fields {
 							RelativeInsert child = new RelativeInsert(
 									firstDescendantOrSelfOfAfter);
 							RelativeInsert grand = child.append(object);
-							RelativeInsert_properties.before
-									.set(firstDescendantOrSelfOfAfter, child);
+							firstDescendantOrSelfOfAfter.properties().before()
+									.set(child);
 							return grand;
 						}
 					}
@@ -196,20 +260,20 @@ public class CollectionDeltaModel extends Model.Fields {
 				if (before == null) {
 					RelativeInsert child = new RelativeInsert(this);
 					RelativeInsert grand = child.append(object);
-					RelativeInsert_properties.before.set(this, child);
+					properties().before().set(child);
 					return grand;
 				} else {
-					RelativeInsert lastDescendantOrSelfOfBefore = after
+					RelativeInsert lastDescendantOrSelfOfBefore = before
 							.lastDescendantOrSelf();
 					/*
-					 * it's guaranteed that lastDescendantOrSelfOfBefore.after
+					 * it's guaranteed that lastDescendantOrSelfOfBefore.before
 					 * is null, since all leaves are null
 					 */
 					RelativeInsert child = new RelativeInsert(
 							lastDescendantOrSelfOfBefore);
 					RelativeInsert grand = child.append(object);
-					RelativeInsert_properties.after
-							.set(lastDescendantOrSelfOfBefore, child);
+					lastDescendantOrSelfOfBefore.properties().after()
+							.set(child);
 					return grand;
 				}
 			}
@@ -287,7 +351,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		}
 
 		void flushPending() {
-			RelativeInsert_properties.flushedContents.set(this, contents);
+			properties().flushedContents().set(contents);
 		}
 
 		boolean canAppend() {
@@ -401,17 +465,17 @@ public class CollectionDeltaModel extends Model.Fields {
 		}
 
 		void setCollectionElement(Object current) {
-			RelativeInsert_properties.element.set(this, current);
+			properties().element().set(current);
 		}
 	}
 
 	@Directed
 	RelativeInsert root;
 
-	public Collection collection;
+	public Collection<T> collection;
 
 	public CollectionDeltaModel() {
-		bindings().from(this).on(properties.collection)
+		from(properties().collection()).ifNotEqual()
 				.signal(this::updateElements);
 	}
 
@@ -482,7 +546,8 @@ public class CollectionDeltaModel extends Model.Fields {
 					} else if (willMatch(cursor)) {
 						insertDirection = InsertDirection.before;
 						renderAt = cursor;
-					} else if (cursor.canSetCollectionElement()) {
+					} else if (cursor.canSetCollectionElement()
+							&& !remainingRendered.containsKey(current)) {
 						/*
 						 * The cursor is a leaf without before/after branches,
 						 * so is a valid position for the collection element
@@ -536,13 +601,22 @@ public class CollectionDeltaModel extends Model.Fields {
 
 	void updateElements() {
 		if (collection == null || collection.isEmpty()) {
-			properties.root.set(this, null);
+			properties().root().set(null);
 			return;
 		}
 		if (root == null) {
-			properties.root.set(this, new RelativeInsert(null));
+			properties().root().set(new RelativeInsert(null));
 		}
 		update = new Update();
 		update.update();
+	}
+
+	public List<T> updatePreserveExistingEqual(List<T> preservedExistingEqual) {
+		if (collection != null) {
+			preservedExistingEqual = CommonUtils
+					.replaceWithExisting(preservedExistingEqual, collection);
+		}
+		properties().collection().set(preservedExistingEqual);
+		return preservedExistingEqual;
 	}
 }

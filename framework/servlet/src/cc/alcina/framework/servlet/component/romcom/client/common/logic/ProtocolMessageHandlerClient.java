@@ -1,12 +1,12 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
+import com.google.gwt.dom.client.NodeNotFoundException;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.DOM;
@@ -23,6 +23,7 @@ import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -38,16 +39,12 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		return message instanceof Message.ProcessingException;
 	}
 
-	public abstract void handle(HandlerContext handlerContext, PM message);
-
-	public interface HandlerContext {
-	}
+	public abstract void handle(PM message);
 
 	public static class EnvironmentInitCompleteHandler extends
 			ProtocolMessageHandlerClient<Message.EnvironmentInitComplete> {
 		@Override
-		public void handle(HandlerContext handlerContext,
-				Message.EnvironmentInitComplete message) {
+		public void handle(Message.EnvironmentInitComplete message) {
 			ClientRpc.get().onEnvironmentInitComplete(message);
 		}
 	}
@@ -55,8 +52,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public static class ServerDebugProtocolResponseHandler extends
 			ProtocolMessageHandlerClient<Message.ServerDebugProtocolResponse> {
 		@Override
-		public void handle(HandlerContext handlerContext,
-				Message.ServerDebugProtocolResponse message) {
+		public void handle(Message.ServerDebugProtocolResponse message) {
 			ClientUtils.consoleInfo("Server protocol state:");
 			ClientUtils.consoleInfo(message.serverState);
 		}
@@ -65,8 +61,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public static class SetCookieServerSideHandler
 			extends ProtocolMessageHandlerClient<Message.SetCookieServerSide> {
 		@Override
-		public void handle(HandlerContext handlerContext,
-				Message.SetCookieServerSide message) {
+		public void handle(Message.SetCookieServerSide message) {
 			// client-side noop
 		}
 	}
@@ -74,8 +69,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public static class InvokeHandler
 			extends ProtocolMessageHandlerClient<Message.Invoke> {
 		@Override
-		public void handle(HandlerContext handlerContext,
-				Message.Invoke message) {
+		public void handle(Message.Invoke message) {
 			AttachId path = message.path;
 			Node node = path == null ? null : path.node();
 			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
@@ -86,11 +80,15 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 			Object result = null;
 			try {
 				if (message.methodName != null) {
-					Preconditions.checkNotNull(node, Ax
-							.format("invoke - target node %s not found", path));
-					result = Reflections.at(node).invoke(node,
-							message.methodName, message.argumentTypes,
-							message.arguments, message.flags);
+					if (node == null) {
+						responseMessage.exception = new ExceptionTransport(
+								new NodeNotFoundException());
+						Ax.out("invoke - target node %s not found", path);
+					} else {
+						result = Reflections.at(node).invoke(node,
+								message.methodName, message.argumentTypes,
+								message.arguments, message.flags);
+					}
 				} else {
 					Result scriptResult = new Result();
 					String script = message.javascript;
@@ -145,10 +143,12 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public static class MutationsHandler
 			extends ProtocolMessageHandlerClient<Mutations> {
 		@Override
-		public void handle(HandlerContext handlerContext, Mutations message) {
+		public void handle(Mutations mutations) {
+			MessageTransportLayer.get().getStringProtocolCache()
+					.hydrateMutations(mutations);
 			LocalDom.attachIdRepresentations()
-					.applyMutations(message.domMutations, true);
-			SelectionRecord selectionMutation = message.selectionMutation;
+					.applyMutations(mutations.domMutations, true);
+			SelectionRecord selectionMutation = mutations.selectionMutation;
 			if (selectionMutation != null) {
 				LocalDom.flush();
 				selectionMutation.populateNodes();
@@ -162,7 +162,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 							selectionMutation.focusOffset);
 				}
 			}
-			message.eventSystemMutations.forEach(m -> {
+			mutations.eventSystemMutations.forEach(m -> {
 				try {
 					Element elem = (Element) m.nodeId.node();
 					if (m.eventBits == -1) {
@@ -175,16 +175,16 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 					e.printStackTrace();
 				}
 			});
-			if (message.locationMutation != null) {
+			if (mutations.locationMutation != null) {
 				try {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = true;
 					History.CONTEXT_REPLACING.runWith(
 							() -> History.newItem(
 									HistoryImplDelegate.pushStateEnabled
-											? message.locationMutation.path
-											: message.locationMutation.hash),
-							message.locationMutation.replace);
+											? mutations.locationMutation.path
+											: mutations.locationMutation.hash),
+							mutations.locationMutation.replace);
 				} finally {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = false;
@@ -205,7 +205,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 
 			@Override
 			public void onBrowserEvent(Event event) {
-				ClientEventDispatch.dispatchEventMessage(event, elem, false);
+				ClientRpc.get().clientEventDispatch.dispatchEventMessage(event,
+						elem, false);
 			}
 		}
 	}
@@ -218,8 +219,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		}
 
 		@Override
-		public void handle(HandlerContext handlerContext,
-				Message.ProcessingException message) {
+		public void handle(Message.ProcessingException message) {
 			RemoteObjectModelComponentState.get().finished = true;
 			Exception protocolException = message.protocolException;
 			String clientMessage = Ax.format(
@@ -244,8 +244,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public static class PersistSettingsHandler
 			extends ProtocolMessageHandlerClient<Message.PersistSettings> {
 		@Override
-		public void handle(HandlerContext handlerContext,
-				Message.PersistSettings message) {
+		public void handle(Message.PersistSettings message) {
 			RemoteComponentSettings.setSettings(message.value);
 		}
 	}

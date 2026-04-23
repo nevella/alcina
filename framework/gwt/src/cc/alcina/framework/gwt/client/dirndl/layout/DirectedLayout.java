@@ -77,6 +77,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRe
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.MultiNodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.util.ClassNames;
@@ -510,11 +511,12 @@ public class DirectedLayout implements AlcinaProcess {
 					// registry, but this works
 					String bindingTypeName = type.getName() + "$Binding";
 					boolean hasBinding = Reflections.at(modelType)
-							.getInterfaces().stream().anyMatch(intf -> Objects
-									.equals(intf.getName(), bindingTypeName));
+							.provideAllImplementedInterfaces()
+							.anyMatch(intf -> Objects.equals(intf.getName(),
+									bindingTypeName));
 					if (!hasBinding) {
 						throw new IllegalStateException(Ax.format(
-								"Type %s registers for event %s but does not emit the corresponding Binding class",
+								"Type %s registers for event %s but does not implement the corresponding Binding class",
 								NestedName.get(modelType),
 								NestedName.get(type)));
 					}
@@ -591,6 +593,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		boolean bindingsDisabled;
 
+		public boolean bound;
+
 		public boolean isBindingsDisabled() {
 			return bindingsDisabled;
 		}
@@ -637,7 +641,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		public <T extends ContextService> T service(Class<T> serviceType) {
-			return getResolver().getService(serviceType).orElse(null);
+			return getResolver().service(serviceType);
 		}
 
 		void bind(boolean modelToRendered) {
@@ -854,7 +858,7 @@ public class DirectedLayout implements AlcinaProcess {
 						emitterType, cursor.model.getClass())) {
 					return (Emitter) cursor.model;
 				}
-				cursor = cursor.parent;
+				cursor = ModelEventDispatch.getParentOrReroutedAncestor(cursor);
 			}
 			return null;
 		}
@@ -1412,11 +1416,15 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void unbind() {
+			if (children != null) {
+				children.forEach(Node::unbind);
+			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
 				if (parent != null && parent.model == model) {
 					// noop (to prevent multiple bind event firings on the same
 					// model)
 				} else {
+					fireEvent(new LayoutEvents.BeforeUnbound());
 					((LayoutEvents.Bind.Handler) model)
 							.onBind(new LayoutEvents.Bind(this, false));
 					fireEvent(new LayoutEvents.Unbound());
@@ -1424,9 +1432,6 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			if (onUnbind != null) {
 				onUnbind.run();
-			}
-			if (children != null) {
-				children.forEach(Node::unbind);
 			}
 			if (replacementListener != null) {
 				replacementListener.unbind();
@@ -1936,11 +1941,73 @@ public class DirectedLayout implements AlcinaProcess {
 		 * Use to dispatch a runnable if it may cause layout (but simplifies the
 		 * sequencing by non-deferrred execution if layout is not in progress)
 		 * 
+		 * wip - ds.- late add to 'exec' - generally this should not fire if the
+		 * source node is removed
+		 * 
 		 * @param runnable
 		 *            the runnable to execute which may cause layout
+		 * 
+		 * 
 		 */
 		public void deferIfFiring(Runnable runnable) {
-			DirectedLayout.this.deferIfFiring(runnable);
+			getResolver().layout.deferIfFiring(runnable);
+		}
+
+		void beforeRender() {
+			/*
+			 * MultiNodeModel instances - as the name suggests - are the backing
+			 * models for potentially multiple nodes, so can't be bound (since
+			 * node/model binding binding currently requires 1-1)
+			 */
+			boolean setNode = !(model instanceof MultiNodeModel);
+			if (!lastForModel || !directed.bindToModel()) {
+				// only bind if last of a multiple node -> single model
+				// chain
+				setNode = false;
+			} else if (model instanceof HasNode
+					&& ((HasNode) model).provideIsBound()) {
+				/*
+				 * model.node will already be set in most cases (exceptions are
+				 * like 'FragmentNode.replaceWith', which regenerates child node
+				 * bindings)
+				 */
+				setNode = false;
+			}
+			/*
+			 * This event is fired directly (as method calls), not via
+			 * bubbling/dispatch. It's fired once on the resolver (setNode
+			 * independent), and possibly twice on the model - the first time
+			 * only if setNode is true (to set Model.node pre NodeContext), the
+			 * second to perform initial bindings
+			 */
+			{
+				LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
+						this, model, setNode);
+				resolver.onBeforeRender(beforeRender);
+				if (setNode
+						&& model instanceof LayoutEvents.BeforeRender.Handler) {
+					((LayoutEvents.BeforeRender.Handler) model)
+							.onBeforeRender(beforeRender);
+				}
+			}
+			if (model instanceof LayoutEvents.NodeContext.Handler) {
+				LayoutEvents.NodeContext nodeContextEvent = new LayoutEvents.NodeContext(
+						this, model);
+				((LayoutEvents.NodeContext.Handler) model)
+						.onNodeContext(nodeContextEvent);
+			}
+			{
+				LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
+						this, model, false);
+				if (model instanceof LayoutEvents.BeforeRender.Handler) {
+					((LayoutEvents.BeforeRender.Handler) model)
+							.onBeforeRender(beforeRender);
+				}
+			}
+		}
+
+		public NodeEventTypeValidator provideRootValidator() {
+			return nodeEventTypeValidator;
 		}
 	}
 
@@ -2208,20 +2275,6 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		void beforeRender() {
-			/*
-			 * This event is fired directly (as method calls), not via
-			 * bubbling/dispatch
-			 */
-			LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
-					node, model);
-			resolver.onBeforeRender(beforeRender);
-			if (model instanceof LayoutEvents.BeforeRender.Handler) {
-				((LayoutEvents.BeforeRender.Handler) model)
-						.onBeforeRender(beforeRender);
-			}
-		}
-
 		@Override
 		public Iterator children() {
 			throw new UnsupportedOperationException();
@@ -2347,7 +2400,9 @@ public class DirectedLayout implements AlcinaProcess {
 					}
 				}
 			}
-			beforeRender();
+			if (node.lastForModel) {
+				node.beforeRender();
+			}
 			boolean hasRenderer = model != null
 					|| Reflections.isAssignableFrom(RendersNull.class,
 							node.directed.renderer())

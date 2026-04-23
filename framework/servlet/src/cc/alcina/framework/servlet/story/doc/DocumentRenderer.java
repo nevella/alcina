@@ -7,20 +7,27 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Img;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafTransforms;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.story.doc.StoryDocObservable;
 import cc.alcina.framework.servlet.publication.DirndlRenderer;
 
+/*
+ * https://developer.chrome.com/docs/chromedriver/mobile-emulation
+ */
 public class DocumentRenderer implements StoryDocRenderer {
 	List<StoryDocObservable> observables;
 
@@ -30,7 +37,13 @@ public class DocumentRenderer implements StoryDocRenderer {
 	public void render(StoryDocPart part, File outputFolder,
 			List<StoryDocObservable> observables) {
 		this.part = part;
-		this.observables = observables;
+		/*
+		 * currently, any StoryDocObservable is only rendered once
+		 */
+		this.observables = observables.stream()
+				.collect(AlcinaCollectors
+						.toKeyMultimap(StoryDocObservable::getPointClassName))
+				.allFirstItems().stream().sorted().toList();
 		Sequence sequence = new Sequence();
 		DirndlRenderer renderer = new DirndlRenderer().withRenderable(sequence)
 				.addStyleResource(DocumentRenderer.class, "res/css/styles.css");
@@ -39,7 +52,11 @@ public class DocumentRenderer implements StoryDocRenderer {
 		}
 		renderer.addScriptResource(
 				Io.read().resource("res/js/doc-renderer.js").asString());
-		String markup = renderer.withWrapStyleInCdata(true).asMarkup();
+		renderer.withWrapStyleInCdata(true);
+		DomNode body = renderer.asDocument().html().body();
+		body.setAttr("columns-view", "on");
+		body.setAttr("device", part.rendererConfiguration.device.toString());
+		String markup = renderer.asMarkup();
 		File out = FileUtils.child(outputFolder, "document.html");
 		Io.write().string(markup).toFile(out);
 		Ax.out("Wrote report markup to %s", out);
@@ -79,19 +96,28 @@ public class DocumentRenderer implements StoryDocRenderer {
 			String build;
 		}
 
+		@Directed(tag = "doc-header")
 		class Header extends Model.All {
 			Header() {
-				heading2 = part.rendererConfiguration.storyTitle;
-				if (heading2 == null) {
+				heading = part.rendererConfiguration.storyTitle;
+				if (heading == null) {
 					if (observables.isEmpty()) {
-						heading2 = "[No observables]";
+						heading = "[No observables]";
 					} else {
-						heading2 = observables.get(0).path();
+						heading = observables.get(0).filterPathOrPath();
 					}
 				}
 			}
 
-			String heading2;
+			String heading;
+
+			@Directed(tag = "links")
+			@Directed(
+				bindings = @Binding(
+					type = Binding.Type.PROPERTY,
+					to = "onclick",
+					literal = "toggleColumns()"))
+			Link link = new Link().withText("Toggle columns").withHref("#");
 		}
 
 		Header header;
@@ -115,8 +141,14 @@ public class DocumentRenderer implements StoryDocRenderer {
 
 			String path;
 
+			@Directed(tag = "description")
 			LeafModel.HtmlBlock description;
 
+			@Directed(
+				bindings = @Binding(
+					type = Binding.Type.PROPERTY,
+					to = "onclick",
+					literal = "toggleColumns()"))
 			Img screenshot;
 
 			VisitArea(StoryDocObservable observable) {

@@ -190,12 +190,34 @@ public class DateUtil {
 				Integer.parseInt(matchResult.getGroup(3)));
 	}
 
+	public static Date parseYyyyMmDdNoSeperator(String ymd) {
+		RegExp regExp = RegExp.compile("(\\d{4})(\\d{2})(\\d{2})");
+		MatchResult matchResult = regExp.exec(ymd);
+		return Ax.date(Integer.parseInt(matchResult.getGroup(1)),
+				Integer.parseInt(matchResult.getGroup(2)),
+				Integer.parseInt(matchResult.getGroup(3)));
+	}
+
+	public static String toYyyyMmDd(Date date) {
+		return Ax.format("%s%s%s", CommonUtils.padFour(date.getYear() + 1900),
+				CommonUtils.padTwo(date.getMonth() + 1),
+				CommonUtils.padTwo(date.getDate()));
+	}
+
 	public static Date parseDdMmYyyy(String ymd) {
 		RegExp regExp = RegExp.compile("(\\d{2}).(\\d{2}).(\\d{4})");
 		MatchResult matchResult = regExp.exec(ymd);
 		return Ax.date(Integer.parseInt(matchResult.getGroup(3)),
 				Integer.parseInt(matchResult.getGroup(2)),
 				Integer.parseInt(matchResult.getGroup(1)));
+	}
+
+	public static Date parseMmDdYyyy(String mdy) {
+		RegExp regExp = RegExp.compile("(\\d{1,2})[/](\\d{1,2})[/](\\d{4})");
+		MatchResult matchResult = regExp.exec(mdy);
+		return Ax.date(Integer.parseInt(matchResult.getGroup(3)),
+				Integer.parseInt(matchResult.getGroup(1)),
+				Integer.parseInt(matchResult.getGroup(2)));
 	}
 
 	/**

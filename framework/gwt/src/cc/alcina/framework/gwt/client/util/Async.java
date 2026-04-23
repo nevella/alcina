@@ -24,9 +24,8 @@ public class Async {
 		return new RunAsyncBuilder();
 	}
 
-	public static AsyncCallback<Object> untypedCallback(Runnable runnable) {
-		return Async.<Object> callbackBuilder().success(v -> runnable.run())
-				.build();
+	public static AsyncCallback untypedCallback(Runnable runnable) {
+		return Async.callbackBuilder().success(v -> runnable.run()).build();
 	}
 
 	public static AsyncCallback<Void> voidCallback(Runnable runnable) {

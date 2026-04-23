@@ -18,7 +18,16 @@
   /*
     leaving the rest as an exercise
     */
-  
+@mixin actions-last
+  display: flex
+  flex-direction: column
+
+  > actions
+    margin-top: 1rem
+
+@mixin fit-y
+  max-height: min(48rem, 80vh)
+  overflow-y: auto 
 
 body > .overlay-container
   position: absolute
@@ -49,8 +58,6 @@ body > .overlay-container
         &:hover
           color: color.$primary-hover-color
 
-
-
 body > overlay-container-modal
   display: block
   bottom: 0
@@ -65,10 +72,3 @@ body > overlay-container-modal
     //FIXME - sass - theme
     background-color: white
     
-
-@mixin actions-last
-  display: flex
-  flex-direction: column-reverse
-
-  > actions
-    margin-top: 1rem

@@ -15,6 +15,7 @@ import cc.alcina.framework.servlet.component.gallery.GalleryPage;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.GallerySettings;
 import cc.alcina.framework.servlet.component.gallery.Header;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import java.lang.Class;
 import java.lang.String;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class PackageProperties {
       public TypedProperty<AppSuggestorGallery, String> acceptedFilterText = new TypedProperty<>(AppSuggestorGallery.class, "acceptedFilterText");
       public TypedProperty<AppSuggestorGallery, String> filterText = new TypedProperty<>(AppSuggestorGallery.class, "filterText");
       public TypedProperty<AppSuggestorGallery, Suggestor> suggestor = new TypedProperty<>(AppSuggestorGallery.class, "suggestor");
-      public static class InstanceProperties extends InstanceProperty.Container<AppSuggestorGallery> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AppSuggestorGallery> {
         public  InstanceProperties(AppSuggestorGallery source){super(source);}
         public InstanceProperty<AppSuggestorGallery, String> acceptedFilterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorGallery.acceptedFilterText);}
         public InstanceProperty<AppSuggestorGallery, String> filterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorGallery.filterText);}
@@ -51,7 +52,7 @@ public class PackageProperties {
     static class _Dotburger_Menu implements TypedProperty.Container {
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");
       TypedProperty<Dotburger.Menu, Heading> section4 = new TypedProperty<>(Dotburger.Menu.class, "section4");
-      static class InstanceProperties extends InstanceProperty.Container<Dotburger.Menu> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Dotburger.Menu> {
          InstanceProperties(Dotburger.Menu source){super(source);}
         InstanceProperty<Dotburger.Menu, Link> keyboardShortcuts(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.keyboardShortcuts);}
         InstanceProperty<Dotburger.Menu, Heading> section4(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.section4);}
@@ -66,7 +67,7 @@ public class PackageProperties {
     static class _GalleryArea implements TypedProperty.Container {
       TypedProperty<GalleryArea, GalleryContents> contents = new TypedProperty<>(GalleryArea.class, "contents");
       TypedProperty<GalleryArea, GalleryPage> page = new TypedProperty<>(GalleryArea.class, "page");
-      static class InstanceProperties extends InstanceProperty.Container<GalleryArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<GalleryArea> {
          InstanceProperties(GalleryArea source){super(source);}
         InstanceProperty<GalleryArea, GalleryContents> contents(){return new InstanceProperty<>(source,PackageProperties.galleryArea.contents);}
         InstanceProperty<GalleryArea, GalleryPage> page(){return new InstanceProperty<>(source,PackageProperties.galleryArea.page);}
@@ -85,8 +86,9 @@ public class PackageProperties {
       TypedProperty<GalleryBrowser.Ui, String> mainCaption = new TypedProperty<>(GalleryBrowser.Ui.class, "mainCaption");
       TypedProperty<GalleryBrowser.Ui, GalleryPage> page = new TypedProperty<>(GalleryBrowser.Ui.class, "page");
       TypedProperty<GalleryBrowser.Ui, GalleryPlace> place = new TypedProperty<>(GalleryBrowser.Ui.class, "place");
+      TypedProperty<GalleryBrowser.Ui, RemoteComponent> remoteComponent = new TypedProperty<>(GalleryBrowser.Ui.class, "remoteComponent");
       TypedProperty<GalleryBrowser.Ui, GallerySettings> settings = new TypedProperty<>(GalleryBrowser.Ui.class, "settings");
-      static class InstanceProperties extends InstanceProperty.Container<GalleryBrowser.Ui> {
+      static class InstanceProperties extends 	InstanceProperty.Container<GalleryBrowser.Ui> {
          InstanceProperties(GalleryBrowser.Ui source){super(source);}
         InstanceProperty<GalleryBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.appCommandContexts);}
         InstanceProperty<GalleryBrowser.Ui, CommandContext.Provider> commandContextProvider(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.commandContextProvider);}
@@ -94,6 +96,7 @@ public class PackageProperties {
         InstanceProperty<GalleryBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.mainCaption);}
         InstanceProperty<GalleryBrowser.Ui, GalleryPage> page(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.page);}
         InstanceProperty<GalleryBrowser.Ui, GalleryPlace> place(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.place);}
+        InstanceProperty<GalleryBrowser.Ui, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.remoteComponent);}
         InstanceProperty<GalleryBrowser.Ui, GallerySettings> settings(){return new InstanceProperty<>(source,PackageProperties.galleryBrowser_ui.settings);}
       }
       
@@ -105,7 +108,7 @@ public class PackageProperties {
     
     public static class _GalleryContents implements TypedProperty.Container {
       public TypedProperty<GalleryContents, GalleryPlace> place = new TypedProperty<>(GalleryContents.class, "place");
-      public static class InstanceProperties extends InstanceProperty.Container<GalleryContents> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<GalleryContents> {
         public  InstanceProperties(GalleryContents source){super(source);}
         public InstanceProperty<GalleryContents, GalleryPlace> place(){return new InstanceProperty<>(source,PackageProperties.galleryContents.place);}
       }
@@ -120,7 +123,7 @@ public class PackageProperties {
       TypedProperty<GalleryPage, GalleryArea> galleryArea = new TypedProperty<>(GalleryPage.class, "galleryArea");
       TypedProperty<GalleryPage, Header> header = new TypedProperty<>(GalleryPage.class, "header");
       TypedProperty<GalleryPage, GalleryBrowser.Ui> ui = new TypedProperty<>(GalleryPage.class, "ui");
-      static class InstanceProperties extends InstanceProperty.Container<GalleryPage> {
+      static class InstanceProperties extends 	InstanceProperty.Container<GalleryPage> {
          InstanceProperties(GalleryPage source){super(source);}
         InstanceProperty<GalleryPage, GalleryArea> galleryArea(){return new InstanceProperty<>(source,PackageProperties.galleryPage.galleryArea);}
         InstanceProperty<GalleryPage, Header> header(){return new InstanceProperty<>(source,PackageProperties.galleryPage.header);}
@@ -137,7 +140,7 @@ public class PackageProperties {
       TypedProperty<GalleryPage.ActivityRoute, Class> channel = new TypedProperty<>(GalleryPage.ActivityRoute.class, "channel");
       TypedProperty<GalleryPage.ActivityRoute, GalleryPage> page = new TypedProperty<>(GalleryPage.ActivityRoute.class, "page");
       TypedProperty<GalleryPage.ActivityRoute, BasePlace> place = new TypedProperty<>(GalleryPage.ActivityRoute.class, "place");
-      static class InstanceProperties extends InstanceProperty.Container<GalleryPage.ActivityRoute> {
+      static class InstanceProperties extends 	InstanceProperty.Container<GalleryPage.ActivityRoute> {
          InstanceProperties(GalleryPage.ActivityRoute source){super(source);}
         InstanceProperty<GalleryPage.ActivityRoute, Class> channel(){return new InstanceProperty<>(source,PackageProperties.galleryPage_activityRoute.channel);}
         InstanceProperty<GalleryPage.ActivityRoute, GalleryPage> page(){return new InstanceProperty<>(source,PackageProperties.galleryPage_activityRoute.page);}

@@ -2,8 +2,10 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 
@@ -59,7 +61,9 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
 		InferredDomEvents.SelectionChanged.Handler, FragmentModel.Has,
 		ModelMutation.Handler, HasElementBehaviors, Binding.TabIndexZero {
-	public static transient PackageProperties._EditArea properties = PackageProperties.editArea;
+	PackageProperties._EditArea.InstanceProperties properties() {
+		return PackageProperties.editArea.instance(this);
+	}
 
 	@Binding(type = Type.INNER_HTML)
 	public String value;
@@ -77,6 +81,12 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 
 	@Binding(type = Type.PROPERTY, to = "contenteditable")
 	public boolean contentEditable = true;
+
+	/*
+	 * true if the user has entered text - used by single-selection
+	 */
+	@Binding(type = Type.PROPERTY)
+	boolean inputDirty;
 
 	FragmentModel fragmentModel;
 
@@ -171,10 +181,12 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 			elementValue = "";
 		}
 		try {
-			provideNode().setBindingsDisabled(bindingsDisabled);
+			node.setBindingsDisabled(bindingsDisabled);
 			setValue(elementValue);
 		} finally {
-			provideNode().setBindingsDisabled(false);
+			if (node != null) {
+				node.setBindingsDisabled(false);
+			}
 		}
 		/*
 		 * fixme - edit - this should fire unbound on SN (but doesn't)
@@ -195,8 +207,8 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Override
 	public void onMutation(Mutation event) {
 		/*
-		 * This is intended only for romcom (which has a configurable observer
-		 * for DecoratorEvent)
+		 * This observer is intended only for romcom (which has a configurable
+		 * observer for DecoratorEvent)
 		 */
 		ProcessObservers.publish(DecoratorEvent.class, () -> {
 			DecoratorEvent decoratorEvent = new DecoratorEvent()
@@ -234,13 +246,31 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Override
 	public void onModelMutation(ModelMutation event) {
 		provideNode().deferIfFiring(() -> {
+			if (provideIsUnbound()) {
+				return;
+			}
 			new CursorTargetConstraint().alignWithConstraint();
 			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
 			List<DecoratorNode> decorators = getDecoratorNodes();
 			if (!Objects.equals(decorators, lastPublishedDecorators)) {
+				DecoratorEvents.DecoratorsChanged.Data data = new DecoratorEvents.DecoratorsChanged.Data(
+						lastPublishedDecorators, decorators);
 				lastPublishedDecorators = decorators;
-				emitEvent(DecoratorEvents.DecoratorsChanged.class, decorators);
+				emitEvent(DecoratorEvents.DecoratorsChanged.class, data);
 			}
+			List<EditNode> editNodes = getEditNodes();
+			if (!Objects.equals(editNodes, lastPublishedEditNodes)) {
+				lastPublishedEditNodes = editNodes;
+				emitEvent(DecoratorEvents.EditNodesChanged.class, editNodes);
+			}
+			if (provideIsUnbound()) {
+				return;
+			}
+			boolean inputDirty = fragmentModel.byTypeAssignable(TextNode.class)
+					.anyMatch(tn -> tn.domNode().isNonWhitespaceTextContent()
+							&& !tn.ancestors()
+									.has(n -> n instanceof DecoratorNode));
+			properties().inputDirty().set(inputDirty);
 		});
 	}
 
@@ -249,7 +279,14 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		return fragmentModel.byTypeAssignable(DecoratorNode.class).toList();
 	}
 
+	@Property.Not
+	List<EditNode> getEditNodes() {
+		return fragmentModel.byTypeAssignable(EditNode.class).toList();
+	}
+
 	List<DecoratorNode> lastPublishedDecorators;
+
+	List<EditNode> lastPublishedEditNodes;
 
 	/**
 	 * 
@@ -371,7 +408,33 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		 * wip - decorator - shouldn't be needed - is because browser
 		 * synchronous attr change isn't syncing?
 		 */
-		properties.contentEditable.set(this, false);
-		properties.contentEditable.set(this, true);
+		properties().contentEditable().set(false);
+		properties().contentEditable().set(true);
+	}
+
+	/*
+	 * wip - editarea - behavior - this should probably be a behavior for
+	 * ChoiceEditor, 'ensureFinalSuggestionNodeIfActive' - where active is
+	 * [focus|desc-overlay-focussed]
+	 */
+	void focusLastSuggestingDecorator() {
+		Optional<SuggestingNode> last = fragmentModel
+				.byTypeAssignable(SuggestingNode.class).reduce(Ax.last());
+		last.ifPresentOrElse(SuggestingNode::collapseSelectionToStart, () -> {
+			DomNode lastDescendant = provideElement().asDomNode().relative()
+					.lastDescendant();
+			Document.get().getSelection().collapse(lastDescendant.gwtNode());
+		});
+	}
+
+	/*
+	 * wip - editarea - behavior
+	 */
+	public void makeLastSuggestingNodeTabbable() {
+		List<SuggestingNode> suggestings = fragmentModel
+				.byTypeAssignable(SuggestingNode.class).toList();
+		SuggestingNode last = Ax.last(suggestings);
+		suggestings.forEach(
+				sn -> sn.properties().tabIndex().set(sn == last ? 0 : -1));
 	}
 }

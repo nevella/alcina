@@ -1,9 +1,6 @@
 package cc.alcina.extras.webdriver.story;
 
-import java.awt.Toolkit;
-
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 
 import com.google.common.base.Preconditions;
@@ -46,6 +43,7 @@ public class WdContext implements PerformerResource {
 		}
 		WDConfiguration configuration = new WDConfiguration();
 		configuration.driverType = getDriverType();
+		configuration.device = part.device;
 		token = new WDToken();
 		token.setConfiguration(configuration);
 		token.setDriverHandler(configuration.driverHandler());
@@ -53,6 +51,7 @@ public class WdContext implements PerformerResource {
 			LooseContext.push();
 			LooseContext.set(WDDriverHandler.CONTEXT_REUSE_SESSION,
 					part.reuseSession);
+			WDToken.CONTEXT_TOKEN.set(token);
 			WebDriver driver = token.getDriverHandler().getDriver();
 			token.setWebDriver(driver);
 		} finally {
@@ -86,7 +85,7 @@ public class WdContext implements PerformerResource {
 		}
 	}
 
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientMessageState.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientMessageState.class)
 	public class ActionPerformedObserver
 			implements ProcessObserver<StoryPerformer.ActionPerformed> {
 		static final String INFLIGHT_NON_AWAIT_MESSAGE = "__romcom_inflightNonAwaitMessage";
@@ -94,7 +93,7 @@ public class WdContext implements PerformerResource {
 		@Override
 		public void topicPublished(StoryPerformer.ActionPerformed action) {
 			boolean disabled = action.context.getAttribute(
-					StoryPerformer.PerformerAttribute.RomcomMessageQueueAwaitDisabled.class)
+					WdActionPerformer.PerformerAttribute.RomcomMessageQueueAwaitDisabled.class)
 					.orElse(false);
 			if (disabled) {
 				return;

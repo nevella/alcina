@@ -17,13 +17,18 @@ import cc.alcina.framework.common.client.util.NestedName;
 /**
  * A utility wrapper around a DOM Selection, for use by annotators and
  * decorators
+ * 
+ * Note re cursors - a cursor (in DOM-land) is positioned at the start of the
+ * next text node via user-select: all (at least around editable regiones)
+ * 
+ * 
  */
 public class EditSelection {
 	Selection selection;
 
 	boolean triggerable;
 
-	Location.Range range;
+	public Location.Range range;
 
 	/*
 	 * the range from the start of the caret textnode to the caret, if any
@@ -44,9 +49,13 @@ public class EditSelection {
 	 */
 	public EditSelection() {
 		selection = Document.get().getSelection();
-		if (!selection.hasSelection() || selection.getFocusLocation() == null
-				|| !selection.getFocusLocation().getContainingNode()
-						.isAttached()) {
+		if (!selection.hasSelection() || selection.getFocusLocation() == null) {
+			return;
+		}
+		if (!selection.getFocusNode().isAttached()) {
+			return;
+		}
+		if (!selection.getAnchorNode().isAttached()) {
 			return;
 		}
 		hasEditSelection = true;
@@ -70,7 +79,7 @@ public class EditSelection {
 	 * needed at end
 	 */
 	Location caretLocation(Location location) {
-		if (!location.after) {
+		if (location.isStart()) {
 			return location;
 		}
 		DomNode containingNode = location.getContainingNode();
@@ -79,10 +88,12 @@ public class EditSelection {
 		tree.setCurrentNode(cursor);
 		while ((cursor = tree.currentNode()) != containingNode) {
 			if (cursor.isText() && !cursor.isEmptyTextContent()) {
-				Location result = cursor.asLocation().clone();
-				result.setIndex(
-						result.getIndex() + cursor.textContent().length());
-				return result;
+				Location cursorLocation = cursor.asLocation();
+				return new Location(cursorLocation.getTreeIndex(),
+						cursorLocation.getIndex()
+								+ cursor.textContent().length(),
+						cursorLocation.isStart(), cursor,
+						cursorLocation.getLocationContext());
 			}
 			tree.previousLogicalNode();
 		}
@@ -105,12 +116,11 @@ public class EditSelection {
 		}
 		if (tagRange.end.isAfter(range.end)) {
 			if (anchorBeforeFocus) {
-				modifiedFocusLocation = node.asLocation().clone();
-				modifiedFocusLocation.after = true;
+				modifiedFocusLocation = node.asLocation().cloneWithStart(false);
 				modifiedFocusLocation = caretLocation(modifiedFocusLocation);
 			} else {
-				modifiedAnchorLocation = node.asLocation().clone();
-				modifiedAnchorLocation.after = true;
+				modifiedAnchorLocation = node.asLocation()
+						.cloneWithStart(false);
 				modifiedAnchorLocation = caretLocation(modifiedAnchorLocation);
 			}
 		}
@@ -133,6 +143,12 @@ public class EditSelection {
 	public DomNode focusNode() {
 		Location focusLocation = selection.getFocusLocation();
 		return focusLocation == null ? null : focusLocation.getContainingNode();
+	}
+
+	public DomNode anchorNode() {
+		Location anchorLocation = selection.getAnchorLocation();
+		return anchorLocation == null ? null
+				: anchorLocation.getContainingNode();
 	}
 
 	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(

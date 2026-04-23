@@ -21,19 +21,19 @@ import cc.alcina.framework.servlet.story.component.gallery.Point_GalleryBrowser_
 @Feature.Parent(Feature_Dirndl_ChoiceEditor.class)
 public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		extends Waypoint {
-	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.ClickSuggestionsArea.class)
+	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._ChoiceEditor.ClickSuggestionsArea.class)
 	/*
 	 * don't await the overlay - deliberately cause a server mutation to be sent
 	 * between SendNameChar1 and SendNameChar2
 	 */
 	// @Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.AwaitOverlay.class)
-	@Decl.Child(_DefinitionEditor.SendNameChar1.class)
 	@Decl.Child(SetDelayConfigurationOn.class)
+	@Decl.Child(_DefinitionEditor.SendNameChar1.class)
 	@Decl.Child(_DefinitionEditor.SendNameChar2.class)
 	@Decl.Child(SetDelayConfigurationOff.class)
 	@Decl.Child(Wait1000.class)
 	@Decl.Child(_DefinitionEditor.VerifySuggestingNode.class)
-	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._DefinitionEditor.ClickLars.class)
+	@Decl.Child(Point_GalleryBrowser_ChoiceEditor._ChoiceEditor.ClickLars.class)
 	static class _DefinitionEditor extends Waypoint {
 		@Decl.Location.CurrentFocus
 		@Decl.Action.UI.Keys("l")
@@ -41,7 +41,7 @@ public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		}
 
 		@Decl.Location.CurrentFocus
-		@Decl.Action.UI.Keys("a")
+		@Decl.Action.UI.KeysWithClear("a")
 		static class SendNameChar2 extends Waypoint {
 		}
 
@@ -51,7 +51,7 @@ public class Point_GalleryBrowser_ChoiceEditor_MutationConflict
 		}
 	}
 
-	@Decl.Location.Url("/control?action=set-property&key=MessageTransportLayerServer.ReceiveChannelImpl.receiveDelay&value=200")
+	@Decl.Location.Url("/control?action=set-property&key=MessageTransportLayerServer.ReceiveChannelImpl.receiveDelay&value=800")
 	@Decl.Action.UI.Navigation.Get
 	static class SetDelayConfigurationOn extends Waypoint {
 	}

@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +19,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -125,12 +127,16 @@ class NodeEventBinding {
 			domBinding.bind(getBindingRendered().as(Element.class), node.model,
 					true);
 		} else {
-			// model event
+			/*
+			 * Check this is a (non-dom) ModelEvent
+			 */
 			Preconditions.checkState(Reflections
 					.isAssignableFrom(NodeEvent.WithoutDomBinding.class, type));
 			if (isDescendantBinding(type)) {
-				// find emitter attached to a parent node which emits events of
-				// Type type
+				/*
+				 * find the emitter attached to an ancestor-or-self node which
+				 * emits events of Type type
+				 */
 				ModelEvent.Emitter emitter = node.findEmitter(type);
 				if (emitter != null) {
 					Node emitterNode = null;
@@ -275,6 +281,10 @@ class NodeEventBinding {
 	 * *as a finally* - note the risk of memory leaks is really pretty remote
 	 * here, since whatever's reachable from the event should be reachable to
 	 * the firing model
+	 * 
+	 * <p>
+	 * In cases where this behavior is not desired, the event should implement
+	 * DescendantEvent.NotStored
 	 */
 	class DescendantBindings {
 		Set<NodeEventBinding> handlers = GWT.isScript()
@@ -306,12 +316,15 @@ class NodeEventBinding {
 		}
 
 		void dispatch(ModelEvent modelEvent) {
-			lastDispatched = modelEvent;
+			if (!(modelEvent instanceof DescendantEvent.NotStored)) {
+				lastDispatched = modelEvent;
+			}
 			/*
 			 * it's guaranteed that the handler NodeEventBinding is the right
 			 * type
 			 */
-			handlers.forEach(h -> h.fireEventIfType(modelEvent));
+			new ArrayList<>(handlers)
+					.forEach(h -> h.fireEventIfType(modelEvent));
 		}
 
 		public void removeHandler(NodeEventBinding descendantBinding) {

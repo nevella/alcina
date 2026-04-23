@@ -56,8 +56,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
@@ -558,6 +558,8 @@ public class TableModel extends Model
 	@PropertyOrder(value = {}, custom = CustomOrder.class)
 	public static class TableColumn extends Model implements
 			DomEvents.Click.Handler, TableColumnMetadata.Change.Handler {
+		static PackageProperties._TableModel_TableColumn properties = PackageProperties.tableModel_tableColumn;
+
 		public static class CustomOrder implements PropertyOrder.Custom {
 			List<TypedProperty> defaultOrder = List.of(properties.caption,
 					properties.columnFilter, properties.sortDirection);
@@ -576,6 +578,12 @@ public class TableModel extends Model
 		@TypedProperties
 		public class ColumnFilter extends Model.Fields
 				implements DomEvents.Click.Handler, Property.Has {
+			PackageProperties._TableModel_TableColumn_ColumnFilter.InstanceProperties
+					properties() {
+				return PackageProperties.tableModel_tableColumn_columnFilter
+						.instance(this);
+			}
+
 			@Property.Not
 			Field field;
 
@@ -616,9 +624,10 @@ public class TableModel extends Model
 			}
 		}
 
-		static PackageProperties._TableModel_TableColumn properties = PackageProperties.tableModel_tableColumn;
-
-		static PackageProperties._TableModel_TableColumn_ColumnFilter _ColumnFilter_properties = PackageProperties.tableModel_tableColumn_columnFilter;
+		PackageProperties._TableModel_TableColumn.InstanceProperties
+				properties() {
+			return PackageProperties.tableModel_tableColumn.instance(this);
+		}
 
 		private Field field;
 
@@ -730,10 +739,10 @@ public class TableModel extends Model
 			if (columnDirection != null) {
 				setSortDirection(columnDirection);
 			}
-			_ColumnFilter_properties.filtered.set(columnFilter,
-					columnMetadata.isFiltered());
-			_ColumnFilter_properties.filterOpen.set(columnFilter,
-					columnMetadata.isFilterOpen());
+			columnFilter.properties().filtered()
+					.set(columnMetadata.isFiltered());
+			columnFilter.properties().filtered()
+					.set(columnMetadata.isFilterOpen());
 		}
 
 		@Override
@@ -811,10 +820,8 @@ public class TableModel extends Model
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		event.node.getResolver().registerService(NodeEditorContextService.class,
-				this);
-		super.onBeforeRender(event);
+	public void onNodeContext(NodeContext event) {
+		event.registerService(NodeEditorContextService.class, this);
 	}
 
 	@Directed(reemits = { DomEvents.Click.class, TableEvents.RowClicked.class })
@@ -877,13 +884,11 @@ public class TableModel extends Model
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			if (originalRowModel instanceof Model) {
-				((Model) originalRowModel).onBeforeRender(event);
+				((Model) originalRowModel).onNodeContext(event);
 			}
-			event.node.getResolver().registerService(RowService.class,
-					new RowService());
-			super.onBeforeRender(event);
+			event.registerService(RowService.class, new RowService());
 		}
 
 		@Override
@@ -922,11 +927,10 @@ public class TableModel extends Model
 	class CellEditor {
 		class ValueEditor extends Model.All {
 			@Override
-			public void onBeforeRender(BeforeRender event) {
-				event.node.getResolver().registerService(
+			public void onNodeContext(NodeContext event) {
+				node.getResolver().registerService(
 						NodeEditorContextService.class,
 						NodeEditorContextService.Editable.INSTANCE);
-				super.onBeforeRender(event);
 			}
 
 			class EditableCell extends TableCell {

@@ -19,7 +19,7 @@ public class PackageProperties {
       public TypedProperty<AppSuggestor, Boolean> currentSelectionHandled = new TypedProperty<>(AppSuggestor.class, "currentSelectionHandled");
       public TypedProperty<AppSuggestor, String> filterText = new TypedProperty<>(AppSuggestor.class, "filterText");
       public TypedProperty<AppSuggestor, Suggestor> suggestor = new TypedProperty<>(AppSuggestor.class, "suggestor");
-      public static class InstanceProperties extends InstanceProperty.Container<AppSuggestor> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AppSuggestor> {
         public  InstanceProperties(AppSuggestor source){super(source);}
         public InstanceProperty<AppSuggestor, String> acceptedFilterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestor.acceptedFilterText);}
         public InstanceProperty<AppSuggestor, AppSuggestor.Attributes> attributes(){return new InstanceProperty<>(source,PackageProperties.appSuggestor.attributes);}

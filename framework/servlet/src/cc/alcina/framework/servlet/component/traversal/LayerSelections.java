@@ -29,8 +29,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -75,6 +75,11 @@ class LayerSelections extends Model.All implements IfNotEqual {
 	@TypedProperties
 	class NameArea extends Model.All implements ModelEvents.Closed.Handler,
 			DomEvents.Click.Handler, LayerFilterEditor.Host {
+		PackageProperties._LayerSelections_NameArea.InstanceProperties
+				properties() {
+			return PackageProperties.layerSelections_nameArea.instance(this);
+		}
+
 		@Directed
 		LeafModel.TextTitle key;
 
@@ -94,17 +99,15 @@ class LayerSelections extends Model.All implements IfNotEqual {
 		boolean selected;
 
 		NameArea() {
-			bindings().from(selectionLayers.page.ui).on(Ui.properties.place)
+			from(selectionLayers.page.ui.properties().place())
 					.map(this::computeSelected).to(this).on("selected")
 					.oneWay();
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
-			bindings().from(LayerSelections.this.selectionsArea)
-					.on(_SelectionsArea_properties.selections).nonNull()
-					.signal(this::render);
-			super.onBeforeRender(event);
+		public void onNodeContext(NodeContext event) {
+			from(LayerSelections.this.selectionsArea.properties().selections())
+					.nonNull().signal(this::render);
 		}
 
 		public void onClick(Click event) {
@@ -114,7 +117,7 @@ class LayerSelections extends Model.All implements IfNotEqual {
 
 		@Override
 		public void onClosed(Closed event) {
-			_NameArea_properties.filterEditorOpen.set(NameArea.this, false);
+			properties().filterEditorOpen().set(false);
 		}
 
 		@Property.Not
@@ -145,10 +148,10 @@ class LayerSelections extends Model.All implements IfNotEqual {
 			keyBuilder.append(layer.getName());
 			String keyString = keyBuilder.toString();
 			outputs = computeOutputs();
-			_NameArea_properties.key.set(this, new TextTitle(keyString,
+			properties().key().set(new TextTitle(keyString,
 					Ax.format("%s : %s", keyString, outputs)));
-			_NameArea_properties.filter.set(this, new LayerFilterEditor(this));
-			_NameArea_properties.hasFilter.set(this, filter.existing != null);
+			properties().filter().set(new LayerFilterEditor(this));
+			properties().hasFilter().set(filter.existing != null);
 		}
 
 		boolean computeSelected(Place place) {
@@ -162,6 +165,12 @@ class LayerSelections extends Model.All implements IfNotEqual {
 	 */
 	@TypedProperties
 	class SelectionsArea extends Model.Fields {
+		PackageProperties._LayerSelections_SelectionsArea.InstanceProperties
+				properties() {
+			return PackageProperties.layerSelections_selectionsArea
+					.instance(this);
+		}
+
 		/*
 		 * Cache test results for a given selection/string
 		 */
@@ -297,8 +306,7 @@ class LayerSelections extends Model.All implements IfNotEqual {
 		TestHistory testHistory = new TestHistory();
 
 		SelectionsArea() {
-			bindings().from(Ui.get()).on(Ui.properties.place)
-					.signal(this::update);
+			from(Ui.get().properties().place()).signal(this::update);
 		}
 
 		void update() {
@@ -353,7 +361,7 @@ class LayerSelections extends Model.All implements IfNotEqual {
 				// +1 (one based) +1 (end of grid item)
 				selections.add(new Spacer(start + 2, end + 2));
 			}
-			_SelectionsArea_properties.selections.set(this, selections);
+			properties().selections().set(selections);
 		}
 
 		boolean test(Selection selection) {
@@ -397,11 +405,9 @@ class LayerSelections extends Model.All implements IfNotEqual {
 		}
 	}
 
-	static PackageProperties._LayerSelections properties = PackageProperties.layerSelections;
-
-	static PackageProperties._LayerSelections_SelectionsArea _SelectionsArea_properties = PackageProperties.layerSelections_selectionsArea;
-
-	static PackageProperties._LayerSelections_NameArea _NameArea_properties = PackageProperties.layerSelections_nameArea;
+	PackageProperties._LayerSelections.InstanceProperties properties() {
+		return PackageProperties.layerSelections.instance(this);
+	}
 
 	@Binding(type = Type.PROPERTY)
 	boolean empty;
@@ -440,10 +446,9 @@ class LayerSelections extends Model.All implements IfNotEqual {
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		nameArea = new NameArea();
 		selectionsArea = new SelectionsArea();
-		super.onBeforeRender(event);
 	}
 
 	String computeOutputs() {

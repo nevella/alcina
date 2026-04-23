@@ -185,15 +185,14 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				DeclarationVisitor::new, isRefresh());
 		switch (getAction()) {
 		case LIST_INTERESTING: {
-			compUnits.declarations.values().stream()
-					.filter(dec -> dec.hasFlags()).filter(this::assignableFrom)
+			compUnits.unitTypes.values().stream().filter(dec -> dec.hasFlags())
+					.filter(this::assignableFrom)
 					.forEach(dec -> Ax.out("%s - %s",
 							dec.clazz().getSimpleName(), dec.typeFlags));
 			break;
 		}
 		case LIST_TWO_KEY_ROOTS: {
-			Stream<Stream<Class<?>>> map = compUnits.declarations.values()
-					.stream()
+			Stream<Stream<Class<?>>> map = compUnits.unitTypes.values().stream()
 					.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
 					.map(UnitType::rootTypes);
 			map.flatMap(Function.identity()).distinct().map(Class::getName)
@@ -201,20 +200,20 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 			break;
 		}
 		case CLEAN_HANDLERS: {
-			compUnits.declarations.values().stream()
+			compUnits.unitTypes.values().stream()
 					.filter(dec -> dec.hasFlag(Type.DomainCriterionHandler))
 					.forEach(dec -> this.removeHandlesMethod(dec,
 							Type.DomainCriterionHandler));
 			// rearrange class hierarchy so logic interfaces can override
 			// filter()
-			compUnits.declarations.values().stream()
+			compUnits.unitTypes.values().stream()
 					.filter(dec -> dec.hasFlag(Type.DomainCriterionHandler))
 					.forEach(dec -> this.removeFilter0FilterMethod(dec,
 							Type.DomainCriterionHandler));
 			break;
 		}
 		case CLEAN_TOKENIZERS: {
-			compUnits.declarations.values().stream()
+			compUnits.unitTypes.values().stream()
 					.filter(dec -> dec.hasFlag(Type.BasePlaceTokenizer))
 					.forEach(dec -> this.removeHandlesMethod(dec,
 							Type.BasePlaceTokenizer));
@@ -254,7 +253,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 	}
 
 	private void updateTwoKeyAnnotations() {
-		compUnits.declarations.values().stream()
+		compUnits.unitTypes.values().stream()
 				.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
 				.filter(this::assignableFrom).forEach(dec -> SourceMods
 						.removeRedundantRegistrationAnnotation(dec));

@@ -31,7 +31,8 @@ import cc.alcina.framework.common.client.util.TextUtils;
  *      W3C HTML Specification</a>
  */
 @TagName(TableRowElement.TAG)
-public class TableRowElement extends Element {
+public class TableRowElement extends Element
+		implements Element.RestrictedElementContent {
 	public static final String TAG = "tr";
 
 	/**

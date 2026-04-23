@@ -24,6 +24,10 @@ http://127.0.0.1:31009/seq#sequence/instanceQuery.loadertype=cc.alcina.extras.de
 
 http://127.0.0.1:31009/seq#sequence/instanceQuery.loadertype=cc.alcina.extras.dev.console.alcina.MostRecentFlight:instanceQuery.querytype=cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence:search.flightevent.o=idorder:search.flightevent.o.asc=true
 
+Also [console.properties]:
+
+`log.level.cc.alcina.framework.servlet.component.romcom.protocol=DEBUG`
+
 ### Remote
 
 - move the events folder

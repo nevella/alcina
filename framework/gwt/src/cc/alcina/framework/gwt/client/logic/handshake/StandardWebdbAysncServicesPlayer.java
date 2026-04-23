@@ -29,6 +29,6 @@ public class StandardWebdbAysncServicesPlayer extends InitAysncServicesPlayer
 
 	@Override
 	public void run() {
-		new SubconsortSupport().run(consort, asyncConfigConsort, this);
+		new SubconsortSupport().run(getConsort(), asyncConfigConsort, this);
 	}
 }

@@ -51,8 +51,6 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * </ul>
  */
 public class DomDocument extends DomNode implements Cloneable {
-	public boolean useLocations2 = true;
-
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
 
@@ -120,9 +118,8 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public static DomDocument createTextContainer(String text) {
-		DomDocument document = DomDocument.from("<container/>");
+		DomDocument document = DomDocument.from("<container/>", true);
 		document.getDocumentElementNode().setText(text);
-		document.setReadonly(true);
 		return document;
 	}
 
@@ -296,8 +293,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public LocationContext locations() {
 		if (locationContext == null) {
-			if (useLocations2
-					&& w3cDoc() instanceof com.google.gwt.dom.client.Document) {
+			if (w3cDoc() instanceof com.google.gwt.dom.client.Document) {
 				TrackingLocationContext locationContext3 = new TrackingLocationContext(
 						this);
 				locationContext = locationContext3;
@@ -425,10 +421,10 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 
 		@Override
-		public Location createTextRelativeLocation(Location location,
+		public Location createIndexRelativeLocation(Location location,
 				int offset, boolean after) {
 			ensureLookups();
-			return LocationContext.super.createTextRelativeLocation(location,
+			return LocationContext.super.createIndexRelativeLocation(location,
 					offset, after);
 		}
 
@@ -451,7 +447,7 @@ public class DomDocument extends DomNode implements Cloneable {
 				int depth = node.depth() - rootOffset;
 				int treeIndex = byNode.size();
 				Location location = new Location(treeIndex, content.length(),
-						false, node, this);
+						true, node, this);
 				byNode.put(node, location);
 				byTreeIndex.put(treeIndex, node);
 				contentLengths.put(node, 0);
@@ -511,21 +507,7 @@ public class DomDocument extends DomNode implements Cloneable {
 				}
 			}
 			int cursor = treeIndex;
-			if (test.after) {
-				// there's no non-empty text node ending at index 0
-				Preconditions.checkArgument(test.getIndex() != 0);
-				while (cursor >= 0) {
-					Location found = locations[cursor];
-					// will loop until found.index < test.index (which will
-					// be the text node that ends at test.index)
-					if (found.getIndex() < test.getIndex()) {
-						treeIndex = cursor;
-						break;
-					} else {
-						cursor--;
-					}
-				}
-			} else {
+			if (test.isStart()) {
 				// there's no non-empty text node starting at index
 				// [contents.length]
 				Preconditions
@@ -545,6 +527,20 @@ public class DomDocument extends DomNode implements Cloneable {
 				// edge case, last text node
 				if (treeIndex == -1) {
 					treeIndex = locations.length - 1;
+				}
+			} else {
+				// there's no non-empty text node ending at index 0
+				Preconditions.checkArgument(test.getIndex() != 0);
+				while (cursor >= 0) {
+					Location found = locations[cursor];
+					// will loop until found.index < test.index (which will
+					// be the text node that ends at test.index)
+					if (found.getIndex() < test.getIndex()) {
+						treeIndex = cursor;
+						break;
+					} else {
+						cursor--;
+					}
 				}
 			}
 			return locations[treeIndex];
@@ -582,7 +578,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			ensureLookups();
 			DomNode documentElementNode = getDocumentElementNode();
 			Location start = byNode.get(documentElementNode);
-			Location end = new Location(0, contents.length(), true,
+			Location end = new Location(0, contents.length(), false,
 					documentElementNode, this);
 			return new Location.Range(start, end);
 		}

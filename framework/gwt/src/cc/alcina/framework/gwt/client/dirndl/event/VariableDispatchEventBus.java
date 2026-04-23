@@ -133,6 +133,10 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 			}
 		}
 
+		/*
+		 * wip - dirndl - mostly replace with Model.exec (which checks for model
+		 * detach, and is more trim)
+		 */
 		public <T> QueuedEvent lambda(Runnable runnable) {
 			this.runnable = runnable;
 			return this;

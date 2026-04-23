@@ -21,13 +21,16 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SearchDefinition.EditSupport;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Opened;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionDirty;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
@@ -39,6 +42,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorMultiple;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 
 @TypedProperties
 @DirectedContextResolver
@@ -46,7 +50,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
 public class SearchDefinitionEditor extends Model.Fields
 		implements ModelTransform<SearchDefinition, SearchDefinitionEditor>,
 		ModelEvents.SelectionDirty.Handler, ModelEvents.Submit.Handler,
-		ModelEvents.Commit.Handler {
+		ModelEvents.Commit.Handler, ModelEvents.Opened.Handler,
+		ModelEvents.Closed.Handler {
 	/**
 	 * Models default logic behaviour for the definition, may be overridden
 	 */
@@ -135,6 +140,12 @@ public class SearchDefinitionEditor extends Model.Fields
 	@Directed.Wrap("go-container")
 	Link go = Link.button(ModelEvents.Submit.class).withText("Go");
 
+	@Binding(type = Type.PROPERTY)
+	boolean popupsOpen;
+
+	@Binding(type = Type.PROPERTY)
+	boolean modified;
+
 	@Property.Not
 	SearchDefinition originalDefinition;
 
@@ -150,26 +161,18 @@ public class SearchDefinitionEditor extends Model.Fields
 	@Property.Not
 	Peer peer;
 
+	@Property.Not
+	int openPopupCount;
+
 	@Override
 	public SearchDefinitionEditor apply(SearchDefinition searchDefinition) {
 		this.originalDefinition = searchDefinition;
 		return this;
 	}
 
-	/*
-	 * wip - ds.early
-	 */
 	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-			provideNode().getResolver().registerService(Service.class,
-					new ServiceImpl());
-		}
-	}
-
-	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
+		event.registerService(Service.class, new ServiceImpl());
 		this.initialSerializedDefinition = FlatTreeSerializer
 				.serializeElided(this.originalDefinition);
 		this.renderedDefinition = this.originalDefinition.cloneObject();
@@ -180,7 +183,6 @@ public class SearchDefinitionEditor extends Model.Fields
 		searchablesListener.topicChangeEvent.add(this::onPropertyGraphChange);
 		this.peer = new Peer();
 		exec(() -> initialRenderComplete = true).deferred().dispatch();
-		super.onBeforeRender(event);
 	}
 
 	/**
@@ -221,8 +223,10 @@ public class SearchDefinitionEditor extends Model.Fields
 	void updateGoState() {
 		String renderedDefinitionSerialized = FlatTreeSerializer
 				.serializeElided(renderedDefinition);
-		go.properties().disabled().set(Objects.equals(
-				initialSerializedDefinition, renderedDefinitionSerialized));
+		boolean modified = !Objects.equals(initialSerializedDefinition,
+				renderedDefinitionSerialized);
+		go.properties().disabled().set(!modified);
+		properties().modified().set(modified);
 	}
 
 	void onPropertyGraphChange(PropertyGraphListener.ChangeEvent changeEvent) {
@@ -231,5 +235,28 @@ public class SearchDefinitionEditor extends Model.Fields
 
 	PackageProperties._SearchDefinitionEditor.InstanceProperties properties() {
 		return PackageProperties.searchDefinitionEditor.instance(this);
+	}
+
+	@Override
+	public void onClosed(Closed event) {
+		if (event.getContext().getOriginatingContext().node
+				.getModel() instanceof Overlay) {
+			deltaOpenPopupCount(-1);
+		}
+		event.bubble();
+	}
+
+	@Override
+	public void onOpened(Opened event) {
+		if (event.getContext().getOriginatingContext().node
+				.getModel() instanceof Overlay) {
+			deltaOpenPopupCount(1);
+		}
+		event.bubble();
+	}
+
+	private void deltaOpenPopupCount(int delta) {
+		openPopupCount += delta;
+		properties().popupsOpen().set(openPopupCount != 0);
 	}
 }

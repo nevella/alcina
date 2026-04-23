@@ -8,8 +8,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ContextObservable;
-import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.gwt.client.story.Story.Action;
 import cc.alcina.framework.gwt.client.story.Story.Action.Annotate;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
@@ -17,20 +15,12 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.Story.Attribute;
 import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
+import cc.alcina.framework.gwt.client.story.Story.Decl.ContextModifier.SetAttribute;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class StoryPerformer {
-	public interface PerformerAttribute<T> extends Story.Attribute<T> {
-		public static interface Timeout extends PerformerAttribute<Integer> {
-		}
-
-		public static interface RomcomMessageQueueAwaitDisabled
-				extends PerformerAttribute<Boolean> {
-		}
-	}
-
 	private ContextImpl context;
 
 	public class ContextImpl implements Story.Action.Context {
@@ -211,6 +201,7 @@ public class StoryPerformer {
 	}
 
 	public void beforeChildren(Visit visit) {
+		addContextAttributes(visit);
 		Story.Action action = visit.getAction();
 		if (action == null) {
 			return;
@@ -227,6 +218,29 @@ public class StoryPerformer {
 				visit.result.ok = false;
 				visit.result.throwable = t;
 			}
+		}
+	}
+
+	void addContextAttributes(Visit visit) {
+		deltaContextAttributes(visit, true);
+	}
+
+	void removeContextAttributes(Visit visit) {
+		deltaContextAttributes(visit, false);
+	}
+
+	void deltaContextAttributes(Visit visit, boolean add) {
+		List<SetAttribute> contextAttributes = visit.getContextAttributes();
+		if (contextAttributes != null) {
+			context = new ContextImpl();
+			context.visit = visit;
+			contextAttributes.forEach(attr -> {
+				if (add) {
+					context.setAttribute(attr.key(), attr.value());
+				} else {
+					context.removeAttribute(attr.key());
+				}
+			});
 		}
 	}
 }

@@ -613,7 +613,8 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setHeight(double value, Unit unit) {
-		throw new UnsupportedOperationException();
+		element.invokeStyleAsync("setHeight", List.of(double.class, Unit.class),
+				List.of(value, unit));
 	}
 
 	@Override
@@ -719,7 +720,8 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setPosition(Position value) {
-		throw new UnsupportedOperationException();
+		element.invokeStyleAsync("setPosition", List.of(Position.class),
+				List.of(value));
 	}
 
 	@Override
@@ -732,7 +734,7 @@ public class StyleAttachId implements ClientDomStyle {
 	@Override
 	public void setProperty(String name, String value) {
 		element.invokeStyleAsync("setProperty",
-				List.of(String.class, double.class), List.of(name, value));
+				List.of(String.class, String.class), List.of(name, value));
 	}
 
 	@Override
@@ -742,7 +744,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setPropertyPx(String name, int value) {
-		throw new UnsupportedOperationException();
+		setProperty(name, value, Unit.PX);
 	}
 
 	@Override

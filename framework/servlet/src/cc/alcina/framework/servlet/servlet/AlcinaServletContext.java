@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.gwt.client.logic.ClientProperties;
@@ -45,6 +44,15 @@ public class AlcinaServletContext {
 				.orElse(null);
 	}
 
+	/**
+	 * For romcom contexts, to simulate a request environment
+	 */
+	public static void pushRequest(HttpServletRequest request) {
+		AlcinaServletContext context = new AlcinaServletContext();
+		context.httpContext = new HttpContext(request, null);
+		contextServletContext.set(context);
+	}
+
 	public static void removePerThreadContexts() {
 		if (TransformManager.hasInstance()) {
 			TransformManager.removePerThreadContext();
@@ -68,6 +76,8 @@ public class AlcinaServletContext {
 	private boolean rootPermissions;
 
 	private HttpContext httpContext;
+
+	private int permissionsContextsPushed = 0;
 
 	/**
 	 * Refuse all requests, in the case of a malfunctioning (e.g. deadlocked)
@@ -121,20 +131,22 @@ public class AlcinaServletContext {
 			Transaction.begin();
 		}
 		if (TransformManager.hasInstance()) {
+			permissionsDepth = Permissions.depth();
 			PermissionsContext permissionsContext = AuthenticationManager.get()
 					.getPermissionsContext();
-			permissionsDepth = Permissions.depth();
 			/*
 			 * Two contexts - the outer context guarantees a clientinstance for
 			 * transforms to attach to
 			 */
 			Permissions.pushSystemUser();
+			permissionsContextsPushed++;
 			AuthenticationManager.get().initialiseContext(httpContext);
 			if (rootPermissions) {
 				Permissions.pushSystemUser();
 			} else {
 				Permissions.pushContext(permissionsContext);
 			}
+			permissionsContextsPushed++;
 		}
 	}
 
@@ -152,8 +164,9 @@ public class AlcinaServletContext {
 			LooseContext.allowUnbalancedFrameRemoval(AlcinaServletContext.class,
 					"begin");
 			if (TransformManager.hasInstance()) {
-				Permissions.popContext();
-				Permissions.popContext();
+				while (permissionsContextsPushed-- > 0) {
+					Permissions.popContext();
+				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				Permissions.confirmDepth(permissionsDepth);
 				Permissions.get().reset();

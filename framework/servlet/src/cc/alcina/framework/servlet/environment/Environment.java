@@ -5,8 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.AttachIdException;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentAttachId;
@@ -35,8 +36,12 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObserver;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.service.DispatchRefProvider;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.DatePair;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
@@ -51,19 +56,29 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations.Resubmit;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AfterHandled;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.MessageCreated;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteWindowState;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol.Cache.Key;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol.CacheableStringProvider;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
@@ -98,9 +113,6 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * thread
  */
 class Environment {
-	static Configuration.Key invokeSyncTimeoutSecs = Configuration
-			.key("invokeSyncTimeoutSecs");
-
 	static class TimerProvider implements Timer.Provider {
 		static TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
 
@@ -179,7 +191,8 @@ class Environment {
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
 					arguments, flags, null, null);
 			queue.flush();
-			return awaitResponse(node, methodName, handler);
+			T result = awaitResponse(node, methodName, handler);
+			return result;
 		}
 
 		@Override
@@ -193,6 +206,12 @@ class Environment {
 			return null;
 		}
 
+		@Override
+		public void onWindowState(WindowState windowState) {
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'onWindowState'");
+		}
+
 		<T> T awaitResponse(NodeAttachId node, String methodName,
 				ResponseHandler handler) {
 			boolean timedOut = false;
@@ -200,7 +219,9 @@ class Environment {
 			long start = System.currentTimeMillis();
 			do {
 				try {
-					timedOut = !handler.latch.await(1, TimeUnit.SECONDS);
+					boolean devmode = session.url.contains("gwt.l");
+					timedOut = !handler.latch.await(devmode ? 10 : 1,
+							TimeUnit.SECONDS);
 				} catch (Exception e) {
 					Ax.simpleExceptionOut(e);
 				}
@@ -226,11 +247,19 @@ class Environment {
 				if (handler.response.exception == null) {
 					return (T) handler.response.response;
 				} else {
-					String context = Ax.format(
-							"invoke-remote - node %s - method %s", node.node(),
-							methodName);
-					throw new InvokeException(context,
-							handler.response.exception);
+					Class<? extends Throwable> exceptionType = Reflections
+							.forName(handler.response.exception.className);
+					if (Reflections.isAssignableFrom(AttachIdException.class,
+							exceptionType)) {
+						throw (AttachIdException) Reflections
+								.newInstance(exceptionType);
+					} else {
+						String context = Ax.format(
+								"invoke-remote - node %s - method %s",
+								node.node(), methodName);
+						throw new InvokeException(context,
+								handler.response.exception);
+					}
 				}
 			}
 		}
@@ -240,9 +269,14 @@ class Environment {
 				String javascript, AsyncCallback<?> callback) {
 			// check this is valid
 			if (node != null && AttachId.forNode(node.node()).id == 0) {
-				throw new IllegalStateException(Ax.format(
-						"node %s is detached, cannot be remote-invoked",
-						node.node().getNodeName()));
+				if (callback != null) {
+					throw new IllegalStateException(Ax.format(
+							"node %s is detached, cannot be remote-invoked",
+							node.node().getNodeName()));
+				} else {
+					// WIP - romcom
+					return new ResponseHandler(callback);
+				}
 			}
 			// always emit mutations before proxy invoke
 			access().flush();
@@ -273,15 +307,15 @@ class Environment {
 	}
 
 	static class InvokeException extends RuntimeException {
-		InvokeException(String context, ExceptionTransport exception) {
-			super(Ax.format("%s\n======================\n%s", context,
-					exception.toExceptionString()));
-		}
-
 		static class PageHide extends InvokeException {
 			PageHide(String message) {
 				super(message);
 			}
+		}
+
+		InvokeException(String context, ExceptionTransport exception) {
+			super(Ax.format("%s\n======================\n%s", context,
+					exception.toExceptionString()));
 		}
 
 		InvokeException(String message) {
@@ -334,6 +368,12 @@ class Environment {
 			runWithMutations(() -> {
 				Element elem = (Element) eventSystemMutation.nodeId.node();
 				mutations.eventSystemMutations.add(eventSystemMutation);
+			});
+		}
+
+		void emitStringProtocolInvalidation(Key key) {
+			runWithMutations(() -> {
+				mutations.ensureStringProtocolDelta().remove.add(key);
 			});
 		}
 	}
@@ -433,6 +473,9 @@ class Environment {
 					token = locationMutation.path.startsWith("/")
 							? locationMutation.path.substring(1)
 							: locationMutation.path;
+					if (Ax.notBlank(locationMutation.queryString)) {
+						token += locationMutation.queryString;
+					}
 				} else {
 					token = locationMutation.hash.startsWith("#")
 							? locationMutation.hash.substring(1)
@@ -597,6 +640,21 @@ class Environment {
 			return ui.isSendFullExceptionMessage();
 		}
 
+		boolean hasPendingMutations() {
+			return mutations != null && mutations.domMutations.size() > 0;
+		}
+
+		void setClientState(StringProtocol.State clientState) {
+			StringProtocol.Cache serverCache = MessageTransportLayer.get()
+					.getStringProtocolCache();
+			serverCache.clientState = clientState;
+			clientState.metadataEntries.forEach(entry -> {
+				if (serverCache.isInvalid(entry)) {
+					mutationProxy.emitStringProtocolInvalidation(entry.key);
+				}
+			});
+		}
+
 		Cookie[] getCookies() {
 			return queue.transportLayer.getCookies();
 		}
@@ -608,6 +666,18 @@ class Environment {
 			return access()::invoke;
 		}
 	}
+
+	class ResubmitObserver implements ProcessObserver<Mutations.Resubmit> {
+		@Override
+		public void topicPublished(Resubmit message) {
+			mutationProxy.runWithMutations(() -> {
+				mutations.resubmit(message.mutations);
+			});
+		}
+	}
+
+	static Configuration.Key invokeSyncTimeoutSecs = Configuration
+			.key("invokeSyncTimeoutSecs");
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class
 			.getName() + ".CONTEXT_ENVIRONMENT";
@@ -674,6 +744,8 @@ class Environment {
 
 	private ClientExecutionThreadAccess clientExecutionThreadAccess;
 
+	MutationConflictResolutionServer mutationConflictResolution;
+
 	Environment(RemoteUi ui, Session session) {
 		this.ui = ui;
 		this.session = session;
@@ -688,6 +760,10 @@ class Environment {
 	@Override
 	public String toString() {
 		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
+	}
+
+	public String getContextPath() {
+		return ui.getRemoteComponent().getPath();
 	}
 
 	void flushNonClientMutations() {
@@ -722,9 +798,18 @@ class Environment {
 		if (mutations != null) {
 			Document.get().attachIdRemote().flushSinkEventsQueue();
 			mutations.selectionMutation = pendingSelectionMutation;
+			Set<StringProtocol.Cache.Entry> cacheEntriesEmitted = MessageTransportLayer
+					.get().getStringProtocolCache()
+					.dehydrateMutations(mutations);
+			cacheEntriesEmitted
+					.forEach(mutations.ensureStringProtocolDelta().add::add);
 			queue.sendToClient(mutations);
 			mutations = null;
 		}
+	}
+
+	Class<? extends CacheableStringProvider> getCacheableStringProviderClass() {
+		return ui.getCacheableStringProviderClass();
 	}
 
 	private void emitServerDebugProtocolResponse(
@@ -748,10 +833,34 @@ class Environment {
 		queue.flush();
 	}
 
+	class MessageCreationObserver
+			implements ProcessObserver<Message.MessageCreated> {
+		@Override
+		public void topicPublished(MessageCreated messageCreated) {
+			if (!EnvironmentManager.debugRomcomMetrics.is()) {
+				return;
+			}
+			// check romcom thread
+			MessageHistory messageHistory = new MessageHistory();
+			Message message = messageCreated.message;
+			message.creationDate = new Date();
+			message.messageHistory = messageHistory;
+			messageHistory.thisMessage = message;
+			messageHistory.originatingMessage = queue.activeClientMessage;
+			messageHistory.originatingMessageTransportHistory = queue.transportLayer
+					.receiveChannel()
+					.getTransportHistory(queue.activeClientMessage);
+		}
+	}
+
 	private void enterContext() {
 		LooseContext.set(CONTEXT_ENVIRONMENT, this);
 		environmentRegistry = new EnvironmentRegistry();
 		EnvironmentRegistry.enter(environmentRegistry);
+		queue.transportLayer.registerInContext();
+		mutationConflictResolution = new MutationConflictResolutionServer();
+		new MessageCreationObserver().bind();
+		startMetricObservers();
 		// the order - location, history, client, document - is necessary
 		location = Window.Location.contextProvider.createFrame(null);
 		navigator = Window.Navigator.contextProvider.createFrame(null);
@@ -763,6 +872,7 @@ class Environment {
 		History.addValueChangeHandler(this::onHistoryChange);
 		client = Client.contextProvider.createFrame(ui);
 		client.getPlaceController();
+		GWTBridgeHeadless.inClient.set(true);
 		client.setupPlaceMapping();
 		client.setupActivityManager();
 		scheduler = SchedulerFrame.contextProvider.createFrame(null);
@@ -770,12 +880,13 @@ class Environment {
 		document = Document.contextProvider.createFrame(RemoteType.REF_ID);
 		document.createDocumentElement("<html/>", true, true);
 		document.implAccess().attachIdRemote().mutationProxy = mutationProxy;
+		RemoteWindowState remoteWindowState = new RemoteWindowState(
+				invokeProxy);
 		document.implAccess().attachIdRemote()
-				.registerToRemoteInvokeProxy(invokeProxy);
+				.registerInvokeProxy(remoteWindowState);
 		LocalDom.initalizeDetachedSync();
 		// FIXME - locationcontext3 - remove
 		document.domDocument.asLocation();
-		GWTBridgeHeadless.inClient.set(true);
 		EnvironmentRegistry.enter(environmentRegistry);
 		Client.contextProvider.registerFrame(client);
 		History.contextProvider.registerFrame(history);
@@ -787,7 +898,38 @@ class Environment {
 		Document.contextProvider.registerFrame(document);
 		Document.get().onDocumentEventSystemInit();
 		DispatchRefProvider.context.set(new DispatchRefProviderImpl());
-		GWTBridgeHeadless.inClient.set(true);
+		Registry.register().singleton(Client.RenderState.RomcomImpl.class,
+				queue.renderStateImpl);
+	}
+
+	void startMetricObservers() {
+		if (EnvironmentManager.debugRomcomMetrics.is()) {
+			new HandlerStartedMetricObserver().bind();
+			new HandlerEndedMetricObserver().bind();
+		}
+	}
+
+	class HandlerStartedMetricObserver implements
+			ProcessObserver<RemoteComponentProtocol.Message.BeforeHandled> {
+		@Override
+		public void topicPublished(BeforeHandled message) {
+			message.message.handlerStarted = new Date();
+		}
+	}
+
+	class HandlerEndedMetricObserver implements
+			ProcessObserver<RemoteComponentProtocol.Message.AfterHandled> {
+		@Override
+		public void topicPublished(AfterHandled message) {
+			MessageHistory messageHistory = message.message.messageHistory;
+			Date published = messageHistory.originatingMessageTransportHistory.published;
+			DatePair sendTraces = new DatePair(published, new Date());
+			messageHistory.executionQueueStates = queue.processSnapshot
+					.getQueueStates(sendTraces);
+			if (messageHistory.executionQueueStates.size() > 1) {
+				int debug = 3;
+			}
+		}
 	}
 
 	private void exitContext() {
@@ -878,6 +1020,7 @@ class Environment {
 		access().applyDomMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
 		access().applyWindowState(message.windowState);
+		access().setClientState(message.stringMetadata);
 		initialiseSettings(message.settings);
 		startClient();
 		History.setEnabled(true);

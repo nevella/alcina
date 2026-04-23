@@ -17,6 +17,8 @@ package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
 
+import com.google.gwt.dom.client.mutations.MutationGroup;
+
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -140,15 +142,21 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	 */
 	@Override
 	public Text splitText(int offset) {
-		String contents = getTextContent();
-		setTextContent(contents.substring(0, offset));
-		String newNodeContents = contents.substring(offset);
-		if (newNodeContents.isEmpty()) {
-			throw new IllegalStateException();
+		try {
+			mutationGroups().enterSplit();
+			String contents = getTextContent();
+			setTextContent(contents.substring(0, offset));
+			String newNodeContents = contents.substring(offset);
+			if (newNodeContents.isEmpty()) {
+				throw new IllegalStateException();
+			}
+			Text createdNode = getOwnerDocument()
+					.createTextNode(newNodeContents);
+			getParentElement().insertAfter(createdNode, this);
+			return createdNode;
+		} finally {
+			mutationGroups().exit();
 		}
-		Text createdNode = getOwnerDocument().createTextNode(newNodeContents);
-		getParentElement().insertAfter(createdNode, this);
-		return createdNode;
 	}
 
 	@Override

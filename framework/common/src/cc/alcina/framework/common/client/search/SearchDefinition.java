@@ -67,7 +67,11 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  * </ul>
  * 
  * 
- *
+ * <p>
+ * About 16 years later - note that if a definition has custon initial
+ * population, such as FlightEventSearchDefinition, that initial population
+ * should be cleared before deserialization in a custom onBeforeTreeDeserialize
+ * 
  * @author nick@alcina.cc
  *
  */

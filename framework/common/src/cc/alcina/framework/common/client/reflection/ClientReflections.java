@@ -46,7 +46,11 @@ public class ClientReflections {
 		}
 	}
 
-	public static Class<?> forName(String fqn) {
+	public static Class<?> forName(String rawFqn) {
+		/*
+		 * remove enum subclass tag
+		 */
+		String fqn = rawFqn.replaceFirst("(.+)\\$[0-9]+", "$1");
 		Optional<Class> optional = moduleReflectors.stream()
 				.map(mr -> mr.forName(fqn)).filter(Objects::nonNull)
 				.findFirst();

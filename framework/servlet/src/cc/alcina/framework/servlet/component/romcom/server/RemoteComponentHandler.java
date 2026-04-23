@@ -26,7 +26,6 @@ import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
@@ -87,7 +86,7 @@ public class RemoteComponentHandler {
 					&& Ax.notBlank(request.getParameter("action"))) {
 				serveQuery(request, response);
 			} else {
-				serveFile(request, response, null);
+				serveFile(request, response, null, "");
 			}
 			break;
 		case "POST":
@@ -164,8 +163,8 @@ public class RemoteComponentHandler {
 
 	public void serveFile(HttpServletRequest request,
 			HttpServletResponse response,
-			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser)
-			throws IOException {
+			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser,
+			String remotePath) throws IOException {
 		String path = request.getPathInfo();
 		boolean injectSession = false;
 		if (component.isApplicationPath(path)) {
@@ -188,6 +187,10 @@ public class RemoteComponentHandler {
 				response.addHeader("Cross-Origin-Embedder-Policy",
 						"require-corp");
 			}
+		}
+		boolean addCacheHeaders = path.matches(".+\\.cache\\.js");
+		if (addCacheHeaders) {
+			response.addHeader("Cache-Control", "max-age=8640000");
 		}
 		String suffix = path.replaceFirst(".+\\.(.+)", "$1");
 		switch (suffix) {
@@ -240,8 +243,12 @@ public class RemoteComponentHandler {
 						nocacheJs);
 				bootstrapHtml = bootstrapHtml.replace("%%FEATURE_PATH%%",
 						featurePath);
+				bootstrapHtml = bootstrapHtml.replace("%%REMOTE_PATH%%",
+						remotePath);
 				bootstrapHtml = bootstrapHtml.replace("%%HISTORY_PUSHSTATE%%",
 						String.valueOf(component.isHistoryPushState()));
+				bootstrapHtml = bootstrapHtml.replace("%%COMPONENT_META%%",
+						component.getMetaMarkup());
 				bootstrapHtml = bootstrapHtml.replace(
 						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
 						websocketTransportClientPrefix);
@@ -255,7 +262,10 @@ public class RemoteComponentHandler {
 						.toStream(response.getOutputStream());
 			} else {
 				response.setContentType("text/plain");
-				Io.write().string(sessionCreationException.getMessage())
+				Io.write()
+						.string(Ax.blankTo(
+								sessionCreationException.getMessage(),
+								"session creation issue"))
 						.toStream(response.getOutputStream());
 			}
 		} else {
@@ -320,8 +330,8 @@ public class RemoteComponentHandler {
 					ProcessingException message = ProcessingException.wrap(e,
 							false);
 					MessageId messageId = new MessageId(sendChannelId, -1);
-					response.messageEnvelope.packets
-							.add(new MessagePacket(messageId, message));
+					message.messageId = messageId;
+					response.messageEnvelope.messages.add(message);
 				}
 				logger.debug("{} dispatched response [#{}/#{}] - {}",
 						Ax.appMillis(),
@@ -330,6 +340,13 @@ public class RemoteComponentHandler {
 						response.messageEnvelope.toMessageSummaryString());
 				new RemoteComponentEvent(request, response, start,
 						System.currentTimeMillis()).publish();
+				if (response.messageEnvelope.messages.size() > 0) {
+					List<Message> withOriginating = response.messageEnvelope.messages
+							.stream()
+							.filter(m -> m.messageHistory != null
+									&& m.messageHistory.originatingMessage != null)
+							.toList();
+				}
 				applyOutgoingMessagesToServletResponse(servletResponse,
 						response);
 				servletResponse.getWriter()
@@ -347,8 +364,7 @@ public class RemoteComponentHandler {
 	void applyOutgoingMessagesToServletResponse(
 			HttpServletResponse servletResponse,
 			RemoteComponentResponse response) {
-		response.messageEnvelope.packets.forEach(packet -> {
-			Message message = packet.message;
+		response.messageEnvelope.messages.forEach(message -> {
 			if (message instanceof SetCookieServerSide) {
 				SetCookieServerSide cookieMessage = (SetCookieServerSide) message;
 				servletResponse.addCookie(

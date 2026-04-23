@@ -98,7 +98,13 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
  * (table, tree leaves - where the vast majority of instances are in a large UI)
  * won't use it, so that's the simplest + most effective (memory-conserving)
  * optimisation
+ * 
+ * <p>
+ * Binding lifecycle. Bindings *can* be added post Model.onBind() - and will be
+ * detached normally on unbind
  *
+ * <p>
+ * Children are bound after parents, unbound before parents
  * <p>
  * Serialization: this is predominantly a UI class, if you need a just a general
  * purpose base reflective serializable class use Bindable (or any Bean-like
@@ -112,19 +118,20 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 @ObjectPermissions(
 	read = @Permission(access = AccessLevel.EVERYONE),
 	write = @Permission(access = AccessLevel.EVERYONE))
-public abstract class Model extends Bindable implements
-		LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler, HasNode {
-	private transient DirectedLayout.Node node;
+public abstract class Model extends Bindable
+		implements LayoutEvents.Bind.Handler, LayoutEvents.BeforeRender.Handler,
+		LayoutEvents.NodeContext.Handler, HasNode, NodeEvent.BindingLocation {
+	protected transient DirectedLayout.Node node;
 
 	private transient Bindings bindings;
 
 	/**
 	 * <p>
-	 * Adds support for lifecycle binding of model properties to other objects.
-	 * The property bindings (which cascade property changes with optional
-	 * validation and transformation) are set up/torn down during the model
-	 * onBind event, so are only live (and reachable from the GC point of view)
-	 * while the model is attached to the layout tree.
+	 * Adds support for lifecycle binding of model properties + events to other
+	 * objects. The property bindings (which cascade property changes with
+	 * optional validation and transformation) are set up/torn down during the
+	 * model onBind event, so are only live (and reachable from the GC point of
+	 * view) while the model is attached to the layout tree.
 	 *
 	 * <p>
 	 * FIXME - dirndl 1x1h - document/exemplify binding types (field-backed,
@@ -141,6 +148,9 @@ public abstract class Model extends Bindable implements
 	public Bindings bindings() {
 		if (bindings == null) {
 			bindings = new Bindings();
+			if (provideIsBound()) {
+				bindings.bind(provideNode().provideRootValidator());
+			}
 		}
 		return bindings;
 	}
@@ -156,15 +166,36 @@ public abstract class Model extends Bindable implements
 		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, value);
 	}
 
-	/**
-	 * Subclasses should call super.onBeforeRender at the *end* of their binding
-	 * setup (generally at the end of the method)
+	/*
+	 * note that this event may be fired twice during model setup - see the
+	 * caller. Hence the if/else
 	 */
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		if (bindings != null) {
-			bindings.setLeft();
+	public final void onBeforeRender(BeforeRender event) {
+		if (event.setNode) {
+			if (node != null) {
+				Ax.err("binding a model to multiple nodes.\n"
+						+ "--------------------------\n" + "Existing node:\n%s"
+						+ "\n--------------------------\n"
+						+ "Incoming node:\n%s", node.toParentStack(),
+						event.getContext().node.toParentStack());
+				Preconditions.checkState(node == null);
+			}
+			node = event.getContext().node;
+		} else {
+			if (bindings != null) {
+				bindings.setLeft();
+			}
 		}
+	}
+
+	/**
+	 * Subclasses with context-sensitive bindings should configure their
+	 * bindings here, not in the constructor, since they'll have access to the
+	 * node.
+	 */
+	@Override
+	public void onNodeContext(LayoutEvents.NodeContext event) {
 	}
 
 	@Override
@@ -183,18 +214,14 @@ public abstract class Model extends Bindable implements
 			return;
 		}
 		if (event.isBound()) {
-			if (node != null) {
-				Ax.err("binding a model to multiple nodes.\n"
-						+ "--------------------------\n" + "Existing node:\n%s"
-						+ "\n--------------------------\n"
-						+ "Incoming node:\n%s", node.toParentStack(),
-						event.getContext().node.toParentStack());
-				Preconditions.checkState(node == null);
-			}
-			node = event.getContext().node;
+			/*
+			 * Note that Model.node is set earlier (principally to assist
+			 * service bindings) *except* for FragmentNodes
+			 */
 			if (bindings != null) {
 				bindings.bind(event.nodeEventTypeValidator);
 			}
+			event.getContext().node.bound = true;
 			// I'm not sure that this is the best way to dispatch, but there may
 			// be no other way
 			// to call arbitrary interface methods non-reflectively?
@@ -206,7 +233,10 @@ public abstract class Model extends Bindable implements
 			if (bindings != null) {
 				bindings.unbind();
 			}
-			node = null;
+			if (node != null) {
+				node.bound = false;
+				node = null;
+			}
 			if (!hasPropertyChangeSupport()) {
 				return;
 			}
@@ -243,8 +273,8 @@ public abstract class Model extends Bindable implements
 	 * <ul>
 	 * <li>Gwittir Binding (a set of property change listener bindings)
 	 * 
-	 * <li>a list of ModelBinding objects (similar to gwittir bindings, but
-	 * stream-like, more 'change pipelines' than bindings)
+	 * <li>a list of {@link StreamBinding} objects (similar to gwittir bindings,
+	 * but stream-like, more 'change pipelines' than bindings)
 	 * <li>a list of listeners (generic objects than can be bound and unbound -
 	 * topic subscribers being one example)
 	 * </ul>
@@ -273,7 +303,7 @@ public abstract class Model extends Bindable implements
 
 		private boolean bound;
 
-		public List<ModelBinding> modelBindings = new ArrayList<>();
+		public List<StreamBinding> streamBindings = new ArrayList<>();
 
 		public Binding add(Object leftPropertyName,
 				Converter leftToRightConverter,
@@ -297,13 +327,13 @@ public abstract class Model extends Bindable implements
 					.asPropertyName(leftPropertyName);
 			String rightPropertyNameString = PropertyEnum
 					.asPropertyName(rightPropertyName);
-			Binding child = BindingBuilder.bind(left)
+			Binding childBinding = BindingBuilder.bind(left)
 					.onLeftProperty(leftPropertyNameString)
 					.convertLeftWith(leftToRightConverter).toRight(right)
 					.onRightProperty(rightPropertyNameString)
 					.convertRightWith(rightToLeftConverter).toBinding();
-			binding.getChildren().add(child);
-			return child;
+			addBinding(childBinding);
+			return childBinding;
 		}
 
 		public void add(SourcesPropertyChangeEvents left,
@@ -314,6 +344,10 @@ public abstract class Model extends Bindable implements
 
 		public void addBinding(Binding childBinding) {
 			binding.getChildren().add(childBinding);
+			if (bound) {
+				childBinding.setLeft();
+				childBinding.bind();
+			}
 		}
 
 		/**
@@ -346,7 +380,7 @@ public abstract class Model extends Bindable implements
 		 */
 		public void addListener(
 				Supplier<ListenerReference> listenerReferenceSupplier) {
-			listenerBindings.add(listenerReferenceSupplier);
+			addListener(ListenerReference.asBinding(listenerReferenceSupplier));
 		}
 
 		public <I, O> void addOneway(Object leftPropertyName,
@@ -398,7 +432,7 @@ public abstract class Model extends Bindable implements
 
 		public void addRegistration(
 				Supplier<HandlerRegistration> handlerRegistrationSupplier) {
-			listenerBindings.add(asBinding(handlerRegistrationSupplier));
+			addListener(asBinding(handlerRegistrationSupplier));
 		}
 
 		/*
@@ -441,37 +475,38 @@ public abstract class Model extends Bindable implements
 			Preconditions.checkState(!bound);
 			binding.bind();
 			listenerBindings.bind();
-			modelBindings.forEach(ModelBinding::bind);
-			// FIXME - dirndl - remove Bind.exTreeBindEvent - and then this
-			// check
-			if (nodeEventTypeValidator != null) {
-				nodeEventTypeValidator.validate(Model.this.getClass(),
-						getModelEventBindings());
-			}
+			streamBindings.forEach(StreamBinding::bind);
+			nodeEventTypeValidator.validate(Model.this.getClass(),
+					getModelEventBindings());
 			bound = true;
 		}
 
 		List<Class<? extends NodeEvent>> getModelEventBindings() {
-			return (List) modelBindings.stream()
+			return (List) streamBindings.stream()
 					.map(binding -> binding.fromNodeEventClass)
 					.filter(Objects::nonNull).toList();
 		}
 
-		public <T extends SourcesPropertyChangeEvents> ModelBinding<T>
+		public <T extends SourcesPropertyChangeEvents> StreamBinding<T>
 				from(T source) {
-			ModelBinding binding = new ModelBinding(this);
-			modelBindings.add(binding);
+			StreamBinding binding = new StreamBinding(this);
+			addStreamBinding(binding);
 			return binding.from(source);
 		}
 
-		public <T> ModelBinding<T>
+		private void addStreamBinding(StreamBinding streamBinding) {
+			streamBindings.add(streamBinding);
+			streamBinding.bindOnTerminal(bound);
+		}
+
+		public <T> StreamBinding<T>
 				from(InstanceProperty<?, T> instanceProperty) {
 			return from(instanceProperty.source).on(instanceProperty.property);
 		}
 
-		public <TE> ModelBinding<TE> fromTopic(Topic<TE> topic) {
-			ModelBinding binding = new ModelBinding(this);
-			modelBindings.add(binding);
+		public <TE> StreamBinding<TE> fromTopic(Topic<TE> topic) {
+			StreamBinding binding = new StreamBinding(this);
+			addStreamBinding(binding);
 			return binding.from(topic);
 		}
 
@@ -485,12 +520,12 @@ public abstract class Model extends Bindable implements
 
 		public void setLeft() {
 			binding.setLeft();
-			modelBindings.forEach(ModelBinding::prepare);
+			streamBindings.forEach(StreamBinding::prepare);
 		}
 
 		public void unbind() {
 			Preconditions.checkState(bound);
-			modelBindings.forEach(ModelBinding::unbind);
+			streamBindings.forEach(StreamBinding::unbind);
 			listenerBindings.unbind();
 			binding.unbind();
 			bound = false;
@@ -501,24 +536,29 @@ public abstract class Model extends Bindable implements
 		}
 
 		public void onNodeEvent(NodeEvent event) {
-			modelBindings.stream().filter(
+			streamBindings.stream().filter(
 					binding -> binding.fromNodeEventClass == event.getClass())
 					.forEach(binding -> binding.acceptStreamElement(event));
 		}
 
-		<E extends NodeEvent> ModelBinding<E>
+		<E extends NodeEvent> StreamBinding<E>
 				fromNodeEventClass(Class<E> nodeEventClass) {
-			ModelBinding binding = new ModelBinding(this);
-			modelBindings.add(binding);
+			StreamBinding binding = new StreamBinding(this);
+			addStreamBinding(binding);
 			return binding.fromNodeEventClass(nodeEventClass);
 		}
 	}
 
-	public <T> ModelBinding<T> from(InstanceProperty<?, T> instanceProperty) {
+	public <T extends SourcesPropertyChangeEvents> StreamBinding<T>
+			from(T source) {
+		return bindings().from(source);
+	}
+
+	public <T> StreamBinding<T> from(InstanceProperty<?, T> instanceProperty) {
 		return bindings().from(instanceProperty);
 	}
 
-	public <E extends NodeEvent> ModelBinding<E> on(Class<E> nodeEventClass) {
+	public <E extends NodeEvent> StreamBinding<E> on(Class<E> nodeEventClass) {
 		return bindings().fromNodeEventClass(nodeEventClass);
 	}
 
@@ -656,9 +696,6 @@ public abstract class Model extends Bindable implements
 	}
 
 	/*
-	 * sugary execution support (such as deferred-if-bound)
-	 */
-	/*
 	 * Sugary finally/deferred execution support. The lambda will only be
 	 * executed if the model is bound (unless bindingAgnostic() is called)
 	 */
@@ -711,11 +748,44 @@ public abstract class Model extends Bindable implements
 	}
 
 	public <T extends ContextService> T service(Class<T> serviceType) {
-		return provideNode().getResolver().getService(serviceType).orElse(null);
+		return provideNode().getResolver().service(serviceType);
 	}
 
 	public interface NodeEventTypeValidator {
 		void validate(Class<? extends Model> modelType,
 				List<Class<? extends NodeEvent>> modelEventBindings);
+	}
+
+	public ContextService.Source provideServiceSource() {
+		return new ContextServiceSourceImpl();
+	}
+
+	class ContextServiceSourceImpl implements ContextService.Source {
+		public void reemitEvent(NodeEvent<?> nodeEvent,
+				Class<? extends ModelEvent> eventClass, Object eventModel) {
+			nodeEvent.reemitAs(Model.this, eventClass, eventModel);
+		}
+
+		@Override
+		public <T extends ContextService> T service(Class<T> serviceType) {
+			return Model.this.service(serviceType);
+		}
+
+		@Override
+		public void emitEvent(Class<? extends ModelEvent> clazz) {
+			Model.this.emitEvent(clazz);
+		}
+
+		@Override
+		public void emitEvent(Class<? extends ModelEvent> clazz, Object value) {
+			Model.this.emitEvent(clazz, value);
+		}
+
+		@Override
+		public <CS extends ContextService> void
+				registerService(Class<CS> service, CS implementation) {
+			provideNode().getResolver().registerService(service,
+					implementation);
+		}
 	}
 }

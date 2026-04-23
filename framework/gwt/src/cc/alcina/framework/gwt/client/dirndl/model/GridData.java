@@ -82,7 +82,8 @@ public class GridData extends Model.All {
 						.collect(Collectors.toList());
 				columnNames = data.header.toStringList().stream()
 						.map(ColumnName::new).collect(Collectors.toList());
-				ColumnsWidth columnsWidth = node.annotation(ColumnsWidth.class);
+				ColumnsWidth columnsWidth = Table.this.node
+						.annotation(ColumnsWidth.class);
 				gridTemplateColumns = columnNames.stream()
 						.map(n -> data.firstColumnFixedWidth
 								&& Objects.equals(n, columnNames.get(0))

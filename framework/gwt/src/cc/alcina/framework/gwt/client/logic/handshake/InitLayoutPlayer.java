@@ -4,7 +4,6 @@ import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.logic.permissions.OnlineState;
-import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;

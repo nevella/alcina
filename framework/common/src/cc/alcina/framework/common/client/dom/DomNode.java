@@ -375,6 +375,11 @@ public class DomNode {
 		return false;
 	}
 
+	public boolean classContains(String test) {
+		String className = getClassName();
+		return List.of(className.split(" ")).contains(test);
+	}
+
 	public boolean classMatches(String regex) {
 		return attr("class").matches(regex);
 	}
@@ -531,11 +536,12 @@ public class DomNode {
 	}
 
 	public boolean isNonWhitespaceTextContent() {
-		return ntc().length() > 0;
+		return stream().anyMatch(n -> n.isText()
+				&& !TextUtils.isWhitespaceOrEmpty(n.textContent()));
 	}
 
 	public boolean isNonWhitespaceTextOrElement() {
-		return isElement() || ntc().length() > 0;
+		return isElement() || isNonWhitespaceTextContent();
 	}
 
 	public boolean isProcessingInstruction() {
@@ -704,8 +710,37 @@ public class DomNode {
 	 */
 	public DomNode strip() {
 		List<DomNode> nodes = children.nodes();
-		nodes.forEach(relative()::insertBeforeThis);
-		removeFromParent();
+		com.google.gwt.dom.client.Node gwtNode = isGwtNode() ? gwtNode() : null;
+		try {
+			if (gwtNode != null) {
+				gwtNode.mutationGroups().enterStrip();
+				List<com.google.gwt.dom.client.Node> gwtNodes = nodes.stream()
+						.map(DomNode::gwtNode).toList();
+				gwtNode.getOwnerDocument().setWillReattach(gwtNodes);
+				/*
+				 * the location mutations will operate directly on the stripped
+				 * subtree, so ensure current here
+				 */
+				stream().forEach(n -> n.asLocation().ensureCurrent());
+			}
+			/**
+			 * need to insert the children *after* the parent so the parent
+			 * removal mutation affects them
+			 */
+			DomNode insertAfter = this;
+			for (DomNode node : nodes) {
+				insertAfter.relative().insertAfterThis(node);
+				insertAfter = node;
+			}
+			if (gwtNode != null) {
+				gwtNode.getOwnerDocument().setWillReattach(null);
+			}
+			removeFromParent();
+		} finally {
+			if (gwtNode != null) {
+				gwtNode.mutationGroups().exit();
+			}
+		}
 		return Ax.first(nodes);
 	}
 
@@ -1913,6 +1948,17 @@ public class DomNode {
 			}
 		}
 
+		/**
+		 * <p>
+		 * A possibly multiple split of a text node into [0...from, from...to,
+		 * to...len(text)]
+		 * 
+		 * @param from
+		 *            the start of the split
+		 * @param to
+		 *            the end of the split
+		 * @return a SplitResult, modelling the parts of the split
+		 */
 		public SplitResult split(int from, int to) {
 			SplitResult result = new SplitResult();
 			Preconditions.checkState(isText());
@@ -1920,19 +1966,15 @@ public class DomNode {
 			result.contents = cursor;
 			if (from > 0) {
 				result.before = cursor;
-				result.contents = cursor.builder()
-						.text(cursor.textContent().substring(from))
-						.insertAfterThis();
-				cursor.setText(cursor.textContent().substring(0, from));
+				Text secondText = cursor.w3cText().splitText(from);
+				result.contents = document.nodeFor(secondText);
 				cursor = result.contents;
 				to -= from;
 				from = 0;
 			}
 			if (to < cursor.textContent().length()) {
-				result.after = cursor.builder()
-						.text(cursor.textContent().substring(to))
-						.insertAfterThis();
-				cursor.setText(cursor.textContent().substring(0, to));
+				Text secondText = cursor.w3cText().splitText(to);
+				result.after = document.nodeFor(secondText);
 			}
 			return result;
 		}
@@ -1944,6 +1986,10 @@ public class DomNode {
 
 			public DomNode after;
 		}
+	}
+
+	public DomNodeTraversal traversal() {
+		return new DomNodeTraversal(this);
 	}
 
 	public static class DomNodeTraversal extends DepthFirstTraversal<DomNode> {
@@ -2464,7 +2510,12 @@ public class DomNode {
 		DomNode treeSubsequent = relative().treeSubsequentNodeNoDescent();
 		int end = treeSubsequent != null
 				? treeSubsequent.asLocation().getIndex()
-				: document.asRange().toIntPair().i2;
+				: document.getDocumentElementNode().asRange().toIntPair().i2;
 		return new IntPair(asLocation().getIndex(), end);
+	}
+
+	public String toIndexDebug() {
+		return Ax.format("%s :: %s :: %s", asLocation().asIndexTuple(), name(),
+				asLocation().documentMutationPosition);
 	}
 }

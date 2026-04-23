@@ -41,7 +41,6 @@ public abstract class PerformerTask implements SelfPerformer {
 	public abstract static class Fields extends PerformerTask {
 	}
 
-	@Bean(PropertySource.FIELDS)
 	public abstract static class Remote extends Fields
 			implements Task.RemotePerformable {
 	}

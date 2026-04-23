@@ -198,6 +198,12 @@
 				<include name="**/*.txt" />
 				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
+			<fileset dir="${framework.dir}/../extras/jsdom/src">
+				<include name="**/*.java" />
+				<include name="**/*.properties" />
+				<include name="**/*.txt" />
+				<exclude name="org/w3c/dom/**/*.*" />
+			</fileset>
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
 			<fileset dir="${framework.gwt.src.dir}">
 				<include name="**/*.css" />

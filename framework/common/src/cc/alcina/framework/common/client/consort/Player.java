@@ -8,9 +8,11 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
@@ -214,5 +216,10 @@ public abstract class Player<D> {
 			super(null);
 			runnable = this;
 		}
+	}
+
+	public D soleProvided() {
+		Preconditions.checkState(provides.size() == 1);
+		return Ax.first(provides);
 	}
 }

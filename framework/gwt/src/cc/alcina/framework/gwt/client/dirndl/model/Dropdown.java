@@ -65,6 +65,13 @@ public class Dropdown extends Model
 
 	private boolean display = true;
 
+	private boolean parentFixed = false;
+
+	public Dropdown withParentFixed(boolean parentFixed) {
+		this.parentFixed = parentFixed;
+		return this;
+	}
+
 	@Binding(
 		transform = Binding.DisplayBlankNone.class,
 		type = Type.STYLE_ATTRIBUTE)
@@ -213,6 +220,7 @@ public class Dropdown extends Model
 		closedOverlayData = new ClosedOverlayData(event);
 		// the popup closed, so change the corresponding state
 		setOpen(false);
+		event.bubble();
 	}
 
 	@Override
@@ -279,6 +287,7 @@ public class Dropdown extends Model
 				logicalParent = this;
 			}
 			attributes.withLogicalParent(logicalParent);
+			attributes.withParentFixed(parentFixed);
 			overlay = attributes.create();
 			overlay.open();
 		} else {
@@ -307,10 +316,18 @@ public class Dropdown extends Model
 		return this;
 	}
 
-	/*
-	 * Rare - when you want a dropdown overlay to stay visible , and the
+	/**
+	 * <p>
+	 * Normally leave blank (the dropdown should be the logical ancestor of the
+	 * overlay)
+	 * <p>
+	 * Rarely - when you want a dropdown overlay to stay visible , and the
 	 * originating dropdown may disappear due to a rerender, set this somewhere
-	 * higher in the node/model ancestor chain
+	 * higher in the node/model ancestor chain. Note that the new logical parent
+	 * will then need to handle overlay close triggering setOpen(false)
+	 * <p>
+	 * To add a logical -style- parent (events will bubble), use
+	 * withLogicalAncestor
 	 */
 	public Dropdown withLogicalParent(Model logicalParent) {
 		this.logicalParent = logicalParent;

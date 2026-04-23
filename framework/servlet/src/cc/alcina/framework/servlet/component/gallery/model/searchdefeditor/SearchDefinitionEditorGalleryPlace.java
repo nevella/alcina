@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.domain.search.criterion.CreatedFromCrit
 import cc.alcina.framework.common.client.domain.search.criterion.CreatedToCriterion;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
@@ -16,6 +17,25 @@ import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSearchD
 
 public class SearchDefinitionEditorGalleryPlace extends GalleryPlace {
 	public SearchDefinitionEditorGalleryPlace.Definition definition = new SearchDefinitionEditorGalleryPlace.Definition();
+
+	@Override
+	public TreeSerializable.Customiser treeSerializationCustomiser() {
+		return new Customiser(this);
+	}
+
+	protected static class Customiser extends
+			TreeSerializable.Customiser<SearchDefinitionEditorGalleryPlace> {
+		public Customiser(SearchDefinitionEditorGalleryPlace treeSerializable) {
+			super(treeSerializable);
+		}
+
+		@Override
+		public void onBeforeTreeDeserialize() {
+			serializable.definition.def.treeSerializationCustomiser()
+					.onBeforeTreeDeserialize();
+			super.onBeforeTreeDeserialize();
+		}
+	}
 
 	@Override
 	public SearchDefinitionEditorGalleryPlace copy() {

@@ -42,12 +42,17 @@ public class DirndlRenderer {
 		return this;
 	}
 
+	DomDocument document;
+
 	/**
 	 * Render, return an html doc containing the rendered element and any style
 	 * nodes
 	 */
 	public DomDocument asDocument() {
-		return render(this::renderDocument);
+		if (document == null) {
+			document = render(this::renderDocument);
+		}
+		return document;
 	}
 
 	/**

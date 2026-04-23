@@ -20,7 +20,7 @@ public class PackageProperties {
       TypedProperty<Gallery_SequenceAreaReportArea, Object> model = new TypedProperty<>(Gallery_SequenceAreaReportArea.class, "model");
       TypedProperty<Gallery_SequenceAreaReportArea, GalleryPlace> place = new TypedProperty<>(Gallery_SequenceAreaReportArea.class, "place");
       TypedProperty<Gallery_SequenceAreaReportArea, SequencePlace> sequencePlace = new TypedProperty<>(Gallery_SequenceAreaReportArea.class, "sequencePlace");
-      static class InstanceProperties extends InstanceProperty.Container<Gallery_SequenceAreaReportArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Gallery_SequenceAreaReportArea> {
          InstanceProperties(Gallery_SequenceAreaReportArea source){super(source);}
         InstanceProperty<Gallery_SequenceAreaReportArea, Gallery_SequenceAreaReportArea.Header> header(){return new InstanceProperty<>(source,PackageProperties.gallery_sequenceAreaReportArea.header);}
         InstanceProperty<Gallery_SequenceAreaReportArea, Object> model(){return new InstanceProperty<>(source,PackageProperties.gallery_sequenceAreaReportArea.model);}
@@ -36,7 +36,7 @@ public class PackageProperties {
     
     static class _Gallery_SequenceAreaReportArea_Header implements TypedProperty.Container {
       TypedProperty<Gallery_SequenceAreaReportArea.Header, SearchDefinition> searchDefinition = new TypedProperty<>(Gallery_SequenceAreaReportArea.Header.class, "searchDefinition");
-      static class InstanceProperties extends InstanceProperty.Container<Gallery_SequenceAreaReportArea.Header> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Gallery_SequenceAreaReportArea.Header> {
          InstanceProperties(Gallery_SequenceAreaReportArea.Header source){super(source);}
         InstanceProperty<Gallery_SequenceAreaReportArea.Header, SearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.gallery_sequenceAreaReportArea_header.searchDefinition);}
       }

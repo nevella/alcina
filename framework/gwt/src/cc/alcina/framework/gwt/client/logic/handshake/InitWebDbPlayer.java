@@ -22,6 +22,6 @@ public class InitWebDbPlayer
 
 	@Override
 	public void run() {
-		new SubconsortSupport().run(consort, subConsort, this);
+		new SubconsortSupport().run(getConsort(), subConsort, this);
 	}
 }

@@ -2,10 +2,13 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  * A cross-platform url. It's not intended to handle everything (i.e.
@@ -56,9 +59,17 @@ public class Url {
 		StringMap queryParameters = new StringMap();
 		if (queryString != null) {
 			// no encoding (yet)
-			String transformedQueryString = queryString.replace("&", "\n");
-			queryParameters = StringMap
-					.fromPropertyString(transformedQueryString);
+			Stream.of(queryString.split("&")).forEach(pair -> {
+				int idx = pair.indexOf("=");
+				if (idx == -1) {
+					queryParameters.put(pair, "");
+				} else {
+					String key = pair.substring(0, idx);
+					String value = pair.substring(idx + 1);
+					queryParameters.put(key, Registry
+							.impl(UrlComponentEncoder.class).decode(value));
+				}
+			});
 		}
 		this.queryParameters = Collections.unmodifiableMap(queryParameters);
 	}

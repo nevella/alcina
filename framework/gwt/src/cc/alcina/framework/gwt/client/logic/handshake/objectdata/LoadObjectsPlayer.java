@@ -29,11 +29,11 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState>
 
 	@Override
 	public void run() {
-		new SubconsortSupport().run(consort, loadObjectsConsort, this);
+		new SubconsortSupport().run(getConsort(), loadObjectsConsort, this);
 	}
 
 	@Override
-	protected void wasPlayed() {
+	public void wasPlayed() {
 		boolean success = loadObjectsConsort
 				.containsState(LoadObjectDataState.OBJECT_DATA_LOADED);
 		super.wasPlayed(success ? HandshakeState.OBJECT_DATA_LOADED

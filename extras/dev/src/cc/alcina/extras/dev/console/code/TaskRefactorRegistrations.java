@@ -47,7 +47,7 @@ public class TaskRefactorRegistrations extends PerformerTask {
 	private boolean test;
 
 	private void ensureRegistrations() {
-		compUnits.declarations.values().stream()
+		compUnits.unitTypes.values().stream()
 				.filter(this::hasRegistryLocationAnnotations)
 				.forEach(type -> new RegistrationsModifier(type).modify());
 		compUnits.writeDirty(isTest());

@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.lang.reflect.Field;
 import java.util.Iterator;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -41,12 +42,19 @@ class MvccObjectVersionsEntity<T extends Entity>
 		return result;
 	}
 
+	Set<String> getLazyFieldNames(T object) {
+		return Mvcc.getLazyFieldNames(object.entityClass());
+	}
+
 	@Override
-	protected void copyObject(T fromObject, T domainIdenttyObject) {
-		Transactions.copyObjectFields(fromObject, domainIdenttyObject);
+	protected void copyObject(T fromObject, T domainIdentityObject) {
+		Transactions.copyObjectFields(fromObject, domainIdentityObject,
+				getLazyFieldNames(domainIdentityObject));
+		Mvcc.clearLazyProperties(domainIdentityObject);
+		Mvcc.clearTransients(domainIdentityObject);
 		ProcessObservers.publish(VersionCopiedToDomainIdentityEvent.class,
 				() -> new VersionCopiedToDomainIdentityEvent(this, fromObject,
-						domainIdenttyObject));
+						domainIdentityObject));
 	}
 
 	@Override

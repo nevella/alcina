@@ -1,6 +1,7 @@
 @use '../../theme/theme'
 @use '../../theme/color'
 @use 'form-input'
+@use '../multi/media'
 
 @mixin vertical-layout
   form > section > form-element
@@ -163,21 +164,33 @@
       input,
       select,
       textarea 
-        width: 20em
+        width: min(20em, 80vw)
+
       div.ol-select 
         display: inline-block
+        
   &.grid 
     > form
       display: block
+
       > section 
         display: grid
         grid-template-columns: min-content 1fr
         row-gap: 0.5rem
+
         > div, form-element
           display: contents
+
           > label 
             white-space: nowrap
             padding-right: 2em
+        
+        @include media.phone
+          grid-template-columns: 1fr
+
+          > label::not(::first-child)
+            padding-top: 0.5rem
+
     &.tight-rows
       line-height: 1.2
       > form > section > form-element > value
@@ -286,7 +299,10 @@
 bean-editor
   @include bean-editor
 
-
+  @include media.phone
+    @include vertical-layout
+    padding-left: 0
+    padding-right: 0
 
 /*
 will always have single-line bean-editor, pad label until we work out baseline alignment

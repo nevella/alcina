@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -42,14 +43,14 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyPress;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CommitEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
@@ -97,13 +98,15 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			ModelEvents.Commit.class })
 @TypeSerialization(reflectiveSerializable = false)
 @TypedProperties
-public class StringInput extends Model.Value<String>
-		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
-		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
-		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler,
-		DomEvents.KeyDown.Handler, ModelEvents.FormElementLabelClicked.Handler,
-		HasElementBehaviors, ModelEvents.FocusEditor.Handler {
-	static PackageProperties._StringInput properties = PackageProperties.stringInput;
+public class StringInput extends Model.Value<String> implements FocusOnBind,
+		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
+		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
+		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
+		ModelEvents.FormElementLabelClicked.Handler, HasElementBehaviors,
+		ModelEvents.FocusEditor.Handler, ModelEvents.CommitEditor.Handler {
+	PackageProperties._StringInput.InstanceProperties properties() {
+		return PackageProperties.stringInput.instance(this);
+	}
 
 	private String value;
 
@@ -286,29 +289,26 @@ public class StringInput extends Model.Value<String>
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		event.node.optional(Placeholder.class)
+	public void onNodeContext(NodeContext event) {
+		node.optional(Placeholder.class)
 				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
-		event.node.optional(Autocomplete.class).ifPresent(
+		node.optional(Autocomplete.class).ifPresent(
 				autocomplete -> setAutocomplete(autocomplete.value()));
-		event.node.optional(Validation.class).ifPresent(validation -> {
+		node.optional(Validation.class).ifPresent(validation -> {
 			if (validation.maxLength().length() > 0) {
 				setMaxLength(Integer.parseInt(validation.maxLength()));
 			}
 			setInputMode(validation.inputMode());
 			setPattern(validation.pattern());
 		});
-		event.node.optional(InputType.class)
-				.ifPresent(type -> setType(type.value()));
-		event.node.optional(FocusOnBind.class)
+		node.optional(InputType.class).ifPresent(type -> setType(type.value()));
+		node.optional(FocusOnBindMarker.class)
 				.ifPresent(ann -> setFocusOnBind(true));
-		event.node.optional(TextArea.class)
-				.ifPresent(ann -> setTag("textarea"));
-		Service service = event.node.service(Service.class);
+		node.optional(TextArea.class).ifPresent(ann -> setTag("textarea"));
+		Service service = service(Service.class);
 		if (service != null) {
 			setCommitOnEnter(service.isCommitOnEnter());
 		}
-		super.onBeforeRender(event);
 	}
 
 	@Override
@@ -325,7 +325,9 @@ public class StringInput extends Model.Value<String>
 	protected void handleChange(NodeEvent event) {
 		currentValue = elementValue();
 		setValue(currentValue);
-		event.reemitAs(this, ModelEvents.Change.class, currentValue);
+		if (provideIsBound()) {
+			event.reemitAs(this, ModelEvents.Change.class, currentValue);
+		}
 	}
 
 	@Override
@@ -371,7 +373,7 @@ public class StringInput extends Model.Value<String>
 
 	@Override
 	public void onKeyDown(KeyDown event) {
-		Context context = event.getContext();
+		NodeEvent.Context context = event.getContext();
 		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
 		switch (domEvent.getNativeKeyCode()) {
 		case KeyCodes.KEY_ENTER:
@@ -460,7 +462,7 @@ public class StringInput extends Model.Value<String>
 
 	void updateSize() {
 		if (ensureContentVisible) {
-			Scheduler.get().scheduleDeferred(() -> {
+			Client.RenderState.queueWithRenderedState(() -> {
 				if (!provideIsBound()) {
 					return;
 				}
@@ -502,13 +504,6 @@ public class StringInput extends Model.Value<String>
 				}
 			});
 		}
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface FocusOnBind {
 	}
 
 	@ClientVisible
@@ -649,7 +644,10 @@ public class StringInput extends Model.Value<String>
 	@TypedProperties
 	public static class DateEditor extends Model.Value<Date>
 			implements ModelEvents.Change.Handler {
-		static PackageProperties._StringInput_DateEditor properties = PackageProperties.stringInput_dateEditor;
+		PackageProperties._StringInput_DateEditor.InstanceProperties
+				properties() {
+			return PackageProperties.stringInput_dateEditor.instance(this);
+		}
 
 		private Date value;
 
@@ -670,11 +668,10 @@ public class StringInput extends Model.Value<String>
 			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
 					.inverseValidator();
 			Function<String, Date> typedValidator = (Function<String, Date>) validator;
-			bindings().from(this).on(properties.value).map(revTypedValidator)
-					.to(input).on(DateInput.properties.value)
-					.map(typedValidator).bidi();
-			bindings().from(this).on(properties.value)
-					.withSetOnInitialise(false).signal(this::emitValueChange);
+			from(properties().value()).map(revTypedValidator)
+					.to(input.properties().value()).map(typedValidator).bidi();
+			from(properties().value()).withSetOnInitialise(false)
+					.signal(this::emitValueChange);
 		}
 
 		void emitValueChange() {
@@ -717,5 +714,10 @@ public class StringInput extends Model.Value<String>
 	public void onFocusEditor(FocusEditor event) {
 		setFocusOnBind(true);
 		Model.FocusOnBind.focusIfAttached(provideNode());
+	}
+
+	@Override
+	public void onCommitEditor(CommitEditor event) {
+		commitCurrentValue();
 	}
 }

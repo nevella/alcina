@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * Check if a dom node has a magic attribute set, and if so perform a specific
@@ -31,6 +32,20 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  * Perform a few actions client-side that require blocking (such as keyboard
  * navigation)
  * 
+ */
+/*
+ * FIXME - dirndl 1
+ 
+ @formatter:off
+* modality to specify behavior [prevent default, say]
+    * magic attribute
+        * deprecate - then remove. even when mutation is originally client-side, 
+		  server propagation (fragmentmodel) should emit behaviour mutation
+	* parameters
+		* if a behavior is parameterised (say prevent defaults for lots of different keycombos), 
+		  send that parameter object as a magic-named attribute (json). Slightly messy, but it's one fewer sync mech to track
+
+ @formatter:on
  */
 @Registration.Self
 @Reflected
@@ -93,6 +108,54 @@ public interface ElementBehavior extends EventBehavior {
 				nativeKeydownEvent.preventDefault();
 				break;
 			}
+		}
+	}
+
+	/**
+	 * <p>
+	 * This behavior marks an element as containing the cursor. Note that it
+	 * registers with the registry on set to receive all subsequent
+	 * selectionchange events until released
+	 *
+	 */
+	public static class MarkContainsCursorBehaviour
+			extends ElementBehavior.NonParameterised {
+		static final String CONTAINS_CURSOR = "contains-cursor";
+
+		@Override
+		public String getEventType() {
+			return BrowserEvents.SELECTIONCHANGE;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement,
+				RegisterAllEvents registerAllEvents) {
+			Selection selection = Document.get().getSelection();
+			boolean contains = false;
+			if (selection.hasAttachedSelection()) {
+				IntPair elementPair = registeredElement.asDomNode().asRange()
+						.toIntPair();
+				int selectionIndex = selection.getFocusLocation().getIndex();
+				contains = elementPair.containsExBoundaries(selectionIndex)
+						|| selection.isCollapsed()
+								&& elementPair.i1 == selectionIndex;
+			}
+			if (contains) {
+				registeredElement.setAttribute(CONTAINS_CURSOR, "true");
+				registerAllEvents.registerAllEvents(registeredElement, this,
+						true);
+			} else {
+				registeredElement.removeAttribute(CONTAINS_CURSOR);
+				registerAllEvents.registerAllEvents(registeredElement, this,
+						false);
+			}
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -186,8 +249,6 @@ public interface ElementBehavior extends EventBehavior {
 			List<DomNode> nonEditables = editable.children.nodes().stream()
 					.filter(ContentEditable::isNot).toList();
 			nonEditables.forEach(ContentEditable::ensureEditableBoundaryNodes);
-			int debug = 3;
-			// TODO Auto-generated method stub
 		}
 	}
 
@@ -347,5 +408,18 @@ public interface ElementBehavior extends EventBehavior {
 		return elem.hasBehavior(getClass());
 	}
 
+	default void onNativeEvent(NativePreviewEvent event,
+			Element registeredElement, RegisterAllEvents registerAllEvents) {
+		onNativeEvent(event, registeredElement);
+	}
+
 	void onNativeEvent(NativePreviewEvent event, Element registeredElement);
+
+	/**
+	 * Short term register-all (for subsequent detach)
+	 */
+	public interface RegisterAllEvents {
+		void registerAllEvents(Element elem, ElementBehavior behavior,
+				boolean register);
+	}
 }

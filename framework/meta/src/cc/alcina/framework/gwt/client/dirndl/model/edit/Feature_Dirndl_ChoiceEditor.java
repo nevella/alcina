@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
+import cc.alcina.framework.gwt.client.dirndl.model.search.Feature_Dirndl_SearchDefinitionEditor;
 
 /**
  * <p>
@@ -30,7 +31,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
   - if an unorderered editor, keyboard input is only allowed at the end of the editable (affects keyboard, pointer selection)
 - focus handling (editor) - delete uncommitted editors on focusout (ContentEditor unwraps but does not delete)
   - impl note: OnFocusLossUnwrapUncommittedDecorators behaviour
-- commit behavior - unlike jira, focusout commits and [esc] cancels
+- commit behavior - unlike jira, focusout commits (if changed) and [esc] cancels
+- single-selection:
+  - existing values are hidden (display none) if the editor is input-dirty
+  
 
 
   
@@ -41,4 +45,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
 @Feature.Status.Ref(Feature.Status.In_Progress.class)
 @Feature.Parent(Feature_Dirndl.class)
 public interface Feature_Dirndl_ChoiceEditor extends Feature {
+	/**
+	 * Since the single selector doesn't have selectable/clearable decorators,
+	 * add a clear button _if_ allow null
+	 */
+	@Feature.Parent(Feature_Dirndl_ChoiceEditor.class)
+	@Feature.Status.Ref(Feature.Status.Open.class)
+	public interface _SingleSelectionClear extends Feature {
+	}
 }

@@ -11,7 +11,6 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.place.shared.Place;
-import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.History;
@@ -25,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistry
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ContextObservers;
@@ -37,12 +37,10 @@ import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Al.Context;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus.QueuedEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -163,14 +161,6 @@ public abstract class Client implements ContextFrame {
 	public static ContextProvider<Object, Client> contextProvider;
 
 	private Place pendingPlace;
-
-	/**
-	 * Utility method for a common pattern (ui bind :: do xxx on place change);
-	 */
-	public static void addPlaceChangeBinding(Model model, Runnable runnable) {
-		model.bindings().addRegistration(() -> Client.eventBus()
-				.addHandler(PlaceChangeEvent.TYPE, evt -> runnable.run()));
-	}
 
 	public static CommonRemoteServiceAsync commonRemoteService() {
 		return Registry.impl(CommonRemoteServiceAsync.class);
@@ -313,12 +303,39 @@ public abstract class Client implements ContextFrame {
 		return (P) get().pendingPlace;
 	}
 
-	public static void runWithWindowState(Runnable runnable) {
-		if (Al.isBrowser()) {
-			runnable.run();
-		} else {
-			// FIXME - romcom - rather, this should wait for mutation post-state
-			Timer.scheduleDelayed(runnable, 2000);
+	/**
+	 * <p>
+	 * An important abstraction optimising render queueing:
+	 * 
+	 * <p>
+	 * Only execute the runnable once there's a no-cost way of accessing
+	 * currently generated element state. So only execute the runnable once
+	 * local dom changes have been flushed to the remote dom - and in the case
+	 * of Romcom, once the UI offsets of those dom changes have been returned
+	 * from the browser client
+	 */
+	public static class RenderState {
+		/**
+		 * 
+		 * @param runnable
+		 *            A distinct runnable (equal runnables will only be queued
+		 *            once per dispatch cycle)
+		 */
+		public static void queueWithRenderedState(Runnable runnable) {
+			/**
+			 * wip - ui2 - there *may* be a prettier environment registration
+			 * strategy (rather than isBrowser)
+			 */
+			if (Al.isBrowser()) {
+				LocalDom.onFlush(runnable);
+			} else {
+				Registry.impl(RomcomImpl.class).enqueue(runnable);
+			}
+		}
+
+		@EnvironmentRegistration
+		public interface RomcomImpl {
+			void enqueue(Runnable runnable);
 		}
 	}
 }

@@ -9,7 +9,7 @@ public abstract class CheckSoleInstancePlayer
 		addProvides(HandshakeState.SOLE_OPEN_TAB_CHECKED);
 	}
 
-	protected abstract void checkFailed();
+	public abstract void checkFailed();
 
 	@Override
 	public void onSuccess(Boolean result) {
@@ -17,7 +17,7 @@ public abstract class CheckSoleInstancePlayer
 			super.onSuccess(result);
 		} else {
 			checkFailed();
-			consort.onFailure(new NotSoleInstanceException());
+			getConsort().onFailure(new NotSoleInstanceException());
 		}
 	}
 

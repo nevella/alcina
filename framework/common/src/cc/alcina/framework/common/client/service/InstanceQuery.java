@@ -38,7 +38,12 @@ public final class InstanceQuery implements TreeSerializable {
 	 * <p>
 	 * * Objects - particularly generic objects such as InstanceQuery.Parameter
 	 * with a complex type parameter - must have en empty value set in the
-	 * constructor for deserialization to work
+	 * constructor for deserialization and copying to work
+	 * 
+	 * <p>
+	 * Where the object itself may be have an empty default def - such as a
+	 * searchdefinition - set some harmless parameter (such as
+	 * searchdefinition.name) - for the moment
 	 * 
 	 */
 	@Bean(PropertySource.FIELDS)
@@ -182,5 +187,19 @@ public final class InstanceQuery implements TreeSerializable {
 	@Override
 	public int hashCode() {
 		return type.hashCode() ^ parameters.hashCode();
+	}
+
+	public <T extends Parameter> T ensureParameter(Class<T> type) {
+		T parameter = typedParameter(type);
+		if (parameter == null) {
+		}
+		return parameter;
+	}
+
+	public <T> Parameter<T> typeAssignableParameter(Class<T> clazz) {
+		return (Parameter<T>) parameters.stream().filter(p -> {
+			return Reflections.isAssignableFrom(clazz,
+					Reflections.at(p).firstGenericBound());
+		}).findFirst().orElse(null);
 	}
 }

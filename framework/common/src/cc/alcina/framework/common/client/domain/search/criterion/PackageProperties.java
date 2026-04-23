@@ -26,7 +26,7 @@ public class PackageProperties {
       public TypedProperty<CreatedFromCriterion, StandardSearchOperator> operator = new TypedProperty<>(CreatedFromCriterion.class, "operator");
       public TypedProperty<CreatedFromCriterion, String> targetPropertyName = new TypedProperty<>(CreatedFromCriterion.class, "targetPropertyName");
       public TypedProperty<CreatedFromCriterion, Date> value = new TypedProperty<>(CreatedFromCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<CreatedFromCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<CreatedFromCriterion> {
         public  InstanceProperties(CreatedFromCriterion source){super(source);}
         public InstanceProperty<CreatedFromCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.createdFromCriterion.direction);}
         public InstanceProperty<CreatedFromCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.createdFromCriterion.displayName);}
@@ -47,7 +47,7 @@ public class PackageProperties {
       public TypedProperty<CreatedToCriterion, StandardSearchOperator> operator = new TypedProperty<>(CreatedToCriterion.class, "operator");
       public TypedProperty<CreatedToCriterion, String> targetPropertyName = new TypedProperty<>(CreatedToCriterion.class, "targetPropertyName");
       public TypedProperty<CreatedToCriterion, Date> value = new TypedProperty<>(CreatedToCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<CreatedToCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<CreatedToCriterion> {
         public  InstanceProperties(CreatedToCriterion source){super(source);}
         public InstanceProperty<CreatedToCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.createdToCriterion.direction);}
         public InstanceProperty<CreatedToCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.createdToCriterion.displayName);}
@@ -68,7 +68,7 @@ public class PackageProperties {
       public TypedProperty<EndDateCriterion, StandardSearchOperator> operator = new TypedProperty<>(EndDateCriterion.class, "operator");
       public TypedProperty<EndDateCriterion, String> targetPropertyName = new TypedProperty<>(EndDateCriterion.class, "targetPropertyName");
       public TypedProperty<EndDateCriterion, Date> value = new TypedProperty<>(EndDateCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<EndDateCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<EndDateCriterion> {
         public  InstanceProperties(EndDateCriterion source){super(source);}
         public InstanceProperty<EndDateCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.endDateCriterion.direction);}
         public InstanceProperty<EndDateCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.endDateCriterion.displayName);}
@@ -89,7 +89,7 @@ public class PackageProperties {
       public TypedProperty<FinishedFromCriterion, StandardSearchOperator> operator = new TypedProperty<>(FinishedFromCriterion.class, "operator");
       public TypedProperty<FinishedFromCriterion, String> targetPropertyName = new TypedProperty<>(FinishedFromCriterion.class, "targetPropertyName");
       public TypedProperty<FinishedFromCriterion, Date> value = new TypedProperty<>(FinishedFromCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<FinishedFromCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<FinishedFromCriterion> {
         public  InstanceProperties(FinishedFromCriterion source){super(source);}
         public InstanceProperty<FinishedFromCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.finishedFromCriterion.direction);}
         public InstanceProperty<FinishedFromCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.finishedFromCriterion.displayName);}
@@ -110,7 +110,7 @@ public class PackageProperties {
       public TypedProperty<FinishedToCriterion, StandardSearchOperator> operator = new TypedProperty<>(FinishedToCriterion.class, "operator");
       public TypedProperty<FinishedToCriterion, String> targetPropertyName = new TypedProperty<>(FinishedToCriterion.class, "targetPropertyName");
       public TypedProperty<FinishedToCriterion, Date> value = new TypedProperty<>(FinishedToCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<FinishedToCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<FinishedToCriterion> {
         public  InstanceProperties(FinishedToCriterion source){super(source);}
         public InstanceProperty<FinishedToCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.finishedToCriterion.direction);}
         public InstanceProperty<FinishedToCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.finishedToCriterion.displayName);}
@@ -131,7 +131,7 @@ public class PackageProperties {
       public TypedProperty<ModifiedFromCriterion, StandardSearchOperator> operator = new TypedProperty<>(ModifiedFromCriterion.class, "operator");
       public TypedProperty<ModifiedFromCriterion, String> targetPropertyName = new TypedProperty<>(ModifiedFromCriterion.class, "targetPropertyName");
       public TypedProperty<ModifiedFromCriterion, Date> value = new TypedProperty<>(ModifiedFromCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<ModifiedFromCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<ModifiedFromCriterion> {
         public  InstanceProperties(ModifiedFromCriterion source){super(source);}
         public InstanceProperty<ModifiedFromCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.modifiedFromCriterion.direction);}
         public InstanceProperty<ModifiedFromCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.modifiedFromCriterion.displayName);}
@@ -152,7 +152,7 @@ public class PackageProperties {
       public TypedProperty<ModifiedToCriterion, StandardSearchOperator> operator = new TypedProperty<>(ModifiedToCriterion.class, "operator");
       public TypedProperty<ModifiedToCriterion, String> targetPropertyName = new TypedProperty<>(ModifiedToCriterion.class, "targetPropertyName");
       public TypedProperty<ModifiedToCriterion, Date> value = new TypedProperty<>(ModifiedToCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<ModifiedToCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<ModifiedToCriterion> {
         public  InstanceProperties(ModifiedToCriterion source){super(source);}
         public InstanceProperty<ModifiedToCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.modifiedToCriterion.direction);}
         public InstanceProperty<ModifiedToCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.modifiedToCriterion.displayName);}
@@ -173,7 +173,7 @@ public class PackageProperties {
       public TypedProperty<StartDateCriterion, StandardSearchOperator> operator = new TypedProperty<>(StartDateCriterion.class, "operator");
       public TypedProperty<StartDateCriterion, String> targetPropertyName = new TypedProperty<>(StartDateCriterion.class, "targetPropertyName");
       public TypedProperty<StartDateCriterion, Date> value = new TypedProperty<>(StartDateCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<StartDateCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<StartDateCriterion> {
         public  InstanceProperties(StartDateCriterion source){super(source);}
         public InstanceProperty<StartDateCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.startDateCriterion.direction);}
         public InstanceProperty<StartDateCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.startDateCriterion.displayName);}

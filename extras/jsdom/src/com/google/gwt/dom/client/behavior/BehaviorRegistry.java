@@ -26,16 +26,49 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * custom initialization.
  */
 @Registration.Singleton
-public class BehaviorRegistry implements NativePreviewHandler {
+public class BehaviorRegistry
+		implements NativePreviewHandler, ElementBehavior.RegisterAllEvents {
+	static class ElementRegistration {
+		Element elem;
+
+		ElementBehavior behavior;
+
+		ElementRegistration(Element elem, ElementBehavior behavior) {
+			this.elem = elem;
+			this.behavior = behavior;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof ElementRegistration) {
+				ElementRegistration o = (ElementRegistration) obj;
+				return elem == o.elem && behavior == o.behavior;
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(elem, behavior);
+		}
+	}
+
 	public static BehaviorRegistry get() {
 		return Registry.impl(BehaviorRegistry.class);
 	}
 
-	List<ElementBehavior> handlers;
+	public static boolean isInitialised() {
+		return get().behaviors != null;
+	}
+
+	List<ElementBehavior> behaviors;
 
 	Set<String> eventTypes = AlcinaCollections.newUniqueSet();
 
 	boolean initialised = false;
+
+	Set<ElementRegistration> allEventRegistrations = AlcinaCollections
+			.newUniqueSet();
 
 	/**
 	 * In a romcom context, the server does *not* need to populate the handlers
@@ -48,18 +81,14 @@ public class BehaviorRegistry implements NativePreviewHandler {
 			return;
 		}
 		initialised = true;
-		handlers = registerHandlers ? Registry.query(ElementBehavior.class)
+		behaviors = registerHandlers ? Registry.query(ElementBehavior.class)
 				.implementations().filter(ElementBehavior::isEventHandler)
 				.collect(Collectors.toList()) : List.of();
-		handlers.stream().map(ElementBehavior::getEventType)
+		behaviors.stream().map(ElementBehavior::getEventType)
 				.filter(Objects::nonNull).forEach(eventTypes::add);
 		if (registerHandlers) {
 			Event.addNativePreviewHandler(this);
 		}
-	}
-
-	public static boolean isInitialised() {
-		return get().handlers != null;
 	}
 
 	@Override
@@ -95,20 +124,37 @@ public class BehaviorRegistry implements NativePreviewHandler {
 		if (targetElement == null) {
 			return;
 		}
-		if (handlers.isEmpty()) {
+		if (behaviors.isEmpty()) {
 			return;
 		}
 		Element cursor = targetElement;
 		while (cursor != null) {
-			if (cursor.hasAttributes() || cursor.getBehaviors() != null) {
+			if (cursor.getBehaviors() != null) {
 				Element registeredElement = cursor;
-				handlers.stream()
-						.filter(h -> h.matches(registeredElement)
-								&& h.getEventType().equals(eventType))
-						.forEach(
-								h -> h.onNativeEvent(event, registeredElement));
+				behaviors.stream()
+						.filter(bh -> bh.matches(registeredElement)
+								&& bh.getEventType().equals(eventType))
+						.forEach(bh -> bh.onNativeEvent(event,
+								registeredElement, this));
 			}
 			cursor = cursor.getParentElement();
+		}
+		allEventRegistrations.stream()
+				.filter(registration -> registration.behavior.getEventType()
+						.equals(eventType))
+				.toList().forEach(registration -> registration.behavior
+						.onNativeEvent(event, registration.elem, this));
+	}
+
+	@Override
+	public void registerAllEvents(Element elem, ElementBehavior behavior,
+			boolean register) {
+		ElementRegistration registration = new ElementRegistration(elem,
+				behavior);
+		if (register) {
+			allEventRegistrations.add(registration);
+		} else {
+			allEventRegistrations.remove(registration);
 		}
 	}
 }

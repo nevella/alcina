@@ -392,6 +392,10 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	public abstract void ensureDomainStore() throws Exception;
 
+	public boolean hasDomainStore() {
+		return true;
+	}
+
 	protected boolean filterCommand(DevConsoleCommand command) {
 		return true;
 	}
@@ -515,6 +519,16 @@ public abstract class DevConsole implements ClipboardOwner {
 		remote = DevConsoleRemote.get();
 		remote.setOverridePort(launchConfiguration.httpPort);
 		remote.setDevConsole(this);
+		MetricLogging.get().setStart("init-console", statStartInit);
+		MetricLogging.get().end("init-console");
+		this.logProvider = new ConsoleStatLogProvider();
+		new StatCategory_Console.Start().emit(startupTime);
+		new InitLightweightServices().emit(statEndInitLightweightServices);
+		new InitJaxbServices().emit(statEndInitJaxbServices);
+		devHelper.initPostObjectServices();
+		devHelper.initLifecycleServices();
+		devHelper.initAppDebug();
+		devHelper.initTopics();
 		if (launchConfiguration.noHttpServer) {
 			Ax.out("STARTUP\t no-http: not serving console over http");
 			this.headless = true;
@@ -532,16 +546,6 @@ public abstract class DevConsole implements ClipboardOwner {
 			throw new UnsupportedOperationException();
 		}
 		clear();
-		MetricLogging.get().setStart("init-console", statStartInit);
-		MetricLogging.get().end("init-console");
-		this.logProvider = new ConsoleStatLogProvider();
-		new StatCategory_Console.Start().emit(startupTime);
-		new InitLightweightServices().emit(statEndInitLightweightServices);
-		new InitJaxbServices().emit(statEndInitJaxbServices);
-		devHelper.initPostObjectServices();
-		devHelper.initLifecycleServices();
-		devHelper.initAppDebug();
-		devHelper.initTopics();
 		new InitPostObjectServices().emit(System.currentTimeMillis());
 		new InitConsole().emit(System.currentTimeMillis());
 		initialised = true;

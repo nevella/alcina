@@ -30,8 +30,6 @@ import com.google.gwt.user.client.Window;
  */
 public class BrowserMod {
 	private static Boolean isIe9 = null;
-
-	private static String userAgent = null;
 	/**
 	 * Only warn the user if in hosted mode and the browser host page causes the
 	 * document to be rendered in quirks mode.
@@ -109,15 +107,8 @@ public class BrowserMod {
 	 * @return the reported user agent
 	 */
 	public static String getUserAgent() {
-		if (userAgent == null) {
-			userAgent = getUserAgent0();
-		}
-		return userAgent;
+		return Window.Navigator.getUserAgent();
 	}
-
-	public static native String getUserAgent0()/*-{
-												return @com.google.gwt.user.client.Window.Navigator::getUserAgent()();
-												}-*/;
 
 	/**
 	 * Retrieves the window object for the current page.
@@ -241,9 +232,9 @@ public class BrowserMod {
 	 * @return true if the browser is operating in quirks mode otherwise returns
 	 *         false
 	 */
-	native static public boolean isQuirksMode()/*-{
-												return "BackCompat" == $doc.compatMode;
-												}-*/;
+	static boolean isQuirksMode() {
+		return false;
+	}
 
 	public static boolean isSafari() {
 		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1

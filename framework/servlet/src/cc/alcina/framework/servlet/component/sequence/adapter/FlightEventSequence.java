@@ -158,7 +158,6 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 	}
 
 	@InstanceProvider.Parameter(SequencePathParameter.class)
-	@InstanceProvider.Parameter(FlightEventSearchDefinition.Parameter.class)
 	public static class InstanceProviderImpl
 			implements InstanceProvider<FlightEventSequence> {
 		@Override

@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -93,7 +94,7 @@ public final class MutationRecord {
 	public static MutationRecord generateDocumentInsert(String markup) {
 		MutationRecord creationRecord = new MutationRecord();
 		creationRecord.type = Type.childList;
-		// note - no parent
+		/* note - no parent, no mutationgroup */
 		creationRecord.newValue = markup;
 		return creationRecord;
 	}
@@ -123,6 +124,8 @@ public final class MutationRecord {
 		if (creationRecord != null) {
 			creationRecord.target = MutationNode.forNode(parentElement);
 			creationRecord.type = Type.childList;
+			creationRecord.mutationGroup = node.mutationGroups()
+					.getActiveGroup();
 			creationRecord.addedNodes.add(MutationNode.forNode(node));
 			Node previousSibling = node.getPreviousSibling();
 			if (previousSibling != null) {
@@ -149,6 +152,7 @@ public final class MutationRecord {
 			elem.getAttributeMap().forEach((k, v) -> {
 				MutationRecord record = new MutationRecord();
 				record.target = MutationNode.forNode(node);
+				record.mutationGroup = node.mutationGroups().getActiveGroup();
 				record.type = Type.attributes;
 				record.attributeName = k;
 				record.newValue = v;
@@ -179,6 +183,7 @@ public final class MutationRecord {
 			Node oldChild) {
 		MutationRecord record = new MutationRecord();
 		record.target = MutationNode.forNode(parent);
+		record.mutationGroup = parent.mutationGroups().getActiveGroup();
 		record.type = Type.childList;
 		record.removedNodes.add(MutationNode.forNode(oldChild));
 		return record;
@@ -212,6 +217,7 @@ public final class MutationRecord {
 			String value = e.getValue();
 			MutationRecord record = new MutationRecord();
 			record.type = Type.attributes;
+			record.mutationGroup = elem.mutationGroups().getActiveGroup();
 			record.newValue = e.getValue();
 			record.attributeName = e.getKey();
 			record.target = MutationNode.forNode(elem);
@@ -221,6 +227,7 @@ public final class MutationRecord {
 		if (Ax.notBlank(style)) {
 			MutationRecord record = new MutationRecord();
 			record.type = Type.attributes;
+			record.mutationGroup = elem.mutationGroups().getActiveGroup();
 			record.newValue = style;
 			record.attributeName = "style";
 			record.target = MutationNode.forNode(elem);
@@ -261,6 +268,7 @@ public final class MutationRecord {
 		markupRecord.type = Type.innerMarkup;
 		markupRecord.newValue = elem.getInnerHTML();
 		markupRecord.target = MutationNode.forNode(node);
+		markupRecord.mutationGroup = node.mutationGroups().getActiveGroup();
 		markupRecord.attachIds = elem.getSubtreeIds();
 		return markupRecord;
 	}
@@ -290,20 +298,47 @@ public final class MutationRecord {
 	public Type type;
 
 	/**
-	 * If this is an element, the type = childList is and flag
-	 * FlagTransportMarkupTree is set this will be the previous outerXml of the
-	 * node
-	 * 
-	 * If this is a characterdata mutation, the value will be the value prior to
-	 * the mutation
-	 */
-	public transient String oldValue;
-
-	/**
 	 * If this is an element and flag FlagTransportMarkupTree is set this will
 	 * be the outerXml of the node
 	 */
 	public String newValue;
+
+	public DehydratedValue newValueDehydrated;
+
+	/**
+	 * Used to optimise transport of large strings, such as stylesheets, base64
+	 */
+	@Bean(PropertySource.FIELDS)
+	public static final class DehydratedValue {
+		public List<Entry> entries = new ArrayList<>();
+
+		/**
+		 * An entry will have either a value -or- a cacheKey, never both
+		 */
+		@Bean(PropertySource.FIELDS)
+		public static final class Entry {
+			public static Entry ofValue(String value) {
+				Entry result = new Entry();
+				result.value = value;
+				return result;
+			}
+
+			public static Entry ofCacheKey(String cacheKey) {
+				Entry result = new Entry();
+				result.cacheKey = cacheKey;
+				return result;
+			}
+
+			public String value;
+
+			public String cacheKey;
+
+			@Property.Not
+			public boolean isEmpty() {
+				return cacheKey == null && Ax.isBlank(value);
+			}
+		}
+	}
 
 	/**
 	 * For dom trees, this carries the tree node ids (which are not carried by
@@ -312,6 +347,18 @@ public final class MutationRecord {
 	public IdProtocolList attachIds;
 
 	public Multimap<ElementBehavior, List<AttachId>> behaviors;
+
+	public MutationGroup mutationGroup;
+
+	/**
+	 * If this is an element, the type = childList and flag
+	 * FlagTransportMarkupTree is set this will be the previous outerXml of the
+	 * node
+	 * 
+	 * If this is a characterdata mutation, the value will be the value prior to
+	 * the mutation
+	 */
+	public transient String oldValue;
 
 	public void registerBehaviors(Element elem) {
 		List<ElementBehavior> behaviors = elem.getBehaviors();
@@ -358,6 +405,10 @@ public final class MutationRecord {
 			oldValue = jso.getOldValue();
 			newValue = jso.getNewValue();
 			type = Type.valueOf(jso.getType());
+			/*
+			 * No mutationgroup (yet) (although bolding via the keyboard UI etc
+			 * really is that)(sol'n - hijack all those keyboard shortcuts)
+			 */
 		} else {
 			// optimised, reduce # ws calls
 			String json = jso.getInterchangeJson();
@@ -383,6 +434,9 @@ public final class MutationRecord {
 			oldValue = stringOrNull(jsonObj, "oldValue");
 			newValue = stringOrNull(jsonObj, "newValue");
 			type = Type.valueOf(jsonObj.getString("type"));
+			/*
+			 * As above, this does not set mutationgroup
+			 */
 		}
 	}
 
@@ -574,5 +628,35 @@ public final class MutationRecord {
 		} else {
 			return jsonValue.asString();
 		}
+	}
+
+	/*
+	 * this seems very short - which it is! a lot of the joy here is that
+	 * AttachId is exactly what we want for undo (preserving the old id of
+	 * originally-removed nodes)
+	 */
+	public MutationRecord invert() {
+		MutationRecord result = new MutationRecord();
+		result.type = type;
+		result.target = target;
+		result.attributeName = attributeName;
+		result.attributeNamespace = attributeNamespace;
+		switch (this.type) {
+		case attributes:
+		case characterData:
+		case innerMarkup:
+			result.newValue = this.oldValue;
+			result.oldValue = this.newValue;
+			break;
+		case childList:
+			result.removedNodes = this.addedNodes.stream()
+					.collect(Collectors.toList());
+			result.addedNodes = this.removedNodes.stream()
+					.collect(Collectors.toList());
+			Collections.reverse(result.removedNodes);
+			Collections.reverse(result.addedNodes);
+			break;
+		}
+		return result;
 	}
 }

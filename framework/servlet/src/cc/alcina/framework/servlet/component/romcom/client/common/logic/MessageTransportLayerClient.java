@@ -16,6 +16,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 
 /**
  * <p>
@@ -103,7 +104,18 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 
 	EnvelopeDispatcherClient envelopeDispatcher;
 
-	MessageTransportLayerClient() {
+	StringProtocol.Cache stringProtocolCache;
+
+	String remotePath;
+
+	public StringProtocol.Cache getStringProtocolCache() {
+		return stringProtocolCache;
+	}
+
+	MessageTransportLayerClient(StringProtocol.Cache stringProtocolCache,
+			String remotePath) {
+		this.stringProtocolCache = stringProtocolCache;
+		this.remotePath = remotePath;
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
 		envelopeDispatcher = new EnvelopeDispatcherClient(this);

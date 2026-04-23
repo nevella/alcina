@@ -124,6 +124,9 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 	}
 
 	public static boolean isContinuous(List<IntPair> pairs) {
+		if (pairs.isEmpty()) {
+			return true;
+		}
 		IntPair union = unionOf(pairs);
 		return provideUncovered(pairs, union).isEmpty();
 	}
@@ -181,6 +184,13 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		return result;
 	}
 
+	/**
+	 * 
+	 * @param ranges
+	 *            a non-overlapping (unchecked!) list of ranges
+	 * @param range
+	 * @return
+	 */
 	public static IntPair intersection(List<IntPair> ranges, IntPair range) {
 		for (IntPair intPair : ranges) {
 			IntPair intersection = range.intersection(intPair);
@@ -327,6 +337,10 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 
 	public boolean containsExBoundaries(IntPair other) {
 		return contains(other) && i1 < other.i1 && i2 > other.i2;
+	}
+
+	public boolean containsExBoundaries(int i) {
+		return contains(i) && i1 < i && i2 > i;
 	}
 
 	public boolean containsExEnd(int i) {
@@ -542,5 +556,45 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 
 	public boolean isContiguousWith(IntPair o) {
 		return i2 == o.i1;
+	}
+
+	public static double distance(IntPair pair1, IntPair pair2) {
+		return Math.sqrt((pair2.i2 - pair1.i2) ^ 2 + (pair2.i1 - pair1.i1) ^ 2);
+	}
+
+	public enum IntersectionType {
+		none, partial, full
+	}
+
+	public IntersectionType intersectionType(IntPair other) {
+		if (contains(other)) {
+			return IntersectionType.full;
+		}
+		if (intersectsWithNonPoint(other)) {
+			return IntersectionType.partial;
+		}
+		return IntersectionType.none;
+	}
+
+	public IntersectionType intersectionType(List<IntPair> others) {
+		if (others.isEmpty()) {
+			return IntersectionType.none;
+		}
+		if (i2 <= Ax.first(others).i1 || i1 >= Ax.last(others).i2) {
+			return IntersectionType.none;
+		}
+		/*
+		 * could be sped up with a binary search, if others > a threshold
+		 */
+		IntPair intersection = intersection(others, this);
+		if (intersection != null) {
+			if (intersection.equals(this)) {
+				return IntersectionType.full;
+			} else {
+				return IntersectionType.partial;
+			}
+		} else {
+			return IntersectionType.none;
+		}
 	}
 }

@@ -54,8 +54,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.Filterable;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Filter;
@@ -385,10 +385,10 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onChange(Change event) {
-			DirectedLayout.Node node = provideNode()
+			DirectedLayout.Node mostSpecficNode = node
 					.provideMostSpecificNodeForModel();
-			SelectElement selectElement = (SelectElement) node.getRendered()
-					.asElement();
+			SelectElement selectElement = (SelectElement) mostSpecficNode
+					.getRendered().asElement();
 			List<OptionElement> options = selectElement.getOptions().stream()
 					.collect(Collectors.toList());
 			List<T> selectedValues = new ArrayList<>();
@@ -408,12 +408,13 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void setSelectedValues(List<T> values) {
+			Ax.out("set-sel: %s", values);
 			super.setSelectedValues(values);
 			if (provideIsBound()) {
-				DirectedLayout.Node node = provideNode()
+				DirectedLayout.Node mostSpecficNode = node
 						.provideMostSpecificNodeForModel();
-				SelectElement selectElement = (SelectElement) node.getRendered()
-						.asElement();
+				SelectElement selectElement = (SelectElement) mostSpecficNode
+						.getRendered().asElement();
 				List<OptionElement> options = selectElement.getOptions()
 						.stream().collect(Collectors.toList());
 				List<T> selectedValues = new ArrayList<>();
@@ -564,10 +565,10 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onChange(Change event) {
-			DirectedLayout.Node node = provideNode()
+			DirectedLayout.Node mostSpecficNode = node
 					.provideMostSpecificNodeForModel();
-			SelectElement selectElement = (SelectElement) node.getRendered()
-					.asElement();
+			SelectElement selectElement = (SelectElement) mostSpecficNode
+					.getRendered().asElement();
 			int index = selectElement.getSelectedIndex();
 			Choice<T> choice = null;
 			if (index >= 0) {
@@ -582,10 +583,10 @@ public abstract class Choices<T> extends Model implements
 		public void setSelectedValue(T value) {
 			super.setSelectedValue(value);
 			if (provideIsBound()) {
-				DirectedLayout.Node node = provideNode()
+				DirectedLayout.Node mostSpecficNode = node
 						.provideMostSpecificNodeForModel();
-				SelectElement selectElement = (SelectElement) node.getRendered()
-						.asElement();
+				SelectElement selectElement = (SelectElement) mostSpecficNode
+						.getRendered().asElement();
 				int index = getValues().indexOf(value);
 				selectElement.setSelectedIndex(index);
 			}
@@ -618,6 +619,14 @@ public abstract class Choices<T> extends Model implements
 					option.setSelected(choice.isSelected());
 					return option;
 				}
+			}
+
+			/*
+			 * must allow default behavior
+			 */
+			@Override
+			public List<ElementBehavior> getBehaviors() {
+				return List.of();
 			}
 
 			public Option(String displayName) {
@@ -855,16 +864,26 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onSelected(Selected event) {
-			if (event.checkReemitted(this)) {
+			/*
+			 * the latter will be from the deselect logic (lower)
+			 */
+			if (event.checkReemitted(this) || event.getModel() == null) {
+				event.bubble();
 				return;
 			}
 			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
+			boolean deselect = false;
 			if (deselectIfSelectedClicked && value == getSelectedValue()) {
+				deselect = true;
 				value = null;
 			}
 			provisionalValue = value;
-			event.reemit();
+			if (deselect) {
+				event.reemitAs(this, Selected.class, null);
+			} else {
+				event.reemit();
+			}
 			valueSelected.signal();
 			if (changeOnSelectionEvent) {
 				setSelectedValue(value);
@@ -905,9 +924,19 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void setValues(List<T> values) {
+			T preChangeSelectedValue = choices == null ? null
+					: getSelectedValue();
 			super.setValues(values);
-			choices.forEach(c -> c
-					.setSelected(Objects.equals(c.value, lastSelectedValue)));
+			/* preserve existing choice if possible */
+			boolean newChoicesContainsCurrentSelectedValue = choices.stream()
+					.anyMatch(c -> Objects.equals(c.value,
+							preChangeSelectedValue));
+			if (newChoicesContainsCurrentSelectedValue) {
+				choices.forEach(c -> c.setSelected(
+						Objects.equals(c.value, lastSelectedValue)));
+			} else {
+				setSelectedValue(null);
+			}
 		}
 
 		public ListenerReference subscribeSelectionChanged(Runnable runnable) {
@@ -976,12 +1005,11 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			select = new MultipleSelect<>();
 			// populate the delegate values from this node's AnnotationLocation
-			select.populateFromNodeContext(event.node, null);
+			select.populateFromNodeContext(node, null);
 			value = select.getSelectedValues();
-			super.onBeforeRender(event);
 		}
 
 		@Override
@@ -1074,6 +1102,11 @@ public abstract class Choices<T> extends Model implements
 
 	protected boolean changeOnSelectionEvent = true;
 
+	/*
+	 * prevent double-population from delegating constructs
+	 */
+	protected boolean nodeContextPopulated = false;
+
 	boolean hasValueSupplier;
 
 	public Choices() {
@@ -1119,9 +1152,8 @@ public abstract class Choices<T> extends Model implements
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
-		populateFromNodeContext(event.node, null);
-		super.onBeforeRender(event);
+	public void onNodeContext(NodeContext event) {
+		populateFromNodeContext(node, null);
 	}
 
 	public List<T> getValues() {
@@ -1181,6 +1213,10 @@ public abstract class Choices<T> extends Model implements
 		if (node == null) {
 			return;
 		}
+		if (nodeContextPopulated) {
+			return;
+		}
+		nodeContextPopulated = true;
 		node.optional(Categoriser.class)
 				.ifPresent(ann -> this.categoriser = (Function) Reflections
 						.newInstance(ann.value()));

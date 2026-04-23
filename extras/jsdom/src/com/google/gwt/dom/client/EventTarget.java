@@ -50,6 +50,12 @@ public class EventTarget implements JavascriptObjectEquivalent {
 			EventTarget result = new EventTarget();
 			if (target.isElement()) {
 				Element element = target.asElement();
+				if (element == null) {
+					/*
+					 * detached
+					 */
+					return null;
+				}
 				result.attachId = AttachId.forNode(element);
 				result.name = element.getTagName();
 				result.type = Type.element;

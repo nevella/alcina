@@ -287,11 +287,11 @@ public class TextAreaElement extends Element implements HasSelectionRange {
 	@Override
 	public void setPropertyString(String name, String value) {
 		if ("value".equals(name) && !hasRemote()) {
-			local().setInnerText(value);
+			setInnerText(value);
 		} else {
 			local().setPropertyString(name, value);
+			sync(() -> remote().setPropertyString(name, value));
 		}
-		sync(() -> remote().setPropertyString(name, value));
 	}
 
 	/**

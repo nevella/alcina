@@ -10,21 +10,21 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 class Header extends Model.All {
-	static PackageProperties._Header_Left _Header_Leftproperties = PackageProperties.header_left;
-
 	@TypedProperties
 	class Left extends Model.All {
+		PackageProperties._Header_Left.InstanceProperties properties() {
+			return PackageProperties.header_left.instance(this);
+		}
+
 		String name;
 
 		List<?> additional;
 
 		Left() {
-			bindings().from(Header.this.page).on(Page.properties.history)
-					.value(this::computeName).to(this)
-					.on(_Header_Leftproperties.name).oneWay();
-			bindings().from(Header.this.page.ui).on(Ui.properties.place)
-					.value(this::computeName).to(this)
-					.on(_Header_Leftproperties.name).oneWay();
+			from(Header.this.page.properties().history())
+					.value(this::computeName).to(properties().name()).oneWay();
+			from(Header.this.page.ui.properties().place())
+					.value(this::computeName).to(properties().name()).oneWay();
 			additional = Ui.get().createAdditionalLeftHeader();
 		}
 

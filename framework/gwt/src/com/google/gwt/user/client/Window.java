@@ -434,13 +434,13 @@ public class Window {
     $wnd.moveTo(x, y);
 	}-*/;
 
-	static void onClosed() {
+	public static void onClosed() {
 		if (closeHandlersInitialized) {
 			CloseEvent.fire(ensureHandlers(), null);
 		}
 	}
 
-	static String onClosing() {
+	public static String onClosing() {
 		if (closeHandlersInitialized) {
 			Window.ClosingEvent event = new Window.ClosingEvent();
 			fireEvent(event);
@@ -453,13 +453,13 @@ public class Window {
 		fireEvent(new PageHideEvent());
 	}
 
-	static void onResize() {
+	public static void onResize() {
 		if (resizeHandlersInitialized) {
 			Resources.get().onResize();
 		}
 	}
 
-	static void onScroll() {
+	public static void onScroll() {
 		if (scrollHandlersInitialized) {
 			fireEvent(new Window.ScrollEvent(getScrollLeft(), getScrollTop()));
 		}
@@ -478,7 +478,12 @@ public class Window {
 	 * @param features
 	 *            the features to be enabled/disabled on this window
 	 */
-	public static native void open(String url, String name, String features) /*-{
+	public static void open(String url, String name, String features) {
+		Document.get().invoke(() -> open0(url, name, features), Window.class,
+				"open0", null, List.of(url, name, features), false);
+	}
+
+	public static native void open0(String url, String name, String features) /*-{
     $wnd.open(url, name, features);
 	}-*/;
 
@@ -591,6 +596,10 @@ public class Window {
 
 	public static Topic<IntPair> topicScrollTo() {
 		return Resources.get().topicScrollTo;
+	}
+
+	public static IntPair getScrollPosition() {
+		return new IntPair(getScrollLeft(), getScrollTop());
 	}
 
 	public static void scrollTo(int left, int top, boolean smooth) {
@@ -1279,5 +1288,25 @@ public class Window {
 
 	public static DomRect getRect() {
 		return DomRect.fromOrigin(getClientWidth(), getClientHeight());
+	}
+
+	private static native void copyString0(String value) /*-{
+	$wnd.navigator.clipboard.writeText(value);
+	}-*/;
+
+	/**
+	 * Utility methods, easier than say adding a ContextFrame for
+	 * Window.Navigator.Clipboard
+	 */
+	public static class Util {
+		/**
+		 * Copy the value to the clipboard
+		 * 
+		 * @param value
+		 */
+		public static void copyString(String value) {
+			Document.get().invoke(() -> Window.copyString0(value), Window.class,
+					"copyString0", null, List.of(value), false);
+		}
 	}
 }

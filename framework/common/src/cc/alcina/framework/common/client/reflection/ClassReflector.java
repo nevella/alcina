@@ -59,10 +59,13 @@ public class ClassReflector<T> implements HasAnnotations {
 			RegExp regExp = RegExp.compile(beanRegex);
 			MatchResult matchResult = regExp.exec(methodName);
 			boolean reflective = matchResult != null;
-			if (!reflective) {
+			if (reflective) {
 				boolean get = !matchResult.getGroup(1).equals("set");
-				reflective &= get && argumentTypes.size() == 0;
-				reflective &= !get && argumentTypes.size() == 1;
+				if (get) {
+					reflective &= argumentTypes.size() == 0;
+				} else {
+					reflective &= argumentTypes.size() == 1;
+				}
 			}
 			if (!reflective) {
 				throw new IllegalArgumentException(
@@ -224,6 +227,13 @@ public class ClassReflector<T> implements HasAnnotations {
 		return this.genericBounds;
 	}
 
+	/**
+	 * Normally use provideAllImplementedInterfaces - unless you're sure this is
+	 * what you want
+	 * 
+	 * @return the interfaces implemented by this type, not including
+	 *         supertype/superinterface implementation types
+	 */
 	public List<Class> getInterfaces() {
 		return interfaces;
 	}

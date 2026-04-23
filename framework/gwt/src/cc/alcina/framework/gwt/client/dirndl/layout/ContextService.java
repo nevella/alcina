@@ -1,7 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  * <p>
@@ -20,27 +21,55 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  * A more general and sometimes better analaogy is an RPC service - the
  * (directed) descendants interact with each other and the ancestor via rpc-like
  * invocations of the ancestor service(s)
+ * 
+ * <p>
+ * Services - if reachable - will always be registered with some node/model - so
+ * the ContextService.Source can also be used to emit events
  */
 public interface ContextService {
-	/*
-	 * Marker interface, subtypes will have explicit getSomeService methods,
-	 * that will be invoked reflectivly via the corresponding ProviderInvoker
-	 */
-	/*
-	 * It'd be nice for this to be generic, but given we want to have a
-	 * coordinator model potentially interface several Provider subtypes, we
-	 * can't. So both the provider intf and the provided service go on the
-	 * ProviderInvoker
+	/**
+	 * <p>
+	 * Marker interface, {@link Model} instances which register services can
+	 * implement subtypes to describe their ContextService emission at
+	 * compile-time.
+	 * 
+	 * <p>
+	 * Originally, this was linked to runtime kit which performed service
+	 * creation - but since the Model needs to retain a reference to the
+	 * services anyway, manual registration is better (and simpler). It is not
+	 * required, but is a useful indicator of service scope, particularly if
+	 * different models register the same service interface (say
+	 * SequenceArea.Service)
+	 * 
+	 * <p>
+	 * Note - don't name subtypes "Provider" - rather "ServiceProvider"
 	 */
 	public interface Provider {
 	}
 
-	@Registration.NonGenericSubtypes(ProviderInvoker.class)
-	@Reflected
-	public interface ProviderInvoker<P extends ContextService.Provider>
-			extends Registration.AllSubtypesClient {
-		ContextService get(P provider);
+	public interface Source {
+		/**
+		 * not 'getService' because it's _so_ common
+		 * 
+		 * @param <T>
+		 * @param serviceType
+		 * @return
+		 */
+		<T extends ContextService> T service(Class<T> serviceType);
 
-		Class<? extends ContextService> getServiceClass();
+		void emitEvent(Class<? extends ModelEvent> clazz);
+
+		void emitEvent(Class<? extends ModelEvent> clazz, Object value);
+
+		default void reemitEvent(NodeEvent<?> nodeEvent,
+				Class<? extends ModelEvent> clazz) {
+			reemitEvent(nodeEvent, clazz, null);
+		}
+
+		void reemitEvent(NodeEvent<?> nodeEvent,
+				Class<? extends ModelEvent> clazz, Object value);
+
+		<CS extends ContextService> void registerService(Class<CS> service,
+				CS implementation);
 	}
 }

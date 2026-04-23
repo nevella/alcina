@@ -249,7 +249,7 @@ bean-editor.wide form textarea {
 bean-editor.wide form input,
 bean-editor.wide form select,
 bean-editor.wide form textarea {
-  width: 20em;
+  width: min(20em, 80vw);
 }
 bean-editor.wide form div.ol-select {
   display: inline-block;
@@ -268,6 +268,14 @@ bean-editor.grid > form > section > div, bean-editor.grid > form > section form-
 bean-editor.grid > form > section > div > label, bean-editor.grid > form > section form-element > label {
   white-space: nowrap;
   padding-right: 2em;
+}
+@media screen and (max-width: 640px) {
+  bean-editor.grid > form > section {
+    grid-template-columns: 1fr;
+  }
+  bean-editor.grid > form > section > label::not(::first-child) {
+    padding-top: 0.5rem;
+  }
 }
 bean-editor.grid.tight-rows {
   line-height: 1.2;
@@ -413,6 +421,16 @@ bean-editor > form > form-validation {
   color: #FF5030;
   margin-top: 2rem;
 }
+@media screen and (max-width: 640px) {
+  bean-editor {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  bean-editor form > section > form-element {
+    display: flex;
+    flex-direction: column;
+  }
+}
 
 /* will always have single-line bean-editor, pad label until we work out baseline alignment
  * */
@@ -510,9 +528,8 @@ body {
 
 body > page {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: auto;
   grid-template-areas: "header header header header" "sequence sequence sequence detail";
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: min-content 1fr;
   height: 100vh;
   width: 100vw;
@@ -826,7 +843,7 @@ body > page > detail > properties.wide form textarea {
 body > page > detail > properties.wide form input,
 body > page > detail > properties.wide form select,
 body > page > detail > properties.wide form textarea {
-  width: 20em;
+  width: min(20em, 80vw);
 }
 body > page > detail > properties.wide form div.ol-select {
   display: inline-block;
@@ -845,6 +862,14 @@ body > page > detail > properties.grid > form > section > div, body > page > det
 body > page > detail > properties.grid > form > section > div > label, body > page > detail > properties.grid > form > section form-element > label {
   white-space: nowrap;
   padding-right: 2em;
+}
+@media screen and (max-width: 640px) {
+  body > page > detail > properties.grid > form > section {
+    grid-template-columns: 1fr;
+  }
+  body > page > detail > properties.grid > form > section > label::not(::first-child) {
+    padding-top: 0.5rem;
+  }
 }
 body > page > detail > properties.grid.tight-rows {
   line-height: 1.2;
@@ -1123,62 +1148,7 @@ body > page > header > search:focus-within, body > page > header > search:hover 
   transition: all 0.3s;
 }
 body > page > header > search > search-definition-editor {
-  display: flex;
   padding-top: 0.5rem;
-}
-body > page > header > search > search-definition-editor > choice-editor {
-  flex-grow: 1;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit {
-  border: none;
-  background: none;
-  line-height: 2.2;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit > * {
-  line-height: 1.5;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit cursor-target {
-  display: inline-block;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit choice-node {
-  border-color: #eee;
-  background: #eee;
-  padding: 0.2rem 0.8rem;
-  display: inline-block;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable {
-  display: inline-flex;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable > name {
-  display: inline-block;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable > operator {
-  display: inline-block;
-  padding: 0 0.5rem;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable > value-editor {
-  display: inline-block;
-  height: 100%;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > select, body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > input {
-  border-color: transparent;
-  background-color: transparent;
-}
-body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > select, body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > input, body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > select, body > page > header > search > search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > input {
-  background-color: white;
-}
-body > page > header > search > search-definition-editor > go-container {
-  display: block;
-  line-height: 145%;
-  padding: 0.4rem;
-}
-body > page > header > search > search-definition-editor > go-container > button {
-  color: #3050FF;
-}
-body > page > header > search > search-definition-editor > go-container > button:hover {
-  color: #5070FF;
-  background: white;
-  border-color: transparent;
 }
 body > page > header > search > search-definition-editor edit {
   width: auto;
@@ -1199,6 +1169,7 @@ app-suggestor {
   width: 34rem;
   font-family: Arial;
   background-color: #FFF;
+  box-sizing: border-box;
 }
 app-suggestor:focus-within {
   border-color: #bfbfbf;
@@ -1213,6 +1184,7 @@ app-suggestor > editor > input {
   outline: none;
   font-family: Arial;
   color: #555;
+  box-sizing: border-box;
 }
 app-suggestor > editor > input::placeholder {
   opacity: 0.6;
@@ -1304,6 +1276,11 @@ overlay.app-suggestor > results > choice > suggestion > app-suggestion > content
   display: block;
 }
 
+@media screen and (max-width: 640px) {
+  app-suggestor {
+    width: 100vw;
+  }
+}
 keyboard-shortcuts {
   background: white;
   user-select: none;
@@ -1479,12 +1456,15 @@ help sequence > visit {
   margin-bottom: 5rem;
 }
 help sequence > visit > path {
+  grid-area: path;
   font-weight: bold;
 }
 help sequence > visit > description {
+  grid-area: description;
   margin-bottom: 1rem;
 }
 help sequence > visit > img {
+  grid-area: img;
   max-width: 100%;
 }
 
@@ -1598,12 +1578,21 @@ choice-editor > edit:focus {
   border-color: #555;
   background-color: #FFF;
 }
+choice-editor > edit:focus-within, choice-editor > edit:hover {
+  outline: solid 1px #005fcc;
+}
 choice-editor > edit suggesting-node {
   display: inline-block;
   white-space: nowrap;
   display: inline-block;
   min-height: 16px;
   padding-right: 1px;
+  cursor: text;
+}
+choice-editor > edit suggesting-node:empty:after {
+  content: " ";
+  display: inline-block;
+  color: #aaa;
 }
 choice-editor > edit choice-node {
   background: none;
@@ -1623,6 +1612,12 @@ choice-editor > edit choice-node.selected::selection, choice-editor > edit choic
 }
 choice-editor > edit suggesting-node + choice-node {
   margin-left: 3px;
+}
+choice-editor.single edit > .decorator-node {
+  border: none;
+}
+choice-editor.single edit[input-dirty] > .decorator-node {
+  display: none;
 }
 
 overlay > .decorator-suggestor {
@@ -1756,4 +1751,101 @@ exec-commands > suggestor > results > choice > suggestion > command-area > *:fir
 }
 exec-commands > suggestor > results > choice[index-selected] > suggestion > command-area > * {
   background-color: #00000010;
+}
+
+search-definition-editor {
+  display: flex;
+  width: 100%;
+}
+search-definition-editor > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
+  content: "Type, or [Enter] to search";
+}
+search-definition-editor[modified] > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
+  content: "[Enter] to search";
+}
+search-definition-editor > choice-editor {
+  flex-grow: 1;
+}
+search-definition-editor > choice-editor > edit {
+  border: none;
+  background: none;
+  line-height: 2.2;
+  width: auto;
+}
+search-definition-editor > choice-editor > edit > * {
+  line-height: 1.5;
+}
+search-definition-editor > choice-editor > edit cursor-target {
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node {
+  border-color: #eee;
+  background: #eee;
+  padding: 0.2rem 0.8rem;
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable {
+  display: inline-flex;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > name {
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator {
+  display: inline-block;
+  width: 1.5rem;
+  text-align: center;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator {
+  display: inline-block;
+  cursor: pointer;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator:hover {
+  background-color: #ffffff80;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > value-editor {
+  display: inline-block;
+  height: 100%;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > input {
+  border-color: transparent;
+  background-color: transparent;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > input, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > input {
+  background-color: white;
+}
+search-definition-editor > go-container {
+  display: block;
+  line-height: 145%;
+  padding: 0.4rem;
+}
+search-definition-editor > go-container > button {
+  color: #3050FF;
+}
+search-definition-editor > go-container > button:hover {
+  color: #5070FF;
+  background: white;
+  border-color: transparent;
+}
+search-definition-editor[popups-open] > choice-editor {
+  background: white;
+}
+
+overlay > choice-suggestor.decorator-suggestor {
+  border-color: #ffffff00;
+  box-shadow: none;
+}
+
+overlay.searchable.operator-selector {
+  background-color: white;
+}
+overlay.searchable.operator-selector choice-editor > edit {
+  width: 20.2rem;
+  border-color: #ccc;
+}
+overlay.searchable.operator-selector choice-renderer {
+  display: inline-flex;
+  gap: 0.8rem;
+}
+overlay.searchable.operator-selector choice-renderer > operator-char {
+  width: 1rem;
 }

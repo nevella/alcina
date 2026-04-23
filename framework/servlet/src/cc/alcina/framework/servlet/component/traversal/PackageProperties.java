@@ -11,12 +11,14 @@ import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.Header;
 import cc.alcina.framework.servlet.component.traversal.LayerFilterEditor;
@@ -49,6 +51,7 @@ public class PackageProperties {
     static _LayerSelections_SelectionsArea_SelectionArea layerSelections_selectionsArea_selectionArea = new _LayerSelections_SelectionsArea_SelectionArea();
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
+    static _PropertiesArea propertiesArea = new _PropertiesArea();
     static _RenderedSelections renderedSelections = new _RenderedSelections();
     static _SelectionLayers_LayersContainer selectionLayers_layersContainer = new _SelectionLayers_LayersContainer();
     public static _TraversalBrowser_Ui traversalBrowser_ui = new _TraversalBrowser_Ui();
@@ -58,7 +61,7 @@ public class PackageProperties {
       public TypedProperty<AppSuggestorTraversal, String> acceptedFilterText = new TypedProperty<>(AppSuggestorTraversal.class, "acceptedFilterText");
       public TypedProperty<AppSuggestorTraversal, String> filterText = new TypedProperty<>(AppSuggestorTraversal.class, "filterText");
       public TypedProperty<AppSuggestorTraversal, Suggestor> suggestor = new TypedProperty<>(AppSuggestorTraversal.class, "suggestor");
-      public static class InstanceProperties extends InstanceProperty.Container<AppSuggestorTraversal> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AppSuggestorTraversal> {
         public  InstanceProperties(AppSuggestorTraversal source){super(source);}
         public InstanceProperty<AppSuggestorTraversal, String> acceptedFilterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorTraversal.acceptedFilterText);}
         public InstanceProperty<AppSuggestorTraversal, String> filterText(){return new InstanceProperty<>(source,PackageProperties.appSuggestorTraversal.filterText);}
@@ -83,7 +86,7 @@ public class PackageProperties {
       TypedProperty<Dotburger.Menu, Heading> section5 = new TypedProperty<>(Dotburger.Menu.class, "section5");
       TypedProperty<Dotburger.Menu, String> selectionAreaHeight = new TypedProperty<>(Dotburger.Menu.class, "selectionAreaHeight");
       TypedProperty<Dotburger.Menu, TraversalPlace.SelectionType> selectionType = new TypedProperty<>(Dotburger.Menu.class, "selectionType");
-      static class InstanceProperties extends InstanceProperty.Container<Dotburger.Menu> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Dotburger.Menu> {
          InstanceProperties(Dotburger.Menu source){super(source);}
         InstanceProperty<Dotburger.Menu, Link> keyboardShortcuts(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.keyboardShortcuts);}
         InstanceProperty<Dotburger.Menu, TraversalSettings.PropertyDisplayMode> propertyDisplayMode(){return new InstanceProperty<>(source,PackageProperties.dotburger_menu.propertyDisplayMode);}
@@ -107,7 +110,7 @@ public class PackageProperties {
     static class _Header_Left implements TypedProperty.Container {
       TypedProperty<Header.Left, List> additional = new TypedProperty<>(Header.Left.class, "additional");
       TypedProperty<Header.Left, String> name = new TypedProperty<>(Header.Left.class, "name");
-      static class InstanceProperties extends InstanceProperty.Container<Header.Left> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Header.Left> {
          InstanceProperties(Header.Left source){super(source);}
         InstanceProperty<Header.Left, List> additional(){return new InstanceProperty<>(source,PackageProperties.header_left.additional);}
         InstanceProperty<Header.Left, String> name(){return new InstanceProperty<>(source,PackageProperties.header_left.name);}
@@ -123,7 +126,7 @@ public class PackageProperties {
       TypedProperty<LayerSelections, Boolean> empty = new TypedProperty<>(LayerSelections.class, "empty");
       TypedProperty<LayerSelections, LayerSelections.NameArea> nameArea = new TypedProperty<>(LayerSelections.class, "nameArea");
       TypedProperty<LayerSelections, LayerSelections.SelectionsArea> selectionsArea = new TypedProperty<>(LayerSelections.class, "selectionsArea");
-      static class InstanceProperties extends InstanceProperty.Container<LayerSelections> {
+      static class InstanceProperties extends 	InstanceProperty.Container<LayerSelections> {
          InstanceProperties(LayerSelections source){super(source);}
         InstanceProperty<LayerSelections, Boolean> empty(){return new InstanceProperty<>(source,PackageProperties.layerSelections.empty);}
         InstanceProperty<LayerSelections, LayerSelections.NameArea> nameArea(){return new InstanceProperty<>(source,PackageProperties.layerSelections.nameArea);}
@@ -143,7 +146,7 @@ public class PackageProperties {
       TypedProperty<LayerSelections.NameArea, LeafModel.TextTitle> key = new TypedProperty<>(LayerSelections.NameArea.class, "key");
       TypedProperty<LayerSelections.NameArea, String> outputs = new TypedProperty<>(LayerSelections.NameArea.class, "outputs");
       TypedProperty<LayerSelections.NameArea, Boolean> selected = new TypedProperty<>(LayerSelections.NameArea.class, "selected");
-      static class InstanceProperties extends InstanceProperty.Container<LayerSelections.NameArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<LayerSelections.NameArea> {
          InstanceProperties(LayerSelections.NameArea source){super(source);}
         InstanceProperty<LayerSelections.NameArea, LayerFilterEditor> filter(){return new InstanceProperty<>(source,PackageProperties.layerSelections_nameArea.filter);}
         InstanceProperty<LayerSelections.NameArea, Boolean> filterEditorOpen(){return new InstanceProperty<>(source,PackageProperties.layerSelections_nameArea.filterEditorOpen);}
@@ -167,7 +170,7 @@ public class PackageProperties {
       TypedProperty<LayerSelections.SelectionsArea, LooseContextInstance> snapshot = new TypedProperty<>(LayerSelections.SelectionsArea.class, "snapshot");
       TypedProperty<LayerSelections.SelectionsArea, List> tableSelections = new TypedProperty<>(LayerSelections.SelectionsArea.class, "tableSelections");
       TypedProperty<LayerSelections.SelectionsArea, LayerSelections.SelectionsArea.TestHistory> testHistory = new TypedProperty<>(LayerSelections.SelectionsArea.class, "testHistory");
-      static class InstanceProperties extends InstanceProperty.Container<LayerSelections.SelectionsArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<LayerSelections.SelectionsArea> {
          InstanceProperties(LayerSelections.SelectionsArea source){super(source);}
         InstanceProperty<LayerSelections.SelectionsArea, List> filtered(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea.filtered);}
         InstanceProperty<LayerSelections.SelectionsArea, List> filteredSelections(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea.filteredSelections);}
@@ -192,7 +195,7 @@ public class PackageProperties {
       TypedProperty<LayerSelections.SelectionsArea.SelectionArea, TraversalPlace.SelectionType> selectionType = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "selectionType");
       TypedProperty<LayerSelections.SelectionsArea.SelectionArea, String> text = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "text");
       TypedProperty<LayerSelections.SelectionsArea.SelectionArea, String> type = new TypedProperty<>(LayerSelections.SelectionsArea.SelectionArea.class, "type");
-      static class InstanceProperties extends InstanceProperty.Container<LayerSelections.SelectionsArea.SelectionArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<LayerSelections.SelectionsArea.SelectionArea> {
          InstanceProperties(LayerSelections.SelectionsArea.SelectionArea source){super(source);}
         InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, Boolean> ancestorOfSelected(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.ancestorOfSelected);}
         InstanceProperty<LayerSelections.SelectionsArea.SelectionArea, String> pathSegment(){return new InstanceProperty<>(source,PackageProperties.layerSelections_selectionsArea_selectionArea.pathSegment);}
@@ -218,7 +221,7 @@ public class PackageProperties {
       TypedProperty<Page, RenderedSelections> output = new TypedProperty<>(Page.class, "output");
       TypedProperty<Page, PropertiesArea> propertiesArea = new TypedProperty<>(Page.class, "propertiesArea");
       TypedProperty<Page, RenderedSelections> table = new TypedProperty<>(Page.class, "table");
-      static class InstanceProperties extends InstanceProperty.Container<Page> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Page> {
          InstanceProperties(Page source){super(source);}
         InstanceProperty<Page, Header> header(){return new InstanceProperty<>(source,PackageProperties.page.header);}
         InstanceProperty<Page, RemoteComponentObservables.ObservableEntry> history(){return new InstanceProperty<>(source,PackageProperties.page.history);}
@@ -241,7 +244,7 @@ public class PackageProperties {
       TypedProperty<Page.ActivityRoute, Model> eventHandlerCustomisation = new TypedProperty<>(Page.ActivityRoute.class, "eventHandlerCustomisation");
       TypedProperty<Page.ActivityRoute, Page> page = new TypedProperty<>(Page.ActivityRoute.class, "page");
       TypedProperty<Page.ActivityRoute, BasePlace> place = new TypedProperty<>(Page.ActivityRoute.class, "place");
-      static class InstanceProperties extends InstanceProperty.Container<Page.ActivityRoute> {
+      static class InstanceProperties extends 	InstanceProperty.Container<Page.ActivityRoute> {
          InstanceProperties(Page.ActivityRoute source){super(source);}
         InstanceProperty<Page.ActivityRoute, Class> channel(){return new InstanceProperty<>(source,PackageProperties.page_activityRoute.channel);}
         InstanceProperty<Page.ActivityRoute, Model> eventHandlerCustomisation(){return new InstanceProperty<>(source,PackageProperties.page_activityRoute.eventHandlerCustomisation);}
@@ -255,6 +258,25 @@ public class PackageProperties {
       
     }
     
+    static class _PropertiesArea implements TypedProperty.Container {
+      TypedProperty<PropertiesArea, Choices.Single> filter = new TypedProperty<>(PropertiesArea.class, "filter");
+      TypedProperty<PropertiesArea, Heading> header = new TypedProperty<>(PropertiesArea.class, "header");
+      TypedProperty<PropertiesArea, Page> page = new TypedProperty<>(PropertiesArea.class, "page");
+      TypedProperty<PropertiesArea, Selection> selection = new TypedProperty<>(PropertiesArea.class, "selection");
+      static class InstanceProperties extends 	InstanceProperty.Container<PropertiesArea> {
+         InstanceProperties(PropertiesArea source){super(source);}
+        InstanceProperty<PropertiesArea, Choices.Single> filter(){return new InstanceProperty<>(source,PackageProperties.propertiesArea.filter);}
+        InstanceProperty<PropertiesArea, Heading> header(){return new InstanceProperty<>(source,PackageProperties.propertiesArea.header);}
+        InstanceProperty<PropertiesArea, Page> page(){return new InstanceProperty<>(source,PackageProperties.propertiesArea.page);}
+        InstanceProperty<PropertiesArea, Selection> selection(){return new InstanceProperty<>(source,PackageProperties.propertiesArea.selection);}
+      }
+      
+       InstanceProperties instance(PropertiesArea instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
     static class _RenderedSelections implements TypedProperty.Container {
       TypedProperty<RenderedSelections, Heading> heading = new TypedProperty<>(RenderedSelections.class, "heading");
       TypedProperty<RenderedSelections, Page> page = new TypedProperty<>(RenderedSelections.class, "page");
@@ -263,7 +285,7 @@ public class PackageProperties {
       TypedProperty<RenderedSelections, SelectionTableArea> selectionTable = new TypedProperty<>(RenderedSelections.class, "selectionTable");
       TypedProperty<RenderedSelections, StyleElement> styleElement = new TypedProperty<>(RenderedSelections.class, "styleElement");
       TypedProperty<RenderedSelections, TraversalSettings.SecondaryArea> variant = new TypedProperty<>(RenderedSelections.class, "variant");
-      static class InstanceProperties extends InstanceProperty.Container<RenderedSelections> {
+      static class InstanceProperties extends 	InstanceProperty.Container<RenderedSelections> {
          InstanceProperties(RenderedSelections source){super(source);}
         InstanceProperty<RenderedSelections, Heading> heading(){return new InstanceProperty<>(source,PackageProperties.renderedSelections.heading);}
         InstanceProperty<RenderedSelections, Page> page(){return new InstanceProperty<>(source,PackageProperties.renderedSelections.page);}
@@ -283,7 +305,7 @@ public class PackageProperties {
     static class _SelectionLayers_LayersContainer implements TypedProperty.Container {
       TypedProperty<SelectionLayers.LayersContainer, CollectionDeltaModel> collectionRepresentation = new TypedProperty<>(SelectionLayers.LayersContainer.class, "collectionRepresentation");
       TypedProperty<SelectionLayers.LayersContainer, List> layers = new TypedProperty<>(SelectionLayers.LayersContainer.class, "layers");
-      static class InstanceProperties extends InstanceProperty.Container<SelectionLayers.LayersContainer> {
+      static class InstanceProperties extends 	InstanceProperty.Container<SelectionLayers.LayersContainer> {
          InstanceProperties(SelectionLayers.LayersContainer source){super(source);}
         InstanceProperty<SelectionLayers.LayersContainer, CollectionDeltaModel> collectionRepresentation(){return new InstanceProperty<>(source,PackageProperties.selectionLayers_layersContainer.collectionRepresentation);}
         InstanceProperty<SelectionLayers.LayersContainer, List> layers(){return new InstanceProperty<>(source,PackageProperties.selectionLayers_layersContainer.layers);}
@@ -307,13 +329,14 @@ public class PackageProperties {
       public TypedProperty<TraversalBrowser.Ui, String> mainCaption = new TypedProperty<>(TraversalBrowser.Ui.class, "mainCaption");
       public TypedProperty<TraversalBrowser.Ui, Page> page = new TypedProperty<>(TraversalBrowser.Ui.class, "page");
       public TypedProperty<TraversalBrowser.Ui, TraversalPlace> place = new TypedProperty<>(TraversalBrowser.Ui.class, "place");
+      public TypedProperty<TraversalBrowser.Ui, RemoteComponent> remoteComponent = new TypedProperty<>(TraversalBrowser.Ui.class, "remoteComponent");
       public TypedProperty<TraversalBrowser.Ui, Layer> selectedLayer0 = new TypedProperty<>(TraversalBrowser.Ui.class, "selectedLayer0");
       public TypedProperty<TraversalBrowser.Ui, SelectionMarkup> selectionMarkup = new TypedProperty<>(TraversalBrowser.Ui.class, "selectionMarkup");
       public TypedProperty<TraversalBrowser.Ui, TraversalSettings> settings = new TypedProperty<>(TraversalBrowser.Ui.class, "settings");
       public TypedProperty<TraversalBrowser.Ui, SelectionTraversal> traversal = new TypedProperty<>(TraversalBrowser.Ui.class, "traversal");
       public TypedProperty<TraversalBrowser.Ui, String> traversalPath = new TypedProperty<>(TraversalBrowser.Ui.class, "traversalPath");
       public TypedProperty<TraversalBrowser.Ui, Boolean> useSelectionSegmentPath = new TypedProperty<>(TraversalBrowser.Ui.class, "useSelectionSegmentPath");
-      public static class InstanceProperties extends InstanceProperty.Container<TraversalBrowser.Ui> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<TraversalBrowser.Ui> {
         public  InstanceProperties(TraversalBrowser.Ui source){super(source);}
         public InstanceProperty<TraversalBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.appCommandContexts);}
         public InstanceProperty<TraversalBrowser.Ui, Boolean> appendTableSelections(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.appendTableSelections);}
@@ -326,6 +349,7 @@ public class PackageProperties {
         public InstanceProperty<TraversalBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.mainCaption);}
         public InstanceProperty<TraversalBrowser.Ui, Page> page(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.page);}
         public InstanceProperty<TraversalBrowser.Ui, TraversalPlace> place(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.place);}
+        public InstanceProperty<TraversalBrowser.Ui, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.remoteComponent);}
         public InstanceProperty<TraversalBrowser.Ui, Layer> selectedLayer0(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.selectedLayer0);}
         public InstanceProperty<TraversalBrowser.Ui, SelectionMarkup> selectionMarkup(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.selectionMarkup);}
         public InstanceProperty<TraversalBrowser.Ui, TraversalSettings> settings(){return new InstanceProperty<>(source,PackageProperties.traversalBrowser_ui.settings);}
@@ -347,7 +371,7 @@ public class PackageProperties {
       public TypedProperty<TraversalSettings, Integer> selectionAreaHeight = new TypedProperty<>(TraversalSettings.class, "selectionAreaHeight");
       public TypedProperty<TraversalSettings, Boolean> showContainerLayers = new TypedProperty<>(TraversalSettings.class, "showContainerLayers");
       public TypedProperty<TraversalSettings, Integer> tableRows = new TypedProperty<>(TraversalSettings.class, "tableRows");
-      public static class InstanceProperties extends InstanceProperty.Container<TraversalSettings> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<TraversalSettings> {
         public  InstanceProperties(TraversalSettings source){super(source);}
         public InstanceProperty<TraversalSettings, Boolean> descentSelectionIncludesSecondaryRelations(){return new InstanceProperty<>(source,PackageProperties.traversalSettings.descentSelectionIncludesSecondaryRelations);}
         public InstanceProperty<TraversalSettings, TraversalSettings.PropertyDisplayMode> propertyDisplayMode(){return new InstanceProperty<>(source,PackageProperties.traversalSettings.propertyDisplayMode);}

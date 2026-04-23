@@ -1,15 +1,14 @@
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import com.google.gwt.dom.client.mutations.ElementSelectionRangeRecord;
-import com.google.gwt.dom.client.mutations.SelectionRecord;
+import java.util.Objects;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 
 /**
@@ -40,28 +39,119 @@ public final class WindowState {
 
 		public IntPair scrollPos;
 
-		public AttachId element;
+		public AttachId nodeId;
+
+		public int absoluteTop;
+
+		public int absoluteLeft;
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("boundingClientRect",
+					boundingClientRect, "scrollPos", scrollPos, "element",
+					nodeId);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(boundingClientRect, scrollPos, nodeId);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NodeUiState) {
+				NodeUiState o = (NodeUiState) obj;
+				return CommonUtils.equals(boundingClientRect,
+						o.boundingClientRect, scrollPos, o.scrollPos, nodeId,
+						o.nodeId);
+			} else {
+				return super.equals(obj);
+			}
+		}
 	}
 
 	public AttachId activeElement;
 
-	public List<NodeUiState> nodeUiStates = new ArrayList<>();
-
-	transient Map<Integer, NodeUiState> idUiState;
+	public OffsetsDelta offsetsDelta;
 
 	public int clientHeight;
 
 	public int clientWidth;
 
-	public int scrollTop;
+	@Bean(PropertySource.FIELDS)
+	public final static class OffsetsDelta {
+		public List<ElementOffsets> changes;
 
-	public int scrollLeft;
+		public Set<AttachId> removed;
 
-	public NodeUiState uiStateFor(int attachId) {
-		if (idUiState == null) {
-			idUiState = nodeUiStates.stream().collect(
-					AlcinaCollectors.toKeyMap(state -> state.element.id));
+		/**
+		 * The data synced via the protocol
+		 */
+		@Bean(PropertySource.FIELDS)
+		public final static class ElementOffsets {
+			public static ElementOffsets of(Node node) {
+				ElementOffsets result = new ElementOffsets();
+				result.id = AttachId.forNode(node);
+				if (node instanceof Element) {
+					Element elem = (Element) node;
+					Element offsetParent = elem.getOffsetParent();
+					result.offsetParentId = AttachId.forNode(offsetParent);
+					result.offsetHeight = elem.getOffsetHeight();
+					result.offsetLeft = elem.getOffsetLeft();
+					result.offsetTop = elem.getOffsetTop();
+					result.offsetWidth = elem.getOffsetWidth();
+					result.scrollLeft = elem.getScrollLeft();
+					result.scrollTop = elem.getScrollTop();
+				}
+				return result;
+			}
+
+			public AttachId id;
+
+			public AttachId offsetParentId;
+
+			/*
+			 * these should really be doubles, but that requires a full gwt dom
+			 * rework
+			 */
+			public int offsetLeft;
+
+			public int offsetWidth;
+
+			public int offsetTop;
+
+			public int offsetHeight;
+
+			public int scrollLeft;
+
+			public int scrollTop;
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof ElementOffsets) {
+					ElementOffsets o = (ElementOffsets) obj;
+					return Objects.equals(id, o.id) && Objects.equals(id, o.id)
+							&& offsetHeight == o.offsetHeight
+							&& offsetLeft == o.offsetLeft
+							&& offsetTop == o.offsetTop
+							&& offsetWidth == o.offsetWidth
+							&& scrollLeft == o.scrollLeft
+							&& scrollTop == o.scrollTop;
+				} else {
+					return false;
+				}
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(id, offsetParentId, offsetLeft, offsetWidth,
+						offsetTop, offsetHeight, scrollLeft, scrollTop);
+			}
 		}
-		return idUiState.get(attachId);
+
+		public String toSizes() {
+			return Ax.format("changes: %s - removed: %s", changes.size(),
+					removed.size());
+		}
 	}
 }

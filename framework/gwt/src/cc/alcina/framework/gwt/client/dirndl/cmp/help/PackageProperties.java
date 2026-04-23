@@ -16,7 +16,7 @@ public class PackageProperties {
     
     static class _HelpArea implements TypedProperty.Container {
       TypedProperty<HelpArea, LeafModel.TagMarkup> markup = new TypedProperty<>(HelpArea.class, "markup");
-      static class InstanceProperties extends InstanceProperty.Container<HelpArea> {
+      static class InstanceProperties extends 	InstanceProperty.Container<HelpArea> {
          InstanceProperties(HelpArea source){super(source);}
         InstanceProperty<HelpArea, LeafModel.TagMarkup> markup(){return new InstanceProperty<>(source,PackageProperties.helpArea.markup);}
       }
@@ -31,7 +31,7 @@ public class PackageProperties {
       TypedProperty<HelpArea.ActivityRoute, HelpArea> area = new TypedProperty<>(HelpArea.ActivityRoute.class, "area");
       TypedProperty<HelpArea.ActivityRoute, Class> channel = new TypedProperty<>(HelpArea.ActivityRoute.class, "channel");
       TypedProperty<HelpArea.ActivityRoute, BasePlace> place = new TypedProperty<>(HelpArea.ActivityRoute.class, "place");
-      static class InstanceProperties extends InstanceProperty.Container<HelpArea.ActivityRoute> {
+      static class InstanceProperties extends 	InstanceProperty.Container<HelpArea.ActivityRoute> {
          InstanceProperties(HelpArea.ActivityRoute source){super(source);}
         InstanceProperty<HelpArea.ActivityRoute, HelpArea> area(){return new InstanceProperty<>(source,PackageProperties.helpArea_activityRoute.area);}
         InstanceProperty<HelpArea.ActivityRoute, Class> channel(){return new InstanceProperty<>(source,PackageProperties.helpArea_activityRoute.channel);}

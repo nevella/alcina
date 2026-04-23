@@ -79,7 +79,7 @@ public final class MutationNode {
 	}
 
 	/*
-	 * Non-added nodes just need the attachid. Currently not hooked up (because
+	 * Non-added nodes just need the attachid. Currently truncation (to just id) isnot hooked up (because
 	 * the bandwidth used isn't that high, and the extra info is very useful for
 	 * debugging)
 	 * 
@@ -116,7 +116,7 @@ public final class MutationNode {
 
 	 * @formatter:on
 	 */
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_Impl.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._Impl.class)
 	void minimizeRpc() {
 		attributes = null;
 		nodeType = 0;

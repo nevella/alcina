@@ -33,6 +33,8 @@ public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 
 	/*
 	 * A marker interface for generated classes containing typed properties
+	 * 
+	 * wip - ds.late - final review of non-instanceproperty PackageProperty refs
 	 */
 	public interface Container {
 	}
@@ -89,7 +91,7 @@ public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 		}
 	}
 
-	public void setIfNotNull(S propertySource, T newValue) {
+	public void setIfUnset(S propertySource, T newValue) {
 		T existing = get(propertySource);
 		if (existing != null) {
 			return;

@@ -71,6 +71,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.ContainsTest;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
@@ -1957,12 +1958,12 @@ public abstract class TransformManager
 	}
 
 	public List<DomainTransformEvent> getTransformsForObjects(Collection coll) {
-		Set set = coll instanceof Set ? (Set) coll : new HashSet(coll);
+		ContainsTest test = new ContainsTest(coll);
 		return getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).stream()
-				.filter(transform -> coll
+				.filter(transform -> test
 						.contains(transform.provideSourceOrMarker())
-						|| coll.contains(transform.getNewValue())
-						|| coll.contains(
+						|| test.contains(transform.getNewValue())
+						|| test.contains(
 								transform.provideTargetMarkerForRemoval()))
 				.toList();
 	}

@@ -11,6 +11,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.DoublePair;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
@@ -26,6 +27,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  */
 /*
+ *
+ * Note that boundingclientrect coordinates are used (rather than say
+ * abosluteclientrect)
+ *
  * FIX - auto tracking of source rect-relative positioning via mutation observer
  */
 public class OverlayPosition {
@@ -53,6 +58,8 @@ public class OverlayPosition {
 	// FIXME - dirndl - another constraint?
 	public boolean equalWidths = false;
 
+	boolean parentFixed;
+
 	@Reflected
 	public enum ViewportConstraint {
 		ATTEMPT_VISIBLE {
@@ -63,9 +70,22 @@ public class OverlayPosition {
 			 */
 			@Override
 			void apply(OverlayPosition overlayPosition) {
+				if (!overlayPosition.toElement.isAttached()) {
+					return;
+				}
+				if (overlayPosition.parentFixed) {
+					return;
+				}
 				DomRect viewport = Window.getRect();
 				DomRect toRect = overlayPosition.toElement
 						.getBoundingClientRect();
+				/*
+				 * the checks are to handle element detach during the (async)
+				 * process
+				 */
+				if (toRect == null) {
+					return;
+				}
 				/*
 				 * x
 				 */
@@ -149,8 +169,8 @@ public class OverlayPosition {
 			/*
 			 * correction - minus (scroll-coords)
 			 */
-			int scrollLeft = Window.getScrollLeft();
-			int scrollTop = Window.getScrollTop();
+			// int scrollLeft = Window.getScrollLeft();
+			// int scrollTop = Window.getScrollTop();
 			/*
 			 * FIXME - dirndl - not if [from] is absolute - I think there's some
 			 * confusion here
@@ -160,14 +180,28 @@ public class OverlayPosition {
 			// -scrollLeft, -scrollTop);
 		} else {
 			toRect = toElement.getBoundingClientRect();
+			if (parentFixed) {
+				toRect = DomRect.fromOrigin(toRect.width, toRect.height);
+			} else {
+			}
 		}
 		constraints.forEach(Constraint::apply);
 		/*
 		 * FIXME - romcom - this should be run client-side (non-romcom, better
-		 * to not defer)
+		 * to not defer). Note that it has no effect if the overlay isn't
+		 * constrained by the viewport
 		 */
-		Client.eventBus().queued().lambda(() -> viewportConstraint.apply(this))
-				.deferred().dispatch();
+		if (parentFixed) {
+			toElement.getStyle().setPosition(
+					com.google.gwt.dom.client.Style.Position.FIXED);
+		}
+		/*
+		 * wip - romcom - doesn't play nice with romcom yet
+		 */
+		if (!Al.isRomcom()) {
+			Client.RenderState.queueWithRenderedState(
+					() -> viewportConstraint.apply(this));
+		}
 	}
 
 	public void dropdown(Position xalign, DomRect rect, Model rectSource,

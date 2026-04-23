@@ -155,6 +155,10 @@ public class Topic<T> {
 		publish(null);
 	}
 
+	public boolean wasPublished() {
+		return wasPublished;
+	}
+
 	public <V> Topic<V> withRetainPublished(boolean retainPublished) {
 		this.retainPublished = retainPublished;
 		return (Topic<V>) this;

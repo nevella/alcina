@@ -14,18 +14,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 
 public class StandardModels {
-	public static class LabelText extends Model.All
-			implements Directed.NonClassTag {
-		public String label;
-
-		public String text;
-
-		public LabelText(String label, String text) {
-			this.label = label;
-			this.text = text;
-		}
-	}
-
 	@Registration.Singleton
 	public static class PageCssClass extends Bindable {
 		public static StandardModels.PageCssClass get() {
@@ -43,24 +31,6 @@ public class StandardModels {
 			this.className = className;
 			propertyChangeSupport().firePropertyChange("className",
 					old_className, className);
-		}
-	}
-
-	public static class TextTitle extends Model.Fields
-			implements Directed.NonClassTag {
-		@Binding(type = Type.INNER_TEXT)
-		public String text;
-
-		@Binding(type = Type.PROPERTY)
-		public String title;
-
-		public TextTitle(String text) {
-			this(text, text);
-		}
-
-		public TextTitle(String text, String title) {
-			this.text = text;
-			this.title = title;
 		}
 	}
 

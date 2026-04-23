@@ -4,6 +4,7 @@ import com.google.gwt.dom.client.Document;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 class TestLocationMutation {
 	void run() {
@@ -21,5 +22,6 @@ class TestLocationMutation {
 		Ax.out("t1_1 treeIndex post-previousSiblingInsert: %s", t1_1_index_2);
 		int t1_2_index_2 = t1_2.asLocation().getTreeIndex();
 		Ax.out("t1_2 treeIndex post-previousSiblingInsert: %s", t1_2_index_2);
+		ClientUtils.consoleInfo("   [TestLocationMutation] Passed");
 	}
 }

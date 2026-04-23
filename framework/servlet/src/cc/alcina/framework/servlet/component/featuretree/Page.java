@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -36,9 +36,8 @@ class Page extends Model.All {
 		Page page;
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			page = new Page();
-			super.onBeforeRender(event);
 		}
 
 		@Override
@@ -64,7 +63,7 @@ class Page extends Model.All {
 
 		Main() {
 			featureTable = new FeatureTable();
-			properties = new Properties(featureTable.features);
+			properties = new Properties();
 		}
 	}
 }

@@ -28,7 +28,8 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 @TagName({ TableSectionElement.TAG_TBODY, TableSectionElement.TAG_TFOOT,
 		TableSectionElement.TAG_THEAD })
-public class TableSectionElement extends Element {
+public class TableSectionElement extends Element
+		implements Element.RestrictedElementContent {
 	static final String[] TAGS = { TableSectionElement.TAG_TBODY,
 			TableSectionElement.TAG_TFOOT, TableSectionElement.TAG_THEAD };
 

@@ -1,5 +1,9 @@
 package cc.alcina.framework.gwt.client.story;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location;
+import cc.alcina.framework.gwt.client.story.Story.Attribute;
+import cc.alcina.framework.gwt.client.story.Story.Decl.ContextEvaluator;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 
 public interface TellerContext {
@@ -35,7 +39,7 @@ public interface TellerContext {
 	}
 
 	/*
-	 * could be much larger obviously
+	 * could be much larger obviously. also used in WDConfiguration
 	 */
 	public enum Device {
 		Desktop, Tablet, Phone;
@@ -46,4 +50,25 @@ public interface TellerContext {
 	}
 
 	boolean isThrowOnFailure();
+
+	<V> Attribute.Entry<V, Attribute<V>>
+			getAttribute(Class<? extends Attribute<V>> clazz);
+
+	default boolean hasAttribute(Class<? extends Attribute> clazz) {
+		return getAttribute((Class) clazz).value != null;
+	}
+
+	TellerContext.Device getDevice();
+
+	default boolean eveluateCondition(Story.Decl.Condition condition) {
+		if (condition.attr() != Attribute.class) {
+			return hasAttribute(condition.attr());
+		}
+		if (condition.evaluator() != ContextEvaluator.class) {
+			return Reflections.newInstance(condition.evaluator()).test(this);
+		}
+		return getDevice() == condition.device();
+	}
+
+	void updateLocation(Location location);
 }

@@ -43,6 +43,13 @@ import cc.alcina.framework.common.client.util.Topic;
  * <li><b>Parsing end location</b> - defaults to the measure end
  * <li><b>Traversal order/b> - {@link #forwardsTraversalOrder}
  * </ul>
+ * <h3>Gotchas</h3>
+ * <ul>
+ * <li>Assuming the parser logic is correct (and I think it now is), the main
+ * varianca is in token behavior - so:
+ * <li>Use the BranchingParser.logRanges configuration flag to debug the match
+ * output of a given range of the doc
+ * </ul>
  */
 public class LayerParser {
 	public abstract static class ExtendedState {
@@ -156,9 +163,10 @@ public class LayerParser {
 			class SuccessorFollowingMatchLookahead
 					extends SuccessorFollowingMatch {
 				Location get(Measure match) {
+					BranchToken branchToken = (BranchToken) match.token;
 					if (forwardsTraversalOrder) {
 						if (match.provideIsPoint()
-								&& match.token.isNonDomToken()) {
+								&& branchToken.isNonDomToken()) {
 							// the match was a zero-width match, remain at the
 							// location
 							return match.end;
@@ -172,6 +180,10 @@ public class LayerParser {
 						return match.end.relativeLocation(
 								RelativeDirection.NEXT_LOCATION, textTraversal);
 					} else {
+						/*
+						 * wip - (ds) - this is probably OK, but see changes to
+						 * forwards in jan/2026
+						 */
 						return match.start.relativeLocation(
 								RelativeDirection.PREVIOUS_LOCATION,
 								TextTraversal.TO_START_OF_NODE);
@@ -372,8 +384,8 @@ public class LayerParser {
 		}
 
 		Measure match(BranchToken token) {
-			boolean atEndBoundary = forwardsTraversalOrder ? location.after
-					: !location.after;
+			boolean atEndBoundary = forwardsTraversalOrder ? !location.isStart()
+					: location.isStart();
 			// text traversal is only at start location
 			if (!location.getContainingNode().isText()) {
 				switch (token.matchesBoundary()) {

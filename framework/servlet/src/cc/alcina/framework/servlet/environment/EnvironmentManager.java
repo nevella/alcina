@@ -1,8 +1,10 @@
 package cc.alcina.framework.servlet.environment;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
@@ -14,6 +16,7 @@ import javax.servlet.http.Cookie;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
@@ -52,9 +55,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvent;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
@@ -88,6 +94,9 @@ public class EnvironmentManager {
 	 */
 	static Configuration.Key decoratorEventRecordingEnabled = Configuration
 			.key("decoratorEventRecordingEnabled");
+
+	public static final Configuration.Key debugRomcomMetrics = Configuration
+			.key("debugRomcomMetrics");
 
 	public static EnvironmentManager get() {
 		return Registry.impl(EnvironmentManager.class);
@@ -236,8 +245,8 @@ public class EnvironmentManager {
 		}
 
 		@Override
-		public void ensurePopulated(Entity<?> entity) {
-			handler().ensurePopulated(entity);
+		public void ensurePopulated(List<? extends Entity> entities) {
+			handler().ensurePopulated(entities);
 		}
 
 		EnvironmentHandler() {
@@ -249,6 +258,41 @@ public class EnvironmentManager {
 		new RemoteComponentEventObserver().bind();
 		if (decoratorEventRecordingEnabled.is()) {
 			new DecoratorEventObserver().bind();
+		}
+	}
+
+	@Reflected
+	public static class LongResponseTimeEventObserver
+			implements ProcessObserver<RemoteComponentEvent> {
+		@Override
+		public void topicPublished(RemoteComponentEvent message) {
+			List<Message> requestMessages = message.request.messageEnvelope.messages
+					.stream().toList();
+			List<Message> responseMessages = message.response.messageEnvelope.messages
+					.stream().toList();
+			List<Mutations> responseMutations = responseMessages.stream()
+					.filter(m -> m instanceof Mutations).map(m -> (Mutations) m)
+					.toList();
+			if (responseMutations.size() > 0) {
+				// responseMutations
+				// .forEach(m -> m.emitTime = System.currentTimeMillis());
+				List<DomEventMessage> incomingEvents = requestMessages.stream()
+						.filter(m -> m instanceof DomEventMessage)
+						.map(m -> (DomEventMessage) m).toList();
+				if (incomingEvents.size() > 0) {
+					DomEventData firstEvent = incomingEvents.get(0).events
+							.get(0);
+					Set<String> types = new LinkedHashSet<>();
+					incomingEvents.stream().flatMap(em -> em.events.stream())
+							.map(e -> e.event.getType()).forEach(types::add);
+					long eventTime = firstEvent.event.getEventTime();
+					long now = System.currentTimeMillis();
+					Ax.out("%s - %sms", types, now - eventTime);
+					if (now - eventTime > 200) {
+						int debug = 3;
+					}
+				}
+			}
 		}
 	}
 

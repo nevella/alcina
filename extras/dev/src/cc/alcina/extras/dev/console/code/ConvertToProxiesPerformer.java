@@ -508,7 +508,7 @@ public class ConvertToProxiesPerformer
 					unit.ensureImport(proxyClass);
 					NameExpr nameExpr = (NameExpr) expr.getChildNodes().get(0);
 					nameExpr.setName(proxyClass.getSimpleName());
-					unit.dirty = true;
+					unit.dirty();
 				}
 			}
 			super.visit(expr, arg);
@@ -533,7 +533,7 @@ public class ConvertToProxiesPerformer
 							.parseExpression(expression);
 					Optional<Node> parent = expr.getParentNode();
 					parent.get().replace(expr, replExpr);
-					unit.dirty = true;
+					unit.dirty();
 				}
 			}
 			super.visit(expr, arg);

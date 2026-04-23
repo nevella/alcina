@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -57,7 +56,8 @@ public class RemoteComponentUi {
 		@Override
 		public void onPreviewNativeEvent(NativePreviewEvent event) {
 			Event nativeEvent = (Event) event.getNativeEvent();
-			ClientEventDispatch.dispatchEventMessage(nativeEvent, null, true);
+			ClientRpc.get().clientEventDispatch
+					.dispatchEventMessage(nativeEvent, null, true);
 		}
 	}
 
@@ -65,66 +65,8 @@ public class RemoteComponentUi {
 	 * Transforms some rpc messages observables into UI mods (for testing,
 	 * long-running message processing indication)
 	 */
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientMessageState.class)
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientMessageState.class)
 	class MessageStateRouter {
-		void onMessageHandlingException(Message message, Throwable e) {
-			// FIXME - ask the context to log
-			String logMesssage = Ax.format(
-					"Exception handling message %s\n"
-							+ "================\nSerialized form:\n%s",
-					message, "??");
-			RemoteObjectModelComponentClient.consoleError(logMesssage);
-			e.printStackTrace();
-			/*
-			 * FIXME - devex - 0 - once syncmutations.3 is stable, this should
-			 * not occur (ha!)
-			 *
-			 * Serious, the romcom client is a bounded piece of code that just
-			 * propagates server changes to the client dom, so all exceptions
-			 * *should* be server-only (unless client dom is mashed by an
-			 * extension)
-			 */
-			Window.alert(CommonUtils.toSimpleExceptionMessage(e));
-			if (!toServerMessageSent) {
-				ProcessingException toServerMessage = ProcessingException
-						.wrap(WrappedRuntimeException.wrap(e), true);
-				ClientRpc.send(toServerMessage);
-			}
-		}
-
-		boolean toServerMessageSent = false;
-
-		Element notificationElement;
-
-		void displayRpcStateMessage(String message) {
-			notificationElement = Document.get()
-					.createElement("romcom-notification");
-			notificationElement.setTextContent(message);
-			Document.get().getBody().appendChild(notificationElement);
-			LocalDom.flush();
-			String display = notificationElement.implAccess().ensureJsoRemote()
-					.getComputedStyle().getDisplay();
-			if (Objects.equals(display, "inline")) {
-				// not set by the app, add our own
-				notificationElement.setAttribute("style",
-						"position: absolute; top:5px; left: 5px; padding: 0.5rem 1rem; "
-								+ "display: block; background-color: #333; border: solid 1px #ccc; color: #cc5; z-index: 999");
-			}
-		}
-
-		void clearRpcStateMessage() {
-			if (notificationElement != null) {
-				notificationElement.removeFromParent();
-				notificationElement = null;
-			}
-		}
-
-		MessageStateRouter() {
-			new MessageStateObserver().bind();
-		}
-
-		boolean showingLongProcessing;
-
 		@Reflected
 		class MessageStateObserver implements
 				ProcessObserver<MessageTransportLayer.ActiveMessagesChanged> {
@@ -177,6 +119,64 @@ public class RemoteComponentUi {
 				}
 			}
 		}
+
+		boolean toServerMessageSent = false;
+
+		Element notificationElement;
+
+		boolean showingLongProcessing;
+
+		MessageStateRouter() {
+			new MessageStateObserver().bind();
+		}
+
+		void onMessageHandlingException(Message message, Throwable e) {
+			// FIXME - ask the context to log
+			String logMesssage = Ax.format(
+					"Exception handling message %s\n"
+							+ "================\nSerialized form:\n%s",
+					message, "??");
+			RemoteObjectModelComponentClient.consoleError(logMesssage);
+			e.printStackTrace();
+			/*
+			 * FIXME - devex - 0 - once syncmutations.3 is stable, this should
+			 * not occur (ha!)
+			 *
+			 * Serious, the romcom client is a bounded piece of code that just
+			 * propagates server changes to the client dom, so all exceptions
+			 * *should* be server-only (unless client dom is mashed by an
+			 * extension)
+			 */
+			Window.alert(CommonUtils.toSimpleExceptionMessage(e));
+			if (!toServerMessageSent) {
+				ProcessingException toServerMessage = ProcessingException
+						.wrap(WrappedRuntimeException.wrap(e), true);
+				ClientRpc.send(toServerMessage);
+			}
+		}
+
+		void displayRpcStateMessage(String message) {
+			notificationElement = Document.get()
+					.createElement("romcom-notification");
+			notificationElement.setTextContent(message);
+			Document.get().getBody().appendChild(notificationElement);
+			LocalDom.flush();
+			String display = notificationElement.implAccess().ensureJsoRemote()
+					.getComputedStyle().getDisplay();
+			if (Objects.equals(display, "inline")) {
+				// not set by the app, add our own
+				notificationElement.setAttribute("style",
+						"position: absolute; top:5px; left: 5px; padding: 0.5rem 1rem; "
+								+ "display: block; background-color: #333; border: solid 1px #ccc; color: #cc5; z-index: 999");
+			}
+		}
+
+		void clearRpcStateMessage() {
+			if (notificationElement != null) {
+				notificationElement.removeFromParent();
+				notificationElement = null;
+			}
+		}
 	}
 
 	PreviewEventRouter previewEventRouter;
@@ -219,9 +219,6 @@ public class RemoteComponentUi {
 				.add(this::onLocalMutations);
 		LocalDom.getLocalMutations().topicBehaviorAdded
 				.add(this::onBehaviorAdded);
-		ClientRpc.get().transportLayer.session = ReflectiveSerializer
-				.deserializeRpc(ClientUtils.wndString(
-						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
 		Startup startupMessage = Message.Startup.forClient();
 		ClientRpc.send(startupMessage);
 		/*
@@ -269,13 +266,32 @@ public class RemoteComponentUi {
 	// now handles window events)
 	void onPageHideNativeEvent() {
 		Event event = new Event(BrowserEvents.PAGEHIDE);
-		ClientEventDispatch.dispatchEventMessage(event, null, false);
+		ClientRpc.get().clientEventDispatch.dispatchEventMessage(event, null,
+				false);
+	}
+
+	void onWindowResizeNativeEvent() {
+		Event event = new Event(BrowserEvents.WINDOWRESIZE);
+		ClientRpc.get().clientEventDispatch.dispatchEventMessage(event, null,
+				false);
+	}
+
+	void onWindowScrollNativeEvent() {
+		Event event = new Event(BrowserEvents.SCROLL);
+		ClientRpc.get().clientEventDispatch.dispatchEventMessage(event, null,
+				false);
 	}
 
 	final native void initWindowListeners() /*-{
 		var _this=this;
 		$wnd.onpagehide = $entry(function (evt){
 			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::onPageHideNativeEvent()();
+		});
+		$wnd.onresize = $entry(function (evt){
+			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::onWindowResizeNativeEvent()();
+		});
+		$wnd.onscroll = $entry(function (evt){
+			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::onWindowScrollNativeEvent()();
 		});
 		}-*/;
 }

@@ -149,8 +149,9 @@ public interface EditAreaBehavior {
 				 * if focus is at the other end of the non-editable, switch it
 				 * prior to move
 				 */
-				Direction focusDirection = focusLocation.after ? Direction.right
-						: Direction.left;
+				Direction focusDirection = focusLocation.isStart()
+						? Direction.left
+						: Direction.right;
 				if (focusDirection != direction) {
 					focusLocation = focusLocation.toOppositeEnd();
 				}

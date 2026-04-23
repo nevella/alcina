@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
+import cc.alcina.framework.gwt.client.story.TellerContext.Device;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 /**
@@ -218,6 +219,52 @@ public interface Story {
 			public interface Converter<A extends Annotation>
 					extends Registration.AllSubtypes {
 				Story.Action convert(A ann);
+			}
+
+			public interface Code {
+			}
+
+			public interface Environment {
+				/**
+				 * Mark the current downloads folder (to await changes)
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface MarkDownloads {
+					public static class ConverterImpl
+							implements Converter<MarkDownloads> {
+						@Override
+						public Story.Action convert(MarkDownloads ann) {
+							return new Story.Action.Environment.MarkDownloads();
+						}
+					}
+				}
+
+				/**
+				 * Mark the current downloads folder (to await changes)
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface AwaitNewDownload {
+					/**
+					 * 
+					 * @return the new download regex to match
+					 */
+					String value() default ".*";
+
+					public static class ConverterImpl
+							implements Converter<AwaitNewDownload> {
+						@Override
+						public Story.Action convert(AwaitNewDownload ann) {
+							return new Story.Action.Environment.AwaitNewDownload(
+									ann.value());
+						}
+					}
+				}
 			}
 
 			/**
@@ -456,11 +503,14 @@ public interface Story {
 				@Target({ ElementType.TYPE })
 				@Registration(DeclarativeAction.class)
 				public @interface TestAbsent {
+					int resetIfPresent() default 0;
+
 					public static class ConverterImpl
 							implements Converter<TestAbsent> {
 						@Override
 						public Story.Action convert(TestAbsent ann) {
-							return new Story.Action.Ui.TestAbsent();
+							return new Story.Action.Ui.TestAbsent()
+									.withRetestIfPresent(ann.resetIfPresent());
 						}
 					}
 				}
@@ -471,6 +521,10 @@ public interface Story {
 				 * <p>
 				 * To send a control code, use
 				 * Decl.Action.UI.KeyConstant(SeleniumKeys.RETURN) etc
+				 * 
+				 * <p>
+				 * Note that by default this clears the element (which is not
+				 * Selenium default)
 				 */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -487,6 +541,23 @@ public interface Story {
 						public Story.Action convert(Keys ann) {
 							return new Story.Action.Ui.Keys()
 									.withClear(ann.clear())
+									.withText(ann.value());
+						}
+					}
+				}
+
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface KeysWithClear {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<KeysWithClear> {
+						@Override
+						public Story.Action convert(KeysWithClear ann) {
+							return new Story.Action.Ui.Keys().withClear(true)
 									.withText(ann.value());
 						}
 					}
@@ -527,7 +598,7 @@ public interface Story {
 					}
 				}
 
-				/** Define a script action */
+				/** Define a resizeviewport action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
@@ -545,6 +616,36 @@ public interface Story {
 						public Story.Action convert(ResizeViewport ann) {
 							return new Story.Action.Ui.ResizeViewport(
 									ann.width(), ann.height(), ann.maximise());
+						}
+					}
+				}
+
+				/** Define a FocusWindow action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface FocusWindow {
+					public static class ConverterImpl
+							implements Converter<FocusWindow> {
+						@Override
+						public Story.Action convert(FocusWindow ann) {
+							return new Story.Action.Ui.FocusWindow();
+						}
+					}
+				}
+
+				/** Define a CloseWindow action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface CloseWindow {
+					public static class ConverterImpl
+							implements Converter<CloseWindow> {
+						@Override
+						public Story.Action convert(CloseWindow ann) {
+							return new Story.Action.Ui.CloseWindow();
 						}
 					}
 				}
@@ -908,19 +1009,66 @@ public interface Story {
 
 			/**
 			 * <p>
-			 * Invert the test result for ascent propagation (e.g. if the point
-			 * is a dom existence test, the evaluated test result should be true
-			 * if the node <i>doesn't</i> exist)
-			 * 
-			 * <p>
-			 * TODO - speculative, maybe remove (since it may be simpler/more
-			 * reusable to invert elsewhere - such as TestAbsent/TestPresent)
+			 * Skip this child if the attribute has a value
 			 */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
-			public @interface Invert {
+			public @interface SkipIf {
+				Condition value();
 			}
+
+			/**
+			 * <p>
+			 * Skip this child if the attribute is unset
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface SkipIfNot {
+				Condition value();
+			}
+		}
+
+		/**
+		 * Conditional execution attributes
+		 */
+		public interface ContextModifier {
+			/**
+			 * Set a context attribute. This will be visible for the point and
+			 * all child points
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			@Repeatable(SetAttribute.Multiple.class)
+			public @interface SetAttribute {
+				Class<? extends Attribute<String>> key();
+
+				String value();
+
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				public @interface Multiple {
+					SetAttribute[] value();
+				}
+			}
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Condition {
+			Class<? extends Attribute> attr() default Attribute.class;
+
+			Class<? extends ContextEvaluator> evaluator() default ContextEvaluator.class;
+
+			Device device() default Device.Desktop;
+		}
+
+		public interface ContextEvaluator {
+			boolean test(TellerContext context);
 		}
 	}
 
@@ -951,7 +1099,8 @@ public interface Story {
 	 * </ul>
 	 * 
 	 */
-	public interface Point {
+	@Registration(Point.class)
+	public interface Point extends Registration.AllSubtypes {
 		List<Class<? extends Story.State>> getRequires();
 
 		List<? extends Point> getChildren();
@@ -960,9 +1109,10 @@ public interface Story {
 
 		/**
 		 * 
+		 * @param context
 		 * @return the Action (which will not be a subtype of Annotate)
 		 */
-		Story.Action getAction();
+		Story.Action getAction(TellerContext context);
 
 		/**
 		 * 
@@ -980,6 +1130,8 @@ public interface Story {
 
 		String getDescription();
 
+		List<Story.Decl.ContextModifier.SetAttribute> getContextAttributes();
+
 		/*
 		 * An aspect added to point/performers
 		 */
@@ -994,6 +1146,19 @@ public interface Story {
 		 */
 		public interface Code extends Story.Action {
 			void perform(Action.Context context) throws Exception;
+		}
+
+		public interface Environment extends Story.Action {
+			public static class MarkDownloads implements Environment {
+			}
+
+			public static class AwaitNewDownload implements Environment {
+				AwaitNewDownload(String newDownloadPathRegex) {
+					this.newDownloadPathRegex = newDownloadPathRegex;
+				}
+
+				public String newDownloadPathRegex;
+			}
 		}
 
 		/*
@@ -1155,6 +1320,12 @@ public interface Story {
 			 * Test for the absence of the document locator
 			 */
 			public static class TestAbsent implements Ui {
+				public int resetIfPresent;
+
+				public TestAbsent withRetestIfPresent(int resetIfPresent) {
+					this.resetIfPresent = resetIfPresent;
+					return this;
+				}
 			}
 
 			public static class Go implements Ui {
@@ -1295,13 +1466,13 @@ public interface Story {
 			}
 
 			public static class SelectArea implements Ui {
-				int fromX;
+				public int fromX;
 
-				int fromY;
+				public int fromY;
 
-				int toX;
+				public int toX;
 
-				int toY;
+				public int toY;
 
 				public SelectArea() {
 				}
@@ -1312,6 +1483,12 @@ public interface Story {
 					this.toX = toX;
 					this.toY = toY;
 				}
+			}
+
+			public static class FocusWindow implements Ui {
+			}
+
+			public static class CloseWindow implements Ui {
 			}
 		}
 
@@ -1397,5 +1574,9 @@ public interface Story {
 	 */
 	public interface Conditional {
 		Set<Class<? extends Point>> exitOkOnFalse();
+
+		Set<Story.Decl.Condition> getSkipIf();
+
+		Set<Story.Decl.Condition> getSkipIfNot();
 	}
 }

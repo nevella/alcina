@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.process.ProcessObserver;
-import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -111,10 +110,10 @@ class ObservableRecorder {
 	}
 
 	void observe() {
-		ProcessObservers.context().observe(new BeforeStoryObserver());
-		ProcessObservers.context().observe(new BeforeVisitObserver());
-		ProcessObservers.context().observe(new AfterPerformActionObserver());
-		ProcessObservers.context().observe(new AfterStoryObserver());
+		new BeforeStoryObserver().bind();
+		new BeforeVisitObserver().bind();
+		new AfterPerformActionObserver().bind();
+		new AfterStoryObserver().bind();
 	}
 
 	class BeforeStoryObserver
@@ -129,11 +128,7 @@ class ObservableRecorder {
 			implements ProcessObserver<StoryTeller.BeforeVisit> {
 		@Override
 		public void topicPublished(BeforeVisit message) {
-			Visit visit = message.getVisit();
-			if (visit.getDescription() != null) {
-				storage.storeObservable(new StoryDocObservable.DocumentPoint(
-						visit, visit.getDescription()));
-			}
+			// noop
 		}
 	}
 
@@ -141,12 +136,20 @@ class ObservableRecorder {
 			implements ProcessObserver<StoryTeller.AfterPerformAction> {
 		@Override
 		public void topicPublished(AfterPerformAction message) {
-			byte[] screenshotBytes = message.getState()
-					.getAttribute(ScreenshotData.class).get();
-			if (screenshotBytes != null) {
-				message.getState().removeAttribute(ScreenshotData.class);
-				storage.updateCurrentObservable(
-						message.getVisit().displayName(), screenshotBytes);
+			Visit visit = message.getVisit();
+			if (visit.actionPerformed) {
+				if (visit.getDescription() != null) {
+					storage.storeObservable(
+							new StoryDocObservable.DocumentPoint(visit,
+									visit.getDescription()));
+				}
+				byte[] screenshotBytes = message.getState()
+						.getAttribute(ScreenshotData.class).get();
+				if (screenshotBytes != null) {
+					message.getState().removeAttribute(ScreenshotData.class);
+					storage.updateCurrentObservable(visit.displayName(),
+							screenshotBytes);
+				}
 			}
 		}
 	}
@@ -159,23 +162,17 @@ class ObservableRecorder {
 			RendererConfiguration rendererConfiguration = storyDoc.part.rendererConfiguration;
 			if (rendererConfiguration != null) {
 				List<StoryDocObservable> observables = storage.getObservables();
-				observables = observables.stream()
-						.filter(obv -> testPoint(obv.pointClassName))
-						.collect(Collectors.toList());
+				Class<? extends Point> pointFilter = rendererConfiguration.pointFilter;
+				if (pointFilter != null) {
+					observables = observables.stream()
+							.filter(obv -> obv.ancestorClassNames
+									.contains(pointFilter.getName()))
+							.collect(Collectors.toList());
+				}
 				Reflections.newInstance(rendererConfiguration.renderer)
 						.render(storyDoc.part, storage.folder, observables);
 			}
 			storage.conditionallyCopyToPersistent();
-		}
-
-		boolean testPoint(String pointClassName) {
-			RendererConfiguration rendererConfiguration = storyDoc.part.rendererConfiguration;
-			Class<? extends Point> pointFilter = rendererConfiguration.pointFilter;
-			if (pointFilter != null) {
-				return pointClassName.startsWith(pointFilter.getName());
-			} else {
-				return true;
-			}
 		}
 	}
 }

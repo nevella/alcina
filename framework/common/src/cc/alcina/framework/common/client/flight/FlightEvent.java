@@ -75,6 +75,15 @@ public class FlightEvent extends Bindable.Fields
 		return event == null ? null : event.provideStringRepresentation();
 	}
 
+	public boolean provideIsMutation() {
+		if (event == null) {
+			return false;
+		} else {
+			String detail = Ax.blankToEmpty(event.provideDetail());
+			return detail.contains("Mutations");
+		}
+	}
+
 	@Override
 	public void setId(long id) {
 		set("id", this.id, id, () -> this.id = id);

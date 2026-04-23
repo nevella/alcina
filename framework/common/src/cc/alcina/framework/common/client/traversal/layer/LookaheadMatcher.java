@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -231,13 +230,16 @@ public abstract class LookaheadMatcher<C> {
 		}
 
 		LocationMatcher withOptions(Options options) {
+			if (options.matchesEmphasisTypes != MatchesEmphasisTypes.BOTH) {
+				/*
+				 * can't be in the later clause due to the permitUnequalOptions
+				 * branch
+				 */
+				emphasisOracle = Registry.impl(EmphasisOracle.class);
+			}
 			if (this.options == null || (options.permitUnequalOptions
 					&& !Objects.equals(options, this.options))) {
 				this.options = options;
-				if (options.matchesEmphasisTypes != MatchesEmphasisTypes.BOTH
-						&& emphasisOracle == null) {
-					emphasisOracle = Registry.impl(EmphasisOracle.class);
-				}
 				currentMatchInvalidated = true;
 				textMeasureInvalidated = true;
 			} else {
@@ -326,6 +328,12 @@ public abstract class LookaheadMatcher<C> {
 			LocationMatcher matcher = matchers
 					.computeIfAbsent(token, LocationMatcher::new)
 					.withOptions(this);
+			if (matcher.emphasisOracle == null) {
+				if (matcher.options.matchesEmphasisTypes != MatchesEmphasisTypes.BOTH) {
+					int debug = 3;
+					matcher.withOptions(this);
+				}
+			}
 			return matcher.match();
 		}
 

@@ -1,19 +1,24 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.NodeNotFoundException;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
+import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
@@ -125,12 +130,18 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
 		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler,
 		DomEvents.Focusout.Handler {
-	public static class Builder<T> {
+	public static class Attributes<T> {
 		HasDecorators decoratorParent;
 
 		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
 
 		DecoratorNode.Descriptor<?, ?, ?> descriptor;
+
+		Model suggestorRelativeTo;
+
+		public void setSuggestorRelativeTo(Model suggestorRelativeTo) {
+			this.suggestorRelativeTo = suggestorRelativeTo;
+		}
 
 		public ContentDecorator build() {
 			Preconditions.checkNotNull(decoratorParent);
@@ -158,8 +169,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	class CancelledDecoratorSuggestion {
 	}
 
-	public static ContentDecorator.Builder builder() {
-		return new Builder();
+	public static ContentDecorator.Attributes attributes() {
+		return new Attributes();
 	}
 
 	/*
@@ -211,19 +222,22 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	DomNode overlayEditNode;
 
+	Model suggestorRelativeTo;
+
 	/**
 	 * Should only be called by the builder
 	 * 
-	 * @param builder
+	 * @param attributes
 	 */
-	private ContentDecorator(ContentDecorator.Builder builder) {
+	private ContentDecorator(ContentDecorator.Attributes attributes) {
 		/*
 		 * AttributeBehaviorHandler registration is required
 		 */
 		Preconditions.checkState(BehaviorRegistry.isInitialised());
-		this.descriptor = builder.descriptor;
-		this.suggestorProvider = builder.suggestorProvider;
-		this.decoratorParent = builder.decoratorParent;
+		this.descriptor = attributes.descriptor;
+		this.suggestorProvider = attributes.suggestorProvider;
+		this.decoratorParent = attributes.decoratorParent;
+		this.suggestorRelativeTo = attributes.suggestorRelativeTo;
 	}
 
 	public boolean isActive() {
@@ -295,7 +309,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	public void onReferenceSelected(ReferenceSelected event) {
 		if (event.getContext().getPrevious().node.getModel() == suggestor) {
 			DecoratorNode decorator = descriptor.createNode();
-			decorator.putReferenced(event.getModel());
+			decorator.putReferenced(((Model) decoratorParent).provideNode(),
+					event.getModel());
 			suggestingNode.nodes().insertAfterThis(decorator);
 			suggestingNode.nodes().removeFromParent();
 			if (decorator.isPositionPostDecoratorOnCreate()) {
@@ -324,6 +339,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	protected void validateSelection0() {
+		if (!((Model) decoratorParent).provideIsBound()) {
+			return;
+		}
 		EditSelection selection = new EditSelection();
 		if (!selection.hasSelection()) {
 			return;
@@ -366,6 +384,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				&& characterString.matches("[ \\u200B({\\[]");
 	}
 
+	/**
+	 * determine if a suggestor overlay should be displayed
+	 */
 	void checkTrigger() {
 		/*
 		 * handling requires mutations to be processed (and FN mutations), so
@@ -378,6 +399,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				.deferred().dispatch();
 	}
 
+	/**
+	 * determine if a suggestor overlay should be displayed (filtered)
+	 */
 	/*
  * @formatter:off
  * 
@@ -418,9 +442,16 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			if (focussedFragment != null
 					&& focussedFragment.ancestors().has(SuggestingNode.class)) {
 				/*
-				 * transitional, transforming from accepted suggesing to
+				 * transitional, transforming from accepted suggesting to
 				 * decorator
 				 */
+				/*
+				 * actually - that depends. for the moment, *don't* exit here.
+				 */
+				// return;
+				suggestingNode = focussedFragment.ancestors()
+						.get(SuggestingNode.class);
+				showOverlay(suggestingNode.domNode());
 				return;
 			}
 			validateSelection0();
@@ -434,7 +465,12 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			// split
 			if (triggerSequence != null) {
 				suggestingNode = createSuggestingNode(editSelection);
-				showOverlay(suggestingNode.domNode());
+				/*
+				 * overlay positioning will require the suggestingNode be
+				 * rendered
+				 */
+				Client.RenderState.queueWithRenderedState(
+						() -> showOverlay(suggestingNode.domNode()));
 			}
 		}
 	}
@@ -472,26 +508,34 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	void showOverlay(DomNode decoratorDomNode) {
-		LocalDom.flush();
 		DomNode parent = decoratorDomNode.parent();
 		if (parent.tagIs("font")) {
 			// Webkit style-preserving?
 		}
 		Overlay.Attributes attributes = Overlay.attributes();
-		Element domElement = (Element) decoratorDomNode.w3cElement();
+		Element rectElement = suggestorRelativeTo != null
+				? suggestorRelativeTo.provideElement()
+				: (Element) decoratorDomNode.w3cElement();
 		suggestor = suggestorProvider.apply(this, decoratorDomNode);
 		attributes.withCssClass("decorator-suggestor");
 		attributes.withConsumeSubmit(true).withFocusOnBind(false);
-		overlay = attributes
-				.dropdown(OverlayPosition.Position.START,
-						domElement.getBoundingClientRect(),
-						(Model) decoratorParent, suggestor)
-				.withRectSourceElement(domElement)
-				.withPeerModels(List.of(this.suggestingNode)).create();
-		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
-				.publish();
-		overlay.open();
-		this.overlayEditNode = decoratorDomNode;
+		try {
+			DomRect boundingClientRect = rectElement.getBoundingClientRect();
+			overlay = attributes
+					.dropdown(OverlayPosition.Position.START,
+							boundingClientRect, (Model) decoratorParent,
+							suggestor)
+					.withRectSourceElement(rectElement)
+					.withPeerModels(List.of(this.suggestingNode)).create();
+			new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
+					.publish();
+			overlay.open();
+			this.overlayEditNode = decoratorDomNode;
+		} catch (NodeNotFoundException e) {
+			/*
+			 * the suggestor was never rendered due to edit conflicts
+			 */
+		}
 	}
 
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
@@ -528,6 +572,52 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			}
 			if (!retain) {
 				closeOverlay();
+			}
+		}
+	}
+
+	void deleteIfSingleDecoratorSelected() {
+		EditSelection editSelection = new EditSelection();
+		DomNode focusNode = editSelection.focusNode();
+		DomNode anchorNode = editSelection.anchorNode();
+		if (focusNode == null) {
+			return;
+		}
+		if (Document.get().getSelection().isCollapsed()) {
+			return;
+		}
+		/*
+		 * ensure start before end
+		 */
+		Range orderedRange = editSelection.range.asOrderedRange();
+		if (orderedRange.end.isAtNodeStart()) {
+			/*
+			 * handle browser interpretation of 'user-select: all' - which
+			 * positions the focus on the next non-editable (somehow)
+			 * 
+			 * this isn't perfect, but does check that the only selected text is
+			 * in the one decorator-node
+			 */
+			DomNode cursor = orderedRange.end.getContainingNode().relative()
+					.treePreviousNode();
+			while (!cursor.isText() || cursor.textContent().isEmpty()) {
+				cursor = cursor.relative().treePreviousNode();
+			}
+			orderedRange = new Location.Range(orderedRange.start,
+					cursor.asRange().end);
+		}
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		FragmentNode startFragment = fragmentModel
+				.getFragmentContaining(orderedRange.start.getContainingNode());
+		FragmentNode endFragment = fragmentModel
+				.getFragmentContaining(orderedRange.end.getContainingNode());
+		if (startFragment instanceof DecoratorNode
+				&& endFragment == startFragment) {
+			if (Objects.equals(editSelection.range.toIntPair(),
+					startFragment.domNode().asRange().toIntPair())) {
+				startFragment.nodes().removeFromParent();
+				((Model) decoratorParent).emitEvent(
+						DecoratorEvents.SelectedDecoratorDeleted.class);
 			}
 		}
 	}

@@ -1,11 +1,16 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.place.shared.Place;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -68,7 +73,7 @@ public class ModelEvents {
 			void onBack(Back event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onBack(Back event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -109,6 +114,14 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onBeforeSelectionChanged(BeforeSelectionChangedDispatch event);
+		}
+
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
+			@Override
+			default void onBeforeSelectionChanged(
+					BeforeSelectionChangedDispatch event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 
@@ -193,7 +206,7 @@ public class ModelEvents {
 			void onClose(Close event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onClose(Close event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -323,6 +336,30 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * The most common use of Filter is as a subtree notification - so
+	 * {@link Filter} is a DescendantEvent, this is the Ascending
+	 * verb/gerund/thing
+	 */
+	public static class FilterAscent
+			extends ModelEvent<Object, FilterAscent.Handler> {
+		@Override
+		public void dispatch(FilterAscent.Handler handler) {
+			handler.onFilterAscent(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFilterAscent(FilterAscent event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onFilterAscent(FilterAscent event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Find extends ModelEvent<Object, Find.Handler> {
 		@Override
 		public void dispatch(Find.Handler handler) {
@@ -359,7 +396,7 @@ public class ModelEvents {
 			void onForward(Forward event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onForward(Forward event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -558,6 +595,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Save extends ModelEvent<Object, Save.Handler> {
+		@Override
+		public void dispatch(Save.Handler handler) {
+			handler.onSave(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSave(Save event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSave(Save event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Search extends ModelEvent<Object, Search.Handler> {
 		@Override
 		public void dispatch(Search.Handler handler) {
@@ -623,6 +678,13 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onSelected(Selected event);
 		}
+
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
+			@Override
+			default void onSelected(Selected event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
 	}
 
 	/**
@@ -650,6 +712,13 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
+		}
+
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
+			@Override
+			default void onSelectionChanged(SelectionChanged event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 
@@ -836,7 +905,7 @@ public class ModelEvents {
 			void onPlaceChanged(PlaceChanged event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onPlaceChanged(PlaceChanged event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -844,6 +913,91 @@ public class ModelEvents {
 		}
 
 		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
+	/**
+	 * Application (browser-wide) events, essentially a recasting of events from
+	 * other sources (window:scroll - history - etc)
+	 */
+	public interface Global {
+		public static class WindowScroll extends
+				ModelEvent.DescendantEvent<Integer, WindowScroll.Handler, WindowScroll.Emitter> {
+			@Override
+			public void dispatch(WindowScroll.Handler handler) {
+				handler.onWindowScroll(this);
+			}
+
+			public interface Handler extends NodeEvent.Handler {
+				void onWindowScroll(WindowScroll event);
+			}
+
+			public interface Binding extends Handler {
+				@Override
+				default void onWindowScroll(WindowScroll event) {
+					((Model) this).bindings().onNodeEvent(event);
+				}
+			}
+
+			public interface Emitter extends ModelEvent.Emitter {
+			}
+		}
+
+		public static class HistoryChange extends
+				ModelEvent.DescendantEvent<String, HistoryChange.Handler, HistoryChange.Emitter> {
+			@Override
+			public void dispatch(HistoryChange.Handler handler) {
+				handler.onHistoryChange(this);
+			}
+
+			public interface Handler extends NodeEvent.Handler {
+				void onHistoryChange(HistoryChange event);
+			}
+
+			public interface Binding extends Handler {
+				@Override
+				default void onHistoryChange(HistoryChange event) {
+					((Model) this).bindings().onNodeEvent(event);
+				}
+			}
+
+			public interface Emitter extends ModelEvent.Emitter {
+			}
+		}
+
+		public interface Emitter extends WindowScroll.Emitter,
+				HistoryChange.Emitter, LayoutEvents.Bind.Handler {
+			public static class Support implements LayoutEvents.Bind.Handler {
+				HandlerRegistration historyChangeHandlerRef;
+
+				Node node;
+
+				HandlerRegistration scrollHandlerRef;
+
+				@Override
+				public void onBind(Bind event) {
+					this.node = event.getContext().node;
+					if (event.isBound()) {
+						historyChangeHandlerRef = History.addValueChangeHandler(
+								change -> ((Model) node.getModel()).emitEvent(
+										HistoryChange.class, change));
+						scrollHandlerRef = Window.addWindowScrollHandler(
+								evt -> ((Model) node.getModel()).emitEvent(
+										WindowScroll.class,
+										evt.getScrollTop()));
+					} else {
+						historyChangeHandlerRef.removeHandler();
+						scrollHandlerRef.removeHandler();
+					}
+				}
+			}
+
+			@Override
+			default void onBind(Bind event) {
+				getGlobalEventsEmitterSupport().onBind(event);
+			}
+
+			Emitter.Support getGlobalEventsEmitterSupport();
 		}
 	}
 
@@ -865,6 +1019,32 @@ public class ModelEvents {
 		public interface Binding extends Handler {
 			@Override
 			default void onFocusEditor(FocusEditor event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
+	/**
+	 * Instructs any editor (a model analagous to select, input etc) to commit
+	 * itself - i.e. to copy any pending (input) value to its value field
+	 */
+	public static class CommitEditor extends
+			ModelEvent.DescendantEvent<Object, CommitEditor.Handler, CommitEditor.Emitter> {
+		@Override
+		public void dispatch(CommitEditor.Handler handler) {
+			handler.onCommitEditor(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCommitEditor(CommitEditor event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onCommitEditor(CommitEditor event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}

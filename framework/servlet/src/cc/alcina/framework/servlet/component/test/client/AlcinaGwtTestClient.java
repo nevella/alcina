@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.ui.RootPanel;
 
@@ -26,7 +25,6 @@ public class AlcinaGwtTestClient implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 		Client.Init.init();
-		Document.get().domDocument.useLocations2 = true;
 		Registry.register().singleton(Timer.Provider.class,
 				new TimerGwt.Provider());
 		Registry.register().singleton(DomContext.class, new DomContextGwt());
@@ -34,15 +32,26 @@ public class AlcinaGwtTestClient implements EntryPoint {
 	}
 
 	void test() {
-		if (GWT.isScript()) {
-			throw new IllegalStateException("Devmode only");
+		try {
+			if (GWT.isScript()) {
+				throw new IllegalStateException("Devmode only");
+			}
+			new TestLocationMutationExtended().run();
+			new TestJsoLists().run();
+			new TestChubbyTree().run();
+			new TestSyncMutations2().run();
+			new TestLocationMutation().run();
+			new TestSyncMutations2a().run(this::testSyncMutations2aComplete);
+			// ClientUtils.consoleInfo("[AlcinaGwtTestClient] Tests passed!!");
+		} catch (RuntimeException e) {
+			ClientUtils.consoleInfo("[AlcinaGwtTestClient] Tests failed!!");
+			throw e;
 		}
-		// new TestJsoLists().run();
-		// new TestSyncMutations2().run();
-		// new TestSyncMutations2a().run();
-		// new TestChubbyTree().run();
-		new TestLocationMutation().run();
-		ClientUtils.consoleInfo("[AlcinaGwtTestClient] Tests passed");
+	}
+
+	void testSyncMutations2aComplete(boolean success) {
+		ClientUtils.consoleInfo("[AlcinaGwtTestClient] Tests %s",
+				success ? "passed" : "failed");
 	}
 
 	static class Utils {

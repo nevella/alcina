@@ -27,15 +27,15 @@ public interface LocationContext {
 				return cmp;
 			}
 		}
-		// if containingNode is not search, this is a search (rather than a
+		// if containingNode is null, this is a search (rather than a
 		// comparison of fully-populated Location instances)
 		if (l1.getContainingNode() == null || l2.getContainingNode() == null) {
 			{
 				// for a given character, end is always after start (at any
 				// depth)
-				int end1 = l1.after ? 1 : 0;
-				int end2 = l2.after ? 1 : 0;
-				int cmp = end1 - end2;
+				int start1 = l1.isStart() ? 0 : 1;
+				int start2 = l2.isStart() ? 0 : 1;
+				int cmp = start1 - start2;
 				if (cmp != 0) {
 					return cmp;
 				}
@@ -48,9 +48,9 @@ public interface LocationContext {
 			{
 				// for a given character, end is always after start (at any
 				// depth)
-				int end1 = l1.after ? 1 : 0;
-				int end2 = l2.after ? 1 : 0;
-				int cmp = end1 - end2;
+				int start1 = l1.isStart() ? 0 : 1;
+				int start2 = l2.isStart() ? 0 : 1;
+				int cmp = start1 - start2;
 				if (cmp != 0) {
 					return cmp;
 				}
@@ -58,10 +58,10 @@ public interface LocationContext {
 			{
 				// for a given character, continer end is always after contained
 				// end
-				if (l1.after) {
-					return 1;
-				} else {
+				if (l1.isStart()) {
 					return -1;
+				} else {
+					return 1;
 				}
 			}
 		} else if (n2.isAncestorOf(n1)) {
@@ -76,8 +76,8 @@ public interface LocationContext {
 		return l1.getIndex() - l2.getIndex();
 	}
 
-	default Location createTextRelativeLocation(Location location, int offset,
-			boolean after) {
+	default Location createIndexRelativeLocation(Location location, int offset,
+			boolean start) {
 		int index = location.getIndex() + offset;
 		/*
 		 * Special case, preserve existing node if possible)
@@ -86,17 +86,15 @@ public interface LocationContext {
 		int contentLength = getContentLength(containingNode);
 		int relativeIndex = location.getIndex() + offset
 				- containingNode.asLocation().getIndex();
-		if (relativeIndex >= 0 && relativeIndex <= contentLength) {
-			if (relativeIndex == contentLength && contentLength != 0) {
-				after = true;
-			}
-			return new Location(location.getTreeIndex(), index, after,
+		if (relativeIndex > 0 && relativeIndex <= contentLength) {
+			return new Location(location.getTreeIndex(), index, start,
 					location.getContainingNode(), this);
 		}
-		Location test = new Location(-1, index, after, null, this, location);
+		Location test = new Location(-1, index, start, null, this, location);
 		Location containingLocation = getContainingLocation(test, location);
 		return new Location(containingLocation.getTreeIndex(), index,
-				location.after, containingLocation.getContainingNode(), this);
+				location.isStart(), containingLocation.getContainingNode(),
+				this);
 	}
 
 	/**
@@ -123,11 +121,11 @@ public interface LocationContext {
 		return getContainingLocation(test, searchFrom).getContainingNode();
 	}
 
-	default List<DomNode> getContainingNodes(Location start, int index,
-			boolean after) {
+	default List<DomNode> getContainingNodes(Location from, int index,
+			boolean start) {
 		List<DomNode> result = new ArrayList<>();
 		DomNode root = getDocumentElementNode();
-		Location test = start;
+		Location test = from;
 		/*
 		 * traverse to the first text node lte test
 		 */
@@ -145,17 +143,17 @@ public interface LocationContext {
 				test = test.relativeLocation(RelativeDirection.NEXT_LOCATION);
 			}
 		}
-		test = test.textRelativeLocation(index - test.getIndex(), after);
+		test = test.textRelativeLocation(index - test.getIndex(), start);
 		Location containingLocation = test;
 		while (!containingLocation.isTextNode()) {
 			containingLocation = containingLocation
 					.relativeLocation(RelativeDirection.NEXT_LOCATION);
 		}
 		/*
-		 * if this text starts at index, and we're ascending from an 'after', go
-		 * to the previous text
+		 * if this text starts at index, and we're ascending from a non-'start',
+		 * go to the previous text
 		 */
-		if (after && containingLocation.getContainingNode().asLocation()
+		if (!start && containingLocation.getContainingNode().asLocation()
 				.getIndex() == index && index > 0) {
 			containingLocation = containingLocation.relativeLocation(
 					RelativeDirection.PREVIOUS_LOCATION,
@@ -187,7 +185,7 @@ public interface LocationContext {
 	 * <p>
 	 * Note - don't use this for purely text traversal (e.g. mimicking actions
 	 * of a keyevent), instead just increment/decrement location.index, and use
-	 * {@link #createTextRelativeLocation(Location, int, boolean)}
+	 * {@link #createIndexRelativeLocation(Location, int, boolean)}
 	 */
 	default Location getRelativeLocation(Location location,
 			RelativeDirection direction, TextTraversal textTraversal) {
@@ -197,17 +195,17 @@ public interface LocationContext {
 		DomNode node = location.getContainingNode();
 		DomNode targetNode = node;
 		int targetIndex = location.getIndex();
-		boolean targetAfter = !location.after;
+		boolean targetStart = !location.isStart();
 		Location baseLocation = node.asLocation();
 		Location parentLocation = !node.parent().isElement() ? null
 				: node.parent().asLocation();
 		boolean nodeTraversalRequired = false;
 		if (direction == RelativeDirection.CURRENT_NODE_END) {
-			Preconditions.checkArgument(targetAfter);
+			Preconditions.checkArgument(!targetStart);
 			Integer length = getContentLength(node);
 			targetIndex = baseLocation.getIndex() + length;
 			return new Location(node.asLocation().getTreeIndex(), targetIndex,
-					targetAfter, node, this);
+					targetStart, node, this);
 		}
 		if (node.isText()) {
 			int relativeIndex = location.getIndex() - baseLocation.getIndex();
@@ -265,6 +263,10 @@ public interface LocationContext {
 				nodeTraversalRequired = true;
 				break;
 			}
+			case AFTER_END: {
+				nodeTraversalRequired = true;
+				break;
+			}
 			default:
 				throw new UnsupportedOperationException();
 			}
@@ -275,18 +277,7 @@ public interface LocationContext {
 			targetIndex = -1;
 			switch (direction) {
 			case NEXT_LOCATION: {
-				if (location.after) {
-					DomNode nextSibling = node.relative().nextSibling();
-					if (nextSibling == null) {
-						// last, ascend
-						targetNode = parentLocation != null
-								? parentLocation.getContainingNode()
-								: null;
-						targetAfter = true;
-					} else {
-						targetNode = nextSibling;
-					}
-				} else {
+				if (location.isStart()) {
 					// descend or go to next sibling
 					DomNode next = node.relative().treeSubsequentNode();
 					if (next == null) {
@@ -296,20 +287,31 @@ public interface LocationContext {
 								: getDocumentElementNode();
 					} else {
 						targetNode = next;
-						targetAfter = false;
+						targetStart = true;
+					}
+				} else {
+					DomNode nextSibling = node.relative().nextSibling();
+					if (nextSibling == null) {
+						// last, ascend
+						targetNode = parentLocation != null
+								? parentLocation.getContainingNode()
+								: null;
+						targetStart = false;
+					} else {
+						targetNode = nextSibling;
 					}
 				}
 				break;
 			}
 			case PREVIOUS_LOCATION: {
-				if (!location.after) {
+				if (location.isStart()) {
 					DomNode previousSibling = node.relative().previousSibling();
 					if (previousSibling == null) {
 						// last, ascend
 						targetNode = parentLocation != null
 								? parentLocation.getContainingNode()
 								: null;
-						targetAfter = false;
+						targetStart = true;
 					} else {
 						targetNode = previousSibling;
 					}
@@ -320,7 +322,7 @@ public interface LocationContext {
 					} else {
 						// end of the last child
 						targetNode = lastChild;
-						targetAfter = true;
+						targetStart = false;
 					}
 				}
 				break;
@@ -328,8 +330,8 @@ public interface LocationContext {
 			case PREVIOUS_DOMNODE_START: {
 				// if at start, go to previous logical node - if at end, go
 				// to last descendant
-				targetAfter = false;
-				if (!location.after) {
+				targetStart = true;
+				if (location.isStart()) {
 					targetNode = node.relative().treePreviousNode();
 				} else {
 					DomNode lastDescendant = node.relative().lastDescendant();
@@ -345,8 +347,8 @@ public interface LocationContext {
 				// if at start, go to next logical node from start - if at
 				// end, go
 				// next logical node from last descendant
-				targetAfter = false;
-				if (!location.after) {
+				targetStart = true;
+				if (location.isStart()) {
 					targetNode = node.relative().treeSubsequentNode();
 				} else {
 					DomNode lastDescendant = node.relative().lastDescendant();
@@ -356,6 +358,17 @@ public interface LocationContext {
 					} else {
 						targetNode = node.relative().treeSubsequentNode();
 					}
+				}
+				break;
+			}
+			case AFTER_END: {
+				DomNode nextSibling = node.relative().nextSibling();
+				if (nextSibling != null) {
+					targetNode = nextSibling;
+					targetStart = true;
+				} else {
+					targetNode = node.parent();
+					targetStart = false;
 				}
 				break;
 			}
@@ -370,16 +383,19 @@ public interface LocationContext {
 		if (targetIndex == -1) {
 			Location nodeLocation = containingNode.asLocation();
 			targetIndex = nodeLocation.getIndex();
-			if (targetAfter) {
+			if (!targetStart) {
 				if (containingNode.isText()
 						&& textTraversal == TextTraversal.TO_START_OF_NODE) {
 				} else {
+					/*
+					 * at end of node
+					 */
 					targetIndex += getContentLength(containingNode);
 				}
 			}
 		}
 		return new Location(targetNode.asLocation().getTreeIndex(), targetIndex,
-				targetAfter, containingNode, this);
+				targetStart, containingNode, this);
 	}
 
 	DomNode getDocumentElementNode();
@@ -452,10 +468,10 @@ public interface LocationContext {
 
 	default public Location.Range asRange(DomNode domNode) {
 		Location start = domNode.asLocation();
-		boolean after = !domNode.isText();
+		boolean endIsStart = domNode.isText();
 		Location end = new Location(start.getTreeIndex(),
-				start.getIndex() + getContentLength(domNode), after, domNode,
-				start.getLocationContext(), null);
+				start.getIndex() + getContentLength(domNode), endIsStart,
+				domNode, start.getLocationContext(), null);
 		return new Location.Range(start, end);
 	}
 

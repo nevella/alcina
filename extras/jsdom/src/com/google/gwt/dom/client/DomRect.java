@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -8,6 +9,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DoublePair;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * Note - it's really rare that x!=left, y!=top - but they differ when
@@ -64,6 +66,22 @@ public final class DomRect implements Serializable {
 	public DomRect() {
 	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(top, left, bottom, right);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof DomRect) {
+			DomRect o = (DomRect) obj;
+			return top == o.top && left == o.left && bottom == o.bottom
+					&& right == o.right;
+		} else {
+			return super.equals(obj);
+		}
+	}
+
 	public DomRect(DomRectJso jso) {
 		bottom = jso.getBottom();
 		height = jso.getHeight();
@@ -92,8 +110,30 @@ public final class DomRect implements Serializable {
 		return left == 0 && top == 0 && right == 0 && bottom == 0;
 	}
 
+	public void computeFromTLBR() {
+		x = left;
+		y = top;
+		width = right - left;
+		height = bottom - top;
+	}
+
 	public boolean intersectsWith(DomRect other) {
 		return xRange().intersectsWith(other.xRange())
 				&& yRange().intersectsWith(other.yRange());
+	}
+
+	public DomRect toRoundedIntRect() {
+		DomRect rounded = new DomRect();
+		rounded.top = Math.round(top);
+		rounded.bottom = Math.round(bottom);
+		rounded.left = Math.round(left);
+		rounded.right = Math.round(right);
+		rounded.computeFromTLBR();
+		return rounded;
+	}
+
+	public DomRect translate(IntPair offsets) {
+		return ofCoordinatePairs(x + offsets.i1, y + offsets.i2,
+				x + offsets.i1 + width, y + offsets.i2 + height);
 	}
 }

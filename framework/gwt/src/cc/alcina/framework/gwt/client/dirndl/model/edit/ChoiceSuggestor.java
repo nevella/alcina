@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.SuggestOracle;
@@ -11,12 +12,12 @@ import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domain.HasObject;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.StringAskAnswer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
 /*
@@ -28,10 +29,20 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 public class ChoiceSuggestor extends DecoratorSuggestor {
 	ChoiceEditor<?> choiceEditor;
 
-	ChoiceSuggestor(ChoiceEditor choiceSuggestions,
-			ContentDecorator contentDecorator, DomNode decoratorNode) {
+	Function<Object, Model> valueTransformer;
+
+	ChoiceSuggestor(ChoiceEditor choiceEditor,
+			ContentDecorator contentDecorator, DomNode decoratorNode,
+			Function<Object, Model> valueTransformer) {
 		super(contentDecorator, decoratorNode);
-		this.choiceEditor = choiceSuggestions;
+		this.choiceEditor = choiceEditor;
+		this.valueTransformer = valueTransformer;
+		init0();
+	}
+
+	@Override
+	protected void init() {
+		// noop, to allow init0 post-super-constructor
 	}
 
 	@Override
@@ -86,7 +97,8 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 			List<Choice> choices = suggestedObjects.stream().map(Choice::new)
 					.collect(Collectors.toList());
 			StringAskAnswer<Choice> router = new StringAskAnswer<>();
-			Answers answers = router.ask(ask, choices, Object::toString);
+			Answers answers = router.ask(ask, choices, Object::toString,
+					valueTransformer);
 			answersHandler.accept(answers);
 		}
 	}

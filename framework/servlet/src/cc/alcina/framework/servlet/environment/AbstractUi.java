@@ -12,6 +12,7 @@ import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -20,13 +21,15 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 
 /**
@@ -40,22 +43,7 @@ import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		implements RemoteUi {
-	public static transient PackageProperties._AbstractUi properties = PackageProperties.abstractUi;
-
-	DirectedLayout layout;
-
-	/*
-	 * In most cases Environment.get() will also give access to the environment
-	 * - but in cases where (say) an off-thread event is being processed, this
-	 * access to the environment must be used
-	 * 
-	 */
-	@Property.Not
-	Environment environment;
-
 	public interface ClientExceptionNotificationPolicy {
-		boolean isNotifyException(ProcessingException message);
-
 		public static class No implements ClientExceptionNotificationPolicy {
 			@Override
 			public boolean isNotifyException(ProcessingException message) {
@@ -76,9 +64,54 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 				}
 			}
 		}
+
+		boolean isNotifyException(ProcessingException message);
 	}
 
+	public class CommandContextProviderImpl implements CommandContext.Provider {
+		@Override
+		public Set<Class<? extends CommandContext>> getContexts() {
+			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
+			commandContexts.addAll(getAppCommandContexts());
+			return commandContexts;
+		}
+	}
+
+	DirectedLayout layout;
+
+	/*
+	 * In most cases Environment.get() will also give access to the environment
+	 * - but in cases where (say) an off-thread event is being processed, this
+	 * access to the environment must be used
+	 * 
+	 */
+	@Property.Not
+	Environment environment;
+
 	boolean reloading;
+
+	protected ClientExceptionNotificationPolicy clientExceptionNotificationPolicy = new ClientExceptionNotificationPolicy.No();
+
+	List<ProcessingException> notifiedExceptions = new ArrayList<>();
+
+	/**
+	 * The current place, transformed from the browser url.
+	 */
+	public P place;
+
+	private KeyboardShortcuts keyboardShortcuts;
+
+	private KeybindingsHandler keybindingsHandler;
+
+	RemoteComponent remoteComponent;
+
+	public RemoteComponent getRemoteComponent() {
+		return remoteComponent;
+	}
+
+	public PackageProperties._AbstractUi.InstanceProperties properties() {
+		return PackageProperties.abstractUi.instance(this);
+	}
 
 	@Override
 	public void reloadApp(String message) {
@@ -95,14 +128,10 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		}
 	}
 
-	protected ClientExceptionNotificationPolicy clientExceptionNotificationPolicy = new ClientExceptionNotificationPolicy.No();
-
 	@Override
 	public boolean isNotifyException(ProcessingException message) {
 		return clientExceptionNotificationPolicy.isNotifyException(message);
 	}
-
-	List<ProcessingException> notifiedExceptions = new ArrayList<>();
 
 	@Override
 	@Property.Not
@@ -110,26 +139,8 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		this.environment = environment;
 	}
 
-	/**
-	 * The current place, transformed from the browser url.
-	 */
-	public P place;
-
-	private KeyboardShortcuts keyboardShortcuts;
-
-	private KeybindingsHandler keybindingsHandler;
-
 	public KeybindingsHandler getKeybindingsHandler() {
 		return keybindingsHandler;
-	}
-
-	public class CommandContextProviderImpl implements CommandContext.Provider {
-		@Override
-		public Set<Class<? extends CommandContext>> getContexts() {
-			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
-			commandContexts.addAll(getAppCommandContexts());
-			return commandContexts;
-		}
 	}
 
 	public void bindKeyboardShortcuts(boolean bound) {
@@ -160,23 +171,15 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 	@Override
 	public final void render() {
 		PlaceChangeEvent.Handler placeChangeHandler = evt -> {
-			properties.place.set(this, (P) evt.getNewPlace());
+			properties().place().set((P) evt.getNewPlace());
 		};
 		keybindingsHandler = new KeybindingsHandler(eventType -> {
 			layout.layoutResult.getRoot().dispatch(eventType, null);
 		}, getCommandContextProvider());
 		Client.eventBus().addHandler(PlaceChangeEvent.TYPE, placeChangeHandler);
+		Registry.register().singleton(ContextResolver.Default.class,
+				new RemoteResolver.Default());
 		layout = render0();
-	}
-
-	protected abstract DirectedLayout render0();
-
-	protected RemoteComponentProtocol.Session getSession() {
-		return environment.access().getSession();
-	}
-
-	protected AuthenticationTokenStore getAuthenticationTokenStore() {
-		return new RemoteAuthenticationStore(environment);
 	}
 
 	@Override
@@ -189,5 +192,24 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 				e.printStackTrace();
 			}
 		}
+	}
+
+	protected abstract DirectedLayout render0();
+
+	protected RemoteComponentProtocol.Session getSession() {
+		return environment.access().getSession();
+	}
+
+	public void invokeInEnvironmentContext(Runnable runnable) {
+		environment.access().invoke(runnable);
+	}
+
+	protected AuthenticationTokenStore getAuthenticationTokenStore() {
+		return new RemoteAuthenticationStore(environment);
+	}
+
+	public RemoteUi withComponent(RemoteComponent remoteComponent) {
+		this.remoteComponent = remoteComponent;
+		return this;
 	}
 }

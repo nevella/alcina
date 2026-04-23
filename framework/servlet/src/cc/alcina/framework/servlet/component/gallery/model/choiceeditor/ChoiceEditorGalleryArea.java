@@ -31,7 +31,10 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 @TypedProperties
 class ChoiceEditorGalleryArea extends GalleryContents<ChoiceEditorGalleryPlace>
 		implements ModelEvents.Submit.Handler {
-	static PackageProperties._ChoiceEditorGalleryArea properties = PackageProperties.choiceEditorGalleryArea;
+	PackageProperties._ChoiceEditorGalleryArea.InstanceProperties
+			subtypeProperties() {
+		return PackageProperties.choiceEditorGalleryArea.instance(this);
+	}
 
 	@Directed(tag = "definition-editor")
 	@Directed(bindToModel = false)
@@ -44,14 +47,12 @@ class ChoiceEditorGalleryArea extends GalleryContents<ChoiceEditorGalleryPlace>
 	InfoModel model;
 
 	ChoiceEditorGalleryArea() {
-		bindings().from(this).on(properties.place)
-				.typed(ChoiceEditorGalleryPlace.class)
-				.map(place -> place.copy().definition).to(this)
-				.on(properties.definition).oneWay();
-		bindings().from(this).on(properties.place)
-				.typed(ChoiceEditorGalleryPlace.class)
+		from(subtypeProperties().place()).typed(ChoiceEditorGalleryPlace.class)
+				.map(place -> place.copy().definition)
+				.to(subtypeProperties().definition()).oneWay();
+		from(subtypeProperties().place()).typed(ChoiceEditorGalleryPlace.class)
 				.filter(place -> place.definition.isRenderable())
-				.map(InfoModel::new).to(this).on(properties.model).oneWay();
+				.map(InfoModel::new).to(subtypeProperties().model()).oneWay();
 	}
 
 	@Override

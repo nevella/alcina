@@ -47,6 +47,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -1086,6 +1087,14 @@ public class CommonUtils {
 						+ (s.length() == 1 ? "" : s.substring(1));
 	}
 
+	/**
+	 * 
+	 * @param c1
+	 * @param c2
+	 * @return the intersection of the two collections. Note that whether equal
+	 *         elements will be returned from c1 or c2 depends on the respective
+	 *         sizes (due to optimisation)
+	 */
 	public static Set intersection(Collection c1, Collection c2) {
 		Set result = setSupplier.get();
 		if (c1 == null) {
@@ -1903,8 +1912,9 @@ public class CommonUtils {
 	}
 
 	public static String toSimpleExceptionMessage(Throwable caught) {
-		return format("%s:%s", caught.getClass().getSimpleName(),
-				caught.getMessage());
+		String message = caught.getMessage();
+		String name = NestedName.get(caught);
+		return Ax.isBlank(message) ? name : format("%s:%s", name, message);
 	}
 
 	public static String toUrlFragment(Object object) {
@@ -2247,12 +2257,64 @@ public class CommonUtils {
 		return "file://" + name;
 	}
 
+	public static int occurrenceIndexIn(String occurenceIndexOf,
+			String occurenceIndexIn) {
+		Preconditions.checkArgument(occurenceIndexOf.length() > 0);
+		int fromIndex = 0;
+		int matchIdx = -1;
+		for (;;) {
+			int nextIndex = occurenceIndexIn.indexOf(occurenceIndexOf,
+					fromIndex);
+			if (nextIndex == -1) {
+				break;
+			}
+			fromIndex = nextIndex + occurenceIndexOf.length();
+			matchIdx++;
+		}
+		return matchIdx;
+	}
+
+	public static <T> List<T> replaceWithExisting(Collection<T> newCollection,
+			Collection<T> existingCollection) {
+		List<T> result = new ArrayList<>();
+		Map<T, T> existingMap = existingCollection.stream()
+				.collect(Collectors.toMap(t -> t, t -> t));
+		newCollection.forEach(elem -> {
+			T orDefault = existingMap.getOrDefault(elem, elem);
+			result.add(orDefault);
+		});
+		return result;
+	}
+
 	public static <T> T greatestLte(SortedSet<T> set, T t) {
 		if (set.contains(t)) {
 			return t;
 		} else {
 			SortedSet<T> headSet = set.headSet(t);
 			return headSet.isEmpty() ? null : headSet.last();
+		}
+	}
+
+	/**
+	 * A wrapper to handle contains tests for immutable collections, optimise
+	 * for large lists
+	 */
+	public static class ContainsTest {
+		Collection testCollection;
+
+		public ContainsTest(Collection coll) {
+			if (coll.size() < 6 || coll instanceof Set) {
+				testCollection = coll;
+			} else {
+				testCollection = new HashSet<>(coll);
+			}
+		}
+
+		public boolean contains(Object object) {
+			if (object == null) {
+				return false;
+			}
+			return testCollection.contains(object);
 		}
 	}
 }

@@ -16,11 +16,13 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.core.client.SchedulerTaskPriority;
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.MarkupJso.MarkupToken;
 import com.google.gwt.dom.client.mutations.LocalMutations;
+import com.google.gwt.dom.client.mutations.MutationGroup;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.RemoteMutations;
@@ -31,6 +33,7 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -382,13 +385,15 @@ public class LocalDom implements ContextFrame {
 			if (Al.isBrowser()) {
 				return Document.get().jsoRemote().validateHtml(html);
 			} else {
-				// FIXME - romcom - but basically there's no quick way except
-				// pre-caching
-				return html;
+				return Registry.impl(MarkupValidator.class).validate(html);
 			}
 		} else {
 			return html;
 		}
+	}
+
+	public interface MarkupValidator {
+		String validate(String markup);
 	}
 
 	public static void verifyDomEquivalence(boolean fromUserGesture) {
@@ -433,7 +438,7 @@ public class LocalDom implements ContextFrame {
 
 	List<Node> pendingSync = new ArrayList<>();
 
-	ScheduledCommand flushCommand = null;
+	FlushCommand flushCommand = null;
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
@@ -489,8 +494,21 @@ public class LocalDom implements ContextFrame {
 
 	private void ensureFlush() {
 		if (flushCommand == null && GWT.isClient()) {
-			flushCommand = () -> flush();
+			flushCommand = new FlushCommand();
 			Scheduler.get().scheduleFinally(flushCommand);
+		}
+	}
+
+	class FlushCommand implements ScheduledCommand,
+			SchedulerTaskPriority.HasTaskPriority.Typed {
+		@Override
+		public SchedulerTaskPriority getTaskPriorityTyped() {
+			return SchedulerTaskPriority.AFTER_DEFAULT;
+		}
+
+		@Override
+		public void execute() {
+			flush();
 		}
 	}
 
@@ -573,6 +591,8 @@ public class LocalDom implements ContextFrame {
 
 	boolean applyingDetachedMutationsToLocalDom;
 
+	public MutationGroup mutationGroup;
+
 	void flush0(boolean force) {
 		if (syncing) {
 			return;
@@ -594,6 +614,12 @@ public class LocalDom implements ContextFrame {
 			!n.hasRemote());
 			List<Node> toSync = new ArrayList<>(pendingSync);
 			toSync.stream().forEach(this::ensurePendingSynced);
+			/*
+			 * handle possible cascading mods
+			 */
+			LinkedHashSet<Runnable> onFlushRunnables = this.onFlushRunnables;
+			this.onFlushRunnables = new LinkedHashSet<>();
+			onFlushRunnables.forEach(Runnable::run);
 		} catch (RuntimeException re) {
 			topicReportException.publish(re);
 			throw re;
@@ -1035,6 +1061,12 @@ public class LocalDom implements ContextFrame {
 				case BrowserEvents.PAGEHIDE:
 					Window.onPageHide();
 					break;
+				case BrowserEvents.SCROLL:
+					Window.onScroll();
+					break;
+				case BrowserEvents.WINDOWRESIZE:
+					Window.onResize();
+					break;
 				default:
 					// ignore, could be implemented
 				}
@@ -1191,5 +1223,23 @@ public class LocalDom implements ContextFrame {
 
 	static Node toNode(ElementJso elemJso) {
 		return get().parse(elemJso, false);
+	}
+
+	public static boolean hasPending() {
+		return get().pendingSync.size() > 0;
+	}
+
+	public static void onFlush(Runnable runnable) {
+		get().onFlush0(runnable);
+	}
+
+	LinkedHashSet<Runnable> onFlushRunnables = new LinkedHashSet<>();
+
+	void onFlush0(Runnable runnable) {
+		if (pendingSync.isEmpty()) {
+			Scheduler.get().scheduleFinally(runnable::run);
+		} else {
+			onFlushRunnables.add(runnable);
+		}
 	}
 }

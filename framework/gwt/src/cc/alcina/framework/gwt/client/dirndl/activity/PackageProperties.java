@@ -30,7 +30,7 @@ public class PackageProperties {
     
     public static class _DirectedActivity implements TypedProperty.Container {
       public TypedProperty<DirectedActivity, BasePlace> place = new TypedProperty<>(DirectedActivity.class, "place");
-      public static class InstanceProperties extends InstanceProperty.Container<DirectedActivity> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DirectedActivity> {
         public  InstanceProperties(DirectedActivity source){super(source);}
         public InstanceProperty<DirectedActivity, BasePlace> place(){return new InstanceProperty<>(source,PackageProperties.directedActivity.place);}
       }
@@ -45,7 +45,7 @@ public class PackageProperties {
       public TypedProperty<DirectedBindableSearchActivity, Stream> actions = new TypedProperty<>(DirectedBindableSearchActivity.class, "actions");
       public TypedProperty<DirectedBindableSearchActivity, BindablePlace> place = new TypedProperty<>(DirectedBindableSearchActivity.class, "place");
       public TypedProperty<DirectedBindableSearchActivity, ModelSearchResults> searchResults = new TypedProperty<>(DirectedBindableSearchActivity.class, "searchResults");
-      public static class InstanceProperties extends InstanceProperty.Container<DirectedBindableSearchActivity> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DirectedBindableSearchActivity> {
         public  InstanceProperties(DirectedBindableSearchActivity source){super(source);}
         public InstanceProperty<DirectedBindableSearchActivity, Stream> actions(){return new InstanceProperty<>(source,PackageProperties.directedBindableSearchActivity.actions);}
         public InstanceProperty<DirectedBindableSearchActivity, BindablePlace> place(){return new InstanceProperty<>(source,PackageProperties.directedBindableSearchActivity.place);}
@@ -62,7 +62,7 @@ public class PackageProperties {
       public TypedProperty<DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity, Stream> actions = new TypedProperty<>(DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity.class, "actions");
       public TypedProperty<DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity, EntityPlace> place = new TypedProperty<>(DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity.class, "place");
       public TypedProperty<DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity, ModelSearchResults> searchResults = new TypedProperty<>(DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity.class, "searchResults");
-      public static class InstanceProperties extends InstanceProperty.Container<DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity> {
         public  InstanceProperties(DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity source){super(source);}
         public InstanceProperty<DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity, Stream> actions(){return new InstanceProperty<>(source,PackageProperties.directedBindableSearchActivity_directedBindableSearchActivity_entity.actions);}
         public InstanceProperty<DirectedBindableSearchActivity.DirectedBindableSearchActivity_Entity, EntityPlace> place(){return new InstanceProperty<>(source,PackageProperties.directedBindableSearchActivity_directedBindableSearchActivity_entity.place);}
@@ -77,7 +77,7 @@ public class PackageProperties {
     
     public static class _DirectedCategoriesActivity implements TypedProperty.Container {
       public TypedProperty<DirectedCategoriesActivity, CategoryNamePlace> place = new TypedProperty<>(DirectedCategoriesActivity.class, "place");
-      public static class InstanceProperties extends InstanceProperty.Container<DirectedCategoriesActivity> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DirectedCategoriesActivity> {
         public  InstanceProperties(DirectedCategoriesActivity source){super(source);}
         public InstanceProperty<DirectedCategoriesActivity, CategoryNamePlace> place(){return new InstanceProperty<>(source,PackageProperties.directedCategoriesActivity.place);}
       }
@@ -90,7 +90,7 @@ public class PackageProperties {
     
     public static class _DirectedCategoryActivity implements TypedProperty.Container {
       public TypedProperty<DirectedCategoryActivity, CategoryNamePlace> place = new TypedProperty<>(DirectedCategoryActivity.class, "place");
-      public static class InstanceProperties extends InstanceProperty.Container<DirectedCategoryActivity> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DirectedCategoryActivity> {
         public  InstanceProperties(DirectedCategoryActivity source){super(source);}
         public InstanceProperty<DirectedCategoryActivity, CategoryNamePlace> place(){return new InstanceProperty<>(source,PackageProperties.directedCategoryActivity.place);}
       }
@@ -105,7 +105,7 @@ public class PackageProperties {
       public TypedProperty<DirectedEntityActivity, Entity> entity = new TypedProperty<>(DirectedEntityActivity.class, "entity");
       public TypedProperty<DirectedEntityActivity, Boolean> entityNotFound = new TypedProperty<>(DirectedEntityActivity.class, "entityNotFound");
       public TypedProperty<DirectedEntityActivity, EntityPlace> place = new TypedProperty<>(DirectedEntityActivity.class, "place");
-      public static class InstanceProperties extends InstanceProperty.Container<DirectedEntityActivity> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DirectedEntityActivity> {
         public  InstanceProperties(DirectedEntityActivity source){super(source);}
         public InstanceProperty<DirectedEntityActivity, Entity> entity(){return new InstanceProperty<>(source,PackageProperties.directedEntityActivity.entity);}
         public InstanceProperty<DirectedEntityActivity, Boolean> entityNotFound(){return new InstanceProperty<>(source,PackageProperties.directedEntityActivity.entityNotFound);}
@@ -121,7 +121,7 @@ public class PackageProperties {
     public static class _RootArea implements TypedProperty.Container {
       public TypedProperty<RootArea, Map> channelOverlays = new TypedProperty<>(RootArea.class, "channelOverlays");
       public TypedProperty<RootArea, DirectedActivity> mainActivity = new TypedProperty<>(RootArea.class, "mainActivity");
-      public static class InstanceProperties extends InstanceProperty.Container<RootArea> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<RootArea> {
         public  InstanceProperties(RootArea source){super(source);}
         public InstanceProperty<RootArea, Map> channelOverlays(){return new InstanceProperty<>(source,PackageProperties.rootArea.channelOverlays);}
         public InstanceProperty<RootArea, DirectedActivity> mainActivity(){return new InstanceProperty<>(source,PackageProperties.rootArea.mainActivity);}
@@ -137,7 +137,7 @@ public class PackageProperties {
       TypedProperty<RootArea.ChannelOverlay, DirectedActivity> activity = new TypedProperty<>(RootArea.ChannelOverlay.class, "activity");
       TypedProperty<RootArea.ChannelOverlay, Class> channel = new TypedProperty<>(RootArea.ChannelOverlay.class, "channel");
       TypedProperty<RootArea.ChannelOverlay, Overlay> overlay = new TypedProperty<>(RootArea.ChannelOverlay.class, "overlay");
-      static class InstanceProperties extends InstanceProperty.Container<RootArea.ChannelOverlay> {
+      static class InstanceProperties extends 	InstanceProperty.Container<RootArea.ChannelOverlay> {
          InstanceProperties(RootArea.ChannelOverlay source){super(source);}
         InstanceProperty<RootArea.ChannelOverlay, DirectedActivity> activity(){return new InstanceProperty<>(source,PackageProperties.rootArea_channelOverlay.activity);}
         InstanceProperty<RootArea.ChannelOverlay, Class> channel(){return new InstanceProperty<>(source,PackageProperties.rootArea_channelOverlay.channel);}

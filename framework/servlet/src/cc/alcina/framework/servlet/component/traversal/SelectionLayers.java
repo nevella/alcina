@@ -45,9 +45,9 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 		CollectionDeltaModel collectionRepresentation = new CollectionDeltaModel();
 
 		LayersContainer() {
-			bindings().from(this).on(layersContainer_properties.layers)
-					.to(collectionRepresentation)
-					.on(CollectionDeltaModel.properties.collection).oneWay();
+			from(properties().layers())
+					.to(collectionRepresentation.properties().collection())
+					.oneWay();
 		}
 
 		List<? extends Selection> getFilteredSelections(Layer layer) {
@@ -60,9 +60,13 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 							: ls.selectionsArea.tableSelections)
 					.orElse(List.of());
 		}
-	}
 
-	static PackageProperties._SelectionLayers_LayersContainer layersContainer_properties = PackageProperties.selectionLayers_layersContainer;
+		PackageProperties._SelectionLayers_LayersContainer.InstanceProperties
+				properties() {
+			return PackageProperties.selectionLayers_layersContainer
+					.instance(this);
+		}
+	}
 
 	@Directed
 	Heading header = new Heading("Selection layers");
@@ -95,9 +99,9 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 	SelectionLayers(Page page) {
 		this.page = page;
 		this.place = page.place();
-		bindings().from(page.ui).on(Ui.properties.traversal)
-				.map(this::toLayerSelections).ifNotEqual().to(layersContainer)
-				.on(layersContainer_properties.layers).oneWay();
+		from(page.ui.subclassProperties().traversal())
+				.map(this::toLayerSelections).ifNotEqual()
+				.to(layersContainer.properties().layers()).oneWay();
 	}
 
 	SelectionTraversal traversal() {

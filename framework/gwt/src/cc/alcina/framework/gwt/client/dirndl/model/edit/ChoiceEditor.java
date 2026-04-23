@@ -22,18 +22,26 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.EditNodesChanged;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.SelectedDecoratorDeleted;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 
@@ -53,7 +61,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
  * <p>
  * Note: this doesn't share much implementation with other {@link Choices}
  * subtypes, but very much shares behavior, so I'm happy with the type structure
- * (sure, Choices could be abstracted further to an interface, but...)
+ * (sure, Choices could be abstracted further to an interface, but...). It
+ * *does* clone some implementation with the (more general)
+ * {@link ContentEditor} - but most of the shared behavior is encapsulated in
+ * {@link HasDecorators}, which both implement
  * 
  * <p>
  * This will emit a Commit event if enter is pressed with no choice selected
@@ -66,7 +77,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
 @Directed(tag = "choice-editor")
 public abstract class ChoiceEditor<T> extends Choices<T>
 		implements HasDecorators, DecoratorEvents.DecoratorsChanged.Handler,
-		ModelEvents.Commit.Handler, Choices.CommitWithNoSelectedChoice.Handler {
+		DecoratorEvents.EditNodesChanged.Handler, ModelEvents.Commit.Handler,
+		Choices.CommitWithNoSelectedChoice.Handler,
+		DecoratorEvents.SelectedDecoratorDeleted.Handler {
 	@Directed(tag = "choice-node")
 	@Bean(PropertySource.FIELDS)
 	static class ChoiceNode extends DecoratorNode<Choice, Object>
@@ -81,15 +94,29 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			}
 
 			@Override
-			public Function<Choice, ?> itemRenderer() {
-				return choice -> {
+			public ItemRenderer<Choice> itemRenderer() {
+				return (node, choice) -> {
+					if (node == null) {
+						int debug = 3;
+					}
+					Function valueTransformer = node == null ? null
+							: node.service(ChoiceEditor.Service.class)
+									.getValueTransformer();
 					Object value = choice.getValue();
 					if (value instanceof Model) {
 						return value;
 					} else {
-						return choiceToString(choice);
+						if (valueTransformer != null) {
+							return valueTransformer.apply(choice.getValue());
+						} else {
+							return choiceToString(choice);
+						}
 					}
 				};
+			}
+
+			static String choiceToString(Choice choice) {
+				return CommonUtils.nullSafeToString(choice.getValue());
 			}
 
 			public void onCommit(Commit event) {
@@ -113,16 +140,25 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			}
 		}
 
+		Choice choice;
+
 		ChoiceNode() {
 		}
 
 		ChoiceNode(Choice choice) {
-			putReferenced(choice);
+			this.choice = choice;
 		}
 
 		@Override
 		public DecoratorNode.Descriptor<Choice, Object, ?> getDescriptor() {
 			return new ChoiceNode.Descriptor();
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			if (choice != null) {
+				putReferenced(node, choice);
+			}
 		}
 
 		/**
@@ -139,14 +175,11 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		}
 	}
 
-	static PackageProperties._ChoiceEditor properties = PackageProperties.choiceEditor;
-
-	static String choiceToString(Choice choice) {
-		return CommonUtils.nullSafeToString(choice.getValue());
-	}
-
 	@Directed
 	EditArea editArea;
+
+	@Binding(type = Type.CSS_CLASS)
+	protected boolean single;
 
 	List<ContentDecorator> decorators = new ArrayList<>();
 
@@ -154,22 +187,42 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	SuggestOracleRouter suggestOracleRouter;
 
+	@ReflectiveSerializer.Checks(ignore = true)
+	Function valueTransformerFunction;
+
+	boolean widthConstrained;
+
+	class Service implements ContextService {
+		public Function getValueTransformer() {
+			return valueTransformerFunction;
+		}
+	}
+
+	@Override
+	public void onNodeContext(NodeContext event) {
+		event.registerService(Service.class, new Service());
+	}
+
 	@Override
 	public void onDecoratorsChanged(DecoratorsChanged event) {
-		List<DecoratorNode> model = event.getModel();
-		List<T> decoratorChoiceValues = model.stream()
+		DecoratorsChanged.Data model = event.getModel();
+		List<T> decoratorChoiceValues = model.newValue.stream()
 				.map(n -> (T) n.getStringRepresentable()).toList();
 		event.reemitAs(this, ModelEvents.SelectionDirty.class,
 				decoratorChoiceValues);
+	}
+
+	@Override
+	public void onEditNodesChanged(EditNodesChanged event) {
+		editArea.makeLastSuggestingNodeTabbable();
 	}
 
 	public ChoiceEditor() {
 		editArea = new EditArea();
 		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
 		keyboardNavigation = new KeyboardNavigation(this);
-		bindings().from(editArea).on(EditArea.properties.value)
-				.withSetOnInitialise(false).signal(this::onEditCommit);
-		decorators.add(createChoiceDecorator());
+		from(editArea.properties().value()).withSetOnInitialise(false)
+				.signal(this::onEditCommit);
 	}
 
 	/*
@@ -184,13 +237,32 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Override
 	protected void populateFromNodeContext(Node node,
 			Predicate<T> valueFilter) {
-		Optional<Class<? extends SuggestOracleRouter>> routerTypeOptional = node
-				.optional(RouterType.class).map(RouterType::value);
-		SuggestOracleRouter suggestOracleRouter = routerTypeOptional
-				.map(Reflections::newInstance).orElse(null);
-		if (suggestOracleRouter != null) {
-			this.suggestOracleRouter = suggestOracleRouter;
+		if (nodeContextPopulated) {
+			return;
 		}
+		{
+			Optional<Class<? extends SuggestOracleRouter>> routerTypeOptional = node
+					.optional(RouterType.class).map(RouterType::value);
+			SuggestOracleRouter suggestOracleRouter = routerTypeOptional
+					.map(Reflections::newInstance).orElse(null);
+			if (suggestOracleRouter != null) {
+				this.suggestOracleRouter = suggestOracleRouter;
+			}
+		}
+		{
+			Optional<Class<? extends Function>> valueTransformerOptional = node
+					.optional(ValueTransformer.class)
+					.map(ValueTransformer::value);
+			valueTransformerFunction = valueTransformerOptional
+					.map(Reflections::newInstance).orElse(null);
+		}
+		{
+			boolean focusOnBind = node.optional(FocusOnBindMarker.class)
+					.isPresent();
+			editArea.focusOnBind = focusOnBind;
+		}
+		this.widthConstrained = node.annotation(WidthConstrained.class) != null;
+		decorators.add(createChoiceDecorator());
 		super.populateFromNodeContext(node, valueFilter);
 	}
 
@@ -203,6 +275,17 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		 * The answer type
 		 */
 		Class<? extends SuggestOracleRouter> value();
+	}
+
+	/**
+	 * If constrained, suggestions will be rendered relative to the editor, not
+	 * the suggesting node
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface WidthConstrained {
 	}
 
 	@Override
@@ -259,13 +342,17 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	}
 
 	ContentDecorator createChoiceDecorator() {
-		ContentDecorator.Builder<Choice> builder = ContentDecorator.builder();
-		builder.setSuggestorProvider(
+		ContentDecorator.Attributes<Choice> attributes = ContentDecorator
+				.attributes();
+		attributes.setSuggestorProvider(
 				(decorator, decoratorNode) -> new ChoiceSuggestor(this,
-						decorator, decoratorNode));
-		builder.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
-		builder.setDecoratorParent(this);
-		return builder.build();
+						decorator, decoratorNode, valueTransformerFunction));
+		attributes.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
+		attributes.setDecoratorParent(this);
+		if (widthConstrained) {
+			attributes.setSuggestorRelativeTo(this);
+		}
+		return attributes.build();
 	}
 
 	// FIXME - fragmentNode - can this initial deferral be avoided?
@@ -278,21 +365,20 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.forEach(editArea.fragmentModel.getFragmentRoot()::append);
 	}
 
+	//
 	void updateAreaFromSelectedValue(T value) {
 		List<T> values = value == null ? List.of() : List.of(value);
-		Client.eventBus().queued()
-				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
+		exec(() -> updateAreaFromSelectedValues0(values)).dispatch();
 	}
 
 	void updateAreaFromSelectedValues(List<T> values) {
-		Client.eventBus().queued()
-				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
+		exec(() -> updateAreaFromSelectedValues0(values)).dispatch();
 	}
 
 	void areaContentsFromChoices0(List<Choice<?>> choices) {
 		choices.forEach(choice -> {
 			ChoiceNode choiceNode = new ChoiceNode();
-			choiceNode.putReferenced(choice);
+			choiceNode.putReferenced(node, choice);
 			editArea.fragmentModel.getFragmentRoot().append(choiceNode);
 		});
 	}
@@ -318,5 +404,10 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Override
 	public void onCommitWithNoSelectedChoice(CommitWithNoSelectedChoice event) {
 		event.reemitAs(this, Commit.class, this);
+	}
+
+	@Override
+	public void onSelectedDecoratorDeleted(SelectedDecoratorDeleted event) {
+		exec(editArea::focusLastSuggestingDecorator).dispatch();
 	}
 }

@@ -1,33 +1,34 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Reflected
 public enum StandardSearchOperator implements SearchOperator {
-	CONTAINS, DOES_NOT_CONTAIN, EQUALS, LESS_THAN, GREATER_THAN, ALL_OF,
-	AT_LEAST_ONE_OF, DOES_NOT_EQUAL, STARTS_WITH, LESS_THAN_OR_EQUAL_TO,
-	GREATER_THAN_OR_EQUAL_TO;
+	CONTAINS, DOES_NOT_CONTAIN, EQUALS, DOES_NOT_EQUAL, LESS_THAN,
+	LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO, ALL_OF,
+	AT_LEAST_ONE_OF, STARTS_WITH;
 
-	public static transient List LINEAR = Arrays.asList(EQUALS, LESS_THAN,
+	public static transient List<StandardSearchOperator> TEXT = List.of(
+			CONTAINS, DOES_NOT_CONTAIN, EQUALS, DOES_NOT_EQUAL, STARTS_WITH,
+			LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN,
+			GREATER_THAN_OR_EQUAL_TO);
+
+	public static transient List LINEAR = List.of(EQUALS, LESS_THAN,
 			GREATER_THAN);
 
-	public static transient List EQUAL_OR_NOT = Arrays.asList(EQUALS,
-			DOES_NOT_EQUAL);
+	public static transient List EQUAL_OR_NOT = List.of(EQUALS, DOES_NOT_EQUAL);
 
-	public static transient List EQUAL = Arrays.asList(EQUALS);
+	public static transient List EQUAL = List.of(EQUALS);
 
-	public static transient List CONTAINS_AND_ALL_OF = Arrays.asList(CONTAINS,
+	public static transient List CONTAINS_AND_ALL_OF = List.of(CONTAINS,
 			ALL_OF);
 
-	public static transient List MEMBERSHIP = Arrays.asList(CONTAINS, ALL_OF,
+	public static transient List MEMBERSHIP = List.of(CONTAINS, ALL_OF,
 			DOES_NOT_CONTAIN);
 
 	private String displayName;
@@ -94,33 +95,6 @@ public enum StandardSearchOperator implements SearchOperator {
 			return FilterOperator.LT_EQ;
 		default:
 			throw new UnsupportedOperationException();
-		}
-	}
-
-	/**
-	 * wip - search - 'simple' rendering actually depends on the set of values
-	 * available to the operator - so replace with a context-aware renderer
-	 * 
-	 * 
-	 */
-	@Reflected
-	public static class SimpleRenderer
-			implements Function<StandardSearchOperator, String> {
-		@Override
-		public String apply(StandardSearchOperator operator) {
-			if (operator == null) {
-				return ":";
-			}
-			switch (operator) {
-			case EQUALS:
-				return ":";
-			default:
-				FilterOperator filterOperator = operator.toFilterOperator();
-				if (filterOperator != null) {
-					return filterOperator.operationText();
-				}
-				return Ax.friendly(operator);
-			}
 		}
 	}
 }

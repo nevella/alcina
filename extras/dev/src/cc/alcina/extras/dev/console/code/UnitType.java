@@ -63,6 +63,10 @@ public class UnitType {
 				.getClass() == LocalClassDeclarationStmt.class;
 	}
 
+	public boolean isTopLevel() {
+		return clazz().getEnclosingClass() == null;
+	}
+
 	public UnitType(CompilationUnitWrapper unit,
 			ClassOrInterfaceDeclaration n) {
 		this.unitWrapper = unit;
@@ -115,8 +119,7 @@ public class UnitType {
 	 * Call *before* modification
 	 */
 	public void dirty() {
-		unitWrapper.prepareForModification();
-		unitWrapper.dirty = true;
+		unitWrapper.dirty();
 	}
 
 	public void dirty(String initialSource, String ensuredSource) {
@@ -168,7 +171,7 @@ public class UnitType {
 		if (superclassFqn == null) {
 			return false;
 		}
-		UnitType compUnitClassDec = compUnits().declarations.get(superclassFqn);
+		UnitType compUnitClassDec = compUnits().unitTypes.get(superclassFqn);
 		if (compUnitClassDec == null) {
 			return false;
 		}

@@ -38,24 +38,51 @@ public class LayoutEvents {
 	 * <p>
 	 * Model fields can normally be populated during the constructor - in which
 	 * case the model does not need to react to this event. The primary
-	 * exception is model instances that are received via RPC - often they'll
+	 * exceptions are model instances that are received via RPC - often they'll
 	 * have some fields sent via RPC, others that are only populated (here)
-	 * client-side
+	 * client-side, and model instances that derive information from context
+	 * (ancestor) services.
 	 *
 	 *
 	 *
 	 */
-	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
-		public Node node;
+	public static class NodeContext extends LayoutEvent<NodeContext.Handler> {
+		public Object model;
 
-		public BeforeRender(DirectedLayout.Node node, Object model) {
+		public NodeContext(DirectedLayout.Node node, Object model) {
 			this.model = model;
-			this.node = node;
 			setContext(Context.fromNode(node));
 		}
 
-		public <T extends ContextService> T service(Class<T> clazz) {
-			return node.service(clazz);
+		@Override
+		public void dispatch(NodeContext.Handler handler) {
+			handler.onNodeContext(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onNodeContext(NodeContext event);
+		}
+
+		public <CS extends ContextService> void
+				registerService(Class<CS> service, CS implementation) {
+			getContext().node.getResolver().registerService(service,
+					implementation);
+		}
+	}
+
+	/*
+	 * Fired to instruct the model to apply its initial bindings
+	 */
+	public static class BeforeRender extends LayoutEvent<BeforeRender.Handler> {
+		public Object model;
+
+		public boolean setNode;
+
+		public BeforeRender(DirectedLayout.Node node, Object model,
+				boolean setNode) {
+			this.model = model;
+			this.setNode = setNode;
+			setContext(Context.fromNode(node));
 		}
 
 		@Override
@@ -113,21 +140,18 @@ public class LayoutEvents {
 			 */
 			void onBind(Bind event);
 		}
-
-		public static Bind exTreeUnbindEvent() {
-			return NodeEvent.Context.CONTEXT_ALLOW_NULL_NODE
-					.callWithTrue(() -> new Bind(null, false));
-		}
-
-		public static Bind exTreeBindEvent() {
-			return NodeEvent.Context.CONTEXT_ALLOW_NULL_NODE
-					.callWithTrue(() -> new Bind(null, true));
-		}
 	}
 
-	/*
+	/**
+	 * <p>
+	 * CAVEAT - don't currently use this to change directed properties - changes
+	 * will be ignored (since the layout is rendering). Instead, override onBind
+	 * with a test of event.isBound
+	 * <p>
 	 * Note that this will be called with a null context (it doesn't propagate
 	 * etc)
+	 * 
+	 * 
 	 */
 	public static class Bound extends ModelEvent<Object, Bound.Handler> {
 		@Override
@@ -139,7 +163,7 @@ public class LayoutEvents {
 			void onBound(Bound event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onBound(Bound event) {
 				((Model) this).bindings().onNodeEvent(event);
@@ -161,9 +185,32 @@ public class LayoutEvents {
 			void onUnbound(Unbound event);
 		}
 
-		public interface Binding extends Handler, NodeEvent.Binding {
+		public interface Binding extends Handler, NodeEvent.TypeBinding {
 			@Override
 			default void onUnbound(Unbound event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	/**
+	 * Fires just before Unbound (the node is still attached, events will
+	 * propagate)
+	 */
+	public static class BeforeUnbound
+			extends ModelEvent<Object, BeforeUnbound.Handler> {
+		@Override
+		public void dispatch(BeforeUnbound.Handler handler) {
+			handler.onBeforeUnbound(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeforeUnbound(BeforeUnbound event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onBeforeUnbound(BeforeUnbound event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}

@@ -6,10 +6,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -20,6 +20,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
  * be a new value for the dirndl transform source property )
  */
 public interface ValueChange {
+	/*
+	 * I could wish you never needed to know this, but sometimes (e.g. selection
+	 * of an already selected choice) it's key
+	 */
+	public LooseContext.Key CONTEXT_EVENT_CAUSING_PROPERTY_CHANGE = LooseContext
+			.key(ValueChange.class, "CONTEXT_EVENT_CAUSING_PROPERTY_CHANGE");
+
 	default Object getNewValue() {
 		return ((ModelEvent) this).getModel();
 	}
@@ -83,11 +90,18 @@ public interface ValueChange {
 					ValueChange valueChange = (ValueChange) event;
 					Object newValue = valueChange.getNewValue();
 					/*
-					 * Because this property may be bound, enqueue the change
+					 * If in a layout cycle, defer the lambda
 					 */
-					Client.eventBus().queued()
-							.lambda(() -> property.set(container, newValue))
-							.dispatch();
+					Runnable lambda = () -> {
+						try {
+							LooseContext.push();
+							CONTEXT_EVENT_CAUSING_PROPERTY_CHANGE.set(event);
+							property.set(container, newValue);
+						} finally {
+							LooseContext.pop();
+						}
+					};
+					previousNode.deferIfFiring(lambda);
 				} else {
 					event.bubble();
 				}

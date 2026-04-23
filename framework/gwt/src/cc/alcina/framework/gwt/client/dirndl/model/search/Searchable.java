@@ -1,12 +1,17 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
+import java.util.List;
+import java.util.function.Function;
+
 import com.google.gwt.dom.client.EventBehavior;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.totsp.gwittir.client.ui.table.Field;
 
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasObject;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -17,23 +22,38 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices.Values;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
+import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorSingle;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
+/*
+ * wip - ds - late - the choice edtior edit width should be determined by the
+ * max popup width? possibly hardcoded *is* better. see
+ * search-definition-editor.sass
+ */
 @TypedProperties
 @DirectedContextResolver
 class Searchable extends Model.Fields
@@ -55,6 +75,12 @@ class Searchable extends Model.Fields
 
 	SearchCriterion searchCriterion;
 
+	class Service implements ContextService {
+		public SearchCriterion getSearchCriterion() {
+			return searchCriterion;
+		}
+	}
+
 	// for methodHandle
 	SearchCriterion searchCriterion() {
 		return searchCriterion;
@@ -66,8 +92,8 @@ class Searchable extends Model.Fields
 	@Binding(type = Type.PROPERTY)
 	String criterionClass;
 
-	@Directed
-	Dropdown operatorDropdown;
+	@Directed(tag = "operator")
+	Object operator;
 
 	@Directed
 	ValueEditor valueEditor;
@@ -75,7 +101,7 @@ class Searchable extends Model.Fields
 	@TypedProperties
 	class RenderedOperator extends Model.Fields {
 		@Directed.Transform(
-			value = StandardSearchOperator.SimpleRenderer.class,
+			value = OperatorRenderer.class,
 			transformsNull = true)
 		StandardSearchOperator operator;
 
@@ -85,24 +111,39 @@ class Searchable extends Model.Fields
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
+		public void onNodeContext(NodeContext event) {
 			/*
 			 * wip - cookbook - note finaldispatch - otherwise cascading
 			 * property changes cause render woes
 			 */
 			from(searchCriterion.searchCriterionProperties().operator())
 					.withFinalDispatch().to(properties().operator()).oneWay();
-			super.onBeforeRender(event);
 		}
 	}
 
+	/*
+	@formatter:off
+	
+	Notes on model/overlays when editing the operator
+
+	Clicking on the dropdown opens the and overlay with contents OperatorSelector, which contains a 
+	contenteditable [EditArea]. OnBind, that editor displays a choice-suggestor - which does not have an input
+	(input comes from the EditArea), but does contain the results
+
+
+	@formatter:on
+	*/
 	@TypedProperties
 	class OperatorSelector extends Model.Fields
 			implements ValueChange.Container {
 		@Directed.Transform(
-			value = Choices.Select.To.class,
+			// value = Choices.Select.To.class,
+			value = ChoicesEditorSingle.SingleSuggestions.To.class,
 			transformsNull = true)
-		@Choices.EnumValues(StandardSearchOperator.class)
+		@FocusOnBindMarker
+		@Choices.Values(AvailableOperators.class)
+		@ValueTransformer(ChoiceRenderer.To.class)
+		@ChoiceEditor.WidthConstrained
 		StandardSearchOperator operator;
 
 		PackageProperties._Searchable_OperatorSelector.InstanceProperties
@@ -111,11 +152,14 @@ class Searchable extends Model.Fields
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
-			from(properties().operator())
-					.to(searchCriterion.searchCriterionProperties().operator())
-					.bidi();
-			super.onBeforeRender(event);
+		public void onNodeContext(NodeContext event) {
+			from(searchCriterion.searchCriterionProperties().operator())
+					.to(properties().operator()).bidi();
+			from(properties().operator()).signal(() -> {
+				if (provideIsBound()) {
+					emitEvent(ModelEvents.Close.class);
+				}
+			});
 		}
 	}
 
@@ -127,8 +171,16 @@ class Searchable extends Model.Fields
 		this.name = Ax.blankTo(searchCriterion.getDisplayName(), searchCriterion
 				.getClass().getSimpleName().replace("Criterion", ""));
 		renderedOperator = new RenderedOperator();
-		operatorDropdown = new Dropdown(renderedOperator,
-				() -> new OperatorSelector()).withLogicalParent(this);
+		List<StandardSearchOperator> applicableOperators = searchCriterion
+				.getApplicableOperators();
+		if (applicableOperators.size() == 1) {
+			operator = ":";
+		} else {
+			operator = new Dropdown(renderedOperator,
+					() -> new OperatorSelector())
+							.withLogicalAncestor(getClass())
+							.withXalign(Position.START);
+		}
 	}
 
 	PackageProperties._Searchable.InstanceProperties properties() {
@@ -146,23 +198,14 @@ class Searchable extends Model.Fields
 		}
 	}
 
-	/*
-	 * wip - ds - move to onNodeContext
-	 */
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-			exec(() -> {
-				provideNode().getResolver().registerService(
-						StringInput.Service.class,
-						new StringInputServiceImpl());
-				properties().valueEditor().set(new ValueEditor());
-				if (service(SearchDefinitionEditor.Service.class)
-						.isInitialRenderComplete()) {
-					emitEvent(FocusEditor.class);
-				}
-			}).dispatch();
+	public void onNodeContext(NodeContext event) {
+		node.getResolver().registerService(StringInput.Service.class,
+				new StringInputServiceImpl());
+		node.getResolver().registerService(Service.class, new Service());
+		properties().valueEditor().set(new ValueEditor());
+		if (service(SearchDefinitionEditor.Service.class)
+				.isInitialRenderComplete()) {
+			exec(() -> emitEvent(FocusEditor.class)).dispatch();
 		}
 	}
 
@@ -212,11 +255,9 @@ class Searchable extends Model.Fields
 		}
 
 		@Override
-		public void onBeforeRender(BeforeRender event) {
-			event.node.getResolver().registerService(
-					NodeEditorContextService.class,
+		public void onNodeContext(NodeContext event) {
+			node.getResolver().registerService(NodeEditorContextService.class,
 					NodeEditorContextService.Editable.INSTANCE);
-			super.onBeforeRender(event);
 		}
 	}
 
@@ -237,5 +278,94 @@ class Searchable extends Model.Fields
 	@Override
 	public boolean isEditableDecoratorContents() {
 		return true;
+	}
+
+	static String operatorText(StandardSearchOperator operator,
+			DirectedLayout.Node node, boolean colonIfDefault) {
+		if (operator == null) {
+			return ":";
+		}
+		SearchCriterion searchCriterion = node.service(Service.class)
+				.getSearchCriterion();
+		if (Reflections.newInstance(searchCriterion.getClass())
+				.getOperator() == operator && colonIfDefault) {
+			return ":";
+		}
+		switch (operator) {
+		case EQUALS:
+			return "=";
+		case CONTAINS:
+		case AT_LEAST_ONE_OF:
+			return "\u220B";
+		case DOES_NOT_CONTAIN:
+			return "\u220C";
+		/*
+		 * both the same (superset/equals) - treating a string as an ordered set
+		 * // of chars. yeah sure, so does contains...
+		 */
+		case ALL_OF:
+		case STARTS_WITH:
+			return "\u2287";
+		default:
+			FilterOperator filterOperator = operator.toFilterOperator();
+			if (filterOperator != null) {
+				return filterOperator.operationText();
+			}
+			return Ax.friendly(operator);
+		}
+	}
+
+	@Reflected
+	static class OperatorRenderer extends
+			AbstractContextSensitiveModelTransform<StandardSearchOperator, LeafModel.TextTitle> {
+		String operatorText(StandardSearchOperator operator) {
+			return Searchable.operatorText(operator, node, true);
+		}
+
+		@Override
+		public TextTitle apply(StandardSearchOperator t) {
+			TextTitle result = new TextTitle(operatorText(t),
+					t == null ? "" : t.getName());
+			return result;
+		}
+	}
+
+	@Reflected
+	static class ChoiceRenderer extends Model.All {
+		@Reflected
+		static class To
+				implements Function<StandardSearchOperator, ChoiceRenderer> {
+			@Override
+			public ChoiceRenderer apply(StandardSearchOperator operator) {
+				return new ChoiceRenderer(operator);
+			}
+		}
+
+		String operatorChar;
+
+		String operatorName;
+
+		@Property.Not
+		StandardSearchOperator operator;
+
+		ChoiceRenderer(StandardSearchOperator operator) {
+			this.operator = operator;
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			this.operatorChar = Searchable.operatorText(operator, node, false);
+			this.operatorName = operator.getName();
+		}
+	}
+
+	@Reflected
+	static class AvailableOperators
+			implements Choices.Values.ValueSupplier.ContextSensitive {
+		@Override
+		public List<?> apply(DirectedLayout.Node contextNode, Values t) {
+			return contextNode.service(Service.class).getSearchCriterion()
+					.getApplicableOperators();
+		}
 	}
 }

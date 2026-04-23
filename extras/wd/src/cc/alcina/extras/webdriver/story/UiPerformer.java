@@ -157,8 +157,12 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				Story.Action.Ui.TestAbsent action) throws Exception {
 			ElementQuery query = WdActionPerformer.createQuery(wdPerformer);
 			boolean absent = !query.isPresent();
+			if (!absent && action.resetIfPresent > 0) {
+				Thread.sleep(action.resetIfPresent);
+				absent = !query.isPresent();
+			}
 			wdPerformer.context.getVisit().onActionTestResult(absent);
-			wdPerformer.context.log("TestAbsent --> %s", query);
+			wdPerformer.context.log("TestAbsent --> %s :: %s", absent, query);
 		}
 	}
 
@@ -350,9 +354,46 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				Actions actions = exec.actions();
 				// there's something weird about these moves...but this combo
 				// works
-				actions.moveToElement(elem, -60, -5).clickAndHold()
-						.moveToElement(elem, 50, 10).release().build()
-						.perform();
+				actions.moveToElement(elem, action.fromX, action.fromY)
+						.clickAndHold()
+						.moveToElement(elem, action.toX, action.toY).release()
+						.build().perform();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	public static class FocusWindow
+			implements TypedPerformer<Story.Action.Ui.FocusWindow> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.FocusWindow action) throws Exception {
+			WebDriver driver = wdPerformer.wdContext.exec.getDriver();
+			try {
+				driver.switchTo().window(driver.getWindowHandle());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	/*
+	 * closes the most recently created window
+	 */
+	public static class CloseWindow
+			implements TypedPerformer<Story.Action.Ui.CloseWindow> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.CloseWindow action) throws Exception {
+			WebDriver driver = wdPerformer.wdContext.exec.getDriver();
+			try {
+				String originalHandle = driver.getWindowHandle();
+				String openedHandle = driver.getWindowHandles().stream()
+						.filter(h -> !h.equals(originalHandle)).findFirst()
+						.get();
+				driver.switchTo().window(openedHandle).close();
+				driver.switchTo().window(originalHandle);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

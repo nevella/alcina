@@ -7,12 +7,13 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.HandlesModelChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @TypedProperties
@@ -57,7 +58,7 @@ public class FilteredChoices<T> extends Model.Fields
 		@Directed(
 			reemits = { ModelEvents.Input.class, ModelEvents.Filter.class })
 		@Directed.Transform(value = StringInput.To.class, transformsNull = true)
-		@StringInput.FocusOnBind
+		@FocusOnBindMarker
 		String filter;
 	}
 
@@ -68,13 +69,12 @@ public class FilteredChoices<T> extends Model.Fields
 	List<T> value;
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		/*
 		 * must reemit selectionchanged events for parent container update
 		 */
 		from(properties().value())
 				.emitStreamElement(ModelEvents.SelectionChanged.class);
-		super.onBeforeRender(event);
 	}
 
 	@Override

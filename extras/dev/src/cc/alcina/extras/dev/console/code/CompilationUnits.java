@@ -21,7 +21,6 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.github.javaparser.printer.lexicalpreservation.LexicalPreservingPrinter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -284,9 +283,9 @@ public class CompilationUnits {
 			fileUnits.put(unit.getFile(), unit);
 			units.add(unit);
 			unit.unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
-				declarations.put(d.qualifiedSourceName, d);
+				unitTypes.put(d.qualifiedSourceName, d);
 			});
-			unit.unitTypes.forEach(d -> declarationsByName.add(d.name, d));
+			unit.unitTypes.forEach(d -> unitTypeByName.add(d.name, d));
 		}
 	}
 
@@ -295,9 +294,9 @@ public class CompilationUnits {
 			units.remove(unit);
 			fileUnits.remove(unit.getFile());
 			unit.unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
-				declarations.remove(d.qualifiedSourceName, d);
+				unitTypes.remove(d.qualifiedSourceName, d);
 			});
-			unit.unitTypes.forEach(d -> declarationsByName.remove(d.name, d));
+			unit.unitTypes.forEach(d -> unitTypeByName.remove(d.name, d));
 		}
 	}
 
@@ -307,9 +306,9 @@ public class CompilationUnits {
 
 	public Map<File, CompilationUnitWrapper> fileUnits = new LinkedHashMap<>();
 
-	public Map<String, UnitType> declarations = new LinkedHashMap<>();
+	public Map<String, UnitType> unitTypes = new LinkedHashMap<>();
 
-	private Multimap<String, List<UnitType>> declarationsByName = new Multimap<>();
+	public Multimap<String, List<UnitType>> unitTypeByName = new Multimap<>();
 
 	public CompilationUnits() {
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
@@ -317,12 +316,12 @@ public class CompilationUnits {
 		this.solver = JavaParserFacade.get(typeSolver);
 	}
 
-	public UnitType declarationByFqn(String typeFqn) {
-		return declarations.get(typeFqn);
+	public UnitType unitTypeByFqn(String typeFqn) {
+		return unitTypes.get(typeFqn);
 	}
 
-	public List<UnitType> declarationByName(String simpleName) {
-		return declarationsByName.get(simpleName);
+	public List<UnitType> unitTypeByName(String simpleName) {
+		return unitTypeByName.get(simpleName);
 	}
 
 	public SolverUtils solverUtils() {
@@ -330,7 +329,7 @@ public class CompilationUnits {
 	}
 
 	public UnitType typeForClass(Class<?> clazz) {
-		return declarationByFqn(clazz.getCanonicalName());
+		return unitTypeByFqn(clazz.getCanonicalName());
 	}
 
 	public void writeDirty(boolean test) {
@@ -427,7 +426,10 @@ public class CompilationUnits {
 
 		public transient CompilationUnit unit;
 
-		public boolean dirty;
+		/**
+		 * call dirty() to ensure lexical preserving output
+		 */
+		private boolean dirty;
 
 		transient boolean preparedForModification;
 
@@ -461,7 +463,7 @@ public class CompilationUnits {
 		void prepareForModification() {
 			if (!preparedForModification) {
 				preparedForModification = true;
-				LexicalPreservingPrinter.setup(unit());
+				// LexicalPreservingPrinter.setup(unit());
 			}
 		}
 
@@ -484,6 +486,7 @@ public class CompilationUnits {
 					unit = StaticJavaParser.parse(getFile());
 				}
 			} catch (Exception e) {
+				Ax.out("Exception processing file: %s", getFile());
 				throw new WrappedRuntimeException(e);
 			}
 			return unit;
@@ -496,8 +499,13 @@ public class CompilationUnits {
 			}
 			File outFile = FileUtils.child(outDir, getFile().getName());
 			try {
-				String modified = mapper == null
-						? LexicalPreservingPrinter.print(unit)
+				String modified = mapper == null ?
+				/*
+				 * LexicalPreservingPrinter doesn't handle (at least) annotation
+				 * comments
+				 */
+						unit.toString()
+						// LexicalPreservingPrinter.print(unit)
 						: mapper.apply(this);
 				Io.write().string(modified).toFile(outFile);
 				Ax.out("wrote: %s", getFile().getName());
@@ -520,9 +528,9 @@ public class CompilationUnits {
 			synchronized (units) {
 				units.units.add(this);
 				unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
-					units.declarations.put(d.qualifiedSourceName, d);
+					units.unitTypes.put(d.qualifiedSourceName, d);
 				});
-				unitTypes.forEach(d -> units.declarationsByName.add(d.name, d));
+				unitTypes.forEach(d -> units.unitTypeByName.add(d.name, d));
 			}
 			updateMetadata();
 		}
@@ -576,6 +584,15 @@ public class CompilationUnits {
 			}
 			return content;
 		}
+
+		public void dirty() {
+			dirty = true;
+			prepareForModification();
+		}
+
+		public boolean isDirty() {
+			return dirty;
+		}
 	}
 
 	public abstract static class CompilationUnitWrapperVisitor
@@ -588,6 +605,31 @@ public class CompilationUnits {
 				CompilationUnitWrapper compUnit) {
 			this.units = units;
 			this.unit = compUnit;
+		}
+
+		public static class Noop extends CompilationUnitWrapperVisitor {
+			public Noop(CompilationUnits units,
+					CompilationUnitWrapper compUnit) {
+				super(units, compUnit);
+			}
+
+			@Override
+			public void visit(ClassOrInterfaceDeclaration node, Void arg) {
+				try {
+					visit0(node, arg);
+				} catch (VerifyError ve) {
+					Ax.out("Verify error: %s", node.getName());
+				} catch (Throwable t) {
+					Ax.out("Other visitor issue: %s", node.getName());
+					t.printStackTrace();
+				}
+			}
+
+			private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
+				UnitType type = new UnitType(unit, node);
+				type.setDeclaration(node);
+				unit.unitTypes.add(type);
+			}
 		}
 	}
 

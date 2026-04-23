@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
@@ -152,8 +155,8 @@ public class Mvcc {
 		}
 	}
 
-	public static DomainStore getStore(Entity entity) {
-		return DomainStore.stores().storeFor(entity.entityClass());
+	public static DomainStore getStore(Class<? extends Entity> entityClass) {
+		return DomainStore.stores().storeFor(entityClass);
 	}
 
 	public static void initialiseTransactionEnvironment() {
@@ -236,5 +239,24 @@ public class Mvcc {
 			}
 			logger.info("(All tests passed)");
 		}
+	}
+
+	static Set<String> getLazyFieldNames(Class<? extends Entity> entityClass) {
+		return getStore(entityClass).getLazyFieldNames(entityClass);
+	}
+
+	static Set<String> getLTransientFieldNamesForClear(
+			Class<? extends Entity> entityClass) {
+		return getStore(entityClass).getTransientFieldNames(entityClass,
+				Set.of(MvccObjectVersions.MVCC_OBJECT_FIELD_NAME));
+	}
+
+	public static void clearLazyProperties(Entity entity) {
+		ObjectUtil.nullFields(entity, getLazyFieldNames(entity.entityClass()));
+	}
+
+	public static void clearTransients(Entity entity) {
+		ObjectUtil.nullFields(entity,
+				getLTransientFieldNamesForClear(entity.entityClass()));
 	}
 }

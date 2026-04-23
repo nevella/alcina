@@ -31,4 +31,33 @@ public interface Feature_Romcom_Impl extends Feature {
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _WindowState extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * This optimises client/server comms - the server needs to know the offsets
+	 * of potentially many elements, but they can be computed from _relative_
+	 * offsets (relative to the parent) which change infrequently. So optimise
+	 * via a caching protocol. Implemented + a large performance improvement
+	 * 
+	 * <p>
+	 * wip - ds.late - check the offsetprotocol json size + possibly client-side
+	 * zip
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _OffsetProtocol extends Feature {
+	}
+
+	/**
+	 * <p>
+	 * This optimises client/server comms - large string constants are cached
+	 * client-side in local storage, and MutationRecord.innerMarkup is ...
+	 * munged? extended? to support
+	 * 
+	 * <p>
+	 * some considerations: onload cache invalidation and client-to-server cache
+	 * comms
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _StringProtocol extends Feature {
+	}
 }

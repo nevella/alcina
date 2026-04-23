@@ -271,7 +271,7 @@ public class Domain {
 			return false;
 		}
 
-		default void ensurePopulated(Entity<?> entity) {
+		default void ensurePopulated(List<? extends Entity> entities) {
 			throw new UnsupportedOperationException();
 		}
 	}
@@ -338,7 +338,7 @@ public class Domain {
 	 * @param entity
 	 *            the entity to populate
 	 */
-	public static void ensurePopulated(Entity<?> entity) {
-		handler.ensurePopulated(entity);
+	public static void ensurePopulated(List<? extends Entity> entities) {
+		handler.ensurePopulated(entities);
 	}
 }

@@ -352,7 +352,7 @@ public class Ax {
 	}
 
 	public static long appMillis(Date date) {
-		return date.getTime() - appStartup;
+		return date == null ? -1 : date.getTime() - appStartup;
 	}
 
 	public static <T> Optional<T> last(Stream<T> stream) {

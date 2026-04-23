@@ -1,0 +1,602 @@
+package cc.alcina.framework.gwt.client.dirndl.model;
+
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.Scheduler;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.ListenerBinding;
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.InstanceOracle;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.Ref;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
+
+/**
+ *
+ * <p>
+ * Build a binding pipeline with a lifecycle controlled by the registering
+ * model. The logic and api are similar to the {@link java.util.stream.Stream}
+ * api.
+ *
+ * <p>
+ * FIXME - dirndl - this could be refactored to an "event source" and an "event
+ * stream" - acceptStreamElement0 being essentially the stream part. But that
+ * would require yet more footprint for what was originally lightweight - so
+ * holding pattern
+ * 
+ * <p>
+ * Note - when bidi binding a data model to a UI element, the data model element
+ * should be 'from' (since the initial bind sequence is from-&gt;to then
+ * to-&gt;from)
+ * 
+ * <p>
+ * The {@link IfNotEqual} interface can be used to prevent bindings from
+ * actually firing if the existing property value is 'good enough'
+ * 
+ * <p>
+ * One of the nicest bits of this is {@link #dispatchRef} - avoiding *a lot* of
+ * the threading cruft of traditional desktop apps by mandating that a
+ * multi-threaded (romcom) app propagate changes - and thus UI mutations - on
+ * the app's UI thread. There's a similar system for {@link InstanceOracle}
+ * 
+ * @param <T>
+ */
+public class StreamBinding<T> {
+	public static class TargetBinding<BSP extends SourcesPropertyChangeEvents, T2> {
+		BSP to;
+
+		Object on;
+
+		Function map;
+
+		StreamBinding<T2> binding;
+
+		Property property;
+
+		TargetBinding(StreamBinding<T2> binding, BSP to) {
+			this.binding = binding;
+			binding.targetBinding = this;
+			this.to = to;
+		}
+
+		public StreamBinding<T2> bidi() {
+			acceptLeftToRight();
+			StreamBinding source = binding;
+			StreamBinding<?> reverse = new StreamBinding<>(binding.bindings);
+			binding.bindings.streamBindings.add(reverse);
+			reverse.fromPropertyChangeSource = to;
+			reverse.map = map;
+			reverse.on = on;
+			reverse.transformsNull = binding.transformsNull;
+			TargetBinding reverseTargetBinding = reverse
+					.to(source.fromPropertyChangeSource);
+			reverseTargetBinding.on = source.on;
+			reverseTargetBinding.acceptLeftToRight();
+			return (StreamBinding<T2>) reverse;
+		}
+
+		public TargetBinding<BSP, ?> onUntyped(PropertyEnum on) {
+			this.on = on;
+			return this;
+		}
+
+		public TargetBinding<BSP, T2>
+				on(TypedProperty<? super BSP, ? super T2> on) {
+			this.on = on;
+			return (TargetBinding<BSP, T2>) this;
+		}
+
+		public <T3> TargetBinding map(Function<T2, T3> map) {
+			this.map = (Function) map;
+			return this;
+		}
+
+		public TargetBinding on(String on) {
+			this.on = on;
+			return this;
+		}
+
+		public TargetBinding withFireOnce() {
+			binding.fireOnce = true;
+			return this;
+		}
+
+		public void oneWay() {
+			acceptLeftToRight();
+		}
+
+		@Override
+		public String toString() {
+			return ensureProperty().toLocationString();
+		}
+
+		Object getExistingValue() {
+			return ensureProperty().get(to);
+		}
+
+		Class<?> getTargetPropertyType() {
+			return ensureProperty().getType();
+		}
+
+		void acceptLeftToRight() {
+			binding.accept(newValue -> {
+				try {
+					ensureProperty().set(to, newValue);
+				} catch (Exception e) {
+					LoggerFactory.getLogger(getClass()).warn(
+							"Exception executing model binding on {} to {} :: {}",
+							NestedName.get(binding.bindings.model()),
+							NestedName.get(to), on);
+					e.printStackTrace();
+					throw WrappedRuntimeException.wrap(e);
+				}
+			});
+		}
+
+		private Property ensureProperty() {
+			if (property == null) {
+				Preconditions.checkNotNull(on);
+				property = Reflections.at(to).property(on);
+			}
+			return property;
+		}
+	}
+
+	Bindings bindings;
+
+	SourcesPropertyChangeEvents fromPropertyChangeSource;
+
+	Object on;
+
+	Function<?, ?> map;
+
+	Supplier<?> supplier;
+
+	Consumer<?> consumer;
+
+	BiConsumer<?, ?> changeConsumer;
+
+	ListenerBinding listener;
+
+	boolean setOnInitialise = true;
+
+	Ref<Consumer<Runnable>> dispatchRef = null;
+
+	Predicate<T> postMapPredicate;
+
+	boolean transformsNull;
+
+	Predicate<T> preSupplierPredicate;
+
+	Predicate<T> preMapPredicate;
+
+	Topic<?> fromTopic;
+
+	/*
+	 * Use this to add conditional breakpoints to test things like unwanted
+	 * multiple dispatch
+	 */
+	boolean debug;
+
+	/*
+	 * only fire once
+	 */
+	boolean fireOnce;
+
+	boolean fired;
+
+	TargetBinding targetBinding;
+
+	boolean ifNotEqual;
+
+	public Class<? extends NodeEvent> fromNodeEventClass;
+
+	Object oldValue;
+
+	boolean bindOnTerminal;
+
+	public StreamBinding(Bindings bindings) {
+		this.bindings = bindings;
+	}
+
+	public StreamBinding ifNotEqual() {
+		ifNotEqual = true;
+		return this;
+	}
+
+	/**
+	 * add a terminal consumer (i.e. the actual action performer) to the end of
+	 * the pipeline
+	 */
+	public void accept(Consumer<T> consumer) {
+		this.consumer = consumer;
+		checkBindOnTerminal();
+	}
+
+	/**
+	 * add a terminal property change consumer
+	 */
+	public void acceptChange(BiConsumer<T, T> changeConsumer) {
+		this.changeConsumer = changeConsumer;
+	}
+
+	/**
+	 * Depending on whether map() or value()/supplier() have already been
+	 * called, this filter will be inserted into a different location in the
+	 * binding pipeline (i.e. after whatever the most recent stream operation
+	 * is)
+	 * 
+	 * @param predicate
+	 * @return
+	 */
+	public StreamBinding<T> filter(Predicate<T> predicate) {
+		Predicate existingFilter = null;
+		if (map != null) {
+			existingFilter = this.postMapPredicate;
+			this.postMapPredicate = predicate;
+		} else if (supplier != null) {
+			existingFilter = this.preMapPredicate;
+			this.preMapPredicate = predicate;
+		} else {
+			existingFilter = preSupplierPredicate;
+			this.preSupplierPredicate = predicate;
+		}
+		Preconditions.checkState(existingFilter == null,
+				"Cannot set multiple predicates");
+		return this;
+	}
+
+	public StreamBinding<T> nonNull() {
+		return filter(Objects::nonNull);
+	}
+
+	public StreamBinding<T> debug() {
+		this.debug = true;
+		return this;
+	}
+
+	/**
+	 * The source of the binding property changes
+	 */
+	StreamBinding<T> from(SourcesPropertyChangeEvents from) {
+		Preconditions.checkNotNull(from);
+		this.fromPropertyChangeSource = from;
+		return this;
+	}
+
+	<TE> StreamBinding<TE> from(Topic<TE> topic) {
+		this.fromTopic = topic;
+		return (StreamBinding<TE>) this;
+	}
+
+	<E extends NodeEvent> StreamBinding<E>
+			fromNodeEventClass(Class<E> nodeEventClass) {
+		this.fromNodeEventClass = nodeEventClass;
+		return (StreamBinding<E>) this;
+	}
+
+	/**
+	 * Add an intermediate mapping to the pipeline
+	 */
+	public <U> StreamBinding<U> map(Function<T, U> map) {
+		this.map = (Function) map;
+		return (StreamBinding<U>) this;
+	}
+
+	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
+	public <P> StreamBinding<P> on(PropertyEnum fromPropertyName) {
+		this.on = fromPropertyName;
+		return (StreamBinding<P>) this;
+	}
+
+	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
+	public <PT> StreamBinding<PT> on(TypedProperty<?, PT> typedProperty) {
+		this.on = typedProperty;
+		return (StreamBinding<PT>) this;
+	}
+
+	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
+	public <P> StreamBinding<P> on(String fromPropertyName) {
+		this.on = fromPropertyName;
+		return (StreamBinding<P>) this;
+	}
+
+	/**
+	 * add a terminal runnable (i.e. the actual action performer) to the end of
+	 * the pipeline
+	 */
+	public void signal(Runnable runnable) {
+		accept(t -> runnable.run());
+	}
+
+	public void dispatch(Runnable runnable) {
+		accept(t -> Client.eventBus().queued().lambda(runnable).dispatch());
+	}
+
+	/**
+	 * Enqueue at most one handler lambda - very useful if multiple signals can
+	 * produce a given result, and you only want to process once in a given
+	 * event cycle
+	 * 
+	 * @param runnable
+	 */
+	public void dispatchDistinct(Runnable runnable) {
+		accept(t -> Client.eventBus().queued().lambda(runnable).distinct()
+				.dispatch());
+	}
+
+	public <BSP extends SourcesPropertyChangeEvents> TargetBinding<BSP, T>
+			to(BSP to) {
+		Preconditions.checkNotNull(to);
+		return new TargetBinding(this, to);
+	}
+
+	public <BSP extends SourcesPropertyChangeEvents, T2> TargetBinding<BSP, T2>
+			to(InstanceProperty<BSP, T2> instanceProperty) {
+		return to(instanceProperty.source)
+				.on((TypedProperty) instanceProperty.property);
+	}
+
+	/**
+	 * Define the type of the incoming property
+	 */
+	public <V> StreamBinding<V> typed(Class<V> propertyType) {
+		return (StreamBinding<V>) this;
+	}
+
+	/**
+	 * When the change occurs, rather than pipe the event/change, pipe the
+	 * object from <code>supplier</code>
+	 */
+	public <V> StreamBinding<V> value(Supplier<V> supplier) {
+		this.supplier = supplier;
+		return (StreamBinding<V>) this;
+	}
+
+	/**
+	 * When the change occurs, rather than pipe the event/change, pipe the
+	 * replaceWith object
+	 */
+	public <V> StreamBinding<V> value(V replaceWith) {
+		return value(() -> replaceWith);
+	}
+
+	public StreamBinding<T> withDeferredDispatch() {
+		Preconditions.checkState(dispatchRef == null);
+		dispatchRef = Ref
+				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
+		return this;
+	}
+
+	public StreamBinding<T> withFinalDispatch() {
+		Preconditions.checkState(dispatchRef == null);
+		dispatchRef = Ref
+				.of(r -> Scheduler.get().scheduleFinally(() -> r.run()));
+		return this;
+	}
+
+	/**
+	 * Trigger the pipeline with the source's initial value when the binding is
+	 * created (defaults to true)
+	 */
+	public StreamBinding<T> withSetOnInitialise(boolean setOnInitialise) {
+		this.setOnInitialise = setOnInitialise;
+		return this;
+	}
+
+	public StreamBinding<T> withTransformsNull() {
+		this.transformsNull = true;
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder format = new FormatBuilder();
+		format.format("%s.", NestedName.get(fromPropertyChangeSource));
+		format.format("%s", on == null ? "*" : fromProperty().getName());
+		// ...map, fn etc
+		if (targetBinding != null) {
+			format.format(" --> %s", targetBinding);
+		}
+		return format.toString();
+	}
+
+	void acceptStreamElement(Object obj) {
+		if (fireOnce) {
+			if (fired) {
+				return;
+			}
+		}
+		fired = true;
+		Consumer<Runnable> dispatch = ensureDispatch();
+		if (dispatch == null) {
+			acceptStreamElement0(obj);
+		} else {
+			dispatch.accept(() -> acceptStreamElement0(obj));
+		}
+	}
+
+	void acceptStreamElement0(Object obj) {
+		if (preSupplierPredicate != null
+				&& !((Predicate) preSupplierPredicate).test(obj)) {
+			return;
+		}
+		Object o1 = supplier == null ? obj : supplier.get();
+		if (preMapPredicate != null
+				&& !((Predicate) preMapPredicate).test(o1)) {
+			return;
+		}
+		Object o2 = map == null || (o1 == null && !transformsNull) ? o1
+				: ((Function) map).apply(o1);
+		if (postMapPredicate != null
+				&& !((Predicate) postMapPredicate).test(o2)) {
+			return;
+		}
+		if (targetBinding != null) {
+			Class<?> toType = targetBinding.getTargetPropertyType();
+			if (Reflections.isAssignableFrom(IfNotEqual.class, toType)
+					|| ifNotEqual) {
+				Object existing = targetBinding.getExistingValue();
+				if (existing != null) {
+					if (Objects.equals(existing, o2)) {
+						return;
+					}
+				}
+			}
+		}
+		Preconditions.checkState(consumer != null || changeConsumer != null,
+				"No consumer - possibly you forgot to call bind(), "
+						+ "or  onewWay()/bidi() if this is a property binding");
+		if (consumer != null) {
+			((Consumer) consumer).accept(o2);
+		} else {
+			((BiConsumer) changeConsumer).accept(oldValue, o2);
+		}
+	}
+
+	void bind() {
+		if (fromPropertyChangeSource != null) {
+			listener = bindings.addPropertyChangeListener(
+					fromPropertyChangeSource, on, evt -> {
+						if (on == null) {
+							acceptStreamElement(fromPropertyChangeSource);
+						} else {
+							try {
+								this.oldValue = evt.getOldValue();
+								acceptStreamElement(evt.getNewValue());
+							} finally {
+								// finally body
+								this.oldValue = null;
+							}
+						}
+					});
+		} else if (fromTopic != null) {
+			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
+					.asBinding();
+			listener.bind();
+		} else {
+			// noop (from is null)
+		}
+	}
+
+	Consumer<Runnable> ensureDispatch() {
+		if (dispatchRef == null) {
+			if (bindings != null && bindings.model() != null
+					&& bindings.model().provideIsBound()) {
+				dispatchRef = bindings.model().provideNode().getResolver()
+						.dispatch();
+			} else {
+				// pre-binding, return null
+				return null;
+			}
+		}
+		return dispatchRef.get();
+	}
+
+	void prepare() {
+		try {
+			if (setOnInitialise) {
+				if (fromPropertyChangeSource != null) {
+					acceptStreamElement(resolvePropertyChangeValue());
+				} else if (fromTopic != null) {
+					fromTopic.fireIfPublished((Consumer) consumer);
+				} else {
+					// noop - from is null
+				}
+			}
+		} catch (Exception e) {
+			LoggerFactory.getLogger(getClass()).warn(
+					"Exception preparing model binding on {} from {} :: {}",
+					NestedName.get(bindings.model()),
+					NestedName.get(fromPropertyChangeSource), on);
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
+	public void unbind() {
+		if (listener != null) {
+			listener.unbind();
+		}
+	}
+
+	private Object resolvePropertyChangeValue() {
+		return on != null ? fromProperty().get(fromPropertyChangeSource)
+				: fromPropertyChangeSource;
+	}
+
+	private Property fromProperty() {
+		return Reflections.at(fromPropertyChangeSource).property(on);
+	}
+
+	public static <T> StreamBinding<T>
+			ofProperty(InstanceProperty<?, T> property) {
+		return new StreamBinding<>(null).from(property.source)
+				.on(property.property);
+	}
+
+	public <E> void emit(Class<? extends ModelEvent<E, ?>> modelEventClass) {
+		emit(modelEventClass, null);
+	}
+
+	/* A terminal, stream output will emit the corresponding event */
+	public <E> void emit(Class<? extends ModelEvent<E, ?>> modelEventClass,
+			E value) {
+		signal(() -> bindings.model().emitEvent(modelEventClass, value));
+	}
+
+	/**
+	 * Emit the stream element at the payload of a model event
+	 * 
+	 * @param <E>
+	 * @param modelEventClass
+	 */
+	public <E> void emitStreamElement(
+			Class<? extends ModelEvent<E, ?>> modelEventClass) {
+		accept(value -> {
+			bindings.model().emitEvent(modelEventClass, value);
+		});
+	}
+
+	public <FT> StreamBinding<FT> filterType(Class<FT> clazz) {
+		StreamBinding<T> filtered = filter(e -> e == null ? false
+				: Reflections.isAssignableFrom(clazz, e.getClass()));
+		return (StreamBinding<FT>) filtered;
+	}
+
+	void bindOnTerminal(boolean bound) {
+		this.bindOnTerminal = bound;
+		checkBindOnTerminal();
+	}
+
+	void checkBindOnTerminal() {
+		if (bindOnTerminal && consumer != null) {
+			prepare();
+			bind();
+		}
+	}
+}

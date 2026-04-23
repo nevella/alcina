@@ -53,7 +53,9 @@ public class ElementQuery {
 		if (element == null) {
 			return;
 		}
-		from(element).awaitRemoval(2000.0);
+		ElementQuery from = from(element);
+		from.markedElement = element;
+		from.awaitRemoval(2000.0);
 	}
 
 	public static ElementQuery from(SearchContext context) {

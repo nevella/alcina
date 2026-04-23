@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -186,6 +187,11 @@ public class EntityHelper {
 			sb.append(entity.getId());
 		}
 		return sb.toString();
+	}
+
+	public static String longsToIdString(Collection<? extends Long> ids) {
+		return ids.stream().map(String::valueOf)
+				.collect(Collectors.joining(","));
 	}
 
 	public static class EntityDebugIdFilter implements Predicate<Entity> {

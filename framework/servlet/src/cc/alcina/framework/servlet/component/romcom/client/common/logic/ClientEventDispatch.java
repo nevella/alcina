@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.google.gwt.core.client.Scheduler;
@@ -15,30 +16,67 @@ import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 
 class ClientEventDispatch {
-	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientEventThrottling.class)
-	static void dispatchEventMessage(Event event, Element listenerElement,
+	DomEventMessage currentEventMessage = null;
+
+	EventCollator repeatedPreviewCollator = new EventCollator<>(30,
+			this::dispatchRepeatedPreviews);
+
+	EventCollator scrollCollator = new EventCollator<>(30,
+			this::dispatchScroll);
+
+	void dispatchRepeatedPreviews() {
+		collatedPreviews.values()
+				.forEach(event -> dispatchEventMessage0(event, null, true));
+		collatedPreviews.clear();
+	}
+
+	void dispatchScroll() {
+		Event lastEvent = (Event) scrollCollator.getLastObject();
+		dispatchEventMessage0(lastEvent, null, false);
+	}
+
+	Map<String, Event> collatedPreviews = AlcinaCollections.newUnqiueMap();
+
+	@Feature.Ref(Feature_RemoteObjectComponent._ClientEventThrottling.class)
+	void dispatchEventMessage(Event event, Element listenerElement,
 			boolean preview) {
 		/*
 		 * FIXME - shouldn't need to dedpue
 		 */
+		String typeName = event.getType().toLowerCase();
 		if (preview) {
-			switch (event.getType().toLowerCase()) {
+			switch (typeName) {
+			case "selectionchange":
 			case "mouseout":
 			case "mouseenter":
 			case "mouseleave":
 			case "mousemove":
 			case "mouseover":
-			case "mousewheel":
 			case "scroll":
+			case "mousewheel":
+				collatedPreviews.put(typeName, event);
+				repeatedPreviewCollator.eventOccurred();
+				return;
+			}
+		} else {
+			switch (typeName) {
+			case "scroll":
+				scrollCollator.eventOccurred(event);
 				return;
 			}
 		}
+		dispatchEventMessage0(event, listenerElement, preview);
+	}
+
+	void dispatchEventMessage0(Event event, Element listenerElement,
+			boolean preview) {
 		if (event.getEventTarget().isDetachedElement()) {
 			return;
 		}
@@ -48,6 +86,7 @@ class ClientEventDispatch {
 				sendCurrentEventMessage();
 			});
 		}
+		String eventType = event.getType();
 		DomEventData eventData = new DomEventData();
 		currentEventMessage.events.add(eventData);
 		eventData.event = event.serializableForm();
@@ -61,7 +100,6 @@ class ClientEventDispatch {
 		 */
 		eventData.firstReceiver = listenerElement == null ? null
 				: AttachId.forNode(listenerElement);
-		String eventType = event.getType();
 		if (Element.is(event.getEventTarget())) {
 			Element elem = Element.as(event.getEventTarget());
 			/*
@@ -139,14 +177,11 @@ class ClientEventDispatch {
 		}
 	}
 
-	static DomEventMessage currentEventMessage = null;
-
-	static void sendCurrentEventMessage() {
+	void sendCurrentEventMessage() {
 		// may have been removed by a 'fire-now'
 		if (currentEventMessage == null) {
 			return;
 		}
-		Ax.out(currentEventMessage);
 		ClientRpc.send(currentEventMessage);
 		currentEventMessage = null;
 	}

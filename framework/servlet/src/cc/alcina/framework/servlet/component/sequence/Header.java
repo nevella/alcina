@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SequenceChanged;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -155,9 +155,8 @@ class Header extends Model.All {
 	}
 
 	@Override
-	public void onBeforeRender(BeforeRender event) {
+	public void onNodeContext(NodeContext event) {
 		from(page.sequenceArea.properties().sequence()).nonNull().value(this)
 				.map(Left::new).to(properties().left()).oneWay();
-		super.onBeforeRender(event);
 	}
 }

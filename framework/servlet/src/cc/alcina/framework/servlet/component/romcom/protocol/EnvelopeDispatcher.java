@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 
 public abstract class EnvelopeDispatcher {
@@ -48,8 +47,7 @@ public abstract class EnvelopeDispatcher {
 				uack.transportHistory.firstReceiptAcknowledgedEnvelopeId = envelope.envelopeId;
 			}
 			uack.onSending();
-			envelope.packets.add(new MessagePacket(
-					uack.transportHistory.messageId, uack.message));
+			envelope.messages.add(uack.message);
 		});
 		/*
 		 * send the transport histories of sent + received messages (for sender

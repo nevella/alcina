@@ -23,7 +23,8 @@ public interface RemoteComponent {
 
 	default RemoteComponentProtocol.Session createEnvironment(
 			HttpServletRequest request, HttpServletResponse response) {
-		if (isUseContextIdentity()) {
+		if (isUseContextIdentity()
+				&& AlcinaServletContext.httpContext() == null) {
 			InstanceOracle.query(DomainStore.class).await();
 			AlcinaServletContext alcinaContext = new AlcinaServletContext();
 			try {
@@ -56,7 +57,12 @@ public interface RemoteComponent {
 		if (Ax.notBlank(request.getQueryString())) {
 			session.url += "?" + request.getQueryString();
 		}
+		session.componentPath = getPath();
 		session.componentClassName = ui.getClass().getName();
+		if (EnvironmentManager.debugRomcomMetrics.is()) {
+			session.properties.put(RemoteComponentProtocol.FLAG_DEBUG_METRICS,
+					"true");
+		}
 		EnvironmentManager.get().register(ui, session,
 				getNonInteractionTimeout(session));
 		return session;
@@ -85,7 +91,7 @@ public interface RemoteComponent {
 	}
 
 	default RemoteUi getUiInstance() {
-		return Reflections.newInstance(getUiType());
+		return Reflections.newInstance(getUiType()).withComponent(this);
 	}
 
 	Class<? extends RemoteUi> getUiType();
@@ -97,5 +103,9 @@ public interface RemoteComponent {
 	default boolean isApplicationPath(String path) {
 		return path == null || (getPath().isEmpty()
 				&& (path.isEmpty() || path.equals("/")));
+	}
+
+	default String getMetaMarkup() {
+		return "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
 	}
 }

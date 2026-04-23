@@ -76,7 +76,14 @@ public abstract class DecoratorSuggestor extends Model.Fields
 						""));
 	}
 
+	/*
+	 * init->init0 allows the subclass to complete construction
+	 */
 	protected void init() {
+		init0();
+	}
+
+	protected void init0() {
 		tagEditor = createTagEditor();
 		suggestor = createSuggestorAttributes().create();
 		bindings().addListener(

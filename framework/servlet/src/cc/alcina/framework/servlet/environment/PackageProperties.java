@@ -6,6 +6,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 import com.google.gwt.place.shared.Place;
@@ -29,8 +30,9 @@ public class PackageProperties {
       public TypedProperty<AbstractUi, List> notifiedExceptions = new TypedProperty<>(AbstractUi.class, "notifiedExceptions");
       public TypedProperty<AbstractUi, Place> place = new TypedProperty<>(AbstractUi.class, "place");
       public TypedProperty<AbstractUi, Boolean> reloading = new TypedProperty<>(AbstractUi.class, "reloading");
+      public TypedProperty<AbstractUi, RemoteComponent> remoteComponent = new TypedProperty<>(AbstractUi.class, "remoteComponent");
       public TypedProperty<AbstractUi, RemoteComponentProtocol.Session> session = new TypedProperty<>(AbstractUi.class, "session");
-      public static class InstanceProperties extends InstanceProperty.Container<AbstractUi> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AbstractUi> {
         public  InstanceProperties(AbstractUi source){super(source);}
         public InstanceProperty<AbstractUi, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.abstractUi.appCommandContexts);}
         public InstanceProperty<AbstractUi, AuthenticationTokenStore> authenticationTokenStore(){return new InstanceProperty<>(source,PackageProperties.abstractUi.authenticationTokenStore);}
@@ -41,6 +43,7 @@ public class PackageProperties {
         public InstanceProperty<AbstractUi, List> notifiedExceptions(){return new InstanceProperty<>(source,PackageProperties.abstractUi.notifiedExceptions);}
         public InstanceProperty<AbstractUi, Place> place(){return new InstanceProperty<>(source,PackageProperties.abstractUi.place);}
         public InstanceProperty<AbstractUi, Boolean> reloading(){return new InstanceProperty<>(source,PackageProperties.abstractUi.reloading);}
+        public InstanceProperty<AbstractUi, RemoteComponent> remoteComponent(){return new InstanceProperty<>(source,PackageProperties.abstractUi.remoteComponent);}
         public InstanceProperty<AbstractUi, RemoteComponentProtocol.Session> session(){return new InstanceProperty<>(source,PackageProperties.abstractUi.session);}
       }
       

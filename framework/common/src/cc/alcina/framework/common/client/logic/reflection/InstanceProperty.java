@@ -4,6 +4,8 @@ import java.beans.PropertyChangeListener;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * Access like so:
  * 
@@ -37,8 +39,12 @@ public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 		property.set(getSource(), t);
 	}
 
-	public void setIfNotEqual(T t) {
-		property.setIfNotEqual(getSource(), t);
+	public boolean setIfNotEqual(T t) {
+		return property.setIfNotEqual(getSource(), t);
+	}
+
+	public void setIfUnset(T newValue) {
+		property.setIfUnset(getSource(), newValue);
 	}
 
 	public S getSource() {
@@ -58,5 +64,10 @@ public class InstanceProperty<S extends SourcesPropertyChangeEvents, T> {
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
 		source.addPropertyChangeListener(listener);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("InstanceProperty :: %s :: %s", property, source);
 	}
 }

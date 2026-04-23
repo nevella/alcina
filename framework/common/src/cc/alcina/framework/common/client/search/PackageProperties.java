@@ -16,6 +16,7 @@ import java.lang.Enum;
 import java.lang.Long;
 import java.lang.String;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
@@ -45,7 +46,7 @@ public class PackageProperties {
       public TypedProperty<AbstractDateCriterion, StandardSearchOperator> operator = new TypedProperty<>(AbstractDateCriterion.class, "operator");
       public TypedProperty<AbstractDateCriterion, String> targetPropertyName = new TypedProperty<>(AbstractDateCriterion.class, "targetPropertyName");
       public TypedProperty<AbstractDateCriterion, Date> value = new TypedProperty<>(AbstractDateCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<AbstractDateCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AbstractDateCriterion> {
         public  InstanceProperties(AbstractDateCriterion source){super(source);}
         public InstanceProperty<AbstractDateCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.abstractDateCriterion.direction);}
         public InstanceProperty<AbstractDateCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.abstractDateCriterion.displayName);}
@@ -66,7 +67,7 @@ public class PackageProperties {
       public TypedProperty<AbstractUserCriterion, String> targetPropertyName = new TypedProperty<>(AbstractUserCriterion.class, "targetPropertyName");
       public TypedProperty<AbstractUserCriterion, Long> userId = new TypedProperty<>(AbstractUserCriterion.class, "userId");
       public TypedProperty<AbstractUserCriterion, Long> value = new TypedProperty<>(AbstractUserCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<AbstractUserCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<AbstractUserCriterion> {
         public  InstanceProperties(AbstractUserCriterion source){super(source);}
         public InstanceProperty<AbstractUserCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.abstractUserCriterion.displayName);}
         public InstanceProperty<AbstractUserCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.abstractUserCriterion.operator);}
@@ -87,7 +88,7 @@ public class PackageProperties {
       public TypedProperty<BaseEnumCriterion, String> targetPropertyName = new TypedProperty<>(BaseEnumCriterion.class, "targetPropertyName");
       public TypedProperty<BaseEnumCriterion, Enum> value = new TypedProperty<>(BaseEnumCriterion.class, "value");
       public TypedProperty<BaseEnumCriterion, Boolean> withNull = new TypedProperty<>(BaseEnumCriterion.class, "withNull");
-      public static class InstanceProperties extends InstanceProperty.Container<BaseEnumCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<BaseEnumCriterion> {
         public  InstanceProperties(BaseEnumCriterion source){super(source);}
         public InstanceProperty<BaseEnumCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.baseEnumCriterion.displayName);}
         public InstanceProperty<BaseEnumCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.baseEnumCriterion.operator);}
@@ -109,7 +110,7 @@ public class PackageProperties {
       public TypedProperty<BooleanEnumCriterion, String> targetPropertyName = new TypedProperty<>(BooleanEnumCriterion.class, "targetPropertyName");
       public TypedProperty<BooleanEnumCriterion, BooleanEnum> value = new TypedProperty<>(BooleanEnumCriterion.class, "value");
       public TypedProperty<BooleanEnumCriterion, Boolean> withNull = new TypedProperty<>(BooleanEnumCriterion.class, "withNull");
-      public static class InstanceProperties extends InstanceProperty.Container<BooleanEnumCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<BooleanEnumCriterion> {
         public  InstanceProperties(BooleanEnumCriterion source){super(source);}
         public InstanceProperty<BooleanEnumCriterion, BooleanEnum> booleanEnum(){return new InstanceProperty<>(source,PackageProperties.booleanEnumCriterion.booleanEnum);}
         public InstanceProperty<BooleanEnumCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.booleanEnumCriterion.displayName);}
@@ -131,7 +132,7 @@ public class PackageProperties {
       public TypedProperty<DateCriterion, StandardSearchOperator> operator = new TypedProperty<>(DateCriterion.class, "operator");
       public TypedProperty<DateCriterion, String> targetPropertyName = new TypedProperty<>(DateCriterion.class, "targetPropertyName");
       public TypedProperty<DateCriterion, Date> value = new TypedProperty<>(DateCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<DateCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DateCriterion> {
         public  InstanceProperties(DateCriterion source){super(source);}
         public InstanceProperty<DateCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.dateCriterion.direction);}
         public InstanceProperty<DateCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.dateCriterion.displayName);}
@@ -153,7 +154,7 @@ public class PackageProperties {
       public TypedProperty<DateRangeEnumCriterion, String> targetPropertyName = new TypedProperty<>(DateRangeEnumCriterion.class, "targetPropertyName");
       public TypedProperty<DateRangeEnumCriterion, DateRange> value = new TypedProperty<>(DateRangeEnumCriterion.class, "value");
       public TypedProperty<DateRangeEnumCriterion, Boolean> withNull = new TypedProperty<>(DateRangeEnumCriterion.class, "withNull");
-      public static class InstanceProperties extends InstanceProperty.Container<DateRangeEnumCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DateRangeEnumCriterion> {
         public  InstanceProperties(DateRangeEnumCriterion source){super(source);}
         public InstanceProperty<DateRangeEnumCriterion, DateRange> dateRange(){return new InstanceProperty<>(source,PackageProperties.dateRangeEnumCriterion.dateRange);}
         public InstanceProperty<DateRangeEnumCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.dateRangeEnumCriterion.displayName);}
@@ -174,7 +175,7 @@ public class PackageProperties {
       public TypedProperty<DoubleCriterion, StandardSearchOperator> operator = new TypedProperty<>(DoubleCriterion.class, "operator");
       public TypedProperty<DoubleCriterion, String> targetPropertyName = new TypedProperty<>(DoubleCriterion.class, "targetPropertyName");
       public TypedProperty<DoubleCriterion, Double> value = new TypedProperty<>(DoubleCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<DoubleCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<DoubleCriterion> {
         public  InstanceProperties(DoubleCriterion source){super(source);}
         public InstanceProperty<DoubleCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.doubleCriterion.displayName);}
         public InstanceProperty<DoubleCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.doubleCriterion.operator);}
@@ -196,7 +197,7 @@ public class PackageProperties {
       public TypedProperty<EntityCriterion, StandardSearchOperator> operator = new TypedProperty<>(EntityCriterion.class, "operator");
       public TypedProperty<EntityCriterion, String> targetPropertyName = new TypedProperty<>(EntityCriterion.class, "targetPropertyName");
       public TypedProperty<EntityCriterion, HasId> value = new TypedProperty<>(EntityCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<EntityCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<EntityCriterion> {
         public  InstanceProperties(EntityCriterion source){super(source);}
         public InstanceProperty<EntityCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.displayName);}
         public InstanceProperty<EntityCriterion, String> displayText(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.displayText);}
@@ -219,7 +220,7 @@ public class PackageProperties {
       public TypedProperty<EnumCriterion, String> targetPropertyName = new TypedProperty<>(EnumCriterion.class, "targetPropertyName");
       public TypedProperty<EnumCriterion, Enum> value = new TypedProperty<>(EnumCriterion.class, "value");
       public TypedProperty<EnumCriterion, Boolean> withNull = new TypedProperty<>(EnumCriterion.class, "withNull");
-      public static class InstanceProperties extends InstanceProperty.Container<EnumCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<EnumCriterion> {
         public  InstanceProperties(EnumCriterion source){super(source);}
         public InstanceProperty<EnumCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.enumCriterion.displayName);}
         public InstanceProperty<EnumCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.enumCriterion.operator);}
@@ -239,7 +240,7 @@ public class PackageProperties {
       public TypedProperty<EnumMultipleCriterion, StandardSearchOperator> operator = new TypedProperty<>(EnumMultipleCriterion.class, "operator");
       public TypedProperty<EnumMultipleCriterion, String> targetPropertyName = new TypedProperty<>(EnumMultipleCriterion.class, "targetPropertyName");
       public TypedProperty<EnumMultipleCriterion, Set> value = new TypedProperty<>(EnumMultipleCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<EnumMultipleCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<EnumMultipleCriterion> {
         public  InstanceProperties(EnumMultipleCriterion source){super(source);}
         public InstanceProperty<EnumMultipleCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.enumMultipleCriterion.displayName);}
         public InstanceProperty<EnumMultipleCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.enumMultipleCriterion.operator);}
@@ -259,7 +260,7 @@ public class PackageProperties {
       public TypedProperty<IdMultipleCriterion, StandardSearchOperator> operator = new TypedProperty<>(IdMultipleCriterion.class, "operator");
       public TypedProperty<IdMultipleCriterion, String> targetPropertyName = new TypedProperty<>(IdMultipleCriterion.class, "targetPropertyName");
       public TypedProperty<IdMultipleCriterion, Set> value = new TypedProperty<>(IdMultipleCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<IdMultipleCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<IdMultipleCriterion> {
         public  InstanceProperties(IdMultipleCriterion source){super(source);}
         public InstanceProperty<IdMultipleCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.idMultipleCriterion.displayName);}
         public InstanceProperty<IdMultipleCriterion, Set> ids(){return new InstanceProperty<>(source,PackageProperties.idMultipleCriterion.ids);}
@@ -279,7 +280,7 @@ public class PackageProperties {
       public TypedProperty<LongCriterion, StandardSearchOperator> operator = new TypedProperty<>(LongCriterion.class, "operator");
       public TypedProperty<LongCriterion, String> targetPropertyName = new TypedProperty<>(LongCriterion.class, "targetPropertyName");
       public TypedProperty<LongCriterion, Long> value = new TypedProperty<>(LongCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<LongCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<LongCriterion> {
         public  InstanceProperties(LongCriterion source){super(source);}
         public InstanceProperty<LongCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.longCriterion.displayName);}
         public InstanceProperty<LongCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.longCriterion.operator);}
@@ -298,7 +299,7 @@ public class PackageProperties {
       public TypedProperty<OrderCriterion, String> displayName = new TypedProperty<>(OrderCriterion.class, "displayName");
       public TypedProperty<OrderCriterion, StandardSearchOperator> operator = new TypedProperty<>(OrderCriterion.class, "operator");
       public TypedProperty<OrderCriterion, String> targetPropertyName = new TypedProperty<>(OrderCriterion.class, "targetPropertyName");
-      public static class InstanceProperties extends InstanceProperty.Container<OrderCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<OrderCriterion> {
         public  InstanceProperties(OrderCriterion source){super(source);}
         public InstanceProperty<OrderCriterion, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.orderCriterion.direction);}
         public InstanceProperty<OrderCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.orderCriterion.displayName);}
@@ -317,7 +318,7 @@ public class PackageProperties {
       public TypedProperty<PersistentObjectCriterion, String> displayName = new TypedProperty<>(PersistentObjectCriterion.class, "displayName");
       public TypedProperty<PersistentObjectCriterion, StandardSearchOperator> operator = new TypedProperty<>(PersistentObjectCriterion.class, "operator");
       public TypedProperty<PersistentObjectCriterion, String> targetPropertyName = new TypedProperty<>(PersistentObjectCriterion.class, "targetPropertyName");
-      public static class InstanceProperties extends InstanceProperty.Container<PersistentObjectCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<PersistentObjectCriterion> {
         public  InstanceProperties(PersistentObjectCriterion source){super(source);}
         public InstanceProperty<PersistentObjectCriterion, ClassRef> classRef(){return new InstanceProperty<>(source,PackageProperties.persistentObjectCriterion.classRef);}
         public InstanceProperty<PersistentObjectCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.persistentObjectCriterion.displayName);}
@@ -335,7 +336,7 @@ public class PackageProperties {
       public TypedProperty<SearchCriterion, String> displayName = new TypedProperty<>(SearchCriterion.class, "displayName");
       public TypedProperty<SearchCriterion, StandardSearchOperator> operator = new TypedProperty<>(SearchCriterion.class, "operator");
       public TypedProperty<SearchCriterion, String> targetPropertyName = new TypedProperty<>(SearchCriterion.class, "targetPropertyName");
-      public static class InstanceProperties extends InstanceProperty.Container<SearchCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<SearchCriterion> {
         public  InstanceProperties(SearchCriterion source){super(source);}
         public InstanceProperty<SearchCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.searchCriterion.displayName);}
         public InstanceProperty<SearchCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.searchCriterion.operator);}
@@ -349,13 +350,15 @@ public class PackageProperties {
     }
     
     public static class _TextCriterion implements TypedProperty.Container {
+      public TypedProperty<TextCriterion, List> applicableOperators = new TypedProperty<>(TextCriterion.class, "applicableOperators");
       public TypedProperty<TextCriterion, String> displayName = new TypedProperty<>(TextCriterion.class, "displayName");
       public TypedProperty<TextCriterion, StandardSearchOperator> operator = new TypedProperty<>(TextCriterion.class, "operator");
       public TypedProperty<TextCriterion, String> targetPropertyName = new TypedProperty<>(TextCriterion.class, "targetPropertyName");
       public TypedProperty<TextCriterion, TextCriterion.TextCriterionType> textCriterionType = new TypedProperty<>(TextCriterion.class, "textCriterionType");
       public TypedProperty<TextCriterion, String> value = new TypedProperty<>(TextCriterion.class, "value");
-      public static class InstanceProperties extends InstanceProperty.Container<TextCriterion> {
+      public static class InstanceProperties extends 	InstanceProperty.Container<TextCriterion> {
         public  InstanceProperties(TextCriterion source){super(source);}
+        public InstanceProperty<TextCriterion, List> applicableOperators(){return new InstanceProperty<>(source,PackageProperties.textCriterion.applicableOperators);}
         public InstanceProperty<TextCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.textCriterion.displayName);}
         public InstanceProperty<TextCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.textCriterion.operator);}
         public InstanceProperty<TextCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.textCriterion.targetPropertyName);}

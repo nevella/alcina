@@ -194,6 +194,8 @@ public class BackendTransformQueue {
 			LooseContext
 					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			Transaction.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 			LooseContext.pop();
 		}

@@ -154,6 +154,11 @@ public class Selection implements ClientDomSelection {
 		return !Objects.equals("None", getType());
 	}
 
+	public boolean hasAttachedSelection() {
+		return hasSelection() && getFocusNode() != null
+				&& getFocusLocation().isAttached();
+	}
+
 	public void validate() {
 		local.validate();
 	}
@@ -183,10 +188,16 @@ public class Selection implements ClientDomSelection {
 					anchorLocation = null;
 					focusLocation = null;
 				} else {
-					anchorLocation = asLocation(getAnchorNode(),
-							getAnchorOffset());
-					focusLocation = asLocation(getFocusNode(),
-							getFocusOffset());
+					Node anchorNode = getAnchorNode();
+					if (anchorNode == null || anchorNode.isDetached()) {
+						anchorLocation = null;
+						focusLocation = null;
+					} else {
+						anchorLocation = asLocation(anchorNode,
+								getAnchorOffset());
+						focusLocation = asLocation(getFocusNode(),
+								getFocusOffset());
+					}
 				}
 				lastSelectionRecord = currenSelectionRecord;
 			}

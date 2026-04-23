@@ -11,10 +11,9 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -29,7 +28,7 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
  * it's trickier to isolate the classpaths than register manually)
  */
 @Reflected
-@EnvironmentSingleton
+@EnvironmentRegistration
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	public static RegistryHistoryMapper get() {
 		return Registry.impl(RegistryHistoryMapper.class);
@@ -48,15 +47,23 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
 
 	public RegistryHistoryMapper() {
-		this(null);
+		this(null, "");
 	}
 
 	Class<? extends Place> permittedPlaceSupertype;
 
+	String appPrefix;
+
 	public RegistryHistoryMapper(
 			Class<? extends Place> permittedPlaceSupertype) {
+		this(permittedPlaceSupertype, "");
+	}
+
+	public RegistryHistoryMapper(Class<? extends Place> permittedPlaceSupertype,
+			String appPrefix) {
 		this.permittedPlaceSupertype = permittedPlaceSupertype;
-		ensurePlaceLookup();
+		this.appPrefix = appPrefix;
+		initPlaceLookup();
 	}
 
 	private String cleanGwtCodesvr(String token) {
@@ -74,8 +81,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		}
 	}
 
-	// only during constructor
-	void ensurePlaceLookup() {
+	void initPlaceLookup() {
 		listTokenizers().forEach(tokenizer -> {
 			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
@@ -103,7 +109,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	protected String getAppPrefix() {
-		return "";
+		return appPrefix;
 	}
 
 	public Class<? extends Entity>
@@ -194,14 +200,18 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	protected Stream<BasePlace> listPlaces() {
-		return Registry.query(BasePlace.class).implementations();
+		return Registry.query(BasePlace.class).registrations()
+				.filter(this::testPlaceType).map(Reflections::newInstance);
+	}
+
+	boolean testPlaceType(Class<? extends BasePlace> placeType) {
+		return permittedPlaceSupertype == null || Reflections
+				.isAssignableFrom(permittedPlaceSupertype, placeType);
 	}
 
 	protected Stream<BasePlaceTokenizer> listTokenizers() {
 		return Registry.query(BasePlaceTokenizer.class).implementations()
-				.filter(t -> permittedPlaceSupertype == null
-						|| Reflections.isAssignableFrom(permittedPlaceSupertype,
-								t.getTokenizedClass()));
+				.filter(t -> testPlaceType(t.getTokenizedClass()));
 	}
 
 	/**
@@ -280,5 +290,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		tokenizersByPlace.entrySet().removeIf(e -> matcher.test(e.getValue()));
 		tokenizersByPrefix.values()
 				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
+	}
+
+	public static void registerDefaultMapper() {
+		RegistryHistoryMapper mapper = new RegistryHistoryMapper();
+		Registry.register().singleton(RegistryHistoryMapper.class, mapper);
 	}
 }

@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding;
 
 /**
  * <p>
@@ -29,6 +30,209 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @Registration(NodeEvent.class)
 public abstract class NodeEvent<H extends NodeEvent.Handler>
 		extends GwtEvent<H> {
+	public interface BindingLocation {
+		<E extends NodeEvent> StreamBinding<E> on(Class<E> nodeEventClass);
+	}
+
+	//
+	public static class Context {
+		/**
+		 * Utility methods for the event
+		 */
+		public class Util {
+			/**
+			 * Should only be called if its known that the NodeEvent was caused
+			 * by a NativeEvent
+			 * 
+			 * @return true if a modifier key is being held down
+			 */
+			public boolean hasKeyboardModifier() {
+				NativeEvent nativeEvent = ((DomEvent) getOriginatingGwtEvent())
+						.getNativeEvent();
+				return nativeEvent.getShiftKey() || nativeEvent.getCtrlKey()
+						|| nativeEvent.getMetaKey() || nativeEvent.getAltKey();
+			}
+		}
+
+		public static LooseContext.Key<?> CONTEXT_ALLOW_NULL_NODE = LooseContext
+				.key(Context.class, "CONTEXT_ALLOW_NULL_NODE");
+
+		public static Context fromContext(Context previous, Node node) {
+			Context context = new Context(node == null ? previous.node : node);
+			context.previous = previous;
+			return context;
+		}
+
+		public static Context fromEvent(GwtEvent event, Node node) {
+			Context context = new Context(node);
+			if (event instanceof NodeEvent
+					&& ((NodeEvent) event).context != null) {
+				context.previous = ((NodeEvent) event).context;
+			} else {
+				context.gwtEvent = event;
+			}
+			return context;
+		}
+
+		public static Context fromNode(Node node) {
+			Context context = new Context(node);
+			return context;
+		}
+
+		private Context previous;
+
+		public final Node node;
+
+		private NodeEvent nodeEvent;
+
+		private GwtEvent gwtEvent;
+
+		Node reemission;
+
+		public Context(Node node) {
+			this.node = node;
+			Preconditions.checkArgument(
+					node != null || CONTEXT_ALLOW_NULL_NODE.is());
+		}
+
+		public Util util() {
+			return new Util();
+		}
+
+		public <A extends Annotation> A annotation(Class<A> clazz) {
+			return node.annotation(clazz);
+		}
+
+		/*
+		 * Mark the event causing this one as not handled - which causes it to
+		 * fire on ancestor handlers
+		 */
+		public void bubble() {
+			if (!(getNodeEvent() instanceof ModelEvent)) {
+				throw new IllegalArgumentException(
+						"Dom events bubble via DOM bubbling, and are not stopped at the first handler. Remove this bubble!");
+			}
+			((ModelEvent) getPrevious().getNodeEvent()).setHandled(false);
+		}
+
+		public void dispatch(Class<? extends ModelEvent> modelEventClass,
+				Object model) {
+			ModelEvent.dispatch(this, modelEventClass, model);
+		}
+
+		public GwtEvent getGwtEvent() {
+			return gwtEvent;
+		}
+
+		public NodeEvent getNodeEvent() {
+			return nodeEvent;
+		}
+
+		public GwtEvent getOriginatingGwtEvent() {
+			return getOriginatingContext().gwtEvent;
+		}
+
+		public Context getOriginatingContext() {
+			Context cursor = this;
+			while (cursor.previous != null) {
+				cursor = cursor.previous;
+			}
+			return cursor;
+		}
+
+		public NativeEvent getOriginatingNativeEvent() {
+			return ((HasNativeEvent) getOriginatingGwtEvent()).getNativeEvent();
+		}
+
+		/**
+		 * A dispatched event (dispatched to a model) is a copy of the bubbling
+		 * event, so the first call to getPrevious() within a handler will
+		 * return that bubbling event. Subsequent calls will return the prior
+		 * event(s) causal events
+		 */
+		public Context getPrevious() {
+			return previous;
+		}
+
+		public <E extends NodeEvent> E getPreviousEvent(Class<E> eventClass) {
+			Context cursor = this;
+			while (cursor != null) {
+				if (eventClass == cursor.nodeEvent.getClass()) {
+					return (E) cursor.getNodeEvent();
+				}
+				cursor = cursor.getPrevious();
+			}
+			return null;
+		}
+
+		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
+			return getPreviousEvent(eventClass) != null;
+		}
+
+		public void setNodeEvent(NodeEvent nodeEvent) {
+			Preconditions.checkState(this.nodeEvent == null);
+			this.nodeEvent = nodeEvent;
+			nodeEvent.context = this;
+		}
+
+		void reemit() {
+			Context newContext = fromContext(this, node);
+			newContext.reemission = node;
+			ModelEvent modelEvent = (ModelEvent) nodeEvent;
+			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
+		}
+
+		@Override
+		public String toString() {
+			Object event = gwtEvent != null ? gwtEvent : nodeEvent;
+			return Ax.format("%s :: %s", event, node);
+		}
+
+		public String toHistoryString() {
+			FormatBuilder format = new FormatBuilder();
+			Context cursor = this;
+			while (cursor != null) {
+				format.appendIfBuilderNonEmpty(" => ");
+				format.line(cursor);
+				cursor = cursor.previous;
+			}
+			return format.toString();
+		}
+	}
+
+	// Omit from Event binding
+	public interface DirectlyInvoked {
+	}
+
+	/**
+	 * Subtypes handle events via on[hanslermethod] overrides
+	 */
+	public interface Handler extends EventHandler {
+	}
+
+	/**
+	 * Subtypes handle events via on([eventclass]) in their constructor
+	 */
+	public interface TypeBinding extends Handler {
+	}
+
+	public static class Type<H extends EventHandler> extends GwtEvent.Type<H> {
+		private Class<H> handlerClass;
+
+		public Type(Class<H> handlerClass) {
+			super();
+			this.handlerClass = handlerClass;
+		}
+
+		public Class<H> getHandlerClass() {
+			return this.handlerClass;
+		}
+	}
+
+	// Marker interface - otherwise a Registry-supplied DomBinding is expected
+	public interface WithoutDomBinding {
+	}
+
 	private Context context;
 
 	protected Object model;
@@ -94,200 +298,5 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	@Override
 	public String toString() {
 		return Ax.format("%s : %s", getClass().getSimpleName(), model);
-	}
-
-	//
-	public static class Context {
-		public static LooseContext.Key<?> CONTEXT_ALLOW_NULL_NODE = LooseContext
-				.key(Context.class, "CONTEXT_ALLOW_NULL_NODE");
-
-		public static Context fromContext(Context previous, Node node) {
-			Context context = new Context(node == null ? previous.node : node);
-			context.previous = previous;
-			return context;
-		}
-
-		public static Context fromEvent(GwtEvent event, Node node) {
-			Context context = new Context(node);
-			if (event instanceof NodeEvent
-					&& ((NodeEvent) event).context != null) {
-				context.previous = ((NodeEvent) event).context;
-			} else {
-				context.gwtEvent = event;
-			}
-			return context;
-		}
-
-		public static Context fromNode(Node node) {
-			Context context = new Context(node);
-			return context;
-		}
-
-		/**
-		 * Utility methods for the event
-		 */
-		public class Util {
-			/**
-			 * Should only be called if its known that the NodeEvent was caused
-			 * by a NativeEvent
-			 * 
-			 * @return true if a modifier key is being held down
-			 */
-			public boolean hasKeyboardModifier() {
-				NativeEvent nativeEvent = ((DomEvent) getOriginatingGwtEvent())
-						.getNativeEvent();
-				return nativeEvent.getShiftKey() || nativeEvent.getCtrlKey()
-						|| nativeEvent.getMetaKey() || nativeEvent.getAltKey();
-			}
-		}
-
-		public Util util() {
-			return new Util();
-		}
-
-		private Context previous;
-
-		public final Node node;
-
-		private NodeEvent nodeEvent;
-
-		private GwtEvent gwtEvent;
-
-		Node reemission;
-
-		public Context(Node node) {
-			this.node = node;
-			Preconditions.checkArgument(
-					node != null || CONTEXT_ALLOW_NULL_NODE.is());
-		}
-
-		public <A extends Annotation> A annotation(Class<A> clazz) {
-			return node.annotation(clazz);
-		}
-
-		/*
-		 * Mark the event causing this one as not handled - which causes it to
-		 * fire on ancestor handlers
-		 */
-		public void bubble() {
-			if (!(getNodeEvent() instanceof ModelEvent)) {
-				throw new IllegalArgumentException(
-						"Dom events bubble via DOM bubbling, and are not stopped at the first handler. Remove this bubble!");
-			}
-			((ModelEvent) getPrevious().getNodeEvent()).setHandled(false);
-		}
-
-		public void dispatch(Class<? extends ModelEvent> modelEventClass,
-				Object model) {
-			ModelEvent.dispatch(this, modelEventClass, model);
-		}
-
-		public GwtEvent getGwtEvent() {
-			return gwtEvent;
-		}
-
-		public NodeEvent getNodeEvent() {
-			return nodeEvent;
-		}
-
-		public GwtEvent getOriginatingGwtEvent() {
-			Context cursor = this;
-			while (cursor.previous != null) {
-				cursor = cursor.previous;
-			}
-			return cursor.gwtEvent;
-		}
-
-		public NativeEvent getOriginatingNativeEvent() {
-			return ((HasNativeEvent) getOriginatingGwtEvent()).getNativeEvent();
-		}
-
-		/**
-		 * A dispatched event (dispatched to a model) is a copy of the bubbling
-		 * event, so the first call to getPrevious() within a handler will
-		 * return that bubbling event. Subsequent calls will return the prior
-		 * event(s) causal events
-		 */
-		public Context getPrevious() {
-			return previous;
-		}
-
-		public <E extends NodeEvent> E getPreviousEvent(Class<E> eventClass) {
-			Context cursor = this;
-			while (cursor != null) {
-				if (eventClass == cursor.nodeEvent.getClass()) {
-					return (E) cursor.getNodeEvent();
-				}
-				cursor = cursor.getPrevious();
-			}
-			return null;
-		}
-
-		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
-			return getPreviousEvent(eventClass) != null;
-		}
-
-		void reemit() {
-			Context newContext = fromContext(this, node);
-			newContext.reemission = node;
-			ModelEvent modelEvent = (ModelEvent) nodeEvent;
-			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
-		}
-
-		public void setNodeEvent(NodeEvent nodeEvent) {
-			Preconditions.checkState(this.nodeEvent == null);
-			this.nodeEvent = nodeEvent;
-			nodeEvent.context = this;
-		}
-
-		@Override
-		public String toString() {
-			Object event = gwtEvent != null ? gwtEvent : nodeEvent;
-			return Ax.format("%s :: %s", event, node);
-		}
-
-		public String toHistoryString() {
-			FormatBuilder format = new FormatBuilder();
-			Context cursor = this;
-			while (cursor != null) {
-				format.appendIfBuilderNonEmpty(" => ");
-				format.line(cursor);
-				cursor = cursor.previous;
-			}
-			return format.toString();
-		}
-	}
-
-	// Omit from Event binding
-	public interface DirectlyInvoked {
-	}
-
-	/**
-	 * Subtypes handle events via on[hanslermethod] overrides
-	 */
-	public interface Handler extends EventHandler {
-	}
-
-	/**
-	 * Subtypes handle events via on([eventclass]) in their constructor
-	 */
-	public interface Binding extends Handler {
-	}
-
-	public static class Type<H extends EventHandler> extends GwtEvent.Type<H> {
-		private Class<H> handlerClass;
-
-		public Type(Class<H> handlerClass) {
-			super();
-			this.handlerClass = handlerClass;
-		}
-
-		public Class<H> getHandlerClass() {
-			return this.handlerClass;
-		}
-	}
-
-	// Marker interface - otherwise a Registry-supplied DomBinding is expected
-	public interface WithoutDomBinding {
 	}
 }

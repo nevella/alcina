@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -156,6 +155,22 @@ public class ObjectUtil {
 		}
 	}
 
+	static List<Field> getFieldsByName(Object obj, Collection<String> names) {
+		List<Field> result = new ArrayList<>();
+		Class c = obj.getClass();
+		while (c != Object.class) {
+			Field[] fields = c.getDeclaredFields();
+			for (Field field : fields) {
+				if (names.contains(field.getName())) {
+					field.setAccessible(true);
+					result.add(field);
+				}
+			}
+			c = c.getSuperclass();
+		}
+		return result;
+	}
+
 	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
 			boolean withTransients, Set<String> ignoreFieldNames) {
 		List<Field> result = new ArrayList<>();
@@ -264,6 +279,16 @@ public class ObjectUtil {
 		@Override
 		public <T> T fieldwiseClone(T source) {
 			return ObjectUtil.fieldwiseClone(source);
+		}
+	}
+
+	public static void nullFields(Object object, Set<String> fieldNames) {
+		try {
+			for (Field field : getFieldsByName(object, fieldNames)) {
+				field.set(object, null);
+			}
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
 		}
 	}
 }

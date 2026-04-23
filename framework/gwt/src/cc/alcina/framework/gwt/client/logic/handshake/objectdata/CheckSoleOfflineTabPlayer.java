@@ -28,7 +28,7 @@ public class CheckSoleOfflineTabPlayer
 			super.onSuccess(result);
 		} else {
 			checkFailed();
-			consort.onFailure(new NotSoleInstanceException());
+			getConsort().onFailure(new NotSoleInstanceException());
 		}
 	}
 

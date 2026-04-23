@@ -94,6 +94,16 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 			}
 			return new Link().withPlace(place).withText(place.toNameString());
 		}
+
+		public static class NewTab extends PlaceTransform {
+			@Override
+			public Link apply(BasePlace place) {
+				if (place == null) {
+					return null;
+				}
+				return super.apply(place).withNewTab(true);
+			}
+		}
 	}
 
 	private static final transient String INITIAL_HREF = "#";
@@ -148,6 +158,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 	private boolean disabled;
 
 	private boolean inFlight;
+
+	private boolean lazyPlaceHref;
 
 	public PackageProperties._Link.InstanceProperties properties() {
 		return PackageProperties.link.instance(this);
@@ -277,11 +289,12 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 				event.reemitAs(this, modelEvent, modelEventData);
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
+				EntityPlace entityPlace = (EntityPlace) Client.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(
 						((DirectedLayout.Node) event.getSource()).getRendered()
 								.as(Widget.class),
 						Reflections.newInstance(nonStandardObjectAction),
-						((EntityPlace) Client.currentPlace()).provideEntity());
+						entityPlace.provideEntity());
 			} else {
 				// propagate href (not squelched)
 				if (Ax.notBlank(href)) {
@@ -341,6 +354,9 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 
 	public void setTag(String tag) {
 		this.tag = tag;
+		if (!tag.equalsIgnoreCase("a")) {
+			withoutHref(true);
+		}
 	}
 
 	public void setTarget(String target) {

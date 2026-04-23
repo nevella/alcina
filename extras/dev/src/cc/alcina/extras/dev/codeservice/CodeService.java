@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.util.fs.FsUtils;
 
@@ -63,6 +64,8 @@ import cc.alcina.framework.entity.util.fs.FsUtils;
 @Feature.Ref(Feature_CodeService.class)
 public class CodeService {
 	public List<String> sourceAndClassPaths;
+
+	public StringMap properties = new StringMap();
 
 	public String sourceFilterRegex = ".+\\.java";
 
@@ -205,6 +208,10 @@ public class CodeService {
 
 		Context() {
 			this.units = compilationUnits;
+		}
+
+		String getProperty(String key) {
+			return properties.get(key);
 		}
 
 		void submitFileEvent(File file) {

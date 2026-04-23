@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.NodeNotFoundException;
+import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Window;
@@ -34,7 +36,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 @Directed
 public class OverlayContainer extends Model implements HasTag,
 		Model.RerouteBubbledEvents, OverlayEvents.PositionedDescendants.Emitter,
-		OverlayEvents.RefreshPositioning.Handler, PlaceChangeEvent.Handler {
+		OverlayEvents.RefreshPositioning.Handler, PlaceChangeEvent.Handler,
+		RemoteElementBehaviors.ElementOffsetsRequired.SoleBehavior {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;
@@ -151,8 +154,12 @@ public class OverlayContainer extends Model implements HasTag,
 							.isAttached()) {
 				return;
 			}
-			containerOptions.position.fromRect = containerOptions.position.rectSourceElement
-					.getBoundingClientRect();
+			try {
+				containerOptions.position.fromRect = containerOptions.position.rectSourceElement
+						.getBoundingClientRect();
+			} catch (NodeNotFoundException e) {
+				return;
+			}
 			this.position();
 		});
 	}

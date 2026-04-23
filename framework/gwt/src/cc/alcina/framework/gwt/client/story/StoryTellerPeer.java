@@ -8,6 +8,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location;
+import cc.alcina.framework.gwt.client.story.Story.Attribute;
+import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
 import cc.alcina.framework.gwt.client.story.Story.State;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 
@@ -35,6 +38,10 @@ public class StoryTellerPeer implements TellerContext {
 	}
 
 	protected TellerContext.Device device = Device.Desktop;
+
+	public TellerContext.Device getDevice() {
+		return device;
+	}
 
 	protected StoryTeller storyTeller;
 
@@ -91,5 +98,16 @@ public class StoryTellerPeer implements TellerContext {
 
 	protected void initObservers() {
 		ProcessObservers.context().observe(new BeforeVisitObserver());
+	}
+
+	@Override
+	public <V> Entry<V, Attribute<V>>
+			getAttribute(Class<? extends Attribute<V>> clazz) {
+		return storyTeller.state.getAttribute(clazz);
+	}
+
+	@Override
+	public void updateLocation(Location location) {
+		storyTeller.state.updateLocationAxis(location);
 	}
 }

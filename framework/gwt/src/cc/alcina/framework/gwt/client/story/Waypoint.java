@@ -12,6 +12,8 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.story.Story.Action;
+import cc.alcina.framework.gwt.client.story.Story.Attribute;
 import cc.alcina.framework.gwt.client.story.Story.Decl.Action.DeclarativeAction;
 import cc.alcina.framework.gwt.client.story.Story.Decl.Location.DeclarativeLocation;
 
@@ -19,17 +21,55 @@ public class Waypoint implements Story.Point {
 	public static abstract class Code extends Waypoint
 			implements Story.Action.Code {
 		@Override
-		public Story.Action getAction() {
+		public Action getAction(TellerContext context) {
 			return this;
 		}
+	}
+
+	public interface TextInterpolator {
+		String interpolate(Class<?> waypointClass, String value);
 	}
 
 	protected class ConditionalImpl implements Story.Conditional {
 		Set<Class<? extends Story.Point>> exitOkOnFalse = Set.of();
 
+		Set<Story.Decl.Condition> skipIf = Set.of();
+
+		Set<Story.Decl.Condition> skipIfNot = Set.of();
+
+		public Set<Story.Decl.Condition> getSkipIf() {
+			return skipIf;
+		}
+
+		public Set<Story.Decl.Condition> getSkipIfNot() {
+			return skipIfNot;
+		}
+
 		@Override
 		public Set<Class<? extends Story.Point>> exitOkOnFalse() {
 			return exitOkOnFalse;
+		}
+	}
+
+	protected class SetAttributeImpl
+			implements Story.Decl.ContextModifier.SetAttribute {
+		protected Class<? extends Attribute<String>> key;
+
+		protected String value;
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Story.Decl.ContextModifier.SetAttribute.class;
+		}
+
+		@Override
+		public Class<? extends Attribute<String>> key() {
+			return key;
+		}
+
+		@Override
+		public String value() {
+			return value;
 		}
 	}
 
@@ -42,6 +82,8 @@ public class Waypoint implements Story.Point {
 	protected List<Story.Action.Annotate> annotateActions;
 
 	protected Story.Action.Location location;
+
+	protected List<Story.Decl.ContextModifier.SetAttribute> contextAttributes;
 
 	protected Class<? extends Feature> feature;
 
@@ -56,6 +98,16 @@ public class Waypoint implements Story.Point {
 	protected String description;
 
 	public Waypoint() {
+	}
+
+	public List<Story.Decl.ContextModifier.SetAttribute>
+			getContextAttributes() {
+		return contextAttributes;
+	}
+
+	public void setContextAttributes(
+			List<Story.Decl.ContextModifier.SetAttribute> contextAttributes) {
+		this.contextAttributes = contextAttributes;
 	}
 
 	public String getLabel() {
@@ -77,6 +129,7 @@ public class Waypoint implements Story.Point {
 	}
 
 	public ConditionalImpl getConditional() {
+		ensurePopulated();
 		return conditional;
 	}
 
@@ -97,7 +150,8 @@ public class Waypoint implements Story.Point {
 		return feature;
 	}
 
-	public Story.Action getAction() {
+	@Override
+	public Action getAction(TellerContext context) {
 		ensurePopulated();
 		return action;
 	}
@@ -239,15 +293,32 @@ public class Waypoint implements Story.Point {
 		}
 		if (conditional == null) {
 			conditional = new ConditionalImpl();
-			Story.Decl.Conditional.ExitOkOnFalse exitOkOnFalseAnn = reflector
-					.annotation(Story.Decl.Conditional.ExitOkOnFalse.class);
-			if (exitOkOnFalseAnn != null) {
-				conditional.exitOkOnFalse = Set.of(exitOkOnFalseAnn.value());
+			{
+				Story.Decl.Conditional.ExitOkOnFalse exitOkOnFalseAnn = reflector
+						.annotation(Story.Decl.Conditional.ExitOkOnFalse.class);
+				if (exitOkOnFalseAnn != null) {
+					conditional.exitOkOnFalse = Set
+							.of(exitOkOnFalseAnn.value());
+				}
+			}
+			{
+				Story.Decl.Conditional.SkipIf skipIf = reflector
+						.annotation(Story.Decl.Conditional.SkipIf.class);
+				if (skipIf != null) {
+					conditional.skipIf = Set.of(skipIf.value());
+				}
+			}
+			{
+				Story.Decl.Conditional.SkipIfNot skipIfNot = reflector
+						.annotation(Story.Decl.Conditional.SkipIfNot.class);
+				if (skipIfNot != null) {
+					conditional.skipIfNot = Set.of(skipIfNot.value());
+				}
 			}
 		}
-	}
-
-	public interface TextInterpolator {
-		String interpolate(Class<?> waypointClass, String value);
+		if (contextAttributes == null) {
+			contextAttributes = reflector
+					.annotations(Story.Decl.ContextModifier.SetAttribute.class);
+		}
 	}
 }
