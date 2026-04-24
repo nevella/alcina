@@ -214,8 +214,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 			}
 			if (filter.matchesTaskClass()) {
 				recentlyCompletedJobs = filter.getRecentlyCompletedJobs()
-						.filter(job -> topLevel
-								^ job.provideParent().isPresent());
+						.filter(job -> topLevel ^ job.provideIsNotTopLevel());
 			}
 			Stream<? extends Job> stream = recentlyCompletedJobs
 					.filter(textFilter).filter((Predicate) topLevelAdditional)
