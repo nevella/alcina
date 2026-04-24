@@ -280,6 +280,9 @@ public class HtmlParser {
 			// e.g. is gwt celltable safehtml for input
 		} else {
 			if (closeTag || selfCloseTag) {
+				if (!selfCloseTag) {
+					closeToValidateCloseTag(tag);
+				}
 				emitEndElement(tag);
 			}
 		}
@@ -310,6 +313,30 @@ public class HtmlParser {
 		selfCloseTag = false;
 	}
 
+	private void closeToValidateCloseTag(String tag) {
+		if (cursor == null) {
+			return;
+		}
+		if (tag.equals(cursor.getTagName())) {
+			return;
+		}
+		/*
+		 * only the elements MSWord optionally closes (not all - see say
+		 * https://www.tempertemper.net/blog/optional-closing-tags-in-html)
+		 */
+		while (cursor != null) {
+			if (cursor.hasTagName("p")) {
+				emitEndElement("p");
+				continue;
+			}
+			if (cursor.hasTagName("li")) {
+				emitEndElement("li");
+				continue;
+			}
+			break;
+		}
+	}
+
 	private void closeToValidateOutput(String tag) {
 		if (cursor == null) {
 			return;
@@ -324,7 +351,7 @@ public class HtmlParser {
 		if (closeTo != null) {
 			/*
 			 * close up to the invalid container, then reopen. Add closeTo to
-			 * the list of
+			 * the list of ignores
 			 */
 			List<Element> reopen = new ArrayList<>();
 			Element closeCursor = cursor;
@@ -365,6 +392,7 @@ public class HtmlParser {
 					return;
 				} else {
 					ignoreClose.add(tag, -1);
+					return;
 				}
 			}
 		}
