@@ -276,6 +276,33 @@ public interface LeafModel {
 		}
 	}
 
+	@Directed(renderer = LeafRenderer.Text.class)
+	public static class ToString extends Model {
+		String text;
+
+		public ToString() {
+		}
+
+		public ToString(Object model) {
+			this.text = CommonUtils.nullSafeToString(model);
+		}
+
+		/*
+		 * used by the renderer
+		 */
+		@Override
+		public String toString() {
+			return text;
+		}
+
+		public static class To implements ModelTransform<Object, ToString> {
+			@Override
+			public ToString apply(Object model) {
+				return new ToString(model);
+			}
+		}
+	}
+
 	@Directed
 	public static class TagText extends Model.Fields implements HasTag {
 		@ClientVisible
