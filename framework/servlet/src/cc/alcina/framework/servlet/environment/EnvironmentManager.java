@@ -504,4 +504,8 @@ public class EnvironmentManager {
 			return Environment.get().access().getCookies();
 		}
 	}
+
+	public boolean isSessionActive(String sessionId) {
+		return environments.containsKey(sessionId);
+	}
 }

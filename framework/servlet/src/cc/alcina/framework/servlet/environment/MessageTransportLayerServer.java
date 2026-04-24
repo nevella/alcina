@@ -39,6 +39,16 @@ import cc.alcina.framework.servlet.environment.MessageTransportLayerServer.Aggre
  * 
  * 
  */
+/*
+ * synchronization - basically most things synchronize on the top-level instance
+ * (MessageTransportLayerServer) instance. Calls are quick + infrequent, and
+ * finer-grained locks caused deadlocks
+ * 
+ * On a completely different note, note that you want http/2 - http/1.1 limit of
+ * 6 connections will cause eventual packet/message backlog if generating gt 6
+ * messages per [latency cycle], since 6 is the standard max tcp conns per
+ * tab/remotedomain
+ */
 class MessageTransportLayerServer extends MessageTransportLayer {
 	class SendChannelImpl extends SendChannel {
 		/**
@@ -47,7 +57,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		 */
 		@Override
 		public void conditionallySend() {
-			synchronized (envelopeDispatcher()) {
+			synchronized (MessageTransportLayerServer.this) {
 				super.conditionallySend();
 			}
 		}
@@ -171,7 +181,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 		/*
 		 * Sync - all operations/calls should be synchronized on the
-		 * AggregateDispatcher instance
+		 * transportLayer instance
 		 */
 		AggregateDispatcher(MessageTransportLayerServer transportLayer) {
 			super(transportLayer);
@@ -209,7 +219,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		 */
 		boolean shouldFlush(boolean flushAllNonAwaiters) {
 			// envelope dispatcher (this) is the monitor for dispatch
-			synchronized (this) {
+			synchronized (transportLayer) {
 				return dispatchableTokens.stream()
 						.filter(token -> !token.isAwaiter())
 						.count() > (flushAllNonAwaiters ? 0 : 1)
@@ -248,7 +258,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	}
 
 	void onFinish() {
-		synchronized (envelopeDispatcher()) {
+		synchronized (this) {
 			while (aggregateDispatcher.hasDispatchers()) {
 				sendChannel.unconditionallySend();
 			}
@@ -301,7 +311,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	 * 
 	 */
 	void onReceivedToken(RequestToken token) {
-		synchronized (envelopeDispatcher()) {
+		synchronized (this) {
 			/*
 			 * distribute etc incoming messages
 			 */
@@ -361,21 +371,27 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	 * </ul>
 	 */
 	class MessageBatcherServer {
-		synchronized void flush() {
-			List<Message> toSend = messages;
-			messages = new ArrayList<>();
-			sendChannel.send(toSend);
-			conditionallyFlushDispatcher(true);
+		void flush() {
+			synchronized (MessageBatcherServer.this) {
+				List<Message> toSend = messages;
+				messages = new ArrayList<>();
+				sendChannel.send(toSend);
+				conditionallyFlushDispatcher(true);
+			}
 		}
 
 		List<Message> messages = new ArrayList<>();
 
-		synchronized void add(Message message) {
-			messages.add(message);
+		void add(Message message) {
+			synchronized (MessageBatcherServer.this) {
+				messages.add(message);
+			}
 		}
 
-		synchronized boolean hasPendingMutations() {
-			return messages.stream().anyMatch(m -> m instanceof Mutations);
+		boolean hasPendingMutations() {
+			synchronized (MessageBatcherServer.this) {
+				return messages.stream().anyMatch(m -> m instanceof Mutations);
+			}
 		}
 	}
 
@@ -387,7 +403,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		snapshotActiveMessages.stream().map(MessageToken::toDebugString)
 				.forEach(format::line);
 		format.line("Envelopes:");
-		synchronized (envelopeDispatcher()) {
+		synchronized (this) {
 			format.line(envelopeDispatcher().toDebugString());
 		}
 		return format.toString();
