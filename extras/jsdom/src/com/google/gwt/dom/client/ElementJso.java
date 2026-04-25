@@ -12,6 +12,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.JsArrayString;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
@@ -1174,4 +1175,19 @@ public final class ElementJso extends NodeJso implements ElementRemote {
 	public native String getComputedStyleValue(String key)/*-{
 		return $wnd.getComputedStyle(this)[key];
 	}-*/;
+
+	@Override
+	public void addBehavior(ElementBehavior behavior) {
+		// noop
+	}
+
+	@Override
+	public void removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
+		// noop
+	}
+
+	@Override
+	public List<ElementBehavior> getBehaviors() {
+		throw new UnsupportedOperationException();
+	}
 }

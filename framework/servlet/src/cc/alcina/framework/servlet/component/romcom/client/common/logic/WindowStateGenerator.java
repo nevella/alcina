@@ -50,6 +50,7 @@ class WindowStateGenerator {
 				.computeOffsetsDelta(elementOffsets);
 		result.clientHeight = Window.getClientHeight();
 		result.clientWidth = Window.getClientWidth();
+		result.title = Window.getTitle();
 		return result;
 	}
 

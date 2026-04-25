@@ -11,8 +11,8 @@ import java.util.function.Supplier;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
-import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
@@ -678,8 +678,7 @@ public abstract class Model extends Bindable
 	public interface TransmitState extends HasElementBehaviors {
 		@Override
 		default List<ElementBehavior> getBehaviors() {
-			return List
-					.of(RemoteElementBehaviors.ElementOffsetsRequired.INSTANCE);
+			return List.of(ElementOffsetsRequired.INSTANCE);
 		}
 	}
 
@@ -714,6 +713,11 @@ public abstract class Model extends Bindable
 
 		public Exec deferred() {
 			this.deferred = true;
+			return this;
+		}
+
+		public Exec deferred(boolean deferred) {
+			this.deferred = deferred;
 			return this;
 		}
 

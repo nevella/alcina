@@ -74,6 +74,8 @@ public final class WindowState {
 
 	public OffsetsDelta offsetsDelta;
 
+	public String title;
+
 	public int clientHeight;
 
 	public int clientWidth;

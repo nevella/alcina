@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.NodeNotFoundException;
-import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Window;
@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 public class OverlayContainer extends Model implements HasTag,
 		Model.RerouteBubbledEvents, OverlayEvents.PositionedDescendants.Emitter,
 		OverlayEvents.RefreshPositioning.Handler, PlaceChangeEvent.Handler,
-		RemoteElementBehaviors.ElementOffsetsRequired.SoleBehavior {
+		ElementOffsetsRequired.SoleBehavior {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;
@@ -104,7 +104,7 @@ public class OverlayContainer extends Model implements HasTag,
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
-			Scheduler.get().scheduleDeferred(this::position);
+			this.position();
 		}
 	}
 
@@ -134,7 +134,23 @@ public class OverlayContainer extends Model implements HasTag,
 	 * remove visibility:hidden
 	 */
 	void position() {
-		if (provideIsUnbound()) {
+		if (!canPosition()) {
+			return;
+		}
+		if (containerOptions.position.requiresActualToRect()) {
+			/*
+			 * this double-wrapping seems a bit wobbly - but it's needed at the
+			 * moment
+			 */
+			Scheduler.get().scheduleDeferred(() -> Client.RenderState
+					.queueWithRenderedState(this::position0));
+		} else {
+			Scheduler.get().scheduleDeferred(this::position0);
+		}
+	}
+
+	void position0() {
+		if (!canPosition()) {
 			return;
 		}
 		containerOptions.position.withToElement(provideElement()).apply();
@@ -143,25 +159,32 @@ public class OverlayContainer extends Model implements HasTag,
 		Scheduler.get().scheduleFinally(() -> setVisible(true));
 	}
 
-	@Override
-	public void onRefreshPositioning(RefreshPositioning event) {
-		if (containerOptions.position.rectSourceElement == null) {
-			return;
+	boolean canPosition() {
+		if (provideIsUnbound()) {
+			return false;
 		}
-		Scheduler.get().scheduleDeferred(() -> {
+		if (containerOptions.position.fromRect == null) {
 			if (containerOptions.position.rectSourceElement == null
 					|| !containerOptions.position.rectSourceElement
 							.isAttached()) {
-				return;
+				return false;
 			}
 			try {
 				containerOptions.position.fromRect = containerOptions.position.rectSourceElement
 						.getBoundingClientRect();
 			} catch (NodeNotFoundException e) {
-				return;
+				return false;
 			}
-			this.position();
-		});
+		}
+		return true;
+	}
+
+	@Override
+	public void onRefreshPositioning(RefreshPositioning event) {
+		if (containerOptions.position.rectSourceElement == null) {
+			return;
+		}
+		this.position();
 	}
 
 	@Override

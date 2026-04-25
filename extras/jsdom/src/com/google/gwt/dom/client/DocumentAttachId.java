@@ -596,8 +596,13 @@ public class DocumentAttachId extends NodeAttachId
 	@Override
 	public void emitMutation(MutationRecord mutation) {
 		/*
-		 * send ids and behaviors in a side channel exactly once - note the
-		 * filtering of innerMarkup to avoid sending the root id/behaviors twice
+		 * must happen-before ensureBehaviors
+		 */
+		mutationProxy.onMutation(mutation);
+		/*
+		 * send ids and ensure behaviors in a side channel exactly once - note
+		 * the filtering of innerMarkup to avoid sending the root id/ensuring
+		 * behaviors twice
 		 */
 		switch (mutation.type) {
 		case attributes:
@@ -625,12 +630,14 @@ public class DocumentAttachId extends NodeAttachId
 						ensureBehaviors(mutation, elem);
 					});
 		}
-		mutationProxy.onMutation(mutation);
 	}
 
 	void ensureBehaviors(MutationRecord mutation, Element elem) {
+		/*
+		 * app can add custom behaviors to any dom element here
+		 */
 		topicAttachingElement.publish(elem);
-		mutation.registerBehaviors(elem);
+		ElementAttachId.emitBehaviorMutations(elem);
 	}
 
 	void addSunkEvent(Runnable runnable) {

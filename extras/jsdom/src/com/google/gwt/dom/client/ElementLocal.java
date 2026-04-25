@@ -904,7 +904,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		behaviors.add(behavior);
 	}
 
-	List<ElementBehavior> getBehaviors() {
+	public List<ElementBehavior> getBehaviors() {
 		return behaviors;
 	}
 
@@ -916,6 +916,13 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 					.orElse(null);
 		} else {
 			return null;
+		}
+	}
+
+	public void removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
+		behaviors.removeIf(b -> b.getClass() == behaviorClass);
+		if (behaviors.isEmpty()) {
+			behaviors = null;
 		}
 	}
 }

@@ -91,14 +91,6 @@ class SyncMutations {
 						mutationsAccess.putRemoteAttachId(added.node);
 					}
 				});
-				Multimap<ElementBehavior, List<AttachId>> behaviors = record.behaviors;
-				if (behaviors != null) {
-					behaviors.forEach((behavior, attachIds) -> {
-						attachIds.forEach(attachId -> {
-							((Element) attachId.node()).addBehavior(behavior);
-						});
-					});
-				}
 			});
 		} finally {
 			mutationsAccess.setApplyToRemote(true);

@@ -99,7 +99,11 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 	}
 
 	void emitMutation(MutationRecord mutation) {
-		getOwnerDocument().attachIdRemote().emitMutation(mutation);
+		emitMutation(getOwnerDocument(), mutation);
+	}
+
+	static void emitMutation(Document document, MutationRecord mutation) {
+		document.attachIdRemote().emitMutation(mutation);
 	}
 
 	@Override

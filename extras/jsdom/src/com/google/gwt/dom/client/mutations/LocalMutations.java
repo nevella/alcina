@@ -11,6 +11,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.mutations.LocalMutations.BehaviorAdded;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -66,6 +67,18 @@ public class LocalMutations {
 		}
 	}
 
+	public static class BehaviorRemoved {
+		public Element element;
+
+		public Class<? extends ElementBehavior> behaviorClass;
+
+		BehaviorRemoved(Element element,
+				Class<? extends ElementBehavior> behaviorClass) {
+			this.element = element;
+			this.behaviorClass = behaviorClass;
+		}
+	}
+
 	MutationsAccess mutationsAccess;
 
 	List<MutationRecord> mutations = new ArrayList<>();
@@ -86,6 +99,8 @@ public class LocalMutations {
 			.create();
 
 	public Topic<BehaviorAdded> topicBehaviorAdded = Topic.create();
+
+	public Topic<BehaviorRemoved> topicBehaviorRemoved = Topic.create();
 
 	ScheduledCommand finallyCommand;
 
@@ -178,8 +193,34 @@ public class LocalMutations {
 		}
 	}
 
-	public void notifyAddedBehavior(Element element, ElementBehavior behavior) {
-		topicBehaviorAdded.publish(new BehaviorAdded(element, behavior));
+	public void notifyBehaviorAdded(Element target, ElementBehavior behavior) {
+		if (!target.isAttached()) {
+			return;
+		}
+		MutationRecord record = new MutationRecord();
+		record.mutationsAccess = mutationsAccess;
+		record.type = Type.behavior;
+		record.target = MutationNode.forNode(target);
+		record.mutationGroup = target.mutationGroups().getActiveGroup();
+		record.behaviorAdded = behavior;
+		addMutation(record);
+		topicBehaviorAdded.publish(new BehaviorAdded(target, behavior));
+	}
+
+	public void notifyBehaviorRemoved(Element target,
+			Class<? extends ElementBehavior> behaviorClass) {
+		if (!target.isAttached()) {
+			return;
+		}
+		MutationRecord record = new MutationRecord();
+		record.mutationsAccess = mutationsAccess;
+		record.type = Type.behavior;
+		record.target = MutationNode.forNode(target);
+		record.mutationGroup = target.mutationGroups().getActiveGroup();
+		record.behaviorRemoved = behaviorClass;
+		addMutation(record);
+		topicBehaviorRemoved
+				.publish(new BehaviorRemoved(target, behaviorClass));
 	}
 
 	boolean hasMutations() {

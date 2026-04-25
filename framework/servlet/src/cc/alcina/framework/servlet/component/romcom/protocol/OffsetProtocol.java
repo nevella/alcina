@@ -12,11 +12,12 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.WindowState.NodeUiState;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
-import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 
@@ -24,7 +25,7 @@ import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
  * <p>
  * The biggest client-to-server communication cost is transmitting the offset
  * state of nodes where the server has registered a need-to-know (
- * {@link RemoteElementBehaviors.ElementOffsetsRequired} behaviour)
+ * {@link ElementOffsetsRequired} behaviour)
  * 
  * <p>
  * This class optimises by only transmitting changes, and providing a
@@ -63,8 +64,9 @@ public class OffsetProtocol {
 
 		public void update(OffsetsDelta offsetsDelta) {
 			attachIdOffsets.keySet().removeAll(offsetsDelta.removed);
-			offsetsDelta.changes
-					.forEach(change -> attachIdOffsets.put(change.id, change));
+			offsetsDelta.changes.forEach(change -> {
+				attachIdOffsets.put(change.id, change);
+			});
 		}
 
 		public boolean containsKey(AttachId attachId) {
