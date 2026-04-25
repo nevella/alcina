@@ -2,8 +2,10 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.TraversalCompleteGlobal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
 import cc.alcina.framework.common.client.traversal.TraversalContext.NonDefaultTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext.ShortTraversal;
@@ -47,9 +49,15 @@ public class TraversalObserver extends LifecycleService.AlsoDev {
 		}
 	}
 
+	class TraversalCompleteObserver
+			implements ProcessObserver<TraversalCompleteGlobal> {
+		@Override
+		public void topicPublished(TraversalCompleteGlobal message) {
+			onTraversalComplete(message.getTraversal());
+		}
+	}
+
 	public void observe() {
-		SelectionTraversal.topicTraversalComplete
-				.add(this::onTraversalComplete);
 		observables.observe();
 	}
 
