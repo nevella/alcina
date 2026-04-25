@@ -218,6 +218,11 @@ class Environment {
 			boolean timedOut = false;
 			boolean hadTimeOut = false;
 			long start = System.currentTimeMillis();
+			if (!invokeSyncPermitted.is()) {
+				throw new IllegalStateException(Ax.format(
+						"Invokesync not permitted: node - %s :: method - %s",
+						node.toString(), methodName));
+			}
 			do {
 				try {
 					boolean devmode = session.url.contains("gwt.l");
@@ -679,6 +684,9 @@ class Environment {
 
 	static Configuration.Key invokeSyncTimeoutSecs = Configuration
 			.key("invokeSyncTimeoutSecs");
+
+	static Configuration.Key invokeSyncPermitted = Configuration
+			.key("invokeSyncPermitted");
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class
 			.getName() + ".CONTEXT_ENVIRONMENT";

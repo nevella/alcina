@@ -802,6 +802,10 @@ public class Element extends Node implements ClientDomElement,
 					: this;
 		}
 		DOM.setEventListener(this, eventListener);
+		if (getBehaviors() != null) {
+			getBehaviors().forEach(behavior -> mutations()
+					.notifyBehaviorAdded(this, behavior));
+		}
 		super.onAttach();
 	}
 
@@ -1506,18 +1510,23 @@ public class Element extends Node implements ClientDomElement,
 		return value == null ? 0.0 : Double.parseDouble(value);
 	}
 
-	/**
-	 * Behaviors are not intended to be removed, so there's no corresponding
-	 * remove method
-	 */
 	public void addBehavior(ElementBehavior behavior) {
 		local().addBehavior(behavior);
-		mutations().notifyAddedBehavior(this, behavior);
+		mutations().notifyBehaviorAdded(this, behavior);
+		sync(() -> remote().addBehavior(behavior));
+	}
+
+	/*
+	 * remove by type, not instance
+	 */
+	public void removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
+		local().removeBehavior(behaviorClass);
+		mutations().notifyBehaviorRemoved(this, behaviorClass);
 		/*
 		 * Behaviors are not used for ElementJso, and are marshalled at
 		 * emitMutation time by DocumentAttachId
 		 */
-		// sync(() -> remote().addBehavior(clazz));
+		sync(() -> remote().removeBehavior(behaviorClass));
 	}
 
 	public List<ElementBehavior> getBehaviors() {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -139,6 +140,8 @@ public class MeasureOverlay {
 
 	public Highlighter highlighter;
 
+	public boolean parentRelativeFixed;
+
 	public interface Highlighter {
 		DomNode highlight(DomNode node);
 
@@ -272,6 +275,19 @@ public class MeasureOverlay {
 		if (loc.isAtNodeEnd()) {
 			loc = loc.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
 		}
-		return loc.getContainingNode().ancestors().selfOrContainingElement();
+		DomNode elem = loc.getContainingNode().ancestors()
+				.selfOrContainingElement();
+		Element gwtElement = elem.gwtElement();
+		ElementOffsetsRequired offsetsBehavior = getOffsetsBehavior();
+		if (!gwtElement.hasBehavior(offsetsBehavior.getClass())) {
+			gwtElement.addBehavior(offsetsBehavior);
+		}
+		return elem;
+	}
+
+	public ElementOffsetsRequired getOffsetsBehavior() {
+		return parentRelativeFixed
+				? ElementOffsetsRequired.ParentRelativeFixed.INSTANCE
+				: ElementOffsetsRequired.INSTANCE;
 	}
 }

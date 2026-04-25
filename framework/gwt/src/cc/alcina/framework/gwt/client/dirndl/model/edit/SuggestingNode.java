@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
-import com.google.gwt.dom.client.behavior.RemoteElementBehaviors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -64,7 +64,7 @@ public class SuggestingNode extends EditNode
 		return List.of(new EditAreaBehavior.InterceptUpDownBehaviour(),
 				new ElementBehavior.PreventDefaultEnterBehaviour(),
 				new ElementBehavior.MarkContainsCursorBehaviour(),
-				new RemoteElementBehaviors.ElementOffsetsRequired());
+				new ElementOffsetsRequired());
 	}
 
 	@Override

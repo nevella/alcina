@@ -25,13 +25,14 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.util.IntPair;
 
 /**
- * Check if a dom node has a magic attribute set, and if so perform a specific
- * behavior
- */
-/**
  * Perform a few actions client-side that require blocking (such as keyboard
- * navigation)
+ * navigation), irrespective of whether the app is running in a browser or
+ * romcom client
  * 
+ * The basic registration mechanism is that the nativeevent preview traverses up
+ * the (local) dom and checks if any elements contain a behavior registered for
+ * that event type - which doesn't involve say ElementJso, and only involves
+ * ElementAttachId as a transport notifier
  */
 /*
  * FIXME - dirndl 1

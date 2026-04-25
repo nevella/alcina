@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -599,5 +600,42 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 				typed.selected = indexSet.contains(idx);
 			}
 		}
+	}
+
+	@Override
+	public void addBehavior(ElementBehavior behavior) {
+		emitBehaviorMutation(elementFor(), behavior);
+	}
+
+	static void emitBehaviorMutation(Element elem, ElementBehavior behavior) {
+		MutationRecord record = new MutationRecord();
+		record.type = MutationRecord.Type.behavior;
+		record.target = MutationNode.forNode(elem);
+		record.mutationGroup = elem.mutationGroups().getActiveGroup();
+		record.behaviorAdded = behavior;
+		emitMutation(elem.getOwnerDocument(), record);
+	}
+
+	@Override
+	public void removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
+		MutationRecord record = new MutationRecord();
+		record.type = MutationRecord.Type.behavior;
+		Element elem = elementFor();
+		record.target = MutationNode.forNode(elem);
+		record.mutationGroup = elem.mutationGroups().getActiveGroup();
+		record.behaviorRemoved = behaviorClass;
+		emitMutation(record);
+	}
+
+	static void emitBehaviorMutations(Element elem) {
+		List<ElementBehavior> behaviors = elem.getBehaviors();
+		if (behaviors != null) {
+			behaviors.forEach(behavior -> emitBehaviorMutation(elem, behavior));
+		}
+	}
+
+	@Override
+	public List<ElementBehavior> getBehaviors() {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -469,6 +469,7 @@ class TrackingLocationContext implements LocationContext {
 		public void topicPublished(MutationRecord mutation) {
 			switch (mutation.type) {
 			case attributes:
+			case behavior:
 				/*
 				 * does not affect the index
 				 */

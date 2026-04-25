@@ -88,6 +88,8 @@ public class RemoteWindowState implements InvokeProxy {
 						return (T) (Integer) windowState.clientHeight;
 					case "getClientWidth":
 						return (T) (Integer) windowState.clientWidth;
+					case "getTitle":
+						return (T) (String) windowState.title;
 					}
 				} else {
 					switch (methodName) {

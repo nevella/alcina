@@ -163,7 +163,13 @@ public class OverlayPosition {
 		if (equalWidths) {
 			toElement.getStyle().setWidth(fromRect.width, Unit.PX);
 		}
-		if (constraints.stream().noneMatch(Constraint::requiresActualToRect)) {
+		if (requiresActualToRect()) {
+			toRect = toElement.getBoundingClientRect();
+			if (parentFixed) {
+				toRect = DomRect.fromOrigin(toRect.width, toRect.height);
+			} else {
+			}
+		} else {
 			// will return a [0,0,0,0] domRect - which is fine if positioning
 			// all-start constraints
 			/*
@@ -178,12 +184,6 @@ public class OverlayPosition {
 			toRect = DomRect.ofCoordinatePairs(0, 0, 0, 0);
 			// DomRect.ofCoordinatePairs(-scrollLeft, -scrollTop,
 			// -scrollLeft, -scrollTop);
-		} else {
-			toRect = toElement.getBoundingClientRect();
-			if (parentFixed) {
-				toRect = DomRect.fromOrigin(toRect.width, toRect.height);
-			} else {
-			}
 		}
 		constraints.forEach(Constraint::apply);
 		/*
@@ -202,6 +202,10 @@ public class OverlayPosition {
 			Client.RenderState.queueWithRenderedState(
 					() -> viewportConstraint.apply(this));
 		}
+	}
+
+	boolean requiresActualToRect() {
+		return constraints.stream().anyMatch(Constraint::requiresActualToRect);
 	}
 
 	public void dropdown(Position xalign, DomRect rect, Model rectSource,

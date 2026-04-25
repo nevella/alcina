@@ -1,8 +1,10 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.util.IntPair;
@@ -323,4 +325,10 @@ public interface ClientDomElement extends ClientDomNode {
 	IntPair getScrollPosition();
 
 	String getComputedStyleValue(String key);
+
+	void addBehavior(ElementBehavior behavior);
+
+	List<ElementBehavior> getBehaviors();
+
+	void removeBehavior(Class<? extends ElementBehavior> behaviorClass);
 }

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.ClientDomElement;
@@ -53,7 +54,7 @@ public final class MutationRecord {
 
 	@Reflected
 	public enum Type {
-		attributes, characterData, childList, innerMarkup
+		attributes, characterData, childList, innerMarkup, behavior
 	}
 
 	enum ApplyDirection {
@@ -108,6 +109,7 @@ public final class MutationRecord {
 	 * 
 	 * Note that if the node is the root, and the representation is 'as markup
 	 * tree', a combination of *inner* markup and attr mutations will be sent,
+	 * 
 	 */
 	public static void generateInsertMutations(Node node,
 			List<MutationRecord> records, boolean deep) {
@@ -158,6 +160,18 @@ public final class MutationRecord {
 				record.newValue = v;
 				records.add(record);
 			});
+			List<ElementBehavior> behaviors = elem.getBehaviors();
+			if (behaviors != null) {
+				behaviors.forEach(behavior -> {
+					MutationRecord record = new MutationRecord();
+					record.type = MutationRecord.Type.behavior;
+					record.target = MutationNode.forNode(node);
+					record.mutationGroup = node.mutationGroups()
+							.getActiveGroup();
+					record.behaviorAdded = behavior;
+					records.add(record);
+				});
+			}
 			break;
 		}
 		case Node.COMMENT_NODE:
@@ -346,8 +360,6 @@ public final class MutationRecord {
 	 */
 	public IdProtocolList attachIds;
 
-	public Multimap<ElementBehavior, List<AttachId>> behaviors;
-
 	public MutationGroup mutationGroup;
 
 	/**
@@ -360,18 +372,6 @@ public final class MutationRecord {
 	 */
 	public transient String oldValue;
 
-	public void registerBehaviors(Element elem) {
-		List<ElementBehavior> behaviors = elem.getBehaviors();
-		if (behaviors == null) {
-			return;
-		}
-		if (this.behaviors == null) {
-			this.behaviors = new Multimap<>();
-		}
-		behaviors.forEach(behavior -> this.behaviors.add(behavior,
-				AttachId.forNode(elem)));
-	}
-
 	transient MutationRecordJso jso;
 
 	transient SyncMutations sync;
@@ -379,6 +379,10 @@ public final class MutationRecord {
 	public transient List<Class<? extends Flag>> flags;
 
 	transient MutationsAccess mutationsAccess;
+
+	public ElementBehavior behaviorAdded;
+
+	public Class<? extends ElementBehavior> behaviorRemoved;
 
 	// for serialization
 	public MutationRecord() {
@@ -481,6 +485,7 @@ public final class MutationRecord {
 		switch (type) {
 		case attributes:
 		case characterData:
+		case behavior:
 			return true;
 		case childList:
 			return false;
@@ -583,11 +588,23 @@ public final class MutationRecord {
 			}
 			break;
 		}
-		case innerMarkup:
+		case innerMarkup: {
+			Preconditions.checkState(applyDirection == ApplyDirection.history);
 			// not used for syncmutations, only for remote transport (so
 			// bypass most of the mutations infrastructure)
 			Element elem = (Element) target.node();
 			elem.implAccess().setInnerHTML(newValue, attachIds);
+		}
+			break;
+		case behavior: {
+			Preconditions.checkState(applyDirection == ApplyDirection.history);
+			Element elem = (Element) target.node();
+			if (behaviorAdded != null) {
+				elem.addBehavior(behaviorAdded);
+			} else {
+				elem.removeBehavior(behaviorRemoved);
+			}
+		}
 			break;
 		default:
 			throw new UnsupportedOperationException();
@@ -656,6 +673,8 @@ public final class MutationRecord {
 			Collections.reverse(result.removedNodes);
 			Collections.reverse(result.addedNodes);
 			break;
+		default:
+			throw new UnsupportedOperationException();
 		}
 		return result;
 	}
