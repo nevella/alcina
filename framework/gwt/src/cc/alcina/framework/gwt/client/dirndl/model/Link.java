@@ -114,6 +114,10 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 		return new Link().withModelEvent(modelEvent).withTextFromModelEvent();
 	}
 
+	public static Link of(BasePlace place) {
+		return new Link().withPlace(place);
+	}
+
 	public static Link button(Class<? extends ModelEvent> modelEvent) {
 		return of(modelEvent).withTag("button");
 	}

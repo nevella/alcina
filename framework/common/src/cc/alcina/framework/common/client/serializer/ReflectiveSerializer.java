@@ -244,7 +244,7 @@ public class ReflectiveSerializer {
 			}
 			boolean resolveWithReflectiveTypeSerializer = new AnnotationLocation(
 					clazz, null).hasAnnotation(Bean.class);
-			if (!GWT.isClient()) {
+			if (!Al.isBrowser()) {
 				resolveWithReflectiveTypeSerializer |= Reflections
 						.isAssignableFrom(TreeSerializable.class, lookupClass)
 						|| Reflections.isAssignableFrom(
