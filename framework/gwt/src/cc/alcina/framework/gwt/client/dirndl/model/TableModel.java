@@ -113,6 +113,10 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * <p>
  * Note that the rendered model (which is transformed to a tablemodel) can't
  * (currently) receive modelevents - but it *can* bind via the rendered peer
+ * 
+ * <p>
+ * Normally this model will be created via a transform - e.g:
+ * [at]Directed.Transform(TableView.class)
  *
  * <h3>Rendering + resolving example
  * <ul>

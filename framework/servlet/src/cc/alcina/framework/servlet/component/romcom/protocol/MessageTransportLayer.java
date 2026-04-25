@@ -92,6 +92,10 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * 
  * 
  */
+/*
+ * thread-safety - all sensitive methods lock on the top-level
+ * (MessageTransportLayer) instance
+ */
 public abstract class MessageTransportLayer {
 	protected static LooseContext.Key<MessageTransportLayer> CONTEXT_TRANSPORT_LAYER = LooseContext
 			.key(MessageTransportLayer.class, "CONTEXT_TRANSPORT_LAYER");
@@ -529,7 +533,7 @@ public abstract class MessageTransportLayer {
 		protected Map<MessageId, MessageToken> messageIdActiveMessage = new LinkedHashMap<>();
 
 		public List<MessageToken> snapshotActiveMessages() {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				return new ArrayList<>(activeMessages);
 			}
 		}
@@ -550,7 +554,7 @@ public abstract class MessageTransportLayer {
 		protected abstract boolean publishesMessages();
 
 		boolean shouldSendMessagesOrMetadata() {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				return activeMessages.stream()
 						.anyMatch(MessageToken::shouldSendMessageOrMetadata);
 			}
@@ -559,7 +563,7 @@ public abstract class MessageTransportLayer {
 		abstract String channelName();
 
 		void bufferMessage(MessageToken messageToken) {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				logger.debug("Message added to active [{}] ::  {}",
 						channelName(),
 						messageToken.transportHistory.toTransportDebugString());
@@ -583,13 +587,13 @@ public abstract class MessageTransportLayer {
 		}
 
 		MessageToken getActiveMessage(MessageId messageId) {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				return messageIdActiveMessage.get(messageId);
 			}
 		}
 
 		void removeAcknowledgedPublishedMessages() {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				List<MessageToken> toRemove = activeMessages.stream().filter(
 						active -> active.acknowledged && (!publishesMessages()
 								|| active.transportHistory.published != null))
@@ -602,7 +606,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		public TransportHistory getTransportHistory(Message message) {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				return activeMessages.stream()
 						.filter(m -> Objects.equals(m.message, message))
 						.map(mt -> mt.transportHistory).findFirst()
@@ -759,7 +763,7 @@ public abstract class MessageTransportLayer {
 				if (verifying) {
 					return;
 				}
-				synchronized (activeMessages) {
+				synchronized (MessageTransportLayer.this) {
 					try {
 						verifying = true;
 						verify0();
@@ -863,7 +867,7 @@ public abstract class MessageTransportLayer {
 		 * If no inflight or retry, send
 		 */
 		public void conditionallySend() {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				if (envelopeDispatcher().isDispatchAvailable()) {
 					if (shouldSendMessagesOrMetadata()) {
 						unconditionallySend();
@@ -880,14 +884,14 @@ public abstract class MessageTransportLayer {
 		}
 
 		public boolean hasMessagesPendingDispatch() {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				return activeMessages.stream()
 						.anyMatch(token -> !token.transportHistory.wasSent());
 			}
 		}
 
 		public void unconditionallySend() {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				envelopeDispatcher().dispatch(activeMessages,
 						receiveChannel().snapshotActiveMessages());
 			}
@@ -925,7 +929,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				envelope.transportHistories.stream().filter(
 						remoteHistory -> remoteHistory.messageId.sendChannelId == sendChannelId())
 						.forEach(remoteHistory -> {
@@ -1005,7 +1009,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		void publishSequentialMessages() {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				for (MessageToken activeMessageToken : activeMessages) {
 					boolean publish = activeMessageToken.message.messageId.number == highestPublishedMessageId
 							+ 1;
@@ -1026,7 +1030,7 @@ public abstract class MessageTransportLayer {
 			 * this is the only place receivedMessageIds is used, so sync works
 			 * for both
 			 */
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				envelope.messages.forEach(message -> {
 					if (!receivedMessageIds.add(message.messageId)) {
 						return;
@@ -1042,7 +1046,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
-			synchronized (activeMessages) {
+			synchronized (MessageTransportLayer.this) {
 				/*
 				 * The highest envelopeId sent by *this* endpoint, received by
 				 * the other
@@ -1066,12 +1070,16 @@ public abstract class MessageTransportLayer {
 	class TransportEvents {
 		List<TransportEvent> events = new ArrayList<>();
 
-		synchronized void onTransportSuccess() {
-			events.add(new TransportEvent(Type.success));
+		void onTransportSuccess() {
+			synchronized (MessageTransportLayer.this) {
+				events.add(new TransportEvent(Type.success));
+			}
 		}
 
-		synchronized void onTransportFailure() {
-			events.add(new TransportEvent(Type.transport_failure));
+		void onTransportFailure() {
+			synchronized (MessageTransportLayer.this) {
+				events.add(new TransportEvent(Type.transport_failure));
+			}
 		}
 	}
 

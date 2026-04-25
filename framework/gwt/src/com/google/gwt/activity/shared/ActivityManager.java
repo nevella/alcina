@@ -192,17 +192,19 @@ public class ActivityManager
 			}
 			if (currentActivity instanceof PlaceUpdateable
 					&& nextActivity instanceof PlaceUpdateable) {
-				PlaceUpdateable activity1 = (PlaceUpdateable) currentActivity;
-				PlaceUpdateable activity2 = (PlaceUpdateable) nextActivity;
-				if (activity1.canUpdate(activity2)) {
-					if (activity1 instanceof HasPlace) {
-						BasePlace outgoingPlace = ((HasPlace) activity1)
-								.getPlace();
-						BasePlace incomingPlace = ((HasPlace) activity2)
-								.getPlace();
-						incomingPlace.updateFrom(outgoingPlace);
-						((HasPlace) activity1).setPlace(incomingPlace);
-						return;
+				if (currentActivity.getClass() == nextActivity.getClass()) {
+					PlaceUpdateable activity1 = (PlaceUpdateable) currentActivity;
+					PlaceUpdateable activity2 = (PlaceUpdateable) nextActivity;
+					if (activity1.canUpdate(activity2)) {
+						if (activity1 instanceof HasPlace) {
+							BasePlace outgoingPlace = ((HasPlace) activity1)
+									.getPlace();
+							BasePlace incomingPlace = ((HasPlace) activity2)
+									.getPlace();
+							incomingPlace.updateFrom(outgoingPlace);
+							((HasPlace) activity1).setPlace(incomingPlace);
+							return;
+						}
 					}
 				}
 			}

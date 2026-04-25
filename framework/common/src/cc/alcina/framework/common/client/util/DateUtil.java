@@ -237,4 +237,33 @@ public class DateUtil {
 	public static int currentYear() {
 		return getYear(new Date());
 	}
+
+	public static Date setToFirstDayOfMonth(Date d) {
+		Date date = new Date(d.getTime());
+		date = DateUtil.roundDate(date, false);
+		date.setDate(1);
+		return date;
+	}
+
+	public static Date addMonthsToDate(Date date, int months) {
+		if (months != 0) {
+			date = new Date(date.getTime());
+			int month = date.getMonth();
+			int year = date.getYear();
+			int resultMonthCount = year * 12 + month + months;
+			int resultYear = (int) Math.floor(resultMonthCount / 12.0);
+			int resultMonth = resultMonthCount - resultYear * 12;
+			date.setMonth(resultMonth);
+			date.setYear(resultYear);
+			return date;
+		} else {
+			return date;
+		}
+	}
+
+	public static Date addDaysToDate(Date date, int days) {
+		date = new Date(date.getTime());
+		date.setDate(date.getDate() + days);
+		return date;
+	}
 }

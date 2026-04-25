@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
@@ -31,6 +33,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.SetCookieServerSide;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
@@ -50,6 +53,8 @@ import cc.alcina.framework.servlet.publication.DirndlRenderer;
  * the return from the client will come on a different servlet thread
  */
 public class RemoteComponentHandler {
+	static Configuration.Key awaitTimeout = Configuration.key("awaitTimeout");
+
 	RemoteComponent component;
 
 	String loadIndicatorHtml = "";
@@ -299,7 +304,29 @@ public class RemoteComponentHandler {
 					RequestToken token = new RequestToken(requestJson, request,
 							response, servletRequest, servletResponse);
 					EnvironmentManager.get().acceptRequest(token);
-					token.latch.await();
+					/*
+					 * normally this just runs once, but AwaitRemote is special
+					 */
+					for (;;) {
+						boolean await = token.latch.await(
+								awaitTimeout.longValue(),
+								TimeUnit.MILLISECONDS);
+						if (await) {
+							break;
+						} else {
+							boolean isSessionActive = EnvironmentManager.get()
+									.isSessionActive(request.session.id);
+							if (isSessionActive && isAwaitRemote(request)) {
+								continue;
+							} else {
+								throw new Exception(Ax.format(
+										"Await timed out :: session - %s :: active - %s :: request - %s",
+										request.session.id, isSessionActive,
+										request.messageEnvelope
+												.toMessageSummaryString()));
+							}
+						}
+					}
 				} catch (Exception e) {
 					if (e instanceof ProtocolException) {
 						boolean handled = false;
@@ -358,6 +385,12 @@ public class RemoteComponentHandler {
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	boolean isAwaitRemote(RemoteComponentRequest request) {
+		return request.messageEnvelope.messages.size() == 1
+				&& request.messageEnvelope.messages
+						.get(0) instanceof AwaitRemote;
 	}
 
 	@Feature.Ref(Feature_Romcom_Impl._Authentication.class)

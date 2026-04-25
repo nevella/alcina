@@ -103,6 +103,15 @@
  * 
  */
 /*
+ * - Message transport - minimising blocked http calls [for feature/impl doc]
+ * 
+ * Particularly with high-latency connections, invokesync can cascade and cause
+ * long wait times. To simulate, perform a romcom action that requires multiple
+ * invoke syncs (say uncached getOffsets())
+ * 
+ * To prevent holding potentially 100s of open requests,
+ */
+/*
  * Session handling logic
  * 
  * There are basically three types of apps - single UI only (say an android app

@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
  * 
  * <p>
  * Gotchas - this uses property permissions, so if you see nothing, try adding a
- * DisplayAllMixin resovler - e.g.
+ * DisplayAllMixin resolver - e.g.
  * {@code &#064;DirectedContextResolver(DisplayAllMixin.class)}
  */
 @Directed
