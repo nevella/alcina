@@ -32,6 +32,9 @@ import cc.alcina.framework.gwt.client.util.DomUtils;
  * with some html quirks by default)
  */
 public class HtmlParser {
+	public static final LooseContext.Key CONTEXT_DO_NOT_CLOSE_TO_VALIDATE = LooseContext
+			.key(HtmlParser.class, "CONTEXT_DO_NOT_CLOSE_TO_VALIDATE");
+
 	static final boolean debugCursor = false;
 
 	public static Element parseMarkup(String markup) {
@@ -239,6 +242,8 @@ public class HtmlParser {
 
 	private FastLcProvider lc = new FastLcProvider();
 
+	boolean closeToValidateCloseTag = true;
+
 	private void emitAttribute() {
 		attributes.put(attrName, decodeEntities(attrValue));
 	}
@@ -269,7 +274,9 @@ public class HtmlParser {
 			}
 		}
 		if (!closeTag) {
-			closeToValidateOutput(tag);
+			if (closeToValidateCloseTag) {
+				closeToValidateOutput(tag);
+			}
 			emitStartElement(tag);
 		}
 		// selfCloseTag |= !closeTag && isSelfClosingTagLcRead(tag);
@@ -280,7 +287,7 @@ public class HtmlParser {
 			// e.g. is gwt celltable safehtml for input
 		} else {
 			if (closeTag || selfCloseTag) {
-				if (!selfCloseTag) {
+				if (!selfCloseTag && closeToValidateCloseTag) {
 					closeToValidateCloseTag(tag);
 				}
 				emitEndElement(tag);
@@ -490,6 +497,7 @@ public class HtmlParser {
 		if (!Al.isBrowser()) {
 			markup = cleanPreamble(markup);
 		}
+		this.closeToValidateCloseTag = !CONTEXT_DO_NOT_CLOSE_TO_VALIDATE.is();
 		this.markup = markup;
 		this.replaceContents = replaceContents;
 		this.lineNumber = 1;
