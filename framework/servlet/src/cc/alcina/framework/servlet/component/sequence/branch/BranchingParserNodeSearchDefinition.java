@@ -1,10 +1,17 @@
 package cc.alcina.framework.servlet.component.sequence.branch;
 
+import java.util.Set;
+
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainDefinitionHandler;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 
@@ -19,6 +26,40 @@ public class BranchingParserNodeSearchDefinition
 	@TypeSerialization("bpnsdparam")
 	public static class Parameter extends
 			SequenceSearchDefinition.BaseParameter<BranchingParserNodeSearchDefinition> {
+	}
+
+	static class SearchContext {
+		static final LooseContext.Key<SearchContext> CONTEXT_SEACH_CONTEXT = LooseContext
+				.key(SearchContext.class, "CONTEXT_SEACH_CONTEXT");
+
+		static void register() {
+			CONTEXT_SEACH_CONTEXT.set(new SearchContext());
+		}
+
+		static SearchContext get() {
+			return CONTEXT_SEACH_CONTEXT.getTyped();
+		}
+
+		Set<Group> seenTopLevelGroups = AlcinaCollections.newHashSet();
+
+		boolean addBranch(BranchingParserNode node) {
+			return seenTopLevelGroups.add(node.branchNode.branch.group);
+		}
+	}
+
+	static class DomainDefinitionHandlerImpl extends
+			DomainDefinitionHandler<BranchingParserNodeSearchDefinition> {
+		@Override
+		public DomainFilter getFilter(BranchingParserNodeSearchDefinition sc) {
+			SearchContext.register();
+			return new DomainFilter(o -> true);
+		}
+
+		@Override
+		public Class<BranchingParserNodeSearchDefinition>
+				handlesSearchDefinition() {
+			return BranchingParserNodeSearchDefinition.class;
+		}
 	}
 
 	@Override

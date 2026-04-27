@@ -4,19 +4,22 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.process.ProcessObserver;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.BranchNode;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Exit;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+@TypeSerialization("brpns")
 public class BranchingParserNodeSequence
-		extends Sequence.Abstract<BranchingParserNode> {
+		extends Sequence.Abstract.Passthrough<BranchingParserNode> {
 	@Override
 	public SequenceSearchDefinition getDefaultSearchDefinition() {
 		return new BranchingParserNodeSearchDefinition();
@@ -25,8 +28,10 @@ public class BranchingParserNodeSequence
 	@Display.AllProperties
 	static class BranchingParserNodeView extends Model.Fields
 			implements Model.MultiNodeModel {
+		@Directed(className = "path")
 		String path;
 
+		@Directed(className = "match")
 		String match;
 
 		BranchingParserNodeView(BranchingParserNode node) {
@@ -47,12 +52,8 @@ public class BranchingParserNodeSequence
 		return BranchingParserNodeView::new;
 	}
 
-	public static InstanceQuery
-			createInstanceQuery(BranchingParserNodeSearchDefinition def) {
-		return new InstanceQuery().withType(BranchingParserNodeSequence.class)
-				.addParameters(
-						new BranchingParserNodeSearchDefinition.Parameter()
-								.withValue(def));
+	public static InstanceQuery createInstanceQuery() {
+		return new InstanceQuery().withType(BranchingParserNodeSequence.class);
 	}
 
 	@InstanceProvider.Parameter(BranchingParserNodeSearchDefinition.Parameter.class)

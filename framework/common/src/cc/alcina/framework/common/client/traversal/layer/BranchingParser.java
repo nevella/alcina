@@ -185,6 +185,16 @@ public class BranchingParser {
 	to visualise in a devconsole:
 	
 	@formatter:off
+
+	BranchingParserNodeSearchDefinition def = new BranchingParserNodeSearchDefinition();
+		SequencePlace place = new SequencePlace();
+		place.search = def;
+		place.instanceQuery = BranchingParserNodeSequence
+				.createInstanceQuery(def);
+		Ax.out(place.toHrefString());
+
+		...
+		
 [console]/seq#sequence/instanceQuery.bpnsdparam=+:instanceQuery.querytype=cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeSequence
 
 
@@ -482,7 +492,7 @@ public class BranchingParser {
 
 		public Location location;
 
-		Group group;
+		public Group group;
 
 		public Measure match;
 
