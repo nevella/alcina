@@ -202,6 +202,8 @@ class ClientExecutionQueue implements Runnable {
 			}
 			QueuedRunnable queuedRunnable = new QueuedRunnable(awaitId,
 					awaitNextMutationId, runnable);
+			Client.RenderState.Observable.eventOcurred(queuedRunnable,
+					Client.RenderState.Observable.EventType.queued_runnable);
 			pending.add(queuedRunnable);
 			//
 		}
@@ -224,6 +226,8 @@ class ClientExecutionQueue implements Runnable {
 						if (p.messageId < messageDataSnapshot.lastMutationIdBuffered) {
 							p.messageId = messageDataSnapshot.lastMutationIdBuffered;
 							p.awaitNextMutationId = false;
+							Client.RenderState.Observable.eventOcurred(p,
+									Client.RenderState.Observable.EventType.runnable_mutation_assigned);
 						}
 					});
 			int awaitingNextMutationIdCount = (int) pending.stream()

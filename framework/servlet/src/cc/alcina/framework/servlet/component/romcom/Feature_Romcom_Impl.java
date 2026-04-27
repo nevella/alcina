@@ -24,9 +24,16 @@ public interface Feature_Romcom_Impl extends Feature {
 	}
 
 	/**
+	 * <p>
 	 * Windowstate (offsets, scroll etc) is key - batches are sent async from
-	 * the client and accessed ASAP by the server, to avoid blocking
+	 * the client and accessed as needed by the server, to avoid blocking
 	 * getBoundingClientRect() calls and such
+	 * 
+	 * <p>
+	 * This feature is utterly critical for getting reasonable romcom
+	 * performance - there's even a flag to totally disable invokesync to test
+	 * 
+	 * <p>
 	 */
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _WindowState extends Feature {
