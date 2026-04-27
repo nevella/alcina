@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
@@ -55,6 +56,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 @Reflected
 @Registration(Client.class)
@@ -342,6 +344,7 @@ public abstract class Client implements ContextFrame {
 		}
 
 		@EnvironmentRegistration
+		@Feature.Ref(Feature_RemoteObjectComponent._Impl.class)
 		public interface RomcomImpl {
 			void enqueue(Runnable runnable);
 		}

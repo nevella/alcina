@@ -4,7 +4,8 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 @Feature.Status.Ref(Feature.Status.Open.class)
-@Feature.Parent(Feature_RemoteObjectComponent.class)
+// ref the client-visible package version of this 'feature'
+@Feature.Parent(Feature_RemoteObjectComponent._Impl.class)
 @Feature.Type.Ref(Feature.Type.Ui_implementation.class)
 public interface Feature_Romcom_Impl extends Feature {
 	/*
