@@ -354,7 +354,9 @@ public abstract class Client implements ContextFrame {
 		 */
 		public static class Observable implements GlobalObservable.Debug {
 			public enum EventType {
-				node_attach, queued_runnable, runnable_mutation_assigned;
+				node_attach, queued_runnable, mutations_emitted,
+				runnable_mutation_assigned, window_state_update,
+				emit_dispatchable;
 			}
 
 			Node gwtNode;
@@ -405,7 +407,8 @@ public abstract class Client implements ContextFrame {
 
 			@Override
 			public void topicPublished(Observable message) {
-				logger.info("[Renderstate] {} :: {}", Ax.appMillis(), message);
+				logger.info("[Renderstate]  {} [{}] :: {}", Ax.appMillis(),
+						Thread.currentThread().getName(), message);
 			}
 		}
 	}

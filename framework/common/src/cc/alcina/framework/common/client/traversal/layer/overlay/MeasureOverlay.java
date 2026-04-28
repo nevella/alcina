@@ -142,6 +142,8 @@ public class MeasureOverlay {
 
 	public boolean parentRelativeFixed;
 
+	DomNode positioningElement;
+
 	public interface Highlighter {
 		DomNode highlight(DomNode node);
 
@@ -267,7 +269,14 @@ public class MeasureOverlay {
 		return getElement().getAbsoluteTop();
 	}
 
+	/*
+	 * positioning element should be cached, since it may need an associated
+	 * behavior attached on eval
+	 */
 	public DomNode getPositioningElement() {
+		if (positioningElement != null) {
+			return positioningElement;
+		}
 		Location loc = initialRange.start;
 		if (overlays.size() > 0) {
 			loc = overlays.get(0).start;
@@ -275,14 +284,14 @@ public class MeasureOverlay {
 		if (loc.isAtNodeEnd()) {
 			loc = loc.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
 		}
-		DomNode elem = loc.getContainingNode().ancestors()
+		positioningElement = loc.getContainingNode().ancestors()
 				.selfOrContainingElement();
-		Element gwtElement = elem.gwtElement();
+		Element gwtElement = positioningElement.gwtElement();
 		ElementOffsetsRequired offsetsBehavior = getOffsetsBehavior();
 		if (!gwtElement.hasBehavior(offsetsBehavior.getClass())) {
 			gwtElement.addBehavior(offsetsBehavior);
 		}
-		return elem;
+		return positioningElement;
 	}
 
 	public ElementOffsetsRequired getOffsetsBehavior() {

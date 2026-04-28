@@ -3,6 +3,7 @@ package com.google.gwt.dom.client;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -85,6 +86,11 @@ public final class WindowState {
 		public List<ElementOffsets> changes;
 
 		public Set<AttachId> removed;
+
+		public String toChangesIds() {
+			return changes.stream().map(eo -> eo.id.id).map(String::valueOf)
+					.collect(Collectors.joining(", "));
+		}
 
 		/**
 		 * The data synced via the protocol

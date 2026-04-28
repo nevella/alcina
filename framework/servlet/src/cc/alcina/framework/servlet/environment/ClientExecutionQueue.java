@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -88,7 +89,28 @@ class ClientExecutionQueue implements Runnable {
 		synchronized void onMessageBuffered(Message message) {
 			if (message instanceof Mutations
 					&& message.messageId.sendChannelId == SendChannelId.SERVER_TO_CLIENT) {
+				Mutations mutations = (Mutations) message;
+				Client.RenderState.Observable.eventOcurred(
+						new MutationsView(mutations),
+						Client.RenderState.Observable.EventType.mutations_emitted);
 				lastMutationIdBuffered = message.messageId.number;
+			}
+		}
+
+		class MutationsView {
+			Mutations mutations;
+
+			MutationsView(Mutations mutations) {
+				this.mutations = mutations;
+			}
+
+			@Override
+			public String toString() {
+				List<AttachId> attachIds = mutations.domMutations.stream()
+						.flatMap(m -> m.addedNodes.stream())
+						.map(n -> n.attachId).toList();
+				return Ax.format("[mutations - attachids] :: %s :: %s",
+						mutations.messageId, attachIds);
 			}
 		}
 
@@ -98,13 +120,22 @@ class ClientExecutionQueue implements Runnable {
 				if (update.counterpartProcessingId != null
 						&& lastMutationIdUpdateHandled < update.counterpartProcessingId.number) {
 					lastMutationIdUpdateHandled = update.counterpartProcessingId.number;
+					Client.RenderState.Observable.eventOcurred(
+							Ax.format("mutation id handled :: %s :: %s",
+									lastMutationIdUpdateHandled,
+									update.windowState.offsetsDelta
+											.toChangesIds()),
+							Client.RenderState.Observable.EventType.window_state_update);
 				}
 			}
 		}
 
-		MutationMessageData() {
+		void attachListeners() {
 			transportLayer.topicMessageBuffered.add(this::onMessageBuffered);
 			topicMessageHandled.add(this::onMessageHandled);
+		}
+
+		MutationMessageData() {
 		}
 
 		synchronized MutationMessageData snapshot() {
@@ -239,6 +270,8 @@ class ClientExecutionQueue implements Runnable {
 					updateHighestAwaiting(next.messageId);
 					if (next.messageId <= messageDataSnapshot.lastMutationIdUpdateHandled) {
 						addDispatchable(new AsyncDispatchable(next.runnable));
+						Client.RenderState.Observable.eventOcurred(next,
+								Client.RenderState.Observable.EventType.emit_dispatchable);
 						itr.remove();
 					}
 				}
@@ -321,6 +354,7 @@ class ClientExecutionQueue implements Runnable {
 		transportLayer = new MessageTransportLayerServer(cacheFromRegistry);
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 		mutationMessageData = new MutationMessageData();
+		mutationMessageData.attachListeners();
 		renderStateImpl = new RenderStateImpl();
 	}
 
