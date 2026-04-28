@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.component;
 
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -42,8 +43,8 @@ import elemental.json.impl.JsonUtil;
  * So all styles should be applied to inner
  */
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
-public class StringArea extends Model.Fields
-		implements DomEvents.Click.Handler, ModelEvents.Closed.Handler {
+public class StringArea extends Model.Fields implements DomEvents.Click.Handler,
+		ModelEvents.Closed.Handler, ElementOffsetsRequired.SoleBehavior {
 	@Directed(tag = "string-value")
 	public String renderedValue;
 

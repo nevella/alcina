@@ -186,7 +186,7 @@ public class BranchingParser {
 	
 	@formatter:off
 
-	BranchingParserNodeSearchDefinition def = new BranchingParserNodeSearchDefinition();
+		BranchingParserNodeSearchDefinition def = new BranchingParserNodeSearchDefinition();
 		SequencePlace place = new SequencePlace();
 		place.search = def;
 		place.instanceQuery = BranchingParserNodeSequence

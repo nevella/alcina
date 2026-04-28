@@ -49,6 +49,31 @@ public class BranchingParserNodeSequence
 		}
 	}
 
+	@Display.AllProperties
+	static class BranchingParserNodeDetail extends Model.Fields
+			implements Model.MultiNodeModel {
+		@Directed(className = "path")
+		String path;
+
+		@Directed(className = "measure")
+		String measure;
+
+		@Directed(className = "match")
+		String match;
+
+		@Directed(className = "match")
+		String result;
+
+		BranchingParserNodeDetail(BranchingParserNode node) {
+			this.path = node.getPath();
+			this.measure = node.getMeasure();
+			this.match = node.getMatch();
+			if (node.branchNode.match != null) {
+				result = node.branchNode.branch.toResult().toStructuredString();
+			}
+		}
+	}
+
 	@Override
 	public ModelTransform<BranchingParserNode, ? extends Model>
 			getRowTransform() {
@@ -58,7 +83,7 @@ public class BranchingParserNodeSequence
 	@Override
 	public ModelTransform<BranchingParserNode, ? extends Model>
 			getDetailTransform() {
-		return BranchingParserNodeView::new;
+		return BranchingParserNodeDetail::new;
 	}
 
 	public static InstanceQuery createInstanceQuery() {
