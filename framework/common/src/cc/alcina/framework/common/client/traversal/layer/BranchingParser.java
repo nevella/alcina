@@ -253,8 +253,6 @@ public class BranchingParser {
 			if (isObserve()) {
 				branchEntryObserver.unbind();
 				sentenceMatchObserver.unbind();
-				Ax.out("branchCount: %s", branchCount);
-				Ax.out("tlBranchCount: %s", tlBranchCount);
 			}
 		}
 	}

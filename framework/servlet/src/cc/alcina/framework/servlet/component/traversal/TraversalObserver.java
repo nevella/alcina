@@ -58,6 +58,7 @@ public class TraversalObserver extends LifecycleService.AlsoDev {
 	}
 
 	public void observe() {
+		new TraversalCompleteObserver().bind();
 		observables.observe();
 	}
 

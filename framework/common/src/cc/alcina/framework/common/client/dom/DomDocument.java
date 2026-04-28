@@ -162,7 +162,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	private Multimap<String, List<DomNode>> byId;
 
-	private LocationContext locationContext;
+	private volatile LocationContext locationContext;
 
 	/*
 	 * Normally this will be null, unless the DomDocument has no backing w3c/gwt
@@ -299,7 +299,11 @@ public class DomDocument extends DomNode implements Cloneable {
 				locationContext = locationContext3;
 				locationContext3.init();
 			} else {
-				locationContext = new NonTrackingLocationContext();
+				synchronized (this) {
+					if (locationContext == null) {
+						locationContext = new NonTrackingLocationContext();
+					}
+				}
 			}
 		}
 		return locationContext;
