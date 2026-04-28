@@ -190,7 +190,7 @@ public class BranchingParser {
 		SequencePlace place = new SequencePlace();
 		place.search = def;
 		place.instanceQuery = BranchingParserNodeSequence
-				.createInstanceQuery(def);
+				.createInstanceQuery();
 		Ax.out(place.toHrefString());
 
 		...
@@ -222,9 +222,8 @@ public class BranchingParser {
 			@Override
 			public void topicPublished(BeforeBranchEntry message) {
 				branchCount++;
+				branchNodes.put(message.branch, new BranchNode(message.branch));
 				if (message.branch.parent == null) {
-					branchNodes.put(message.branch,
-							new BranchNode(message.branch));
 					tlBranchCount++;
 				}
 			}
@@ -850,6 +849,14 @@ public class BranchingParser {
 			}
 			return format.toString();
 		}
+
+		public Branch root() {
+			Branch cursor = this;
+			while (cursor.parent != null) {
+				cursor = cursor.parent;
+			}
+			return cursor;
+		}
 	}
 
 	/*
@@ -1076,7 +1083,10 @@ public class BranchingParser {
 
 				int repetitionIndex;
 
+				public Branch branch;
+
 				LevelLocation(Branch branch, int repetitionIndexOffset) {
+					this.branch = branch;
 					group = branch.group;
 					indexInGroup = branch.indexInGroup;
 					repetitionIndex = branch.repetitionIndex
@@ -1116,6 +1126,10 @@ public class BranchingParser {
 			public List<Entry> children = new LinkedList<>();
 
 			public Measure match;
+
+			public Branch getLastBranch() {
+				return Ax.last(branchLocation.locations).branch;
+			}
 
 			Entry(BranchLocation branchLocation) {
 				this.branchLocation = branchLocation;

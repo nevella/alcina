@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.sequence.branch;
 
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.process.ProcessObserver;
@@ -9,13 +10,17 @@ import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser;
+import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.BranchNode;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Exit;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode.GroupType;
+import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode.MatchType;
 
 @TypeSerialization("brpns")
 public class BranchingParserNodeSequence
@@ -31,11 +36,15 @@ public class BranchingParserNodeSequence
 		@Directed(className = "path")
 		String path;
 
+		@Directed(className = "measure")
+		String measure;
+
 		@Directed(className = "match")
 		String match;
 
 		BranchingParserNodeView(BranchingParserNode node) {
 			this.path = node.getPath();
+			this.measure = node.getMeasure();
 			this.match = node.getMatch();
 		}
 	}
@@ -56,27 +65,38 @@ public class BranchingParserNodeSequence
 		return new InstanceQuery().withType(BranchingParserNodeSequence.class);
 	}
 
-	@InstanceProvider.Parameter(BranchingParserNodeSearchDefinition.Parameter.class)
 	public static class InstanceProviderImpl
 			implements InstanceProvider<BranchingParserNodeSequence> {
 		@Override
 		public BranchingParserNodeSequence provide(
 				Query<BranchingParserNodeSequence> query) throws Exception {
-			BranchingParserNodeSearchDefinition.Parameter parameter = query
-					.typedParameter(
-							BranchingParserNodeSearchDefinition.Parameter.class);
-			List<BranchingParserNode> sessions = getNodes(parameter.getValue());
-			return new BranchingParserNodeSequence().withElements(sessions);
+			List<BranchingParserNode> nodes = getNodes();
+			return new BranchingParserNodeSequence().withElements(nodes);
 		}
 
-		@Override
-		public boolean isOneOff() {
-			return true;
-		}
-
-		List<BranchingParserNode>
-				getNodes(BranchingParserNodeSearchDefinition def) {
-			return lastSequence.stream().map(BranchingParserNode::new).toList();
+		List<BranchingParserNode> getNodes() {
+			List<BranchingParserNode> list = lastSequence.stream()
+					.map(BranchingParserNode::new).toList();
+			Map<Branch, BranchingParserNode> branchBranchNode = list.stream()
+					.collect(AlcinaCollectors
+							.toKeyMap(BranchingParserNode::getBranch));
+			list.forEach(bpn -> {
+				bpn.groupType = GroupType.GROUP;
+				if (bpn.branchNode.match != null
+						|| !bpn.branchNode.branch.group.isComplex()) {
+					bpn.groupType = GroupType.LEAF_OR_MATCH;
+				}
+				if (bpn.branchNode.match != null) {
+					bpn.matchType = MatchType.MATCH;
+					BranchingParser.Result result = bpn.branchNode.branch
+							.toResult();
+					result.stream().map(e -> e.getLastBranch())
+							.filter(branch -> branch != bpn.branchNode.branch)
+							.forEach(branch -> branchBranchNode.get(
+									branch).matchType = MatchType.DESCENDANT_MATCH);
+				}
+			});
+			return list;
 		}
 	}
 

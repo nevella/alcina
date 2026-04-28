@@ -23,11 +23,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefiniti
 		defaultProperty = true) })
 public class BranchingParserNodeSearchDefinition
 		extends SequenceSearchDefinition {
-	@TypeSerialization("bpnsdparam")
-	public static class Parameter extends
-			SequenceSearchDefinition.BaseParameter<BranchingParserNodeSearchDefinition> {
-	}
-
 	static class SearchContext {
 		static final LooseContext.Key<SearchContext> CONTEXT_SEACH_CONTEXT = LooseContext
 				.key(SearchContext.class, "CONTEXT_SEACH_CONTEXT");
