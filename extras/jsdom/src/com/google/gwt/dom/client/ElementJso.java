@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
@@ -15,11 +16,14 @@ import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
 
 public final class ElementJso extends NodeJso implements ElementRemote {
 	/*
@@ -1189,5 +1193,48 @@ public final class ElementJso extends NodeJso implements ElementRemote {
 	@Override
 	public List<ElementBehavior> getBehaviors() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void getFileData(AsyncCallback<InputFileData> callback) {
+		throw new UnsupportedOperationException();
+	}
+
+	public static class InputDataFiles {
+		static native JsArray<Html5File> getFiles(ElementJso elem) /*-{
+    return elem.files;
+	}-*/;
+
+		static void fromFile(Html5File file, Consumer<InputFileData> consumer) {
+			InputFileData fileData = new InputFileData();
+			fileData.fileName = file.getFileName();
+			readAsBinaryString(file, new AsyncCallback<String>() {
+				@Override
+				public void onFailure(Throwable caught) {
+					throw new WrappedRuntimeException(caught);
+				}
+
+				@Override
+				public void onSuccess(String result) {
+					int length = result.length();
+					byte[] bytes = new byte[length];
+					for (int i = 0; i < length; i++) {
+						bytes[i] = (byte) result.charAt(i);
+					}
+					fileData.bytes = bytes;
+					consumer.accept(fileData);
+				}
+			});
+		}
+
+		static native void readAsBinaryString(Html5File file,
+				AsyncCallback<String> callback)/*-{
+    var reader = new FileReader();
+    reader.onloadend = function() {
+      callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
+
+    };
+    reader.readAsBinaryString(file);
+	}-*/;
 	}
 }

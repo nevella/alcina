@@ -6,7 +6,10 @@ import java.util.Map;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.IntPair;
 
 public interface ClientDomElement extends ClientDomNode {
@@ -41,6 +44,21 @@ public interface ClientDomElement extends ClientDomNode {
 		className = className.trim();
 		assert !className.isEmpty() : "Unexpectedly empty class name";
 		return className;
+	}
+
+	@Bean(PropertySource.FIELDS)
+	public static class InputFileData {
+		public String fileName;
+
+		public InputFileData(String fileName, byte[] bytes) {
+			this.fileName = fileName;
+			this.bytes = bytes;
+		}
+
+		public byte[] bytes;
+
+		public InputFileData() {
+		}
 	}
 
 	boolean addClassName(String className);
@@ -331,4 +349,6 @@ public interface ClientDomElement extends ClientDomNode {
 	List<ElementBehavior> getBehaviors();
 
 	void removeBehavior(Class<? extends ElementBehavior> behaviorClass);
+
+	void getFileData(AsyncCallback<InputFileData> callback);
 }

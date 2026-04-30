@@ -12,10 +12,13 @@ import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.util.Async;
 
 /*
  * Currently an outlier in this is support for the 'value' property - which
@@ -637,5 +640,16 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	@Override
 	public List<ElementBehavior> getBehaviors() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void getFileData(AsyncCallback<InputFileData> callback) {
+		AsyncCallback<String> strCallback = Async.<String> callbackBuilder()
+				.success(str -> {
+					List<InputFileData> list = ReflectiveSerializer
+							.deserialize(str);
+					callback.onSuccess(Ax.first(list));
+				}).build();
+		invokeAsync("provideFileData", List.of(), List.of(), null, strCallback);
 	}
 }

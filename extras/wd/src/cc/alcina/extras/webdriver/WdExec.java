@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.SearchContext;
@@ -24,7 +25,6 @@ import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 
@@ -540,5 +540,12 @@ public class WdExec {
 
 	public WDToken getToken() {
 		return token;
+	}
+
+	public void setInnerHtml(String markup) {
+		String jsEscapedMarkup = StringEscapeUtils.escapeEcmaScript(markup);
+		String script = Ax.format("var elt =arguments[0]; elt.innerHTML='%s'",
+				jsEscapedMarkup);
+		executeScript(script);
 	}
 }

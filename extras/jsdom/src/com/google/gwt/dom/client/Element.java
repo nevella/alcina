@@ -15,6 +15,7 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +32,7 @@ import org.w3c.dom.TypeInfo;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy.Flag;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
@@ -45,6 +47,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
@@ -53,9 +56,11 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
 
 /**
  * All HTML element interfaces derive from this class.
@@ -1466,11 +1471,58 @@ public class Element extends Node implements ClientDomElement,
 							(int) arguments.get(0), (int) arguments.get(1));
 					return null;
 				}
+			case "provideFileData":
+				AsyncResult asyncResult = new AsyncResult();
+				List<InputFileData> fileResults = new ArrayList<>();
+				ElementJso elemJso = elem.jsoRemote();
+				JsArray<Html5File> files = ElementJso.InputDataFiles
+						.getFiles(elemJso);
+				if (files.length() == 1) {
+					ElementJso.InputDataFiles.fromFile(files.get(0), ifd -> {
+						// asyncResult.result = fileResults;
+						// it might be possible to use unwrapped serialization,
+						// but this is fine...
+						fileResults.add(ifd);
+						asyncResult.result = ReflectiveSerializer
+								.serialize(fileResults);
+						asyncResult.onComplete();
+					});
+				} else {
+					// asyncResult.result = fileResults;
+					asyncResult.result = ReflectiveSerializer
+							.serialize(fileResults);
+					asyncResult.onComplete();
+				}
+				return asyncResult;
 			default:
 				break;
 			}
 			return invokeReflective(elem, methodName, argumentTypes, arguments,
 					flags);
+		}
+	}
+
+	public static class AsyncResult {
+		boolean complete;
+
+		Runnable runnable;
+
+		public Object result;
+
+		public void onComplete() {
+			if (runnable != null) {
+				runnable.run();
+			} else {
+				complete = true;
+			}
+		}
+
+		public void accept(Runnable runnable) {
+			if (complete) {
+				runnable.run();
+			} else {
+				this.runnable = runnable;
+			}
 		}
 	}
 
@@ -1542,5 +1594,10 @@ public class Element extends Node implements ClientDomElement,
 	public <B extends ElementBehavior> B
 			getBehavior(Class<? extends ElementBehavior> clazz) {
 		return local().getBehavior(clazz);
+	}
+
+	@Property.Not
+	public void getFileData(AsyncCallback<InputFileData> callback) {
+		remote.getFileData(callback);
 	}
 }

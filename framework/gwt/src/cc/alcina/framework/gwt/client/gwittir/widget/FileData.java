@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import java.io.Serializable;
 import java.util.function.Consumer;
 
+import com.google.gwt.dom.client.ClientDomElement.InputFileData;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -81,5 +82,12 @@ public class FileData extends Bindable
 
 	public Topic<FileData> topicClear() {
 		return clearTopic;
+	}
+
+	public static FileData fromInputFileData(InputFileData ifd) {
+		FileData result = new FileData();
+		result.setFileName(ifd.fileName);
+		result.setBytes(ifd.bytes);
+		return result;
 	}
 }

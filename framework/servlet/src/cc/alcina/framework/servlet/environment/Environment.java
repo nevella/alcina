@@ -155,7 +155,7 @@ class Environment {
 					if (response.exception == null) {
 						callback.onSuccess(response.response);
 					} else {
-						callback.onSuccess(response.exception);
+						callback.onFailure(response.exception.toException());
 					}
 				} else {
 					latch.countDown();

@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Element.AsyncResult;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
@@ -88,6 +89,14 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 						result = Reflections.at(node).invoke(node,
 								message.methodName, message.argumentTypes,
 								message.arguments, message.flags);
+						if (result instanceof AsyncResult) {
+							AsyncResult asyncResult = (AsyncResult) result;
+							asyncResult.accept(() -> {
+								responseMessage.response = asyncResult.result;
+								ClientRpc.send(responseMessage);
+							});
+							return;
+						}
 					}
 				} else {
 					Result scriptResult = new Result();

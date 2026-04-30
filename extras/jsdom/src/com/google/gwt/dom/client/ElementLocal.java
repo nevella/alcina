@@ -19,6 +19,7 @@ import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
@@ -924,5 +925,10 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		if (behaviors.isEmpty()) {
 			behaviors = null;
 		}
+	}
+
+	@Override
+	public void getFileData(AsyncCallback<InputFileData> callback) {
+		throw new UnsupportedOperationException();
 	}
 }

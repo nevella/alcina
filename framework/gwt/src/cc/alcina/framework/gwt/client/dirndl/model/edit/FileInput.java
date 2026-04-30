@@ -8,12 +8,15 @@ import java.lang.annotation.Target;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.dom.client.ClientDomElement.InputFileData;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -26,6 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.gwittir.widget.FileData;
 import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
+import cc.alcina.framework.gwt.client.util.Async;
 
 /**
  * <p>
@@ -95,6 +99,21 @@ public class FileInput extends Model.Value<FileData>
 					event.reemitAs(this, ModelEvents.Change.class);
 				});
 			}
+		} else {
+			event.reemitAs(this, ModelEvents.Change.class);
+		}
+	}
+
+	@Property.Not
+	public void getFileData(AsyncCallback<FileData> callback) {
+		if (Al.isBrowser()) {
+			callback.onSuccess(value);
+		} else {
+			AsyncCallback<InputFileData> inputCallback = Async
+					.<InputFileData> callbackBuilder().success(ifd -> {
+						callback.onSuccess(FileData.fromInputFileData(ifd));
+					}).build();
+			provideElement().getFileData(inputCallback);
 		}
 	}
 

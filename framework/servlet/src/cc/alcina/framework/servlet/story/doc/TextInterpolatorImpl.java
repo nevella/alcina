@@ -46,6 +46,8 @@ public class TextInterpolatorImpl implements TextInterpolator {
 			} else {
 				result = new InterpolationResult(contents, false);
 			}
+		} else if (value.startsWith("html:")) {
+			result = new InterpolationResult(value.substring(5), true);
 		} else {
 			result = new InterpolationResult(value, false);
 		}
