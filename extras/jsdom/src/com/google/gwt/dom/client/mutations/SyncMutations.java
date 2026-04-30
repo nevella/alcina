@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JsArray;
-import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
@@ -20,7 +19,6 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.NodeList;
-import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
@@ -28,7 +26,6 @@ import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 class SyncMutations {
@@ -88,7 +85,7 @@ class SyncMutations {
 				record.addedNodes.forEach(added -> {
 					record.connectMutationNodeRef(added);
 					if (!Al.isBrowser()) {
-						mutationsAccess.putRemoteAttachId(added.node);
+						mutationsAccess.putRemoteAttachId(added.node());
 					}
 				});
 			});
@@ -246,6 +243,10 @@ class SyncMutations {
 		List<MutationRecord> recordList = recordJsoList.stream()
 				.map(jso -> new MutationRecord(this, jso))
 				.filter(this::isApplicable).collect(Collectors.toList());
+		/*
+		 * don't add tree/child mutations here - instead, let the damaged node
+		 * apply phase (on local) take care of that
+		 */
 		/*
 		 * V1
 		 * 

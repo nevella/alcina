@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.ClientDomElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.IdProtocolList;
@@ -26,7 +25,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.Multimap;
 import elemental.json.Json;
 import elemental.json.JsonNull;
 import elemental.json.JsonObject;

@@ -1306,7 +1306,7 @@ public class Element extends Node implements ClientDomElement,
 		}
 
 		public NodeJso jsoChild(int index) {
-			return jsoRemote().getChildNodes0().getItem0(index);
+			return jsoRemote().getChildNodesJso().getItemJso(index);
 		}
 
 		public ElementJso jsoRemoteOrNull() {
@@ -1498,7 +1498,8 @@ public class Element extends Node implements ClientDomElement,
 	void insertAttachedBefore(Node newChild, Node refChild) {
 		local().insertBefore(newChild, refChild);
 		mutations().notifyChildListMutation(this, newChild,
-				newChild.getPreviousSibling(), newChild.getNextSibling(), true);
+				newChild.getPreviousSibling(), newChild.getNextSibling(), true,
+				true);
 	}
 
 	public IntPair getScrollPosition() {

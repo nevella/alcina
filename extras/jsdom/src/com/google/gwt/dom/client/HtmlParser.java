@@ -244,6 +244,8 @@ public class HtmlParser {
 
 	boolean closeToValidateCloseTag = true;
 
+	boolean useExistingRemote;
+
 	private void emitAttribute() {
 		attributes.put(attrName, decodeEntities(attrValue));
 	}
@@ -483,12 +485,16 @@ public class HtmlParser {
 
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
-		RemoteType preParse = Document.get().remoteType;
-		try {
-			Document.get().remoteType = RemoteType.NONE;
+		if (useExistingRemote) {
 			return parse0(html, replaceContents, emitHtmlHeadBodyTags);
-		} finally {
-			Document.get().remoteType = preParse;
+		} else {
+			RemoteType preParse = Document.get().remoteType;
+			try {
+				Document.get().remoteType = RemoteType.NONE;
+				return parse0(html, replaceContents, emitHtmlHeadBodyTags);
+			} finally {
+				Document.get().remoteType = preParse;
+			}
 		}
 	}
 
@@ -824,6 +830,11 @@ public class HtmlParser {
 
 	public void setEmitBrowserCompatibleDom(boolean emitBrowserCompatibleDom) {
 		this.emitBrowserCompatibleDom = emitBrowserCompatibleDom;
+	}
+
+	public HtmlParser withUseExistingRemote(boolean useExistingRemote) {
+		this.useExistingRemote = useExistingRemote;
+		return this;
 	}
 
 	enum TokenState {
