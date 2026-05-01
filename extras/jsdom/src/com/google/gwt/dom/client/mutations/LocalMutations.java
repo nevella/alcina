@@ -11,7 +11,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
-import com.google.gwt.dom.client.mutations.LocalMutations.BehaviorAdded;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -163,6 +162,12 @@ public class LocalMutations {
 
 	public void notifyChildListMutation(Node target, Node child,
 			Node previousSibling, Node nextSibling, boolean add) {
+		notifyChildListMutation(target, child, previousSibling, nextSibling,
+				add, false);
+	}
+
+	public void notifyChildListMutation(Node target, Node child,
+			Node previousSibling, Node nextSibling, boolean add, boolean deep) {
 		if (add && !target.isAttached()) {
 			MutationRecord record = new MutationRecord();
 			record.mutationsAccess = mutationsAccess;
@@ -175,7 +180,7 @@ public class LocalMutations {
 			addMutation(record);
 		} else {
 			if (add) {
-				nodeAsMutations(child, false
+				nodeAsMutations(child, deep
 				// !MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS
 				// .is()
 				).forEach(this::addMutation);
@@ -241,6 +246,10 @@ public class LocalMutations {
 				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
 		topicUnbatchedUnattachedMutations.publish(record);
 		if (record.target.node().isAttached()) {
+			if (Al.isBrowser() && !mutationsAccess
+					.isApplyingDetachedMutationsToLocalDom()) {
+				int debug = 3;
+			}
 			mutations.add(record);
 			topicUnbatchedAttachedMutations.publish(record);
 			if (record.removedNodes.isEmpty() && record.mutationGroup == null) {

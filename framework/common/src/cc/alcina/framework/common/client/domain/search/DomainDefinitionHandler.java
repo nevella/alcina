@@ -7,7 +7,8 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 
 @Reflected
 @Registration(DomainDefinitionHandler.class)
-public abstract class DomainDefinitionHandler<SD extends SearchDefinition> {
+public abstract class DomainDefinitionHandler<SD extends SearchDefinition>
+		implements Registration.AllSubtypes {
 	public abstract DomainFilter getFilter(SD sc);
 
 	public abstract Class<SD> handlesSearchDefinition();

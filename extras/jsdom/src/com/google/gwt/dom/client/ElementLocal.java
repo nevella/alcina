@@ -19,6 +19,7 @@ import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
@@ -525,8 +526,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 				builder.append(html);
 				builder.append(outerHtml.substring(idx));
 				try {
-					new HtmlParser().parse(builder.toString(), element,
-							hasTagName("html"));
+					new HtmlParser().withUseExistingRemote(true).parse(
+							builder.toString(), element, hasTagName("html"));
 				} catch (Exception e) {
 					if (Document.get().remote instanceof NodeJso) {
 						html = LocalDom.safeParseByBrowser(html);
@@ -538,8 +539,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 					builder.append(outerHtml.substring(0, idx));
 					builder.append(html);
 					builder.append(outerHtml.substring(idx));
-					new HtmlParser().parse(builder.toString(), element,
-							hasTagName("html"));
+					new HtmlParser().withUseExistingRemote(true).parse(
+							builder.toString(), element, hasTagName("html"));
 				}
 			}
 		}
@@ -924,5 +925,10 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		if (behaviors.isEmpty()) {
 			behaviors = null;
 		}
+	}
+
+	@Override
+	public void getFileData(AsyncCallback<InputFileData> callback) {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -98,6 +98,9 @@ public class EnvironmentManager {
 	public static final Configuration.Key debugRomcomMetrics = Configuration
 			.key("debugRomcomMetrics");
 
+	static final Configuration.Key debugRenderState = Configuration
+			.key("debugRenderState");
+
 	public static EnvironmentManager get() {
 		return Registry.impl(EnvironmentManager.class);
 	}
@@ -158,6 +161,9 @@ public class EnvironmentManager {
 		BehaviorRegistry.get().init(false);
 		if (flightRecordingEnabled.is()) {
 			startFlightRecording();
+		}
+		if (debugRenderState.is()) {
+			new Client.RenderState.Observer().bind();
 		}
 		new EnvironmentReaper().start();
 	}

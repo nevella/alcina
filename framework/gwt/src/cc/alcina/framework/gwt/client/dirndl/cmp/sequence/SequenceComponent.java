@@ -57,7 +57,7 @@ public class SequenceComponent extends Model.Fields implements
 	@Directed
 	SequenceArea sequenceArea = new SequenceArea();
 
-	SequenceSettings sequenceSettings = new SequenceSettings();
+	public SequenceSettings sequenceSettings = new SequenceSettings();
 
 	SequenceAreaServiceImpl serviceImpl = new SequenceAreaServiceImpl();
 

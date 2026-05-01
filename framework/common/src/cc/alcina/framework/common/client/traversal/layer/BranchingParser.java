@@ -117,6 +117,21 @@ public class BranchingParser {
 
 	List<BranchToken> primitiveInitialTokens;
 
+	public static class BranchNode {
+		public Branch branch;
+
+		public Measure match;
+
+		BranchNode(Branch branch) {
+			this.branch = branch;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", branch, match);
+		}
+	}
+
 	Logger logger;
 
 	BranchingParser(LayerParser layerParser) {
@@ -151,14 +166,96 @@ public class BranchingParser {
 		try {
 			parserObserver = new ParserObserver(
 					peer.getBranchingParserObserverAttributes());
+			sequenceObserver = new SequenceObserver();
 			parserObserver.bind();
+			sequenceObserver.bind();
 			parse0(env);
+			new Exit().publish();
 		} finally {
+			sequenceObserver.unbind();
 			parserObserver.unbind();
 		}
 	}
 
 	ParserObserver parserObserver;
+
+	SequenceObserver sequenceObserver;
+
+	/*
+	to visualise in a devconsole:
+	
+	@formatter:off
+
+		BranchingParserNodeSearchDefinition def = new BranchingParserNodeSearchDefinition();
+		SequencePlace place = new SequencePlace();
+		place.search = def;
+		place.instanceQuery = BranchingParserNodeSequence
+				.createInstanceQuery();
+		Ax.out(place.toHrefString());
+
+		...
+		
+[console]/seq#sequence/instanceQuery.bpnsdparam=+:instanceQuery.querytype=cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeSequence
+
+
+	@formatter:on
+	*/
+	public static class SequenceObserver implements HasBind {
+		public static boolean observe;
+
+		private BranchEntryObserver branchEntryObserver;
+
+		private SentenceMatchObserver sentenceMatchObserver;
+
+		boolean isObserve() {
+			return observe;
+		}
+
+		Map<Branch, BranchNode> branchNodes;
+
+		int tlBranchCount;
+
+		int branchCount;
+
+		class BranchEntryObserver
+				implements ProcessObserver<BranchingParser.BeforeBranchEntry> {
+			@Override
+			public void topicPublished(BeforeBranchEntry message) {
+				branchCount++;
+				branchNodes.put(message.branch, new BranchNode(message.branch));
+				if (message.branch.parent == null) {
+					tlBranchCount++;
+				}
+			}
+		}
+
+		class SentenceMatchObserver
+				implements ProcessObserver<BranchingParser.SentenceMatch> {
+			@Override
+			public void topicPublished(SentenceMatch message) {
+				branchNodes.get(message.branch).match = message.measure;
+			}
+		}
+
+		@Override
+		public void bind() {
+			if (isObserve()) {
+				branchEntryObserver = new BranchEntryObserver();
+				sentenceMatchObserver = new SentenceMatchObserver();
+				branchEntryObserver.bind();
+				sentenceMatchObserver.bind();
+				branchNodes = AlcinaCollections.newHashMap();
+			}
+		}
+
+		@Override
+		public void unbind() {
+			if (isObserve()) {
+				branchEntryObserver.unbind();
+				sentenceMatchObserver.unbind();
+			}
+		}
+	}
 
 	public static class ParserObserver implements HasBind {
 		Attributes attributes;
@@ -370,6 +467,15 @@ public class BranchingParser {
 		}
 	}
 
+	public class Exit implements GlobalObservable.Debug {
+		public Exit() {
+		}
+
+		public List<BranchNode> getNodes() {
+			return sequenceObserver.branchNodes.values().stream().toList();
+		}
+	}
+
 	/*
 	 * A sequence of matches satisfying the structural (Group) constraints at a
 	 * given Location
@@ -383,7 +489,7 @@ public class BranchingParser {
 
 		public Location location;
 
-		Group group;
+		public Group group;
 
 		public Measure match;
 
@@ -741,6 +847,14 @@ public class BranchingParser {
 			}
 			return format.toString();
 		}
+
+		public Branch root() {
+			Branch cursor = this;
+			while (cursor.parent != null) {
+				cursor = cursor.parent;
+			}
+			return cursor;
+		}
 	}
 
 	/*
@@ -967,7 +1081,10 @@ public class BranchingParser {
 
 				int repetitionIndex;
 
+				public Branch branch;
+
 				LevelLocation(Branch branch, int repetitionIndexOffset) {
+					this.branch = branch;
 					group = branch.group;
 					indexInGroup = branch.indexInGroup;
 					repetitionIndex = branch.repetitionIndex
@@ -1007,6 +1124,10 @@ public class BranchingParser {
 			public List<Entry> children = new LinkedList<>();
 
 			public Measure match;
+
+			public Branch getLastBranch() {
+				return Ax.last(branchLocation.locations).branch;
+			}
 
 			Entry(BranchLocation branchLocation) {
 				this.branchLocation = branchLocation;

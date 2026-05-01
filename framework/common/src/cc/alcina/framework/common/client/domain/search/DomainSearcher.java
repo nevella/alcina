@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.DomainQuery;
@@ -59,6 +60,16 @@ public class DomainSearcher<T extends Entity> {
 	}
 
 	public Stream<T> search(SearchDefinition def, Class<T> clazz,
+			Comparator<? super T> order) {
+		try {
+			LooseContext.push();
+			return search0(def, clazz, order);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	Stream<T> search0(SearchDefinition def, Class<T> clazz,
 			Comparator<? super T> order) {
 		query = Domain.query(clazz);
 		query.sourceStream(Registry.impl(SearcherCollectionSource.class)

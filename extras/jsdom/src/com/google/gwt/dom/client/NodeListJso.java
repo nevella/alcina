@@ -39,7 +39,7 @@ public final class NodeListJso<T extends Node> extends JavaScriptObject
 
 	@Override
 	public T getItem(int index) {
-		return LocalDom.nodeFor(getItem0(index));
+		return LocalDom.nodeFor(getItemJso(index));
 	}
 
 	/**
@@ -51,7 +51,7 @@ public final class NodeListJso<T extends Node> extends JavaScriptObject
 	 * @return the node at the indexth position in the NodeList, or null if that
 	 *         is not a valid index.
 	 */
-	native NodeJso getItem0(int index) /*-{
+	public final native NodeJso getItemJso(int index) /*-{
     return this[index];
 	}-*/;
 
@@ -72,7 +72,7 @@ public final class NodeListJso<T extends Node> extends JavaScriptObject
 	Stream<NodeJso> streamRemote() {
 		List<NodeJso> list = new ArrayList<>();
 		for (int idx = 0; idx < this.getLength(); idx++) {
-			list.add(this.getItem0(idx));
+			list.add(this.getItemJso(idx));
 		}
 		return list.stream();
 	}

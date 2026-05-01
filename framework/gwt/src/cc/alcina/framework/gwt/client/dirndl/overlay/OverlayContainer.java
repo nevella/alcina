@@ -163,17 +163,19 @@ public class OverlayContainer extends Model implements HasTag,
 		if (provideIsUnbound()) {
 			return false;
 		}
-		if (containerOptions.position.fromRect == null) {
-			if (containerOptions.position.rectSourceElement == null
-					|| !containerOptions.position.rectSourceElement
-							.isAttached()) {
-				return false;
-			}
-			try {
-				containerOptions.position.fromRect = containerOptions.position.rectSourceElement
-						.getBoundingClientRect();
-			} catch (NodeNotFoundException e) {
-				return false;
+		if (containerOptions.position.viewportRelative == null) {
+			if (containerOptions.position.fromRect == null) {
+				if (containerOptions.position.rectSourceElement == null
+						|| !containerOptions.position.rectSourceElement
+								.isAttached()) {
+					return false;
+				}
+				try {
+					containerOptions.position.fromRect = containerOptions.position.rectSourceElement
+							.getBoundingClientRect();
+				} catch (NodeNotFoundException e) {
+					return false;
+				}
 			}
 		}
 		return true;

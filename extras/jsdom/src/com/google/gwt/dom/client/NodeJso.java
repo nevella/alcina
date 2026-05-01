@@ -134,10 +134,10 @@ public abstract class NodeJso extends JavaScriptObject
 	 */
 	@Override
 	public final NodeList<Node> getChildNodes() {
-		return new NodeList<>(getChildNodes0());
+		return new NodeList<>(getChildNodesJso());
 	}
 
-	final native NodeListJso<Node> getChildNodes0() /*-{
+	public final native NodeListJso<Node> getChildNodesJso() /*-{
     return this.childNodes;
 	}-*/;
 
@@ -168,14 +168,14 @@ public abstract class NodeJso extends JavaScriptObject
 
 	@Override
 	public final Node getNextSibling() {
-		return nodeFor(getNextSibling0());
+		return nodeFor(getNextSiblingJso());
 	}
 
 	/**
 	 * The node immediately following this node. If there is no such node, this
 	 * returns null.
 	 */
-	private final native NodeJso getNextSibling0() /*-{
+	public final native NodeJso getNextSiblingJso() /*-{
     return this.nextSibling;
 	}-*/;
 
@@ -257,14 +257,14 @@ public abstract class NodeJso extends JavaScriptObject
 
 	@Override
 	public final Node getPreviousSibling() {
-		return nodeFor(getPreviousSibling0());
+		return nodeFor(getPreviousSiblingJso());
 	}
 
 	/**
 	 * The node immediately preceding this node. If there is no such node, this
 	 * returns null.
 	 */
-	private final native NodeJso getPreviousSibling0() /*-{
+	public final native NodeJso getPreviousSiblingJso() /*-{
     return this.previousSibling;
 	}-*/;
 
@@ -487,8 +487,4 @@ public abstract class NodeJso extends JavaScriptObject
 	protected final native int getAttachId0() /*-{
 	return this.hasOwnProperty('__attachId') ? this.__attachId : 0;
 	}-*/;
-
-	public final native NodeJso getNextSiblingJso() /*-{
-		return this.nextSibling;
-		}-*/;
 }

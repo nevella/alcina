@@ -56,6 +56,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
@@ -891,6 +892,14 @@ public class TableModel extends Model
 		public void onNodeContext(NodeContext event) {
 			if (originalRowModel instanceof Model) {
 				((Model) originalRowModel).onNodeContext(event);
+				((Model) originalRowModel)
+						.onBeforeRender(new LayoutEvents.BeforeRender(node,
+								originalRowModel, false));
+			}
+			if (rowModel instanceof Model && rowModel != originalRowModel) {
+				((Model) rowModel).onNodeContext(event);
+				((Model) rowModel).onBeforeRender(
+						new LayoutEvents.BeforeRender(node, rowModel, false));
 			}
 			event.registerService(RowService.class, new RowService());
 		}
@@ -900,6 +909,9 @@ public class TableModel extends Model
 			super.onBind(event);
 			if (originalRowModel instanceof Model) {
 				((Model) originalRowModel).onBind(event);
+			}
+			if (rowModel instanceof Model && rowModel != originalRowModel) {
+				((Model) rowModel).onBind(event);
 			}
 		}
 

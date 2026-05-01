@@ -828,6 +828,12 @@ public class SelectionTraversal
 	public class TraversalComplete implements ContextObservable {
 	}
 
+	public class TraversalCompleteGlobal implements GlobalObservable {
+		public SelectionTraversal getTraversal() {
+			return SelectionTraversal.this;
+		}
+	}
+
 	/**
 	 * API grouping sugar class - provides access to layer operations
 	 */
@@ -915,9 +921,6 @@ public class SelectionTraversal
 
 	static LooseContext.Key<Selection> CONTEXT_SELECTION = LooseContext
 			.key(SelectionTraversal.class, "CONTEXT_SELECTION");
-
-	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
-			.create();
 
 	/*
 	 * Each traversal in the VM lifetime is assigned a unique id
@@ -1141,9 +1144,8 @@ public class SelectionTraversal
 				break;
 			}
 		}
-		topicTraversalComplete.publish(this);
-		ProcessObservers.publish(TraversalComplete.class,
-				() -> new TraversalComplete());
+		new TraversalComplete().publish();
+		new TraversalCompleteGlobal().publish();
 	}
 
 	boolean isExit() {

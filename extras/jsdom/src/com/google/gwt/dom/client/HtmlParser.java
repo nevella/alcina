@@ -32,6 +32,9 @@ import cc.alcina.framework.gwt.client.util.DomUtils;
  * with some html quirks by default)
  */
 public class HtmlParser {
+	public static final LooseContext.Key CONTEXT_DO_NOT_CLOSE_TO_VALIDATE = LooseContext
+			.key(HtmlParser.class, "CONTEXT_DO_NOT_CLOSE_TO_VALIDATE");
+
 	static final boolean debugCursor = false;
 
 	public static Element parseMarkup(String markup) {
@@ -239,6 +242,10 @@ public class HtmlParser {
 
 	private FastLcProvider lc = new FastLcProvider();
 
+	boolean closeToValidateCloseTag = true;
+
+	boolean useExistingRemote;
+
 	private void emitAttribute() {
 		attributes.put(attrName, decodeEntities(attrValue));
 	}
@@ -269,7 +276,9 @@ public class HtmlParser {
 			}
 		}
 		if (!closeTag) {
-			closeToValidateOutput(tag);
+			if (closeToValidateCloseTag) {
+				closeToValidateOutput(tag);
+			}
 			emitStartElement(tag);
 		}
 		// selfCloseTag |= !closeTag && isSelfClosingTagLcRead(tag);
@@ -280,7 +289,7 @@ public class HtmlParser {
 			// e.g. is gwt celltable safehtml for input
 		} else {
 			if (closeTag || selfCloseTag) {
-				if (!selfCloseTag) {
+				if (!selfCloseTag && closeToValidateCloseTag) {
 					closeToValidateCloseTag(tag);
 				}
 				emitEndElement(tag);
@@ -476,12 +485,16 @@ public class HtmlParser {
 
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
-		RemoteType preParse = Document.get().remoteType;
-		try {
-			Document.get().remoteType = RemoteType.NONE;
+		if (useExistingRemote) {
 			return parse0(html, replaceContents, emitHtmlHeadBodyTags);
-		} finally {
-			Document.get().remoteType = preParse;
+		} else {
+			RemoteType preParse = Document.get().remoteType;
+			try {
+				Document.get().remoteType = RemoteType.NONE;
+				return parse0(html, replaceContents, emitHtmlHeadBodyTags);
+			} finally {
+				Document.get().remoteType = preParse;
+			}
 		}
 	}
 
@@ -490,6 +503,7 @@ public class HtmlParser {
 		if (!Al.isBrowser()) {
 			markup = cleanPreamble(markup);
 		}
+		this.closeToValidateCloseTag = !CONTEXT_DO_NOT_CLOSE_TO_VALIDATE.is();
 		this.markup = markup;
 		this.replaceContents = replaceContents;
 		this.lineNumber = 1;
@@ -816,6 +830,11 @@ public class HtmlParser {
 
 	public void setEmitBrowserCompatibleDom(boolean emitBrowserCompatibleDom) {
 		this.emitBrowserCompatibleDom = emitBrowserCompatibleDom;
+	}
+
+	public HtmlParser withUseExistingRemote(boolean useExistingRemote) {
+		this.useExistingRemote = useExistingRemote;
+		return this;
 	}
 
 	enum TokenState {

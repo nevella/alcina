@@ -238,15 +238,16 @@ public class RemoteComponentUi {
 	 * server
 	 */
 	void onLocalMutations(List<MutationRecord> mutationRecords) {
-		mutationRecords = mutationRecords.stream().filter(mr -> !mr.hasFlag(
-				MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class))
+		List<MutationRecord> filtered = mutationRecords.stream()
+				.filter(mr -> !mr.hasFlag(
+						MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class))
 				.toList();
-		if (mutationRecords.isEmpty()) {
+		if (filtered.isEmpty()) {
 			return;
 		}
-		mutationRecords.forEach(mr -> mr.populateAttachIds(true));
+		filtered.forEach(mr -> mr.populateAttachIds(true));
 		Mutations mutations = new Mutations();
-		mutations.domMutations = mutationRecords;
+		mutations.domMutations = filtered;
 		ClientRpc.send(mutations);
 	}
 

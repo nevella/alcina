@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public class SequenceComponentServer extends Model.Fields
 		implements SequenceBehaviorsServer {
 	@Directed
-	SequenceComponent component;
+	public SequenceComponent component;
 
 	public SequenceComponentServer(Model header,
 			InstanceProperty<?, SequencePlace> sequencePlaceProperty) {

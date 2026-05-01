@@ -701,7 +701,7 @@ public class LocalDom implements ContextFrame {
 				throw new IllegalStateException(
 						"Local nodes must track browser tree rules");
 			}
-			NodeJso remote = parentRemote.getChildNodes0().getItem0(idx);
+			NodeJso remote = parentRemote.getChildNodesJso().getItemJso(idx);
 			node.putRemote(remote);
 		});
 	}
@@ -972,7 +972,7 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public Stream<NodeJso> streamChildren(NodeJso node) {
-			return node.getChildNodes0().streamRemote();
+			return node.getChildNodesJso().streamRemote();
 		}
 
 		public Stream<NodeJso> streamRemote(NodeListJso<Node> nodeListRemote) {

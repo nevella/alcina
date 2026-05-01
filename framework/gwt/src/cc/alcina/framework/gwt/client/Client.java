@@ -2,6 +2,9 @@ package cc.alcina.framework.gwt.client;
 
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.activity.shared.ActivityManager;
 import com.google.gwt.core.client.GWT;
@@ -9,6 +12,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
@@ -27,7 +31,10 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.process.GlobalObservable;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.reflection.ClientReflectorFactory;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
@@ -36,7 +43,9 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Al.Context;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
@@ -47,6 +56,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 @Reflected
 @Registration(Client.class)
@@ -334,8 +344,72 @@ public abstract class Client implements ContextFrame {
 		}
 
 		@EnvironmentRegistration
+		@Feature.Ref(Feature_RemoteObjectComponent._Impl.class)
 		public interface RomcomImpl {
 			void enqueue(Runnable runnable);
+		}
+
+		/**
+		 * Debug points for RenderState ssequencing
+		 */
+		public static class Observable implements GlobalObservable.Debug {
+			public enum EventType {
+				node_attach, queued_runnable, mutations_emitted,
+				runnable_mutation_assigned, window_state_update,
+				emit_dispatchable;
+			}
+
+			Node gwtNode;
+
+			EventType type;
+
+			Object eventSource;
+
+			Observable(Node gwtNode) {
+				this.type = EventType.node_attach;
+				this.gwtNode = gwtNode;
+			}
+
+			Observable(Object eventSource, EventType type) {
+				this.eventSource = eventSource;
+				this.type = type;
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder().separator(" - ");
+				Integer attachId = gwtNode == null ? null
+						: gwtNode.getAttachId();
+				format.appendKeyValues("type", type, "attachId", attachId,
+						"node",
+						gwtNode == null ? null : gwtNode.toNameAttachId(),
+						"eventSource", eventSource);
+				return format.toString();
+			}
+
+			public static void observeNode(Node gwtNode) {
+				new Observable(gwtNode).publish();
+			}
+
+			public static void eventOcurred(Object eventSource,
+					EventType type) {
+				new Observable(eventSource, type).publish();
+			}
+		}
+
+		/**
+		 * To debug sequencing, set EnvironmentManager.debugRenderState=true in
+		 * the app configuration (which causes an instance of this to be bound
+		 * on EnvironmentManager startup)
+		 */
+		public static class Observer implements ProcessObserver<Observable> {
+			static Logger logger = LoggerFactory.getLogger(Observer.class);
+
+			@Override
+			public void topicPublished(Observable message) {
+				logger.info("[Renderstate]  {} [{}] :: {}", Ax.appMillis(),
+						Thread.currentThread().getName(), message);
+			}
 		}
 	}
 }

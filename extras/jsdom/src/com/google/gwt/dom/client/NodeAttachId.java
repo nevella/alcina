@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -209,6 +210,14 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 		getOwnerDocument().attachIdRemote().invokeProxy.invoke(
 				NodeAttachId.this, methodName, argumentTypes, arguments, null,
 				null);
+	}
+
+	void invokeAsync(String methodName, List<Class> argumentTypes,
+			List<?> arguments, List<InvokeProxy.Flag> flags,
+			AsyncCallback<?> callback) {
+		getOwnerDocument().attachIdRemote().invokeProxy.invoke(
+				NodeAttachId.this, methodName, argumentTypes, arguments, flags,
+				callback);
 	}
 
 	<T> T invokeStyle(String methodName, List<Class> argumentTypes,

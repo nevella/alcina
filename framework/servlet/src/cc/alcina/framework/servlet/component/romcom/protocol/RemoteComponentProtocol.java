@@ -308,6 +308,10 @@ public class RemoteComponentProtocol {
 				return Ax.format("%s :: %s\n\n%s", NestedName.get(this),
 						nestedClassName, stackTrace);
 			}
+
+			public RuntimeException toException() {
+				return new RuntimeException(toExceptionString());
+			}
 		}
 
 		/*

@@ -647,7 +647,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		}-*/;
 
 		native String getDataTransfer() /*-{
-      return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.dataTransfer;
+      return JSON.stringify(this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.dataTransfer);
 		}-*/;
 
 		native String getInputType() /*-{

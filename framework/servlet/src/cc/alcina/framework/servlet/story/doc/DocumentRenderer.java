@@ -154,6 +154,9 @@ public class DocumentRenderer implements StoryDocRenderer {
 			VisitArea(StoryDocObservable observable) {
 				this.observable = observable;
 				path = observable.path();
+				if (observable.description.contains("href")) {
+					int debug = 3;
+				}
 				description = new LeafModel.HtmlBlock(observable.description);
 				if (observable.screenshot != null) {
 					String base64 = Base64.getEncoder()
