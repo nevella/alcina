@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseEnumCriterionPack.BaseEnumCriterionHandler;
@@ -35,6 +36,7 @@ public class BranchingParserNodeCriterion {
 					OncePerToplevelToken.class,
 					MatchTypeCriterion.class,
 					GroupTypeCriterion.class,
+					NameDepthCriterion.class
 				//@formatter:on
 			}))
 	@XmlType(name = "BranchingParserNodeSearchDefinition_CriteriaGroup")
@@ -120,6 +122,30 @@ public class BranchingParserNodeCriterion {
 		}
 	}
 
+	enum Depth implements HasDisplayName {
+		_1, _2, _3, _4, _5, _6, _7, _8, _9;
+
+		@Override
+		public String displayName() {
+			return toString().substring(1);
+		}
+	}
+
+	@TypeSerialization("namedepth")
+	static class NameDepthCriterion extends BaseEnumCriterion<Depth> {
+		static class Handler extends CriterionHandler<NameDepthCriterion>
+				implements
+				BaseEnumCriterionHandler<BranchingParserNode, Depth, NameDepthCriterion> {
+			@Override
+			public boolean test(BranchingParserNode node, Depth value) {
+				if (value == null) {
+					return true;
+				}
+				return node.nameDepth <= (value.ordinal() - 1);
+			}
+		}
+	}
+
 	@TypeSerialization("group")
 	static class GroupTypeCriterion extends BaseEnumCriterion<GroupType> {
 		static class Handler extends CriterionHandler<GroupTypeCriterion>
@@ -131,6 +157,9 @@ public class BranchingParserNodeCriterion {
 			public boolean test(BranchingParserNode node, GroupType value) {
 				if (value == null) {
 					return true;
+				}
+				if (value == GroupType.PRIMITIVE) {
+					return !node.branchNode.branch.group.isComplex();
 				}
 				return value == node.groupType;
 			}

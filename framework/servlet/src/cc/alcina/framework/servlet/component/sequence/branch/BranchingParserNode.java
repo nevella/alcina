@@ -22,7 +22,7 @@ class BranchingParserNode extends Model
 	}
 
 	enum GroupType {
-		GROUP, LEAF_OR_MATCH
+		GROUP, LEAF_OR_MATCH, PRIMITIVE
 	}
 
 	BranchNode branchNode;
@@ -34,6 +34,22 @@ class BranchingParserNode extends Model
 	MatchType matchType;
 
 	GroupType groupType;
+
+	int nameDepth = -1;
+
+	public int getNameDepth() {
+		if (nameDepth == -1) {
+			int result = 0;
+			Branch cursor = branchNode.branch;
+			while (cursor != null) {
+				if (!cursor.group.isComplex()) {
+					result++;
+				}
+				cursor = cursor.parent;
+			}
+		}
+		return nameDepth;
+	}
 
 	BranchingParserNode(BranchNode branchNode) {
 		this.branchNode = branchNode;
