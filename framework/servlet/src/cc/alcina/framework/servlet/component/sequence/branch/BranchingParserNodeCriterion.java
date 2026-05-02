@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.sequence.branch;
 
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlType;
 
@@ -36,7 +37,8 @@ public class BranchingParserNodeCriterion {
 					OncePerToplevelToken.class,
 					MatchTypeCriterion.class,
 					GroupTypeCriterion.class,
-					NameDepthCriterion.class
+					NameDepthCriterion.class,
+					BranchMinDepthCriterion.class
 				//@formatter:on
 			}))
 	@XmlType(name = "BranchingParserNodeSearchDefinition_CriteriaGroup")
@@ -66,10 +68,11 @@ public class BranchingParserNodeCriterion {
 				return null;
 			}
 			return new DomainFilter(new Predicate<BranchingParserNode>() {
+				Pattern p = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
+
 				@Override
 				public boolean test(BranchingParserNode o) {
-					return SearchUtils.matches(text,
-							o.provideStringRepresentation());
+					return p.matcher(o.provideStringRepresentation()).find();
 				}
 			}).invertIf(sc
 					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
@@ -123,7 +126,7 @@ public class BranchingParserNodeCriterion {
 	}
 
 	enum Depth implements HasDisplayName {
-		_1, _2, _3, _4, _5, _6, _7, _8, _9;
+		_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
 
 		@Override
 		public String displayName() {
@@ -141,7 +144,22 @@ public class BranchingParserNodeCriterion {
 				if (value == null) {
 					return true;
 				}
-				return node.nameDepth <= (value.ordinal() - 1);
+				return node.getNameDepth() <= (value.ordinal());
+			}
+		}
+	}
+
+	@TypeSerialization("branchmindepth")
+	static class BranchMinDepthCriterion extends BaseEnumCriterion<Depth> {
+		static class Handler extends CriterionHandler<BranchMinDepthCriterion>
+				implements
+				BaseEnumCriterionHandler<BranchingParserNode, Depth, BranchMinDepthCriterion> {
+			@Override
+			public boolean test(BranchingParserNode node, Depth value) {
+				if (value == null) {
+					return true;
+				}
+				return node.containingBranchMaxLength >= (value.ordinal());
 			}
 		}
 	}
@@ -158,8 +176,9 @@ public class BranchingParserNodeCriterion {
 				if (value == null) {
 					return true;
 				}
-				if (value == GroupType.PRIMITIVE) {
-					return !node.branchNode.branch.group.isComplex();
+				if (value == GroupType.NAMED) {
+					return node.branchNode.branch.group.isNamed()
+							|| node.branchNode.match != null;
 				}
 				return value == node.groupType;
 			}

@@ -271,6 +271,17 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Debug extends ModelEvent<Object, Debug.Handler> {
+		@Override
+		public void dispatch(Debug.Handler handler) {
+			handler.onDebug(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onDebug(Debug event);
+		}
+	}
+
 	public static class Delete extends ModelEvent<Object, Delete.Handler> {
 		@Override
 		public void dispatch(Delete.Handler handler) {

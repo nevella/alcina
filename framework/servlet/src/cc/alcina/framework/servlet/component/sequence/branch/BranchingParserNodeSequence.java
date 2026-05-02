@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.BranchNode;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Exit;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
@@ -40,12 +41,12 @@ public class BranchingParserNodeSequence
 		String measure;
 
 		@Directed(className = "match")
-		String match;
+		String range;
 
 		BranchingParserNodeView(BranchingParserNode node) {
 			this.path = node.getPath();
 			this.measure = node.getMeasure();
-			this.match = node.getMatch();
+			this.range = node.getMeasureRange();
 		}
 	}
 
@@ -105,21 +106,38 @@ public class BranchingParserNodeSequence
 			Map<Branch, BranchingParserNode> branchBranchNode = list.stream()
 					.collect(AlcinaCollectors
 							.toKeyMap(BranchingParserNode::getBranch));
+			Multimap<Branch, List<BranchingParserNode>> rootBranchNode = list
+					.stream().collect(AlcinaCollectors
+							.toKeyMultimap(BranchingParserNode::getBranch));
 			list.forEach(bpn -> {
+				Branch root = bpn.getBranch().root();
+				rootBranchNode.add(root, bpn);
+				BranchingParserNode rootNode = branchBranchNode.get(root);
 				bpn.groupType = GroupType.GROUP;
+				Branch bpnBranch = bpn.branchNode.branch;
 				if (bpn.branchNode.match != null
-						|| !bpn.branchNode.branch.group.isComplex()) {
+						|| !bpnBranch.group.isComplex()) {
 					bpn.groupType = GroupType.LEAF_OR_MATCH;
 				}
 				if (bpn.branchNode.match != null) {
 					bpn.matchType = MatchType.MATCH;
-					BranchingParser.Result result = bpn.branchNode.branch
-							.toResult();
+					BranchingParser.Result result = bpnBranch.toResult();
 					result.stream().map(e -> e.getLastBranch())
-							.filter(branch -> branch != bpn.branchNode.branch)
+							.filter(branch -> branch != bpnBranch)
+							.filter(branch -> branch.match != null)
 							.forEach(branch -> branchBranchNode.get(
 									branch).matchType = MatchType.DESCENDANT_MATCH);
 				}
+				int length = bpnBranch.length();
+				if (rootNode.containingBranchMaxLength < length) {
+					rootNode.containingBranchMaxLength = length;
+				}
+			});
+			list.forEach(bpn -> {
+				Branch root = bpn.getBranch().root();
+				rootBranchNode.add(root, bpn);
+				BranchingParserNode rootNode = branchBranchNode.get(root);
+				bpn.containingBranchMaxLength = rootNode.containingBranchMaxLength;
 			});
 			return list;
 		}

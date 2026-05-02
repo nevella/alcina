@@ -218,7 +218,8 @@ class Environment {
 			boolean timedOut = false;
 			boolean hadTimeOut = false;
 			long start = System.currentTimeMillis();
-			if (!invokeSyncPermitted.is()) {
+			if (invokeSyncPermitted.notBlank()
+					&& !methodName.matches(invokeSyncPermitted.get())) {
 				throw new IllegalStateException(Ax.format(
 						"Invokesync not permitted: node - %s :: method - %s",
 						node.toString(), methodName));
@@ -685,6 +686,9 @@ class Environment {
 	static Configuration.Key invokeSyncTimeoutSecs = Configuration
 			.key("invokeSyncTimeoutSecs");
 
+	/**
+	 * if set, a regex listing the permitted sync methods
+	 */
 	static Configuration.Key invokeSyncPermitted = Configuration
 			.key("invokeSyncPermitted");
 
