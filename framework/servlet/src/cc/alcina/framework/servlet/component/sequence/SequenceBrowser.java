@@ -72,10 +72,7 @@ public class SequenceBrowser {
 			return PackageProperties.sequenceBrowser_ui.instance(this);
 		}
 
-		boolean isDomain;
-
 		Ui() {
-			isDomain = Registry.impl(IsDomain.class).isDomain();
 		}
 
 		public static Ui get() {
@@ -100,7 +97,7 @@ public class SequenceBrowser {
 		 */
 		@Override
 		public boolean isDomain() {
-			return isDomain;
+			return Registry.impl(IsDomain.class).isDomain();
 		}
 
 		@Override

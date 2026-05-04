@@ -1,0 +1,28 @@
+@use '../../dirndl/multi/form'
+@use '../../dirndl/cmp/heading'
+
+@mixin bordered-full
+  width: calc(100vw - 8rem)
+  box-sizing: border-box
+  margin: 0 auto
+  min-height: calc(100vh - 50px)
+  overflow-x: auto
+  display: block
+  background-color: white
+
+@mixin sub-heading
+  @include heading.heading-actions
+  color: #0f4589
+  margin: 1rem 0
+
+  > actions
+    padding-right: 4rem
+
+@mixin definition-editor
+  max-width: 600px
+  margin: 2rem auto
+  display: block
+  @include form.medium-inputs
+
+  > bean-editor > heading
+    font-weight: bold

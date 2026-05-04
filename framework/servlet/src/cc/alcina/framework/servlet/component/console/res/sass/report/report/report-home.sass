@@ -1,0 +1,24 @@
+@use '../../theme/theme'
+@use '../../dirndl/cmp/heading'
+@use '../../dirndl/cmp/panel'
+
+@mixin contents
+  padding: 2rem 6rem
+  max-width: none
+  
+  > heading
+    @include heading.panel-3
+
+  > cards
+    display: flex
+    gap: 4rem
+
+    > card
+      @include panel.contents
+      @include panel.x2-bordered
+      max-width: 24rem
+      min-height: 10rem
+
+      
+      
+    
