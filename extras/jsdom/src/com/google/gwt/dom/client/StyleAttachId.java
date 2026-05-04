@@ -831,7 +831,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void removeProperty(String key) {
-		element.invokeStyle("removeProperty", List.of(String.class),
+		element.invokeStyleAsync("removeProperty", List.of(String.class),
 				List.of(key));
 	}
 }

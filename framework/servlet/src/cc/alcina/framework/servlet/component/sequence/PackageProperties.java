@@ -173,7 +173,6 @@ public class PackageProperties {
       TypedProperty<SequenceBrowser.Ui, Class> cacheableStringProviderClass = new TypedProperty<>(SequenceBrowser.Ui.class, "cacheableStringProviderClass");
       TypedProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(SequenceBrowser.Ui.class, "commandContextProvider");
       TypedProperty<SequenceBrowser.Ui, Boolean> domain = new TypedProperty<>(SequenceBrowser.Ui.class, "domain");
-      TypedProperty<SequenceBrowser.Ui, Boolean> isDomain = new TypedProperty<>(SequenceBrowser.Ui.class, "isDomain");
       TypedProperty<SequenceBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(SequenceBrowser.Ui.class, "keybindingsHandler");
       TypedProperty<SequenceBrowser.Ui, String> mainCaption = new TypedProperty<>(SequenceBrowser.Ui.class, "mainCaption");
       TypedProperty<SequenceBrowser.Ui, Page> page = new TypedProperty<>(SequenceBrowser.Ui.class, "page");
@@ -186,7 +185,6 @@ public class PackageProperties {
         InstanceProperty<SequenceBrowser.Ui, Class> cacheableStringProviderClass(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.cacheableStringProviderClass);}
         InstanceProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.commandContextProvider);}
         InstanceProperty<SequenceBrowser.Ui, Boolean> domain(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.domain);}
-        InstanceProperty<SequenceBrowser.Ui, Boolean> isDomain(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.isDomain);}
         InstanceProperty<SequenceBrowser.Ui, KeybindingsHandler> keybindingsHandler(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.keybindingsHandler);}
         InstanceProperty<SequenceBrowser.Ui, String> mainCaption(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.mainCaption);}
         InstanceProperty<SequenceBrowser.Ui, Page> page(){return new InstanceProperty<>(source,PackageProperties.sequenceBrowser_ui.page);}

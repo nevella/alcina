@@ -1,0 +1,29 @@
+@use '../../dirndl/cmp/table'
+@use '../../dirndl/cmp/heading'
+
+@mixin contents
+  > submit-area
+    width: 30rem
+    display: block
+    margin: 1rem auto
+    text-align: center
+
+    > a
+      color: blue
+
+  heading
+    @include heading.panel-2
+    color: #333
+
+  th
+    text-align: left
+
+  table
+    @include table.data-table
+    @include table.no-wrap
+
+    td
+      padding: 2px
+      
+      > *
+        max-width: none !important

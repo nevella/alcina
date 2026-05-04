@@ -45,8 +45,10 @@ public class FlightEventHandler {
 			String sessionFolder = Ax.blankTo(sessionParam, ".+");
 			Action action = Action.valueOf(actionParam);
 			File eventsFolder = new File(eventRootPath);
-			Stream<File> stream = Stream.of(eventsFolder.listFiles())
-					.sorted(Comparator.comparing(File::lastModified));
+			Stream<File> stream = eventsFolder.exists()
+					? Stream.of(eventsFolder.listFiles())
+							.sorted(Comparator.comparing(File::lastModified))
+					: Stream.empty();
 			switch (action) {
 			case list: {
 				FormatBuilder format = new FormatBuilder();
@@ -67,9 +69,8 @@ public class FlightEventHandler {
 				String path = Ax.format("%s/%s", eventRootPath, sessionFolder);
 				Stream.of(new File(path).listFiles())
 						.sorted(Comparator.comparing(File::lastModified))
-						.forEach(f -> Io.read().file(f).write()
-								.toFile(FileUtils.child(tmpFolder,
-										f.getName())));
+						.forEach(f -> Io.read().file(f).write().toFile(
+								FileUtils.child(tmpFolder, f.getName())));
 				File toZip = File.createTempFile("log-download", "zip");
 				new ZipUtil().createZip(toZip, tmpFolder,
 						new LinkedHashMap<>());
