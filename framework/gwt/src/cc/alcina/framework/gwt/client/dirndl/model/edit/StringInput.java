@@ -17,6 +17,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
@@ -195,8 +196,9 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	@Override
 	public List<ElementBehavior> getBehaviors() {
 		return commitOnEnter
-				? List.of(new ElementBehavior.PreventDefaultEnterBehaviour())
-				: List.of();
+				? List.of(new ElementBehavior.PreventDefaultEnterBehaviour(),
+						ElementOffsetsRequired.INSTANCE)
+				: List.of(ElementOffsetsRequired.INSTANCE);
 	}
 
 	public StringInput(String value) {
@@ -473,6 +475,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 				} else {
 					// textarea
 					element.getStyle().setProperty("height", "auto");
+					// fixme - romcom - group + make async
 					String paddingTop = element
 							.getComputedStyleValue("paddingTop");
 					String paddingBottom = element

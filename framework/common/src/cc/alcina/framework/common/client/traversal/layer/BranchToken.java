@@ -129,6 +129,17 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 
 		Quantifier quantifier = Quantifier.GREEDY;
 
+		public boolean isNamed() {
+			if (token != null) {
+				if (groups.size() == 1 && groups.get(0).token == token) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		/*
 		 * initially unsupported (except for leaf tokens)
 		 */

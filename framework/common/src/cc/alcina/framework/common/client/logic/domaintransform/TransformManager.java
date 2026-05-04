@@ -2387,4 +2387,8 @@ public abstract class TransformManager
 	public static boolean has() {
 		return factoryInstance != null;
 	}
+
+	public static int getTransformCount() {
+		return get().getTransforms().size();
+	}
 }

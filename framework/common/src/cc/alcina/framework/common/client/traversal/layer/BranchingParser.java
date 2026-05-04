@@ -107,6 +107,8 @@ public class BranchingParser {
 
 	List<BranchToken> rootTokens;
 
+	List<BranchToken> lookaheadExternalTokens;
+
 	ParserState parserState;
 
 	ConditionalLogger conditionalLogger;
@@ -116,6 +118,8 @@ public class BranchingParser {
 	List<BranchToken> primitiveTokens;
 
 	List<BranchToken> primitiveInitialTokens;
+
+	List<BranchToken> lookaheadTokens;
 
 	public static class BranchNode {
 		public Branch branch;
@@ -146,6 +150,7 @@ public class BranchingParser {
 
 	void computeInvariants() {
 		rootTokens = (List) layerParser.parserPeer.tokens;
+		lookaheadExternalTokens = (List) layerParser.parserPeer.lookaheadTokens;
 		sentenceGroups = rootTokens.stream().map(Group::of)
 				.collect(Collectors.toList());
 		sentenceGroups.forEach(
@@ -156,6 +161,8 @@ public class BranchingParser {
 		primitiveInitialTokens = sentenceGroups.stream()
 				.flatMap(Group::primitiveTokens).distinct()
 				.filter(BranchToken::isInitial).collect(Collectors.toList());
+		lookaheadTokens = Stream.concat(lookaheadExternalTokens.stream(),
+				primitiveInitialTokens.stream()).toList();
 	}
 
 	boolean isDebugLoggingEnabled() {
@@ -563,10 +570,17 @@ public class BranchingParser {
 						 * contiguous _text_ runs to not be continuous - and
 						 * thus fail the sequence
 						 */
-						matchesLocation = Objects.equals(
-								testMeasureEnd ? match.end.getIndex()
-										: match.start.getIndex(),
-								location.getIndex());
+						matchesLocation =
+								// getMostRecentMatchedMeasure() == null
+								// ||
+								Objects.equals(
+										testMeasureEnd ? match.end.getIndex()
+												: match.start.getIndex(),
+										location.getIndex());
+						if (!matchesLocation) {
+							int debug = 3;
+						}
+						int debug = 3;
 					}
 					if (group.negated) {
 						if (matchesLocation) {
@@ -691,7 +705,7 @@ public class BranchingParser {
 			return group.token;
 		}
 
-		public Measure getLastMeasure() {
+		public Measure getMostRecentMatchedMeasure() {
 			Branch cursor = this;
 			while (cursor != null) {
 				if (cursor.match != null) {
@@ -854,6 +868,26 @@ public class BranchingParser {
 				cursor = cursor.parent;
 			}
 			return cursor;
+		}
+
+		public int length() {
+			Branch cursor = this;
+			int length = 0;
+			while (cursor.parent != null) {
+				cursor = cursor.parent;
+				length++;
+			}
+			return length;
+		}
+
+		public Stream<Branch> selfAndPrecdecessors() {
+			List<Branch> result = new ArrayList<>();
+			Branch cursor = this;
+			do {
+				result.add(cursor);
+				cursor = cursor.parent;
+			} while (cursor != null);
+			return result.stream();
 		}
 	}
 
@@ -1212,9 +1246,9 @@ public class BranchingParser {
 			Location nextLocationAfterNoMatch;
 
 			LookaheadMatches() {
-				matches = primitiveInitialTokens.stream()
-						.map(parserState::match).filter(Objects::nonNull)
-						.sorted().collect(Collectors.toList());
+				matches = lookaheadTokens.stream().map(parserState::match)
+						.filter(Objects::nonNull).sorted()
+						.collect(Collectors.toList());
 				minimalNext = Ax.first(matches);
 				if (minimalNext != null) {
 					Location after = nextLocationAfterNoMatch();

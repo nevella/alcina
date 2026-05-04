@@ -330,7 +330,6 @@ public abstract class LookaheadMatcher<C> {
 					.withOptions(this);
 			if (matcher.emphasisOracle == null) {
 				if (matcher.options.matchesEmphasisTypes != MatchesEmphasisTypes.BOTH) {
-					int debug = 3;
 					matcher.withOptions(this);
 				}
 			}

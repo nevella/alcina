@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.component.sequence.branch;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.BranchNode;
 import cc.alcina.framework.common.client.util.Ax;
@@ -22,7 +21,7 @@ class BranchingParserNode extends Model
 	}
 
 	enum GroupType {
-		GROUP, LEAF_OR_MATCH
+		GROUP, LEAF_OR_MATCH, NAMED
 	}
 
 	BranchNode branchNode;
@@ -34,6 +33,28 @@ class BranchingParserNode extends Model
 	MatchType matchType;
 
 	GroupType groupType;
+
+	int nameDepth = -1;
+
+	int containingBranchMaxLength;
+
+	int getContainingBranchMaxLength() {
+		return containingBranchMaxLength;
+	}
+
+	public int getNameDepth() {
+		if (nameDepth == -1) {
+			nameDepth = 0;
+			Branch cursor = branchNode.branch;
+			while (cursor != null) {
+				if (cursor.group.isNamed()) {
+					nameDepth++;
+				}
+				cursor = cursor.parent;
+			}
+		}
+		return nameDepth;
+	}
 
 	BranchingParserNode(BranchNode branchNode) {
 		this.branchNode = branchNode;
@@ -48,8 +69,13 @@ class BranchingParserNode extends Model
 	}
 
 	public String getMeasure() {
-		Measure lastMeasure = branchNode.branch.getLastMeasure();
-		return lastMeasure == null ? null : lastMeasure.text();
+		return branchNode.branch.match == null ? null
+				: branchNode.branch.match.text();
+	}
+
+	public String getMeasureRange() {
+		return branchNode.branch.match == null ? null
+				: branchNode.branch.match.toIntPair().toDashStringOrPoint();
 	}
 
 	@Override

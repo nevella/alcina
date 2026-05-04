@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.dom.Location;
@@ -20,6 +21,8 @@ public class LayerParserPeer {
 
 	List<BranchToken> tokens = new ArrayList<>();
 
+	protected List<BranchToken> lookaheadTokens = new ArrayList<>();
+
 	protected Predicate<Location> filter = null;
 
 	protected LayerParser parser;
@@ -32,7 +35,8 @@ public class LayerParserPeer {
 	}
 
 	protected void add(BranchToken... tokens) {
-		Arrays.stream(tokens).forEach(this.tokens::add);
+		Arrays.stream(tokens).filter(Objects::nonNull)
+				.forEach(this.tokens::add);
 	}
 
 	public boolean confirmSentenceBranch(Branch branch) {
