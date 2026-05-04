@@ -56,6 +56,30 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * structure
  */
 /*
+ * -------------------------
+ * 
+ * GOTCHAS!!
+ * 
+ * -------------------------
+ * 
+ * @formatter:off
+ * 
+ * * Regex boundary matches are dangerous - i.e \\A|and|or - since the region
+ * matched changes. Generally:
+ * 
+ * - minimise use
+ * - make sure to turn caching off
+ * - *must* put at the *end* of the regex - e.g. and|or|\\A (since \\A will of course match anything)
+ * - use GenericTextual.START_OF_RANGE - aka hoist the regex clause to a BP token
+ * - make sure you mean START_OF_RANGE and not START_OF_INPUT
+ * 
+ * * regex order is important
+ * 
+ * * make ORs (i.e. BRUCE|BOB) higher level if needed (hoist individual regex clauses to a token each from the regex)
+ * 
+ * * @formatter:on
+ */
+/*
  * The naive algorithm is:
  * 
  * Defina an object 'branch' which has a method "nextPossibleBranches" which
