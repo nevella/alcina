@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.Client.RenderState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory.ExecutionQueueState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
@@ -145,6 +146,10 @@ class ClientExecutionQueue implements Runnable {
 			return result;
 		}
 
+		synchronized boolean areAllUpdatesHandled() {
+			return lastMutationIdBuffered == lastMutationIdUpdateHandled;
+		}
+
 		@Override
 		public String toString() {
 			return Ax.format(
@@ -215,9 +220,7 @@ class ClientExecutionQueue implements Runnable {
 		public void enqueue(Runnable runnable) {
 			int awaitId = mutationMessageData.lastMutationIdBuffered;
 			boolean awaitNextMutationId = false;
-			if (LocalDom.hasPending()
-					|| environment.access().hasPendingMutations()
-					|| transportLayer.hasPendingMutations()) {
+			if (hasPending()) {
 				if (!transportLayer.sendChannel.hasMessagesPendingDispatch()) {
 					// await return of the *next* message (which will include
 					// mutations)
@@ -237,6 +240,12 @@ class ClientExecutionQueue implements Runnable {
 					Client.RenderState.Observable.EventType.queued_runnable);
 			pending.add(queuedRunnable);
 			//
+		}
+
+		boolean hasPending() {
+			return LocalDom.hasPending()
+					|| environment.access().hasPendingMutations()
+					|| transportLayer.hasPendingMutations();
 		}
 
 		int highestAwaiting = -1;
@@ -282,6 +291,25 @@ class ClientExecutionQueue implements Runnable {
 			if (messageId > highestAwaiting) {
 				highestAwaiting = messageId;
 			}
+		}
+
+		/**
+		 * Because rendering is interleaved, it's possible a collating runnable
+		 * that requires offsets of X nodes might not have those offsets
+		 * available even if it requests that it runs with via
+		 * {@link RenderState#queueWithRenderedState}
+		 * 
+		 * Looping on a check here will proceed until all mutations have
+		 * 'settled' - guaranteeing no sync server/client call to
+		 * getBoundingClientRects (if the models have the ElementOffsetsRequired
+		 * behaviour)
+		 */
+		@Override
+		public boolean areAllOffsetsAccessible() {
+			if (hasPending()) {
+				return false;
+			}
+			return mutationMessageData.areAllUpdatesHandled();
 		}
 	}
 

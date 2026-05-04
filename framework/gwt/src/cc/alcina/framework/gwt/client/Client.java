@@ -347,6 +347,17 @@ public abstract class Client implements ContextFrame {
 		@Feature.Ref(Feature_RemoteObjectComponent._Impl.class)
 		public interface RomcomImpl {
 			void enqueue(Runnable runnable);
+
+			boolean areAllOffsetsAccessible();
+		}
+
+		public static boolean areAllOffsetsAccessible() {
+			if (Al.isBrowser()) {
+				return true;
+			} else {
+				return Registry.impl(RomcomImpl.class)
+						.areAllOffsetsAccessible();
+			}
 		}
 
 		/**
