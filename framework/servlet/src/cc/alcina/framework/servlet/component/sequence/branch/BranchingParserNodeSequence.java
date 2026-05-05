@@ -69,7 +69,9 @@ public class BranchingParserNodeSequence
 		@Directed(className = "match")
 		String match;
 
-		@Directed(className = "matchAgainst")
+		@Directed(
+			className = "matchAgainst",
+			renderer = LeafRenderer.Html.class)
 		String matchAgainst;
 
 		@Directed(className = "result")

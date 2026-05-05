@@ -1015,7 +1015,6 @@ public class BranchingParser {
 				Range truncator = new Range(start, end);
 				projected.values().forEach(branch -> {
 					branch.match = truncator.truncate(branch.match);
-					branch.location = truncator.truncate(branch.location);
 				});
 				return projected.get(Branch.this);
 			}
@@ -1067,6 +1066,7 @@ public class BranchingParser {
 
 		Result(Branch branch) {
 			this.branch = branch;
+			Branch cursor = branch;
 			populate();
 			stream().filter(r -> r.match == null).forEach(r -> {
 				if (r.children.isEmpty()) {

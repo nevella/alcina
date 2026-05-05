@@ -58,7 +58,7 @@ public class Measure extends Location.Range {
 	public final Token token;
 
 	public Measure clone() {
-		return new Measure(start, end, token);
+		return new Measure(start, end, token).withData(data);
 	}
 
 	/**

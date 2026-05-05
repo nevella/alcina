@@ -617,8 +617,8 @@ public class Location implements Comparable<Location> {
 			if (measure == null) {
 				return null;
 			}
-			return new Measure(truncate(start), truncate(end), measure.token)
-					.withData(measure.getData());
+			return new Measure(truncate(measure.start), truncate(measure.end),
+					measure.token).withData(measure.getData());
 		}
 
 		public Location truncate(Location location) {

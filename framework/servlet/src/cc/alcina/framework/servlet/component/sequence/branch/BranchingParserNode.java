@@ -134,6 +134,7 @@ class BranchingParserNode extends Model
 				format.append(StringEscapeUtils.escapeHtml(range.text()));
 			} else {
 				int matchStart = match.start.getIndex();
+				format.append("<div>");
 				{
 					/*
 					 * pre
@@ -157,7 +158,16 @@ class BranchingParserNode extends Model
 					 * match
 					 */
 					format.append("<match>");
-					format.append(match.markup());
+					/*
+					 * respect limitations of w3c impl (for now) - FIXME dom
+					 */
+					if (match.start.isAtNodeStart()
+							&& match.end.isAtNodeEnd()) {
+						format.append(match.markup());
+					} else {
+						format.append(
+								StringEscapeUtils.escapeHtml(match.text()));
+					}
 					format.append("</match>");
 				}
 				{
@@ -174,6 +184,7 @@ class BranchingParserNode extends Model
 						format.append("...");
 					}
 				}
+				format.append("</div>");
 			}
 			markup = format.toString().replace(" ", "\u00B7");
 		}

@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CopyToClipboard;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -154,7 +155,13 @@ public class StringArea extends Model.Fields implements DomEvents.Click.Handler,
 				return model;
 			}
 			if (model instanceof String) {
-				return new StringArea(location, (String) model);
+				Directed annotation = location.getAnnotation(Directed.class);
+				if (annotation
+						.renderer() == DirectedRenderer.ModelClass.class) {
+					return new StringArea(location, (String) model);
+				} else {
+					return model;
+				}
 			} else {
 				return model;
 			}

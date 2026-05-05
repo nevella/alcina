@@ -93,6 +93,7 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 						group = Group.primitive(token);
 					} else {
 						group = group.clone();
+						group.name = token.toString();
 					}
 					group.token = token;
 					return group;
@@ -128,6 +129,8 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 		BranchToken token;
 
 		Quantifier quantifier = Quantifier.GREEDY;
+
+		String name;
 
 		public boolean isNamed() {
 			if (token != null) {
@@ -292,6 +295,8 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 		public String getName() {
 			if (isPrimitive()) {
 				return token.toString();
+			} else if (name != null) {
+				return name;
 			} else {
 				return "ANON";
 			}
