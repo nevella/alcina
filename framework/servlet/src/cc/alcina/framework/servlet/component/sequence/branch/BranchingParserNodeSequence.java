@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode.GroupType;
@@ -37,6 +38,11 @@ public class BranchingParserNodeSequence
 		@Directed(className = "path")
 		String path;
 
+		@Directed(
+			className = "matchAgainst",
+			renderer = LeafRenderer.Html.class)
+		String matchAgainst;
+
 		@Directed(className = "measure")
 		String measure;
 
@@ -45,6 +51,7 @@ public class BranchingParserNodeSequence
 
 		BranchingParserNodeView(BranchingParserNode node) {
 			this.path = node.getPath();
+			this.matchAgainst = node.getMatchAgainst();
 			this.measure = node.getMeasure();
 			this.range = node.getMeasureRange();
 		}
@@ -62,8 +69,14 @@ public class BranchingParserNodeSequence
 		@Directed(className = "match")
 		String match;
 
-		@Directed(className = "match")
+		@Directed(className = "matchAgainst")
+		String matchAgainst;
+
+		@Directed(className = "result")
 		String result;
+
+		@Directed(className = "userData")
+		String userData;
 
 		BranchingParserNodeDetail(BranchingParserNode node) {
 			this.path = node.getPath();
@@ -71,6 +84,10 @@ public class BranchingParserNodeSequence
 			this.match = node.getMatch();
 			if (node.branchNode.match != null) {
 				result = node.branchNode.branch.toResult().toStructuredString();
+			}
+			matchAgainst = node.getMatchAgainst();
+			if (node.branchNode.branch.userData != null) {
+				this.userData = node.branchNode.branch.userData.toString();
 			}
 		}
 	}

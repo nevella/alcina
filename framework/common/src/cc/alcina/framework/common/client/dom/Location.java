@@ -612,6 +612,24 @@ public class Location implements Comparable<Location> {
 			}
 			return result;
 		}
+
+		public Measure truncate(Measure measure) {
+			if (measure == null) {
+				return null;
+			}
+			return new Measure(truncate(start), truncate(end), measure.token)
+					.withData(measure.getData());
+		}
+
+		public Location truncate(Location location) {
+			if (location.compareTo(start) < 0) {
+				return start;
+			}
+			if (location.compareTo(end) > 0) {
+				return end;
+			}
+			return location;
+		}
 	}
 
 	public enum RelativeDirection {
@@ -709,6 +727,16 @@ public class Location implements Comparable<Location> {
 
 	public LocationSnapshot toLocationSnapshot() {
 		return new LocationSnapshot();
+	}
+
+	public static Location min(Location l1, Location l2) {
+		int cmp = l1.compareTo(l2);
+		return cmp <= 0 ? l1 : l2;
+	}
+
+	public static Location max(Location l1, Location l2) {
+		int cmp = l1.compareTo(l2);
+		return cmp >= 0 ? l1 : l2;
 	}
 
 	public boolean isAttached() {

@@ -288,6 +288,14 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			this.order = Order.ANY;
 			return this;
 		}
+
+		public String getName() {
+			if (isPrimitive()) {
+				return token.toString();
+			} else {
+				return "ANON";
+			}
+		}
 	}
 
 	public enum MatchesBoundary {
