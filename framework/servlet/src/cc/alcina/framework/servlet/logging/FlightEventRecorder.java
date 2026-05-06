@@ -1,14 +1,16 @@
 package cc.alcina.framework.servlet.logging;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable.FlightExceptionMessage;
@@ -17,7 +19,9 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
@@ -25,22 +29,15 @@ import cc.alcina.framework.entity.LogUtil;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.util.FileUtils;
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.servlet.LifecycleService;
+import cc.alcina.framework.servlet.component.sequence.AbstractSequenceLoader;
+import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSequence;
 import cc.alcina.framework.servlet.logging.FlightEventRecorderObservable.MarkRecordedEvents;
 import cc.alcina.framework.servlet.logging.FlightEventRecorderObservable.PersistRecordedEvents;
 
 @Registration.Singleton
 public class FlightEventRecorder extends LifecycleService.AlsoDev {
-	File eventsFolder;
-
-	String sessionId;
-
-	public long timeNs;
-
-	public static FlightEventRecorder get() {
-		return Registry.impl(FlightEventRecorder.class);
-	}
-
 	@Reflected
 	class FlightEventObserver implements ProcessObserver<FlightEvent> {
 		@Override
@@ -65,17 +62,9 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		public synchronized void topicPublished(PersistRecordedEvents message) {
 			Preconditions.checkState(enabled.is(),
 					"Flight events not enabled!");
-			copyEventsToExtractFolder();
+			rollover();
 		}
 	}
-
-	RecorderThread recorderThread;
-
-	boolean finished;
-
-	public int threadPriority = Thread.NORM_PRIORITY;
-
-	public int recordedEventCount;
 
 	class RecorderThread extends Thread {
 		BlockingQueue<FlightEvent> events = new LinkedBlockingDeque<>();
@@ -99,7 +88,78 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		}
 	}
 
+	class RecordedSession {
+		File folder;
+
+		int eventCount;
+
+		RecordedSession(File folder) {
+			this.folder = folder;
+		}
+
+		void write(FlightEvent message) {
+			File writeTo = null;
+			try {
+				eventCount++;
+				if (eventCount > maxEvents.intValue()) {
+					return;
+				}
+				if (eventCount == maxEvents.intValue()) {
+					throw new RuntimeException(
+							"Exceeded FlightEventRecorder maxEvents");
+				}
+				// may have been cleared
+				folder.mkdirs();
+				writeTo = FileUtils.child(folder,
+						String.valueOf(message.id) + ".json");
+				String serialized = ReflectiveSerializer.serialize(message);
+				Io.write().string(serialized).toFile(writeTo);
+			} catch (Exception e) {
+				e.printStackTrace();
+				if (writeTo != null) {
+					try {
+						FlightExceptionMessage flightExceptionMessage = new FlightEventWrappable.FlightExceptionMessage(
+								message.event.getSessionId(),
+								CommonUtils.getFullExceptionMessage(e));
+						Io.write().asReflectiveSerialized(true)
+								.object(flightExceptionMessage).toFile(writeTo);
+					} catch (Exception e2) {
+						e2.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+
 	static final Configuration.Key enabled = Configuration.key("enabled");
+
+	public static final Configuration.Key path = Configuration.key("path");
+
+	static final Configuration.Key extractFolderPath = Configuration
+			.key("extractFolder");
+
+	static final Configuration.Key maxEvents = Configuration.key("maxEvents");
+
+	public static FlightEventRecorder get() {
+		return Registry.impl(FlightEventRecorder.class);
+	}
+
+	RecorderThread recorderThread;
+
+	boolean finished;
+
+	public int threadPriority = Thread.NORM_PRIORITY;
+
+	Map<String, RecordedSession> sessionIdFolder = CollectionCreators.Bootstrap
+			.createConcurrentStringMap();
+
+	public synchronized void clear() {
+		File eventsFolder = new File(path.get());
+		eventsFolder.mkdirs();
+		Arrays.stream(eventsFolder.listFiles())
+				.filter(f -> f.isDirectory() && !f.isHidden())
+				.forEach(f -> SEUtilities.deleteDirectory(f));
+	}
 
 	@Override
 	public void onApplicationStartup() {
@@ -108,7 +168,6 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 			new PersistRecordedEventsObserver().bind();
 			return;
 		}
-		maxEvents = Configuration.getInt("maxEvents");
 		new FlightEventObserver().bind();
 		new MarkRecordedEventsObserver().bind();
 		new PersistRecordedEventsObserver().bind();
@@ -122,58 +181,35 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		finished = true;
 	}
 
-	int maxEvents;
-
-	int counter;
-
-	void writeMessage(FlightEvent message) {
-		long nanoTime = System.nanoTime();
-		try {
-			writeMessage0(message);
-		} finally {
-			timeNs += (System.nanoTime() - nanoTime);
-			recordedEventCount++;
-		}
+	/*
+	 * move all non-extract folders to extractFolder
+	 */
+	public synchronized void rollover() {
+		File extractFolder = new File(extractFolderPath.get());
+		extractFolder.mkdirs();
+		File eventsFolder = new File(path.get());
+		eventsFolder.mkdirs();
+		Arrays.stream(eventsFolder.listFiles()).filter(f -> f.isDirectory()
+				&& !f.isHidden() && !Objects.equals(f, extractFolder))
+				.forEach(f -> {
+					File to = FileUtils.child(extractFolder, f.getName());
+					f.renameTo(to);
+					LogUtil.classLogger().warn("Moved flight events to: {}",
+							to);
+				});
 	}
 
-	void writeMessage0(FlightEvent message) {
-		File writeTo = null;
-		try {
-			counter++;
-			if (counter > maxEvents) {
-				return;
-			}
-			if (counter == maxEvents) {
-				throw new RuntimeException(
-						"Exceeded FlightEventRecorder maxEvents");
-			}
-			if (sessionId == null) {
-				sessionId = message.event.getSessionId();
-			}
-			ensureEventsFolder();
-			writeTo = FileUtils.child(eventsFolder,
-					String.valueOf(message.id) + ".json");
-			String serialized = ReflectiveSerializer.serialize(message);
-			Io.write().string(serialized).toFile(writeTo);
-		} catch (Exception e) {
-			e.printStackTrace();
-			if (writeTo != null) {
-				try {
-					FlightExceptionMessage flightExceptionMessage = new FlightEventWrappable.FlightExceptionMessage(
-							message.event.getSessionId(),
-							CommonUtils.getFullExceptionMessage(e));
-					Io.write().asReflectiveSerialized(true)
-							.object(flightExceptionMessage).toFile(writeTo);
-				} catch (Exception e2) {
-					e2.printStackTrace();
-				}
-			}
-		}
+	synchronized void writeMessage(FlightEvent message) {
+		getRecordedSession(message.event.getSessionId()).write(message);
 	}
 
-	void ensureEventsFolder() {
-		if (sessionId == null || eventsFolder != null) {
-			return;
+	RecordedSession getRecordedSession(String sessionId) {
+		if (sessionId == null) {
+			return null;
+		}
+		RecordedSession session = sessionIdFolder.get(sessionId);
+		if (session != null) {
+			return session;
 		}
 		String dateSessionId = Ax.format("%s.%s", Ax.timestampYmd(new Date()),
 				sessionId);
@@ -182,27 +218,31 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 				.orElse(EntityLayerUtils.getLocalHostName());
 		String folderPath = Ax.format("%s/flight-%s-%s",
 				Configuration.get("path"), appId, dateSessionId);
-		eventsFolder = new File(folderPath);
-		eventsFolder.mkdirs();
+		File folder = new File(folderPath);
+		folder.mkdirs();
+		session = new RecordedSession(folder);
+		sessionIdFolder.put(sessionId, session);
 		Ax.out("FlightEventRecorder :: recording to %s", folderPath);
+		return session;
 	}
 
-	public synchronized File rollover() {
-		eventsFolder = null;
-		ensureEventsFolder();
-		return eventsFolder;
+	public static InstanceQuery createInstanceQuery(String path) {
+		InstanceQuery query = new InstanceQuery().withType(Sequence.class);
+		query.addParameters(
+				new Sequence.Loader.LoaderType().withValue(FlightPath.class));
+		query.addParameters(
+				new Sequence.Loader.LoaderLocation().withValue(path));
+		return query;
 	}
 
-	synchronized File copyEventsToExtractFolder() {
-		File file = eventsFolder;
-		rollover();
-		try {
-			File copiedTo = new File(Configuration.get("extractFolder"));
-			SEUtilities.copyFile(file, copiedTo);
-			LogUtil.classLogger().warn("Logged flight events to: {}", copiedTo);
-			return copiedTo;
-		} catch (Exception e) {
-			throw WrappedRuntimeException.wrap(e);
+	public static class FlightPath extends AbstractSequenceLoader {
+		public FlightPath() {
+			super(null, null, s -> s, new FlightEventSequence());
+		}
+
+		@Override
+		public boolean handlesSequenceLocation(String location) {
+			return false;
 		}
 	}
 }

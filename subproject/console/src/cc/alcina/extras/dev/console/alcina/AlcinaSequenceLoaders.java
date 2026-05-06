@@ -1,5 +1,6 @@
 package cc.alcina.extras.dev.console.alcina;
 
+import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.servlet.component.sequence.AbstractSequenceLoader;
 import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSequence;
 import cc.alcina.framework.servlet.component.sequence.adapter.JobEventSequence;

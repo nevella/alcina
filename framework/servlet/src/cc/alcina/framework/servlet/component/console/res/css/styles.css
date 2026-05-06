@@ -747,10 +747,10 @@ body > page > header > right > dropdown > button:hover {
 body > page > header > right > dropdown > button.dotburger {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48dGl0bGU+aW9uaWNvbnMtdjUtZjwvdGl0bGU+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSI0OCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjQxNiIgcj0iNDgiLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSI5NiIgcj0iNDgiLz48L3N2Zz4=");
 }
-body > page > report-area {
+body > page > server-console-area {
   display: block;
 }
-body > page > report-area > .report {
+body > page > server-console-area > .server-console {
   width: calc(100vw - 8rem);
   box-sizing: border-box;
   margin: 0 auto;
@@ -767,14 +767,14 @@ body > page > report-area > .report {
   background: white;
   min-height: 100vh;
 }
-body > page > report-area > .report a, body > page > report-area > .report a.link, body > page > report-area > .report a.visited {
+body > page > server-console-area > .server-console a, body > page > server-console-area > .server-console a.link, body > page > server-console-area > .server-console a.visited {
   text-decoration: none;
   color: black;
 }
-body > page > report-area > .report a:hover, body > page > report-area > .report a.link:hover, body > page > report-area > .report a.visited:hover {
+body > page > server-console-area > .server-console a:hover, body > page > server-console-area > .server-console a.link:hover, body > page > server-console-area > .server-console a.visited:hover {
   color: #387ed3;
 }
-body > page > report-area > .report > heading {
+body > page > server-console-area > .server-console > heading {
   margin: 0 0 0.5rem;
   display: flex;
   width: 100%;
@@ -783,21 +783,21 @@ body > page > report-area > .report > heading {
   color: #0f4589;
   margin: 1rem 0;
 }
-body > page > report-area > .report > heading > actions {
+body > page > server-console-area > .server-console > heading > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-body > page > report-area > .report > heading > actions a {
+body > page > server-console-area > .server-console > heading > actions a {
   cursor: pointer;
 }
-body > page > report-area > .report > heading > actions {
+body > page > server-console-area > .server-console > heading > actions {
   padding-right: 4rem;
 }
-body > page > report-area > .report about {
+body > page > server-console-area > .server-console about {
   display: block;
 }
-body > page > report-area > .report about > heading {
+body > page > server-console-area > .server-console about > heading {
   margin: 0 0 0.5rem;
   display: flex;
   width: 100%;
@@ -806,65 +806,65 @@ body > page > report-area > .report about > heading {
   color: #0f4589;
   margin: 1rem 0;
 }
-body > page > report-area > .report about > heading > actions {
+body > page > server-console-area > .server-console about > heading > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-body > page > report-area > .report about > heading > actions a {
+body > page > server-console-area > .server-console about > heading > actions a {
   cursor: pointer;
 }
-body > page > report-area > .report about > heading > actions {
+body > page > server-console-area > .server-console about > heading > actions {
   padding-right: 4rem;
 }
-body > page > report-area > .report about > ul {
+body > page > server-console-area > .server-console about > ul {
   margin-top: 0;
 }
-body > page > report-area > .report header {
+body > page > server-console-area > .server-console header {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
 }
-body > page > report-area > .report header img {
+body > page > server-console-area > .server-console header img {
   width: 200px;
 }
-body > page > report-area > .report header heading {
+body > page > server-console-area > .server-console header heading {
   font-size: 18px;
   font-weight: bold;
 }
-body > page > report-area > .report header spacer {
+body > page > server-console-area > .server-console header spacer {
   display: block;
   width: 200px;
 }
-body > page > report-area > .report table.metadata {
+body > page > server-console-area > .server-console table.metadata {
   box-sizing: border-box;
   margin-bottom: 1rem;
   border-collapse: separate;
   border-spacing: 1rem 0.5rem;
 }
-body > page > report-area > .report table.metadata th {
+body > page > server-console-area > .server-console table.metadata th {
   text-align: left;
   width: 12rem;
 }
-body > page > report-area > .report table.metadata td > value {
+body > page > server-console-area > .server-console table.metadata td > value {
   white-space: pre-wrap;
 }
-body > page > report-area > .report table.metadata td > value:not(:last-child):after {
+body > page > server-console-area > .server-console table.metadata td > value:not(:last-child):after {
   content: ", ";
 }
-body > page > report-area > .report > definition-editor {
+body > page > server-console-area > .server-console > definition-editor {
   max-width: 600px;
   margin: 2rem auto;
   display: block;
 }
-body > page > report-area > .report > definition-editor input, body > page > report-area > .report > definition-editor select, body > page > report-area > .report > definition-editor textarea, body > page > report-area > .report > definition-editor choice-editor, body > page > report-area > .report > definition-editor choice-editor > edit {
+body > page > server-console-area > .server-console > definition-editor input, body > page > server-console-area > .server-console > definition-editor select, body > page > server-console-area > .server-console > definition-editor textarea, body > page > server-console-area > .server-console > definition-editor choice-editor, body > page > server-console-area > .server-console > definition-editor choice-editor > edit {
   width: 16rem;
 }
-body > page > report-area > .report > definition-editor > bean-editor > heading {
+body > page > server-console-area > .server-console > definition-editor > bean-editor > heading {
   font-weight: bold;
 }
-body > page > report-area > .report .panel {
+body > page > server-console-area > .server-console .panel {
   display: flex;
   flex-direction: column;
   margin: 1rem 0;
@@ -872,51 +872,51 @@ body > page > report-area > .report .panel {
   overflow-y: auto;
   overflow-x: auto;
 }
-body > page > report-area > .report .panel > heading, body > page > report-area > .report .panel > heading-actions {
+body > page > server-console-area > .server-console .panel > heading, body > page > server-console-area > .server-console .panel > heading-actions {
   margin: 0 0 0.5rem;
   display: flex;
   width: 100%;
   font-weight: bold;
   justify-content: space-between;
 }
-body > page > report-area > .report .panel > heading > actions, body > page > report-area > .report .panel > heading-actions > actions {
+body > page > server-console-area > .server-console .panel > heading > actions, body > page > server-console-area > .server-console .panel > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-body > page > report-area > .report .panel > heading > actions a, body > page > report-area > .report .panel > heading-actions > actions a {
+body > page > server-console-area > .server-console .panel > heading > actions a, body > page > server-console-area > .server-console .panel > heading-actions > actions a {
   cursor: pointer;
 }
-body > page > report-area > .report .panel > key-values {
+body > page > server-console-area > .server-console .panel > key-values {
   display: grid;
   grid-template-columns: max-content 1fr;
   column-gap: 1rem;
   row-gap: 0.1rem;
 }
-body > page > report-area > .report .panel > key-values > key-value {
+body > page > server-console-area > .server-console .panel > key-values > key-value {
   display: contents;
 }
-body > page > report-area > .report .panel > key-values > key-value > key {
+body > page > server-console-area > .server-console .panel > key-values > key-value > key {
   color: #777;
 }
-body > page > report-area > .report .panel > a {
+body > page > server-console-area > .server-console .panel > a {
   display: block;
   margin: 0 0 0.2rem;
 }
-body > page > report-area > report-home.report {
+body > page > server-console-area > server-console-home.server-console {
   padding: 2rem 6rem;
   max-width: none;
 }
-body > page > report-area > report-home.report > heading {
+body > page > server-console-area > server-console-home.server-console > heading {
   margin: 1rem 0;
   font-size: 1.5rem;
   display: block;
 }
-body > page > report-area > report-home.report > cards {
+body > page > server-console-area > server-console-home.server-console > cards {
   display: flex;
   gap: 4rem;
 }
-body > page > report-area > report-home.report > cards > card {
+body > page > server-console-area > server-console-home.server-console > cards > card {
   display: flex;
   flex-direction: column;
   margin: 1rem 0;
@@ -928,204 +928,120 @@ body > page > report-area > report-home.report > cards > card {
   max-width: 24rem;
   min-height: 10rem;
 }
-body > page > report-area > report-home.report > cards > card > heading, body > page > report-area > report-home.report > cards > card > heading-actions {
+body > page > server-console-area > server-console-home.server-console > cards > card > heading, body > page > server-console-area > server-console-home.server-console > cards > card > heading-actions {
   margin: 0 0 0.5rem;
   display: flex;
   width: 100%;
   font-weight: bold;
   justify-content: space-between;
 }
-body > page > report-area > report-home.report > cards > card > heading > actions, body > page > report-area > report-home.report > cards > card > heading-actions > actions {
+body > page > server-console-area > server-console-home.server-console > cards > card > heading > actions, body > page > server-console-area > server-console-home.server-console > cards > card > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-body > page > report-area > report-home.report > cards > card > heading > actions a, body > page > report-area > report-home.report > cards > card > heading-actions > actions a {
+body > page > server-console-area > server-console-home.server-console > cards > card > heading > actions a, body > page > server-console-area > server-console-home.server-console > cards > card > heading-actions > actions a {
   cursor: pointer;
 }
-body > page > report-area > report-home.report > cards > card > key-values {
+body > page > server-console-area > server-console-home.server-console > cards > card > key-values {
   display: grid;
   grid-template-columns: max-content 1fr;
   column-gap: 1rem;
   row-gap: 0.1rem;
 }
-body > page > report-area > report-home.report > cards > card > key-values > key-value {
+body > page > server-console-area > server-console-home.server-console > cards > card > key-values > key-value {
   display: contents;
 }
-body > page > report-area > report-home.report > cards > card > key-values > key-value > key {
+body > page > server-console-area > server-console-home.server-console > cards > card > key-values > key-value > key {
   color: #777;
 }
-body > page > report-area > report-home.report > cards > card > a {
+body > page > server-console-area > server-console-home.server-console > cards > card > a {
   display: block;
   margin: 0 0 0.2rem;
 }
-body > page > report-area > xero-tx-report.report > submit-area {
-  width: 30rem;
-  display: block;
-  margin: 1rem auto;
-  text-align: center;
+body > page > server-console-area > romcom-session.server-console {
+  padding: 2rem 6rem;
+  max-width: none;
 }
-body > page > report-area > xero-tx-report.report > submit-area > a {
-  color: blue;
-}
-body > page > report-area > xero-tx-report.report heading {
+body > page > server-console-area > romcom-session.server-console > heading {
+  margin: 1rem 0;
+  font-size: 1.5rem;
   display: block;
+}
+body > page > server-console-area > romcom-session.server-console > sub-heading {
+  margin: 0 0 0.5rem;
+  display: flex;
+  width: 100%;
   font-weight: bold;
-  color: #999;
-  line-height: 2;
-  color: #333;
+  justify-content: space-between;
+  color: #0f4589;
+  margin: 1rem 0;
 }
-body > page > report-area > xero-tx-report.report heading:not(:first-of-type) {
-  margin-top: 1rem;
+body > page > server-console-area > romcom-session.server-console > sub-heading > actions {
+  font-weight: normal;
+  display: flex;
+  gap: 1em;
 }
-body > page > report-area > xero-tx-report.report tx-counts {
+body > page > server-console-area > romcom-session.server-console > sub-heading > actions a {
+  cursor: pointer;
+}
+body > page > server-console-area > romcom-session.server-console > sub-heading > actions {
+  padding-right: 4rem;
+}
+body > page > server-console-area > romcom-session.server-console > cards {
+  display: flex;
+  gap: 4rem;
+}
+body > page > server-console-area > romcom-session.server-console > cards > card {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: solid 1px #ccc;
+  padding: 1.5rem 2rem;
+  max-width: 24rem;
+  min-height: 10rem;
+}
+body > page > server-console-area > romcom-session.server-console > cards > card > heading, body > page > server-console-area > romcom-session.server-console > cards > card > heading-actions {
+  margin: 0 0 0.5rem;
+  display: flex;
+  width: 100%;
+  font-weight: bold;
+  justify-content: space-between;
+}
+body > page > server-console-area > romcom-session.server-console > cards > card > heading > actions, body > page > server-console-area > romcom-session.server-console > cards > card > heading-actions > actions {
+  font-weight: normal;
+  display: flex;
+  gap: 1em;
+}
+body > page > server-console-area > romcom-session.server-console > cards > card > heading > actions a, body > page > server-console-area > romcom-session.server-console > cards > card > heading-actions > actions a {
+  cursor: pointer;
+}
+body > page > server-console-area > romcom-session.server-console > cards > card > key-values {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 20rem;
+  grid-template-columns: max-content 1fr;
   column-gap: 1rem;
+  row-gap: 0.1rem;
 }
-body > page > report-area > xero-tx-report.report tx-counts > tx-count {
+body > page > server-console-area > romcom-session.server-console > cards > card > key-values > key-value {
   display: contents;
 }
-body > page > report-area > xero-tx-report.report th {
-  text-align: left;
+body > page > server-console-area > romcom-session.server-console > cards > card > key-values > key-value > key {
+  color: #777;
 }
-body > page > report-area > xero-tx-report.report tx-groups, body > page > report-area > xero-tx-report.report txs {
-  border-spacing: 0;
-}
-body > page > report-area > xero-tx-report.report tx-groups > tbody > tr:nth-of-type(even), body > page > report-area > xero-tx-report.report txs > tbody > tr:nth-of-type(even) {
-  background-color: #f7f9ff;
-}
-body > page > report-area > xero-tx-report.report tx-groups > tbody > tr:first-of-type td, body > page > report-area > xero-tx-report.report txs > tbody > tr:first-of-type td {
-  padding-top: 8px;
-}
-body > page > report-area > xero-tx-report.report tx-groups > thead > tr > th, body > page > report-area > xero-tx-report.report txs > thead > tr > th {
-  border-bottom: solid 1px #bbb;
-  cursor: pointer;
-  white-space: nowrap;
-}
-body > page > report-area > xero-tx-report.report tx-groups td, body > page > report-area > xero-tx-report.report tx-groups th, body > page > report-area > xero-tx-report.report txs td, body > page > report-area > xero-tx-report.report txs th {
-  padding: 6px 2px;
-}
-body > page > report-area > xero-tx-report.report tx-groups td > value, body > page > report-area > xero-tx-report.report txs td > value {
+body > page > server-console-area > romcom-session.server-console > cards > card > a {
   display: block;
+  margin: 0 0 0.2rem;
 }
-body > page > report-area > xero-tx-report.report tx-groups td > value.numeric, body > page > report-area > xero-tx-report.report txs td > value.numeric {
-  text-align: right;
-  padding-right: 1rem;
-}
-body > page > report-area > xero-tx-report.report tx-groups td > value.nowrap, body > page > report-area > xero-tx-report.report txs td > value.nowrap {
-  white-space: nowrap;
-}
-body > page > report-area > xero-tx-report.report tx-groups td > *, body > page > report-area > xero-tx-report.report txs td > * {
-  white-space: nowrap;
-  overflow-x: auto;
-  display: inline-block;
-  max-width: 14rem;
-}
-body > page > report-area > xero-tx-report.report tx-groups td > *:not(:first-child), body > page > report-area > xero-tx-report.report txs td > *:not(:first-child) {
+body > page > server-console-area[compact-report-ui] > .report table.metadata, body > page > server-console-area[compact-report-ui] > .report about {
   display: none;
 }
-body > page > report-area > xero-tx-report.report tx-groups th, body > page > report-area > xero-tx-report.report txs th {
-  text-align: left;
-  padding-right: 2rem;
-}
-body > page > report-area > xero-tx-report.report tx-groups td > *.wide, body > page > report-area > xero-tx-report.report txs td > *.wide {
-  max-width: 28rem;
-}
-body > page > report-area > xero-tx-report.report tx-groups td > *.x-wide, body > page > report-area > xero-tx-report.report txs td > *.x-wide {
-  max-width: 40rem;
-}
-body > page > report-area > xero-tx-report.report tx-groups td > *.xx-wide, body > page > report-area > xero-tx-report.report txs td > *.xx-wide {
-  max-width: 56rem;
-}
-body > page > report-area > xero-tx-report.report tx-groups td, body > page > report-area > xero-tx-report.report txs td {
-  padding: 2px;
-}
-body > page > report-area > unmatched-order-report.report > submit-area {
-  width: 30rem;
-  display: block;
-  margin: 1rem auto;
-  text-align: center;
-}
-body > page > report-area > unmatched-order-report.report > submit-area > a {
-  color: blue;
-}
-body > page > report-area > unmatched-order-report.report heading {
-  display: block;
-  font-weight: bold;
-  color: #999;
-  line-height: 2;
-  color: #333;
-}
-body > page > report-area > unmatched-order-report.report heading:not(:first-of-type) {
-  margin-top: 1rem;
-}
-body > page > report-area > unmatched-order-report.report th {
-  text-align: left;
-}
-body > page > report-area > unmatched-order-report.report table {
-  border-spacing: 0;
-}
-body > page > report-area > unmatched-order-report.report table > tbody > tr:nth-of-type(even) {
-  background-color: #f7f9ff;
-}
-body > page > report-area > unmatched-order-report.report table > tbody > tr:first-of-type td {
-  padding-top: 8px;
-}
-body > page > report-area > unmatched-order-report.report table > thead > tr > th {
-  border-bottom: solid 1px #bbb;
-  cursor: pointer;
-  white-space: nowrap;
-}
-body > page > report-area > unmatched-order-report.report table td, body > page > report-area > unmatched-order-report.report table th {
-  padding: 6px 2px;
-}
-body > page > report-area > unmatched-order-report.report table td > value {
-  display: block;
-}
-body > page > report-area > unmatched-order-report.report table td > value.numeric {
-  text-align: right;
-  padding-right: 1rem;
-}
-body > page > report-area > unmatched-order-report.report table td > value.nowrap {
-  white-space: nowrap;
-}
-body > page > report-area > unmatched-order-report.report table td > * {
-  white-space: nowrap;
-  overflow-x: auto;
-  display: inline-block;
-  max-width: 14rem;
-}
-body > page > report-area > unmatched-order-report.report table td > *:not(:first-child) {
-  display: none;
-}
-body > page > report-area > unmatched-order-report.report table th {
-  text-align: left;
-  padding-right: 2rem;
-}
-body > page > report-area > unmatched-order-report.report table td > *.wide {
-  max-width: 28rem;
-}
-body > page > report-area > unmatched-order-report.report table td > *.x-wide {
-  max-width: 40rem;
-}
-body > page > report-area > unmatched-order-report.report table td > *.xx-wide {
-  max-width: 56rem;
-}
-body > page > report-area > unmatched-order-report.report table td {
-  padding: 2px;
-}
-body > page > report-area > unmatched-order-report.report table td > * {
-  max-width: none !important;
-}
-body > page > report-area[compact-report-ui] > .report table.metadata, body > page > report-area[compact-report-ui] > .report about {
-  display: none;
-}
-body > page > report-area[compact-report-ui] > .report definition-editor {
+body > page > server-console-area[compact-report-ui] > .report definition-editor {
   margin: 0.5rem auto !important;
 }
-body > page > report-area[compact-report-ui] > .report > report > header {
+body > page > server-console-area[compact-report-ui] > .report > report > header {
   display: none;
 }
 
@@ -1433,6 +1349,9 @@ help sequence > visit > path {
 help sequence > visit > description {
   grid-area: description;
   margin-bottom: 1rem;
+}
+help sequence > visit > description a {
+  color: #5481b7;
 }
 help sequence > visit > img {
   grid-area: img;

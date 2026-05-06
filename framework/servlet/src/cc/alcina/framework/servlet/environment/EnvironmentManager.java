@@ -323,6 +323,10 @@ public class EnvironmentManager {
 		return environments.get(session.id);
 	}
 
+	public boolean hasEnvironment(String sessionId) {
+		return environments.containsKey(sessionId);
+	}
+
 	public boolean hasEnvironment(Class<? extends RemoteUi> uiType) {
 		return environments.values().stream()
 				.anyMatch(env -> env.access().getUi().getClass() == uiType);

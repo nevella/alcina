@@ -1,11 +1,10 @@
 @use '../multi/common'
-@use 'report-home'
-@use 'xero-tx'
-@use 'unmatched-order'
 @use '../../dirndl/cmp/panel'
+@use 'console-home'
+@use 'romcom-session'
 
 @mixin contents
-  > .report
+  > .server-console
     @include common.bordered-full
 
     display: flex
@@ -35,7 +34,6 @@
 
       > ul
         margin-top: 0
-
 
     header
       display: flex
@@ -70,25 +68,17 @@
 
           &:not(:last-child):after
             content:', '
-
-      
-
     > definition-editor
       @include common.definition-editor
 
     .panel
       @include panel.contents
 
-      
+  > server-console-home.server-console
+    @include console-home.contents
 
-  > report-home.report
-    @include report-home.contents
-
-  > xero-tx-report.report
-    @include xero-tx.contents
-
-  > unmatched-order-report.report
-    @include unmatched-order.contents
+  > romcom-session.server-console
+    @include romcom-session.contents
 
 
   &[compact-report-ui] > .report
