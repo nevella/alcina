@@ -344,6 +344,21 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 				return state.patternMatcher().match(this, PATTERN);
 			}
 		},
+		WHITESPACE_NON_INITIAL {
+			private Pattern PATTERN = Pattern.compile(
+					TextUtils.NON_LINE_WS_PATTERN_STR,
+					Pattern.CASE_INSENSITIVE);
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
+
+			@Override
+			public boolean isInitial() {
+				return false;
+			}
+		},
 		DIGITS {
 			private Pattern PATTERN = Pattern.compile("\\d+");
 
