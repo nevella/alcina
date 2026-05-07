@@ -29,7 +29,6 @@ import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
-import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -80,6 +79,12 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * * regex order is important
  * 
  * * make ORs (i.e. BRUCE|BOB) higher level if needed (hoist individual regex clauses to a token each from the regex)
+ * 
+ * if a primitive doesn't match a dom range (e.g. a boundary match such as START_OF_RANGE) - 
+ * it *must* return true for  #isNonDomToken
+ * 
+ * by default a text primitive will not match if the match cursor is at a node-end boundary - 
+ * to change this behaviour (which can cause unexpected 'no matches'), use LayerParser#setToNextStartIfAtNodeEnd
  * 
  * * @formatter:on
  */
@@ -595,6 +600,12 @@ public class BranchingParser {
 		}
 
 		void enter() {
+			if (group.getName().equals("AT_SUBSEQUENT_LEADIN")) {
+				// if (location.toString().contains("'s 56")) {
+				Ax.out("ASL:%s", location.toString());
+				int debug = 3;
+				// }
+			}
 			ProcessObservers.publish(BeforeBranchEntry.class,
 					() -> new BeforeBranchEntry(this));
 			if (!isComplete()) {
@@ -626,17 +637,10 @@ public class BranchingParser {
 						 * contiguous _text_ runs to not be continuous - and
 						 * thus fail the sequence
 						 */
-						matchesLocation =
-								// getMostRecentMatchedMeasure() == null
-								// ||
-								Objects.equals(
-										testMeasureEnd ? match.end.getIndex()
-												: match.start.getIndex(),
-										location.getIndex());
-						if (!matchesLocation) {
-							int debug = 3;
-						}
-						int debug = 3;
+						matchesLocation = Objects.equals(
+								testMeasureEnd ? match.end.getIndex()
+										: match.start.getIndex(),
+								location.getIndex());
 					}
 					if (group.negated) {
 						if (matchesLocation) {
@@ -918,6 +922,31 @@ public class BranchingParser {
 			return format.toString();
 		}
 
+		public String toStructuredPredecessorString() {
+			List<Branch> chain = new ArrayList<>();
+			Branch cursor = this;
+			while (cursor != null) {
+				chain.add(0, cursor);
+				cursor = cursor.predecessor;
+			}
+			FormatBuilder format = new FormatBuilder();
+			chain.forEach(b -> {
+				format.indent(b.depth());
+				format.line(b);
+			});
+			return format.toString();
+		}
+
+		int depth() {
+			int depth = 0;
+			Branch cursor = this;
+			while (cursor != null) {
+				depth++;
+				cursor = cursor.parent;
+			}
+			return depth;
+		}
+
 		public Branch root() {
 			Branch cursor = this;
 			while (cursor.parent != null) {
@@ -995,17 +1024,16 @@ public class BranchingParser {
 						.toList();
 				elided.forEach(branch -> {
 					Preconditions.checkArgument(branch.match.start
-							.equals(rootMeasure.start)
-							|| branch.match.end.equals(rootMeasure.end));
-					if (branch.match.start.equals(rootMeasure.start)) {
+							.getIndex() == rootMeasure.start.getIndex()
+							|| branch.match.end.getIndex() == rootMeasure.end
+									.getIndex());
+					if (branch.match.start.getIndex() == rootMeasure.start
+							.getIndex()) {
 						Preconditions.checkState(startElided == null);
 						startElided = branch;
 					} else if (branch.match.end.equals(rootMeasure.end)) {
 						Preconditions.checkState(endElided == null);
 						endElided = branch;
-					} else {
-						throw new IllegalArgumentException(
-								"Not at start/end of match");
 					}
 				});
 				Location start = startElided == null ? rootMeasure.start

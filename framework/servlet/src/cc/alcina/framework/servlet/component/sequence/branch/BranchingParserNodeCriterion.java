@@ -31,9 +31,6 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseEnumCriterionPack.BaseEnumCriterionHandler;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode.GroupType;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode.MatchType;
-import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeCriterion.CriterionHandler;
-import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeCriterion.TermDistance;
-import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeCriterion.TokenDistanceCriterion;
 
 public class BranchingParserNodeCriterion {
 	@TypeSerialization(
@@ -120,6 +117,9 @@ public class BranchingParserNodeCriterion {
 			public boolean test(BranchingParserNode node, MatchType value) {
 				if (value == null) {
 					return true;
+				}
+				if (value == MatchType.MEASURE) {
+					return node.branchNode.branch.match != null;
 				}
 				if (node.matchType == null) {
 					return false;

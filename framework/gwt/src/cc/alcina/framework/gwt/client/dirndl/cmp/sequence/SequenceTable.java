@@ -165,8 +165,11 @@ class SequenceTable extends Model.Fields
 	SequenceTable(SequenceArea sequenceArea) {
 		this.sequenceArea = sequenceArea;
 		filteredElements = sequenceArea.filteredSequenceElements;
-		header = new Heading(
-				Ax.format("Sequence elements [%s]", filteredElements.size()));
+		int filteredSize = filteredElements.size();
+		String preFilterPart = sequenceArea.preFilterCount == filteredSize ? ""
+				: "/" + sequenceArea.preFilterCount;
+		header = new Heading(Ax.format("Sequence elements [%s%s]", filteredSize,
+				preFilterPart));
 		from(sequenceArea.service.getSettings().properties().columnSet())
 				.to(properties().columnSet()).oneWay();
 	}

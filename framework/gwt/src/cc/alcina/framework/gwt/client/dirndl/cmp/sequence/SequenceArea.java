@@ -76,21 +76,6 @@ public class SequenceArea extends Model.Fields
 		long getElementLimit();
 	}
 
-	public PackageProperties._SequenceArea.InstanceProperties properties() {
-		return PackageProperties.sequenceArea.instance(this);
-	}
-
-	@Directed(className = "definition-header")
-	Model definitionHeader;
-
-	@Directed
-	SequenceTable sequenceTable;
-
-	@Directed
-	DetailArea detailArea;
-
-	Sequence<?> sequence;
-
 	class IndexPredicate implements Predicate {
 		int index = 0;
 
@@ -109,6 +94,24 @@ public class SequenceArea extends Model.Fields
 		}
 	}
 
+	class OrderServiceImpl implements TableModel.OrderService {
+		@Override
+		public void onSortTable(SortTable event) {
+			int debug = 3;
+		}
+	}
+
+	@Directed(className = "definition-header")
+	Model definitionHeader;
+
+	@Directed
+	SequenceTable sequenceTable;
+
+	@Directed
+	DetailArea detailArea;
+
+	Sequence<?> sequence;
+
 	List<?> filteredSequenceElements;
 
 	HighlightModel highlightModel;
@@ -125,19 +128,19 @@ public class SequenceArea extends Model.Fields
 
 	Service service;
 
-	class OrderServiceImpl implements TableModel.OrderService {
-		@Override
-		public void onSortTable(SortTable event) {
-			int debug = 3;
-		}
-	}
+	InstanceOracle.Query<?> oracleQuery;
+
+	public Runnable reloadSequenceLambda = this::reloadSequence;
+
+	Runnable updateStylesLambda = this::updateStyles;
+
+	public int preFilterCount;
 
 	public SequenceArea() {
 	}
 
-	void onSelectedIndexChange() {
-		properties().detailArea().set(new DetailArea(this));
-		emitEvent(SequenceEvents.SelectedIndexChanged.class);
+	public PackageProperties._SequenceArea.InstanceProperties properties() {
+		return PackageProperties.sequenceArea.instance(this);
 	}
 
 	@Override
@@ -232,6 +235,38 @@ public class SequenceArea extends Model.Fields
 		}
 	}
 
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+		} else {
+			derefOracleQuery();
+		}
+	}
+
+	@Override
+	public void onSetSettingMaxElementRows(SetSettingMaxElementRows event) {
+		String model = event.getModel();
+		service.getSettings().putMaxElementRows(model);
+	}
+
+	@Override
+	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit,
+			boolean onlySelectedIfAnySelected) {
+		return filteredSequenceElements(sequence, true,
+				onlySelectedIfAnySelected);
+	}
+
+	@Property.Not
+	public int getHighlightMatchesCount() {
+		return highlightModel.matches.size();
+	}
+
+	void onSelectedIndexChange() {
+		properties().detailArea().set(new DetailArea(this));
+		emitEvent(SequenceEvents.SelectedIndexChanged.class);
+	}
+
 	/*
 	 * The sequence will be changed if the filter is changed (essentially)
 	 */
@@ -273,12 +308,6 @@ public class SequenceArea extends Model.Fields
 		emitEvent(SequenceEvents.HighlightModelChanged.class);
 	}
 
-	InstanceOracle.Query<?> oracleQuery;
-
-	public Runnable reloadSequenceLambda = this::reloadSequence;
-
-	Runnable updateStylesLambda = this::updateStyles;
-
 	//
 	void reloadSequence() {
 		InstanceQuery instanceQuery = getPlace().instanceQuery;
@@ -315,15 +344,6 @@ public class SequenceArea extends Model.Fields
 			this.oracleQuery.unbind();
 			this.sequence = null;// just de-ref, no need to fire changes
 			this.oracleQuery = null;
-		}
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-		} else {
-			derefOracleQuery();
 		}
 	}
 
@@ -392,10 +412,12 @@ public class SequenceArea extends Model.Fields
 		ModelTransform sequenceRowTransform = sequence.getRowTransform();
 		long limit = ignoreRowsLimit ? Integer.MAX_VALUE
 				: service.getElementLimit();
-		List<?> filteredElements = (List<?>) stream
+		List<?> preFiltered = stream.toList();
+		List<?> filteredElements = (List<?>) preFiltered.stream()
 				.filter(new IndexPredicate(getPlace().selectedRange))
 				.filter(e -> query.test(sequenceRowTransform.apply(e)))
 				.limit(limit).collect(Collectors.toList());
+		preFilterCount = preFiltered.size();
 		if (onlySelectedIfAnySelected) {
 			List<?> selectedElements = sequenceTable.selectionSupport
 					.getSelectedModels();
@@ -417,26 +439,8 @@ public class SequenceArea extends Model.Fields
 				.go();
 	}
 
-	@Override
-	public void onSetSettingMaxElementRows(SetSettingMaxElementRows event) {
-		String model = event.getModel();
-		service.getSettings().putMaxElementRows(model);
-	}
-
 	@Property.Not
 	SequencePlace getPlace() {
 		return service.getPlaceProperty().get();
-	}
-
-	@Override
-	public List<?> provideFilteredSequenceElements(boolean ignoreRowsLimit,
-			boolean onlySelectedIfAnySelected) {
-		return filteredSequenceElements(sequence, true,
-				onlySelectedIfAnySelected);
-	}
-
-	@Property.Not
-	public int getHighlightMatchesCount() {
-		return highlightModel.matches.size();
 	}
 }

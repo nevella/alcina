@@ -50,9 +50,11 @@ public class SequenceComponent extends Model.Fields implements
 
 		@Override
 		public long getElementLimit() {
-			return 50;
+			return elementLimit;
 		}
 	}
+
+	public int elementLimit = 50;
 
 	@Directed
 	SequenceArea sequenceArea = new SequenceArea();

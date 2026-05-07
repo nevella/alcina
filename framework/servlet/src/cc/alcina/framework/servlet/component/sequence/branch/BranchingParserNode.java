@@ -23,7 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 class BranchingParserNode extends Model
 		implements HasClassNames, HasStringRepresentation {
 	enum MatchType {
-		MATCH, DESCENDANT_MATCH
+		MATCH, DESCENDANT_MATCH, MEASURE
 	}
 
 	enum GroupType {
