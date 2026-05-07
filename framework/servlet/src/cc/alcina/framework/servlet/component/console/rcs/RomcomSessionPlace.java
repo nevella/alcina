@@ -13,7 +13,7 @@ public class RomcomSessionPlace extends ServerConsolePlace {
 
 	public RomcomSessionPlace() {
 		sequencePlace.instanceQuery = RomcomSessionSequence
-				.createInstanceQuery(new RomcomSessionSearchDefinition());
+				.createInstanceQuery();
 	}
 
 	public RomcomSessionPlace(SequencePlace sequencePlace) {

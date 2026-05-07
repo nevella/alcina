@@ -15,11 +15,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefiniti
 		types = RomcomSessionCriterion.CriteriaGroup.class,
 		defaultProperty = true) })
 public class RomcomSessionSearchDefinition extends SequenceSearchDefinition {
-	@TypeSerialization("ingestassistsearchdefinition")
-	public static class Parameter extends
-			SequenceSearchDefinition.BaseParameter<RomcomSessionSearchDefinition> {
-	}
-
 	@Override
 	public Class<? extends Sequence> sequenceClass() {
 		return RomcomSessionSequence.class;
