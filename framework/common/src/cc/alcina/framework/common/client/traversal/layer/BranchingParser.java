@@ -125,6 +125,14 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * 
  * 
  */
+/*
+ * FIXMEs
+ * 
+ * isInitial should *mostly* go away, the set of initial tokens should be
+ * determined from the first scan (at location 0). Tokens should be able to
+ * check parsercontext.checkInitial to match a more complex inital token - such
+ * as ' s ?\\d+' instead of ' ' if needed
+ */
 public class BranchingParser {
 	int branchSizeLimit = Integer.MAX_VALUE;
 
