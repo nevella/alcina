@@ -2,11 +2,9 @@ package cc.alcina.framework.servlet.component.console.rcs;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.flight.FlightEvent;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
@@ -32,6 +30,9 @@ public class RomcomSessionEntry extends Bindable.Fields
 	String sessionId;
 
 	String path;
+
+	RomcomSessionEntry() {
+	}
 
 	public RomcomSessionEntry(List<FlightEvent> events, String sessionId,
 			boolean active, String path) {
