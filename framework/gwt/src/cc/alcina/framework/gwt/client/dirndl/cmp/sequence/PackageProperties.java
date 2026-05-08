@@ -39,6 +39,7 @@ public class PackageProperties {
       public TypedProperty<SequenceArea, SequencePlace> lastSequenceTestPlace = new TypedProperty<>(SequenceArea.class, "lastSequenceTestPlace");
       public TypedProperty<SequenceArea, Timer> observableObservedTimer = new TypedProperty<>(SequenceArea.class, "observableObservedTimer");
       public TypedProperty<SequenceArea, InstanceOracle.Query> oracleQuery = new TypedProperty<>(SequenceArea.class, "oracleQuery");
+      public TypedProperty<SequenceArea, Integer> preFilterCount = new TypedProperty<>(SequenceArea.class, "preFilterCount");
       public TypedProperty<SequenceArea, Runnable> reloadSequenceLambda = new TypedProperty<>(SequenceArea.class, "reloadSequenceLambda");
       public TypedProperty<SequenceArea, Sequence> sequence = new TypedProperty<>(SequenceArea.class, "sequence");
       public TypedProperty<SequenceArea, SequenceTable> sequenceTable = new TypedProperty<>(SequenceArea.class, "sequenceTable");
@@ -56,6 +57,7 @@ public class PackageProperties {
         public InstanceProperty<SequenceArea, SequencePlace> lastSequenceTestPlace(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.lastSequenceTestPlace);}
         public InstanceProperty<SequenceArea, Timer> observableObservedTimer(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.observableObservedTimer);}
         public InstanceProperty<SequenceArea, InstanceOracle.Query> oracleQuery(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.oracleQuery);}
+        public InstanceProperty<SequenceArea, Integer> preFilterCount(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.preFilterCount);}
         public InstanceProperty<SequenceArea, Runnable> reloadSequenceLambda(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.reloadSequenceLambda);}
         public InstanceProperty<SequenceArea, Sequence> sequence(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.sequence);}
         public InstanceProperty<SequenceArea, SequenceTable> sequenceTable(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.sequenceTable);}
@@ -71,6 +73,7 @@ public class PackageProperties {
     }
     
     public static class _SequenceComponent implements TypedProperty.Container {
+      public TypedProperty<SequenceComponent, Integer> elementLimit = new TypedProperty<>(SequenceComponent.class, "elementLimit");
       public TypedProperty<SequenceComponent, Model> header = new TypedProperty<>(SequenceComponent.class, "header");
       public TypedProperty<SequenceComponent, SequenceArea> sequenceArea = new TypedProperty<>(SequenceComponent.class, "sequenceArea");
       public TypedProperty<SequenceComponent, InstanceProperty> sequencePlaceProperty = new TypedProperty<>(SequenceComponent.class, "sequencePlaceProperty");
@@ -78,6 +81,7 @@ public class PackageProperties {
       public TypedProperty<SequenceComponent, SequenceComponent.SequenceAreaServiceImpl> serviceImpl = new TypedProperty<>(SequenceComponent.class, "serviceImpl");
       public static class InstanceProperties extends 	InstanceProperty.Container<SequenceComponent> {
         public  InstanceProperties(SequenceComponent source){super(source);}
+        public InstanceProperty<SequenceComponent, Integer> elementLimit(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.elementLimit);}
         public InstanceProperty<SequenceComponent, Model> header(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.header);}
         public InstanceProperty<SequenceComponent, SequenceArea> sequenceArea(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.sequenceArea);}
         public InstanceProperty<SequenceComponent, InstanceProperty> sequencePlaceProperty(){return new InstanceProperty<>(source,PackageProperties.sequenceComponent.sequencePlaceProperty);}

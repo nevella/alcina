@@ -36,6 +36,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding.InstanceDistinctLambda;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
@@ -130,7 +131,8 @@ public class SequenceArea extends Model.Fields
 
 	InstanceOracle.Query<?> oracleQuery;
 
-	public Runnable reloadSequenceLambda = this::reloadSequence;
+	public Runnable reloadSequenceLambda = InstanceDistinctLambda.of(this,
+			this::reloadSequence);
 
 	Runnable updateStylesLambda = this::updateStyles;
 
