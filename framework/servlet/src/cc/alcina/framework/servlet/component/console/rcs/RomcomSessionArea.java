@@ -19,7 +19,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.gwt.client.dirndl.model.search.SearchDefinitionEditor;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage.HeadingArea;
-import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.console.ServerConsoleContents;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentServer;
 import cc.alcina.framework.servlet.logging.FlightEventRecorder;
@@ -29,8 +28,7 @@ import cc.alcina.framework.servlet.logging.FlightEventRecorder;
 @Registration({ ServerConsoleContents.class, RomcomSessionPlace.class })
 @TypedProperties
 class RomcomSessionArea extends ServerConsoleContents<RomcomSessionPlace>
-		implements SequenceEvents.SequencePlaceChanged.Binding,
-		ModelEvents.Clear.Handler {
+		implements ModelEvents.Clear.Handler {
 	PackageProperties._RomcomSessionArea.InstanceProperties properties() {
 		return PackageProperties.romcomSessionArea.instance(this);
 	}
@@ -53,38 +51,69 @@ class RomcomSessionArea extends ServerConsoleContents<RomcomSessionPlace>
 	@Directed.Wrap("actions")
 	List<Link> actions = List.of(Link.of(ModelEvents.Clear.class));
 
-	SubHeading subHeadingActive = new SubHeading("Active");
+	@TypedProperties
+	@Directed.Delegating
+	class SequenceComponentContainer extends Model.All
+			implements SequenceEvents.SequencePlaceChanged.Binding {
+		PackageProperties._RomcomSessionArea_SequenceComponentContainer.InstanceProperties
+				properties() {
+			return PackageProperties.romcomSessionArea_sequenceComponentContainer
+					.instance(this);
+		}
 
-	SequenceComponentServer model;
+		SubHeading subHeading;
 
-	@Directed.Exclude
-	SequencePlace sequencePlace;
+		SequenceComponentContainer(String title) {
+			subHeading = new SubHeading(title);
+			sequence = new SequenceComponentServer(header,
+					properties().sequencePlace());
+			sequence.component.sequenceSettings.detailDisplayMode = DetailDisplayMode.QUARTER_WIDTH;
+			sequence.component.elementLimit = 5;
+			on(SequenceEvents.SequencePlaceChanged.class)
+					.map(SequencePlaceChanged::getModel)
+					.to(properties().sequencePlace()).oneWay();
+			from(properties().sequencePlace())
+					.signal(RomcomSessionArea.this::updateRomcomSessionPlace);
+		}
 
-	/*
-	 * this appears in layout as a child of the SequenceComponentServer, not of
-	 * this model (hence the exclude)
-	 */
-	@Directed.Exclude
-	Header header = new Header();
+		SequenceComponentServer sequence;
+
+		@Directed.Exclude
+		SequencePlace sequencePlace;
+
+		/*
+		 * this appears in layout as a child of the SequenceComponentServer, not
+		 * of this model (hence the exclude)
+		 */
+		@Directed.Exclude
+		Header header = new Header();
+
+		void updateDefinition(SequencePlace sequencePlace) {
+			properties().sequencePlace().set(sequencePlace);
+			RomcomSessionSearchDefinition def = (RomcomSessionSearchDefinition) sequencePlace.search;
+			header.properties().searchDefinition().set(def);
+		}
+	}
+
+	SequenceComponentContainer active;
+
+	SequenceComponentContainer inactive;
 
 	RomcomSessionArea() {
 		from(properties().place()).typed(RomcomSessionPlace.class)
 				.accept(this::updateDefinition);
-		on(SequenceEvents.SequencePlaceChanged.class)
-				.map(SequencePlaceChanged::getModel)
-				.to(properties().sequencePlace()).oneWay();
-		from(properties().sequencePlace()).map(RomcomSessionPlace::new)
-				.accept(BasePlace::go);
-		model = new SequenceComponentServer(header,
-				properties().sequencePlace());
-		model.component.sequenceSettings.detailDisplayMode = DetailDisplayMode.QUARTER_WIDTH;
+		active = new SequenceComponentContainer("Active sessions");
+		inactive = new SequenceComponentContainer("Inactive sessions");
+	}
+
+	void updateRomcomSessionPlace() {
+		new RomcomSessionPlace(active.sequencePlace, inactive.sequencePlace)
+				.go();
 	}
 
 	void updateDefinition(RomcomSessionPlace place) {
-		SequencePlace sequencePlace = place.sequencePlace;
-		properties().sequencePlace().set(sequencePlace);
-		RomcomSessionSearchDefinition def = (RomcomSessionSearchDefinition) place.sequencePlace.search;
-		header.properties().searchDefinition().set(def);
+		active.updateDefinition(place.activePlace);
+		inactive.updateDefinition(place.inactivePlace);
 	}
 
 	@Override

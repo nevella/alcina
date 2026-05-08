@@ -1,11 +1,15 @@
+@use '../../dirndl/cmp/sequence/sequence-area' as sequence
 @use '../../theme/theme'
 @use '../../dirndl/cmp/heading'
 @use '../../dirndl/cmp/panel'
 @use '../multi/common'
+@use 'console-variant'
+
+@mixin non-sequence-indent
+  padding-left: 1rem !important
 
 @mixin contents
-  padding: 2rem 6rem
-  max-width: none
+  @include console-variant.full-width
   
   > heading
     @include heading.panel-3
@@ -13,15 +17,20 @@
   > sub-heading
     @include common.sub-heading
 
-  > cards
-    display: flex
-    gap: 4rem
+  > :not(sequence-component)
+    @include non-sequence-indent
 
-    > card
-      @include panel.contents
-      @include panel.x2-bordered
-      max-width: 24rem
-      min-height: 10rem
+  > sequence-component
+    @include sequence.contents
+    @include sequence.non-full
+    
+
+    > header
+      grid-area: header
+
+    > sequence > table
+      background: white
+
 
       
       

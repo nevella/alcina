@@ -1,5 +1,6 @@
-@use '../multi/common'
 @use '../../dirndl/cmp/panel'
+@use '../../dirndl/cmp/sequence/sequence-area' as sequence
+@use '../multi/common'
 @use 'console-home'
 @use 'romcom-session'
 
@@ -92,3 +93,4 @@
       display: none
 
 @mixin overlay
+  @include sequence.overlay
