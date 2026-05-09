@@ -338,7 +338,8 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public void replace(String newURL) {
-			throw new UnsupportedOperationException();
+			Document.get().invoke(() -> Window.replace0(newURL), Window.class,
+					"replace0", List.of(String.class), List.of(newURL), false);
 		}
 
 		@Override

@@ -50,7 +50,7 @@ public class BranchingParserNodeSequence
 		String range;
 
 		BranchingParserNodeView(BranchingParserNode node) {
-			this.path = node.getPath();
+			this.path = node.getIndentSimplePath();
 			this.matchAgainst = node.getMatchAgainst();
 			this.measure = node.getMeasure();
 			this.range = node.getMeasureRange();
@@ -60,6 +60,9 @@ public class BranchingParserNodeSequence
 	@Display.AllProperties
 	static class BranchingParserNodeDetail extends Model.Fields
 			implements Model.MultiNodeModel {
+		@Directed(className = "descent")
+		String descent;
+
 		@Directed(className = "path")
 		String path;
 
@@ -82,6 +85,7 @@ public class BranchingParserNodeSequence
 
 		BranchingParserNodeDetail(BranchingParserNode node) {
 			this.path = node.getPath();
+			this.descent = node.getDescent();
 			this.measure = node.getMeasure();
 			this.match = node.getMatch();
 			if (node.branchNode.match != null) {

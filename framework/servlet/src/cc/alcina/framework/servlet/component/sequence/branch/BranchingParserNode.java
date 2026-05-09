@@ -67,7 +67,15 @@ class BranchingParserNode extends Model
 	}
 
 	public String getPath() {
-		return branchNode.branch.toAncestorString();
+		return branchNode.branch.toStructuredPredecessorString();
+	}
+
+	public String getDescent() {
+		return branchNode.branch.toStructuredAncestorString();
+	}
+
+	public String getIndentSimplePath() {
+		return branchNode.branch.toIndentString();
 	}
 
 	public String getMatch() {

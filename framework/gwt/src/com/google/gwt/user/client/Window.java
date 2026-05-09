@@ -283,6 +283,13 @@ public class Window {
     $wnd.location.reload();
 	}-*/;
 
+	/*
+	 * Hack - fix would really be to get rid of the Location/LocationImpl split
+	 */
+	public static native void replace0(String newURL) /*-{
+      $wnd.location.replace(newURL);
+	}-*/;
+
 	/**
 	 * Displays a message in a modal dialog box, along with the standard 'OK'
 	 * and 'Cancel' buttons.

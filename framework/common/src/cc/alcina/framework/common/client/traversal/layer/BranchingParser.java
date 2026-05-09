@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Comparators;
 import cc.alcina.framework.common.client.util.ConditionalLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -286,6 +287,9 @@ public class BranchingParser {
 				implements ProcessObserver<BranchingParser.BeforeBranchEntry> {
 			@Override
 			public void topicPublished(BeforeBranchEntry message) {
+				if (branchNodes == null) {
+					return;
+				}
 				branchCount++;
 				branchNodes.put(message.branch, new BranchNode(message.branch));
 				if (message.branch.parent == null) {
@@ -930,6 +934,21 @@ public class BranchingParser {
 			return format.toString();
 		}
 
+		public String toStructuredAncestorString() {
+			List<Branch> chain = new ArrayList<>();
+			Branch cursor = this;
+			while (cursor != null) {
+				chain.add(0, cursor);
+				cursor = cursor.parent;
+			}
+			FormatBuilder format = new FormatBuilder();
+			chain.forEach(b -> {
+				format.indent(b.depth());
+				format.line(b);
+			});
+			return format.toString();
+		}
+
 		public String toStructuredPredecessorString() {
 			List<Branch> chain = new ArrayList<>();
 			Branch cursor = this;
@@ -1062,6 +1081,11 @@ public class BranchingParser {
 
 		public Branch projectFiltered(Predicate<Token> filter) {
 			return new Projector(filter).project();
+		}
+
+		public String toIndentString() {
+			return CommonUtils.padStringLeft("", depth(), '\u00A0')
+					+ toString();
 		}
 	}
 
