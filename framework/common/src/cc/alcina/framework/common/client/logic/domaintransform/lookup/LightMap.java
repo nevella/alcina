@@ -47,6 +47,33 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 		entrySet().clear();
 	}
 
+	public int hashCode() {
+		int h = 0;
+		for (Entry<K, V> entry : entrySet())
+			h += entry.hashCode();
+		return h;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Map) {
+			Map o = (Map) obj;
+			if (size() != o.size()) {
+				return false;
+			}
+			Iterator<Entry<K, V>> itr1 = entrySet().iterator();
+			Iterator<Map.Entry> itr2 = o.entrySet().iterator();
+			while (itr1.hasNext()) {
+				if (!Objects.equals(itr1.next(), itr2.next())) {
+					return false;
+				}
+			}
+			return true;
+		} else {
+			return super.equals(obj);
+		}
+	}
+
 	@Override
 	public LightMap clone() {
 		LightMap<K, V> clone = new LightMap<>();
@@ -346,6 +373,21 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 			@Override
 			public String toString() {
 				return Ax.format("%s:%s", getKey(), getValue());
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof Map.Entry) {
+					Map.Entry o = (Entry) obj;
+					return Objects.equals(getKey(), o.getKey())
+							&& Objects.equals(getValue(), o.getValue());
+				}
+				return super.equals(obj);
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(getKey(), getValue());
 			}
 		}
 	}
