@@ -3,15 +3,12 @@ package cc.alcina.framework.servlet.component.console.rcs;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.BooleanEnum;
-import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.servlet.component.console.ServerConsolePlace;
-import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionArea;
-import cc.alcina.framework.servlet.component.sequence.SequenceComponentServer;
+import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
 import java.lang.Boolean;
 import java.lang.Integer;
 import java.lang.String;
@@ -23,62 +20,28 @@ public class PackageProperties {
     //@formatter:off
     
     static _RomcomSessionArea romcomSessionArea = new _RomcomSessionArea();
-    static _RomcomSessionArea_Header romcomSessionArea_header = new _RomcomSessionArea_Header();
-    static _RomcomSessionArea_SequenceComponentContainer romcomSessionArea_sequenceComponentContainer = new _RomcomSessionArea_SequenceComponentContainer();
     static _RomcomSessionCriterion_ActiveCriterion romcomSessionCriterion_activeCriterion = new _RomcomSessionCriterion_ActiveCriterion();
     public static _RomcomSessionEntry romcomSessionEntry = new _RomcomSessionEntry();
     static _RomcomSessionSequence_RomcomSessionView romcomSessionSequence_romcomSessionView = new _RomcomSessionSequence_RomcomSessionView();
     
     static class _RomcomSessionArea implements TypedProperty.Container {
       TypedProperty<RomcomSessionArea, List> actions = new TypedProperty<>(RomcomSessionArea.class, "actions");
-      TypedProperty<RomcomSessionArea, RomcomSessionArea.SequenceComponentContainer> active = new TypedProperty<>(RomcomSessionArea.class, "active");
+      TypedProperty<RomcomSessionArea, SequenceComponentEditor> active = new TypedProperty<>(RomcomSessionArea.class, "active");
       TypedProperty<RomcomSessionArea, LoginPage.HeadingArea> heading = new TypedProperty<>(RomcomSessionArea.class, "heading");
-      TypedProperty<RomcomSessionArea, RomcomSessionArea.SequenceComponentContainer> inactive = new TypedProperty<>(RomcomSessionArea.class, "inactive");
+      TypedProperty<RomcomSessionArea, SequenceComponentEditor> inactive = new TypedProperty<>(RomcomSessionArea.class, "inactive");
       TypedProperty<RomcomSessionArea, ServerConsolePlace> place = new TypedProperty<>(RomcomSessionArea.class, "place");
       TypedProperty<RomcomSessionArea, SubHeading> subHeadingActions = new TypedProperty<>(RomcomSessionArea.class, "subHeadingActions");
       static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionArea> {
          InstanceProperties(RomcomSessionArea source){super(source);}
         InstanceProperty<RomcomSessionArea, List> actions(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.actions);}
-        InstanceProperty<RomcomSessionArea, RomcomSessionArea.SequenceComponentContainer> active(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.active);}
+        InstanceProperty<RomcomSessionArea, SequenceComponentEditor> active(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.active);}
         InstanceProperty<RomcomSessionArea, LoginPage.HeadingArea> heading(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.heading);}
-        InstanceProperty<RomcomSessionArea, RomcomSessionArea.SequenceComponentContainer> inactive(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.inactive);}
+        InstanceProperty<RomcomSessionArea, SequenceComponentEditor> inactive(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.inactive);}
         InstanceProperty<RomcomSessionArea, ServerConsolePlace> place(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.place);}
         InstanceProperty<RomcomSessionArea, SubHeading> subHeadingActions(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.subHeadingActions);}
       }
       
        InstanceProperties instance(RomcomSessionArea instance) {
-        return new InstanceProperties( instance);
-      }
-      
-    }
-    
-    static class _RomcomSessionArea_Header implements TypedProperty.Container {
-      TypedProperty<RomcomSessionArea.Header, SearchDefinition> searchDefinition = new TypedProperty<>(RomcomSessionArea.Header.class, "searchDefinition");
-      static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionArea.Header> {
-         InstanceProperties(RomcomSessionArea.Header source){super(source);}
-        InstanceProperty<RomcomSessionArea.Header, SearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea_header.searchDefinition);}
-      }
-      
-       InstanceProperties instance(RomcomSessionArea.Header instance) {
-        return new InstanceProperties( instance);
-      }
-      
-    }
-    
-    static class _RomcomSessionArea_SequenceComponentContainer implements TypedProperty.Container {
-      TypedProperty<RomcomSessionArea.SequenceComponentContainer, RomcomSessionArea.Header> header = new TypedProperty<>(RomcomSessionArea.SequenceComponentContainer.class, "header");
-      TypedProperty<RomcomSessionArea.SequenceComponentContainer, SequenceComponentServer> sequence = new TypedProperty<>(RomcomSessionArea.SequenceComponentContainer.class, "sequence");
-      TypedProperty<RomcomSessionArea.SequenceComponentContainer, SequencePlace> sequencePlace = new TypedProperty<>(RomcomSessionArea.SequenceComponentContainer.class, "sequencePlace");
-      TypedProperty<RomcomSessionArea.SequenceComponentContainer, SubHeading> subHeading = new TypedProperty<>(RomcomSessionArea.SequenceComponentContainer.class, "subHeading");
-      static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionArea.SequenceComponentContainer> {
-         InstanceProperties(RomcomSessionArea.SequenceComponentContainer source){super(source);}
-        InstanceProperty<RomcomSessionArea.SequenceComponentContainer, RomcomSessionArea.Header> header(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea_sequenceComponentContainer.header);}
-        InstanceProperty<RomcomSessionArea.SequenceComponentContainer, SequenceComponentServer> sequence(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea_sequenceComponentContainer.sequence);}
-        InstanceProperty<RomcomSessionArea.SequenceComponentContainer, SequencePlace> sequencePlace(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea_sequenceComponentContainer.sequencePlace);}
-        InstanceProperty<RomcomSessionArea.SequenceComponentContainer, SubHeading> subHeading(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea_sequenceComponentContainer.subHeading);}
-      }
-      
-       InstanceProperties instance(RomcomSessionArea.SequenceComponentContainer instance) {
         return new InstanceProperties( instance);
       }
       

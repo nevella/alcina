@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.util;
 
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-@EnvironmentSingleton
+@EnvironmentRegistration
 public interface HostAndProtocolSupplier {
 	String getProtocol();
 
@@ -13,11 +13,12 @@ public interface HostAndProtocolSupplier {
 
 	String getPort();
 
+	String getHostAndProtocol();
+
 	public static HostAndProtocolSupplier get() {
 		return Registry.impl(HostAndProtocolSupplier.class);
 	}
 
-	@EnvironmentSingleton
 	public static class ClientImpl implements HostAndProtocolSupplier {
 		@Override
 		public String getProtocol() {
@@ -32,6 +33,12 @@ public interface HostAndProtocolSupplier {
 		@Override
 		public String getPort() {
 			return Window.Location.getPort();
+		}
+
+		@Override
+		public String getHostAndProtocol() {
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'getHostAndProtocol'");
 		}
 	}
 }

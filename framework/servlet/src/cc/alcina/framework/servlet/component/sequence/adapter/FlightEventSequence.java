@@ -60,8 +60,8 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 
 	public static InstanceQuery createInstanceQuery(String sequencePath) {
 		return new InstanceQuery().withType(FlightEventSequence.class)
-				.addParameters(new SequencePathParameter()
-						.withValue(PathEncoder.encode(sequencePath)));
+				.addParameters(
+						new SequencePathParameter().withValue(sequencePath));
 	}
 
 	class DetailTransformerAdditional

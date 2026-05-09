@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.sequence;
 
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceArea;
@@ -10,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefiniti
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
+import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
@@ -17,6 +19,8 @@ import cc.alcina.framework.servlet.component.sequence.AppSuggestorSequence;
 import cc.alcina.framework.servlet.component.sequence.Header;
 import cc.alcina.framework.servlet.component.sequence.Page;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
+import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
+import cc.alcina.framework.servlet.component.sequence.SequenceComponentServer;
 import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.String;
@@ -35,6 +39,8 @@ public class PackageProperties {
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
     static _SequenceBrowser_Ui sequenceBrowser_ui = new _SequenceBrowser_Ui();
+    public static _SequenceComponentEditor sequenceComponentEditor = new _SequenceComponentEditor();
+    static _SequenceComponentEditor_Header sequenceComponentEditor_header = new _SequenceComponentEditor_Header();
     
     public static class _AppSuggestorSequence implements TypedProperty.Container {
       public TypedProperty<AppSuggestorSequence, String> acceptedFilterText = new TypedProperty<>(AppSuggestorSequence.class, "acceptedFilterText");
@@ -194,6 +200,38 @@ public class PackageProperties {
       }
       
        InstanceProperties instance(SequenceBrowser.Ui instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _SequenceComponentEditor implements TypedProperty.Container {
+      public TypedProperty<SequenceComponentEditor, SequenceComponentEditor.Header> header = new TypedProperty<>(SequenceComponentEditor.class, "header");
+      public TypedProperty<SequenceComponentEditor, SequenceComponentServer> sequence = new TypedProperty<>(SequenceComponentEditor.class, "sequence");
+      public TypedProperty<SequenceComponentEditor, SequencePlace> sequencePlace = new TypedProperty<>(SequenceComponentEditor.class, "sequencePlace");
+      public TypedProperty<SequenceComponentEditor, SubHeading> subHeading = new TypedProperty<>(SequenceComponentEditor.class, "subHeading");
+      public static class InstanceProperties extends 	InstanceProperty.Container<SequenceComponentEditor> {
+        public  InstanceProperties(SequenceComponentEditor source){super(source);}
+        public InstanceProperty<SequenceComponentEditor, SequenceComponentEditor.Header> header(){return new InstanceProperty<>(source,PackageProperties.sequenceComponentEditor.header);}
+        public InstanceProperty<SequenceComponentEditor, SequenceComponentServer> sequence(){return new InstanceProperty<>(source,PackageProperties.sequenceComponentEditor.sequence);}
+        public InstanceProperty<SequenceComponentEditor, SequencePlace> sequencePlace(){return new InstanceProperty<>(source,PackageProperties.sequenceComponentEditor.sequencePlace);}
+        public InstanceProperty<SequenceComponentEditor, SubHeading> subHeading(){return new InstanceProperty<>(source,PackageProperties.sequenceComponentEditor.subHeading);}
+      }
+      
+      public  InstanceProperties instance(SequenceComponentEditor instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _SequenceComponentEditor_Header implements TypedProperty.Container {
+      TypedProperty<SequenceComponentEditor.Header, SearchDefinition> searchDefinition = new TypedProperty<>(SequenceComponentEditor.Header.class, "searchDefinition");
+      static class InstanceProperties extends 	InstanceProperty.Container<SequenceComponentEditor.Header> {
+         InstanceProperties(SequenceComponentEditor.Header source){super(source);}
+        InstanceProperty<SequenceComponentEditor.Header, SearchDefinition> searchDefinition(){return new InstanceProperty<>(source,PackageProperties.sequenceComponentEditor_header.searchDefinition);}
+      }
+      
+       InstanceProperties instance(SequenceComponentEditor.Header instance) {
         return new InstanceProperties( instance);
       }
       

@@ -464,8 +464,14 @@ public class StreamBinding<T> {
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder();
-		format.format("%s.", NestedName.get(fromPropertyChangeSource));
-		format.format("%s", on == null ? "*" : fromProperty().getName());
+		if (fromPropertyChangeSource == null) {
+			format.format("%s::",
+					bindings == null ? null : NestedName.get(bindings.model()));
+			format.format("%s", NestedName.get(fromNodeEventClass));
+		} else {
+			format.format("%s.", NestedName.get(fromPropertyChangeSource));
+			format.format("%s", on == null ? "*" : fromProperty().getName());
+		}
 		// ...map, fn etc
 		if (targetBinding != null) {
 			format.format(" --> %s", targetBinding);
