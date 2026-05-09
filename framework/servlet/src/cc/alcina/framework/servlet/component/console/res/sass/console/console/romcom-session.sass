@@ -1,0 +1,37 @@
+@use '../../dirndl/cmp/sequence/sequence-area' as sequence
+@use '../../theme/theme'
+@use '../../dirndl/cmp/heading'
+@use '../../dirndl/cmp/panel'
+@use '../multi/common'
+@use 'console-variant'
+
+@mixin non-sequence-indent
+  padding-left: 1rem !important
+
+@mixin contents
+  @include console-variant.full-width
+  
+  > heading
+    @include heading.panel-3
+
+  > sub-heading
+    @include common.sub-heading
+
+  > :not(sequence-component)
+    @include non-sequence-indent
+
+  > sequence-component
+    @include sequence.contents
+    @include sequence.non-full
+    
+
+    > header
+      grid-area: header
+
+    > sequence > table
+      background: white
+
+
+      
+      
+    

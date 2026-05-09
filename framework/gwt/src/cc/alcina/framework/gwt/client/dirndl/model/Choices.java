@@ -579,9 +579,7 @@ public abstract class Choices<T> extends Model implements
 			event.reemitAs(this, ModelEvents.Selected.class, choice);
 		}
 
-		@Override
-		public void setSelectedValue(T value) {
-			super.setSelectedValue(value);
+		void updateSelectedElementIndex(T value) {
 			if (provideIsBound()) {
 				DirectedLayout.Node mostSpecficNode = node
 						.provideMostSpecificNodeForModel();
@@ -589,6 +587,21 @@ public abstract class Choices<T> extends Model implements
 						.getRendered().asElement();
 				int index = getValues().indexOf(value);
 				selectElement.setSelectedIndex(index);
+			}
+		}
+
+		@Override
+		public void setSelectedValue(T value) {
+			boolean change = !Objects.equals(getSelectedValue(), value);
+			super.setSelectedValue(value);
+			if (!change) {
+				return;
+			}
+			Runnable updateLambda = () -> updateSelectedElementIndex(value);
+			if (provideIsBound()) {
+				updateLambda.run();
+			} else {
+				exec(updateLambda).dispatch();
 			}
 		}
 	}

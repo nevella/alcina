@@ -61,6 +61,9 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
  */
 @Registration({ ContentDeliveryType.class, ContentDeliveryType_EMAIL.class })
 public class ContentDeliveryEmail implements ContentDelivery {
+	public static final LooseContext.Key CONTEXT_IGNORE_SIZE_CHECK = LooseContext
+			.key(ContentDeliveryEmail.class, "CONTEXT_IGNORE_SIZE_CHECK");
+
 	public static final String PUBLICATION_REASON_MESSAGE = "<!--PUBLICATION_REASON_MESSAGE-->";
 
 	public static final String CONTEXT_SMTP_FROM_NAME = ContentDeliveryEmail.class
@@ -324,7 +327,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			msg.setHeader("Reply-to", replyTo);
 		}
 		// Check message size if we have a max size set
-		if (maxMessageSize != -1) {
+		if (maxMessageSize != -1 && !CONTEXT_IGNORE_SIZE_CHECK.is()) {
 			try {
 				long messageSize = getMessageSize(msg);
 				Ax.out("Message size: %s", messageSize);

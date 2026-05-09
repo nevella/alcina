@@ -47,6 +47,8 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 @Registrations({ @Registration(JaxbContextRegistration.class), })
 public final class IntPair implements Comparable<IntPair>, Serializable,
 		Iterable<Integer>, TreeSerializable {
+	public static final transient IntPair ZERO = new IntPair();
+
 	/*
 	 * later before earler; smaller before larger; (which handles overlaps) -
 	 * this is a superset of contained is before containing

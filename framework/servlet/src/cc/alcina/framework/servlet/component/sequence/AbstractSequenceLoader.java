@@ -41,6 +41,9 @@ public abstract class AbstractSequenceLoader implements Sequence.Loader {
 	@Override
 	public Sequence<?> load(String location) {
 		sequence.name = name;
+		if (location != null) {
+			path = location;
+		}
 		if (!new File(path).exists()) {
 			// FIXME - romcom - this causes a mutation record apply issue -
 			// see

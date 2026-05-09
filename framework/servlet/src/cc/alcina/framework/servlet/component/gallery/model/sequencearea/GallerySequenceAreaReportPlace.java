@@ -9,6 +9,15 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSequence;
 
+/*
+@formatter:off
+
+to generate:
+cd flight-alcina-devconsole-20260508_054843_069.leela.local-0-ncbz-qcgzvvh/
+zip -r  ../flight-events.zip *
+
+@formatter:on
+*/
 public class GallerySequenceAreaReportPlace extends GalleryPlace {
 	public SequencePlace sequencePlace = new SequencePlace();
 

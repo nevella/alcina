@@ -367,6 +367,9 @@ public class DomNode {
 
 	public boolean classIsOneOf(String... names) {
 		String className = getClassName();
+		if (Ax.isBlank(className)) {
+			return false;
+		}
 		for (int idx = 0; idx < names.length; idx++) {
 			if (className.equals(names[idx])) {
 				return true;

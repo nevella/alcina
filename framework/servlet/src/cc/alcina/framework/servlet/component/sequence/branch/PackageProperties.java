@@ -18,6 +18,10 @@ public class PackageProperties {
     static _BranchingParserNodeCriterion_MatchTypeCriterion branchingParserNodeCriterion_matchTypeCriterion = new _BranchingParserNodeCriterion_MatchTypeCriterion();
     static _BranchingParserNodeCriterion_NameDepthCriterion branchingParserNodeCriterion_nameDepthCriterion = new _BranchingParserNodeCriterion_NameDepthCriterion();
     static _BranchingParserNodeCriterion_OncePerToplevelToken branchingParserNodeCriterion_oncePerToplevelToken = new _BranchingParserNodeCriterion_OncePerToplevelToken();
+    static _BranchingParserNodeCriterion_TermDistance branchingParserNodeCriterion_termDistance = new _BranchingParserNodeCriterion_TermDistance();
+    static _BranchingParserNodeCriterion_TextDistanceCriterion branchingParserNodeCriterion_textDistanceCriterion = new _BranchingParserNodeCriterion_TextDistanceCriterion();
+    static _BranchingParserNodeCriterion_TokenDistanceCriterion branchingParserNodeCriterion_tokenDistanceCriterion = new _BranchingParserNodeCriterion_TokenDistanceCriterion();
+    public static _TermDistanceEditor termDistanceEditor = new _TermDistanceEditor();
     
     static class _BranchingParserNodeCriterion_BranchMinDepthCriterion implements TypedProperty.Container {
       TypedProperty<BranchingParserNodeCriterion.BranchMinDepthCriterion, String> displayName = new TypedProperty<>(BranchingParserNodeCriterion.BranchMinDepthCriterion.class, "displayName");
@@ -121,6 +125,76 @@ public class PackageProperties {
       }
       
        InstanceProperties instance(BranchingParserNodeCriterion.OncePerToplevelToken instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _BranchingParserNodeCriterion_TermDistance implements TypedProperty.Container {
+      TypedProperty<BranchingParserNodeCriterion.TermDistance, BranchingParserNodeCriterion.Depth> distance = new TypedProperty<>(BranchingParserNodeCriterion.TermDistance.class, "distance");
+      TypedProperty<BranchingParserNodeCriterion.TermDistance, String> text = new TypedProperty<>(BranchingParserNodeCriterion.TermDistance.class, "text");
+      static class InstanceProperties extends 	InstanceProperty.Container<BranchingParserNodeCriterion.TermDistance> {
+         InstanceProperties(BranchingParserNodeCriterion.TermDistance source){super(source);}
+        InstanceProperty<BranchingParserNodeCriterion.TermDistance, BranchingParserNodeCriterion.Depth> distance(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_termDistance.distance);}
+        InstanceProperty<BranchingParserNodeCriterion.TermDistance, String> text(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_termDistance.text);}
+      }
+      
+       InstanceProperties instance(BranchingParserNodeCriterion.TermDistance instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _BranchingParserNodeCriterion_TextDistanceCriterion implements TypedProperty.Container {
+      TypedProperty<BranchingParserNodeCriterion.TextDistanceCriterion, String> displayName = new TypedProperty<>(BranchingParserNodeCriterion.TextDistanceCriterion.class, "displayName");
+      TypedProperty<BranchingParserNodeCriterion.TextDistanceCriterion, StandardSearchOperator> operator = new TypedProperty<>(BranchingParserNodeCriterion.TextDistanceCriterion.class, "operator");
+      TypedProperty<BranchingParserNodeCriterion.TextDistanceCriterion, String> targetPropertyName = new TypedProperty<>(BranchingParserNodeCriterion.TextDistanceCriterion.class, "targetPropertyName");
+      TypedProperty<BranchingParserNodeCriterion.TextDistanceCriterion, BranchingParserNodeCriterion.TermDistance> value = new TypedProperty<>(BranchingParserNodeCriterion.TextDistanceCriterion.class, "value");
+      static class InstanceProperties extends 	InstanceProperty.Container<BranchingParserNodeCriterion.TextDistanceCriterion> {
+         InstanceProperties(BranchingParserNodeCriterion.TextDistanceCriterion source){super(source);}
+        InstanceProperty<BranchingParserNodeCriterion.TextDistanceCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_textDistanceCriterion.displayName);}
+        InstanceProperty<BranchingParserNodeCriterion.TextDistanceCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_textDistanceCriterion.operator);}
+        InstanceProperty<BranchingParserNodeCriterion.TextDistanceCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_textDistanceCriterion.targetPropertyName);}
+        InstanceProperty<BranchingParserNodeCriterion.TextDistanceCriterion, BranchingParserNodeCriterion.TermDistance> value(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_textDistanceCriterion.value);}
+      }
+      
+       InstanceProperties instance(BranchingParserNodeCriterion.TextDistanceCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _BranchingParserNodeCriterion_TokenDistanceCriterion implements TypedProperty.Container {
+      TypedProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, String> displayName = new TypedProperty<>(BranchingParserNodeCriterion.TokenDistanceCriterion.class, "displayName");
+      TypedProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, StandardSearchOperator> operator = new TypedProperty<>(BranchingParserNodeCriterion.TokenDistanceCriterion.class, "operator");
+      TypedProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, String> targetPropertyName = new TypedProperty<>(BranchingParserNodeCriterion.TokenDistanceCriterion.class, "targetPropertyName");
+      TypedProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, BranchingParserNodeCriterion.TermDistance> value = new TypedProperty<>(BranchingParserNodeCriterion.TokenDistanceCriterion.class, "value");
+      static class InstanceProperties extends 	InstanceProperty.Container<BranchingParserNodeCriterion.TokenDistanceCriterion> {
+         InstanceProperties(BranchingParserNodeCriterion.TokenDistanceCriterion source){super(source);}
+        InstanceProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_tokenDistanceCriterion.displayName);}
+        InstanceProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_tokenDistanceCriterion.operator);}
+        InstanceProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_tokenDistanceCriterion.targetPropertyName);}
+        InstanceProperty<BranchingParserNodeCriterion.TokenDistanceCriterion, BranchingParserNodeCriterion.TermDistance> value(){return new InstanceProperty<>(source,PackageProperties.branchingParserNodeCriterion_tokenDistanceCriterion.value);}
+      }
+      
+       InstanceProperties instance(BranchingParserNodeCriterion.TokenDistanceCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _TermDistanceEditor implements TypedProperty.Container {
+      public TypedProperty<TermDistanceEditor, BranchingParserNodeCriterion.Depth> distance = new TypedProperty<>(TermDistanceEditor.class, "distance");
+      public TypedProperty<TermDistanceEditor, String> text = new TypedProperty<>(TermDistanceEditor.class, "text");
+      public TypedProperty<TermDistanceEditor, BranchingParserNodeCriterion.TermDistance> value = new TypedProperty<>(TermDistanceEditor.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<TermDistanceEditor> {
+        public  InstanceProperties(TermDistanceEditor source){super(source);}
+        public InstanceProperty<TermDistanceEditor, BranchingParserNodeCriterion.Depth> distance(){return new InstanceProperty<>(source,PackageProperties.termDistanceEditor.distance);}
+        public InstanceProperty<TermDistanceEditor, String> text(){return new InstanceProperty<>(source,PackageProperties.termDistanceEditor.text);}
+        public InstanceProperty<TermDistanceEditor, BranchingParserNodeCriterion.TermDistance> value(){return new InstanceProperty<>(source,PackageProperties.termDistanceEditor.value);}
+      }
+      
+      public  InstanceProperties instance(TermDistanceEditor instance) {
         return new InstanceProperties( instance);
       }
       

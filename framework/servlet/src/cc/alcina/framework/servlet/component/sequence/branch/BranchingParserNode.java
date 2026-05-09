@@ -2,9 +2,15 @@ package cc.alcina.framework.servlet.component.sequence.branch;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
+import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.BranchNode;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.model.HasClassNames;
@@ -17,7 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 class BranchingParserNode extends Model
 		implements HasClassNames, HasStringRepresentation {
 	enum MatchType {
-		MATCH, DESCENDANT_MATCH
+		MATCH, DESCENDANT_MATCH, MEASURE
 	}
 
 	enum GroupType {
@@ -61,7 +67,15 @@ class BranchingParserNode extends Model
 	}
 
 	public String getPath() {
-		return branchNode.branch.toAncestorString();
+		return branchNode.branch.toStructuredPredecessorString();
+	}
+
+	public String getDescent() {
+		return branchNode.branch.toStructuredAncestorString();
+	}
+
+	public String getIndentSimplePath() {
+		return branchNode.branch.toIndentString();
 	}
 
 	public String getMatch() {
@@ -90,5 +104,97 @@ class BranchingParserNode extends Model
 	@Override
 	public String provideStringRepresentation() {
 		return getPath();
+	}
+
+	public String getMatchAgainst() {
+		if (matchAgainst == null) {
+			matchAgainst = new MatchAgainst();
+		}
+		return matchAgainst.markup;
+	}
+
+	MatchAgainst matchAgainst;
+
+	class MatchAgainst {
+		String markup;
+
+		MatchAgainst() {
+			/*
+			 * limit to parser input range
+			 * 
+			 * show first 5 chars.
+			 * 
+			 * elide if necc to show underlined match
+			 * 
+			 * 
+			 */
+			int maxChars = 40;
+			FormatBuilder format = new FormatBuilder();
+			Location preMatchStart = branchNode.branch.location;
+			int docEndIndex = preMatchStart.getContainingNode().document
+					.getDocumentElementNode().asRange().end.getIndex();
+			Measure match = branchNode.branch.match;
+			int startIndex = preMatchStart.getIndex();
+			if (match == null) {
+				int end = Math.min(startIndex + maxChars, docEndIndex);
+				Range range = new Location.Range(preMatchStart, preMatchStart
+						.textRelativeLocation(end - startIndex, false));
+				format.append(StringEscapeUtils.escapeHtml(range.text()));
+			} else {
+				int matchStart = match.start.getIndex();
+				format.append("<div>");
+				{
+					/*
+					 * pre
+					 */
+					boolean ellipses = false;
+					int end = matchStart;
+					if (matchStart > startIndex + 8) {
+						end = matchStart + 5;
+						ellipses = true;
+					}
+					Range range = new Location.Range(preMatchStart,
+							preMatchStart.textRelativeLocation(end - startIndex,
+									false));
+					format.append(StringEscapeUtils.escapeHtml(range.text()));
+					if (ellipses) {
+						format.append("...");
+					}
+				}
+				{
+					/*
+					 * match
+					 */
+					format.append("<match>");
+					/*
+					 * respect limitations of w3c impl (for now) - FIXME dom
+					 */
+					if (match.start.isAtNodeStart()
+							&& match.end.isAtNodeEnd()) {
+						format.append(match.markup());
+					} else {
+						format.append(
+								StringEscapeUtils.escapeHtml(match.text()));
+					}
+					format.append("</match>");
+				}
+				{
+					int postMatchStart = match.end.getIndex();
+					/*
+					 * post
+					 */
+					boolean ellipses = false;
+					int end = Math.min(postMatchStart + 30, docEndIndex);
+					Range range = new Location.Range(match.end, match.end
+							.textRelativeLocation(end - postMatchStart, false));
+					format.append(StringEscapeUtils.escapeHtml(range.text()));
+					if (ellipses) {
+						format.append("...");
+					}
+				}
+				format.append("</div>");
+			}
+			markup = format.toString().replace(" ", "\u00B7");
+		}
 	}
 }

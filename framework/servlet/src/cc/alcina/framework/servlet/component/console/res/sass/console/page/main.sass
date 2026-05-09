@@ -9,7 +9,7 @@
 @use '../../dirndl/cmp/choices'
 @use '../../dirndl/cmp/spinner'
 @use '../multi/common'
-@use '../report/report'
+@use '../console/console'
 @use 'header'
 
 @include base.standard-elements
@@ -52,10 +52,10 @@ body > page
   > header
     @include header.contents
 
-  > report-area
+  > server-console-area
     display: block
 
-    @include report.contents
+    @include console.contents
       
 
 @include app-suggestor.contents
@@ -65,4 +65,4 @@ body > page
 @include choices.choice-editor-tag
 @include choices.decorator-suggestor
 
-@include report.overlay
+@include console.overlay

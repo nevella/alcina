@@ -171,6 +171,12 @@ public class LayerParser {
 							// location
 							return match.end;
 						}
+						if (!match.provideIsPoint() && toNextStartIfAtNodeEnd) {
+							if (match.end.isAtNodeEnd()) {
+								return match.end.relativeLocation(
+										RelativeDirection.NEXT_DOMNODE_START);
+							}
+						}
 						// if a text node was matched but only a point in the
 						// node (so no characters, just the node), the node
 						// is being matched as a whole, so exit
@@ -455,6 +461,12 @@ public class LayerParser {
 	 * If not true, the location will advance point-by-point
 	 */
 	boolean lookahead = true;
+
+	boolean toNextStartIfAtNodeEnd = false;
+
+	public void setToNextStartIfAtNodeEnd(boolean toNextStartIfAtNodeEnd) {
+		this.toNextStartIfAtNodeEnd = toNextStartIfAtNodeEnd;
+	}
 
 	public LayerParser(MeasureSelection selection, LayerParserPeer parserPeer) {
 		this.selection = selection;

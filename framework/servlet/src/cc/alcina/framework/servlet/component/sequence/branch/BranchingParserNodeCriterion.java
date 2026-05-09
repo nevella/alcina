@@ -1,14 +1,20 @@
 package cc.alcina.framework.servlet.component.sequence.branch;
 
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlType;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.domain.search.EntityCriteriaGroup;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.BaseEnumCriterion;
 import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.common.client.search.BooleanEnumCriterion;
@@ -16,13 +22,13 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseEnumCriterionPack.BaseEnumCriterionHandler;
-import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode.GroupType;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode.MatchType;
 
@@ -38,7 +44,9 @@ public class BranchingParserNodeCriterion {
 					MatchTypeCriterion.class,
 					GroupTypeCriterion.class,
 					NameDepthCriterion.class,
-					BranchMinDepthCriterion.class
+					BranchMinDepthCriterion.class,
+					TokenDistanceCriterion.class,
+					TextDistanceCriterion.class,
 				//@formatter:on
 			}))
 	@XmlType(name = "BranchingParserNodeSearchDefinition_CriteriaGroup")
@@ -110,6 +118,9 @@ public class BranchingParserNodeCriterion {
 				if (value == null) {
 					return true;
 				}
+				if (value == MatchType.MEASURE) {
+					return node.branchNode.branch.match != null;
+				}
 				if (node.matchType == null) {
 					return false;
 				}
@@ -126,7 +137,8 @@ public class BranchingParserNodeCriterion {
 	}
 
 	enum Depth implements HasDisplayName {
-		_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
+		_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16,
+		_17, _18, _19, _20;
 
 		@Override
 		public String displayName() {
@@ -147,6 +159,85 @@ public class BranchingParserNodeCriterion {
 				return node.getNameDepth() <= (value.ordinal());
 			}
 		}
+	}
+
+	@TypeSerialization("tokendistance")
+	@Bean(PropertySource.FIELDS)
+	static class TokenDistanceCriterion extends SearchCriterion {
+		TermDistance value = new TermDistance();
+
+		static class Handler extends CriterionHandler<TokenDistanceCriterion> {
+			@Override
+			public DomainFilter getFilter(TokenDistanceCriterion sc) {
+				TermDistance tokenDistance = sc.value;
+				String text = TextUtils.normalisedLcKey(tokenDistance.text);
+				if (text.isEmpty()) {
+					return null;
+				}
+				return new DomainFilter(new Predicate<BranchingParserNode>() {
+					Pattern p = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
+
+					@Override
+					public boolean test(BranchingParserNode o) {
+						List<Branch> branchCluster = o.branchNode
+								.getReachableBranches(
+										tokenDistance.distance.ordinal());
+						return branchCluster.stream().anyMatch(
+								b -> p.matcher(b.group.getName()).find());
+					}
+				});
+			}
+		}
+	}
+
+	@TypeSerialization("textdistance")
+	@Bean(PropertySource.FIELDS)
+	static class TextDistanceCriterion extends SearchCriterion {
+		TermDistance value = new TermDistance();
+
+		static class Handler extends CriterionHandler<TextDistanceCriterion> {
+			@Override
+			public DomainFilter getFilter(TextDistanceCriterion sc) {
+				TermDistance termDistance = sc.value;
+				String text = termDistance.text;
+				if (text.isEmpty()) {
+					return null;
+				}
+				return new DomainFilter(new Predicate<BranchingParserNode>() {
+					String documentContent;
+
+					@Override
+					public boolean test(BranchingParserNode o) {
+						Location location = o.branchNode.branch.location;
+						if (documentContent == null) {
+							documentContent = location
+									.getContainingNode().document
+											.getDocumentElementNode()
+											.textContent();
+						}
+						int idx = documentContent.indexOf(text,
+								location.getIndex());
+						return idx != -1
+								&& idx <= termDistance.distance.ordinal()
+										+ location.getIndex();
+					}
+				});
+			}
+		}
+	}
+
+	@TypedProperties
+	static class TermDistance extends Bindable.Fields
+			implements TreeSerializable {
+		PackageProperties._BranchingParserNodeCriterion_TermDistance.InstanceProperties
+				properties() {
+			return PackageProperties.branchingParserNodeCriterion_termDistance
+					.instance(this);
+		}
+
+		String text;
+
+		Depth distance;
 	}
 
 	@TypeSerialization("branchmindepth")

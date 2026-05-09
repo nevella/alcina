@@ -1,3 +1,7 @@
+/* copied from suggestor FIXME actions should be split out into buttons
+ *
+ *  TODO - move some/most to dropdown
+ * */
 bean-editor {
   padding: 1em 2em;
   line-height: 2em;

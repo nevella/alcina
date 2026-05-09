@@ -10,6 +10,7 @@ import com.google.web.bindery.event.shared.SimpleEventBus;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding.ManagedLambdaEquality;
 
 /**
  * <p>
@@ -112,7 +113,12 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 				QueuedEvent other = (QueuedEvent) obj;
 				if (runnable != null) {
 					if (other.runnable != null) {
-						return runnable.getClass() == other.runnable.getClass();
+						if (runnable instanceof ManagedLambdaEquality) {
+							return Objects.equals(runnable, other.runnable);
+						} else {
+							return runnable.getClass() == other.runnable
+									.getClass();
+						}
 					} else {
 						return false;
 					}
@@ -127,7 +133,11 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 		@Override
 		public int hashCode() {
 			if (runnable != null) {
-				return runnable.getClass().hashCode();
+				if (runnable instanceof ManagedLambdaEquality) {
+					return runnable.hashCode();
+				} else {
+					return runnable.getClass().hashCode();
+				}
 			} else {
 				return Objects.hash(topic, message);
 			}

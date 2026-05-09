@@ -28,7 +28,9 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.entity.logic.ServerClientInstance;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
+import cc.alcina.framework.gwt.client.util.HostAndProtocolSupplier;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
 import cc.alcina.framework.servlet.task.TaskLogJobDetails;
 import cc.alcina.framework.servlet.task.TaskRunJob;
@@ -40,6 +42,15 @@ import cc.alcina.framework.servlet.task.TaskRunJob;
  *         FIXME - jobs - add 'rerun'
  */
 public class JobServlet extends AlcinaServlet {
+	public static Link createJobLink(String text, long jobId) {
+		TaskLogJobDetails detailsTask = new TaskLogJobDetails();
+		detailsTask.setJobId(jobId);
+		String jobUrl = JobServlet.createTaskUrl(
+				HostAndProtocolSupplier.get().getHostAndProtocol(),
+				detailsTask);
+		return new Link().withText(text).withHref(jobUrl).withTargetBlank();
+	}
+
 	public static String createTaskUrl(String host, Task task) {
 		StringMap queryParameters = new StringMap();
 		if (task instanceof TaskLogJobDetails) {

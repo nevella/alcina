@@ -489,6 +489,10 @@ class Environment {
 							: locationMutation.hash;
 				}
 				String decoded = UrlComponentEncoder.get().decode(token);
+				/*
+				 * actually - no
+				 */
+				decoded = token;
 				Ax.logEvent("Navigate %s:: -> %s", startup ? "(startup) " : "",
 						decoded);
 				History.newItem(decoded, !startup);

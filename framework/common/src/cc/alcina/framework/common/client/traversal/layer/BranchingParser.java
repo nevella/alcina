@@ -3,11 +3,13 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
@@ -30,6 +33,7 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Comparators;
 import cc.alcina.framework.common.client.util.ConditionalLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -54,6 +58,36 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * <p>
  * Use branch.toResult().toStructuredString() to get a view of the matched
  * structure
+ */
+/*
+ * -------------------------
+ * 
+ * GOTCHAS!!
+ * 
+ * -------------------------
+ * 
+ * @formatter:off
+ * 
+ * * Regex boundary matches are dangerous - i.e \\A|and|or - since the region
+ * matched changes. Generally:
+ * 
+ * - minimise use
+ * - make sure to turn caching off
+ * - *must* put at the *end* of the regex - e.g. and|or|\\A (since \\A will of course match anything)
+ * - use GenericTextual.START_OF_RANGE - aka hoist the regex clause to a BP token
+ * - make sure you mean START_OF_RANGE and not START_OF_INPUT
+ * 
+ * * regex order is important
+ * 
+ * * make ORs (i.e. BRUCE|BOB) higher level if needed (hoist individual regex clauses to a token each from the regex)
+ * 
+ * if a primitive doesn't match a dom range (e.g. a boundary match such as START_OF_RANGE) - 
+ * it *must* return true for  #isNonDomToken
+ * 
+ * by default a text primitive will not match if the match cursor is at a node-end boundary - 
+ * to change this behaviour (which can cause unexpected 'no matches'), use LayerParser#setToNextStartIfAtNodeEnd
+ * 
+ * * @formatter:on
  */
 /*
  * The naive algorithm is:
@@ -91,6 +125,14 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * look at factoring out suggested maybe more trouble than it's worth
  * 
  * 
+ */
+/*
+ * FIXMEs
+ * 
+ * isInitial should *mostly* go away, the set of initial tokens should be
+ * determined from the first scan (at location 0). Tokens should be able to
+ * check parsercontext.checkInitial to match a more complex inital token - such
+ * as ' s ?\\d+' instead of ' ' if needed
  */
 public class BranchingParser {
 	int branchSizeLimit = Integer.MAX_VALUE;
@@ -133,6 +175,23 @@ public class BranchingParser {
 		@Override
 		public String toString() {
 			return Ax.format("%s :: %s", branch, match);
+		}
+
+		public List<Branch> getReachableBranches(int maxDistance) {
+			List<Branch> result = new ArrayList<>();
+			Branch revCursor = branch;
+			Branch fwdCursor = branch;
+			for (int idx = 0; idx < maxDistance; idx++) {
+				if (revCursor != null) {
+					result.add(revCursor);
+					revCursor = revCursor.predecessor;
+				}
+				if (fwdCursor != null) {
+					result.add(fwdCursor);
+					fwdCursor = fwdCursor.succesor;
+				}
+			}
+			return result;
 		}
 	}
 
@@ -228,6 +287,9 @@ public class BranchingParser {
 				implements ProcessObserver<BranchingParser.BeforeBranchEntry> {
 			@Override
 			public void topicPublished(BeforeBranchEntry message) {
+				if (branchNodes == null) {
+					return;
+				}
 				branchCount++;
 				branchNodes.put(message.branch, new BranchNode(message.branch));
 				if (message.branch.parent == null) {
@@ -488,11 +550,13 @@ public class BranchingParser {
 	 * given Location
 	 * 
 	 */
-	public class Branch {
+	public class Branch implements Cloneable {
 		// immutable
 		public Branch parent;
 
 		Branch predecessor;
+
+		Branch succesor;
 
 		public Location location;
 
@@ -510,6 +574,12 @@ public class BranchingParser {
 		int childBranchesReturned;
 
 		boolean backtracking;
+
+		/**
+		 * BP clients can store model objects corresponding to the Branch here,
+		 * for later visualisation
+		 */
+		public Object userData;
 
 		Branch(Branch parent, Branch predecessor, Group group, int indexInGroup,
 				int repetitionIndex) {
@@ -531,6 +601,9 @@ public class BranchingParser {
 				int indexInGroup, int repetitionIndex) {
 			Branch branch = new Branch(parent, predecessor, group, indexInGroup,
 					repetitionIndex);
+			if (predecessor != null) {
+				predecessor.succesor = branch;
+			}
 			if (predecessor.match != null) {
 				branch.location = env.successorFollowingMatch
 						.get(predecessor.match);
@@ -539,6 +612,12 @@ public class BranchingParser {
 		}
 
 		void enter() {
+			if (group.getName().equals("AT_SUBSEQUENT_LEADIN")) {
+				// if (location.toString().contains("'s 56")) {
+				Ax.out("ASL:%s", location.toString());
+				int debug = 3;
+				// }
+			}
 			ProcessObservers.publish(BeforeBranchEntry.class,
 					() -> new BeforeBranchEntry(this));
 			if (!isComplete()) {
@@ -570,17 +649,10 @@ public class BranchingParser {
 						 * contiguous _text_ runs to not be continuous - and
 						 * thus fail the sequence
 						 */
-						matchesLocation =
-								// getMostRecentMatchedMeasure() == null
-								// ||
-								Objects.equals(
-										testMeasureEnd ? match.end.getIndex()
-												: match.start.getIndex(),
-										location.getIndex());
-						if (!matchesLocation) {
-							int debug = 3;
-						}
-						int debug = 3;
+						matchesLocation = Objects.equals(
+								testMeasureEnd ? match.end.getIndex()
+										: match.start.getIndex(),
+								location.getIndex());
 					}
 					if (group.negated) {
 						if (matchesLocation) {
@@ -862,6 +934,46 @@ public class BranchingParser {
 			return format.toString();
 		}
 
+		public String toStructuredAncestorString() {
+			List<Branch> chain = new ArrayList<>();
+			Branch cursor = this;
+			while (cursor != null) {
+				chain.add(0, cursor);
+				cursor = cursor.parent;
+			}
+			FormatBuilder format = new FormatBuilder();
+			chain.forEach(b -> {
+				format.indent(b.depth());
+				format.line(b);
+			});
+			return format.toString();
+		}
+
+		public String toStructuredPredecessorString() {
+			List<Branch> chain = new ArrayList<>();
+			Branch cursor = this;
+			while (cursor != null) {
+				chain.add(0, cursor);
+				cursor = cursor.predecessor;
+			}
+			FormatBuilder format = new FormatBuilder();
+			chain.forEach(b -> {
+				format.indent(b.depth());
+				format.line(b);
+			});
+			return format.toString();
+		}
+
+		int depth() {
+			int depth = 0;
+			Branch cursor = this;
+			while (cursor != null) {
+				depth++;
+				cursor = cursor.parent;
+			}
+			return depth;
+		}
+
 		public Branch root() {
 			Branch cursor = this;
 			while (cursor.parent != null) {
@@ -888,6 +1000,92 @@ public class BranchingParser {
 				cursor = cursor.parent;
 			} while (cursor != null);
 			return result.stream();
+		}
+
+		protected Branch clone() {
+			try {
+				return (Branch) super.clone();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		class Projector {
+			Predicate<Token> filter;
+
+			Projector(Predicate<Token> filter) {
+				this.filter = filter;
+			}
+
+			Map<Branch, Branch> projected = new LinkedHashMap<>();
+
+			Branch project() {
+				Measure rootMeasure = match;
+				{
+					/*
+					 * init projected
+					 */
+					Branch cursor = Branch.this;
+					do {
+						projected.put(cursor, cursor.clone());
+						cursor = cursor.predecessor;
+					} while (cursor != null);
+				}
+				/*
+				 * fixup refs
+				 */
+				projected.values().forEach(branch -> {
+					branch.parent = projected.get(branch.parent);
+					branch.predecessor = projected.get(branch.predecessor);
+					branch.succesor = projected.get(branch.succesor);
+					branch.location = branch.location == null ? null
+							: branch.location.clone();
+					branch.match = branch.match == null ? null
+							: branch.match.clone();
+				});
+				/*
+				 * determine elisions (if any)
+				 */
+				List<Branch> elided = projected.values().stream().filter(
+						b -> b.match != null && filter.test(b.match.token))
+						.toList();
+				elided.forEach(branch -> {
+					Preconditions.checkArgument(branch.match.start
+							.getIndex() == rootMeasure.start.getIndex()
+							|| branch.match.end.getIndex() == rootMeasure.end
+									.getIndex());
+					if (branch.match.start.getIndex() == rootMeasure.start
+							.getIndex()) {
+						Preconditions.checkState(startElided == null);
+						startElided = branch;
+					} else if (branch.match.end.equals(rootMeasure.end)) {
+						Preconditions.checkState(endElided == null);
+						endElided = branch;
+					}
+				});
+				Location start = startElided == null ? rootMeasure.start
+						: startElided.match.end;
+				Location end = endElided == null ? rootMeasure.end
+						: endElided.match.start;
+				Range truncator = new Range(start, end);
+				projected.values().forEach(branch -> {
+					branch.match = truncator.truncate(branch.match);
+				});
+				return projected.get(Branch.this);
+			}
+
+			Branch startElided = null;
+
+			Branch endElided = null;
+		}
+
+		public Branch projectFiltered(Predicate<Token> filter) {
+			return new Projector(filter).project();
+		}
+
+		public String toIndentString() {
+			return CommonUtils.padStringLeft("", depth(), '\u00A0')
+					+ toString();
 		}
 	}
 
@@ -922,12 +1120,13 @@ public class BranchingParser {
 
 		Map<Group, Integer> groupIndicies = AlcinaCollections.newHashMap();
 
-		Entry root;
+		public Entry root;
 
 		Branch branch;
 
 		Result(Branch branch) {
 			this.branch = branch;
+			Branch cursor = branch;
 			populate();
 			stream().filter(r -> r.match == null).forEach(r -> {
 				if (r.children.isEmpty()) {

@@ -343,11 +343,58 @@ public class StreamBinding<T> {
 	 * produce a given result, and you only want to process once in a given
 	 * event cycle
 	 * 
+	 * Note that lambda equality ...ooh, don't go there. But basically make sure
+	 * the lambda is distinct -per-model-instance- - see SequenceArea and
+	 * InstanceDistinctLambda for an example - because if multiple models of the
+	 * same type are visible simultaneously, this gets a little trickier
+	 * 
 	 * @param runnable
 	 */
 	public void dispatchDistinct(Runnable runnable) {
 		accept(t -> Client.eventBus().queued().lambda(runnable).distinct()
 				.dispatch());
+	}
+
+	public interface ManagedLambdaEquality {
+	}
+
+	/*
+	 */
+	public static class InstanceDistinctLambda
+			implements Runnable, ManagedLambdaEquality {
+		Model model;
+
+		Runnable runnable;
+
+		InstanceDistinctLambda(Model model, Runnable runnable) {
+			this.model = model;
+			this.runnable = runnable;
+		}
+
+		public static InstanceDistinctLambda of(Model model,
+				Runnable runnable) {
+			return new InstanceDistinctLambda(model, runnable);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(model, runnable);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof InstanceDistinctLambda) {
+				InstanceDistinctLambda o = (InstanceDistinctLambda) obj;
+				return model == o.model && runnable == o.runnable;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public void run() {
+			runnable.run();
+		}
 	}
 
 	public <BSP extends SourcesPropertyChangeEvents> TargetBinding<BSP, T>
@@ -417,8 +464,14 @@ public class StreamBinding<T> {
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder();
-		format.format("%s.", NestedName.get(fromPropertyChangeSource));
-		format.format("%s", on == null ? "*" : fromProperty().getName());
+		if (fromPropertyChangeSource == null) {
+			format.format("%s::",
+					bindings == null ? null : NestedName.get(bindings.model()));
+			format.format("%s", NestedName.get(fromNodeEventClass));
+		} else {
+			format.format("%s.", NestedName.get(fromPropertyChangeSource));
+			format.format("%s", on == null ? "*" : fromProperty().getName());
+		}
 		// ...map, fn etc
 		if (targetBinding != null) {
 			format.format(" --> %s", targetBinding);

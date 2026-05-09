@@ -22,8 +22,6 @@
       display: flex
       padding-left: 1rem
       align-items: center
-      //background: #e8e8e8
-      //border-bottom: solid 1px #aaa
       width: 100%
       box-sizing: border-box
       background: white
@@ -34,6 +32,11 @@
 
   > detail
     @include detail.contents
+
+@mixin non-full
+  height: auto
+  padding-bottom: 1px
+
 
 @mixin overlay
   @include detail.overlay

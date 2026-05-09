@@ -93,6 +93,7 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 						group = Group.primitive(token);
 					} else {
 						group = group.clone();
+						group.name = token.toString();
 					}
 					group.token = token;
 					return group;
@@ -128,6 +129,8 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 		BranchToken token;
 
 		Quantifier quantifier = Quantifier.GREEDY;
+
+		String name;
 
 		public boolean isNamed() {
 			if (token != null) {
@@ -288,6 +291,16 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			this.order = Order.ANY;
 			return this;
 		}
+
+		public String getName() {
+			if (isPrimitive()) {
+				return token.toString();
+			} else if (name != null) {
+				return name;
+			} else {
+				return "ANON";
+			}
+		}
 	}
 
 	public enum MatchesBoundary {
@@ -329,6 +342,21 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			@Override
 			public Measure match(ParserState state) {
 				return state.patternMatcher().match(this, PATTERN);
+			}
+		},
+		WHITESPACE_NON_INITIAL {
+			private Pattern PATTERN = Pattern.compile(
+					TextUtils.NON_LINE_WS_PATTERN_STR,
+					Pattern.CASE_INSENSITIVE);
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
+
+			@Override
+			public boolean isInitial() {
+				return false;
 			}
 		},
 		DIGITS {
