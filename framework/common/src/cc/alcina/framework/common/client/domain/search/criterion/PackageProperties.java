@@ -1,9 +1,13 @@
 package cc.alcina.framework.common.client.domain.search.criterion;
 
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyNameCriterion;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+import java.lang.Boolean;
+import java.lang.Class;
 import java.lang.String;
 import java.util.Date;
 
@@ -18,6 +22,10 @@ public class PackageProperties {
     public static _FinishedToCriterion finishedToCriterion = new _FinishedToCriterion();
     public static _ModifiedFromCriterion modifiedFromCriterion = new _ModifiedFromCriterion();
     public static _ModifiedToCriterion modifiedToCriterion = new _ModifiedToCriterion();
+    public static _PropertyNameCriterion propertyNameCriterion = new _PropertyNameCriterion();
+    public static _PropertyNameCriterion_Filter propertyNameCriterion_filter = new _PropertyNameCriterion_Filter();
+    public static _PropertyOrderCriterion propertyOrderCriterion = new _PropertyOrderCriterion();
+    public static _PropertyOrderCriterion_Order propertyOrderCriterion_order = new _PropertyOrderCriterion_Order();
     public static _StartDateCriterion startDateCriterion = new _StartDateCriterion();
     
     public static class _CreatedFromCriterion implements TypedProperty.Container {
@@ -162,6 +170,80 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(ModifiedToCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _PropertyNameCriterion implements TypedProperty.Container {
+      public TypedProperty<PropertyNameCriterion, String> displayName = new TypedProperty<>(PropertyNameCriterion.class, "displayName");
+      public TypedProperty<PropertyNameCriterion, StandardSearchOperator> operator = new TypedProperty<>(PropertyNameCriterion.class, "operator");
+      public TypedProperty<PropertyNameCriterion, String> targetPropertyName = new TypedProperty<>(PropertyNameCriterion.class, "targetPropertyName");
+      public TypedProperty<PropertyNameCriterion, PropertyNameCriterion.Filter> value = new TypedProperty<>(PropertyNameCriterion.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyNameCriterion> {
+        public  InstanceProperties(PropertyNameCriterion source){super(source);}
+        public InstanceProperty<PropertyNameCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.displayName);}
+        public InstanceProperty<PropertyNameCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.operator);}
+        public InstanceProperty<PropertyNameCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.targetPropertyName);}
+        public InstanceProperty<PropertyNameCriterion, PropertyNameCriterion.Filter> value(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.value);}
+      }
+      
+      public  InstanceProperties instance(PropertyNameCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _PropertyNameCriterion_Filter implements TypedProperty.Container {
+      public TypedProperty<PropertyNameCriterion.Filter, String> propertyName = new TypedProperty<>(PropertyNameCriterion.Filter.class, "propertyName");
+      public TypedProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue = new TypedProperty<>(PropertyNameCriterion.Filter.class, "serializedPropertyValue");
+      public TypedProperty<PropertyNameCriterion.Filter, Class> type = new TypedProperty<>(PropertyNameCriterion.Filter.class, "type");
+      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyNameCriterion.Filter> {
+        public  InstanceProperties(PropertyNameCriterion.Filter source){super(source);}
+        public InstanceProperty<PropertyNameCriterion.Filter, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.propertyName);}
+        public InstanceProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.serializedPropertyValue);}
+        public InstanceProperty<PropertyNameCriterion.Filter, Class> type(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.type);}
+      }
+      
+      public  InstanceProperties instance(PropertyNameCriterion.Filter instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _PropertyOrderCriterion implements TypedProperty.Container {
+      public TypedProperty<PropertyOrderCriterion, String> displayName = new TypedProperty<>(PropertyOrderCriterion.class, "displayName");
+      public TypedProperty<PropertyOrderCriterion, StandardSearchOperator> operator = new TypedProperty<>(PropertyOrderCriterion.class, "operator");
+      public TypedProperty<PropertyOrderCriterion, String> targetPropertyName = new TypedProperty<>(PropertyOrderCriterion.class, "targetPropertyName");
+      public TypedProperty<PropertyOrderCriterion, PropertyOrderCriterion.Order> value = new TypedProperty<>(PropertyOrderCriterion.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyOrderCriterion> {
+        public  InstanceProperties(PropertyOrderCriterion source){super(source);}
+        public InstanceProperty<PropertyOrderCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion.displayName);}
+        public InstanceProperty<PropertyOrderCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion.operator);}
+        public InstanceProperty<PropertyOrderCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion.targetPropertyName);}
+        public InstanceProperty<PropertyOrderCriterion, PropertyOrderCriterion.Order> value(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion.value);}
+      }
+      
+      public  InstanceProperties instance(PropertyOrderCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _PropertyOrderCriterion_Order implements TypedProperty.Container {
+      public TypedProperty<PropertyOrderCriterion.Order, SearchCriterion.Direction> direction = new TypedProperty<>(PropertyOrderCriterion.Order.class, "direction");
+      public TypedProperty<PropertyOrderCriterion.Order, Boolean> nullsFirst = new TypedProperty<>(PropertyOrderCriterion.Order.class, "nullsFirst");
+      public TypedProperty<PropertyOrderCriterion.Order, String> propertyName = new TypedProperty<>(PropertyOrderCriterion.Order.class, "propertyName");
+      public TypedProperty<PropertyOrderCriterion.Order, Class> type = new TypedProperty<>(PropertyOrderCriterion.Order.class, "type");
+      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyOrderCriterion.Order> {
+        public  InstanceProperties(PropertyOrderCriterion.Order source){super(source);}
+        public InstanceProperty<PropertyOrderCriterion.Order, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.direction);}
+        public InstanceProperty<PropertyOrderCriterion.Order, Boolean> nullsFirst(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.nullsFirst);}
+        public InstanceProperty<PropertyOrderCriterion.Order, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.propertyName);}
+        public InstanceProperty<PropertyOrderCriterion.Order, Class> type(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.type);}
+      }
+      
+      public  InstanceProperties instance(PropertyOrderCriterion.Order instance) {
         return new InstanceProperties( instance);
       }
       

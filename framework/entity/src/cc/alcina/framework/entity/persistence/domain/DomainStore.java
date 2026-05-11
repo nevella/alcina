@@ -1510,16 +1510,25 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public void ensurePopulated(List<? extends Entity> entities) {
+			/*
+			 * local entities only have one version, which is by definition
+			 * populated - so filter to only ensure persisted entities
+			 */
+			List<? extends Entity> filteredEntities = entities.stream()
+					.filter(e -> e.domain().wasPersisted()).toList();
+			if (filteredEntities.isEmpty()) {
+				return;
+			}
 			LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES
 					.runWithTrue(() -> {
-						List<Class<? extends Entity>> types = (List) entities
+						List<Class<? extends Entity>> types = (List) filteredEntities
 								.stream().map(Entity::entityClass).distinct()
 								.toList();
 						Preconditions.checkState(types.size() == 1);
 						Class<? extends Entity> clazz = types.get(0);
 						for (PreProvideTask task : domainDescriptor
 								.getPreProvideTasks(clazz)) {
-							task.run(clazz, entities, true);
+							task.run(clazz, filteredEntities, true);
 						}
 					});
 		}

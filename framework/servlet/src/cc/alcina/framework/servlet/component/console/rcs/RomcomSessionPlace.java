@@ -6,9 +6,7 @@ import cc.alcina.framework.servlet.component.console.ServerConsolePlace;
 import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionCriterion.ActiveCriterion;
 
 public class RomcomSessionPlace extends ServerConsolePlace {
-	public SequencePlace activePlace = new SequencePlace();
-
-	public SequencePlace inactivePlace = new SequencePlace();
+	public SequencePlace sequencePlace = new SequencePlace();
 
 	@Override
 	public RomcomSessionPlace copy() {
@@ -17,27 +15,17 @@ public class RomcomSessionPlace extends ServerConsolePlace {
 
 	public RomcomSessionPlace() {
 		{
-			SequencePlace place = activePlace;
+			SequencePlace place = sequencePlace;
 			place.instanceQuery = RomcomSessionSequence.createInstanceQuery();
 			RomcomSessionSearchDefinition def = new RomcomSessionSearchDefinition();
 			new ActiveCriterion().withValue(BooleanEnum.TRUE)
 					.addToSoleCriteriaGroup(def);
 			place.search = def;
 		}
-		{
-			SequencePlace place = inactivePlace;
-			place.instanceQuery = RomcomSessionSequence.createInstanceQuery();
-			RomcomSessionSearchDefinition def = new RomcomSessionSearchDefinition();
-			new ActiveCriterion().withValue(BooleanEnum.FALSE)
-					.addToSoleCriteriaGroup(def);
-			place.search = def;
-		}
 	}
 
-	public RomcomSessionPlace(SequencePlace activePlace,
-			SequencePlace inactivePlace) {
-		this.activePlace = activePlace;
-		this.inactivePlace = inactivePlace;
+	public RomcomSessionPlace(SequencePlace sequencePlace) {
+		this.sequencePlace = sequencePlace;
 	}
 
 	public static class Tokenizer

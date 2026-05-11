@@ -20,6 +20,21 @@
   > :not(sequence-component)
     @include non-sequence-indent
 
+  > presets
+    display: grid
+    column-gap: 1rem
+    grid-template-columns: min-content min-content
+
+    > preset
+      display: contents
+
+      > name
+        font-weight: bold
+
+      > count
+        text-align: right
+        
+
   > sequence-component
     @include sequence.contents
     @include sequence.non-full

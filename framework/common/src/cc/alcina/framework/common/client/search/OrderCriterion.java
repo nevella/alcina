@@ -57,6 +57,15 @@ public class OrderCriterion extends SearchCriterion {
 		return this;
 	}
 
+	public boolean provideIsOrderingCriterion() {
+		return true;
+	}
+
+	@Override
+	public boolean provideIsFilteringCriterion() {
+		return false;
+	}
+
 	@Reflected
 	public static class DirectionSerializer
 			implements PropertySerialization.Serializer<Direction> {

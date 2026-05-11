@@ -99,6 +99,10 @@ public abstract class SearchCriterion extends Bindable
 				throw new UnsupportedOperationException();
 			}
 		}
+
+		public static Direction ofAscending(boolean ascending) {
+			return ascending ? ASCENDING : DESCENDING;
+		}
 	}
 
 	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
@@ -178,6 +182,18 @@ public abstract class SearchCriterion extends Bindable
 	@XmlTransient
 	public String getTargetPropertyName() {
 		return targetPropertyName;
+	}
+
+	public boolean provideIsFilteringCriterion() {
+		return true;
+	}
+
+	public boolean provideIsTransformingCriterion() {
+		return false;
+	}
+
+	public boolean provideIsOrderingCriterion() {
+		return false;
 	}
 
 	public String provideValueAsRenderableText() {

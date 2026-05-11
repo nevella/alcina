@@ -51,4 +51,34 @@ public class RomcomSessionCriterion {
 			}
 		}
 	}
+
+	@TypeSerialization("marked")
+	static class MarkedCriterion extends BooleanEnumCriterion {
+		static class Handler extends CriterionHandler<MarkedCriterion>
+				implements
+				BaseEnumCriterionHandler<RomcomSessionEntry, BooleanEnum, MarkedCriterion> {
+			@Override
+			public boolean test(RomcomSessionEntry session, BooleanEnum value) {
+				if (value == null) {
+					return true;
+				}
+				return value.toBoolean() == session.marked;
+			}
+		}
+	}
+
+	@TypeSerialization("exception")
+	static class ExceptionCriterion extends BooleanEnumCriterion {
+		static class Handler extends CriterionHandler<ExceptionCriterion>
+				implements
+				BaseEnumCriterionHandler<RomcomSessionEntry, BooleanEnum, ExceptionCriterion> {
+			@Override
+			public boolean test(RomcomSessionEntry session, BooleanEnum value) {
+				if (value == null) {
+					return true;
+				}
+				return value.toBoolean() == session.exception;
+			}
+		}
+	}
 }

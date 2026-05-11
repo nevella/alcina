@@ -58,6 +58,11 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * <p>
  * Use branch.toResult().toStructuredString() to get a view of the matched
  * structure
+ * <p>
+ * Better match strategy (using the branchingparser sequence ui) - use
+ * MatchTypeCriterion with type 'had match' - and check for empty final match
+ * measures. The issue often isn't the current token, but the prior
+ * 
  */
 /*
  * -------------------------

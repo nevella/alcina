@@ -12,13 +12,14 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.OrderGroup;
-import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
@@ -43,6 +44,12 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	 */
 	public BindableSearchDefinition() {
 		super();
+	}
+
+	public void orderBy(TypedProperty property, boolean ascending) {
+		removeFromSoleCriteriaGroup(sc -> sc instanceof PropertyOrderCriterion);
+		PropertyOrderCriterion.of(property, ascending)
+				.addToSoleCriteriaGroup(this);
 	}
 
 	public void addIdsCriterion(Collection<Long> ids) {

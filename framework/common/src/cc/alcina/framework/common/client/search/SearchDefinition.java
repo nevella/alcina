@@ -464,9 +464,15 @@ public abstract class SearchDefinition extends Bindable
 	}
 
 	public void removeFromSoleCriteriaGroup(SearchCriterion sc) {
+		removeFromSoleCriteriaGroup(sco -> sco.getClass() == sc.getClass());
+	}
+
+	public void
+			removeFromSoleCriteriaGroup(Predicate<SearchCriterion> predicate) {
 		assert criteriaGroups.size() == 1;
-		criteriaGroups.iterator().next().getCriteria()
-				.removeIf(sco -> sco.getClass() == sc.getClass());
+		Set<SearchCriterion> criteria = criteriaGroups.iterator().next()
+				.getCriteria();
+		criteria.removeIf(predicate::test);
 	}
 
 	public String resultEqlPrefix() {

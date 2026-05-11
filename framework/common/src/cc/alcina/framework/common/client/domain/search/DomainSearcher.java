@@ -77,10 +77,14 @@ public class DomainSearcher<T extends Entity> {
 		SearchHandlers.ensureHandlers();
 		SearchHandlers.processDefinitionHandler(def, this::addFilter);
 		SearchHandlers.processHandlers(def, this::addFilter);
+		Comparator computedComparator = SearchHandlers.computeComparator(def);
 		Stream<T> stream = query.stream();
 		stream = stream.filter(
 				Registry.impl(DomainSearcherAppFilter.class).filter(def));
 		stream = stream.sorted(order);
+		if (computedComparator != null) {
+			stream = stream.sorted(computedComparator);
+		}
 		return stream;
 	}
 

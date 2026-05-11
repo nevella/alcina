@@ -769,10 +769,10 @@ body > page > server-console-area > .server-console {
 }
 body > page > server-console-area > .server-console a, body > page > server-console-area > .server-console a.link, body > page > server-console-area > .server-console a.visited {
   text-decoration: none;
-  color: black;
+  color: #387ed3;
 }
 body > page > server-console-area > .server-console a:hover, body > page > server-console-area > .server-console a.link:hover, body > page > server-console-area > .server-console a.visited:hover {
-  color: #387ed3;
+  text-decoration: underline;
 }
 body > page > server-console-area > .server-console > heading {
   margin: 0 0 0.5rem;
@@ -992,6 +992,20 @@ body > page > server-console-area > romcom-session.server-console > sub-heading 
 }
 body > page > server-console-area > romcom-session.server-console > :not(sequence-component) {
   padding-left: 1rem !important;
+}
+body > page > server-console-area > romcom-session.server-console > presets {
+  display: grid;
+  column-gap: 1rem;
+  grid-template-columns: min-content min-content;
+}
+body > page > server-console-area > romcom-session.server-console > presets > preset {
+  display: contents;
+}
+body > page > server-console-area > romcom-session.server-console > presets > preset > name {
+  font-weight: bold;
+}
+body > page > server-console-area > romcom-session.server-console > presets > preset > count {
+  text-align: right;
 }
 body > page > server-console-area > romcom-session.server-console > sequence-component {
   display: grid;
