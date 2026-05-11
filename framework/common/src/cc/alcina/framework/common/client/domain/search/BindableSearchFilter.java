@@ -18,11 +18,14 @@ public class BindableSearchFilter implements Predicate, Comparator {
 
 	Predicate predicate = o -> true;
 
+	Comparator computedComparator = null;
+
 	public BindableSearchFilter(SearchDefinition def) {
 		this.def = def;
 		SearchHandlers.ensureHandlers();
 		SearchHandlers.processDefinitionHandler(def, this::addFilter);
 		SearchHandlers.processHandlers(def, this::addFilter);
+		computedComparator = SearchHandlers.computeComparator(def);
 	}
 
 	void addFilter(DomainFilter filter) {
@@ -40,6 +43,9 @@ public class BindableSearchFilter implements Predicate, Comparator {
 
 	@Override
 	public int compare(Object o1, Object o2) {
+		if (computedComparator != null) {
+			return computedComparator.compare(o1, o2);
+		}
 		if (def instanceof BindableSearchDefinition) {
 			BindableSearchDefinition bsd = (BindableSearchDefinition) def;
 			return bsd.getSearchOrders().compare(o1, o2);

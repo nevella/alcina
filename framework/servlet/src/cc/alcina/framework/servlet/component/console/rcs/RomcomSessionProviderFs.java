@@ -2,21 +2,19 @@ package cc.alcina.framework.servlet.component.console.rcs;
 
 import java.io.File;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.gwt.client.story.Story.Action.Environment;
 import cc.alcina.framework.servlet.environment.EnvironmentManager;
 import cc.alcina.framework.servlet.logging.FlightEventRecorder;
 
@@ -78,9 +76,9 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 				? Stream.of(eventsFolder.listFiles())
 						.sorted(Comparator.comparing(File::lastModified))
 				: Stream.empty();
-		return folders
+		return folders.filter(File::isDirectory)
 				.map(f -> fileEventFolder.computeIfAbsent(f, EventFolder::new))
-				.map(EventFolder::asEntry);
+				.map(EventFolder::asEntry).filter(Objects::nonNull);
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.domain.search;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher.DomainSearcherFilter;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion.PropertyOrderComparator;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
@@ -76,6 +79,16 @@ public class SearchHandlers {
 		}
 	}
 
+	static Comparator computeComparator(SearchDefinition def) {
+		List<PropertyOrderCriterion> propertyOrders = def
+				.allCriteria(PropertyOrderCriterion.class);
+		if (propertyOrders.size() > 0) {
+			return new PropertyOrderComparator(propertyOrders);
+		} else {
+			return null;
+		}
+	}
+
 	static void processHandlers(SearchDefinition def,
 			Consumer<DomainFilter> filterConsumer) {
 		processHandlers(def, filterConsumer, 0);
@@ -96,6 +109,9 @@ public class SearchHandlers {
 				boolean added = false;
 				for (SearchCriterion sc : (Set<SearchCriterion>) cg
 						.getCriteria()) {
+					if (!sc.provideIsFilteringCriterion()) {
+						return;
+					}
 					DomainCriterionHandler handler = getCriterionHandler(def,
 							sc);
 					if (handler == null) {

@@ -16,13 +16,21 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasClassNames;
 public class RomcomSessionEntry extends Bindable.Fields
 		implements TreeSerializable, Comparable<RomcomSessionEntry>,
 		HasClassNames, HasStringRepresentation {
+	transient static PackageProperties._RomcomSessionEntry properties = PackageProperties.romcomSessionEntry;
+
 	Date start;
 
 	Date end;
 
 	boolean active;
 
+	boolean marked;
+
+	boolean exception;
+
 	int largestPacket;
+
+	int slowestResponse;
 
 	@Property.Not
 	List<FlightEvent> events;

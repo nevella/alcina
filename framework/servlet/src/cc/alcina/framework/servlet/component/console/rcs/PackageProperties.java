@@ -8,6 +8,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.servlet.component.console.ServerConsolePlace;
+import cc.alcina.framework.servlet.component.console.rcs.PresetsArea;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
 import java.lang.Boolean;
 import java.lang.Integer;
@@ -21,23 +22,25 @@ public class PackageProperties {
     
     static _RomcomSessionArea romcomSessionArea = new _RomcomSessionArea();
     static _RomcomSessionCriterion_ActiveCriterion romcomSessionCriterion_activeCriterion = new _RomcomSessionCriterion_ActiveCriterion();
+    static _RomcomSessionCriterion_ExceptionCriterion romcomSessionCriterion_exceptionCriterion = new _RomcomSessionCriterion_ExceptionCriterion();
+    static _RomcomSessionCriterion_MarkedCriterion romcomSessionCriterion_markedCriterion = new _RomcomSessionCriterion_MarkedCriterion();
     public static _RomcomSessionEntry romcomSessionEntry = new _RomcomSessionEntry();
     static _RomcomSessionSequence_RomcomSessionView romcomSessionSequence_romcomSessionView = new _RomcomSessionSequence_RomcomSessionView();
     
     static class _RomcomSessionArea implements TypedProperty.Container {
       TypedProperty<RomcomSessionArea, List> actions = new TypedProperty<>(RomcomSessionArea.class, "actions");
-      TypedProperty<RomcomSessionArea, SequenceComponentEditor> active = new TypedProperty<>(RomcomSessionArea.class, "active");
       TypedProperty<RomcomSessionArea, LoginPage.HeadingArea> heading = new TypedProperty<>(RomcomSessionArea.class, "heading");
-      TypedProperty<RomcomSessionArea, SequenceComponentEditor> inactive = new TypedProperty<>(RomcomSessionArea.class, "inactive");
       TypedProperty<RomcomSessionArea, ServerConsolePlace> place = new TypedProperty<>(RomcomSessionArea.class, "place");
+      TypedProperty<RomcomSessionArea, PresetsArea> presets = new TypedProperty<>(RomcomSessionArea.class, "presets");
+      TypedProperty<RomcomSessionArea, SequenceComponentEditor> sequence = new TypedProperty<>(RomcomSessionArea.class, "sequence");
       TypedProperty<RomcomSessionArea, SubHeading> subHeadingActions = new TypedProperty<>(RomcomSessionArea.class, "subHeadingActions");
       static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionArea> {
          InstanceProperties(RomcomSessionArea source){super(source);}
         InstanceProperty<RomcomSessionArea, List> actions(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.actions);}
-        InstanceProperty<RomcomSessionArea, SequenceComponentEditor> active(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.active);}
         InstanceProperty<RomcomSessionArea, LoginPage.HeadingArea> heading(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.heading);}
-        InstanceProperty<RomcomSessionArea, SequenceComponentEditor> inactive(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.inactive);}
         InstanceProperty<RomcomSessionArea, ServerConsolePlace> place(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.place);}
+        InstanceProperty<RomcomSessionArea, PresetsArea> presets(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.presets);}
+        InstanceProperty<RomcomSessionArea, SequenceComponentEditor> sequence(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.sequence);}
         InstanceProperty<RomcomSessionArea, SubHeading> subHeadingActions(){return new InstanceProperty<>(source,PackageProperties.romcomSessionArea.subHeadingActions);}
       }
       
@@ -70,20 +73,72 @@ public class PackageProperties {
       
     }
     
+    static class _RomcomSessionCriterion_ExceptionCriterion implements TypedProperty.Container {
+      TypedProperty<RomcomSessionCriterion.ExceptionCriterion, BooleanEnum> booleanEnum = new TypedProperty<>(RomcomSessionCriterion.ExceptionCriterion.class, "booleanEnum");
+      TypedProperty<RomcomSessionCriterion.ExceptionCriterion, String> displayName = new TypedProperty<>(RomcomSessionCriterion.ExceptionCriterion.class, "displayName");
+      TypedProperty<RomcomSessionCriterion.ExceptionCriterion, StandardSearchOperator> operator = new TypedProperty<>(RomcomSessionCriterion.ExceptionCriterion.class, "operator");
+      TypedProperty<RomcomSessionCriterion.ExceptionCriterion, String> targetPropertyName = new TypedProperty<>(RomcomSessionCriterion.ExceptionCriterion.class, "targetPropertyName");
+      TypedProperty<RomcomSessionCriterion.ExceptionCriterion, BooleanEnum> value = new TypedProperty<>(RomcomSessionCriterion.ExceptionCriterion.class, "value");
+      TypedProperty<RomcomSessionCriterion.ExceptionCriterion, Boolean> withNull = new TypedProperty<>(RomcomSessionCriterion.ExceptionCriterion.class, "withNull");
+      static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionCriterion.ExceptionCriterion> {
+         InstanceProperties(RomcomSessionCriterion.ExceptionCriterion source){super(source);}
+        InstanceProperty<RomcomSessionCriterion.ExceptionCriterion, BooleanEnum> booleanEnum(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_exceptionCriterion.booleanEnum);}
+        InstanceProperty<RomcomSessionCriterion.ExceptionCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_exceptionCriterion.displayName);}
+        InstanceProperty<RomcomSessionCriterion.ExceptionCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_exceptionCriterion.operator);}
+        InstanceProperty<RomcomSessionCriterion.ExceptionCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_exceptionCriterion.targetPropertyName);}
+        InstanceProperty<RomcomSessionCriterion.ExceptionCriterion, BooleanEnum> value(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_exceptionCriterion.value);}
+        InstanceProperty<RomcomSessionCriterion.ExceptionCriterion, Boolean> withNull(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_exceptionCriterion.withNull);}
+      }
+      
+       InstanceProperties instance(RomcomSessionCriterion.ExceptionCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _RomcomSessionCriterion_MarkedCriterion implements TypedProperty.Container {
+      TypedProperty<RomcomSessionCriterion.MarkedCriterion, BooleanEnum> booleanEnum = new TypedProperty<>(RomcomSessionCriterion.MarkedCriterion.class, "booleanEnum");
+      TypedProperty<RomcomSessionCriterion.MarkedCriterion, String> displayName = new TypedProperty<>(RomcomSessionCriterion.MarkedCriterion.class, "displayName");
+      TypedProperty<RomcomSessionCriterion.MarkedCriterion, StandardSearchOperator> operator = new TypedProperty<>(RomcomSessionCriterion.MarkedCriterion.class, "operator");
+      TypedProperty<RomcomSessionCriterion.MarkedCriterion, String> targetPropertyName = new TypedProperty<>(RomcomSessionCriterion.MarkedCriterion.class, "targetPropertyName");
+      TypedProperty<RomcomSessionCriterion.MarkedCriterion, BooleanEnum> value = new TypedProperty<>(RomcomSessionCriterion.MarkedCriterion.class, "value");
+      TypedProperty<RomcomSessionCriterion.MarkedCriterion, Boolean> withNull = new TypedProperty<>(RomcomSessionCriterion.MarkedCriterion.class, "withNull");
+      static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionCriterion.MarkedCriterion> {
+         InstanceProperties(RomcomSessionCriterion.MarkedCriterion source){super(source);}
+        InstanceProperty<RomcomSessionCriterion.MarkedCriterion, BooleanEnum> booleanEnum(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_markedCriterion.booleanEnum);}
+        InstanceProperty<RomcomSessionCriterion.MarkedCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_markedCriterion.displayName);}
+        InstanceProperty<RomcomSessionCriterion.MarkedCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_markedCriterion.operator);}
+        InstanceProperty<RomcomSessionCriterion.MarkedCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_markedCriterion.targetPropertyName);}
+        InstanceProperty<RomcomSessionCriterion.MarkedCriterion, BooleanEnum> value(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_markedCriterion.value);}
+        InstanceProperty<RomcomSessionCriterion.MarkedCriterion, Boolean> withNull(){return new InstanceProperty<>(source,PackageProperties.romcomSessionCriterion_markedCriterion.withNull);}
+      }
+      
+       InstanceProperties instance(RomcomSessionCriterion.MarkedCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
     public static class _RomcomSessionEntry implements TypedProperty.Container {
       public TypedProperty<RomcomSessionEntry, Boolean> active = new TypedProperty<>(RomcomSessionEntry.class, "active");
       public TypedProperty<RomcomSessionEntry, Date> end = new TypedProperty<>(RomcomSessionEntry.class, "end");
+      public TypedProperty<RomcomSessionEntry, Boolean> exception = new TypedProperty<>(RomcomSessionEntry.class, "exception");
       public TypedProperty<RomcomSessionEntry, Integer> largestPacket = new TypedProperty<>(RomcomSessionEntry.class, "largestPacket");
+      public TypedProperty<RomcomSessionEntry, Boolean> marked = new TypedProperty<>(RomcomSessionEntry.class, "marked");
       public TypedProperty<RomcomSessionEntry, String> path = new TypedProperty<>(RomcomSessionEntry.class, "path");
       public TypedProperty<RomcomSessionEntry, String> sessionId = new TypedProperty<>(RomcomSessionEntry.class, "sessionId");
+      public TypedProperty<RomcomSessionEntry, Integer> slowestResponse = new TypedProperty<>(RomcomSessionEntry.class, "slowestResponse");
       public TypedProperty<RomcomSessionEntry, Date> start = new TypedProperty<>(RomcomSessionEntry.class, "start");
       public static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionEntry> {
         public  InstanceProperties(RomcomSessionEntry source){super(source);}
         public InstanceProperty<RomcomSessionEntry, Boolean> active(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.active);}
         public InstanceProperty<RomcomSessionEntry, Date> end(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.end);}
+        public InstanceProperty<RomcomSessionEntry, Boolean> exception(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.exception);}
         public InstanceProperty<RomcomSessionEntry, Integer> largestPacket(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.largestPacket);}
+        public InstanceProperty<RomcomSessionEntry, Boolean> marked(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.marked);}
         public InstanceProperty<RomcomSessionEntry, String> path(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.path);}
         public InstanceProperty<RomcomSessionEntry, String> sessionId(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.sessionId);}
+        public InstanceProperty<RomcomSessionEntry, Integer> slowestResponse(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.slowestResponse);}
         public InstanceProperty<RomcomSessionEntry, Date> start(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.start);}
       }
       

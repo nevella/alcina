@@ -18,6 +18,7 @@ import cc.alcina.framework.servlet.logging.FlightEventRecorder;
 
 @Feature.Ref(Feature_RomcomSessionConsole.class)
 @Feature.Ref(Feature_RomcomSessionConsole._Dashboard.class)
+@Feature.Ref(Feature_RomcomSessionConsole._Canned.class)
 @Registration({ ServerConsoleContents.class, RomcomSessionPlace.class })
 @TypedProperties
 class RomcomSessionArea extends ServerConsoleContents<RomcomSessionPlace>
@@ -29,34 +30,30 @@ class RomcomSessionArea extends ServerConsoleContents<RomcomSessionPlace>
 
 	HeadingArea heading = new HeadingArea("Romcom sessions", null);
 
+	PresetsArea presets = new PresetsArea();
+
 	SubHeading subHeadingActions = new SubHeading("Actions");
 
 	@Directed.Wrap("actions")
 	List<Link> actions = List.of(Link.of(ModelEvents.Clear.class));
 
-	SequenceComponentEditor active;
-
-	SequenceComponentEditor inactive;
+	SequenceComponentEditor sequence;
 
 	RomcomSessionArea() {
 		from(properties().place()).typed(RomcomSessionPlace.class)
 				.accept(this::updateDefinition);
-		active = new SequenceComponentEditor("Active sessions");
-		active.sequence.component.elementLimit = 5;
-		inactive = new SequenceComponentEditor("Inactive sessions");
-		inactive.sequence.component.elementLimit = 5;
+		sequence = new SequenceComponentEditor("Inactive sessions");
+		sequence.sequence.component.elementLimit = 5;
 		on(SequenceComponentEditor.DefinitionChanged.class)
 				.signal(this::updateRomcomSessionPlace);
 	}
 
 	void updateRomcomSessionPlace() {
-		new RomcomSessionPlace(active.sequencePlace, inactive.sequencePlace)
-				.go();
+		new RomcomSessionPlace(sequence.sequencePlace).go();
 	}
 
 	void updateDefinition(RomcomSessionPlace place) {
-		active.updateDefinition(place.activePlace);
-		inactive.updateDefinition(place.inactivePlace);
+		sequence.updateDefinition(place.sequencePlace);
 	}
 
 	@Override

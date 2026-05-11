@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.component.console.rcs;
 
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.servlet.component.console.Feature_AlcinaConsole;
+import cc.alcina.framework.servlet.component.console.Feature_ServerConsole;
 
 /**
  * <h4>The romcom session console</h4>
@@ -10,10 +10,11 @@ import cc.alcina.framework.servlet.component.console.Feature_AlcinaConsole;
  * 'large packet' etc
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
-@Feature.Parent(Feature_AlcinaConsole.class)
+@Feature.Parent(Feature_ServerConsole.class)
 public interface Feature_RomcomSessionConsole extends Feature {
 	/*
-	 * the dashboard displays lists of active + historical sessions
+	 * the dashboard displays various category summaries + a detail view of the
+	 * active + historical sessions
 	 */
 	@Feature.Parent(Feature_RomcomSessionConsole.class)
 	public interface _Dashboard extends Feature {

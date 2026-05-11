@@ -1,0 +1,69 @@
+package cc.alcina.framework.servlet.story.component.serverconsole;
+
+import java.lang.System.Logger.Level;
+
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.SimpleHttp;
+import cc.alcina.framework.gwt.client.story.Story;
+import cc.alcina.framework.gwt.client.story.TellerContext;
+import cc.alcina.framework.gwt.client.story.Waypoint;
+import cc.alcina.framework.gwt.client.story.impl.UrlRouterPart;
+import cc.alcina.framework.servlet.story.console.Story_Console;
+
+class Story_ServerConsoleImpl {
+	static final int TIMEOUT = 5000;
+
+	static int getPort(TellerContext context) {
+		UrlRouterPart part = context.getPart(UrlRouterPart.class);
+		int port = part == null ? Story_Console.port() : part.port;
+		return port;
+	}
+
+	/*
+	 * Ensures the serverconsole page renders (i.e. the console is running +
+	 * completed bootstrapping)
+	 */
+	static class EnsuresServerConsolePageRenders extends Waypoint.Code
+			implements
+			Story.State.Provider<Story_ServerConsole.State.ServerConsolePageRenders> {
+		@Override
+		public void perform(Context context) throws Exception {
+			String url = Ax.format("http://127.0.0.1:%s/serverconsole",
+					getPort(context.tellerContext()));
+			SimpleHttp http = new SimpleHttp(url).withTimeout(TIMEOUT);
+			try {
+				String response = http.asString();
+				context.log(Level.INFO, "%s >> %s", url, "OK");
+			} catch (Exception e) {
+				context.log(Level.WARNING, "issue loading :: %s", url);
+				throw e;
+			}
+		}
+	}
+
+	/* Loads the ServerConsole UI in the browser */
+	static class _UiLoaded extends Waypoint
+			implements Story.State.Provider<Story_ServerConsole.State.Loaded> {
+		@Override
+		public void withContext(TellerContext context) {
+			String url = Ax.format("http://127.0.0.1:%s/serverconsole",
+					getPort(context));
+			action = new Story.Action.Ui.Go();
+			location = new Story.Action.Location.Url().withText(url);
+		}
+	}
+
+	/*
+	 * Loads the ServerConsole Home (ok, same as the UI provider) in the browser
+	 */
+	static class _Home extends Waypoint
+			implements Story.State.Provider<Story_ServerConsole.State.Home> {
+		@Override
+		public void withContext(TellerContext context) {
+			String url = Ax.format("http://127.0.0.1:%s/serverconsole",
+					getPort(context));
+			action = new Story.Action.Ui.Go();
+			location = new Story.Action.Location.Url().withText(url);
+		}
+	}
+}
