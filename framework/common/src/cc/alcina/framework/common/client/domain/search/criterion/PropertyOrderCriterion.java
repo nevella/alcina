@@ -3,6 +3,8 @@ package cc.alcina.framework.common.client.domain.search.criterion;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -22,6 +24,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 @TypeSerialization("propertyorder")
 @Bean(PropertySource.FIELDS)
 public class PropertyOrderCriterion extends SearchCriterion {
+	@XmlTransient
 	public Order value = new Order();
 
 	public static class PropertyOrderComparator implements Comparator {
