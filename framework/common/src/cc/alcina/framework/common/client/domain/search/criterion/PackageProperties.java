@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import java.lang.Boolean;
-import java.lang.Class;
 import java.lang.String;
 import java.util.Date;
 
@@ -197,12 +196,10 @@ public class PackageProperties {
     public static class _PropertyNameCriterion_Filter implements TypedProperty.Container {
       public TypedProperty<PropertyNameCriterion.Filter, String> propertyName = new TypedProperty<>(PropertyNameCriterion.Filter.class, "propertyName");
       public TypedProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue = new TypedProperty<>(PropertyNameCriterion.Filter.class, "serializedPropertyValue");
-      public TypedProperty<PropertyNameCriterion.Filter, Class> type = new TypedProperty<>(PropertyNameCriterion.Filter.class, "type");
       public static class InstanceProperties extends 	InstanceProperty.Container<PropertyNameCriterion.Filter> {
         public  InstanceProperties(PropertyNameCriterion.Filter source){super(source);}
         public InstanceProperty<PropertyNameCriterion.Filter, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.propertyName);}
         public InstanceProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.serializedPropertyValue);}
-        public InstanceProperty<PropertyNameCriterion.Filter, Class> type(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.type);}
       }
       
       public  InstanceProperties instance(PropertyNameCriterion.Filter instance) {
@@ -234,13 +231,11 @@ public class PackageProperties {
       public TypedProperty<PropertyOrderCriterion.Order, SearchCriterion.Direction> direction = new TypedProperty<>(PropertyOrderCriterion.Order.class, "direction");
       public TypedProperty<PropertyOrderCriterion.Order, Boolean> nullsFirst = new TypedProperty<>(PropertyOrderCriterion.Order.class, "nullsFirst");
       public TypedProperty<PropertyOrderCriterion.Order, String> propertyName = new TypedProperty<>(PropertyOrderCriterion.Order.class, "propertyName");
-      public TypedProperty<PropertyOrderCriterion.Order, Class> type = new TypedProperty<>(PropertyOrderCriterion.Order.class, "type");
       public static class InstanceProperties extends 	InstanceProperty.Container<PropertyOrderCriterion.Order> {
         public  InstanceProperties(PropertyOrderCriterion.Order source){super(source);}
         public InstanceProperty<PropertyOrderCriterion.Order, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.direction);}
         public InstanceProperty<PropertyOrderCriterion.Order, Boolean> nullsFirst(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.nullsFirst);}
         public InstanceProperty<PropertyOrderCriterion.Order, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.propertyName);}
-        public InstanceProperty<PropertyOrderCriterion.Order, Class> type(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.type);}
       }
       
       public  InstanceProperties instance(PropertyOrderCriterion.Order instance) {

@@ -270,10 +270,15 @@ public abstract class Choices<T> extends Model implements
 	 */
 	@Directed(
 		emits = { ModelEvents.Selected.class, ChoiceSelectedDescent.class })
+	@TypedProperties
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler,
 			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter, Filterable,
 			HasElementBehaviors {
+		PackageProperties._Choices_Choice.InstanceProperties properties() {
+			return PackageProperties.choices_choice.instance(this);
+		}
+
 		private boolean selected;
 
 		private boolean indexSelected;
@@ -581,6 +586,17 @@ public abstract class Choices<T> extends Model implements
 
 		void updateSelectedElementIndex(T value) {
 			if (provideIsBound()) {
+				/*
+				 * update the select options, if bound but not yet renered in
+				 * the browser.
+				 * 
+				 * Note that Choice objects are not currently nodes if rendered
+				 * as a select - that should change - but in the meantime the
+				 * Option property binding (of -selected-) works
+				 */
+				{
+					super.setSelectedValue(value);
+				}
 				DirectedLayout.Node mostSpecficNode = node
 						.provideMostSpecificNodeForModel();
 				SelectElement selectElement = (SelectElement) mostSpecficNode
@@ -607,9 +623,13 @@ public abstract class Choices<T> extends Model implements
 	}
 
 	/**
+	 * <p>
 	 * Transforms a Choices model into an HTML Select. Note that the property of
 	 * type Choices must have tag="select", since the resolver currently applies
 	 * to child inputs, not the input on which it is declared
+	 * 
+	 * <p>
+	 * This implementation is imperfect - since
 	 */
 	public static class SelectResolver extends ContextResolver {
 		@ClientVisible
@@ -621,6 +641,8 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		public static class Option extends Choices.Choice<String> {
+			Choice choice;
+
 			public static class Transform extends
 					AbstractContextSensitiveModelTransform<Choices.Choice, Option> {
 				@Override
@@ -628,8 +650,7 @@ public abstract class Choices<T> extends Model implements
 					SelectResolver resolver = (SelectResolver) node
 							.getResolver();
 					Option option = new Option(
-							resolver.transformOptionName(node, choice));
-					option.setSelected(choice.isSelected());
+							resolver.transformOptionName(node, choice), choice);
 					return option;
 				}
 			}
@@ -642,8 +663,15 @@ public abstract class Choices<T> extends Model implements
 				return List.of();
 			}
 
-			public Option(String displayName) {
+			public Option(String displayName, Choice choice) {
 				super(displayName);
+				this.choice = choice;
+			}
+
+			@Override
+			public void onNodeContext(NodeContext event) {
+				from(choice.properties().selected()).to(properties().selected())
+						.oneWay();
 			}
 
 			@Override

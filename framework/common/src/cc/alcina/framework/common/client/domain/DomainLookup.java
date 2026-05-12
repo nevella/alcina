@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.MultisetCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -59,7 +60,7 @@ public class DomainLookup<T, E extends Entity>
 		if (descriptor.propertyPath != null) {
 			this.propertyPath = new PropertyPath(descriptor.propertyPath);
 		}
-		Class indexClass = CommonUtils.getWrapperType(
+		Class indexClass = ClassUtil.getWrapperType(
 				descriptor.getLookupIndexClass(this.propertyPath));
 		this.store = Registry.impl(MultisetCreator.class).create(indexClass,
 				getListenedClass());

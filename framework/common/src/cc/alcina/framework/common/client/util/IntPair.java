@@ -599,4 +599,8 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 			return IntersectionType.none;
 		}
 	}
+
+	public IntPair toMinimalNonPoint() {
+		return isPoint() ? new IntPair(i1, i1 + 1) : this;
+	}
 }

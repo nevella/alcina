@@ -8,6 +8,7 @@
 @use '../../dirndl/cmp/keyboard-shortcuts'
 @use '../../dirndl/cmp/choices'
 @use '../../dirndl/cmp/spinner'
+@use '../../dirndl/cmp/search-definition-editor/search-definition-editor'
 @use '../multi/common'
 @use '../console/console'
 @use 'header'
@@ -64,5 +65,6 @@ body > page
 @include form.separated-heading
 @include choices.choice-editor-tag
 @include choices.decorator-suggestor
+@include search-definition-editor.tag
 
 @include console.overlay

@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.ClassUtilEntity;
@@ -119,7 +120,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 		Set<String> imports = new TreeSet<>();
 
 		void addImport(Class clazz) {
-			clazz = CommonUtils.getWrapperType(clazz);
+			clazz = ClassUtil.getWrapperType(clazz);
 			Class topLevel = ClassUtilEntity.getTopLevelType(clazz);
 			String name = topLevel.getName();
 			imports.add(name);
@@ -128,7 +129,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 		Logger logger = LoggerFactory.getLogger(getClass());
 
 		String resolvedTypeName(Class clazz) {
-			clazz = CommonUtils.getWrapperType(clazz);
+			clazz = ClassUtil.getWrapperType(clazz);
 			return NestedName.get(clazz);
 		}
 

@@ -28,8 +28,10 @@ public class PackageProperties {
     //@formatter:off
     
     static _Choices_Category choices_category = new _Choices_Category();
+    public static _Choices_Choice choices_choice = new _Choices_Choice();
     public static _Choices_Multiple choices_multiple = new _Choices_Multiple();
     public static _Choices_MultipleSelect choices_multipleSelect = new _Choices_MultipleSelect();
+    public static _Choices_SelectResolver_Option choices_selectResolver_option = new _Choices_SelectResolver_Option();
     public static _ChoicesDropdown choicesDropdown = new _ChoicesDropdown();
     public static _CollectionDeltaModel collectionDeltaModel = new _CollectionDeltaModel();
     static _CollectionDeltaModel_RelativeInsert collectionDeltaModel_relativeInsert = new _CollectionDeltaModel_RelativeInsert();
@@ -58,6 +60,27 @@ public class PackageProperties {
       }
       
        InstanceProperties instance(Choices.Category instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Choices_Choice implements TypedProperty.Container {
+      public TypedProperty<Choices.Choice, List> behaviors = new TypedProperty<>(Choices.Choice.class, "behaviors");
+      public TypedProperty<Choices.Choice, Boolean> filtered = new TypedProperty<>(Choices.Choice.class, "filtered");
+      public TypedProperty<Choices.Choice, Boolean> indexSelected = new TypedProperty<>(Choices.Choice.class, "indexSelected");
+      public TypedProperty<Choices.Choice, Boolean> selected = new TypedProperty<>(Choices.Choice.class, "selected");
+      public TypedProperty<Choices.Choice, Object> value = new TypedProperty<>(Choices.Choice.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices.Choice> {
+        public  InstanceProperties(Choices.Choice source){super(source);}
+        public InstanceProperty<Choices.Choice, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.choices_choice.behaviors);}
+        public InstanceProperty<Choices.Choice, Boolean> filtered(){return new InstanceProperty<>(source,PackageProperties.choices_choice.filtered);}
+        public InstanceProperty<Choices.Choice, Boolean> indexSelected(){return new InstanceProperty<>(source,PackageProperties.choices_choice.indexSelected);}
+        public InstanceProperty<Choices.Choice, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.choices_choice.selected);}
+        public InstanceProperty<Choices.Choice, Object> value(){return new InstanceProperty<>(source,PackageProperties.choices_choice.value);}
+      }
+      
+      public  InstanceProperties instance(Choices.Choice instance) {
         return new InstanceProperties( instance);
       }
       
@@ -114,6 +137,27 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(Choices.MultipleSelect instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Choices_SelectResolver_Option implements TypedProperty.Container {
+      public TypedProperty<Choices.SelectResolver.Option, List> behaviors = new TypedProperty<>(Choices.SelectResolver.Option.class, "behaviors");
+      public TypedProperty<Choices.SelectResolver.Option, Boolean> filtered = new TypedProperty<>(Choices.SelectResolver.Option.class, "filtered");
+      public TypedProperty<Choices.SelectResolver.Option, Boolean> indexSelected = new TypedProperty<>(Choices.SelectResolver.Option.class, "indexSelected");
+      public TypedProperty<Choices.SelectResolver.Option, Boolean> selected = new TypedProperty<>(Choices.SelectResolver.Option.class, "selected");
+      public TypedProperty<Choices.SelectResolver.Option, String> value = new TypedProperty<>(Choices.SelectResolver.Option.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices.SelectResolver.Option> {
+        public  InstanceProperties(Choices.SelectResolver.Option source){super(source);}
+        public InstanceProperty<Choices.SelectResolver.Option, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.choices_selectResolver_option.behaviors);}
+        public InstanceProperty<Choices.SelectResolver.Option, Boolean> filtered(){return new InstanceProperty<>(source,PackageProperties.choices_selectResolver_option.filtered);}
+        public InstanceProperty<Choices.SelectResolver.Option, Boolean> indexSelected(){return new InstanceProperty<>(source,PackageProperties.choices_selectResolver_option.indexSelected);}
+        public InstanceProperty<Choices.SelectResolver.Option, Boolean> selected(){return new InstanceProperty<>(source,PackageProperties.choices_selectResolver_option.selected);}
+        public InstanceProperty<Choices.SelectResolver.Option, String> value(){return new InstanceProperty<>(source,PackageProperties.choices_selectResolver_option.value);}
+      }
+      
+      public  InstanceProperties instance(Choices.SelectResolver.Option instance) {
         return new InstanceProperties( instance);
       }
       

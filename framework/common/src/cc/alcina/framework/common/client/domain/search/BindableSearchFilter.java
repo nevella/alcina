@@ -2,9 +2,10 @@ package cc.alcina.framework.common.client.domain.search;
 
 import java.util.Comparator;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.DomainFilter;
-import cc.alcina.framework.common.client.search.SearchDefinition;
 
 /**
  * Similar to DomainSearcher, but much simpler implementation (since just sed as
@@ -14,13 +15,13 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  *
  */
 public class BindableSearchFilter implements Predicate, Comparator {
-	SearchDefinition def;
+	BindableSearchDefinition def;
 
 	Predicate predicate = o -> true;
 
 	Comparator computedComparator = null;
 
-	public BindableSearchFilter(SearchDefinition def) {
+	public BindableSearchFilter(BindableSearchDefinition def) {
 		this.def = def;
 		SearchHandlers.ensureHandlers();
 		SearchHandlers.processDefinitionHandler(def, this::addFilter);
@@ -46,11 +47,19 @@ public class BindableSearchFilter implements Predicate, Comparator {
 		if (computedComparator != null) {
 			return computedComparator.compare(o1, o2);
 		}
-		if (def instanceof BindableSearchDefinition) {
-			BindableSearchDefinition bsd = (BindableSearchDefinition) def;
-			return bsd.getSearchOrders().compare(o1, o2);
-		} else {
-			return 0;
+		return def.getSearchOrders().compare(o1, o2);
+	}
+
+	public <T> T callInContext(Supplier<T> supplier) {
+		SearchContext context = null;
+		try {
+			LooseContext.push();
+			context = SearchContext.startContext();
+			context.def = def;
+			return supplier.get();
+		} finally {
+			context.end();
+			LooseContext.pop();
 		}
 	}
 }

@@ -2,14 +2,18 @@ package cc.alcina.framework.servlet.component.console;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.PlaceChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @TypedProperties
 public abstract class ServerConsoleContents<RP extends ServerConsolePlace>
-		extends Model.All implements Registration.AllSubtypes, IfNotEqual {
+		extends Model.All implements Registration.AllSubtypes, IfNotEqual,
+		ModelEvents.PlaceChanged.Handler {
 	@Directed.Exclude
 	public RP place;
 
@@ -28,5 +32,14 @@ public abstract class ServerConsoleContents<RP extends ServerConsolePlace>
 				.impl(ServerConsoleContents.class, place.getClass());
 		result.place = place;
 		return result;
+	}
+
+	@Override
+	public void onPlaceChanged(PlaceChanged event) {
+		RP place = event.getModel();
+		if (Reflections.at(this)
+				.firstGenericBound() == ((Class) place.getClass())) {
+			Reflections.at(this).property("place").set(this, place);
+		}
 	}
 }

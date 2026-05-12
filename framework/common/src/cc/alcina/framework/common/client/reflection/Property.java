@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
@@ -37,7 +38,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * annotations at a property. e.g. *don't* expect Property.has(Bean.class) to
  * work, since that's a property with a resolution strategy
  */
-public class Property implements HasAnnotations {
+public class Property implements HasAnnotations, PropertyEnum {
 	private final String name;
 
 	private final Method getter;
@@ -274,5 +275,10 @@ public class Property implements HasAnnotations {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	@Override
+	public String name() {
+		return getName();
 	}
 }

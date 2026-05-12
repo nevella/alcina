@@ -44,6 +44,21 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
+/**
+ * <p>
+ * This could possibly be better named 'SearchPart' - since a 'criteria' can be
+ * 'ordering' or 'transforming' - as well as the default 'filtering'
+ * 
+ * <p>
+ * The reason for this is: search is a pipeline, and a SearchDefinition has
+ * strong parallels to a SQL query. It makes more sense <i>for the most part</i>
+ * to classify a part of the Definition with the properties of the part, rather
+ * than which parent (Definition) field it belongs to.
+ * 
+ * <p>
+ * Note that CriteriaGroup was a mistake (turns out), better (and planned) would
+ * be LogicalFilteringCriteria (ALL_OF|ANY_OF|NOT)
+ */
 @Bean
 @Display.AllProperties
 @ObjectPermissions(
