@@ -1,31 +1,19 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.Collection;
+import java.util.List;
+
+import com.totsp.gwittir.client.ui.table.Field;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
-import cc.alcina.framework.gwt.client.dirndl.model.Choices;
-import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
-import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree;
-import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
-import cc.alcina.framework.gwt.client.dirndl.model.FilteredChoices;
-import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
-import cc.alcina.framework.gwt.client.dirndl.model.Tree;
-import cc.alcina.framework.gwt.client.dirndl.model.TreePath;
 import cc.alcina.framework.gwt.client.place.BasePlace;
-import com.totsp.gwittir.client.ui.table.Field;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.Integer;
-import java.lang.Object;
-import java.lang.String;
-import java.util.Collection;
-import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _Choices_Category choices_category = new _Choices_Category();
     public static _Choices_Choice choices_choice = new _Choices_Choice();
