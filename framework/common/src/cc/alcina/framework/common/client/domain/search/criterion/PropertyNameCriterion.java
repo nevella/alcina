@@ -31,9 +31,8 @@ public class PropertyNameCriterion extends SearchCriterion {
 		public String serializedPropertyValue;
 	}
 
-	@Override
-	public String getDisplayName() {
-		return "Property";
+	public PropertyNameCriterion() {
+		setDisplayName("Property");
 	}
 
 	public interface Handler

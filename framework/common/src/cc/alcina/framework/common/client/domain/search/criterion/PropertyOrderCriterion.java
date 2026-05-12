@@ -30,9 +30,8 @@ public class PropertyOrderCriterion extends SearchCriterion {
 	@XmlTransient
 	public Order value = new Order();
 
-	@Override
-	public String getDisplayName() {
-		return "Order by";
+	public PropertyOrderCriterion() {
+		setDisplayName("Order by");
 	}
 
 	public static class PropertyOrderComparator implements Comparator {
