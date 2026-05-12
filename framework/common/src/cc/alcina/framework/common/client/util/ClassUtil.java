@@ -122,4 +122,35 @@ public class ClassUtil {
 		Class clazz2 = o2 == null ? null : o2.getClass();
 		return clazz1 == clazz2;
 	}
+
+	public static Class getWrapperType(Class clazz) {
+		if (!clazz.isPrimitive()) {
+			return clazz;
+		}
+		if (clazz == int.class) {
+			return Integer.class;
+		}
+		if (clazz == long.class) {
+			return Long.class;
+		}
+		if (clazz == double.class) {
+			return Double.class;
+		}
+		if (clazz == boolean.class) {
+			return Boolean.class;
+		}
+		if (clazz == short.class) {
+			return Short.class;
+		}
+		if (clazz == float.class) {
+			return Float.class;
+		}
+		if (clazz == byte.class) {
+			return Byte.class;
+		}
+		if (clazz == char.class) {
+			return Character.class;
+		}
+		return null;
+	}
 }

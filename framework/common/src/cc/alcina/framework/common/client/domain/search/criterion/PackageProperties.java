@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import java.lang.Boolean;
-import java.lang.Class;
 import java.lang.String;
 import java.util.Date;
 
@@ -197,12 +196,10 @@ public class PackageProperties {
     public static class _PropertyNameCriterion_Filter implements TypedProperty.Container {
       public TypedProperty<PropertyNameCriterion.Filter, String> propertyName = new TypedProperty<>(PropertyNameCriterion.Filter.class, "propertyName");
       public TypedProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue = new TypedProperty<>(PropertyNameCriterion.Filter.class, "serializedPropertyValue");
-      public TypedProperty<PropertyNameCriterion.Filter, Class> type = new TypedProperty<>(PropertyNameCriterion.Filter.class, "type");
       public static class InstanceProperties extends 	InstanceProperty.Container<PropertyNameCriterion.Filter> {
         public  InstanceProperties(PropertyNameCriterion.Filter source){super(source);}
         public InstanceProperty<PropertyNameCriterion.Filter, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.propertyName);}
         public InstanceProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.serializedPropertyValue);}
-        public InstanceProperty<PropertyNameCriterion.Filter, Class> type(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.type);}
       }
       
       public  InstanceProperties instance(PropertyNameCriterion.Filter instance) {

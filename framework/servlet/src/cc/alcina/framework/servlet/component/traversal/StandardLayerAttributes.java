@@ -1,18 +1,12 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.DomainFilter;
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.ClassUtil;
 
 public class StandardLayerAttributes {
 	@TypeSerialization("sort-selected-first")
@@ -83,54 +77,7 @@ public class StandardLayerAttributes {
 		public DomainFilter toDomainFilter(Class<?> filteredClass) {
 			String normalisedValue = normalisedValue();
 			Property property = Reflections.at(filteredClass).property(key);
-			switch (op) {
-			case MATCHES:
-				return new DomainFilter(
-						new MatchesPredicate(property, normalisedValue));
-			case IN:
-				if (property.getName().equals("id")) {
-					if (property.getType() == long.class
-							|| Reflections.isAssignableFrom(Entity.class,
-									property.getType())) {
-						Object filterValue = TransformManager
-								.idListToLongs(normalisedValue);
-						return new DomainFilter(key, filterValue, op);
-					} else {
-						throw new UnsupportedOperationException();
-					}
-				} else {
-					// force non-domain (xx.user for instance)
-					return null;
-				}
-			default:
-				Object filterValue = ClassUtil.fromStringValue(normalisedValue,
-						property.getType());
-				return new DomainFilter(key, filterValue, op);
-			}
-		}
-
-		class MatchesPredicate implements Predicate<Object> {
-			Property property;
-
-			String normalisedValue;
-
-			Pattern pattern;
-
-			MatchesPredicate(Property property, String normalisedValue) {
-				this.property = property;
-				pattern = Pattern.compile(normalisedValue,
-						Pattern.CASE_INSENSITIVE);
-				this.normalisedValue = normalisedValue.toLowerCase();
-			}
-
-			@Override
-			public boolean test(Object t) {
-				Object obj = property.get(t);
-				if (obj == null) {
-					return normalisedValue.equals("null");
-				}
-				return pattern.matcher(obj.toString()).find();
-			}
+			return DomainFilter.ofSearchProperty(property, op, normalisedValue);
 		}
 	}
 }

@@ -42,8 +42,8 @@ class RomcomSessionArea extends ServerConsoleContents<RomcomSessionPlace>
 	RomcomSessionArea() {
 		from(properties().place()).typed(RomcomSessionPlace.class)
 				.accept(this::updateDefinition);
-		sequence = new SequenceComponentEditor("Inactive sessions");
-		sequence.sequence.component.elementLimit = 5;
+		sequence = new SequenceComponentEditor("Sessions");
+		sequence.sequence.component.elementLimit = 10;
 		on(SequenceComponentEditor.DefinitionChanged.class)
 				.signal(this::updateRomcomSessionPlace);
 	}

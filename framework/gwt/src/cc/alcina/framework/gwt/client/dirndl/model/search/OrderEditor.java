@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -42,7 +43,7 @@ public class OrderEditor extends Model.Value<Order>
 			Class<? extends Bindable> type = def.queriedBindableClass();
 			return Reflections.at(type).properties().stream()
 					.filter(p -> Reflections.isAssignableFrom(Comparable.class,
-							p.getType()))
+							ClassUtil.getWrapperType(p.getType())))
 					.map(p -> p.getName()).sorted().toList();
 		}
 	}
@@ -78,8 +79,8 @@ public class OrderEditor extends Model.Value<Order>
 
 	@Override
 	public void setValue(Order value) {
-		this.propertyName = value.propertyName;
-		this.direction = value.direction;
+		properties().propertyName().set(value.propertyName);
+		properties().direction().set(value.direction);
 		set("value", this.value, value, () -> this.value = value);
 	}
 }

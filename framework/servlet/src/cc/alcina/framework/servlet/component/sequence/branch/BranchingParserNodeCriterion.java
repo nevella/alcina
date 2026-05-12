@@ -53,9 +53,6 @@ public class BranchingParserNodeCriterion {
 	public static class CriteriaGroup extends EntityCriteriaGroup {
 	}
 
-	static class SearchContext {
-	}
-
 	abstract static class CriterionHandler<SC extends SearchCriterion> extends
 			DomainCriterionHandler<SC> implements Registration.AllSubtypes {
 		@Override

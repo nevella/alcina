@@ -4,10 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.google.gwt.regexp.shared.RegExp;
+
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 
 /**
  * <p>
@@ -166,6 +173,56 @@ public class DomainFilter {
 		@Override
 		public String toString() {
 			return wrappedPredicate.toString();
+		}
+	}
+
+	public static DomainFilter ofSearchProperty(Property property,
+			FilterOperator operator, String filterString) {
+		switch (operator) {
+		case MATCHES:
+			return new DomainFilter(
+					new MatchesPredicate(property, filterString));
+		case IN:
+			if (property.getName().equals("id")) {
+				if (property.getType() == long.class || Reflections
+						.isAssignableFrom(Entity.class, property.getType())) {
+					Object filterValue = TransformManager
+							.idListToLongs(filterString);
+					return new DomainFilter(property, filterValue, operator);
+				} else {
+					throw new UnsupportedOperationException();
+				}
+			} else {
+				// force non-domain (xx.user for instance)
+				return null;
+			}
+		default:
+			Object filterValue = ClassUtil.fromStringValue(filterString,
+					property.getType());
+			return new DomainFilter(property, filterValue, operator);
+		}
+	}
+
+	static class MatchesPredicate implements Predicate<Object> {
+		Property property;
+
+		String normalisedValue;
+
+		RegExp regExp;
+
+		MatchesPredicate(Property property, String normalisedValue) {
+			this.property = property;
+			regExp = RegExp.compile(normalisedValue, "i");
+			this.normalisedValue = normalisedValue.toLowerCase();
+		}
+
+		@Override
+		public boolean test(Object t) {
+			Object obj = property.get(t);
+			if (obj == null) {
+				return normalisedValue.equals("null");
+			}
+			return regExp.exec(obj.toString()) != null;
 		}
 	}
 }

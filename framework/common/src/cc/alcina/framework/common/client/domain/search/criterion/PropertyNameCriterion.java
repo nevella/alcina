@@ -1,8 +1,13 @@
 package cc.alcina.framework.common.client.domain.search.criterion;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
+import cc.alcina.framework.common.client.domain.search.SearchContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
@@ -21,10 +26,27 @@ public class PropertyNameCriterion extends SearchCriterion {
 	@TypedProperties
 	public static class Filter extends Bindable.Fields
 			implements TreeSerializable {
-		public Class<? extends Bindable> type;
-
 		public String propertyName;
 
 		public String serializedPropertyValue;
+	}
+
+	@Override
+	public String getDisplayName() {
+		return "Property";
+	}
+
+	public interface Handler
+			extends DomainCriterionFilter<PropertyNameCriterion> {
+		@Override
+		default DomainFilter getFilter(PropertyNameCriterion criterion) {
+			Class<? extends Bindable> type = SearchContext.get().def
+					.queriedBindableClass();
+			Property property = Reflections.at(type)
+					.property(criterion.value.propertyName);
+			return DomainFilter.ofSearchProperty(property,
+					criterion.getOperator().toFilterOperator(),
+					criterion.value.serializedPropertyValue);
+		}
 	}
 }

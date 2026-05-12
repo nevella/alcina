@@ -29,7 +29,8 @@ class PresetsArea extends Model.All {
 			RomcomSessionSequence sequence = (RomcomSessionSequence) query
 					.toOracleQuery().get();
 			BindableSearchFilter bsf = new BindableSearchFilter(definition);
-			int rows = (int) sequence.elements.stream().filter(bsf).count();
+			int rows = bsf.callInContext(
+					() -> (int) sequence.elements.stream().filter(bsf).count());
 			RomcomSessionPlace place = new RomcomSessionPlace();
 			place.sequencePlace.search = preset.getDefinition();
 			count = Link.of(place).withText(String.valueOf(rows));
