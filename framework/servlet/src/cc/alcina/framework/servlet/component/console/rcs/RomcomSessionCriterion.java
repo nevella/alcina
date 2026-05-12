@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.domain.search.EntityCriteriaGroup;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.common.client.search.BooleanEnumCriterion;
@@ -22,7 +23,10 @@ public class RomcomSessionCriterion {
 			types = {
 			//@formatter:off
 					TextCriterion.class,
-					ActiveCriterion.class
+					ActiveCriterion.class,
+					MarkedCriterion.class,
+					ExceptionCriterion.class,
+					PropertyOrderCriterion.class
 				//@formatter:on
 			}))
 	@XmlType(name = "RomcomSessionSearchDefinition_CriteriaGroup")

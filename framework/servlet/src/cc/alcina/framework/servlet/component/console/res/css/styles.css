@@ -1018,6 +1018,7 @@ body > page > server-console-area > romcom-session.server-console > sequence-com
   gap: 1px;
   height: auto;
   padding-bottom: 1px;
+  padding-top: 1px;
 }
 body > page > server-console-area > romcom-session.server-console > sequence-component > * {
   min-height: 0;
@@ -1984,6 +1985,103 @@ overlay > .decorator-suggestor > suggestor > choice, overlay > .decorator-sugges
 }
 overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-suggestor > suggestor > choice[index-selected], overlay > .decorator-suggestor > suggestor > results > choice:hover, overlay > .decorator-suggestor > suggestor > results > choice[index-selected] {
   background-color: #00000010;
+}
+
+search-definition-editor {
+  display: flex;
+  width: 100%;
+}
+search-definition-editor > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
+  content: "Type, or [Enter] to search";
+}
+search-definition-editor[modified] > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
+  content: "[Enter] to search";
+}
+search-definition-editor > choice-editor {
+  flex-grow: 1;
+}
+search-definition-editor > choice-editor > edit {
+  border: none;
+  background: none;
+  line-height: 2.2;
+  width: auto;
+}
+search-definition-editor > choice-editor > edit > * {
+  line-height: 1.5;
+}
+search-definition-editor > choice-editor > edit cursor-target {
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node {
+  border-color: #eee;
+  background: #eee;
+  padding: 0.2rem 0.8rem;
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable {
+  display: inline-flex;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > name {
+  display: inline-block;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator {
+  display: inline-block;
+  width: 1.5rem;
+  text-align: center;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator {
+  display: inline-block;
+  cursor: pointer;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > operator > rendered-operator:hover {
+  background-color: #ffffff80;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > value-editor {
+  display: inline-block;
+  height: 100%;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > input {
+  border-color: transparent;
+  background-color: transparent;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > input, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > input {
+  background-color: white;
+}
+search-definition-editor > go-container {
+  display: block;
+  line-height: 145%;
+  padding: 0.4rem;
+}
+search-definition-editor > go-container > button {
+  color: #3050FF;
+}
+search-definition-editor > go-container > button:hover {
+  color: #5070FF;
+  background: white;
+  border-color: transparent;
+}
+search-definition-editor[popups-open] > choice-editor {
+  background: white;
+}
+
+overlay > choice-suggestor.decorator-suggestor {
+  border-color: #ffffff00;
+  box-shadow: none;
+}
+
+overlay.searchable.operator-selector {
+  background-color: white;
+}
+overlay.searchable.operator-selector choice-editor > edit {
+  width: 20.2rem;
+  border-color: #ccc;
+}
+overlay.searchable.operator-selector choice-renderer {
+  display: inline-flex;
+  gap: 0.8rem;
+}
+overlay.searchable.operator-selector choice-renderer > operator-char {
+  width: 1rem;
 }
 
 overlay.string-area string-area-expanded {

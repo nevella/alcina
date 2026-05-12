@@ -1,9 +1,8 @@
 package cc.alcina.framework.servlet.component.console.rcs;
 
-import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.console.ServerConsolePlace;
-import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionCriterion.ActiveCriterion;
+import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionSearchDefinition.Preset;
 
 public class RomcomSessionPlace extends ServerConsolePlace {
 	public SequencePlace sequencePlace = new SequencePlace();
@@ -17,10 +16,7 @@ public class RomcomSessionPlace extends ServerConsolePlace {
 		{
 			SequencePlace place = sequencePlace;
 			place.instanceQuery = RomcomSessionSequence.createInstanceQuery();
-			RomcomSessionSearchDefinition def = new RomcomSessionSearchDefinition();
-			new ActiveCriterion().withValue(BooleanEnum.TRUE)
-					.addToSoleCriteriaGroup(def);
-			place.search = def;
+			place.search = Preset.Active.getDefinition();
 		}
 	}
 

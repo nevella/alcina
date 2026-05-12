@@ -234,13 +234,11 @@ public class PackageProperties {
       public TypedProperty<PropertyOrderCriterion.Order, SearchCriterion.Direction> direction = new TypedProperty<>(PropertyOrderCriterion.Order.class, "direction");
       public TypedProperty<PropertyOrderCriterion.Order, Boolean> nullsFirst = new TypedProperty<>(PropertyOrderCriterion.Order.class, "nullsFirst");
       public TypedProperty<PropertyOrderCriterion.Order, String> propertyName = new TypedProperty<>(PropertyOrderCriterion.Order.class, "propertyName");
-      public TypedProperty<PropertyOrderCriterion.Order, Class> type = new TypedProperty<>(PropertyOrderCriterion.Order.class, "type");
       public static class InstanceProperties extends 	InstanceProperty.Container<PropertyOrderCriterion.Order> {
         public  InstanceProperties(PropertyOrderCriterion.Order source){super(source);}
         public InstanceProperty<PropertyOrderCriterion.Order, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.direction);}
         public InstanceProperty<PropertyOrderCriterion.Order, Boolean> nullsFirst(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.nullsFirst);}
         public InstanceProperty<PropertyOrderCriterion.Order, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.propertyName);}
-        public InstanceProperty<PropertyOrderCriterion.Order, Class> type(){return new InstanceProperty<>(source,PackageProperties.propertyOrderCriterion_order.type);}
       }
       
       public  InstanceProperties instance(PropertyOrderCriterion.Order instance) {

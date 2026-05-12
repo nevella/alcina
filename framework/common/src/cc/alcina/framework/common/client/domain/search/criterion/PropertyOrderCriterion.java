@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -15,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
@@ -27,12 +30,24 @@ public class PropertyOrderCriterion extends SearchCriterion {
 	@XmlTransient
 	public Order value = new Order();
 
+	@Override
+	public String getDisplayName() {
+		return "Order by";
+	}
+
 	public static class PropertyOrderComparator implements Comparator {
 		List<PropertyOrderCriterion> propertyOrders;
 
-		public PropertyOrderComparator(
+		BindableSearchDefinition def;
+
+		public PropertyOrderComparator(SearchDefinition def,
 				List<PropertyOrderCriterion> propertyOrders) {
+			Preconditions
+					.checkArgument(def instanceof BindableSearchDefinition);
+			this.def = (BindableSearchDefinition) def;
 			this.propertyOrders = propertyOrders;
+			propertyOrders.forEach(
+					oc -> oc.value.type = this.def.queriedBindableClass());
 		}
 
 		@Override
@@ -50,15 +65,17 @@ public class PropertyOrderCriterion extends SearchCriterion {
 	@TypedProperties
 	public static class Order extends Bindable.Fields
 			implements TreeSerializable, Comparator {
-		public Class<? extends Bindable> type;
-
 		public String propertyName;
 
 		public SearchCriterion.Direction direction;
 
-		transient Property property;
-
 		public boolean nullsFirst;
+
+		@AlcinaTransient
+		transient public Class<? extends Bindable> type;
+
+		@AlcinaTransient
+		transient Property property;
 
 		@Override
 		public int compare(Object o1, Object o2) {

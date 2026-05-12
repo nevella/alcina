@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
@@ -15,10 +16,28 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    public static _OrderEditor orderEditor = new _OrderEditor();
     public static _SearchDefinitionEditor searchDefinitionEditor = new _SearchDefinitionEditor();
     static _Searchable searchable = new _Searchable();
     static _Searchable_OperatorSelector searchable_operatorSelector = new _Searchable_OperatorSelector();
     static _Searchable_RenderedOperator searchable_renderedOperator = new _Searchable_RenderedOperator();
+    
+    public static class _OrderEditor implements TypedProperty.Container {
+      public TypedProperty<OrderEditor, SearchCriterion.Direction> direction = new TypedProperty<>(OrderEditor.class, "direction");
+      public TypedProperty<OrderEditor, String> propertyName = new TypedProperty<>(OrderEditor.class, "propertyName");
+      public TypedProperty<OrderEditor, PropertyOrderCriterion.Order> value = new TypedProperty<>(OrderEditor.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<OrderEditor> {
+        public  InstanceProperties(OrderEditor source){super(source);}
+        public InstanceProperty<OrderEditor, SearchCriterion.Direction> direction(){return new InstanceProperty<>(source,PackageProperties.orderEditor.direction);}
+        public InstanceProperty<OrderEditor, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.orderEditor.propertyName);}
+        public InstanceProperty<OrderEditor, PropertyOrderCriterion.Order> value(){return new InstanceProperty<>(source,PackageProperties.orderEditor.value);}
+      }
+      
+      public  InstanceProperties instance(OrderEditor instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
     
     public static class _SearchDefinitionEditor implements TypedProperty.Container {
       public TypedProperty<SearchDefinitionEditor, Link> go = new TypedProperty<>(SearchDefinitionEditor.class, "go");

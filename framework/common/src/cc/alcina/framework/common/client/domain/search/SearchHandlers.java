@@ -83,7 +83,7 @@ public class SearchHandlers {
 		List<PropertyOrderCriterion> propertyOrders = def
 				.allCriteria(PropertyOrderCriterion.class);
 		if (propertyOrders.size() > 0) {
-			return new PropertyOrderComparator(propertyOrders);
+			return new PropertyOrderComparator(def, propertyOrders);
 		} else {
 			return null;
 		}
