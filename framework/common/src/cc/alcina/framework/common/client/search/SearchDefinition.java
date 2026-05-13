@@ -467,6 +467,11 @@ public abstract class SearchDefinition extends Bindable
 		removeFromSoleCriteriaGroup(sco -> sco.getClass() == sc.getClass());
 	}
 
+	public void removeFromSoleCriteriaGroup(
+			Class<? extends SearchCriterion> criterionClass) {
+		removeFromSoleCriteriaGroup(sco -> sco.getClass() == criterionClass);
+	}
+
 	public void
 			removeFromSoleCriteriaGroup(Predicate<SearchCriterion> predicate) {
 		assert criteriaGroups.size() == 1;

@@ -23,10 +23,13 @@ public class BindableSearchFilter implements Predicate, Comparator {
 
 	public BindableSearchFilter(BindableSearchDefinition def) {
 		this.def = def;
-		SearchHandlers.ensureHandlers();
-		SearchHandlers.processDefinitionHandler(def, this::addFilter);
-		SearchHandlers.processHandlers(def, this::addFilter);
-		computedComparator = SearchHandlers.computeComparator(def);
+		callInContext(() -> {
+			SearchHandlers.ensureHandlers();
+			SearchHandlers.processDefinitionHandler(def, this::addFilter);
+			SearchHandlers.processHandlers(def, this::addFilter);
+			computedComparator = SearchHandlers.computeComparator(def);
+			return null;
+		});
 	}
 
 	void addFilter(DomainFilter filter) {

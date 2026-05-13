@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.server;
 
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -8,6 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
@@ -77,5 +79,10 @@ public class RemoteComponentEvent
 				? new byte[0]
 				: FlightEventWrappable.serialize(response.messageEnvelope)
 						.getBytes(StandardCharsets.UTF_8);
+	}
+
+	public Stream<Message> allMessages() {
+		return Stream.concat(request.messageEnvelope.messages.stream(),
+				response.messageEnvelope.messages.stream());
 	}
 }

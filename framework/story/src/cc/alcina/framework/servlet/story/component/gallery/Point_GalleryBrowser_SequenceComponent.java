@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.story.component.gallery;
 
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.gwt.client.dirndl.model.Feature_Dirndl_TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.search.Feature_Dirndl_SearchDefinitionEditor;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
@@ -11,7 +12,8 @@ import cc.alcina.framework.gwt.client.story.Waypoints;
  * state
  */
 @Feature.Ref(Feature_Dirndl_SearchDefinitionEditor.class)
-@Decl.Child(Point_GalleryBrowser_SequenceComponent._TestSearch.class)
+@Decl.Child(Point_GalleryBrowser_SequenceComponent.TestSearch.class)
+@Decl.Child(Point_GalleryBrowser_SequenceComponent.TestOrderService.class)
 public class Point_GalleryBrowser_SequenceComponent extends Waypoint {
 	@Decl.Require(Story_GalleryBrowser.State.Home.class)
 	@Decl.Child(Point_GalleryBrowser_Home.ToSequenceComponent.class)
@@ -25,6 +27,8 @@ public class Point_GalleryBrowser_SequenceComponent extends Waypoint {
 	static final String _REL_CHOICE_MUTATIONS = "//suggestion[contains(.,'mutations')]";
 
 	static final String XPATH_SELECT = "//search-definition-editor//searchable//select";
+
+	static final String XPATH_ONE_SEQUENCE_ELEMENT = "//heading[.='Sequence elements [1]']";
 
 	static class _DefinitionEditor extends Waypoint {
 		@Decl.Location.Xpath(XPATH_EDITOR)
@@ -46,6 +50,11 @@ public class Point_GalleryBrowser_SequenceComponent extends Waypoint {
 		@Decl.Action.UI.Keys("t")
 		static class _SelectTrue extends Waypoint {
 		}
+
+		@Decl.Location.Xpath(XPATH_ONE_SEQUENCE_ELEMENT)
+		@Decl.Action.UI.AwaitPresent
+		static class _VerifyOneRow extends Waypoint {
+		}
 	}
 
 	@Decl.Child(_Reset.class)
@@ -55,7 +64,37 @@ public class Point_GalleryBrowser_SequenceComponent extends Waypoint {
 	@Decl.Child(_DefinitionEditor._AwaitSelectFocus.class)
 	@Decl.Child(_DefinitionEditor._SelectTrue.class)
 	@Decl.Child(Point_GalleryBrowser_ChoiceEditor.AwaitSuggestingNodeFocus.class)
+	@Decl.Child(Waypoints.Wait100.class)
 	@Decl.Child(Waypoints.SendKeyEnter.class)
-	static class _TestSearch extends Waypoint {
+	@Decl.Child(_DefinitionEditor._VerifyOneRow.class)
+	static class TestSearch extends Waypoint {
+	}
+
+	/**
+	 * Test the order service by ordering the sequence, refreshing + verifying
+	 * that the order persists
+	 */
+	@Feature.Ref(Feature_Dirndl_TableModel._OrderService.class)
+	@Decl.Child(_Reset.class)
+	@Decl.Child(TestOrderService._ClickSort.class)
+	@Decl.Child(Waypoints.Wait100.class)
+	@Decl.Child(TestOrderService._ClickSort.class)
+	@Decl.Child(TestOrderService._VerifyFirstRowIsLastIndex.class)
+	// sort-direction
+	public static class TestOrderService extends Waypoint {
+		static final String XPATH_SORT = "//ch-content/span[.='Index']";
+
+		static final String XPATH_FIRST_ROW_LAST = "//sequence//tbody/tr[1]/td[1]/value[.='230']";
+		// sequence
+
+		@Decl.Location.Xpath(XPATH_SORT)
+		@Decl.Action.UI.Click
+		static class _ClickSort extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_FIRST_ROW_LAST)
+		@Decl.Action.UI.AwaitPresent
+		static class _VerifyFirstRowIsLastIndex extends Waypoint {
+		}
 	}
 }

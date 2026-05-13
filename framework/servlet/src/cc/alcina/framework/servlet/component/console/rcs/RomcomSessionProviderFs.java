@@ -12,9 +12,11 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.servlet.environment.EnvironmentManager;
 import cc.alcina.framework.servlet.logging.FlightEventRecorder;
 
@@ -29,6 +31,8 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 
 		List<FlightEvent> events;
 
+		File entryFile;
+
 		EventFolder(File folder) {
 			this.folder = folder;
 		}
@@ -42,13 +46,27 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 			if (lastModificationDate == folder.lastModified()) {
 				return;
 			}
+			entryFile = FileUtils.child(metadataFolder,
+					Ax.format(".RomcomSessionEntry-%s.json", folder.getName()));
+			if (entryFile.exists()) {
+				try {
+					this.entry = Io.read().file(entryFile)
+							.asReflectiveSerializedObject();
+					this.lastModificationDate = entry.folderLastModificationDate;
+					if (lastModificationDate == folder.lastModified()) {
+						return;
+					}
+				} catch (Exception e) {
+					Ax.simpleExceptionOut(e);
+				}
+			}
 			lastModificationDate = folder.lastModified();
 			/*
 			 * swap, don't update in place
 			 */
 			events = (List) SEUtilities
 					.listFilesRecursive(folder.getPath(), null).stream()
-					.filter(f -> f.isFile())
+					.filter(f -> f.isFile() && !f.isHidden())
 					.map(f -> Io.read().file(f).asString())
 					.<FlightEvent> map(ReflectiveSerializer::deserialize)
 					.sorted().collect(Collectors.toList());
@@ -56,14 +74,22 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 					"$2");
 			boolean active = EnvironmentManager.get().hasEnvironment(sessionId);
 			RomcomSessionEntry entry = new RomcomSessionEntry(events, sessionId,
-					active, folder.getPath());
+					active, folder.getPath(), lastModificationDate);
 			this.entry = entry;
+			persistEntry();
+		}
+
+		void persistEntry() {
+			Io.write().asReflectiveSerialized(true).object(entry)
+					.toFile(entryFile);
 		}
 	}
 
 	String eventRootPath;
 
 	Map<File, EventFolder> fileEventFolder = new LinkedHashMap<>();
+
+	File metadataFolder;
 
 	RomcomSessionProviderFs() {
 		eventRootPath = Configuration.get(FlightEventRecorder.class, "path");
@@ -72,10 +98,11 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 	@Override
 	public synchronized Stream<RomcomSessionEntry> getSessions() {
 		File eventsFolder = new File(eventRootPath);
-		Stream<File> folders = eventsFolder.exists()
-				? Stream.of(eventsFolder.listFiles())
-						.sorted(Comparator.comparing(File::lastModified))
-				: Stream.empty();
+		metadataFolder = FileUtils.child(eventsFolder, "session-metadata");
+		metadataFolder.mkdirs();
+		Stream<File> folders = Stream.of(eventsFolder.listFiles())
+				.filter(f -> !Objects.equals(f, metadataFolder))
+				.sorted(Comparator.comparing(File::lastModified));
 		return folders.filter(File::isDirectory)
 				.map(f -> fileEventFolder.computeIfAbsent(f, EventFolder::new))
 				.map(EventFolder::asEntry).filter(Objects::nonNull);
@@ -84,5 +111,11 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 	@Override
 	public synchronized void clear() {
 		fileEventFolder.clear();
+	}
+
+	@Override
+	public void persist(RomcomSessionEntry entry) {
+		EventFolder eventFolder = fileEventFolder.get(new File(entry.path));
+		eventFolder.persistEntry();
 	}
 }

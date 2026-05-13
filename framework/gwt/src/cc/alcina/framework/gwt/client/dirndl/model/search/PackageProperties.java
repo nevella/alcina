@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
@@ -16,11 +17,29 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    public static _FilterEditor filterEditor = new _FilterEditor();
     public static _OrderEditor orderEditor = new _OrderEditor();
     public static _SearchDefinitionEditor searchDefinitionEditor = new _SearchDefinitionEditor();
     static _Searchable searchable = new _Searchable();
     static _Searchable_OperatorSelector searchable_operatorSelector = new _Searchable_OperatorSelector();
     static _Searchable_RenderedOperator searchable_renderedOperator = new _Searchable_RenderedOperator();
+    
+    public static class _FilterEditor implements TypedProperty.Container {
+      public TypedProperty<FilterEditor, String> filterValue = new TypedProperty<>(FilterEditor.class, "filterValue");
+      public TypedProperty<FilterEditor, String> propertyName = new TypedProperty<>(FilterEditor.class, "propertyName");
+      public TypedProperty<FilterEditor, PropertyCriterion.Filter> value = new TypedProperty<>(FilterEditor.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<FilterEditor> {
+        public  InstanceProperties(FilterEditor source){super(source);}
+        public InstanceProperty<FilterEditor, String> filterValue(){return new InstanceProperty<>(source,PackageProperties.filterEditor.filterValue);}
+        public InstanceProperty<FilterEditor, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.filterEditor.propertyName);}
+        public InstanceProperty<FilterEditor, PropertyCriterion.Filter> value(){return new InstanceProperty<>(source,PackageProperties.filterEditor.value);}
+      }
+      
+      public  InstanceProperties instance(FilterEditor instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
     
     public static class _OrderEditor implements TypedProperty.Container {
       public TypedProperty<OrderEditor, SearchCriterion.Direction> direction = new TypedProperty<>(OrderEditor.class, "direction");

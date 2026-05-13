@@ -30,6 +30,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.AwaitTimedOutException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -319,7 +320,7 @@ public class RemoteComponentHandler {
 							if (isSessionActive && isAwaitRemote(request)) {
 								continue;
 							} else {
-								throw new Exception(Ax.format(
+								throw new AwaitTimedOutException(Ax.format(
 										"Await timed out :: session - %s :: active - %s :: request - %s",
 										request.session.id, isSessionActive,
 										request.messageEnvelope

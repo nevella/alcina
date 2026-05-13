@@ -1,7 +1,10 @@
 package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -11,13 +14,19 @@ import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchFilter;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.service.InstanceQuery;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasFilterableText;
@@ -39,6 +48,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding.InstanceDistinctLambda;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 
 /*
  * wip - ds.late - add orderservice.provider interface
@@ -98,7 +108,40 @@ public class SequenceArea extends Model.Fields
 	class OrderServiceImpl implements TableModel.OrderService {
 		@Override
 		public void onSortTable(SortTable event) {
-			int debug = 3;
+			TableColumn tableColumn = event.getModel();
+			Property property = tableColumn.getField().getProperty();
+			if (property.name().equals("index")) {
+				/*
+				 * not from the transformed bindable
+				 */
+				// return;
+			}
+			SequencePlace place = getPlace().copy();
+			SequenceSearchDefinition search = place.search;
+			if (search == null || !search
+					.permitsCriterionType(PropertyOrderCriterion.class)) {
+				return;
+			}
+			PropertyOrderCriterion criterion = search
+					.firstCriterion(PropertyOrderCriterion.class);
+			if (criterion == null) {
+				criterion = new PropertyOrderCriterion();
+				search.addCriterionToSoleCriteriaGroup(criterion);
+			}
+			if (Objects.equals(criterion.value.propertyName, property.name())) {
+				criterion.value.direction = criterion.value.direction.reverse();
+			} else {
+				criterion.value.propertyName = property.name();
+			}
+			place.updateInstanceQueryDef(search);
+			event.reemitAs(SequenceArea.this,
+					SequenceEvents.SequencePlaceChanged.class, place);
+			event.setHandled(true);
+		}
+
+		@Override
+		public Class<? extends Bindable> renderedBindableClass() {
+			return sequence.getRowType();
 		}
 	}
 
@@ -137,6 +180,8 @@ public class SequenceArea extends Model.Fields
 	Runnable updateStylesLambda = this::updateStyles;
 
 	public int preFilterCount;
+
+	TransformedCache transformedCache;
 
 	public SequenceArea() {
 	}
@@ -392,13 +437,29 @@ public class SequenceArea extends Model.Fields
 		}
 	}
 
+	/*
+	 * implementation note - property filtering/ordering are persisted in the
+	 * place, but applied to the --transformed-- rows - not the sequence
+	 * elements
+	 */
 	List<?> filteredSequenceElements(Sequence sequence, boolean ignoreRowsLimit,
 			boolean onlySelectedIfAnySelected) {
 		Stream<?> stream = sequence.getElements().stream();
 		SequenceSearchDefinition search = getPlace().search;
+		SequenceSearchDefinition preTransformSearch = null;
+		SequenceSearchDefinition postTransformSearch = null;
 		if (search != null) {
-			BindableSearchFilter bsf = new BindableSearchFilter(search);
-			stream = stream.filter(bsf).sorted(bsf);
+			preTransformSearch = search.copy();
+			postTransformSearch = search.copy();
+			Predicate<SearchCriterion> propertyPredicate = sc -> (sc instanceof PropertyCriterion)
+					|| (sc instanceof PropertyOrderCriterion);
+			preTransformSearch.removeFromSoleCriteriaGroup(propertyPredicate);
+			postTransformSearch
+					.removeFromSoleCriteriaGroup(propertyPredicate.negate());
+			BindableSearchFilter bsf = new BindableSearchFilter(
+					preTransformSearch);
+			Stream<?> f_stream = stream;
+			stream = bsf.callInContext(() -> f_stream.filter(bsf).sorted(bsf));
 		}
 		/*
 		 * because *text* filtering works better on the transformed elts,
@@ -411,14 +472,28 @@ public class SequenceArea extends Model.Fields
 		 */
 		Query<Model> query = HasFilterableText.Query.of(getPlace().filter)
 				.withCaseInsensitive(true).withRegex(true);
-		ModelTransform sequenceRowTransform = sequence.getRowTransform();
 		long limit = ignoreRowsLimit ? Integer.MAX_VALUE
 				: service.getElementLimit();
 		List<?> preFiltered = stream.toList();
-		List<?> filteredElements = (List<?>) preFiltered.stream()
+		transformedCache = new TransformedCache(sequence);
+		Stream<?> transformedElements = preFiltered.stream()
 				.filter(new IndexPredicate(getPlace().selectedRange))
-				.filter(e -> query.test(sequenceRowTransform.apply(e)))
-				.limit(limit).collect(Collectors.toList());
+				.filter(e -> query.test(transformedCache.get(e)));
+		if (postTransformSearch != null
+				&& postTransformSearch.allCriteria().size() > 0) {
+			BindableSearchFilter bsf = new BindableSearchFilter(
+					postTransformSearch);
+			Stream<?> f_stream = transformedElements.toList().stream();
+			/*
+			 * filter/sort the transformed elements
+			 */
+			transformedElements = bsf.callInContext(() -> f_stream
+					.filter(e -> bsf.test(transformedCache.get(e)))
+					.sorted((o1, o2) -> bsf.compare(transformedCache.get(o1),
+							transformedCache.get(o2))));
+		}
+		List<?> filteredElements = transformedElements.limit(limit)
+				.collect(Collectors.toList());
 		preFilterCount = preFiltered.size();
 		if (onlySelectedIfAnySelected) {
 			List<?> selectedElements = sequenceTable.selectionSupport
@@ -428,6 +503,25 @@ public class SequenceArea extends Model.Fields
 			}
 		}
 		return filteredElements;
+	}
+
+	class TransformedCache implements ModelTransform {
+		Map<Object, Object> transformed = AlcinaCollections.newHashMap();
+
+		ModelTransform sequenceRowTransform;
+
+		TransformedCache(Sequence sequence) {
+			sequenceRowTransform = sequence.getRowTransform();
+		}
+
+		Object get(Object e) {
+			return transformed.computeIfAbsent(e, sequenceRowTransform::apply);
+		}
+
+		@Override
+		public Object apply(Object t) {
+			return get(t);
+		}
 	}
 
 	void goToHighlightModelIndex() {

@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.domain.search;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,9 +18,12 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.OrderGroup;
+import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
@@ -47,7 +51,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	public void orderBy(TypedProperty property, boolean ascending) {
-		removeFromSoleCriteriaGroup(sc -> sc instanceof PropertyOrderCriterion);
+		removeFromSoleCriteriaGroup(PropertyOrderCriterion.class);
 		PropertyOrderCriterion.of(property, ascending)
 				.addToSoleCriteriaGroup(this);
 	}
@@ -58,13 +62,31 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 						.collect(Collectors.joining(", ")))));
 	}
 
-	public EntityCriteriaGroup dataCriteriaGroup() {
-		return (EntityCriteriaGroup) getCriteriaGroups().iterator().next();
+	public CriteriaGroup dataCriteriaGroup() {
+		return (CriteriaGroup) getCriteriaGroups().iterator().next();
 	}
 
 	@XmlTransient
 	public GroupingParameters getGroupingParameters() {
 		return groupingParameters;
+	}
+
+	public boolean permitsCriterionType(
+			Class<? extends SearchCriterion> criterionType) {
+		return getCriteriaTypes().contains(criterionType);
+	}
+
+	@Property.Not
+	List<Class<? extends SearchCriterion>> getCriteriaTypes() {
+		Class<? extends BindableCriteriaGroup> cgClass = getSoleCriteriaGroupType();
+		TypeSerialization typeSerialization = Reflections.at(cgClass)
+				.annotation(TypeSerialization.class);
+		List<Class<? extends SearchCriterion>> criteriaTypes = Arrays
+				.asList(Arrays.stream(typeSerialization.properties())
+						.filter(ps -> ps.name()
+								.equals(CriteriaGroup.PROPERTY_CRITERIA))
+						.findFirst().get().types());
+		return criteriaTypes;
 	}
 
 	@Override
@@ -79,15 +101,22 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	protected void init() {
+		Class<? extends CriteriaGroup> soleCriteriaGroupType = getSoleCriteriaGroupType();
+		getCriteriaGroups().add(Reflections.newInstance(soleCriteriaGroupType));
+		setResultsPerPage(50);
+	}
+
+	@Property.Not
+	@XmlTransient
+	Class<? extends BindableCriteriaGroup> getSoleCriteriaGroupType() {
 		TypeSerialization typeSerialization = Reflections.at(getClass())
 				.annotation(TypeSerialization.class);
-		Class<? extends EntityCriteriaGroup> ecgClass = Arrays
+		Class<? extends BindableCriteriaGroup> cgClass = Arrays
 				.stream(typeSerialization.properties())
 				.filter(ps -> ps.name()
 						.equals(SearchDefinition.PROPERTY_CRITERIA_GROUPS))
 				.findFirst().get().types()[0];
-		getCriteriaGroups().add(Reflections.newInstance(ecgClass));
-		setResultsPerPage(50);
+		return cgClass;
 	}
 
 	public boolean provideHasNoCriteria() {

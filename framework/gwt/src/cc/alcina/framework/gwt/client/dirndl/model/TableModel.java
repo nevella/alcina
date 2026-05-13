@@ -220,7 +220,10 @@ public class TableModel extends Model
 	@Feature.Parent(Feature_Dirndl_TableModel._OrderService.class)
 	public interface OrderService
 			extends ContextService, TableEvents.SortTable.Handler {
+		Class<? extends Bindable> renderedBindableClass();
 	}
+
+	public Class<? extends Bindable> elementType;
 
 	public static class DirectedEntitySearchActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableContainer> {
@@ -271,9 +274,9 @@ public class TableModel extends Model
 			SortDirection sortDirection = def.getSearchOrders()
 					.provideIsAscending() ? SortDirection.ASCENDING
 							: SortDirection.DESCENDING;
-			Class<? extends Bindable> resultClass = activity.getSearchResults()
-					.resultClass();
-			List<Field> fields = BeanFields.query().forClass(resultClass)
+			tableModel.elementType = activity.getSearchResults().resultClass();
+			List<Field> fields = BeanFields.query()
+					.forClass(tableModel.elementType)
 					.forMultipleWidgetContainer(true).withResolver(resolver)
 					.listFields();
 			fields.stream().map(field -> {
