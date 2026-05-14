@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.domain.search.criterion;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -45,8 +46,6 @@ public class PropertyOrderCriterion extends SearchCriterion {
 					.checkArgument(def instanceof BindableSearchDefinition);
 			this.def = (BindableSearchDefinition) def;
 			this.propertyOrders = propertyOrders;
-			propertyOrders.forEach(
-					oc -> oc.value.type = this.def.queriedBindableClass());
 		}
 
 		@Override
@@ -66,12 +65,9 @@ public class PropertyOrderCriterion extends SearchCriterion {
 			implements TreeSerializable, Comparator {
 		public String propertyName;
 
-		public SearchCriterion.Direction direction;
+		public SearchCriterion.Direction direction = Direction.ASCENDING;
 
 		public boolean nullsFirst;
-
-		@AlcinaTransient
-		transient public Class<? extends Bindable> type;
 
 		@AlcinaTransient
 		transient Property property;
@@ -83,7 +79,7 @@ public class PropertyOrderCriterion extends SearchCriterion {
 
 		int compare0(Object b1, Object b2) {
 			if (property == null) {
-				property = Reflections.at(type).property(propertyName);
+				property = Reflections.at(b1).property(propertyName);
 			}
 			Comparable o1 = (Comparable) property.get(b1);
 			Comparable o2 = (Comparable) property.get(b2);
@@ -113,9 +109,12 @@ public class PropertyOrderCriterion extends SearchCriterion {
 	public static PropertyOrderCriterion of(TypedProperty property,
 			boolean ascending) {
 		PropertyOrderCriterion result = new PropertyOrderCriterion();
-		result.value.type = property.definingType;
 		result.value.propertyName = property.name();
 		result.value.direction = Direction.ofAscending(ascending);
 		return result;
+	}
+
+	public boolean isProperty(Property property) {
+		return Objects.equals(value.propertyName, property.name());
 	}
 }

@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.ColumnMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.ColumnMetadata;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
@@ -559,7 +559,10 @@ public class TraversalPlace extends BasePlace {
 				&& Objects.equals(filter.key, property.getName());
 		// FIXME - sortDirection
 		SortDirection sortDirection = null;
-		return new ColumnMetadata.Standard(sortDirection, filtered);
+		ColumnMetadata metadata = new ColumnMetadata();
+		metadata.sortDirection = sortDirection;
+		metadata.filtered = filtered;
+		return metadata;
 	}
 
 	public void computeListSource(Layer selectedLayer, Selection selection) {

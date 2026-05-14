@@ -54,6 +54,15 @@ public class RemoteComponentProtocol {
 		}
 	}
 
+	public static class AwaitTimedOutException extends ProtocolException {
+		public AwaitTimedOutException() {
+		}
+
+		public AwaitTimedOutException(String message) {
+			super(message);
+		}
+	}
+
 	@Bean(PropertySource.FIELDS)
 	public static class InvalidClientException extends ProtocolException {
 		@Reflected
@@ -86,6 +95,9 @@ public class RemoteComponentProtocol {
 					MessageId highestProcessingCounterpartId);
 
 			MessageId getCounterpartProcessingId();
+		}
+
+		public interface IsException {
 		}
 
 		/**
@@ -319,7 +331,8 @@ public class RemoteComponentProtocol {
 		 *
 		 */
 		@ReflectiveSerializer.Checks(ignore = true)
-		public static class ProcessingException extends Message {
+		public static class ProcessingException extends Message
+				implements Message.IsException {
 			public static ProcessingException wrap(Throwable e,
 					boolean includeFullTrace) {
 				Message.ProcessingException processingException = new Message.ProcessingException();

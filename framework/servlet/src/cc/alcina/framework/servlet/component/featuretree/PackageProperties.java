@@ -1,18 +1,24 @@
 package cc.alcina.framework.servlet.component.featuretree;
 
-import java.util.Set;
-
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.featuretree.FeaturePlace;
+import cc.alcina.framework.servlet.component.featuretree.FeatureTable;
+import cc.alcina.framework.servlet.component.featuretree.Page;
+import cc.alcina.framework.servlet.component.featuretree.Properties;
+import cc.alcina.framework.servlet.component.featuretree.Table;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import java.lang.Class;
+import java.lang.String;
+import java.util.Set;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     static _FeatureTable featureTable = new _FeatureTable();
     public static _FeatureTree_Ui featureTree_ui = new _FeatureTree_Ui();

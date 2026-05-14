@@ -380,7 +380,8 @@ public class DomNode {
 
 	public boolean classContains(String test) {
 		String className = getClassName();
-		return List.of(className.split(" ")).contains(test);
+		return Ax.isBlank(className) ? false
+				: List.of(className.split(" ")).contains(test);
 	}
 
 	public boolean classMatches(String regex) {

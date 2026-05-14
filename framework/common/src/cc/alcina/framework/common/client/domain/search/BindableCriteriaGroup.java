@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @TypeSerialization(flatSerializable = false)
 @Registration(SearchDefinitionSerializationInfo.class)
-public abstract class EntityCriteriaGroup extends CriteriaGroup {
-	public EntityCriteriaGroup() {
+public abstract class BindableCriteriaGroup extends CriteriaGroup {
+	public BindableCriteriaGroup() {
 	}
 
 	@Override

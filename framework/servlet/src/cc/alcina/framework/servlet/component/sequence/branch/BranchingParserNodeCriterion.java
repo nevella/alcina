@@ -9,8 +9,8 @@ import javax.xml.bind.annotation.XmlType;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.BindableCriteriaGroup;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
-import cc.alcina.framework.common.client.domain.search.EntityCriteriaGroup;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -50,7 +50,7 @@ public class BranchingParserNodeCriterion {
 				//@formatter:on
 			}))
 	@XmlType(name = "BranchingParserNodeSearchDefinition_CriteriaGroup")
-	public static class CriteriaGroup extends EntityCriteriaGroup {
+	public static class CriteriaGroup extends BindableCriteriaGroup {
 	}
 
 	abstract static class CriterionHandler<SC extends SearchCriterion> extends

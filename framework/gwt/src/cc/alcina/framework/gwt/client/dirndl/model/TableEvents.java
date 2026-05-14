@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.List;
+
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
@@ -50,6 +52,36 @@ public class TableEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onCellClicked(CellClicked event);
+		}
+	}
+
+	public static class ColumnsBound
+			extends ModelEvent<ColumnsBound.Data, ColumnsBound.Handler> {
+		public static class Data {
+			public boolean bound;
+
+			public List<TableColumn> columns;
+
+			public Data(boolean bound, List<TableColumn> columns) {
+				this.bound = bound;
+				this.columns = columns;
+			}
+		}
+
+		@Override
+		public void dispatch(ColumnsBound.Handler handler) {
+			handler.onColumnsBound(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onColumnsBound(ColumnsBound event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onColumnsBound(ColumnsBound event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 }

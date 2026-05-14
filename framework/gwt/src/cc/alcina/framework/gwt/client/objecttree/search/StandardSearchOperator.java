@@ -77,10 +77,11 @@ public enum StandardSearchOperator implements SearchOperator {
 		switch (this) {
 		case ALL_OF:
 		case AT_LEAST_ONE_OF:
-		case CONTAINS:
 		case DOES_NOT_CONTAIN:
 		case STARTS_WITH:
 			return null;
+		case CONTAINS:
+			return FilterOperator.CONTAINS;
 		case DOES_NOT_EQUAL:
 			return FilterOperator.NE;
 		case EQUALS:

@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.console.rcs;
 import java.util.Date;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
@@ -11,9 +12,12 @@ import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Mark;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.servlet.logging.FlightEventRecorder;
 
 public class RomcomSessionSequence
@@ -23,9 +27,12 @@ public class RomcomSessionSequence
 		return new RomcomSessionSearchDefinition();
 	}
 
+	@Display.AllProperties
 	@TypedProperties
-	static class RomcomSessionView extends Model.All
+	static class RomcomSessionView extends Model.Fields
 			implements Model.MultiNodeModel {
+		static PackageProperties._RomcomSessionSequence_RomcomSessionView properties = PackageProperties.romcomSessionSequence_romcomSessionView;
+
 		Date start;
 
 		Date end;
@@ -34,7 +41,7 @@ public class RomcomSessionSequence
 
 		int largestPacket;
 
-		Link view;
+		int slowestResponse;
 
 		@Property.Not
 		RomcomSessionEntry entry;
@@ -44,12 +51,34 @@ public class RomcomSessionSequence
 			this.end = entry.end;
 			this.sessionId = entry.sessionId;
 			this.largestPacket = entry.largestPacket;
+			this.slowestResponse = entry.slowestResponse;
+			this.entry = entry;
+		}
+	}
+
+	@TypedProperties
+	static class RomcomSessionDetail extends RomcomSessionView
+			implements ModelEvents.Mark.Handler {
+		List<Link> actions;
+
+		RomcomSessionDetail(RomcomSessionEntry entry) {
+			super(entry);
 			SequencePlace place = new SequencePlace();
 			place.instanceQuery = FlightEventRecorder
 					.createInstanceQuery(entry.path);
 			String tokenString = place.toTokenString();
 			String href = "/seq#" + tokenString;
-			view = new Link().withText("View").withHref(href).withTargetBlank();
+			Link view = new Link().withText("View").withHref(href)
+					.withTargetBlank();
+			actions = List.of(view, Link.of(ModelEvents.Mark.class));
+		}
+
+		@Override
+		public void onMark(Mark event) {
+			entry.marked = true;
+			entry.persist();
+			NotificationObservable.of("Session %s marked", entry.sessionId)
+					.publish();
 		}
 	}
 
@@ -62,7 +91,7 @@ public class RomcomSessionSequence
 	@Override
 	public ModelTransform<RomcomSessionEntry, ? extends Model>
 			getDetailTransform() {
-		return RomcomSessionView::new;
+		return RomcomSessionDetail::new;
 	}
 
 	public static InstanceQuery createInstanceQuery() {

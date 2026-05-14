@@ -3,11 +3,13 @@ package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
@@ -47,6 +49,13 @@ public interface Sequence<T> {
 
 	default ModelTransform<T, ? extends Model> getDetailTransformAdditional() {
 		return t -> null;
+	}
+
+	default Class<? extends Bindable> getRowType() {
+		Class<T> elementType = Reflections.at(this).firstGenericBound();
+		Model rowType = getRowTransform()
+				.apply(Reflections.newInstance(elementType));
+		return rowType.getClass();
 	}
 
 	default String getCss() {

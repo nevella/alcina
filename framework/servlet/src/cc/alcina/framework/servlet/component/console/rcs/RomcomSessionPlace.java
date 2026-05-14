@@ -16,7 +16,6 @@ public class RomcomSessionPlace extends ServerConsolePlace {
 		{
 			SequencePlace place = sequencePlace;
 			place.instanceQuery = RomcomSessionSequence.createInstanceQuery();
-			place.search = Preset.Active.getDefinition();
 		}
 	}
 
@@ -26,6 +25,14 @@ public class RomcomSessionPlace extends ServerConsolePlace {
 
 	public static class Tokenizer
 			extends ServerConsolePlace.Tokenizer<RomcomSessionPlace> {
+		@Override
+		protected RomcomSessionPlace getPlace1(String token, boolean retry) {
+			RomcomSessionPlace place = super.getPlace1(token, retry);
+			if (place.sequencePlace.search == null) {
+				place.sequencePlace.search = Preset.Active.getDefinition();
+			}
+			return place;
+		}
 	}
 
 	@Override

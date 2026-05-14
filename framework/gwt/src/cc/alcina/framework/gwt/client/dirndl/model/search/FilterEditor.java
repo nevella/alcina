@@ -4,14 +4,12 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
-import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion.Order;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.search.SearchCriterion;
-import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -19,19 +17,19 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Values;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.OrderService;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
-@Registration({ Model.Value.class, FormModel.Editor.class, Order.class })
+@Registration({ Model.Value.class, FormModel.Editor.class,
+		PropertyCriterion.Filter.class })
 @Bean(PropertySource.FIELDS)
 @TypedProperties
-public class OrderEditor extends Model.Value<Order>
+public class FilterEditor extends Model.Value<PropertyCriterion.Filter>
 		implements ValueChange.Container {
-	PackageProperties._OrderEditor.InstanceProperties properties() {
-		return PackageProperties.orderEditor.instance(this);
+	PackageProperties._FilterEditor.InstanceProperties properties() {
+		return PackageProperties.filterEditor.instance(this);
 	}
 
-	@Directed.Transform(value = Choices.Select.To.class)
+	@Directed.Transform(value = Choices.Select.To.class, transformsNull = true)
 	@Choices.Values(ValuesImpl.class)
 	String propertyName;
 
@@ -43,28 +41,20 @@ public class OrderEditor extends Model.Value<Order>
 					.service(SearchDefinitionEditor.Service.class)
 					.getSearchDefinition();
 			Class<? extends Bindable> type = def.queriedBindableClass();
-			OrderService orderService = contextNode
-					.service(TableModel.OrderService.class);
-			if (orderService != null) {
-				type = orderService.renderedBindableClass();
-			}
 			return Reflections.at(type).properties().stream()
-					.filter(p -> Reflections.isAssignableFrom(Comparable.class,
-							ClassUtil.getWrapperType(p.getType())))
 					.map(p -> p.getName()).sorted().toList();
 		}
 	}
 
-	@Directed.Transform(value = Choices.Select.To.class, transformsNull = true)
-	@Choices.EnumValues(SearchCriterion.Direction.class)
-	SearchCriterion.Direction direction;
+	@Directed.Transform(value = StringInput.To.class, transformsNull = true)
+	String filterValue;
 
-	Order value;
+	PropertyCriterion.Filter value;
 
-	OrderEditor() {
+	FilterEditor() {
 		from(properties().propertyName()).withSetOnInitialise(false)
 				.signal(this::onPropertiesUpdated);
-		from(properties().direction()).withSetOnInitialise(false)
+		from(properties().filterValue()).withSetOnInitialise(false)
 				.signal(this::onPropertiesUpdated);
 	}
 
@@ -73,21 +63,21 @@ public class OrderEditor extends Model.Value<Order>
 	 * improvable with deep prop listener
 	 */
 	void onPropertiesUpdated() {
-		Order newValue = new Order();
+		PropertyCriterion.Filter newValue = new PropertyCriterion.Filter();
 		newValue.propertyName = propertyName;
-		newValue.direction = direction;
+		newValue.filterValue = filterValue;
 		setValue(newValue);
 	}
 
 	@Override
-	public Order getValue() {
+	public PropertyCriterion.Filter getValue() {
 		return value;
 	}
 
 	@Override
-	public void setValue(Order value) {
+	public void setValue(PropertyCriterion.Filter value) {
 		properties().propertyName().set(value.propertyName);
-		properties().direction().set(value.direction);
+		properties().filterValue().set(value.filterValue);
 		set("value", this.value, value, () -> this.value = value);
 	}
 }

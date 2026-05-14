@@ -366,14 +366,32 @@ public class InstanceOracle {
 						query.unbind();
 					}
 				}
-				if (exception != null && query.exceptionConsumer != null
-						&& lastAcceptedException != exception) {
+				if (exception != null && lastAcceptedException != exception) {
+					Consumer consumer = query.exceptionConsumer;
+					if (consumer == null) {
+						/*
+						 * darkness
+						 */
+						consumer = query.instanceConsumer;
+						/*
+						 * Force an issue in the consumer by passing the
+						 * exception to the instanceConsumer (and getting a
+						 * classcast, we assume)
+						 * 
+						 * The only way the caller can avoid this is by
+						 * providing an explicit exception consumer - there's
+						 * too much of a risk of swallowed exceptions otherwise
+						 */
+					}
 					lastAcceptedException = exception;
 					lastAcceptedInstance = null;
 					// this possibly causes query.instanceConsumer to be called
 					// on the originating (UI) thread
-					dispatch.accept(() -> query.exceptionConsumer
-							.accept(lastAcceptedException));
+					Consumer f_consumer = consumer;
+					if (f_consumer != null) {
+						dispatch.accept(
+								() -> f_consumer.accept(lastAcceptedException));
+					}
 					if (query.oneOff) {
 						query.unbind();
 					}
@@ -542,6 +560,9 @@ public class InstanceOracle {
 			ensureLatch();
 			try {
 				awaitLatch.await();
+				if (exception != null) {
+					throw exception;
+				}
 				return instance;
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);

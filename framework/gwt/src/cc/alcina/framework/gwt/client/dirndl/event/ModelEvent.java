@@ -23,7 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata;
 
 /**
  * <p>
@@ -76,7 +76,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata;
  * 
  * <p>
  * THey are then fired on any descendants of that emitter that are handlers of
- * the event. An example is the {@link TableColumnMetadata.Change} event
+ * the event. An example is the {@link TableColumnsMetadata.Change} event
  * 
  *
  *

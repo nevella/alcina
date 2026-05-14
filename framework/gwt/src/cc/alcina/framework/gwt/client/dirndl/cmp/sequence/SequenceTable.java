@@ -91,7 +91,7 @@ class SequenceTable extends Model.Fields
 		public AbstractContextSensitiveModelTransform
 				withContextNode(Node node) {
 			SequenceTable ctx = node.getResolver().parent().getRootModel();
-			sequenceRowTransform = ctx.sequenceArea.sequence.getRowTransform();
+			sequenceRowTransform = ctx.sequenceArea.transformedCache;
 			return super.withContextNode(node);
 		}
 

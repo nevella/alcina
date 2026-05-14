@@ -58,6 +58,10 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  * <p>
  * Note that CriteriaGroup was a mistake (turns out), better (and planned) would
  * be LogicalFilteringCriteria (ALL_OF|ANY_OF|NOT)
+ * 
+ * <p>
+ * TODO - search - targetpropertyname etc should not be part of the api (and
+ * particularly should not be fields, rather hard-coded)
  */
 @Bean
 @Display.AllProperties
@@ -117,6 +121,17 @@ public abstract class SearchCriterion extends Bindable
 
 		public static Direction ofAscending(boolean ascending) {
 			return ascending ? ASCENDING : DESCENDING;
+		}
+
+		public Direction reverse() {
+			switch (this) {
+			case ASCENDING:
+				return DESCENDING;
+			case DESCENDING:
+				return ASCENDING;
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 	}
 

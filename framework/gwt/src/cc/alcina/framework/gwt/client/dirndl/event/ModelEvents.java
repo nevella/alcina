@@ -517,6 +517,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Mark extends ModelEvent<Object, Mark.Handler> {
+		@Override
+		public void dispatch(Mark.Handler handler) {
+			handler.onMark(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMark(Mark event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onMark(Mark event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Next extends ModelEvent<Object, Next.Handler> {
 		@Override
 		public void dispatch(Next.Handler handler) {

@@ -7,13 +7,18 @@ import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.ui.table.Field;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.EditFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.FilterService;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.OrderService;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
@@ -73,6 +78,7 @@ public class TableView extends
 	 * sort (TraversalBrowser), so currently sort stops here
 	 */
 	@Directed.Delegating
+	@DirectedContextResolver
 	class TableContainer extends Model.All
 			implements TableEvents.SortTable.Handler {
 		@Directed(className = "bound")
@@ -84,15 +90,61 @@ public class TableView extends
 			this.tableModel = tableModel;
 		}
 
-		@Override
-		public void onSortTable(SortTable event) {
-			OrderService orderService = service(TableModel.OrderService.class);
-			if (orderService != null) {
-				orderService.onSortTable(event);
-				if (event.isHandled()) {
-					return;
-				}
+		class OrderServiceImpl implements OrderService {
+			OrderService ancestorService;
+
+			OrderServiceImpl(OrderService ancestorService) {
+				this.ancestorService = ancestorService;
 			}
+
+			@Override
+			public void onSortTable(SortTable event) {
+				if (ancestorService != null) {
+					ancestorService.onSortTable(event);
+					if (event.isHandled()) {
+						return;
+					}
+				}
+				sortTable(event);
+			}
+
+			@Override
+			public Class<? extends Bindable> renderedBindableClass() {
+				return tableModel.elementType;
+			}
+		}
+
+		class FilterServiceImpl implements FilterService {
+			FilterService ancestorService;
+
+			FilterServiceImpl(FilterService ancestorService) {
+				this.ancestorService = ancestorService;
+			}
+
+			@Override
+			public void onEditFilter(EditFilter event) {
+				if (ancestorService != null) {
+					ancestorService.onEditFilter(event);
+					if (event.isHandled()) {
+						return;
+					}
+				}
+				editFilter(event, this);
+			}
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			OrderService ancestorService = service(OrderService.class);
+			event.registerService(OrderService.class,
+					new OrderServiceImpl(ancestorService));
+		}
+
+		void editFilter(EditFilter event, FilterService filterService) {
+			new PropertyFilter(this, event, filterService).editFilter();
+		}
+
+		void sortTable(SortTable event) {
 			TableColumn column = event.getModel();
 			Property property = column.getField().getProperty();
 			if (sortedBy == column) {
@@ -132,6 +184,11 @@ public class TableView extends
 			List<TableModel.TableRow> sorted = tableModel.rows.stream()
 					.sorted(cmp).collect(Collectors.toList());
 			tableModel.setRows(sorted);
+		}
+
+		@Override
+		public void onSortTable(SortTable event) {
+			service(OrderService.class).onSortTable(event);
 		}
 	}
 }

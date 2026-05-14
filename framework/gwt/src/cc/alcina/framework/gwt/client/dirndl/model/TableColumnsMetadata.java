@@ -5,48 +5,21 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 
-public interface TableColumnMetadata {
-	public interface ColumnMetadata {
-		public static class Standard implements ColumnMetadata {
-			SortDirection sortDirection;
+public interface TableColumnsMetadata {
+	public static class ColumnMetadata {
+		public SortDirection sortDirection;
 
-			boolean filtered;
+		public boolean filtered;
 
-			boolean filterOpen;
+		public boolean filterOpen;
 
-			public void setFilterOpen(boolean filterOpen) {
-				this.filterOpen = filterOpen;
-			}
+		public boolean filterVisible;
 
-			public Standard(SortDirection sortDirection, boolean filtered) {
-				this.sortDirection = sortDirection;
-				this.filtered = filtered;
-			}
-
-			public SortDirection getSortDirection() {
-				return sortDirection;
-			}
-
-			public boolean isFiltered() {
-				return filtered;
-			}
-
-			public boolean isFilterOpen() {
-				return filterOpen;
-			}
-		}
-
-		SortDirection getSortDirection();
-
-		void setFilterOpen(boolean filterOpen);
-
-		boolean isFiltered();
-
-		boolean isFilterOpen();
+		public boolean sortVisible;
 	}
 
 	public static class Change extends
-			ModelEvent.DescendantEvent<TableColumnMetadata, Change.Handler, Change.Emitter> {
+			ModelEvent.DescendantEvent<TableColumnsMetadata, Change.Handler, Change.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onTableColumnMetadataChange(Change event);
 		}

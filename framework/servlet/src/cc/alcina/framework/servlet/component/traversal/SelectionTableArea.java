@@ -26,8 +26,8 @@ import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsC
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata;
-import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.EditFilter;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.EditFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
@@ -45,8 +45,8 @@ import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionT
 @TypeSerialization(reflectiveSerializable = false)
 public class SelectionTableArea extends Model.Fields
 		implements TableEvents.RowClicked.Handler, IfNotEqual,
-		TableColumnMetadata.Change.Emitter,
-		TableColumnMetadata.EditFilter.Handler,
+		TableColumnsMetadata.Change.Emitter,
+		TableColumnsMetadata.EditFilter.Handler,
 		LayoutEvents.EmitDescent.Handler, SuggestionSelected.Handler {
 	@Directed.Transform(TableView.class)
 	@BeanViewModifiers(detached = true, nodeEditors = true, editable = false)
@@ -173,13 +173,13 @@ public class SelectionTableArea extends Model.Fields
 		return 1;// force equals comparison
 	}
 
-	class TableColumnMetadataImpl implements TableColumnMetadata {
+	class TableColumnMetadataImpl implements TableColumnsMetadata {
 		@Override
 		public ColumnMetadata getColumnMetadata(Property property) {
 			ColumnMetadata columnMetadata = Ui.place()
 					.getColumnMetadata(selectionLayer, property);
 			if (openFilter != null && openFilter.property == property) {
-				columnMetadata.setFilterOpen(true);
+				columnMetadata.filterOpen = true;
 			}
 			return columnMetadata;
 		}
@@ -191,7 +191,7 @@ public class SelectionTableArea extends Model.Fields
 	}
 
 	void emitColumnMetadata() {
-		emitEvent(TableColumnMetadata.Change.class,
+		emitEvent(TableColumnsMetadata.Change.class,
 				new TableColumnMetadataImpl());
 	}
 

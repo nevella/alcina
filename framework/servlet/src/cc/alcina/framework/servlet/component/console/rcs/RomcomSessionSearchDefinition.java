@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.console.rcs;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
 import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
@@ -8,6 +9,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionCriterion.ActiveCriterion;
 import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionCriterion.ExceptionCriterion;
 import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionCriterion.MarkedCriterion;
@@ -54,6 +56,11 @@ public class RomcomSessionSearchDefinition extends SequenceSearchDefinition {
 			@Override
 			RomcomSessionSearchDefinition getDefinition() {
 				RomcomSessionSearchDefinition def = new RomcomSessionSearchDefinition();
+				PropertyCriterion.of(
+						RomcomSessionSequence.RomcomSessionView.properties.largestPacket,
+						100000)
+						.withOperator(StandardSearchOperator.GREATER_THAN)
+						.addToSoleCriteriaGroup(def);
 				def.orderBy(RomcomSessionEntry.properties.largestPacket, false);
 				return def;
 			}
@@ -62,6 +69,10 @@ public class RomcomSessionSearchDefinition extends SequenceSearchDefinition {
 			@Override
 			RomcomSessionSearchDefinition getDefinition() {
 				RomcomSessionSearchDefinition def = new RomcomSessionSearchDefinition();
+				PropertyCriterion.of(
+						RomcomSessionSequence.RomcomSessionView.properties.slowestResponse,
+						500).withOperator(StandardSearchOperator.GREATER_THAN)
+						.addToSoleCriteriaGroup(def);
 				def.orderBy(RomcomSessionEntry.properties.slowestResponse,
 						false);
 				return def;

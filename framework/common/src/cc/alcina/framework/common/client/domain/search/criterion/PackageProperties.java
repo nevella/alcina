@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.domain.search.criterion;
 
-import cc.alcina.framework.common.client.domain.search.criterion.PropertyNameCriterion;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
@@ -21,8 +21,8 @@ public class PackageProperties {
     public static _FinishedToCriterion finishedToCriterion = new _FinishedToCriterion();
     public static _ModifiedFromCriterion modifiedFromCriterion = new _ModifiedFromCriterion();
     public static _ModifiedToCriterion modifiedToCriterion = new _ModifiedToCriterion();
-    public static _PropertyNameCriterion propertyNameCriterion = new _PropertyNameCriterion();
-    public static _PropertyNameCriterion_Filter propertyNameCriterion_filter = new _PropertyNameCriterion_Filter();
+    public static _PropertyCriterion propertyCriterion = new _PropertyCriterion();
+    public static _PropertyCriterion_Filter propertyCriterion_filter = new _PropertyCriterion_Filter();
     public static _PropertyOrderCriterion propertyOrderCriterion = new _PropertyOrderCriterion();
     public static _PropertyOrderCriterion_Order propertyOrderCriterion_order = new _PropertyOrderCriterion_Order();
     public static _StartDateCriterion startDateCriterion = new _StartDateCriterion();
@@ -174,35 +174,35 @@ public class PackageProperties {
       
     }
     
-    public static class _PropertyNameCriterion implements TypedProperty.Container {
-      public TypedProperty<PropertyNameCriterion, String> displayName = new TypedProperty<>(PropertyNameCriterion.class, "displayName");
-      public TypedProperty<PropertyNameCriterion, StandardSearchOperator> operator = new TypedProperty<>(PropertyNameCriterion.class, "operator");
-      public TypedProperty<PropertyNameCriterion, String> targetPropertyName = new TypedProperty<>(PropertyNameCriterion.class, "targetPropertyName");
-      public TypedProperty<PropertyNameCriterion, PropertyNameCriterion.Filter> value = new TypedProperty<>(PropertyNameCriterion.class, "value");
-      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyNameCriterion> {
-        public  InstanceProperties(PropertyNameCriterion source){super(source);}
-        public InstanceProperty<PropertyNameCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.displayName);}
-        public InstanceProperty<PropertyNameCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.operator);}
-        public InstanceProperty<PropertyNameCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.targetPropertyName);}
-        public InstanceProperty<PropertyNameCriterion, PropertyNameCriterion.Filter> value(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion.value);}
+    public static class _PropertyCriterion implements TypedProperty.Container {
+      public TypedProperty<PropertyCriterion, String> displayName = new TypedProperty<>(PropertyCriterion.class, "displayName");
+      public TypedProperty<PropertyCriterion, StandardSearchOperator> operator = new TypedProperty<>(PropertyCriterion.class, "operator");
+      public TypedProperty<PropertyCriterion, String> targetPropertyName = new TypedProperty<>(PropertyCriterion.class, "targetPropertyName");
+      public TypedProperty<PropertyCriterion, PropertyCriterion.Filter> value = new TypedProperty<>(PropertyCriterion.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyCriterion> {
+        public  InstanceProperties(PropertyCriterion source){super(source);}
+        public InstanceProperty<PropertyCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.propertyCriterion.displayName);}
+        public InstanceProperty<PropertyCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.propertyCriterion.operator);}
+        public InstanceProperty<PropertyCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.propertyCriterion.targetPropertyName);}
+        public InstanceProperty<PropertyCriterion, PropertyCriterion.Filter> value(){return new InstanceProperty<>(source,PackageProperties.propertyCriterion.value);}
       }
       
-      public  InstanceProperties instance(PropertyNameCriterion instance) {
+      public  InstanceProperties instance(PropertyCriterion instance) {
         return new InstanceProperties( instance);
       }
       
     }
     
-    public static class _PropertyNameCriterion_Filter implements TypedProperty.Container {
-      public TypedProperty<PropertyNameCriterion.Filter, String> propertyName = new TypedProperty<>(PropertyNameCriterion.Filter.class, "propertyName");
-      public TypedProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue = new TypedProperty<>(PropertyNameCriterion.Filter.class, "serializedPropertyValue");
-      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyNameCriterion.Filter> {
-        public  InstanceProperties(PropertyNameCriterion.Filter source){super(source);}
-        public InstanceProperty<PropertyNameCriterion.Filter, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.propertyName);}
-        public InstanceProperty<PropertyNameCriterion.Filter, String> serializedPropertyValue(){return new InstanceProperty<>(source,PackageProperties.propertyNameCriterion_filter.serializedPropertyValue);}
+    public static class _PropertyCriterion_Filter implements TypedProperty.Container {
+      public TypedProperty<PropertyCriterion.Filter, String> filterValue = new TypedProperty<>(PropertyCriterion.Filter.class, "filterValue");
+      public TypedProperty<PropertyCriterion.Filter, String> propertyName = new TypedProperty<>(PropertyCriterion.Filter.class, "propertyName");
+      public static class InstanceProperties extends 	InstanceProperty.Container<PropertyCriterion.Filter> {
+        public  InstanceProperties(PropertyCriterion.Filter source){super(source);}
+        public InstanceProperty<PropertyCriterion.Filter, String> filterValue(){return new InstanceProperty<>(source,PackageProperties.propertyCriterion_filter.filterValue);}
+        public InstanceProperty<PropertyCriterion.Filter, String> propertyName(){return new InstanceProperty<>(source,PackageProperties.propertyCriterion_filter.propertyName);}
       }
       
-      public  InstanceProperties instance(PropertyNameCriterion.Filter instance) {
+      public  InstanceProperties instance(PropertyCriterion.Filter instance) {
         return new InstanceProperties( instance);
       }
       

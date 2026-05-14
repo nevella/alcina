@@ -1,9 +1,12 @@
 package cc.alcina.framework.common.client.domain.search.criterion;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.domain.search.SearchContext;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -12,6 +15,7 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
  * Does not generate eql, rather used in property queries. The
@@ -20,7 +24,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
  */
 @TypeSerialization("propertyname")
 @Bean(PropertySource.FIELDS)
-public class PropertyNameCriterion extends SearchCriterion {
+public class PropertyCriterion extends SearchCriterion {
 	public Filter value = new Filter();
 
 	@TypedProperties
@@ -28,24 +32,36 @@ public class PropertyNameCriterion extends SearchCriterion {
 			implements TreeSerializable {
 		public String propertyName;
 
-		public String serializedPropertyValue;
+		public String filterValue;
 	}
 
-	public PropertyNameCriterion() {
+	public PropertyCriterion() {
 		setDisplayName("Property");
+		setOperator(StandardSearchOperator.CONTAINS);
 	}
 
-	public interface Handler
-			extends DomainCriterionFilter<PropertyNameCriterion> {
+	public interface Handler extends DomainCriterionFilter<PropertyCriterion> {
 		@Override
-		default DomainFilter getFilter(PropertyNameCriterion criterion) {
+		default DomainFilter getFilter(PropertyCriterion criterion) {
 			Class<? extends Bindable> type = SearchContext.get().def
 					.queriedBindableClass();
 			Property property = Reflections.at(type)
 					.property(criterion.value.propertyName);
 			return DomainFilter.ofSearchProperty(property,
 					criterion.getOperator().toFilterOperator(),
-					criterion.value.serializedPropertyValue);
+					criterion.value.filterValue);
 		}
+	}
+
+	public static SearchCriterion of(PropertyEnum property,
+			Object filterValue) {
+		PropertyCriterion criterion = new PropertyCriterion();
+		criterion.value.propertyName = property.name();
+		criterion.value.filterValue = String.valueOf(filterValue);
+		return criterion;
+	}
+
+	public boolean isProperty(Property property) {
+		return Objects.equals(value.propertyName, property.name());
 	}
 }

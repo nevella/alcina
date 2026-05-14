@@ -6,10 +6,12 @@ import java.util.function.Predicate;
 import javax.xml.bind.annotation.XmlType;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.search.BindableCriteriaGroup;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
-import cc.alcina.framework.common.client.domain.search.EntityCriteriaGroup;
 import cc.alcina.framework.common.client.domain.search.criterion.CreatedFromCriterion;
 import cc.alcina.framework.common.client.domain.search.criterion.CreatedToCriterion;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
@@ -37,11 +39,18 @@ public class FlightEventCriterion {
 					TextCriterion.class,
 					CreatedFromCriterion.class,
 					CreatedToCriterion.class,
-					IsMutationsCriterion.class
+					IsMutationsCriterion.class,
+					PropertyCriterion.class,
+					PropertyOrderCriterion.class
 				//@formatter:on
 			}))
 	@XmlType(name = "FlightEventCriterion_CriteriaGroup")
-	public static class FlightEventCriteriaGroup extends EntityCriteriaGroup {
+	public static class FlightEventCriteriaGroup extends BindableCriteriaGroup {
+	}
+
+	static class PropertyCriterionHandler
+			extends CriterionHandler<PropertyCriterion>
+			implements PropertyCriterion.Handler {
 	}
 
 	@TypeSerialization("mutations")

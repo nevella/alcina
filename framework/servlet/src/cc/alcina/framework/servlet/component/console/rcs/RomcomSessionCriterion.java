@@ -2,8 +2,9 @@ package cc.alcina.framework.servlet.component.console.rcs;
 
 import javax.xml.bind.annotation.XmlType;
 
+import cc.alcina.framework.common.client.domain.search.BindableCriteriaGroup;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
-import cc.alcina.framework.common.client.domain.search.EntityCriteriaGroup;
+import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.search.BooleanEnum;
@@ -26,11 +27,12 @@ public class RomcomSessionCriterion {
 					ActiveCriterion.class,
 					MarkedCriterion.class,
 					ExceptionCriterion.class,
+					PropertyCriterion.class,
 					PropertyOrderCriterion.class
 				//@formatter:on
 			}))
 	@XmlType(name = "RomcomSessionSearchDefinition_CriteriaGroup")
-	public static class CriteriaGroup extends EntityCriteriaGroup {
+	public static class CriteriaGroup extends BindableCriteriaGroup {
 	}
 
 	abstract static class CriterionHandler<SC extends SearchCriterion> extends
@@ -39,6 +41,11 @@ public class RomcomSessionCriterion {
 		public Class<? extends SearchDefinition> handlesSearchDefinition() {
 			return RomcomSessionSearchDefinition.class;
 		}
+	}
+
+	static class PropertyCriterionHandler
+			extends CriterionHandler<PropertyCriterion>
+			implements PropertyCriterion.Handler {
 	}
 
 	@TypeSerialization("active")

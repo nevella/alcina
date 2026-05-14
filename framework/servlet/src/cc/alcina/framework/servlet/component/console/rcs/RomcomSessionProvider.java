@@ -14,4 +14,6 @@ public interface RomcomSessionProvider {
 	Stream<RomcomSessionEntry> getSessions();
 
 	void clear();
+
+	void persist(RomcomSessionEntry romcomSessionEntry);
 }

@@ -96,7 +96,8 @@ public class SequenceComponent extends Model.Fields implements
 
 	@Override
 	public void onSubmit(SearchDefinitionEditor.Submit event) {
-		SequencePlace place = serviceImpl.getPlaceProperty().get().copy();
+		SequencePlace place = service(SequenceArea.Service.class)
+				.getPlaceProperty().get().copy();
 		place.updateInstanceQueryDef(event.getModel());
 		event.reemitAs(this, SequenceEvents.SequencePlaceChanged.class, place);
 	}

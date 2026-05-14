@@ -131,7 +131,7 @@ public class HtmlParser {
 
 		void append(char c) {
 			toString = null;
-			int charIndex = idx - 1;
+			int charIndex = docIdx - 1;
 			if (start == -1) {
 				start = charIndex;
 				end = charIndex;
@@ -208,7 +208,7 @@ public class HtmlParser {
 
 	TokenState tokenState;
 
-	int idx = 0;
+	int docIdx = 0;
 
 	private String markup;
 
@@ -300,7 +300,7 @@ public class HtmlParser {
 		case "style":
 		case "noscript":
 			Preconditions.checkState(!closeTag);
-			int closeIdx0 = idx;
+			int closeIdx0 = docIdx;
 			while (closeIdx0 != -1) {
 				closeIdx0 = markup.indexOf("</", closeIdx0);
 				int closeIdx1 = markup.indexOf(">", closeIdx0);
@@ -311,15 +311,35 @@ public class HtmlParser {
 					closeIdx0 = closeIdx1 + 1;
 				}
 			}
-			String textContent = markup.substring(idx, closeIdx0);
+			String textContent = markup.substring(docIdx, closeIdx0);
 			emitText(textContent);
 			emitEndElement(tag);
-			idx = closeIdx0 + 2 + tag.length() + 1;
+			lineNumber += countLineNumbers(textContent);
+			docIdx = closeIdx0 + 2 + tag.length() + 1;
 			break;
 		}
 		tokenState = TokenState.EXPECTING_NODE;
 		tag = null;
 		selfCloseTag = false;
+	}
+
+	int countLineNumbers(String text) {
+		int count = 0;
+		for (int idx = 0; idx < text.length(); idx++) {
+			char c = text.charAt(idx);
+			switch (c) {
+			case '\n':
+			case '\r':
+				/*
+				 * count \r\n once
+				 */
+				if (idx > 0 && c == '\n' && text.charAt(idx - 1) == '\r') {
+				} else {
+					count++;
+				}
+			}
+		}
+		return count;
 	}
 
 	private void closeToValidateCloseTag(String tag) {
@@ -517,9 +537,9 @@ public class HtmlParser {
 		if (hasSyntheticContainer) {
 			markup = Ax.format("<div>%s</div>", markup);
 		}
-		char c = markup.charAt(idx);
-		while (idx < length) {
-			c = markup.charAt(idx++);
+		char c = markup.charAt(docIdx);
+		while (docIdx < length) {
+			c = markup.charAt(docIdx++);
 			boolean isWhiteSpace = false;
 			boolean emptyBuffer = markingBuilder.length() == 0;
 			switch (c) {
@@ -532,7 +552,14 @@ public class HtmlParser {
 			switch (c) {
 			case '\n':
 			case '\r':
-				lineNumber++;
+				/*
+				 * count \r\n once
+				 */
+				if (docIdx > 1 && c == '\n'
+						&& markup.charAt(docIdx - 2) == '\r') {
+				} else {
+					lineNumber++;
+				}
 			}
 			// ignoreable whitespace
 			switch (tokenState) {
@@ -566,6 +593,11 @@ public class HtmlParser {
 					resetBuilder();
 					markingBuilder.append(c);
 					tokenState = TokenState.EXPECTING_CDATA;
+				} else if (markingBuilder.textEquals("![")) {
+					tag = markingBuilder.toString();
+					resetBuilder();
+					markingBuilder.append(c);
+					tokenState = TokenState.EXPECTING_PROCESSING_INSTRUCTION_MSO;
 				} else if (markingBuilder.textEquals("?")) {
 					tag = markingBuilder.toString();
 					resetBuilder();
@@ -623,6 +655,16 @@ public class HtmlParser {
 				if (c == '>' && markingBuilder.endsWith("]]")) {
 					markingBuilder.setLength(markingBuilder.length() - 2);
 					emitCData(markingBuilder.toString());
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_NODE;
+				} else {
+					markingBuilder.append(c);
+				}
+				break;
+			case EXPECTING_PROCESSING_INSTRUCTION_MSO:
+				if (c == '>' && markingBuilder.endsWith("]")) {
+					markingBuilder.setLength(markingBuilder.length() - 1);
+					emitProcessingInstruction(markingBuilder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_NODE;
 				} else {
@@ -841,6 +883,6 @@ public class HtmlParser {
 		EXPECTING_NODE, EXPECTING_TAG, TEXT, EXPECTING_COMMENT,
 		EXPECTING_PROCESSING_INSTRUCTION, EXPECTING_ATTRIBUTES,
 		EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM, EXPECTING_ATTR_VALUE,
-		EXPECTING_CDATA
+		EXPECTING_CDATA, EXPECTING_PROCESSING_INSTRUCTION_MSO
 	}
 }
