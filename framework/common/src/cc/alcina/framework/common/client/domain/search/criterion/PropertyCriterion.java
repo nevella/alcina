@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.domain.search.criterion;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
@@ -57,5 +59,9 @@ public class PropertyCriterion extends SearchCriterion {
 		criterion.value.propertyName = property.name();
 		criterion.value.filterValue = String.valueOf(filterValue);
 		return criterion;
+	}
+
+	public boolean isProperty(Property property) {
+		return Objects.equals(value.propertyName, property.name());
 	}
 }

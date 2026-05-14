@@ -49,7 +49,7 @@ public class FmsTable {
 		}
 
 		@Directed.Transform(
-			value = TableColumn.SortDirectionModel.class,
+			value = TableColumn.SortDirectionArea.class,
 			transformsNull = true)
 		public SortDirection getSortDirection() {
 			return null;
@@ -102,7 +102,7 @@ public class FmsTable {
 		}
 
 		@Directed.Transform(
-			value = TableColumn.SortDirectionModel.class,
+			value = TableColumn.SortDirectionArea.class,
 			transformsNull = true)
 		public SortDirection getSortDirection() {
 			return null;

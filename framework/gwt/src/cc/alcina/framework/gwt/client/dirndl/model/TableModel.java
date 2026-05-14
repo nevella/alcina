@@ -68,7 +68,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
-import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.ColumnMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.Change;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.ColumnMetadata;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.CellClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
@@ -221,6 +222,11 @@ public class TableModel extends Model
 	public interface OrderService
 			extends ContextService, TableEvents.SortTable.Handler {
 		Class<? extends Bindable> renderedBindableClass();
+	}
+
+	@Feature.Parent(Feature_Dirndl_TableModel._FilterService.class)
+	public interface FilterService
+			extends ContextService, TableColumnsMetadata.EditFilter.Handler {
 	}
 
 	public Class<? extends Bindable> elementType;
@@ -564,9 +570,16 @@ public class TableModel extends Model
 	@TypeSerialization(reflectiveSerializable = false)
 	@TypedProperties
 	@PropertyOrder(value = {}, custom = CustomOrder.class)
+	@DirectedContextResolver
 	public static class TableColumn extends Model implements
-			DomEvents.Click.Handler, TableColumnMetadata.Change.Handler {
+			DomEvents.Click.Handler, TableColumnsMetadata.Change.Handler {
 		static PackageProperties._TableModel_TableColumn properties = PackageProperties.tableModel_tableColumn;
+
+		class ColumnService implements ContextService {
+			TableColumn getColumn() {
+				return TableColumn.this;
+			}
+		}
 
 		public static class CustomOrder implements PropertyOrder.Custom {
 			List<TypedProperty> defaultOrder = List.of(properties.caption,
@@ -585,7 +598,8 @@ public class TableModel extends Model
 
 		@TypedProperties
 		public class ColumnFilter extends Model.Fields
-				implements DomEvents.Click.Handler, Property.Has {
+				implements DomEvents.Click.Handler, Property.Has,
+				TableColumnsMetadata.Change.Handler {
 			PackageProperties._TableModel_TableColumn_ColumnFilter.InstanceProperties
 					properties() {
 				return PackageProperties.tableModel_tableColumn_columnFilter
@@ -594,6 +608,12 @@ public class TableModel extends Model
 
 			@Property.Not
 			Field field;
+
+			@Binding(
+				to = "visibility",
+				transform = Binding.VisibilityVisibleHidden.class,
+				type = Type.STYLE_ATTRIBUTE)
+			public boolean visible;
 
 			@Binding(type = Type.PROPERTY)
 			boolean filtered;
@@ -609,7 +629,7 @@ public class TableModel extends Model
 			public void onClick(Click event) {
 				event.getContext().getOriginatingNativeEvent()
 						.stopPropagation();
-				event.reemitAs(this, TableColumnMetadata.EditFilter.class,
+				event.reemitAs(this, TableColumnsMetadata.EditFilter.class,
 						this);
 			}
 
@@ -617,18 +637,51 @@ public class TableModel extends Model
 			public Property provideProperty() {
 				return field.getProperty();
 			}
+
+			@Override
+			public void onNodeContext(NodeContext event) {
+				event.registerService(ColumnService.class, new ColumnService());
+			}
+
+			@Override
+			public void onTableColumnMetadataChange(Change event) {
+				TableColumnsMetadata metadata = event.getModel();
+			}
 		}
 
 		@Directed(tag = "sort-direction")
-		public static class SortDirectionModel extends Model.All
-				implements ModelTransform<SortDirection, SortDirectionModel> {
+		@TypedProperties
+		public static class SortDirectionArea extends Model.All
+				implements ModelTransform<SortDirection, SortDirectionArea>,
+				TableColumnsMetadata.Change.Handler {
+			PackageProperties._TableModel_TableColumn_SortDirectionArea.InstanceProperties
+					properties() {
+				return PackageProperties.tableModel_tableColumn_sortDirectionArea
+						.instance(this);
+			}
+
+			@Binding(
+				to = "visibility",
+				transform = Binding.VisibilityVisibleHidden.class,
+				type = Type.STYLE_ATTRIBUTE)
+			public boolean visible;
+
 			@Binding(type = Type.PROPERTY)
 			SortDirection direction;
 
 			@Override
-			public SortDirectionModel apply(SortDirection direction) {
+			public SortDirectionArea apply(SortDirection direction) {
 				this.direction = direction;
 				return this;
+			}
+
+			@Override
+			public void onTableColumnMetadataChange(Change event) {
+				TableColumnsMetadata metadata = event.getModel();
+				ColumnMetadata columnMetadata = metadata.getColumnMetadata(
+						service(ColumnService.class).getColumn().field
+								.getProperty());
+				properties().visible().set(columnMetadata.sortVisible);
 			}
 		}
 
@@ -637,17 +690,17 @@ public class TableModel extends Model
 			return PackageProperties.tableModel_tableColumn.instance(this);
 		}
 
-		private Field field;
+		Field field;
 
-		private SortDirection sortDirection;
+		SortDirection sortDirection;
 
-		private String caption;
+		String caption;
 
-		private Class valueClass;
+		Class valueClass;
 
-		private ColumnFilter columnFilter;
+		ColumnFilter columnFilter;
 
-		private String title;
+		String title;
 
 		public TableColumn() {
 		}
@@ -739,18 +792,19 @@ public class TableModel extends Model
 
 		@Override
 		public void
-				onTableColumnMetadataChange(TableColumnMetadata.Change event) {
-			TableColumnMetadata metadata = event.getModel();
+				onTableColumnMetadataChange(TableColumnsMetadata.Change event) {
+			TableColumnsMetadata metadata = event.getModel();
 			ColumnMetadata columnMetadata = metadata
 					.getColumnMetadata(field.getProperty());
-			SortDirection columnDirection = columnMetadata.getSortDirection();
+			SortDirection columnDirection = columnMetadata.sortDirection;
 			if (columnDirection != null) {
 				setSortDirection(columnDirection);
 			}
-			columnFilter.properties().filtered()
-					.set(columnMetadata.isFiltered());
-			columnFilter.properties().filtered()
-					.set(columnMetadata.isFilterOpen());
+			columnFilter.properties().filtered().set(columnMetadata.filtered);
+			columnFilter.properties().filterOpen()
+					.set(columnMetadata.filterOpen);
+			columnFilter.properties().visible()
+					.set(columnMetadata.filterVisible);
 		}
 
 		@Override
@@ -780,6 +834,14 @@ public class TableModel extends Model
 		@Directed
 		public List<TableColumn> getColumns() {
 			return this.columns;
+		}
+
+		@Override
+		public void onBind(Bind event) {
+			event.reemitAs(this, TableEvents.ColumnsBound.class,
+					new TableEvents.ColumnsBound.Data(event.isBound(),
+							columns));
+			super.onBind(event);
 		}
 	}
 

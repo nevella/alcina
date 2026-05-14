@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,6 +27,7 @@ import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasFilterableText;
 import cc.alcina.framework.common.client.util.HasFilterableText.Query;
@@ -42,10 +42,13 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.Previou
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceEvents.SetSettingMaxElementRows;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding.InstanceDistinctLambda;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
@@ -64,7 +67,8 @@ public class SequenceArea extends Model.Fields
 		SequenceEvents.SetSettingMaxElementRows.Handler,
 		SequenceEvents.HighlightModelChanged.Emitter,
 		SequenceEvents.SelectedIndexChanged.Emitter,
-		HasFilteredSequenceElements {
+		HasFilteredSequenceElements, TableEvents.ColumnsBound.Binding,
+		TableColumnsMetadata.Change.Emitter {
 	/**
 	 * The service required by the SequenceArea (provided by the host, generally
 	 * the directed paren t)
@@ -102,6 +106,68 @@ public class SequenceArea extends Model.Fields
 				return true;
 			}
 			return selectedRange.contains(index++);
+		}
+	}
+
+	/*
+	 * backing for shared order/filter functionality
+	 */
+	class ColumnService
+			implements TableEvents.ColumnsBound.Handler, TableColumnsMetadata {
+		ColumnService() {
+			on(TableEvents.ColumnsBound.class).accept(this::onColumnsBound);
+		}
+
+		List<TableColumn> columns;
+
+		@Override
+		public void onColumnsBound(TableEvents.ColumnsBound event) {
+			TableEvents.ColumnsBound.Data data = event.getModel();
+			open = null;
+			if (data.bound) {
+				this.columns = data.columns;
+				onMetadataChange(event);
+			}
+		}
+
+		void onMetadataChange(ModelEvent event) {
+			event.reemitAs(SequenceArea.this, TableColumnsMetadata.Change.class,
+					this);
+		}
+
+		TableColumn open;
+
+		@Override
+		public ColumnMetadata getColumnMetadata(Property property) {
+			TableColumn column = columns.stream().filter(
+					c -> Objects.equals(c.getField().getProperty(), property))
+					.findFirst().get();
+			ColumnMetadata metadata = new ColumnMetadata();
+			metadata.filterOpen = column == open;
+			boolean propertyTypeIsComparable = Reflections.isAssignableFrom(
+					Comparable.class,
+					ClassUtil.getWrapperType(property.getType()));
+			metadata.sortVisible = propertyTypeIsComparable;
+			/*
+			 * a decent approximation
+			 */
+			metadata.filterVisible = propertyTypeIsComparable;
+			SequenceSearchDefinition def = service.getPlaceProperty()
+					.get().search;
+			if (def != null) {
+				def.allCriteria(PropertyCriterion.class).stream()
+						.filter(pc -> pc.isProperty(property)).findFirst()
+						.ifPresent(criterion -> {
+							metadata.filtered = true;
+						});
+				def.allCriteria(PropertyOrderCriterion.class).stream()
+						.filter(pc -> pc.isProperty(property)).findFirst()
+						.ifPresent(criterion -> {
+							metadata.sortDirection = TableModel.SortDirection
+									.valueOf(criterion.value.direction.name());
+						});
+			}
+			return metadata;
 		}
 	}
 
@@ -183,6 +249,8 @@ public class SequenceArea extends Model.Fields
 
 	TransformedCache transformedCache;
 
+	ColumnService columnService = new ColumnService();
+
 	public SequenceArea() {
 	}
 
@@ -192,8 +260,6 @@ public class SequenceArea extends Model.Fields
 
 	@Override
 	public void onNodeContext(NodeContext event) {
-		event.registerService(TableModel.OrderService.class,
-				new OrderServiceImpl());
 		service = service(Service.class);
 		definitionHeader = service.getSequenceDefinitionHeader();
 		from(service.getPlaceProperty())
@@ -218,6 +284,9 @@ public class SequenceArea extends Model.Fields
 				.dispatchDistinct(updateStylesLambda);
 		bindings().from(service.getSettings().properties().columnSet())
 				.dispatchDistinct(reloadSequenceLambda);
+		columnService = new ColumnService();
+		event.registerService(TableModel.OrderService.class,
+				new OrderServiceImpl());
 		exec(reloadSequenceLambda).distinct().dispatch();
 		/*
 		 * Initialise with an empty sequence, it's easier than adding null

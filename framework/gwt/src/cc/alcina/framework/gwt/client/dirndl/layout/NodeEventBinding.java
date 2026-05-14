@@ -310,7 +310,8 @@ class NodeEventBinding {
 
 		void fireAttachEvent(NodeEventBinding descendantBinding,
 				ModelEvent lastDispatchedRef) {
-			if (lastDispatchedRef == lastDispatched) {
+			if (descendantBinding.node.bound
+					&& lastDispatchedRef == lastDispatched) {
 				descendantBinding.fireEventIfType(lastDispatchedRef);
 			}
 		}

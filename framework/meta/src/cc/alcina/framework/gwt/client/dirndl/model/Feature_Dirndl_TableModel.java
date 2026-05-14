@@ -43,4 +43,12 @@ public interface Feature_Dirndl_TableModel extends Feature {
 	@Feature.Parent(Feature_Dirndl_TableModel.class)
 	public interface _OrderService extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * parallels OrderService, support for filtering a column
+	 */
+	@Feature.Parent(Feature_Dirndl_TableModel.class)
+	public interface _FilterService extends Feature {
+	}
 }

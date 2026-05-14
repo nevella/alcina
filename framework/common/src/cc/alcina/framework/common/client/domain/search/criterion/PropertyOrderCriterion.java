@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.domain.search.criterion;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -111,5 +112,9 @@ public class PropertyOrderCriterion extends SearchCriterion {
 		result.value.propertyName = property.name();
 		result.value.direction = Direction.ofAscending(ascending);
 		return result;
+	}
+
+	public boolean isProperty(Property property) {
+		return Objects.equals(value.propertyName, property.name());
 	}
 }

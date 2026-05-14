@@ -42,6 +42,7 @@ public class PackageProperties {
     public static _StandardModels_Panel standardModels_panel = new _StandardModels_Panel();
     public static _TableModel_TableColumn tableModel_tableColumn = new _TableModel_TableColumn();
     public static _TableModel_TableColumn_ColumnFilter tableModel_tableColumn_columnFilter = new _TableModel_TableColumn_ColumnFilter();
+    public static _TableModel_TableColumn_SortDirectionArea tableModel_tableColumn_sortDirectionArea = new _TableModel_TableColumn_SortDirectionArea();
     public static _Toggle toggle = new _Toggle();
     public static _Tree_AbstractPathNode tree_abstractPathNode = new _Tree_AbstractPathNode();
     public static _Tree_PathNode tree_pathNode = new _Tree_PathNode();
@@ -365,13 +366,32 @@ public class PackageProperties {
     public static class _TableModel_TableColumn_ColumnFilter implements TypedProperty.Container {
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filterOpen = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filterOpen");
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filtered");
+      public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> visible = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "visible");
       public static class InstanceProperties extends 	InstanceProperty.Container<TableModel.TableColumn.ColumnFilter> {
         public  InstanceProperties(TableModel.TableColumn.ColumnFilter source){super(source);}
         public InstanceProperty<TableModel.TableColumn.ColumnFilter, Boolean> filterOpen(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_columnFilter.filterOpen);}
         public InstanceProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_columnFilter.filtered);}
+        public InstanceProperty<TableModel.TableColumn.ColumnFilter, Boolean> visible(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_columnFilter.visible);}
       }
       
       public  InstanceProperties instance(TableModel.TableColumn.ColumnFilter instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _TableModel_TableColumn_SortDirectionArea implements TypedProperty.Container {
+      public TypedProperty<TableModel.TableColumn.SortDirectionArea, TableModel.TableColumn> column = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "column");
+      public TypedProperty<TableModel.TableColumn.SortDirectionArea, TableModel.SortDirection> direction = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "direction");
+      public TypedProperty<TableModel.TableColumn.SortDirectionArea, Boolean> visible = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "visible");
+      public static class InstanceProperties extends 	InstanceProperty.Container<TableModel.TableColumn.SortDirectionArea> {
+        public  InstanceProperties(TableModel.TableColumn.SortDirectionArea source){super(source);}
+        public InstanceProperty<TableModel.TableColumn.SortDirectionArea, TableModel.TableColumn> column(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.column);}
+        public InstanceProperty<TableModel.TableColumn.SortDirectionArea, TableModel.SortDirection> direction(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.direction);}
+        public InstanceProperty<TableModel.TableColumn.SortDirectionArea, Boolean> visible(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.visible);}
+      }
+      
+      public  InstanceProperties instance(TableModel.TableColumn.SortDirectionArea instance) {
         return new InstanceProperties( instance);
       }
       

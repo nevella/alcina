@@ -30,6 +30,7 @@ public class PackageProperties {
     static _SequenceTable sequenceTable = new _SequenceTable();
     
     public static class _SequenceArea implements TypedProperty.Container {
+      public TypedProperty<SequenceArea, SequenceArea.ColumnService> columnService = new TypedProperty<>(SequenceArea.class, "columnService");
       public TypedProperty<SequenceArea, Model> definitionHeader = new TypedProperty<>(SequenceArea.class, "definitionHeader");
       public TypedProperty<SequenceArea, DetailArea> detailArea = new TypedProperty<>(SequenceArea.class, "detailArea");
       public TypedProperty<SequenceArea, List> filteredSequenceElements = new TypedProperty<>(SequenceArea.class, "filteredSequenceElements");
@@ -45,9 +46,11 @@ public class PackageProperties {
       public TypedProperty<SequenceArea, SequenceTable> sequenceTable = new TypedProperty<>(SequenceArea.class, "sequenceTable");
       public TypedProperty<SequenceArea, SequenceArea.Service> service = new TypedProperty<>(SequenceArea.class, "service");
       public TypedProperty<SequenceArea, StyleElement> styleElement = new TypedProperty<>(SequenceArea.class, "styleElement");
+      public TypedProperty<SequenceArea, SequenceArea.TransformedCache> transformedCache = new TypedProperty<>(SequenceArea.class, "transformedCache");
       public TypedProperty<SequenceArea, Runnable> updateStylesLambda = new TypedProperty<>(SequenceArea.class, "updateStylesLambda");
       public static class InstanceProperties extends 	InstanceProperty.Container<SequenceArea> {
         public  InstanceProperties(SequenceArea source){super(source);}
+        public InstanceProperty<SequenceArea, SequenceArea.ColumnService> columnService(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.columnService);}
         public InstanceProperty<SequenceArea, Model> definitionHeader(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.definitionHeader);}
         public InstanceProperty<SequenceArea, DetailArea> detailArea(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.detailArea);}
         public InstanceProperty<SequenceArea, List> filteredSequenceElements(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.filteredSequenceElements);}
@@ -63,6 +66,7 @@ public class PackageProperties {
         public InstanceProperty<SequenceArea, SequenceTable> sequenceTable(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.sequenceTable);}
         public InstanceProperty<SequenceArea, SequenceArea.Service> service(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.service);}
         public InstanceProperty<SequenceArea, StyleElement> styleElement(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.styleElement);}
+        public InstanceProperty<SequenceArea, SequenceArea.TransformedCache> transformedCache(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.transformedCache);}
         public InstanceProperty<SequenceArea, Runnable> updateStylesLambda(){return new InstanceProperty<>(source,PackageProperties.sequenceArea.updateStylesLambda);}
       }
       
