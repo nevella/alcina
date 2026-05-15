@@ -178,11 +178,10 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			sourceWriter.outdent();
 			closeClassBody();
 			if (possibleInvalidClassFiles.size() > 0) {
-				LoggerFactory.getLogger(getClass())
-						.warn("Not writing - possible invalid files :: \n{}",
-								possibleInvalidClassFiles.stream()
-										.map(NestedName::get)
-										.collect(Collectors.joining("\n")));
+				LoggerFactory.getLogger(getClass()).warn(
+						"Not writing - possible invalid files [zero properties]:: \n{}",
+						possibleInvalidClassFiles.stream().map(NestedName::get)
+								.collect(Collectors.joining("\n")));
 			} else {
 				Io.write().bytes(baos.toByteArray()).withNoUpdateIdentical(true)
 						.toFile(file());

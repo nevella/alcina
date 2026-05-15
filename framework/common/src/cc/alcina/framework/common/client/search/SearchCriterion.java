@@ -27,9 +27,11 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -73,6 +75,12 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 public abstract class SearchCriterion extends Bindable
 		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
 		HasEquivalence<SearchCriterion>, TreeSerializable {
+	public InstanceProperty<?, ?> valueProperty() {
+		TypedProperty<?, ?> typedProperty = new TypedProperty<>(getClass(),
+				"value");
+		return new InstanceProperty(this, typedProperty);
+	}
+
 	/**
 	 * Can also apply to things like date criteria, not just order - so leave
 	 * here rather than in OrderCriterion

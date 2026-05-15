@@ -2,9 +2,11 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class TableEvents {
 	public static class SortTable
@@ -80,6 +82,40 @@ public class TableEvents {
 		public interface Binding extends Handler {
 			@Override
 			default void onColumnsBound(ColumnsBound event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	public static class FilterModified
+			extends ModelEvent<FilterModified.Data, FilterModified.Handler> {
+		public static class Data {
+			public Property property;
+
+			public Object value;
+
+			public StandardSearchOperator operator;
+
+			public Data(Property property, Object value,
+					StandardSearchOperator operator) {
+				this.property = property;
+				this.value = value;
+				this.operator = operator;
+			}
+		}
+
+		@Override
+		public void dispatch(FilterModified.Handler handler) {
+			handler.onFilterModified(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFilterModified(FilterModified event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onFilterModified(FilterModified event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}

@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.ui.table.Field;
 
@@ -226,7 +227,9 @@ public class TableModel extends Model
 
 	@Feature.Parent(Feature_Dirndl_TableModel._FilterService.class)
 	public interface FilterService
-			extends ContextService, TableColumnsMetadata.EditFilter.Handler {
+			extends ContextService, TableColumnsMetadata.EditFilter.Handler,
+			TableEvents.FilterModified.Handler {
+		TableColumnsMetadata getMetadata();
 	}
 
 	public Class<? extends Bindable> elementType;
@@ -599,7 +602,8 @@ public class TableModel extends Model
 		@TypedProperties
 		public class ColumnFilter extends Model.Fields
 				implements DomEvents.Click.Handler, Property.Has,
-				TableColumnsMetadata.Change.Handler {
+				TableColumnsMetadata.Change.Handler,
+				ElementOffsetsRequired.SoleBehavior {
 			PackageProperties._TableModel_TableColumn_ColumnFilter.InstanceProperties
 					properties() {
 				return PackageProperties.tableModel_tableColumn_columnFilter

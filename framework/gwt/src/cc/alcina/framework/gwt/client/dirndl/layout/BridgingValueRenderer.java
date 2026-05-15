@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Transform;
@@ -159,7 +160,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			Property property = ((ValueResolver) node.resolver).valueLocation.property;
 			Class marker = editorContext.isEditable() ? FormModel.Editor.class
 					: FormModel.Viewer.class;
-			return Registry.impl(Model.Value.class, marker, property.getType());
+			return Registry.impl(Model.Value.class, marker,
+					ClassUtil.getWrapperType(property.getType()));
 		}
 	}
 

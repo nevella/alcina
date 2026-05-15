@@ -138,6 +138,9 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 		@Display.Exclude
 		String stringRepresentation;
 
+		FlightEventRow() {
+		}
+
 		FlightEventRow(FlightEvent event) {
 			this.event = event;
 			index = (int) event.id;

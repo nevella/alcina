@@ -11,7 +11,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
@@ -280,5 +284,13 @@ public class Property implements HasAnnotations, PropertyEnum {
 	@Override
 	public String name() {
 		return getName();
+	}
+
+	public InstanceProperty createTemplateInstanceProperty() {
+		Object source = Reflections.newInstance(getDeclaringType());
+		TypedProperty typedProperty = new TypedProperty(getDeclaringType(),
+				name);
+		return new InstanceProperty((SourcesPropertyChangeEvents) source,
+				typedProperty);
 	}
 }
