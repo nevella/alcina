@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
@@ -16,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class ValueEditor extends Model.Fields {
 	@Directed(renderer = BridgingValueRenderer.class)
 	class ValueModelImpl implements ValueModel {

@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 /**
  * <p>
@@ -62,6 +63,7 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 	@ObjectPermissions(
 		read = @Permission(access = AccessLevel.EVERYONE),
 		write = @Permission(access = AccessLevel.EVERYONE))
+	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 	public static class Value extends Fields {
 		public static PackageProperties._Bindable_Value properties = PackageProperties.bindable_value;
 
