@@ -449,8 +449,7 @@ class JobAllocator {
 				new StatusMessage().checkPublish();
 			}
 			if (queue.currentPhase == SubqueuePhase.Complete
-					|| job.resolveState() == JobState.CANCELLED
-					|| job.resolveState() == JobState.ABORTED
+					|| job.resolveState().isForciblyTerminated()
 					/*
 					 * sneaky deletion - FIXME - mvcc.jobs.2
 					 */
