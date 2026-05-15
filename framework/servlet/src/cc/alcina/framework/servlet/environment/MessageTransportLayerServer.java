@@ -110,15 +110,18 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			@Override
 			protected void dispatch(List<MessageToken> sendMessages,
 					List<MessageToken> receivedMessages) {
-				if (Math.random() < 0.1) {
-					MessageEnvelope envelope = createEnvelope(sendMessages,
-							receivedMessages);
-					Ax.err("Simulate transport issue - dropping %s", envelope);
-					RequestToken dispatchableToken = getPreferredDispatchableTokenAndRemoveFromAvailable();
-					dispatchableToken.latch.countDown();
-					return;
-				} else {
-					super.dispatch(sendMessages, receivedMessages);
+				synchronized (transportLayer) {
+					if (Math.random() < 0.1) {
+						MessageEnvelope envelope = createEnvelope(sendMessages,
+								receivedMessages);
+						Ax.err("Simulate transport issue - dropping %s",
+								envelope);
+						RequestToken dispatchableToken = getPreferredDispatchableTokenAndRemoveFromAvailable();
+						dispatchableToken.latch.countDown();
+						return;
+					} else {
+						super.dispatch(sendMessages, receivedMessages);
+					}
 				}
 			}
 		}
@@ -139,44 +142,56 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 
 		public String toDebugString() {
-			return dispatchableTokens.stream().map(t -> Ax.format("%s\n\t%s",
-					t.token.request.messageEnvelope.toTransportDebugString(),
-					t.token.request.messageEnvelope.toMessageSummaryString()))
-					.collect(Collectors.joining("\n"));
+			synchronized (transportLayer) {
+				return dispatchableTokens.stream()
+						.map(t -> Ax.format("%s\n\t%s",
+								t.token.request.messageEnvelope
+										.toTransportDebugString(),
+								t.token.request.messageEnvelope
+										.toMessageSummaryString()))
+						.collect(Collectors.joining("\n"));
+			}
 		}
 
 		// FIXME - DOC - this is really the key for metadata exchange
 		RequestToken getPreferredDispatchableTokenAndRemoveFromAvailable() {
-			DispatchableToken dispatchable = getPreferredDispatchableToken();
-			dispatchableTokens.remove(dispatchable);
-			return dispatchable.token;
+			synchronized (transportLayer) {
+				DispatchableToken dispatchable = getPreferredDispatchableToken();
+				dispatchableTokens.remove(dispatchable);
+				return dispatchable.token;
+			}
 		}
 
 		DispatchableToken getPreferredDispatchableToken() {
-			DispatchableToken dispatchable = null;
-			// second awaiter, if > 1 awaiters
-			dispatchable = dispatchableTokens.stream()
-					.filter(token -> token.isAwaiter()).skip(1).findFirst()
-					.orElse(null);
-			// try non-awaiter
-			if (dispatchable == null) {
+			synchronized (transportLayer) {
+				DispatchableToken dispatchable = null;
+				// second awaiter, if > 1 awaiters
 				dispatchable = dispatchableTokens.stream()
-						.filter(token -> !token.isAwaiter()).findFirst()
+						.filter(token -> token.isAwaiter()).skip(1).findFirst()
 						.orElse(null);
+				// try non-awaiter
+				if (dispatchable == null) {
+					dispatchable = dispatchableTokens.stream()
+							.filter(token -> !token.isAwaiter()).findFirst()
+							.orElse(null);
+				}
+				if (dispatchable == null) {
+					// fall through to the awaiter
+					dispatchable = dispatchableTokens.stream()
+							.filter(token -> token.isAwaiter()).findFirst()
+							.get();
+				}
+				return dispatchable;
 			}
-			if (dispatchable == null) {
-				// fall through to the awaiter
-				dispatchable = dispatchableTokens.stream()
-						.filter(token -> token.isAwaiter()).findFirst().get();
-			}
-			return dispatchable;
 		}
 
 		// FIXME - DOC - this is really the key for metadata exchange [#2]
 		@Override
 		protected boolean shouldSendReceiveChannelMetadata() {
-			return dispatchableTokens.stream()
-					.filter(token -> token.isAwaiter()).count() > 1;
+			synchronized (transportLayer) {
+				return dispatchableTokens.stream()
+						.filter(token -> token.isAwaiter()).count() > 1;
+			}
 		}
 
 		/*
@@ -189,18 +204,22 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 		@Override
 		protected boolean isDispatchAvailable() {
-			return dispatchableTokens.size() > 0;
+			synchronized (transportLayer) {
+				return dispatchableTokens.size() > 0;
+			}
 		}
 
 		@Override
 		protected void dispatch(List<MessageToken> sendMessages,
 				List<MessageToken> receivedMessages) {
-			MessageEnvelope envelope = createEnvelope(sendMessages,
-					receivedMessages);
-			RequestToken dispatchableToken = getPreferredDispatchableTokenAndRemoveFromAvailable();
-			dispatchableToken.response.messageEnvelope = envelope;
-			dispatchableToken.response.session = dispatchableToken.request.session;
-			dispatchableToken.latch.countDown();
+			synchronized (transportLayer) {
+				MessageEnvelope envelope = createEnvelope(sendMessages,
+						receivedMessages);
+				RequestToken dispatchableToken = getPreferredDispatchableTokenAndRemoveFromAvailable();
+				dispatchableToken.response.messageEnvelope = envelope;
+				dispatchableToken.response.session = dispatchableToken.request.session;
+				dispatchableToken.latch.countDown();
+			}
 		}
 
 		/*
@@ -210,15 +229,17 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		 * completing the client/server metadata exchange
 		 */
 		void registerAvailableTokenForResponse(RequestToken token) {
-			DispatchableToken dispatchable = new DispatchableToken(token);
-			dispatchableTokens.add(dispatchable);
+			synchronized (transportLayer) {
+				DispatchableToken dispatchable = new DispatchableToken(token);
+				dispatchableTokens.add(dispatchable);
+			}
 		}
 
 		/*
 		 * Allow at most one awaiter, one or zero non-awaiters.
 		 */
 		boolean shouldFlush(boolean flushAllNonAwaiters) {
-			// envelope dispatcher (this) is the monitor for dispatch
+			// etransportLayer is the monitor for dispatch
 			synchronized (transportLayer) {
 				return dispatchableTokens.stream()
 						.filter(token -> !token.isAwaiter())
@@ -229,7 +250,9 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 
 		boolean hasDispatchers() {
-			return dispatchableTokens.size() > 0;
+			synchronized (transportLayer) {
+				return dispatchableTokens.size() > 0;
+			}
 		}
 	}
 

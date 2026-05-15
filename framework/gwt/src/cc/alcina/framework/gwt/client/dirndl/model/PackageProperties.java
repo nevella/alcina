@@ -381,12 +381,10 @@ public class PackageProperties {
     }
     
     public static class _TableModel_TableColumn_SortDirectionArea implements TypedProperty.Container {
-      public TypedProperty<TableModel.TableColumn.SortDirectionArea, TableModel.TableColumn> column = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "column");
       public TypedProperty<TableModel.TableColumn.SortDirectionArea, TableModel.SortDirection> direction = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "direction");
       public TypedProperty<TableModel.TableColumn.SortDirectionArea, Boolean> visible = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "visible");
       public static class InstanceProperties extends 	InstanceProperty.Container<TableModel.TableColumn.SortDirectionArea> {
         public  InstanceProperties(TableModel.TableColumn.SortDirectionArea source){super(source);}
-        public InstanceProperty<TableModel.TableColumn.SortDirectionArea, TableModel.TableColumn> column(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.column);}
         public InstanceProperty<TableModel.TableColumn.SortDirectionArea, TableModel.SortDirection> direction(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.direction);}
         public InstanceProperty<TableModel.TableColumn.SortDirectionArea, Boolean> visible(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.visible);}
       }

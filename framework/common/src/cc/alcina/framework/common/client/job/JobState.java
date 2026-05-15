@@ -30,6 +30,18 @@ public enum JobState {
 		}
 	}
 
+	public boolean isPreProcessing() {
+		switch (this) {
+		case PENDING:
+		case ALLOCATED:
+		case FUTURE:
+		case FUTURE_CONSISTENCY:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	public boolean isResubmittable() {
 		switch (this) {
 		case PENDING:
