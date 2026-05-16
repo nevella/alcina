@@ -20,6 +20,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
+import cc.alcina.framework.gwt.client.story.impl.UrlRouter;
 
 public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 	public static class Go implements TypedPerformer<Story.Action.Ui.Go> {
