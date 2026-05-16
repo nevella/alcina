@@ -36,6 +36,8 @@ public class Story_ServerConsole implements Story {
 	@Decl.Require(State.ServerConsolePageRenders.class)
 	@Decl.Require(State.Loaded.class)
 	@Decl.Child(Point_ServerConsole_Home.class)
+	@Decl.Child(Point_ServerConsole_Romcom_Sessions.class)
+	@Decl.Child(Point_ServerConsole_Romcom_Session.class)
 	static class Top extends Waypoint {
 	}
 }

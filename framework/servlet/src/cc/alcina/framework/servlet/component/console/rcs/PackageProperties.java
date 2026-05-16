@@ -3,12 +3,16 @@ package cc.alcina.framework.servlet.component.console.rcs;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.BooleanEnum;
+import cc.alcina.framework.gwt.client.dirndl.model.Heading;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.servlet.component.console.ServerConsolePlace;
 import cc.alcina.framework.servlet.component.console.rcs.PresetsArea;
+import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionDetailArea;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
+import cc.alcina.framework.servlet.environment.replay.SessionReplay;
 import java.lang.Boolean;
 import java.lang.Integer;
 import java.lang.Long;
@@ -24,6 +28,8 @@ public class PackageProperties {
     static _RomcomSessionCriterion_ActiveCriterion romcomSessionCriterion_activeCriterion = new _RomcomSessionCriterion_ActiveCriterion();
     static _RomcomSessionCriterion_ExceptionCriterion romcomSessionCriterion_exceptionCriterion = new _RomcomSessionCriterion_ExceptionCriterion();
     static _RomcomSessionCriterion_MarkedCriterion romcomSessionCriterion_markedCriterion = new _RomcomSessionCriterion_MarkedCriterion();
+    static _RomcomSessionDetailArea romcomSessionDetailArea = new _RomcomSessionDetailArea();
+    static _RomcomSessionDetailArea_ReplayArea romcomSessionDetailArea_replayArea = new _RomcomSessionDetailArea_ReplayArea();
     public static _RomcomSessionEntry romcomSessionEntry = new _RomcomSessionEntry();
     static _RomcomSessionSequence_RomcomSessionDetail romcomSessionSequence_romcomSessionDetail = new _RomcomSessionSequence_RomcomSessionDetail();
     static _RomcomSessionSequence_RomcomSessionView romcomSessionSequence_romcomSessionView = new _RomcomSessionSequence_RomcomSessionView();
@@ -115,6 +121,44 @@ public class PackageProperties {
       }
       
        InstanceProperties instance(RomcomSessionCriterion.MarkedCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _RomcomSessionDetailArea implements TypedProperty.Container {
+      TypedProperty<RomcomSessionDetailArea, LoginPage.HeadingArea> heading = new TypedProperty<>(RomcomSessionDetailArea.class, "heading");
+      TypedProperty<RomcomSessionDetailArea, ServerConsolePlace> place = new TypedProperty<>(RomcomSessionDetailArea.class, "place");
+      TypedProperty<RomcomSessionDetailArea, RomcomSessionDetailArea.ReplayArea> replayArea = new TypedProperty<>(RomcomSessionDetailArea.class, "replayArea");
+      TypedProperty<RomcomSessionDetailArea, SequenceComponentEditor> sequence = new TypedProperty<>(RomcomSessionDetailArea.class, "sequence");
+      TypedProperty<RomcomSessionDetailArea, RomcomSessionDetailArea.SessionMetadata> sequenceMetadata = new TypedProperty<>(RomcomSessionDetailArea.class, "sequenceMetadata");
+      static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionDetailArea> {
+         InstanceProperties(RomcomSessionDetailArea source){super(source);}
+        InstanceProperty<RomcomSessionDetailArea, LoginPage.HeadingArea> heading(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea.heading);}
+        InstanceProperty<RomcomSessionDetailArea, ServerConsolePlace> place(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea.place);}
+        InstanceProperty<RomcomSessionDetailArea, RomcomSessionDetailArea.ReplayArea> replayArea(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea.replayArea);}
+        InstanceProperty<RomcomSessionDetailArea, SequenceComponentEditor> sequence(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea.sequence);}
+        InstanceProperty<RomcomSessionDetailArea, RomcomSessionDetailArea.SessionMetadata> sequenceMetadata(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea.sequenceMetadata);}
+      }
+      
+       InstanceProperties instance(RomcomSessionDetailArea instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _RomcomSessionDetailArea_ReplayArea implements TypedProperty.Container {
+      TypedProperty<RomcomSessionDetailArea.ReplayArea, Heading> heading = new TypedProperty<>(RomcomSessionDetailArea.ReplayArea.class, "heading");
+      TypedProperty<RomcomSessionDetailArea.ReplayArea, Link> replay = new TypedProperty<>(RomcomSessionDetailArea.ReplayArea.class, "replay");
+      TypedProperty<RomcomSessionDetailArea.ReplayArea, SessionReplay.Status> status = new TypedProperty<>(RomcomSessionDetailArea.ReplayArea.class, "status");
+      static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionDetailArea.ReplayArea> {
+         InstanceProperties(RomcomSessionDetailArea.ReplayArea source){super(source);}
+        InstanceProperty<RomcomSessionDetailArea.ReplayArea, Heading> heading(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea_replayArea.heading);}
+        InstanceProperty<RomcomSessionDetailArea.ReplayArea, Link> replay(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea_replayArea.replay);}
+        InstanceProperty<RomcomSessionDetailArea.ReplayArea, SessionReplay.Status> status(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea_replayArea.status);}
+      }
+      
+       InstanceProperties instance(RomcomSessionDetailArea.ReplayArea instance) {
         return new InstanceProperties( instance);
       }
       

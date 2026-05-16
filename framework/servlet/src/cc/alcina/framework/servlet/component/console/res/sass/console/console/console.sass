@@ -3,6 +3,7 @@
 @use '../multi/common'
 @use 'console-home'
 @use 'romcom-session'
+@use 'romcom-session-detail'
 
 @mixin contents
   > .server-console
@@ -81,6 +82,8 @@
   > romcom-session.server-console
     @include romcom-session.contents
 
+  > romcom-session-detail.server-console
+    @include romcom-session-detail.contents
 
   &[compact-report-ui] > .report
     table.metadata, about

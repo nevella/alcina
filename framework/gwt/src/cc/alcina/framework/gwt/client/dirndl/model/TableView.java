@@ -144,6 +144,11 @@ public class TableView extends
 			public void onFilterModified(FilterModified event) {
 				ancestorService.onFilterModified(event);
 			}
+
+			@Override
+			public Class<? extends Bindable> renderedBindableClass() {
+				return tableModel.elementType;
+			}
 		}
 
 		@Override

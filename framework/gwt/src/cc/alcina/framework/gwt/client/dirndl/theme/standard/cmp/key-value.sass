@@ -1,0 +1,14 @@
+@mixin container
+  display: grid
+  column-gap: 1rem
+  grid-template-columns: min-content min-content
+  white-space: nowrap
+  
+  > key-value
+    display: contents
+
+    > key
+      font-weight: bold
+
+    > value
+      //text-align: right

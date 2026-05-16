@@ -45,6 +45,22 @@ public interface Feature_RomcomSessionConsole extends Feature {
 
 	/*
 	 * Ability to replay a session, assoc. UI
+
+	@formatter:off
+
+	Sketch:
+	- framework package, ReplayCoordinator
+	- instruments a wd session (not story?)
+	- init browser - set cookie to indicate replaying
+	- navigate to url
+	- wait for 'server message received' id prior to next ui (dommessage) event
+	  - this is the tricky bit - 
+	- emit dommessage, emit status
+	- loop
+	- exit
+
+
+	@formatter:on
 	 */
 	@Feature.Parent(Feature_RomcomSessionConsole.class)
 	public interface _Replay extends Feature {

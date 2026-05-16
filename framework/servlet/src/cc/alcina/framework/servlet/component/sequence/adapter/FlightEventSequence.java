@@ -148,7 +148,7 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 			duration = event.provideDuration();
 			type = NestedName.get(event.event);
 			subtype = event.provideSubtype();
-			detail = event.provideDetail();
+			detail = event.provideDetail().replace("[CLIENT_TO_SERVER]", "");
 			in = event.provideInputBytes().length;
 			out = event.provideOutputBytes().length;
 			stringRepresentation = event.provideStringRepresentation();

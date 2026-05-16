@@ -230,6 +230,8 @@ public class TableModel extends Model
 			extends ContextService, TableColumnsMetadata.EditFilter.Handler,
 			TableEvents.FilterModified.Handler {
 		TableColumnsMetadata getMetadata();
+
+		Class<? extends Bindable> renderedBindableClass();
 	}
 
 	public Class<? extends Bindable> elementType;

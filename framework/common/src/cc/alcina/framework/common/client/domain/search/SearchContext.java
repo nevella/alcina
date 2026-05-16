@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -47,5 +48,17 @@ public class SearchContext {
 	}
 
 	public void start() {
+	}
+
+	Class<? extends Bindable> postTransformBindableClass;
+
+	public void setPostTransformBindableClass(
+			Class<? extends Bindable> postTransformBindableClass) {
+		this.postTransformBindableClass = postTransformBindableClass;
+	}
+
+	public Class<? extends Bindable> getPostTransformBindableClass() {
+		return postTransformBindableClass != null ? postTransformBindableClass
+				: def.queriedBindableClass();
 	}
 }

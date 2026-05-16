@@ -17,6 +17,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Values;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.FilterService;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @Registration({ Model.Value.class, FormModel.Editor.class,
@@ -41,6 +43,11 @@ public class FilterEditor extends Model.Value<PropertyCriterion.Filter>
 					.service(SearchDefinitionEditor.Service.class)
 					.getSearchDefinition();
 			Class<? extends Bindable> type = def.queriedBindableClass();
+			FilterService filterService = contextNode
+					.service(TableModel.FilterService.class);
+			if (filterService != null) {
+				type = filterService.renderedBindableClass();
+			}
 			return Reflections.at(type).properties().stream()
 					.map(p -> p.getName()).sorted().toList();
 		}

@@ -1463,6 +1463,9 @@ help sequence > visit > description {
   grid-area: description;
   margin-bottom: 1rem;
 }
+help sequence > visit > description a {
+  color: #5481b7;
+}
 help sequence > visit > img {
   grid-area: img;
   max-width: 100%;

@@ -1,6 +1,7 @@
 package cc.alcina.extras.dev.console.remote.server;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -11,6 +12,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
@@ -24,7 +26,7 @@ public class DevConsoleServeControlHandler extends AbstractHandler {
 	}
 
 	enum Action {
-		stop, set_property
+		stop, set_property, exec_task
 	}
 
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -42,10 +44,26 @@ public class DevConsoleServeControlHandler extends AbstractHandler {
 		case set_property:
 			set_property(request, response);
 			break;
+		case exec_task:
+			exec_task(request, response);
+			break;
 		default:
 			throw new UnsupportedOperationException();
 		}
 		baseRequest.setHandled(true);
+	}
+
+	void exec_task(HttpServletRequest request, HttpServletResponse response)
+			throws IOException {
+		String taskClass = request.getParameter("taskClass");
+		Class<?> clazz = Reflections.forName(taskClass);
+		Supplier<String> task = (Supplier<String>) Reflections.at(clazz)
+				.newInstance();
+		String result = task.get();
+		String message = Ax.format("task: %s\nresult: %s", taskClass, result);
+		response.getWriter().write(message);
+		response.setStatus(HttpServletResponse.SC_OK);
+		logger.info(message);
 	}
 
 	void set_property(HttpServletRequest request, HttpServletResponse response)

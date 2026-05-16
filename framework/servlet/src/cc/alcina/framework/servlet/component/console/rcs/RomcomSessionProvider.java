@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.console.rcs;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -16,4 +17,11 @@ public interface RomcomSessionProvider {
 	void clear();
 
 	void persist(RomcomSessionEntry romcomSessionEntry);
+
+	String ensureSession(String path);
+
+	default RomcomSessionEntry getSession(String path) {
+		return getSessions().filter(s -> Objects.equals(path, s.path))
+				.findFirst().orElse(null);
+	}
 }

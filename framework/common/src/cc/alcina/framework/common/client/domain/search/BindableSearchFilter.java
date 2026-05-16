@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 
 /**
@@ -21,8 +22,16 @@ public class BindableSearchFilter implements Predicate, Comparator {
 
 	Comparator computedComparator = null;
 
+	Class<? extends Bindable> postTransformBindableClass;
+
 	public BindableSearchFilter(BindableSearchDefinition def) {
+		this(def, null);
+	}
+
+	public BindableSearchFilter(BindableSearchDefinition def,
+			Class<? extends Bindable> postTransformBindableClass) {
 		this.def = def;
+		this.postTransformBindableClass = postTransformBindableClass;
 		callInContext(() -> {
 			SearchHandlers.ensureHandlers();
 			SearchHandlers.processDefinitionHandler(def, this::addFilter);
@@ -30,10 +39,6 @@ public class BindableSearchFilter implements Predicate, Comparator {
 			computedComparator = SearchHandlers.computeComparator(def);
 			return null;
 		});
-	}
-
-	void addFilter(DomainFilter filter) {
-		predicate = predicate.and(filter.asPredicate());
 	}
 
 	public boolean exclude(Object o) {
@@ -59,10 +64,15 @@ public class BindableSearchFilter implements Predicate, Comparator {
 			LooseContext.push();
 			context = SearchContext.startContext();
 			context.def = def;
+			context.setPostTransformBindableClass(postTransformBindableClass);
 			return supplier.get();
 		} finally {
 			context.end();
 			LooseContext.pop();
 		}
+	}
+
+	void addFilter(DomainFilter filter) {
+		predicate = predicate.and(filter.asPredicate());
 	}
 }

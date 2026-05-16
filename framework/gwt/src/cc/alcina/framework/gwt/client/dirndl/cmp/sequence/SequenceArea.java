@@ -218,6 +218,11 @@ public class SequenceArea extends Model.Fields
 					SequenceEvents.SequencePlaceChanged.class, place);
 			event.setHandled(true);
 		}
+
+		@Override
+		public Class<? extends Bindable> renderedBindableClass() {
+			return sequence.getRowType();
+		}
 	}
 
 	class OrderServiceImpl implements TableModel.OrderService {
@@ -596,7 +601,7 @@ public class SequenceArea extends Model.Fields
 		if (postTransformSearch != null
 				&& postTransformSearch.allCriteria().size() > 0) {
 			BindableSearchFilter bsf = new BindableSearchFilter(
-					postTransformSearch);
+					postTransformSearch, sequence.getRowType());
 			Stream<?> f_stream = transformedElements.toList().stream();
 			/*
 			 * filter/sort the transformed elements
