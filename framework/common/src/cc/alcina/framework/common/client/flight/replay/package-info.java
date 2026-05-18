@@ -21,6 +21,7 @@
 * Note that the ReplayEventDispatcher can either be a separate process that pushes events to the ReplayEventProcessor, or 
   run as a thread on the ReplayEventProcessor
 
+  ...later ... this is unfinished and probably obsoleted by cc.alcina.framework.servlet.environment.replay.SessionReplay
  *
  * 
  * @formatter:on

@@ -49,7 +49,7 @@ public interface Feature_RomcomSessionConsole extends Feature {
 	@formatter:off
 
 	Sketch:
-	- framework package, ReplayCoordinator
+	- framework package, SessionReplay
 	- instruments a wd session (not story?)
 	- init browser - set cookie to indicate replaying
 	- navigate to url

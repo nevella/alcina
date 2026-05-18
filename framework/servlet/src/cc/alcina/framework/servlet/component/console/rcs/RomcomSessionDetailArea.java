@@ -112,9 +112,10 @@ class RomcomSessionDetailArea
 		public void onReplay(Replay event) {
 			NotificationObservable.of("Replaaaay!").publish();
 			replay.setDisabled(true);
-			SessionReplay replay = new SessionReplay();
+			SessionReplay replay = new SessionReplay(place.sequencePlace);
 			bindings().fromTopic(replay.topicStatusChange)
 					.accept(this::onStatusChange);
+			replay.start();
 		}
 
 		void onStatusChange(SessionReplay.Status status) {

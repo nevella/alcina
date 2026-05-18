@@ -5,6 +5,7 @@ import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.servlet.component.console.rcs.Feature_RomcomSessionConsole;
 import cc.alcina.framework.servlet.story.component.serverconsole.Point_ServerConsole_Romcom_Session._Replay;
+import cc.alcina.framework.servlet.story.component.serverconsole.Point_ServerConsole_Romcom_Session._Replay.ClickReplay;
 import cc.alcina.framework.servlet.story.component.serverconsole.Point_ServerConsole_Romcom_Session._Session1;
 import cc.alcina.framework.servlet.story.component.serverconsole.Point_ServerConsole_Romcom_Session._Session1.ClickTestSession;
 import cc.alcina.framework.servlet.story.component.serverconsole.Point_ServerConsole_Romcom_Session._Session1.ClickView;
@@ -36,6 +37,7 @@ public class Point_ServerConsole_Romcom_Session extends Waypoint {
 	}
 
 	@Decl.Child(_Session1.class)
+	@Decl.Child(ClickReplay.class)
 	public static class _Replay extends Waypoint {
 		static final String XPATH_REPLAY = "//button[.='Replay']";
 
