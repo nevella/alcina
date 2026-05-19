@@ -163,8 +163,6 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 
 	private boolean inFlight;
 
-	private boolean lazyPlaceHref;
-
 	public PackageProperties._Link.InstanceProperties properties() {
 		return PackageProperties.link.instance(this);
 	}

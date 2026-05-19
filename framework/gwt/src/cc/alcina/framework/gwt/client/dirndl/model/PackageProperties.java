@@ -4,16 +4,21 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.FilteredChoices;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
+import cc.alcina.framework.gwt.client.dirndl.model.PropertyFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 import cc.alcina.framework.gwt.client.dirndl.model.TreePath;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import com.google.gwt.dom.client.Element;
 import com.totsp.gwittir.client.ui.table.Field;
 import java.lang.Boolean;
 import java.lang.Class;
@@ -39,6 +44,7 @@ public class PackageProperties {
     public static _FilteredChoices filteredChoices = new _FilteredChoices();
     public static _HeadingActions headingActions = new _HeadingActions();
     public static _Link link = new _Link();
+    static _PropertyFilter_FilterCoordinator propertyFilter_filterCoordinator = new _PropertyFilter_FilterCoordinator();
     public static _StandardModels_Panel standardModels_panel = new _StandardModels_Panel();
     public static _TableModel_TableColumn tableModel_tableColumn = new _TableModel_TableColumn();
     public static _TableModel_TableColumn_ColumnFilter tableModel_tableColumn_columnFilter = new _TableModel_TableColumn_ColumnFilter();
@@ -327,6 +333,29 @@ public class PackageProperties {
       
     }
     
+    static class _PropertyFilter_FilterCoordinator implements TypedProperty.Container {
+      TypedProperty<PropertyFilter.FilterCoordinator, InstanceProperty> editableInstanceProperty = new TypedProperty<>(PropertyFilter.FilterCoordinator.class, "editableInstanceProperty");
+      TypedProperty<PropertyFilter.FilterCoordinator, PropertyFilter.FilterCoordinator.FilterEditor> editor = new TypedProperty<>(PropertyFilter.FilterCoordinator.class, "editor");
+      TypedProperty<PropertyFilter.FilterCoordinator, StandardSearchOperator> operator = new TypedProperty<>(PropertyFilter.FilterCoordinator.class, "operator");
+      TypedProperty<PropertyFilter.FilterCoordinator, Overlay> overlay = new TypedProperty<>(PropertyFilter.FilterCoordinator.class, "overlay");
+      TypedProperty<PropertyFilter.FilterCoordinator, Property> property = new TypedProperty<>(PropertyFilter.FilterCoordinator.class, "property");
+      TypedProperty<PropertyFilter.FilterCoordinator, Element> relativeTo = new TypedProperty<>(PropertyFilter.FilterCoordinator.class, "relativeTo");
+      static class InstanceProperties extends 	InstanceProperty.Container<PropertyFilter.FilterCoordinator> {
+         InstanceProperties(PropertyFilter.FilterCoordinator source){super(source);}
+        InstanceProperty<PropertyFilter.FilterCoordinator, InstanceProperty> editableInstanceProperty(){return new InstanceProperty<>(source,PackageProperties.propertyFilter_filterCoordinator.editableInstanceProperty);}
+        InstanceProperty<PropertyFilter.FilterCoordinator, PropertyFilter.FilterCoordinator.FilterEditor> editor(){return new InstanceProperty<>(source,PackageProperties.propertyFilter_filterCoordinator.editor);}
+        InstanceProperty<PropertyFilter.FilterCoordinator, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.propertyFilter_filterCoordinator.operator);}
+        InstanceProperty<PropertyFilter.FilterCoordinator, Overlay> overlay(){return new InstanceProperty<>(source,PackageProperties.propertyFilter_filterCoordinator.overlay);}
+        InstanceProperty<PropertyFilter.FilterCoordinator, Property> property(){return new InstanceProperty<>(source,PackageProperties.propertyFilter_filterCoordinator.property);}
+        InstanceProperty<PropertyFilter.FilterCoordinator, Element> relativeTo(){return new InstanceProperty<>(source,PackageProperties.propertyFilter_filterCoordinator.relativeTo);}
+      }
+      
+       InstanceProperties instance(PropertyFilter.FilterCoordinator instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
     public static class _StandardModels_Panel implements TypedProperty.Container {
       public TypedProperty<StandardModels.Panel, HeadingActions> header = new TypedProperty<>(StandardModels.Panel.class, "header");
       public static class InstanceProperties extends 	InstanceProperty.Container<StandardModels.Panel> {
@@ -381,12 +410,10 @@ public class PackageProperties {
     }
     
     public static class _TableModel_TableColumn_SortDirectionArea implements TypedProperty.Container {
-      public TypedProperty<TableModel.TableColumn.SortDirectionArea, TableModel.TableColumn> column = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "column");
       public TypedProperty<TableModel.TableColumn.SortDirectionArea, TableModel.SortDirection> direction = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "direction");
       public TypedProperty<TableModel.TableColumn.SortDirectionArea, Boolean> visible = new TypedProperty<>(TableModel.TableColumn.SortDirectionArea.class, "visible");
       public static class InstanceProperties extends 	InstanceProperty.Container<TableModel.TableColumn.SortDirectionArea> {
         public  InstanceProperties(TableModel.TableColumn.SortDirectionArea source){super(source);}
-        public InstanceProperty<TableModel.TableColumn.SortDirectionArea, TableModel.TableColumn> column(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.column);}
         public InstanceProperty<TableModel.TableColumn.SortDirectionArea, TableModel.SortDirection> direction(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.direction);}
         public InstanceProperty<TableModel.TableColumn.SortDirectionArea, Boolean> visible(){return new InstanceProperty<>(source,PackageProperties.tableModel_tableColumn_sortDirectionArea.visible);}
       }

@@ -546,6 +546,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Open extends ModelEvent<Object, Open.Handler> {
+		@Override
+		public void dispatch(Open.Handler handler) {
+			handler.onOpen(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onOpen(Open event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onOpen(Open event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Opened extends ModelEvent<Object, Opened.Handler>
 			implements NoHandlerRequired {
 		@Override

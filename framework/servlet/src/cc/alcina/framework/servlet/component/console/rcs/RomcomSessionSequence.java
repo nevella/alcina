@@ -9,11 +9,13 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.service.InstanceQuery;
+import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Mark;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Open;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -58,7 +60,7 @@ public class RomcomSessionSequence
 
 	@TypedProperties
 	static class RomcomSessionDetail extends RomcomSessionView
-			implements ModelEvents.Mark.Handler {
+			implements ModelEvents.Mark.Handler, ModelEvents.Open.Handler {
 		List<Link> actions;
 
 		RomcomSessionDetail(RomcomSessionEntry entry) {
@@ -68,9 +70,13 @@ public class RomcomSessionSequence
 					.createInstanceQuery(entry.path);
 			String tokenString = place.toTokenString();
 			String href = "/seq#" + tokenString;
-			Link view = new Link().withText("View").withHref(href)
+			RomcomSessionDetailPlace detailPlace = new RomcomSessionDetailPlace(
+					entry.path);
+			Link view = Link.of(detailPlace).withText("View");
+			Link events = new Link().withText("Events").withHref(href)
 					.withTargetBlank();
-			actions = List.of(view, Link.of(ModelEvents.Mark.class));
+			actions = List.of(view, events, Link.of(ModelEvents.Mark.class),
+					Link.of(ModelEvents.Open.class));
 		}
 
 		@Override
@@ -79,6 +85,11 @@ public class RomcomSessionSequence
 			entry.persist();
 			NotificationObservable.of("Session %s marked", entry.sessionId)
 					.publish();
+		}
+
+		@Override
+		public void onOpen(Open event) {
+			Shell.exec("open '%s'", entry.path);
 		}
 	}
 

@@ -7,6 +7,16 @@ public enum JobState {
 	FUTURE, PENDING, ALLOCATED, PROCESSING, CANCELLED, ABORTED, COMPLETED,
 	SKIPPED, SEQUENCE_COMPLETE, FUTURE_CONSISTENCY;
 
+	public boolean isForciblyTerminated() {
+		switch (this) {
+		case CANCELLED:
+		case ABORTED:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	public boolean isComplete() {
 		switch (this) {
 		case CANCELLED:
@@ -24,6 +34,18 @@ public enum JobState {
 		switch (this) {
 		case COMPLETED:
 		case SEQUENCE_COMPLETE:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	public boolean isPreProcessing() {
+		switch (this) {
+		case PENDING:
+		case ALLOCATED:
+		case FUTURE:
+		case FUTURE_CONSISTENCY:
 			return true;
 		default:
 			return false;

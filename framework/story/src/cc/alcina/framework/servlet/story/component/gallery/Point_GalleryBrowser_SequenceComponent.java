@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.story.Waypoints;
 @Feature.Ref(Feature_Dirndl_SearchDefinitionEditor.class)
 @Decl.Child(Point_GalleryBrowser_SequenceComponent.TestSearch.class)
 @Decl.Child(Point_GalleryBrowser_SequenceComponent.TestOrderService.class)
+@Decl.Child(Point_GalleryBrowser_SequenceComponent.TestFilterService.class)
 public class Point_GalleryBrowser_SequenceComponent extends Waypoint {
 	@Decl.Require(Story_GalleryBrowser.State.Home.class)
 	@Decl.Child(Point_GalleryBrowser_Home.ToSequenceComponent.class)
@@ -90,6 +91,53 @@ public class Point_GalleryBrowser_SequenceComponent extends Waypoint {
 		@Decl.Location.Xpath(XPATH_SORT)
 		@Decl.Action.UI.Click
 		static class _ClickSort extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_FIRST_ROW_LAST)
+		@Decl.Action.UI.AwaitPresent
+		static class _VerifyFirstRowIsLastIndex extends Waypoint {
+		}
+	}
+
+	/**
+	 * Test the filter service by filtering + verifying row count
+	 */
+	@Feature.Ref(Feature_Dirndl_TableModel._FilterService.class)
+	@Decl.Child(_Reset.class)
+	@Decl.Child(TestFilterService._ClickFilter.class)
+	@Decl.Child(TestFilterService._SelectOperator.class)
+	@Decl.Child(TestFilterService._EnterValue.class)
+	@Decl.Child(TestFilterService._ClickOff.class)
+	public static class TestFilterService extends Waypoint {
+		static final String XPATH_FILTER = "//ch-content/column-filter";
+
+		static final String XPATH_OPERATOR = "//filter-editor/select";
+
+		static final String XPATH_INPUT = "//filter-editor//input";
+
+		static final String XPATH_OFF = "//left";
+
+		static final String XPATH_FIRST_ROW_LAST = "//sequence//tbody/tr[1]/td[1]/value[.='230']";
+		// sequence
+
+		@Decl.Location.Xpath(XPATH_FILTER)
+		@Decl.Action.UI.Click
+		static class _ClickFilter extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_OPERATOR)
+		@Decl.Action.UI.Select.ByText("Equals")
+		static class _SelectOperator extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_INPUT)
+		@Decl.Action.UI.KeysWithClear("183")
+		static class _EnterValue extends Waypoint {
+		}
+
+		@Decl.Location.Xpath(XPATH_OFF)
+		@Decl.Action.UI.Click
+		static class _ClickOff extends Waypoint {
 		}
 
 		@Decl.Location.Xpath(XPATH_FIRST_ROW_LAST)

@@ -46,6 +46,12 @@ Api weakness:
 - Measure is really "range + meaning" - is it really appropriate for this? Because it's really "range + overlay"
 ... ahh, no, it's not the inputs that are measures, it's the outputs. Gotcha
 
+#2
+
+The highlighter can either work by wrapping texts, or by  wrapping the _entire_ range, 
+potentially splitting boundary nodes
+
+
  * @formatter:on
  */
 public class MeasureOverlay {

@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
+import cc.alcina.framework.gwt.client.logic.ClientProperties;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
@@ -187,6 +188,8 @@ public class RemoteComponentUi {
 
 	List<Element> offsetObservedElements = new ArrayList<>();
 
+	boolean publishProcessedMessageId;
+
 	public void init() {
 		previewEventRouter = new PreviewEventRouter();
 		messageStateRouter = new MessageStateRouter();
@@ -219,6 +222,14 @@ public class RemoteComponentUi {
 				.add(this::onLocalMutations);
 		LocalDom.getLocalMutations().topicBehaviorAdded
 				.add(this::onBehaviorAdded);
+		String publishProcessedMessageIdBefore = ClientProperties.get(
+				RemoteComponentUi.class, "publishProcessedMessageIdBefore");
+		if (publishProcessedMessageIdBefore != null) {
+			if (System.currentTimeMillis() < Long
+					.parseLong(publishProcessedMessageIdBefore)) {
+				publishProcessedMessageId = true;
+			}
+		}
 		Startup startupMessage = Message.Startup.forClient();
 		ClientRpc.send(startupMessage);
 		/*
@@ -295,4 +306,14 @@ public class RemoteComponentUi {
 			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::onWindowScrollNativeEvent()();
 		});
 		}-*/;
+
+	void onMessageProcessed(Message message) {
+		if (publishProcessedMessageId) {
+			markMessageProcessed(String.valueOf(message.messageId.number));
+		}
+	}
+
+	public static native void markMessageProcessed(String messageId) /*-{
+      $doc.documentElement.setAttribute("rc-server-message-processed-d",messageId);
+	}-*/;
 }

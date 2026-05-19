@@ -5,10 +5,8 @@ import java.util.function.Function;
 
 import com.google.gwt.dom.client.EventBehavior;
 import com.google.gwt.user.client.ui.SuggestOracle;
-import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
-import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasObject;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -25,8 +23,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
-import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
-import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -35,22 +31,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Values;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
-import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
-import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
-import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorSingle;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
-import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /*
- * wip - ds - late - the choice edtior edit width should be determined by the
+ * wip - ds - late - the choice editor edit width should be determined by the
  * max popup width? possibly hardcoded *is* better. see
  * search-definition-editor.sass
  */
@@ -121,48 +109,6 @@ class Searchable extends Model.Fields
 		}
 	}
 
-	/*
-	@formatter:off
-	
-	Notes on model/overlays when editing the operator
-
-	Clicking on the dropdown opens the and overlay with contents OperatorSelector, which contains a 
-	contenteditable [EditArea]. OnBind, that editor displays a choice-suggestor - which does not have an input
-	(input comes from the EditArea), but does contain the results
-
-
-	@formatter:on
-	*/
-	@TypedProperties
-	class OperatorSelector extends Model.Fields
-			implements ValueChange.Container {
-		@Directed.Transform(
-			// value = Choices.Select.To.class,
-			value = ChoicesEditorSingle.SingleSuggestions.To.class,
-			transformsNull = true)
-		@FocusOnBindMarker
-		@Choices.Values(AvailableOperators.class)
-		@ValueTransformer(ChoiceRenderer.To.class)
-		@ChoiceEditor.WidthConstrained
-		StandardSearchOperator operator;
-
-		PackageProperties._Searchable_OperatorSelector.InstanceProperties
-				properties() {
-			return PackageProperties.searchable_operatorSelector.instance(this);
-		}
-
-		@Override
-		public void onNodeContext(NodeContext event) {
-			from(searchCriterion.searchCriterionProperties().operator())
-					.to(properties().operator()).bidi();
-			from(properties().operator()).signal(() -> {
-				if (provideIsBound()) {
-					emitEvent(ModelEvents.Close.class);
-				}
-			});
-		}
-	}
-
 	RenderedOperator renderedOperator;
 
 	Searchable(SearchCriterion searchCriterion) {
@@ -177,9 +123,10 @@ class Searchable extends Model.Fields
 			operator = ":";
 		} else {
 			operator = new Dropdown(renderedOperator,
-					() -> new OperatorSelector())
-							.withLogicalAncestor(getClass())
-							.withXalign(Position.START);
+					() -> new OperatorSelector(searchCriterion
+							.searchCriterionProperties().operator()))
+									.withLogicalAncestor(getClass())
+									.withXalign(Position.START);
 		}
 	}
 
@@ -202,62 +149,11 @@ class Searchable extends Model.Fields
 		node.getResolver().registerService(StringInput.Service.class,
 				new StringInputServiceImpl());
 		node.getResolver().registerService(Service.class, new Service());
-		properties().valueEditor().set(new ValueEditor());
+		properties().valueEditor().set(new ValueEditor(
+				searchCriterion.valueProperty(), node.getResolver()));
 		if (service(SearchDefinitionEditor.Service.class)
 				.isInitialRenderComplete()) {
 			exec(() -> emitEvent(FocusEditor.class)).dispatch();
-		}
-	}
-
-	class ValueEditor extends Model.All {
-		@Directed(renderer = BridgingValueRenderer.class)
-		class ValueModelImpl implements ValueModel {
-			@Override
-			public Bindable getBindable() {
-				return searchCriterion;
-			}
-
-			Field field;
-
-			ValueModelImpl() {
-				Property property = Reflections.at(searchCriterion)
-						.property("value");
-				field = BeanFields.query().forClass(searchCriterion.getClass())
-						.forPropertyName("value").withEditable(true)
-						.forMultipleWidgetContainer(false)
-						.withValidationFeedbackProvider(
-								new FormModel.ValidationFeedbackProvider())
-						.withResolver(
-								Searchable.this.provideNode().getResolver())
-						.getField();
-			}
-
-			@Override
-			public Field getField() {
-				return field;
-			}
-
-			@Override
-			public String getGroupName() {
-				return null;
-			}
-
-			@Override
-			public void onChildBindingCreated(
-					com.totsp.gwittir.client.beans.Binding binding) {
-			}
-		}
-
-		ValueModelImpl value;
-
-		ValueEditor() {
-			value = new ValueModelImpl();
-		}
-
-		@Override
-		public void onNodeContext(NodeContext event) {
-			node.getResolver().registerService(NodeEditorContextService.class,
-					NodeEditorContextService.Editable.INSTANCE);
 		}
 	}
 

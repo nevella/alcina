@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.search.Searchable;
+import cc.alcina.framework.gwt.client.dirndl.model.search.ValueEditor;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import java.lang.Boolean;
 import java.lang.Object;
@@ -18,10 +19,10 @@ public class PackageProperties {
     //@formatter:off
     
     public static _FilterEditor filterEditor = new _FilterEditor();
+    public static _OperatorSelector operatorSelector = new _OperatorSelector();
     public static _OrderEditor orderEditor = new _OrderEditor();
     public static _SearchDefinitionEditor searchDefinitionEditor = new _SearchDefinitionEditor();
     static _Searchable searchable = new _Searchable();
-    static _Searchable_OperatorSelector searchable_operatorSelector = new _Searchable_OperatorSelector();
     static _Searchable_RenderedOperator searchable_renderedOperator = new _Searchable_RenderedOperator();
     
     public static class _FilterEditor implements TypedProperty.Container {
@@ -36,6 +37,19 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(FilterEditor instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _OperatorSelector implements TypedProperty.Container {
+      public TypedProperty<OperatorSelector, StandardSearchOperator> operator = new TypedProperty<>(OperatorSelector.class, "operator");
+      public static class InstanceProperties extends 	InstanceProperty.Container<OperatorSelector> {
+        public  InstanceProperties(OperatorSelector source){super(source);}
+        public InstanceProperty<OperatorSelector, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.operatorSelector.operator);}
+      }
+      
+      public  InstanceProperties instance(OperatorSelector instance) {
         return new InstanceProperties( instance);
       }
       
@@ -83,7 +97,7 @@ public class PackageProperties {
       TypedProperty<Searchable, Object> operator = new TypedProperty<>(Searchable.class, "operator");
       TypedProperty<Searchable, Searchable.RenderedOperator> renderedOperator = new TypedProperty<>(Searchable.class, "renderedOperator");
       TypedProperty<Searchable, SearchCriterion> searchCriterion = new TypedProperty<>(Searchable.class, "searchCriterion");
-      TypedProperty<Searchable, Searchable.ValueEditor> valueEditor = new TypedProperty<>(Searchable.class, "valueEditor");
+      TypedProperty<Searchable, ValueEditor> valueEditor = new TypedProperty<>(Searchable.class, "valueEditor");
       static class InstanceProperties extends 	InstanceProperty.Container<Searchable> {
          InstanceProperties(Searchable source){super(source);}
         InstanceProperty<Searchable, String> criterionClass(){return new InstanceProperty<>(source,PackageProperties.searchable.criterionClass);}
@@ -91,23 +105,10 @@ public class PackageProperties {
         InstanceProperty<Searchable, Object> operator(){return new InstanceProperty<>(source,PackageProperties.searchable.operator);}
         InstanceProperty<Searchable, Searchable.RenderedOperator> renderedOperator(){return new InstanceProperty<>(source,PackageProperties.searchable.renderedOperator);}
         InstanceProperty<Searchable, SearchCriterion> searchCriterion(){return new InstanceProperty<>(source,PackageProperties.searchable.searchCriterion);}
-        InstanceProperty<Searchable, Searchable.ValueEditor> valueEditor(){return new InstanceProperty<>(source,PackageProperties.searchable.valueEditor);}
+        InstanceProperty<Searchable, ValueEditor> valueEditor(){return new InstanceProperty<>(source,PackageProperties.searchable.valueEditor);}
       }
       
        InstanceProperties instance(Searchable instance) {
-        return new InstanceProperties( instance);
-      }
-      
-    }
-    
-    static class _Searchable_OperatorSelector implements TypedProperty.Container {
-      TypedProperty<Searchable.OperatorSelector, StandardSearchOperator> operator = new TypedProperty<>(Searchable.OperatorSelector.class, "operator");
-      static class InstanceProperties extends 	InstanceProperty.Container<Searchable.OperatorSelector> {
-         InstanceProperties(Searchable.OperatorSelector source){super(source);}
-        InstanceProperty<Searchable.OperatorSelector, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.searchable_operatorSelector.operator);}
-      }
-      
-       InstanceProperties instance(Searchable.OperatorSelector instance) {
         return new InstanceProperties( instance);
       }
       

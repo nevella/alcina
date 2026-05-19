@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchFilter;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyCriterion;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -48,7 +49,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding.InstanceDistinctLambda;
 import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.EditFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.FilterModified;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
@@ -159,6 +162,9 @@ public class SequenceArea extends Model.Fields
 						.filter(pc -> pc.isProperty(property)).findFirst()
 						.ifPresent(criterion -> {
 							metadata.filtered = true;
+							metadata.filterOperator = criterion.getOperator();
+							metadata.filterValue = ((HasValue) criterion)
+									.getValue();
 						});
 				def.allCriteria(PropertyOrderCriterion.class).stream()
 						.filter(pc -> pc.isProperty(property)).findFirst()
@@ -171,17 +177,59 @@ public class SequenceArea extends Model.Fields
 		}
 	}
 
+	class FilterServiceImpl implements TableModel.FilterService {
+		@Override
+		public void onEditFilter(EditFilter event) {
+			// default is fine
+		}
+
+		@Override
+		public TableColumnsMetadata getMetadata() {
+			return columnService;
+		}
+
+		@Override
+		public void onFilterModified(FilterModified event) {
+			FilterModified.Data data = event.getModel();
+			SequencePlace place = getPlace().copy();
+			SequenceSearchDefinition search = place.search;
+			if (search == null || !search
+					.permitsCriterionType(PropertyOrderCriterion.class)) {
+				return;
+			}
+			PropertyCriterion criterion = search
+					.allCriteria(PropertyCriterion.class).stream()
+					.filter(pc -> Objects.equals(pc.value.propertyName,
+							data.property.name()))
+					.findFirst().orElse(null);
+			if (data.value == null) {
+				if (criterion != null) {
+					search.removeFromSoleCriteriaGroup(criterion);
+				}
+			} else {
+				if (criterion == null) {
+					criterion = new PropertyCriterion();
+					criterion.value.propertyName = data.property.name();
+					search.addCriterionToSoleCriteriaGroup(criterion);
+				}
+				criterion.value.filterValue = data.value.toString();
+			}
+			event.reemitAs(SequenceArea.this,
+					SequenceEvents.SequencePlaceChanged.class, place);
+			event.setHandled(true);
+		}
+
+		@Override
+		public Class<? extends Bindable> renderedBindableClass() {
+			return sequence.getRowType();
+		}
+	}
+
 	class OrderServiceImpl implements TableModel.OrderService {
 		@Override
 		public void onSortTable(SortTable event) {
 			TableColumn tableColumn = event.getModel();
 			Property property = tableColumn.getField().getProperty();
-			if (property.name().equals("index")) {
-				/*
-				 * not from the transformed bindable
-				 */
-				// return;
-			}
 			SequencePlace place = getPlace().copy();
 			SequenceSearchDefinition search = place.search;
 			if (search == null || !search
@@ -287,6 +335,8 @@ public class SequenceArea extends Model.Fields
 		columnService = new ColumnService();
 		event.registerService(TableModel.OrderService.class,
 				new OrderServiceImpl());
+		event.registerService(TableModel.FilterService.class,
+				new FilterServiceImpl());
 		exec(reloadSequenceLambda).distinct().dispatch();
 		/*
 		 * Initialise with an empty sequence, it's easier than adding null
@@ -551,7 +601,7 @@ public class SequenceArea extends Model.Fields
 		if (postTransformSearch != null
 				&& postTransformSearch.allCriteria().size() > 0) {
 			BindableSearchFilter bsf = new BindableSearchFilter(
-					postTransformSearch);
+					postTransformSearch, sequence.getRowType());
 			Stream<?> f_stream = transformedElements.toList().stream();
 			/*
 			 * filter/sort the transformed elements

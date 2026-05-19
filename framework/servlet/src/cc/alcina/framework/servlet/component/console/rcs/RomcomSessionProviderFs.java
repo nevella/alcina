@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -91,13 +92,16 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 
 	File metadataFolder;
 
+	File eventsFolder;
+
 	RomcomSessionProviderFs() {
 		eventRootPath = Configuration.get(FlightEventRecorder.class, "path");
+		eventsFolder = new File(eventRootPath);
+		eventsFolder.mkdirs();
 	}
 
 	@Override
 	public synchronized Stream<RomcomSessionEntry> getSessions() {
-		File eventsFolder = new File(eventRootPath);
 		metadataFolder = FileUtils.child(eventsFolder, "session-metadata");
 		metadataFolder.mkdirs();
 		Stream<File> folders = Stream.of(eventsFolder.listFiles())
@@ -117,5 +121,21 @@ public class RomcomSessionProviderFs implements RomcomSessionProvider {
 	public void persist(RomcomSessionEntry entry) {
 		EventFolder eventFolder = fileEventFolder.get(new File(entry.path));
 		eventFolder.persistEntry();
+	}
+
+	@Override
+	public String ensureSession(String path) {
+		File from = new File(path);
+		File entryFolder = FileUtils.child(eventsFolder, from.getName());
+		if (entryFolder.exists()) {
+			return null;
+		} else {
+			try {
+				SEUtilities.copyFile(from, entryFolder);
+				return entryFolder.getPath();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
 	}
 }

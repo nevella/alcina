@@ -1,0 +1,60 @@
+@use '../../dirndl/cmp/sequence/sequence-area' as sequence
+@use '../../theme/theme'
+@use '../../dirndl/cmp/heading'
+@use '../../dirndl/cmp/panel'
+@use '../../dirndl/cmp/button'
+@use '../../dirndl/cmp/key-value'
+@use '../multi/common'
+@use 'console-variant'
+
+@mixin non-sequence-indent
+  padding-left: 1rem !important
+
+@mixin contents
+  @include console-variant.full-width
+  
+  > heading
+    @include heading.panel-3
+
+  > metadata
+    @include key-value.container
+
+  > replay
+    margin-top: 2rem 
+    margin-bottom: 4rem
+    margin-left: 8rem
+    padding: 1rem
+    border: solid 1px #ccc
+    display: flex
+    flex-direction: column
+    width: 20rem
+    align-items: center
+
+    > heading
+      @include heading.panel-1
+
+    > status
+      @include key-value.container
+      margin: 1rem 0
+
+    button
+      @include button.submit
+
+  > :not(sequence-component)
+    @include non-sequence-indent
+
+  > sequence-component
+    @include sequence.contents
+    @include sequence.non-full
+    
+
+    > header
+      grid-area: header
+
+    > sequence > table
+      background: white
+
+
+      
+      
+    

@@ -29,7 +29,7 @@ public class RomcomSessionPlace extends ServerConsolePlace {
 		protected RomcomSessionPlace getPlace1(String token, boolean retry) {
 			RomcomSessionPlace place = super.getPlace1(token, retry);
 			if (place.sequencePlace.search == null) {
-				place.sequencePlace.search = Preset.Active.getDefinition();
+				place.sequencePlace.search = Preset.All.getDefinition();
 			}
 			return place;
 		}

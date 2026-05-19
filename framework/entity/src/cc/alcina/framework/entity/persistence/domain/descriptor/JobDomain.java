@@ -234,8 +234,7 @@ public class JobDomain {
 
 	private void cleanupQueues() {
 		queues.entrySet().removeIf(e -> e.getValue().job.domain().wasRemoved()
-				|| e.getValue().job.resolveState() == JobState.ABORTED
-				|| e.getValue().job.resolveState() == JobState.CANCELLED);
+				|| e.getValue().job.resolveState().isForciblyTerminated());
 	}
 
 	public void configureDescriptor(DomainDescriptor descriptor) {

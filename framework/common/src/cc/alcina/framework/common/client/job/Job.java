@@ -694,7 +694,8 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public boolean provideIsSequenceComplete() {
 		return provideIsComplete() && (!provideHasIncompleteSubsequent()
-				|| resolveState() == JobState.ABORTED);
+				|| resolveState() == JobState.ABORTED
+				|| resolveState() == JobState.CANCELLED);
 	}
 
 	public boolean provideIsSibling(Job job) {

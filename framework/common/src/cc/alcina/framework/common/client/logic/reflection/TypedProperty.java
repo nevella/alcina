@@ -66,7 +66,7 @@ public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 		return (T) getProperty().get(propertySource);
 	}
 
-	Property getProperty() {
+	public Property getProperty() {
 		return Reflections.at(definingType).property(name);
 	}
 

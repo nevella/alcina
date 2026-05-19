@@ -17,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.EditFilter;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.FilterModified;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.FilterService;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.OrderService;
@@ -80,7 +81,9 @@ public class TableView extends
 	@Directed.Delegating
 	@DirectedContextResolver
 	class TableContainer extends Model.All
-			implements TableEvents.SortTable.Handler {
+			implements TableEvents.SortTable.Handler,
+			TableColumnsMetadata.EditFilter.Handler,
+			TableEvents.FilterModified.Handler {
 		@Directed(className = "bound")
 		TableModel tableModel;
 
@@ -131,13 +134,35 @@ public class TableView extends
 				}
 				editFilter(event, this);
 			}
+
+			@Override
+			public TableColumnsMetadata getMetadata() {
+				return ancestorService.getMetadata();
+			}
+
+			@Override
+			public void onFilterModified(FilterModified event) {
+				ancestorService.onFilterModified(event);
+			}
+
+			@Override
+			public Class<? extends Bindable> renderedBindableClass() {
+				return tableModel.elementType;
+			}
 		}
 
 		@Override
 		public void onNodeContext(NodeContext event) {
-			OrderService ancestorService = service(OrderService.class);
-			event.registerService(OrderService.class,
-					new OrderServiceImpl(ancestorService));
+			{
+				OrderService ancestorService = service(OrderService.class);
+				event.registerService(OrderService.class,
+						new OrderServiceImpl(ancestorService));
+			}
+			{
+				FilterService ancestorService = service(FilterService.class);
+				event.registerService(FilterService.class,
+						new FilterServiceImpl(ancestorService));
+			}
 		}
 
 		void editFilter(EditFilter event, FilterService filterService) {
@@ -189,6 +214,16 @@ public class TableView extends
 		@Override
 		public void onSortTable(SortTable event) {
 			service(OrderService.class).onSortTable(event);
+		}
+
+		@Override
+		public void onEditFilter(EditFilter event) {
+			service(FilterService.class).onEditFilter(event);
+		}
+
+		@Override
+		public void onFilterModified(FilterModified event) {
+			service(FilterService.class).onFilterModified(event);
 		}
 	}
 }

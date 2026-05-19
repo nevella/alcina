@@ -10,7 +10,6 @@ import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.HrefElement;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 
@@ -136,10 +135,13 @@ class ClientEventDispatch {
 							explicitPrevent = true;
 						}
 					}
-					if (elem instanceof HrefElement
-							&& !((HrefElement) elem).hasLinkHref()) {
-						explicitPrevent = true;
-					}
+					/*
+					 * case-by-case, use element behavior
+					 */
+					// if (elem instanceof HrefElement
+					// && !((HrefElement) elem).hasLinkHref()) {
+					// explicitPrevent = true;
+					// }
 					if (explicitPrevent) {
 						event.preventDefault();
 					}

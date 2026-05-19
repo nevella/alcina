@@ -284,6 +284,7 @@ public class ClientRpc {
 				handler.handle(message);
 				new Message.AfterHandled(message).publish();
 			}
+			ui.onMessageProcessed(message);
 		} catch (Throwable e) {
 			RemoteObjectModelComponentClient.markWindowAsErrorState();
 			ui.messageStateRouter.onMessageHandlingException(message, e);

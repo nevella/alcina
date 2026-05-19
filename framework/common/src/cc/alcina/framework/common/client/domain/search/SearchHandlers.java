@@ -125,9 +125,9 @@ public class SearchHandlers {
 						continue;
 					}
 					DomainFilter filter = handler.getFilter(sc);
-					DomainSearcherFilter searcherFilter = new DomainSearcherFilter(
-							filter, sc);
 					if (filter != null) {
+						DomainSearcherFilter searcherFilter = new DomainSearcherFilter(
+								filter, sc);
 						if (or) {
 							orFilter.add(filter);
 						} else {

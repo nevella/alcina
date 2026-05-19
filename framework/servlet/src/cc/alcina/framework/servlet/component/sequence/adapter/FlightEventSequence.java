@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.service.InstanceQuery;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
@@ -138,6 +139,9 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 		@Display.Exclude
 		String stringRepresentation;
 
+		FlightEventRow() {
+		}
+
 		FlightEventRow(FlightEvent event) {
 			this.event = event;
 			index = (int) event.id;
@@ -145,7 +149,8 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 			duration = event.provideDuration();
 			type = NestedName.get(event.event);
 			subtype = event.provideSubtype();
-			detail = event.provideDetail();
+			detail = Ax.blankToEmpty(event.provideDetail())
+					.replace("[CLIENT_TO_SERVER]", "");
 			in = event.provideInputBytes().length;
 			out = event.provideOutputBytes().length;
 			stringRepresentation = event.provideStringRepresentation();

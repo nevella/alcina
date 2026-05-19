@@ -1036,10 +1036,12 @@ public class Permissions implements DomainTransformListener {
 	boolean evaluateRules(Object o, Object assigningTo, Permissible p,
 			boolean permitted) {
 		Boolean b = null;
-		if (assigningTo != null) {
-			b = permissionsExtension.isPermitted(o, assigningTo, p);
-		} else {
-			b = permissionsExtension.isPermitted(o, p);
+		if (permissionsExtension != null) {
+			if (assigningTo != null) {
+				b = permissionsExtension.isPermitted(o, assigningTo, p);
+			} else {
+				b = permissionsExtension.isPermitted(o, p);
+			}
 		}
 		if (b != null) {
 			permitted = b;

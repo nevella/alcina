@@ -97,8 +97,8 @@ public class FlightEventCriterion {
 		}
 	}
 
-	abstract static class CriterionHandler<SC extends SearchCriterion>
-			extends DomainCriterionHandler<SC> {
+	abstract static class CriterionHandler<SC extends SearchCriterion> extends
+			DomainCriterionHandler<SC> implements Registration.AllSubtypes {
 		@Override
 		public Class<? extends SearchDefinition> handlesSearchDefinition() {
 			return FlightEventSearchDefinition.class;

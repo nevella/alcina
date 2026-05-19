@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
@@ -51,7 +52,15 @@ public class SequencePlace extends BasePlace implements TreeSerializable {
 
 	@Override
 	public SequencePlace copy() {
-		return super.copy();
+		SequencePlace result = super.copy();
+		if (search != null && result.search == null) {
+			/*
+			 * FIXME - serialization - this is an issue with flattreeser, needs
+			 * some sort of __DEFAULT__ existence marker
+			 */
+			result.search = Reflections.newInstance(search.getClass());
+		}
+		return result;
 	}
 
 	public static class Tokenizer extends BasePlaceTokenizer<SequencePlace> {
