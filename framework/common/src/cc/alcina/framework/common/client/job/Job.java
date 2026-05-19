@@ -942,7 +942,11 @@ public abstract class Job extends VersionableEntity<Job>
 			throw new RuntimeException("Invalid job depth - maybe a loop?");
 		}
 		if (this.state == null) {
-			return null;
+			/*
+			 * should never happen - but if it does, return pending (until
+			 * there's some @NotNull action)
+			 */
+			return JobState.PENDING;
 		}
 		if (this.state.isComplete()) {
 			return this.state;
