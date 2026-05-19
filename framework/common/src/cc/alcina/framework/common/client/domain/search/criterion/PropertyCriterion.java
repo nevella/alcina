@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.domain.search.criterion;
 
 import java.util.Objects;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
@@ -67,6 +69,7 @@ public class PropertyCriterion extends SearchCriterion
 		return criterion;
 	}
 
+	@XmlTransient
 	public Filter value = new Filter();
 
 	public PropertyCriterion() {
