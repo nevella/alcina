@@ -15,6 +15,8 @@ public interface WebdriverService {
 		void navigateTo(String url);
 
 		void performEvent(DomEventData event);
+
+		String getDocumentAttribute(String attrServerMessageProcessed);
 	}
 
 	WebdriverSession createSession();

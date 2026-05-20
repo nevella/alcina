@@ -1,19 +1,29 @@
 package cc.alcina.framework.servlet.environment.replay;
 
+import java.util.List;
 import java.util.function.Consumer;
 
+import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.DomEventData;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.flight.FlightEvent;
+import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.console.rcs.Feature_RomcomSessionConsole;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
 import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSequence;
 import cc.alcina.framework.servlet.servlet.wd.WebdriverService;
@@ -29,42 +39,52 @@ public class SessionReplay {
 		this.sequencePlace = sequencePlace;
 	}
 
-	public Topic<Status> topicStatusChange = Topic.create();
+	public Topic<State> topicStateChange = Topic.create();
 
-	public static class Status implements Cloneable {
-		public int currentEventId;
+	public static class State implements Cloneable {
+		public int currentEventIdx = -1;
 
-		public State state = State.pending;
+		public Phase phase = Phase.pending;
 
-		public Status() {
+		public String message;
+
+		public State() {
 		}
 
-		protected Status clone() {
+		protected State clone() {
 			try {
-				return (Status) super.clone();
+				return (State) super.clone();
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
 		}
 	}
 
-	void updateStatus(Consumer<Status> modifier) {
-		Status status = this.status.clone();
-		modifier.accept(status);
-		this.status = status;
-		topicStatusChange.publish(this.status);
+	void updateState(Consumer<State> modifier) {
+		State state = this.state.clone();
+		modifier.accept(state);
+		this.state = state;
+		topicStateChange.publish(this.state);
 	}
 
-	Status status = new Status();
+	State state = new State();
 
 	WebdriverSession session;
 
 	RemoteComponentEvent clientInitEvent;
 
+	RemoteComponentEvent currentEvent;
+
+	RemoteComponentEvent lastEvent;
+
+	DomEventMessage replayEvents;
+
+	Message lastServerMessage;
+
 	Message.Startup startupEvent;
 
-	public enum State {
-		pending, replaying, finished;
+	public enum Phase {
+		pending, replaying, finished, exception;
 	}
 
 	public void start() {
@@ -72,9 +92,18 @@ public class SessionReplay {
 		loadSequence();
 		launchWd();
 		loadUrl();
-		updateStatus(next -> next.state = State.replaying);
-		iterateEvents();
-		updateStatus(next -> next.state = State.finished);
+		updateState(next -> next.phase = Phase.replaying);
+		try {
+			iterateEvents();
+		} catch (Exception e) {
+			e.printStackTrace();
+			updateState(next -> {
+				next.phase = Phase.exception;
+				next.message = CommonUtils.toSimpleExceptionMessage(e);
+			});
+			return;
+		}
+		updateState(next -> next.phase = Phase.finished);
 	}
 
 	void loadSequence() {
@@ -91,6 +120,103 @@ public class SessionReplay {
 	}
 
 	void iterateEvents() {
+		for (;;) {
+			advanceToNextClientEvent();
+			if (state.phase == Phase.finished) {
+				break;
+			}
+			int awaitServerMessageId = lastServerMessage.messageId.number;
+			awaitServerMessage(awaitServerMessageId);
+			replayClientEvent();
+		}
+	}
+
+	void replayClientEvent() {
+		replayEvents.events.forEach(e -> {
+			session.performEvent(e);
+			try {
+				Thread.sleep(30);
+			} catch (Exception e2) {
+				throw WrappedRuntimeException.wrap(e2);
+			}
+		});
+	}
+
+	void advanceToNextClientEvent() {
+		for (;;) {
+			if (state.currentEventIdx == eventSequence.elements.size() - 1) {
+				updateState(next -> next.phase = Phase.finished);
+				break;
+			}
+			updateState(next -> next.currentEventIdx++);
+			FlightEvent flightEvent = eventSequence.elements
+					.get(state.currentEventIdx);
+			FlightEventWrappable event = flightEvent.event;
+			if (!(event instanceof RemoteComponentEvent)) {
+				continue;
+			}
+			lastEvent = currentEvent;
+			if (lastEvent != null) {
+				Message lastResponseMessage = Ax
+						.last(lastEvent.response.messageEnvelope.messages);
+				if (lastResponseMessage != null) {
+					this.lastServerMessage = lastResponseMessage;
+				}
+			}
+			currentEvent = (RemoteComponentEvent) event;
+			/*
+			 * TODO - handle multiple messages
+			 */
+			Message message = currentEvent.request.messageEnvelope.messages
+					.get(0);
+			if (message instanceof DomEventMessage) {
+				replayEvents = (DomEventMessage) message;
+				List<DomEventData> userEvents = replayEvents.events.stream()
+						.filter(e -> {
+							switch (e.event.getType()) {
+							case BrowserEvents.CLICK:
+							case BrowserEvents.INPUT:
+							case BrowserEvents.CHANGE:
+							case BrowserEvents.KEYDOWN:
+								return true;
+							default:
+								return false;
+							}
+						}).toList();
+				if (userEvents.size() == 0) {
+					replayEvents = null;
+				} else {
+					break;
+				}
+			}
+		}
+	}
+
+	void awaitServerMessage(int awaitServerMessageId) {
+		long timeout = 2000;
+		long start = System.currentTimeMillis();
+		int replayedId = -1;
+		while (TimeConstants.within(start, timeout)) {
+			try {
+				Thread.sleep(10);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+			String attrValue = session.getDocumentAttribute(
+					RemoteComponentProtocol.ATTR_SERVER_MESSAGE_PROCESSED);
+			if (Ax.notBlank(attrValue)) {
+				replayedId = Integer.parseInt(attrValue);
+				if (replayedId >= awaitServerMessageId) {
+					return;
+				}
+			}
+		}
+		String message = Ax.format(
+				"Server replay id not reached - %s; current %s",
+				awaitServerMessageId, replayedId);
+		Ax.err(message);
+		// throw new IllegalStateException(
+		// message);
 	}
 
 	void loadUrl() {
@@ -105,7 +231,7 @@ public class SessionReplay {
 				"/set-client-property/RemoteComponentUi/publishProcessedMessageIdBefore/%s",
 				System.currentTimeMillis() + 10000));
 		session.navigateTo(urlBuilder.build());
-		session.navigateTo(startupEvent.locationMutation.href + "?gwt.l");
+		session.navigateTo(startupEvent.locationMutation.href);
 	}
 
 	void launchWd() {

@@ -7,8 +7,10 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.dom.client.mutations.LocalMutations;
@@ -24,6 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -228,6 +231,7 @@ public class RemoteComponentUi {
 			if (System.currentTimeMillis() < Long
 					.parseLong(publishProcessedMessageIdBefore)) {
 				publishProcessedMessageId = true;
+				addGetNodeByAttachIdMethod();
 			}
 		}
 		Startup startupMessage = Message.Startup.forClient();
@@ -237,6 +241,23 @@ public class RemoteComponentUi {
 		 */
 		// AlcinaLogUtils.setLogLevelClient(
 		// "cc.alcina.framework.servlet.component.romcom", Level.ALL);
+	}
+
+	final native void addGetNodeByAttachIdMethod() /*-{
+	var _this=this;
+	$wnd.__alc_getNodeByAttachId = $entry(function (attachId){
+		return	_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentUi::getNodeByAttachId(I)(attachId);
+	});
+	}-*/;
+
+	NodeJso getNodeByAttachId(int attachId) {
+		return LocalDom.getNodeByAttachId(attachId);
+	}
+
+	void dispatchEvent(String serializedEvent) {
+		DomEventData eventData = ReflectiveSerializer
+				.deserialize(serializedEvent);
+		LocalDom.dispatchBrowserDomEvent(eventData);
 	}
 
 	/**
@@ -314,6 +335,6 @@ public class RemoteComponentUi {
 	}
 
 	public static native void markMessageProcessed(String messageId) /*-{
-      $doc.documentElement.setAttribute("rc-server-message-processed-d",messageId);
+      $doc.documentElement.setAttribute("rc-server-message-processed",messageId);
 	}-*/;
 }

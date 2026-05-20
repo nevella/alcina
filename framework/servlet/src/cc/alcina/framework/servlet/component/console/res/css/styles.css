@@ -1590,17 +1590,19 @@ body > page > server-console-area > romcom-session-detail.server-console > repla
   font-weight: bold;
   color: #333;
 }
-body > page > server-console-area > romcom-session-detail.server-console > replay > status {
+body > page > server-console-area > romcom-session-detail.server-console > replay > state {
   display: grid;
   column-gap: 1rem;
   grid-template-columns: min-content min-content;
   white-space: nowrap;
   margin: 1rem 0;
+  width: 20rem;
+  white-space: normal;
 }
-body > page > server-console-area > romcom-session-detail.server-console > replay > status > key-value {
+body > page > server-console-area > romcom-session-detail.server-console > replay > state > key-value {
   display: contents;
 }
-body > page > server-console-area > romcom-session-detail.server-console > replay > status > key-value > key {
+body > page > server-console-area > romcom-session-detail.server-console > replay > state > key-value > key {
   font-weight: bold;
 }
 body > page > server-console-area > romcom-session-detail.server-console > replay button {

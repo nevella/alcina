@@ -394,6 +394,11 @@ public abstract class MessageTransportLayer {
 							.collect(Collectors.joining(",")));
 			return format.toString();
 		}
+
+		public String toMessageIdsString() {
+			return messages.stream().map(m -> "#" + m.messageId.number)
+					.collect(Collectors.joining(","));
+		}
 	}
 
 	/**

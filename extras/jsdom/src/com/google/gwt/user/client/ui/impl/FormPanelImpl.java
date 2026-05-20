@@ -29,19 +29,19 @@ public class FormPanelImpl {
 	 * @return the response html
 	 */
 	public native String getContents(Element iframe_mult) /*-{
-															@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(iframe_mult);
-															var iframe = iframe_mult.@com.google.gwt.dom.client.Element::jsoRemote()();
-															try {
-															// Make sure the iframe's window & document are loaded.
-															if (!iframe.contentWindow || !iframe.contentWindow.document)
-															return null;
-															
-															// Get the body's entire inner HTML.
-															return iframe.contentWindow.document.body.innerHTML;
-															} catch (e) {
-															return null;
-															}
-															}-*/;
+		@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(iframe_mult);
+		var iframe = iframe_mult.@com.google.gwt.dom.client.Element::jsoRemote()();
+		try {
+		// Make sure the iframe's window & document are loaded.
+		if (!iframe.contentWindow || !iframe.contentWindow.document)
+		return null;
+		
+		// Get the body's entire inner HTML.
+		return iframe.contentWindow.document.body.innerHTML;
+		} catch (e) {
+		return null;
+		}
+		}-*/;
 
 	/**
 	 * Gets the form element's encoding.

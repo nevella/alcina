@@ -42,6 +42,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 public class RemoteComponentProtocol {
 	public static final String FLAG_DEBUG_METRICS = "RemoteComponentProtocol.FLAG_DEBUG_METRICS";
 
+	public static final String ATTR_SERVER_MESSAGE_PROCESSED = "rc-server-message-processed";
+
 	@Bean
 	public static class InvalidAuthenticationException
 			extends ProtocolException {
