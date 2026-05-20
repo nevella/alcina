@@ -1982,14 +1982,14 @@ public class DomNode {
 			}
 			return result;
 		}
+	}
 
-		public class SplitResult {
-			public DomNode before;
+	public class SplitResult {
+		public DomNode before;
 
-			public DomNode contents;
+		public DomNode contents;
 
-			public DomNode after;
-		}
+		public DomNode after;
 	}
 
 	public DomNodeTraversal traversal() {

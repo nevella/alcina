@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -12,7 +13,7 @@ import org.w3c.dom.Text;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.collections.PublicCloneable;
-import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
+import cc.alcina.framework.common.client.dom.DomNode.SplitResult;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -464,16 +465,27 @@ public class Location implements Comparable<Location> {
 		 *         the location (or are the text node containing the location)
 		 */
 		public Range toShallowestNodes() {
+			return toShallowestNodes(n -> true);
+		}
+
+		/**
+		 * 
+		 * @return the range containing the shallowest nodes which begin/end at
+		 *         the location (or are the text node containing the location)
+		 */
+		public Range toShallowestNodes(Predicate<DomNode> filter) {
 			List<DomNode> startContainers = start.getLocationContext()
 					.getContainingNodes(start, start.getIndex(), start.start)
 					.stream()
-					.filter(n -> n.asDomNode().asLocation().getIndex() == start
-							.getIndex() || n.asDomNode().isText())
+					.filter(n -> filter.test(n)
+							&& (n.asDomNode().asLocation().getIndex() == start
+									.getIndex() || n.asDomNode().isText()))
 					.toList();
 			List<DomNode> endContainers = start.getLocationContext()
 					.getContainingNodes(end, end.getIndex(), end.start).stream()
-					.filter(n -> n.asDomNode().asRange().end.getIndex() == end
-							.getIndex() || n.asDomNode().isText())
+					.filter(n -> filter.test(n)
+							&& (n.asDomNode().asRange().end.getIndex() == end
+									.getIndex() || n.asDomNode().isText()))
 					.toList();
 			Location start = this.start
 					.toContainingTreeIndex(startContainers.get(0).asLocation());

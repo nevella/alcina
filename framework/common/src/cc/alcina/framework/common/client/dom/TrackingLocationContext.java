@@ -607,8 +607,20 @@ class TrackingLocationContext implements LocationContext {
 		/*
 		 * 
 		 */
-		if (!getDocumentRange().toIntPair().contains(index)) {
+		IntPair documentPair = getDocumentRange().toIntPair();
+		if (!documentPair.contains(index)) {
 			return null;
+		}
+		if (index == documentPair.i2) {
+			DomNode cursor = getDocumentElementNode().relative()
+					.lastDescendant();
+			while (true) {
+				if (cursor.isText()) {
+					return cursor.asLocation();
+				} else {
+					cursor = cursor.relative().treePreviousNode();
+				}
+			}
 		}
 		boolean forwards = startAt.getIndex() <= index;
 		int itrCount = 0;

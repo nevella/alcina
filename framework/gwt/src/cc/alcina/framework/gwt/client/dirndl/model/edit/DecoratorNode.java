@@ -15,7 +15,7 @@ import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
+import cc.alcina.framework.common.client.dom.DomNode.SplitResult;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
