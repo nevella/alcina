@@ -1129,6 +1129,9 @@ public class JobRegistry {
 
 		private String cause;
 
+		private String consistencyPriority = JobDomain.DefaultConsistencyPriorities._default
+				.toString();
+
 		public Job addSibling(Task task) {
 			// only run to add a sibling to a child job - otherwise use
 			// followWith()
@@ -1169,8 +1172,6 @@ public class JobRegistry {
 				Preconditions.checkArgument(initialState == JobState.FUTURE);
 			}
 			if (initialState == JobState.FUTURE_CONSISTENCY) {
-				String consistencyPriority = JobDomain.DefaultConsistencyPriorities._default
-						.toString();
 				if (LooseContext
 						.has(CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY)) {
 					consistencyPriority = LooseContext
@@ -1354,6 +1355,12 @@ public class JobRegistry {
 
 		public Builder withTask(Task task) {
 			this.task = task;
+			return this;
+		}
+
+		public Builder withConsistencyPriority(
+				JobDomain.DefaultConsistencyPriorities priority) {
+			this.consistencyPriority = priority.toString();
 			return this;
 		}
 
