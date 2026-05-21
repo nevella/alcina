@@ -488,7 +488,7 @@ public class LayerParser {
 	}
 
 	public DomNode getContainerNode() {
-		return selection.get().containingNode();
+		return selection.get().startContainingNode();
 	}
 
 	public ExtendedState getExtendedState() {

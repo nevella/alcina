@@ -129,7 +129,7 @@ public class MeasureDiff {
 		 */
 		protected boolean isLeaf(MergeInputNode mergeInputNode) {
 			Measure measure = mergeInputNode.get();
-			DomNode containingNode = measure.containingNode();
+			DomNode containingNode = measure.startContainingNode();
 			return measure.token == MergeInputNode.Word.TYPE
 					|| containingNode.nameIs("img");
 		}

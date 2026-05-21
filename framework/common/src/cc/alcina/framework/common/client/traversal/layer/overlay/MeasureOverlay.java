@@ -170,7 +170,7 @@ public class MeasureOverlay {
 	 */
 	static class DocumentElement extends MeasureSelection {
 		public static DocumentElement of(MeasureSelection selection) {
-			Measure measure = selection.get().containingNode().document
+			Measure measure = selection.get().startContainingNode().document
 					.getDocumentElementNode().asRange()
 					.toMeasure(DocumentElementToken.TYPE);
 			return new DocumentElement(selection, measure);
@@ -223,12 +223,54 @@ public class MeasureOverlay {
 			@Override
 			Range adjustLocationDepths(Range range,
 					StyleResolver styleResolver) {
-				return range.toShallowestNodes(n -> !styleResolver.isBlock(n));
+				Range deepestStartEndNode = range.toDeepestStartEndNode();
+				if (deepestStartEndNode.isSingleNode()) {
+					return deepestStartEndNode;
+				}
+				Range adjusted = range
+						.toShallowestNodes(n -> !styleResolver.isBlock(n));
+				return adjusted;
+			}
+
+			Range splitIfNecessary(Range range) {
+				Location start = range.start;
+				Location end = range.end;
+				if (start.getContainingNode().parent() != end
+						.getContainingNode().parent()) {
+					range.startContainingNode();
+				} else {
+					return super.splitIfNecessary(range);
+				}
+				if (!start.isAtNodeBoundary()) {
+					SplitResult split = start.split();
+					start = split.after.asLocation();
+					end.getIndex();
+				}
+				if (!end.isAtNodeBoundary()) {
+					SplitResult split = end.split();
+					end = split.after.asLocation();
+				}
+				return new Range(start, end);
 			}
 		};
 
 		abstract Range adjustLocationDepths(Range truncateAbsolute,
 				StyleResolver styleResolver);
+
+		Range splitIfNecessary(Range range) {
+			Location start = range.start;
+			Location end = range.end;
+			if (!start.isAtNodeBoundary()) {
+				SplitResult split = start.split();
+				start = split.after.asLocation();
+				end.getIndex();
+			}
+			if (!end.isAtNodeBoundary()) {
+				SplitResult split = end.split();
+				end = split.after.asLocation();
+			}
+			return new Range(start, end);
+		}
 	}
 
 	/**
@@ -247,7 +289,7 @@ public class MeasureOverlay {
 
 	public void detach() {
 		overlays.stream().filter(Measure::isAttached)
-				.forEach(overlay -> overlay.containingNode().strip());
+				.forEach(overlay -> overlay.startContainingNode().strip());
 	}
 
 	public ExtendResult extend(BoundaryTraversals quota, boolean reversed) {
@@ -322,8 +364,10 @@ public class MeasureOverlay {
 
 	void markEndpoints() {
 		Range range = ensureSplitRange();
-		range.start.getContainingNode().relative()
-				.insertBeforeThis(endpoints.start);
+		if (endpoints.start != null) {
+			range.start.getContainingNode().relative()
+					.insertBeforeThis(endpoints.start);
+		}
 		if (endpoints.end != null) {
 			range.end.getContainingNode().relative()
 					.insertAfterThis(endpoints.end);
@@ -354,18 +398,7 @@ public class MeasureOverlay {
 
 	Range ensureSplitRange() {
 		if (splitRange == null) {
-			Location start = initialRange.start;
-			Location end = initialRange.end;
-			if (!start.isAtNodeBoundary()) {
-				SplitResult split = start.split();
-				start = split.after.asLocation();
-				end.getIndex();
-			}
-			if (!end.isAtNodeBoundary()) {
-				SplitResult split = end.split();
-				end = split.after.asLocation();
-			}
-			splitRange = new Range(start, end);
+			splitRange = depthStrategy.splitIfNecessary(initialRange);
 		}
 		return splitRange;
 	}

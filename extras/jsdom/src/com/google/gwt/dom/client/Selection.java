@@ -265,7 +265,7 @@ public class Selection implements ClientDomSelection {
 		Location postDeleteCursorPosition = null;
 		if (focusLocation.isTextNode()) {
 			Location.Range focusRange = treeRanges.stream().filter(tr -> tr
-					.containingNode() == focusLocation.getContainingNode())
+					.startContainingNode() == focusLocation.getContainingNode())
 					.findFirst().orElse(null);
 			/*
 			 * TODO - just let the dom do this for now

@@ -33,7 +33,8 @@ public class BoundaryParser
 
 	public BoundaryParser(MeasureOverlay measureOverlay) {
 		this.measureOverlay = measureOverlay;
-		this.document = measureOverlay.initialRange.containingNode().document;
+		this.document = measureOverlay.initialRange
+				.startContainingNode().document;
 	}
 
 	public static class ExtendResult {

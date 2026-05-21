@@ -203,7 +203,7 @@ public class Measure extends Location.Range {
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		if (containingNode() == null) {
+		if (startContainingNode() == null) {
 			return tokenString;
 		}
 		if (start.getTreeIndex() == end.getTreeIndex()

@@ -258,8 +258,9 @@ public class Location implements Comparable<Location> {
 			return start.isAttached();
 		}
 
-		// FIXME - selection - throw if start.node != end.node?
-		public DomNode containingNode() {
+		/**
+		 */
+		public DomNode startContainingNode() {
 			return start.getContainingNode();
 		}
 
@@ -297,7 +298,7 @@ public class Location implements Comparable<Location> {
 
 		public void delete() {
 			if (isWholeNode()) {
-				containingNode().removeFromParent();
+				startContainingNode().removeFromParent();
 			} else if (isSingleNode() && start.isTextNode()) {
 				// Preconditions
 				/*

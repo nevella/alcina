@@ -789,7 +789,18 @@ class TrackingLocationContext implements LocationContext {
 						return result.asLocation();
 					} else {
 						if (child.isText()) {
-							return childRange.start;
+							if (test.isStart() || index > childPair.i1
+									|| index == 0) {
+								return child.asLocation();
+							} else {
+								DomNode cursor = child.relative()
+										.treePreviousNode();
+								while (!cursor.isText()) {
+									cursor = cursor.relative()
+											.treePreviousNode();
+								}
+								return cursor.asLocation();
+							}
 						} else {
 							child.asRange();
 							node = child;

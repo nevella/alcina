@@ -1984,6 +1984,9 @@ public class DomNode {
 		}
 	}
 
+	public SplitResult split(Location at) {
+	}
+
 	public class SplitResult {
 		public DomNode before;
 

@@ -30,7 +30,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	}
 
 	public DomNode containingNode() {
-		return get().containingNode();
+		return get().startContainingNode();
 	}
 
 	/*
@@ -51,7 +51,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		@Override
 		public String getMarkup(M selection) {
 			try {
-				if (selection.get().containingNode() == null) {
+				if (selection.get().startContainingNode() == null) {
 					// a document selection, possibly
 					return super.getMarkup(selection);
 				} else {
@@ -65,7 +65,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 
 		@Override
 		public String getPathSegment(M selection) {
-			if (selection.get().containingNode() == null) {
+			if (selection.get().startContainingNode() == null) {
 				// a document selection, possibly
 				return super.getPathSegment(selection);
 			} else {
@@ -75,7 +75,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 
 		@Override
 		public String computeText(M selection) {
-			if (selection.get().containingNode() == null) {
+			if (selection.get().startContainingNode() == null) {
 				// a document selection, possibly
 				return super.computeText(selection);
 			} else {
@@ -209,7 +209,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	}
 
 	public DomNode domNode() {
-		return get().containingNode();
+		return get().startContainingNode();
 	}
 
 	public void setOmit(boolean omit) {
@@ -235,7 +235,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	@Override
 	public String toString() {
 		return Ax.format("%s :: %s :: %s :: %s :: %s", NestedName.get(this),
-				get().toIntPair(), get().containingNode().name(),
+				get().toIntPair(), get().startContainingNode().name(),
 				get().getData(), Ax.ntrim(get().text(), 40));
 	}
 

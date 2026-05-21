@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.diff.MeasureDiff.Peer;
-import cc.alcina.framework.common.client.traversal.layer.diff.MergeInputNode.Word;
 import cc.alcina.framework.common.client.traversal.layer.diff.RootLayer.RootSelection;
 
 /**
@@ -63,17 +62,17 @@ class GenerateInputNodes extends Layer<RootSelection> {
 						.create(getInputParent(root, measure), measure, left))
 				.forEach(mergeNode -> {
 					domNodeInputNode.putIfAbsent(
-							mergeNode.get().containingNode(), mergeNode);
+							mergeNode.get().startContainingNode(), mergeNode);
 					measureInputNode.put(mergeNode.get(), mergeNode);
 					select(mergeNode);
 				});
 	}
 
 	Selection getInputParent(DomNode root, Measure measure) {
-		if (measure.containingNode() == root) {
+		if (measure.startContainingNode() == root) {
 			return rootSelection;
 		} else {
-			return domNodeInputNode.get(measure.containingNode().parent());
+			return domNodeInputNode.get(measure.startContainingNode().parent());
 		}
 	}
 }

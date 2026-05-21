@@ -184,8 +184,13 @@ public class CommonUtils {
 		return o instanceof Class ? (Class) o : o.getClass();
 	}
 
-	// assume slash-delineated
 	public static String combinePaths(String absPath, String relPath) {
+		return combinePaths(absPath, relPath, false);
+	}
+
+	// assume slash-delineated
+	public static String combinePaths(String absPath, String relPath,
+			boolean absIsFolder) {
 		if (relPath.contains("://")) {
 			return relPath;
 		}
@@ -208,6 +213,9 @@ public class CommonUtils {
 		String parentSep = "../";
 		String voidSep = "./";
 		int x = 0;
+		if (absIsFolder && !absPath.endsWith("/")) {
+			absPath += "/";
+		}
 		x = absPath.lastIndexOf("/");
 		if (x != -1) {
 			absPath = absPath.substring(0, x);

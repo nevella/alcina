@@ -109,8 +109,9 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				if (withRangeSelection != null
 						&& withRangeSelection.provideRange() != null
 						&& withRangeSelection.provideRange()
-								.containingNode() != null) {
-					return withRangeSelection.provideRange().containingNode();
+								.startContainingNode() != null) {
+					return withRangeSelection.provideRange()
+							.startContainingNode();
 				} else {
 					return null;
 				}
