@@ -1052,6 +1052,10 @@ class TrackingLocationContext implements LocationContext {
 		}
 		IndexTuple locationDelta = mutatingPointRef
 				.subtract(initialLocationTuple);
+		// if (Location.debugIndexMutation && locationDelta.index < 0
+		// && initialLocationTuple.start) {
+		// int debug = 3;
+		// }
 		location.applyIndexDelta(locationDelta);
 		if (!locationDelta.isZero()) {
 			flushCurrentMutationIfAffecting(location);

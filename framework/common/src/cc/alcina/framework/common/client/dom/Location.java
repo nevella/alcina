@@ -258,10 +258,14 @@ public class Location implements Comparable<Location> {
 			return start.isAttached();
 		}
 
-		/**
-		 */
 		public DomNode startContainingNode() {
 			return start.getContainingNode();
+		}
+
+		@Property.Not
+		public DomNode getCommonContainingNode() {
+			return start.getContainingNode()
+					.getCommonAncestorContainer(end.getContainingNode(), true);
 		}
 
 		public boolean contains(Location l) {
@@ -473,17 +477,21 @@ public class Location implements Comparable<Location> {
 		 * 
 		 * @return the range containing the shallowest nodes which begin/end at
 		 *         the location (or are the text node containing the location)
+		 * 
+		 *         Note that the filter must permit text nodes (since a result
+		 *         is required)
 		 */
 		public Range toShallowestNodes(Predicate<DomNode> filter) {
-			List<DomNode> startContainers = start.getLocationContext()
-					.getContainingNodes(start, start.getIndex(), start.start)
-					.stream()
+			List<DomNode> unfilteredStartContainers = start.getLocationContext()
+					.getContainingNodes(start, start.getIndex(), start.start);
+			List<DomNode> startContainers = unfilteredStartContainers.stream()
 					.filter(n -> filter.test(n)
 							&& (n.asDomNode().asLocation().getIndex() == start
 									.getIndex() || n.asDomNode().isText()))
 					.toList();
-			List<DomNode> endContainers = start.getLocationContext()
-					.getContainingNodes(end, end.getIndex(), end.start).stream()
+			List<DomNode> unfilteredEndContainers = start.getLocationContext()
+					.getContainingNodes(end, end.getIndex(), end.start);
+			List<DomNode> endContainers = unfilteredEndContainers.stream()
 					.filter(n -> filter.test(n)
 							&& (n.asDomNode().asRange().end.getIndex() == end
 									.getIndex() || n.asDomNode().isText()))
@@ -737,6 +745,8 @@ public class Location implements Comparable<Location> {
 					getLocation().toString());
 		}
 	}
+
+	public static boolean debugIndexMutation;
 
 	public LocationSnapshot toLocationSnapshot() {
 		return new LocationSnapshot();
@@ -1299,6 +1309,11 @@ public class Location implements Comparable<Location> {
 					classData, getSubsequentDebugText(50));
 		}
 		String dir = start ? "<" : ">";
+		// deliberately avoids index updea
+		if (containingNode.isText() && containingNode.location.index
+				+ containingNode.textContent().length() == index) {
+			dir = "> [#EOT]";
+		}
 		return Ax.format("%s,%s,%s %s", treeIndex, index, dir, nodeData);
 	}
 
@@ -1462,5 +1477,11 @@ public class Location implements Comparable<Location> {
 	void markCurrentMutationPosition() {
 		documentMutationPosition = locationContext
 				.getDocumentMutationPosition();
+	}
+
+	public Location toParentLocation() {
+		DomNode parent = getContainingNode().parent();
+		return new Location(parent.asLocation().getTreeIndex(), index, start,
+				parent, locationContext);
 	}
 }

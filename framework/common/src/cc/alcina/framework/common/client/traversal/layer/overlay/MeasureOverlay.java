@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 
@@ -101,7 +102,16 @@ public class MeasureOverlay {
 	public interface StyleResolver {
 		boolean isBlock(DomNode node);
 
+		default DomNode getContainingBlock(DomNode node) {
+			return node.ancestors().orSelf().match(this::isBlock).orElse(null);
+		}
+
 		boolean isSegmentBoundary(DomNode containingNode);
+
+		/*
+		 * i.e. -not- a TR
+		 */
+		boolean allowsArbitraryInsert(DomNode node);
 	}
 
 	public enum Type {
@@ -219,6 +229,14 @@ public class MeasureOverlay {
 				return range.toShallowestNodes();
 			}
 		},
+		shallowest_insertable {
+			@Override
+			Range adjustLocationDepths(Range range,
+					StyleResolver styleResolver) {
+				return range.toShallowestNodes(n -> n.isText()
+						|| styleResolver.allowsArbitraryInsert(n));
+			}
+		},
 		deepest_non_block {
 			@Override
 			Range adjustLocationDepths(Range range,
@@ -232,32 +250,28 @@ public class MeasureOverlay {
 				return adjusted;
 			}
 
-			Range splitIfNecessary(Range range) {
+			Range splitIfNecessary(Range range, StyleResolver styleResolver) {
 				Location start = range.start;
 				Location end = range.end;
 				if (start.getContainingNode().parent() != end
 						.getContainingNode().parent()) {
-					range.startContainingNode();
-				} else {
-					return super.splitIfNecessary(range);
-				}
-				if (!start.isAtNodeBoundary()) {
-					SplitResult split = start.split();
-					start = split.after.asLocation();
+					DomNode commonContainer = range.getCommonContainingNode();
+					Preconditions.checkState(commonContainer.descendants()
+							.noneMatch(n -> styleResolver.isBlock(n)));
+					start = commonContainer.split(start);
 					end.getIndex();
+					end = commonContainer.split(end);
+					return new Range(start, end);
+				} else {
+					return super.splitIfNecessary(range, styleResolver);
 				}
-				if (!end.isAtNodeBoundary()) {
-					SplitResult split = end.split();
-					end = split.after.asLocation();
-				}
-				return new Range(start, end);
 			}
 		};
 
 		abstract Range adjustLocationDepths(Range truncateAbsolute,
 				StyleResolver styleResolver);
 
-		Range splitIfNecessary(Range range) {
+		Range splitIfNecessary(Range range, StyleResolver styleResolver) {
 			Location start = range.start;
 			Location end = range.end;
 			if (!start.isAtNodeBoundary()) {
@@ -267,7 +281,7 @@ public class MeasureOverlay {
 			}
 			if (!end.isAtNodeBoundary()) {
 				SplitResult split = end.split();
-				end = split.after.asLocation();
+				end = split.contents.asRange().end;
 			}
 			return new Range(start, end);
 		}
@@ -365,12 +379,20 @@ public class MeasureOverlay {
 	void markEndpoints() {
 		Range range = ensureSplitRange();
 		if (endpoints.start != null) {
-			range.start.getContainingNode().relative()
-					.insertBeforeThis(endpoints.start);
+			DomNode containingNode = range.start.getContainingNode();
+			if (containingNode.isText()) {
+				containingNode.relative().insertBeforeThis(endpoints.start);
+			} else {
+				containingNode.children.insertAsFirstChild(endpoints.start);
+			}
 		}
 		if (endpoints.end != null) {
-			range.end.getContainingNode().relative()
-					.insertAfterThis(endpoints.end);
+			DomNode containingNode = range.end.getContainingNode();
+			if (containingNode.isText()) {
+				containingNode.relative().insertAfterThis(endpoints.end);
+			} else {
+				containingNode.children.append(endpoints.end);
+			}
 		}
 	}
 
@@ -398,7 +420,8 @@ public class MeasureOverlay {
 
 	Range ensureSplitRange() {
 		if (splitRange == null) {
-			splitRange = depthStrategy.splitIfNecessary(initialRange);
+			splitRange = depthStrategy.splitIfNecessary(initialRange,
+					styleResolver);
 		}
 		return splitRange;
 	}
