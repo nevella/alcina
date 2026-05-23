@@ -53,7 +53,9 @@ public class Waypoint implements Story.Point {
 
 	protected class SetAttributeImpl
 			implements Story.Decl.ContextModifier.SetAttribute {
-		protected Class<? extends Attribute<String>> key;
+		protected Class<? extends Attribute<?>> key;
+
+		protected Class<?> valueType;
 
 		protected String value;
 
@@ -63,13 +65,18 @@ public class Waypoint implements Story.Point {
 		}
 
 		@Override
-		public Class<? extends Attribute<String>> key() {
+		public Class<? extends Attribute<?>> key() {
 			return key;
 		}
 
 		@Override
 		public String value() {
 			return value;
+		}
+
+		@Override
+		public Class<?> valueType() {
+			return valueType;
 		}
 	}
 

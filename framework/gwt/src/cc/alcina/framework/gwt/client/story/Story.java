@@ -1036,14 +1036,16 @@ public interface Story {
 		public interface ContextModifier {
 			/**
 			 * Set a context attribute. This will be visible for the point and
-			 * all child points
+			 * all child points (but *not* successors)
 			 */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
 			@Repeatable(SetAttribute.Multiple.class)
 			public @interface SetAttribute {
-				Class<? extends Attribute<String>> key();
+				Class<? extends Attribute<?>> key();
+
+				Class<?> valueType() default String.class;
 
 				String value();
 

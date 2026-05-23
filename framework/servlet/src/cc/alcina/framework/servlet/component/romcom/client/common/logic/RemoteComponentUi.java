@@ -7,7 +7,6 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeJso;
@@ -26,7 +25,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -252,12 +250,6 @@ public class RemoteComponentUi {
 
 	NodeJso getNodeByAttachId(int attachId) {
 		return LocalDom.getNodeByAttachId(attachId);
-	}
-
-	void dispatchEvent(String serializedEvent) {
-		DomEventData eventData = ReflectiveSerializer
-				.deserialize(serializedEvent);
-		LocalDom.dispatchBrowserDomEvent(eventData);
 	}
 
 	/**

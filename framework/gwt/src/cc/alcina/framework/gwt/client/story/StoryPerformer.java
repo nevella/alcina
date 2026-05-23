@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ContextObservable;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.story.Story.Action;
 import cc.alcina.framework.gwt.client.story.Story.Action.Annotate;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
@@ -165,6 +166,9 @@ public class StoryPerformer {
 		void perform(Story.Action.Context context, A action) throws Exception;
 	}
 
+	public static interface Timeout extends Story.Attribute<Integer> {
+	}
+
 	public static class ActionPerformed implements ContextObservable {
 		public Context context;
 
@@ -236,8 +240,15 @@ public class StoryPerformer {
 			context.visit = visit;
 			contextAttributes.forEach(attr -> {
 				if (add) {
-					context.setAttribute(attr.key(), attr.value());
+					Ax.err("context-add: %s", attr.key());
+					String stringValue = attr.value();
+					Object value = stringValue;
+					if (attr.valueType() == int.class) {
+						value = Integer.parseInt(stringValue);
+					}
+					context.setAttribute((Class) attr.key(), value);
 				} else {
+					Ax.err("context-remove: %s", attr.key());
 					context.removeAttribute(attr.key());
 				}
 			});
