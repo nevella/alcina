@@ -113,8 +113,8 @@ public abstract class MergeInputNode extends MeasureSelection {
 
 	String contentString() {
 		if (contentString == null) {
-			contentString = get().containingNode().isText() ? get().ntc()
-					: get().containingNode().name();
+			contentString = get().startContainingNode().isText() ? get().ntc()
+					: get().startContainingNode().name();
 		}
 		return contentString;
 	}

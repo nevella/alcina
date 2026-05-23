@@ -50,7 +50,12 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * <li>This allows a non-batched, roughly o(1) mutable location ordering system
  * <li>Note that for sequential removals, the optimisation to 'calculate
  * location coords from treeprevious if treeprevious is current' is key
+ * <li>Note that if there are -lots- of mutations, it's important to order the
+ * mutations to allow {@link CumulativeMutation} to assist in keeping things
+ * O(1) - basically, traverse forwards, reset, and if you're mutating a subtree,
+ * ensure the locations before mutating
  * </ul>
+ * 
  * <p>
  * Debugging
  * 
@@ -493,6 +498,9 @@ class TrackingLocationContext implements LocationContext {
 			}
 			if (currentMutation == null
 					|| !currentMutation.extendWith(mutation)) {
+				if (mutations.size() > 0) {
+					cumulativeMutation.extend(Ax.last(mutations));
+				}
 				currentMutation = new IndexMutation(
 						TrackingLocationContext.this);
 				mutations.add(currentMutation);
@@ -517,6 +525,90 @@ class TrackingLocationContext implements LocationContext {
 	List<IndexMutation> mutations;
 
 	IndexMutation currentMutation;
+
+	CumulativeMutation cumulativeMutation;
+
+	/**
+	 * This tracks the sum of all mutations *except* the current mutation
+	 */
+	class CumulativeMutation {
+		int fromMutationIndex = mutations.size();
+
+		/*
+		 * valid for any mutation index gte fromMutationIndex
+		 */
+		IndexTuple undamagedBefore;
+
+		/*
+		 * valid for any location with mutation index eq fromMutationIndex
+		 */
+		IndexTuple undamagedAfter;
+
+		/*
+		 * the cumulative delta
+		 */
+		IndexTuple cumulativeDelta = IndexTuple.zero;
+
+		/**
+		 * 
+		 * Note that I haven't really thought through edge cases here - i.e. if
+		 * changes are right on the boundary. Note that the logic can be tested
+		 * by making applyPriorMutations run both code paths and check equality
+		 * 
+		 * @param mutatingPointRef
+		 * @return the updated if the mutatingPointRef was updateable, otherwise
+		 *         null;
+		 */
+		IndexTuple update(IndexTuple mutatingPointRef) {
+			if (mutatingPointRef == null) {
+				return null;
+			}
+			if (undamagedBefore == null) {
+				return null;
+			}
+			if (undamagedBefore.isAffectedBy(mutatingPointRef,
+					cumulativeDelta)) {
+				/*
+				 * no change
+				 */
+				return mutatingPointRef;
+			} else if (mutatingPointRef.isAffectedBy(undamagedAfter,
+					cumulativeDelta)) {
+				return mutatingPointRef.add(cumulativeDelta);
+			} else {
+				return null;
+			}
+		}
+
+		void extend(IndexMutation mutation) {
+			if (mutation == null) {
+				return;
+			}
+			if (undamagedBefore == null) {
+				// first mutation, initialise
+				undamagedBefore = mutation.at;
+				undamagedAfter = mutation.at;
+			}
+			if (undamagedBefore.isAffectedBy(mutation.at, mutation.delta)) {
+				undamagedBefore = mutation.at;
+			} else {
+				/*
+				 * convert the mutation to the baseline coordinates. this works
+				 * because the effect 'outside' the damaged region is cumulative
+				 */
+				IndexTuple baselineMutationAt = mutation.at
+						.subtract(cumulativeDelta);
+				if (!undamagedAfter.isAffectedBy(baselineMutationAt,
+						mutation.delta)) {
+					/*
+					 * the mutation is 'after' the current cumulative boundary
+					 */
+					undamagedAfter = baselineMutationAt;
+				}
+			}
+			cumulativeDelta = cumulativeDelta.add(mutation.delta);
+		}
+	}
 
 	Range documentRange;
 
@@ -607,8 +699,20 @@ class TrackingLocationContext implements LocationContext {
 		/*
 		 * 
 		 */
-		if (!getDocumentRange().toIntPair().contains(index)) {
+		IntPair documentPair = getDocumentRange().toIntPair();
+		if (!documentPair.contains(index)) {
 			return null;
+		}
+		if (index == documentPair.i2) {
+			DomNode cursor = getDocumentElementNode().relative()
+					.lastDescendant();
+			while (true) {
+				if (cursor.isText()) {
+					return cursor.asLocation();
+				} else {
+					cursor = cursor.relative().treePreviousNode();
+				}
+			}
 		}
 		boolean forwards = startAt.getIndex() <= index;
 		int itrCount = 0;
@@ -685,7 +789,18 @@ class TrackingLocationContext implements LocationContext {
 						return result.asLocation();
 					} else {
 						if (child.isText()) {
-							return childRange.start;
+							if (test.isStart() || index > childPair.i1
+									|| index == 0) {
+								return child.asLocation();
+							} else {
+								DomNode cursor = child.relative()
+										.treePreviousNode();
+								while (!cursor.isText()) {
+									cursor = cursor.relative()
+											.treePreviousNode();
+								}
+								return cursor.asLocation();
+							}
 						} else {
 							child.asRange();
 							node = child;
@@ -918,13 +1033,29 @@ class TrackingLocationContext implements LocationContext {
 		IndexTuple initialLocationTuple = location.asIndexTuple();
 		IndexTuple mutatingPointRef = initialLocationTuple
 				.withContainingNode(null);
-		for (int idx = location.documentMutationPosition; idx < mutations
-				.size(); idx++) {
-			IndexMutation indexMutation = mutations.get(idx);
-			mutatingPointRef = indexMutation.applyTo(mutatingPointRef);
+		/* wip */
+		IndexTuple updatedByCumulativeMutation = null;
+		// cumulativeMutation
+		// .update(mutatingPointRef);
+		if (updatedByCumulativeMutation != null) {
+			mutatingPointRef = updatedByCumulativeMutation;
+			// optimised, cumulativeMutation groups all except current
+			if (currentMutation != null) {
+				mutatingPointRef = currentMutation.applyTo(mutatingPointRef);
+			}
+		} else {
+			for (int idx = location.documentMutationPosition; idx < mutations
+					.size(); idx++) {
+				IndexMutation indexMutation = mutations.get(idx);
+				mutatingPointRef = indexMutation.applyTo(mutatingPointRef);
+			}
 		}
 		IndexTuple locationDelta = mutatingPointRef
 				.subtract(initialLocationTuple);
+		// if (Location.debugIndexMutation && locationDelta.index < 0
+		// && initialLocationTuple.start) {
+		// int debug = 3;
+		// }
 		location.applyIndexDelta(locationDelta);
 		if (!locationDelta.isZero()) {
 			flushCurrentMutationIfAffecting(location);
@@ -946,6 +1077,11 @@ class TrackingLocationContext implements LocationContext {
 			n.recomputeLocation();
 		});
 		documentRange = gwtDocument.getDocumentElement().asDomNode().asRange();
+		resetCumulativeMutation();
+	}
+
+	public void resetCumulativeMutation() {
+		cumulativeMutation = new CumulativeMutation();
 	}
 
 	void init() {

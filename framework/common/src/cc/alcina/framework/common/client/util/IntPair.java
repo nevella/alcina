@@ -603,4 +603,8 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 	public IntPair toMinimalNonPoint() {
 		return isPoint() ? new IntPair(i1, i1 + 1) : this;
 	}
+
+	public boolean isBoundary(int index) {
+		return i1 == index || i2 == index;
+	}
 }

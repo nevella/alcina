@@ -1982,14 +1982,53 @@ public class DomNode {
 			}
 			return result;
 		}
+	}
 
-		public class SplitResult {
-			public DomNode before;
-
-			public DomNode contents;
-
-			public DomNode after;
+	public Location split(Location at) {
+		Location cursor = at.toDeepestLocation();
+		while (cursor.getContainingNode() != this) {
+			DomNode containingNode = cursor.getContainingNode();
+			IntPair intPair = containingNode.asRange().toIntPair();
+			if (intPair.isBoundary(at.getIndex())) {
+			} else {
+				if (cursor.isTextNode()) {
+					Text secondText = containingNode.w3cText()
+							.splitText(at.getIndex() - intPair.i1);
+					if (at.isStart()) {
+						// cursor stays
+					} else {
+						cursor = DomNode.from(secondText).asLocation();
+					}
+				} else {
+					/*
+					 * children will already be split
+					 */
+					DomNode splitSubsequent = containingNode.cloneNode(false);
+					containingNode.relative().insertAfterThis(splitSubsequent);
+					Location f_cursor = cursor;
+					List<DomNode> toMove = containingNode.children.nodes
+							.stream()
+							.filter(n -> n.asLocation().compareTo(f_cursor) > 0)
+							.toList();
+					splitSubsequent.children.append(toMove);
+					if (at.isStart()) {
+						// cursor stays
+					} else {
+						cursor = splitSubsequent.asLocation();
+					}
+				}
+			}
+			cursor = cursor.toParentLocation();
 		}
+		return cursor;
+	}
+
+	public class SplitResult {
+		public DomNode before;
+
+		public DomNode contents;
+
+		public DomNode after;
 	}
 
 	public DomNodeTraversal traversal() {

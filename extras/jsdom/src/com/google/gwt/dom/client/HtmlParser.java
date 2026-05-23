@@ -35,7 +35,7 @@ public class HtmlParser {
 	public static final LooseContext.Key CONTEXT_DO_NOT_CLOSE_TO_VALIDATE = LooseContext
 			.key(HtmlParser.class, "CONTEXT_DO_NOT_CLOSE_TO_VALIDATE");
 
-	static final boolean debugCursor = false;
+	public static boolean debugCursor = false;
 
 	public static Element parseMarkup(String markup) {
 		try {

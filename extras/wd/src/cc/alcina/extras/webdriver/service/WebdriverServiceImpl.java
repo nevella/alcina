@@ -1,7 +1,12 @@
 package cc.alcina.extras.webdriver.service;
 
-import org.openqa.selenium.WebDriver;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 
 import cc.alcina.extras.webdriver.WDConfiguration;
@@ -10,6 +15,7 @@ import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.story.TellerContext.Device;
 import cc.alcina.framework.servlet.servlet.wd.WebdriverService;
 
@@ -54,11 +60,56 @@ public class WebdriverServiceImpl implements WebdriverService {
 			exec.getDriver().navigate().to(url);
 		}
 
+		Set<String> skippedEventTypes = new LinkedHashSet<>();
+
 		@Override
 		public void performEvent(DomEventData event) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'performEvent'");
+			String type = event.event.getType();
+			switch (type) {
+			case BrowserEvents.CLICK:
+			case BrowserEvents.KEYUP:
+				break;
+			default:
+				if (skippedEventTypes.add(type)) {
+					Ax.out("Skipped event type: %s", type);
+				}
+				return;
+			}
+			String script = Ax.format("return __alc_getNodeByAttachId(%s);",
+					event.event.getEventTarget().attachId.id);
+			exec.clearBy();
+			int retryCount = 2;
+			while (retryCount-- > 0) {
+				try {
+					WebElement elem = (WebElement) exec.executeScript(script);
+					if (elem == null) {
+						Ax.err("not found: %s",
+								event.event.getEventTarget().attachId);
+						return;
+					}
+					switch (type) {
+					case BrowserEvents.CLICK:
+						elem.click();
+						return;
+					case BrowserEvents.KEYUP:
+						throw new UnsupportedOperationException();
+					// break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+
+		@Override
+		public String getDocumentAttribute(String attrName) {
+			return exec.xpath("//html").getElement().getAttribute(attrName);
 		}
 	}
 }

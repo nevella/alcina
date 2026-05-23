@@ -22,8 +22,8 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.console.ServerConsoleContents;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
 import cc.alcina.framework.servlet.environment.replay.SessionReplay;
+import cc.alcina.framework.servlet.environment.replay.SessionReplay.Phase;
 import cc.alcina.framework.servlet.environment.replay.SessionReplay.State;
-import cc.alcina.framework.servlet.environment.replay.SessionReplay.Status;
 
 @Feature.Ref(Feature_RomcomSessionConsole._Replay.class)
 @Registration({ ServerConsoleContents.class, RomcomSessionDetailPlace.class })
@@ -76,19 +76,20 @@ class RomcomSessionDetailArea
 		}
 	}
 
-	@Directed(tag = "status")
+	@Directed(tag = "state")
 	static class StatusView extends Model.All
-			implements ModelTransform<SessionReplay.Status, StatusView> {
+			implements ModelTransform<SessionReplay.State, StatusView> {
 		List<KeyValue> keyValues = new ArrayList<>();
 
 		@Property.Not
-		Status status;
+		State state;
 
 		@Override
-		public StatusView apply(Status status) {
-			KeyValue.stringValue("Event id", status.currentEventId)
+		public StatusView apply(State state) {
+			KeyValue.stringValue("Event id", state.currentEventIdx)
 					.addTo(keyValues);
-			KeyValue.stringValue("State", status.state).addTo(keyValues);
+			KeyValue.stringValue("Phase", state.phase).addTo(keyValues);
+			KeyValue.stringValue("Message", state.message).addTo(keyValues);
 			return this;
 		}
 	}
@@ -104,7 +105,7 @@ class RomcomSessionDetailArea
 		Heading heading = new Heading("Replay");
 
 		@Directed.Transform(value = StatusView.class)
-		SessionReplay.Status status = new SessionReplay.Status();
+		SessionReplay.State state = new SessionReplay.State();
 
 		Link replay = Link.button(Replay.class);
 
@@ -113,14 +114,14 @@ class RomcomSessionDetailArea
 			NotificationObservable.of("Replaaaay!").publish();
 			replay.setDisabled(true);
 			SessionReplay replay = new SessionReplay(place.sequencePlace);
-			bindings().fromTopic(replay.topicStatusChange)
-					.accept(this::onStatusChange);
+			bindings().fromTopic(replay.topicStateChange)
+					.accept(this::onStateChange);
 			replay.start();
 		}
 
-		void onStatusChange(SessionReplay.Status status) {
-			properties().status().set(status);
-			if (status.state == State.finished) {
+		void onStateChange(SessionReplay.State state) {
+			properties().state().set(state);
+			if (state.phase == Phase.finished) {
 				replay.setDisabled(false);
 			}
 		}

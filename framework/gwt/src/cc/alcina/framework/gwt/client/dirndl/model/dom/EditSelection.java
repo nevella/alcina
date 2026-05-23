@@ -8,8 +8,8 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Selection;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
+import cc.alcina.framework.common.client.dom.DomNode.SplitResult;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;

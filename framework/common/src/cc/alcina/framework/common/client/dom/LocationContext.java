@@ -407,7 +407,7 @@ public interface LocationContext {
 	}
 
 	default String markupContent(Range range) {
-		DomNode node = range.containingNode();
+		DomNode node = range.startContainingNode();
 		if (node.isText()) {
 			return range.text();
 		}

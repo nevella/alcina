@@ -142,11 +142,11 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		}
 	}
 
-	AttachId attachId;
+	public AttachId attachId;
 
-	Type type;
+	public Type type;
 
-	String name;
+	public String name;
 
 	@Reflected
 	public enum Type {
@@ -172,7 +172,7 @@ public class EventTarget implements JavascriptObjectEquivalent {
 			return elementJsoTarget.attached() ? (T) elementJsoTarget.element
 					: null;
 		}
-		ensureAttachIdTarget();
+		ensureAttachIdTarget(false);
 		if (attachIdTarget instanceof ClientDomElement) {
 			return (T) attachIdTarget;
 		}
@@ -181,10 +181,12 @@ public class EventTarget implements JavascriptObjectEquivalent {
 				"Should oonly be called after is() confirms the type");
 	}
 
-	void ensureAttachIdTarget() {
-		if (attachIdTarget == null && attachId != null
-				&& Document.get().remoteType == RemoteType.REF_ID) {
-			attachIdTarget = attachId.node();
+	public void ensureAttachIdTarget(boolean skipDocTypeCheck) {
+		if (attachIdTarget == null && attachId != null) {
+			if (skipDocTypeCheck
+					|| Document.get().remoteType == RemoteType.REF_ID) {
+				attachIdTarget = attachId.node();
+			}
 		}
 	}
 
@@ -196,7 +198,7 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		if (clazz == Element.class && ElementJso.is(nativeTarget)) {
 			return true;
 		}
-		ensureAttachIdTarget();
+		ensureAttachIdTarget(false);
 		if (clazz == Element.class
 				&& attachIdTarget instanceof ClientDomElement) {
 			return true;

@@ -15,6 +15,8 @@
  */
 package com.google.gwt.user.client;
 
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.NativeEventJso;
@@ -23,6 +25,8 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * <p>
@@ -705,4 +709,61 @@ public class Event extends NativeEvent {
 	public boolean isIdenticalTo(Event event) {
 		return getId() != 0 && getId() == event.getId();
 	}
+
+	static boolean cancelDispatchNative = false;
+
+	public void dispatchNativeEvent() {
+		if (cancelDispatchNative) {
+			return;
+		}
+		String eventClassType = "Event";
+		String eventType = getType();
+		String eventJson = "{}";
+		switch (eventType) {
+		case BrowserEvents.MOUSEDOWN:
+		case BrowserEvents.MOUSEUP:
+		case BrowserEvents.CLICK:
+		case BrowserEvents.MOUSEMOVE:
+		case BrowserEvents.MOUSEOUT:
+		case BrowserEvents.MOUSEOVER:
+		case BrowserEvents.MOUSEWHEEL:
+			eventClassType = "MouseEvent";
+			break;
+		case BrowserEvents.FOCUS:
+		case BrowserEvents.FOCUSIN:
+		case BrowserEvents.FOCUSOUT:
+		case BrowserEvents.BLUR:
+			eventClassType = "FocusEvent";
+			break;
+		}
+		Element elem = getEventTarget().asElement();
+		Ax.out("dispatch: %s :: %s :: %s", eventClassType, eventType,
+				elem.toNameAttachId());
+		dispatchNativeEvent0(elem.jsoRemote(), eventClassType, eventType,
+				eventJson);
+		if (elem.toNameAttachId().contains("column-filter")
+				&& eventType.equals("click")) {
+			cancelDispatchNative = true;
+		}
+	}
+
+	final native void dispatchNativeEvent0(JavaScriptObject eventTarget,
+			String eventClassType, String eventType, String eventJson) /*-{
+	var params = JSON.parse(eventJson)
+	var event = null;
+	switch(eventClassType){
+	case "Event":
+		event = new Event(eventType, params);
+		break;
+	case "MouseEvent":
+		event = new MouseEvent(eventType, params);
+		break;
+	case "FocusEvent":
+		event = new FocusEvent(eventType, params);
+		break;
+	default:
+		throw "unrecognised event type"
+	}
+	eventTarget.dispatchEvent(event);
+		}-*/;
 }

@@ -150,12 +150,12 @@ public class PackageProperties {
     static class _RomcomSessionDetailArea_ReplayArea implements TypedProperty.Container {
       TypedProperty<RomcomSessionDetailArea.ReplayArea, Heading> heading = new TypedProperty<>(RomcomSessionDetailArea.ReplayArea.class, "heading");
       TypedProperty<RomcomSessionDetailArea.ReplayArea, Link> replay = new TypedProperty<>(RomcomSessionDetailArea.ReplayArea.class, "replay");
-      TypedProperty<RomcomSessionDetailArea.ReplayArea, SessionReplay.Status> status = new TypedProperty<>(RomcomSessionDetailArea.ReplayArea.class, "status");
+      TypedProperty<RomcomSessionDetailArea.ReplayArea, SessionReplay.State> state = new TypedProperty<>(RomcomSessionDetailArea.ReplayArea.class, "state");
       static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionDetailArea.ReplayArea> {
          InstanceProperties(RomcomSessionDetailArea.ReplayArea source){super(source);}
         InstanceProperty<RomcomSessionDetailArea.ReplayArea, Heading> heading(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea_replayArea.heading);}
         InstanceProperty<RomcomSessionDetailArea.ReplayArea, Link> replay(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea_replayArea.replay);}
-        InstanceProperty<RomcomSessionDetailArea.ReplayArea, SessionReplay.Status> status(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea_replayArea.status);}
+        InstanceProperty<RomcomSessionDetailArea.ReplayArea, SessionReplay.State> state(){return new InstanceProperty<>(source,PackageProperties.romcomSessionDetailArea_replayArea.state);}
       }
       
        InstanceProperties instance(RomcomSessionDetailArea.ReplayArea instance) {

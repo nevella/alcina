@@ -56,7 +56,10 @@ public class RemoteComponentEvent
 
 	@Override
 	public String provideDetail() {
-		return Ax.format("%s --> %s",
+		request.messageEnvelope.toMessageIdsString();
+		return Ax.format("[%s --> %s] %s --> %s",
+				request.messageEnvelope.toMessageIdsString(),
+				response.messageEnvelope.toMessageIdsString(),
 				request.messageEnvelope.toMessageSummaryString(),
 				response.messageEnvelope.toMessageSummaryString());
 	}

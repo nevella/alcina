@@ -748,7 +748,7 @@ public class DomDocument extends DomNode implements Cloneable {
 		return locationContext instanceof TrackingLocationContext;
 	}
 
-	public DomNode creeateElement(String tagName) {
+	public DomNode createElement(String tagName) {
 		return DomNode.from(w3cDoc().createElement(tagName));
 	}
 
