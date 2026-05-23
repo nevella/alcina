@@ -112,7 +112,8 @@ public abstract class FragmentNode extends Model.Fields
 		return childNodes == null ? Stream.empty()
 				: (Stream<FragmentNode>) (Stream<?>) childNodes.stream()
 						.filter(n -> n.getModel() instanceof FragmentNode)
-						.map(Node::getModel);
+						.map(Node::getModel).filter(fn -> ((FragmentNode) fn)
+								.domNode().isAttached());
 	}
 
 	public void copyFromExternal(FragmentNode external) {
@@ -243,6 +244,8 @@ public abstract class FragmentNode extends Model.Fields
 
 	/*
 	 * FIXME - remove
+	 * 
+	 * Also fixme - at least in some cases this doesn't track removal
 	 */
 	public NotifyingList<Node> provideChildNodes() {
 		return isDetached() ? new NotifyingList<>(new ArrayList<>())

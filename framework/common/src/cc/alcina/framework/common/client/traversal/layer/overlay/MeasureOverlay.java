@@ -222,6 +222,13 @@ public class MeasureOverlay {
 	 * How should the overlay split its boundary points?
 	 */
 	public enum DepthStrategy {
+		deepest {
+			@Override
+			Range adjustLocationDepths(Range range,
+					StyleResolver styleResolver) {
+				return range.toDeepestStartEndNode();
+			}
+		},
 		shallowest {
 			@Override
 			Range adjustLocationDepths(Range range,
@@ -237,7 +244,7 @@ public class MeasureOverlay {
 						|| styleResolver.allowsArbitraryInsert(n));
 			}
 		},
-		deepest_non_block {
+		shallowest_non_block {
 			@Override
 			Range adjustLocationDepths(Range range,
 					StyleResolver styleResolver) {
