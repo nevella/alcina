@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -388,5 +389,13 @@ public class Measure extends Location.Range {
 	 */
 	public Measure truncateMeasureToIndexEnd(int endIndex) {
 		return Measure.fromRange(truncateToIndexEnd(endIndex), token);
+	}
+
+	public DomNode startContainingNodeExEnd() {
+		Location test = start;
+		if (test.isAtNodeEnd()) {
+			test = test.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
+		}
+		return test.getContainingNode();
 	}
 }
