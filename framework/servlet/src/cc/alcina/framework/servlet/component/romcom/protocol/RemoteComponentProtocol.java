@@ -547,12 +547,13 @@ public class RemoteComponentProtocol {
 
 		public Map<String, String> properties = new LinkedHashMap<>();
 
+		public long startTime;
+
+		public int shimBytes;
+
 		// ipv4 address
 		@Property.Not
 		public transient String remoteAddress;
-
-		@Property.Not
-		public transient long startTime;
 
 		public boolean provideIsLocalHost() {
 			return Objects.equals(remoteAddress, "127.0.0.1");

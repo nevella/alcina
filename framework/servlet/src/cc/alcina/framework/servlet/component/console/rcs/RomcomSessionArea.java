@@ -19,6 +19,7 @@ import cc.alcina.framework.servlet.logging.FlightEventRecorder;
 @Feature.Ref(Feature_RomcomSessionConsole.class)
 @Feature.Ref(Feature_RomcomSessionConsole._Dashboard.class)
 @Feature.Ref(Feature_RomcomSessionConsole._Canned.class)
+@Feature.Ref(Feature_RomcomSessionConsole._Performance.class)
 @Registration({ ServerConsoleContents.class, RomcomSessionPlace.class })
 @TypedProperties
 class RomcomSessionArea extends ServerConsoleContents<RomcomSessionPlace>

@@ -1563,6 +1563,7 @@ body > page > server-console-area > romcom-session-detail.server-console > headi
   display: block;
 }
 body > page > server-console-area > romcom-session-detail.server-console > metadata {
+  margin: 1.2rem;
   display: grid;
   column-gap: 1rem;
   grid-template-columns: min-content min-content;

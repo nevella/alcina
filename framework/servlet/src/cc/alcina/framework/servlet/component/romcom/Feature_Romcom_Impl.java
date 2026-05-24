@@ -68,4 +68,29 @@ public interface Feature_Romcom_Impl extends Feature {
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _StringProtocol extends Feature {
 	}
+
+	/**
+	 * <ul>
+	 * <li>Optimise various metrics (time to first paint, bytes to first paint.)
+	 * <li>The metrics themselves are computed in RomcomSessionEntry
+	 * <li>Page opts
+	 * <ul>
+	 * <li>Client should elide/mark the script in the head tag
+	 * </ul>
+	 * <li>Event opts
+	 * <ul>
+	 * <li>Specify max continuous-gesture (scroll, mousemove) event collation
+	 * </ul>
+	 * <li>Protocol opts
+	 * <ul>
+	 * <li>Make types final where possible to reduce type info
+	 * <li>Session should be only id/auth post 1st msg
+	 * <li>use default collections (e.g. arraylist)
+	 * <li>(Later) zip client -- server
+	 * </ul>
+	 * </ul>
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _Performance extends Feature {
+	}
 }

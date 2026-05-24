@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -167,6 +169,10 @@ public class RemoteComponentHandler {
 		}
 	}
 
+	volatile String nocacheJs;
+
+	String shimJs;
+
 	public void serveFile(HttpServletRequest request,
 			HttpServletResponse response,
 			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser,
@@ -181,6 +187,26 @@ public class RemoteComponentHandler {
 		if (url == null) {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
+		}
+		URL nocacheJsUrl = getResourceUrl(
+				"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.nocache.js");
+		if (nocacheJs == null) {
+			synchronized (this) {
+				if (nocacheJs == null) {
+					String nocacheJs = Io.read()
+							.fromStream(nocacheJsUrl.openStream()).asString();
+					Pattern pattern = Pattern.compile("strongName = '(.+)';");
+					Matcher matcher = pattern.matcher(nocacheJs);
+					matcher.find();
+					String strongName = matcher.group(1);
+					URL shimUrl = getResourceUrl(Ax.format(
+							"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/%s.cache.js",
+							strongName));
+					shimJs = Io.read().fromStream(shimUrl.openStream())
+							.asString();
+					this.nocacheJs = nocacheJs;
+				}
+			}
 		}
 		if (addOriginHeaders) {
 			boolean isSecureLocalhost = Ax.matches(request.getHeader("host"),
@@ -226,6 +252,7 @@ public class RemoteComponentHandler {
 						.map(n -> Ax.format("%s=%s", n, request.getHeader(n)))
 						.collect(Collectors.toList());
 				session = component.createEnvironment(request, response);
+				session.shimBytes = shimJs.length();
 				logger.info("Created environment - {} ", session);
 				logger.debug("Environment headers - {} - http headers: {}",
 						session, headers);
@@ -236,10 +263,6 @@ public class RemoteComponentHandler {
 			if (session != null) {
 				String sessionJson = StringEscapeUtils.escapeJavaScript(
 						ReflectiveSerializer.serializeForRpc(session));
-				URL nocacheJsUrl = getResourceUrl(
-						"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.nocache.js");
-				String nocacheJs = Io.read()
-						.fromStream(nocacheJsUrl.openStream()).asString();
 				String websocketTransportClientPrefix = featurePath.isEmpty()
 						? ""
 						: featurePath.substring(1) + "/";
