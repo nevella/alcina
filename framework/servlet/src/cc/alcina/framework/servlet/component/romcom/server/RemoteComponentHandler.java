@@ -195,10 +195,25 @@ public class RemoteComponentHandler {
 				if (nocacheJs == null) {
 					String nocacheJs = Io.read()
 							.fromStream(nocacheJsUrl.openStream()).asString();
-					Pattern pattern = Pattern.compile("strongName = '(.+)';");
-					Matcher matcher = pattern.matcher(nocacheJs);
-					matcher.find();
-					String strongName = matcher.group(1);
+					String strongName = null;
+					{
+						Pattern prettyPattern = Pattern
+								.compile("strongName = '(.+)';");
+						Matcher matcher = prettyPattern.matcher(nocacheJs);
+						if (matcher.find()) {
+							strongName = matcher.group(1);
+							// Jb='cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.devmode.js',Kb='2C8B9711C4E7240A1E45052EAD344CC2'
+						}
+					}
+					if (strongName == null) {
+						Pattern obfPattern = Pattern.compile(
+								"[A-Za-z]+='cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.devmode.js',[A-Za-z]+='(.+?)',");
+						Matcher matcher = obfPattern.matcher(nocacheJs);
+						if (matcher.find()) {
+							strongName = matcher.group(1);
+							// Jb='cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.devmode.js',Kb='2C8B9711C4E7240A1E45052EAD344CC2'
+						}
+					}
 					URL shimUrl = getResourceUrl(Ax.format(
 							"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/%s.cache.js",
 							strongName));

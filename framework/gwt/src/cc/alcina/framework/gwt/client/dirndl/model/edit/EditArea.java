@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.behavior.EditAreaBehavior;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 

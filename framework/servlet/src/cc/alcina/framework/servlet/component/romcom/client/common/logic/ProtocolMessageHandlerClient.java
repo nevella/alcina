@@ -16,6 +16,7 @@ import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -188,13 +189,15 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				try {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = true;
-					History.CONTEXT_REPLACING.runWith(
-							() -> History.newItem(
-									HistoryImplDelegate.pushStateEnabled
-											? mutations.locationMutation.path
-											: mutations.locationMutation.hash),
-							mutations.locationMutation.replace);
+					LooseContext.push();
+					History.CONTEXT_REPLACING
+							.set(mutations.locationMutation.replace);
+					History.CONTEXT_SKIP_ENCODING.setTrue();
+					History.newItem(HistoryImplDelegate.pushStateEnabled
+							? mutations.locationMutation.path
+							: mutations.locationMutation.hash);
 				} finally {
+					LooseContext.pop();
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = false;
 				}

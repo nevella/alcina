@@ -21,6 +21,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
 
 @Feature.Ref(Feature_RomcomSessionConsole._Performance.class)
@@ -64,6 +65,8 @@ public class RomcomSessionEntry extends Bindable.Fields
 
 	int shimBytes;
 
+	String stringProtocolCache;
+
 	RomcomSessionEntry() {
 	}
 
@@ -101,6 +104,11 @@ public class RomcomSessionEntry extends Bindable.Fields
 		RemoteComponentEvent firstEvent = remoteComponentEvents().findFirst()
 				.get();
 		long sessionStartTime = firstEvent.request.session.startTime;
+		Message first = firstEvent.request.messageEnvelope.messages.get(0);
+		if (first instanceof Message.Startup) {
+			Message.Startup startup = (Startup) first;
+			stringProtocolCache = startup.stringMetadata.toMetadataString();
+		}
 		Date startupMessageSent = firstEvent.request.messageEnvelope.transportHistories
 				.get(0).sent;
 		timeFromSessionStartToStartupMessageEmittedClient = startupMessageSent

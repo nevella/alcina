@@ -78,6 +78,9 @@ public class History implements ContextFrame {
 	public static LooseContext.Key CONTEXT_REPLACING = LooseContext
 			.key(History.class, "CONTEXT_REPLACING");
 
+	public static LooseContext.Key CONTEXT_SKIP_ENCODING = LooseContext
+			.key(History.class, "CONTEXT_SKIP_ENCODING");
+
 	public static Function<String, String> tokenInterceptor = null;
 
 	/**
@@ -204,7 +207,8 @@ public class History implements ContextFrame {
 		}
 		if (!historyToken.equals(getToken())) {
 			get().token = historyToken;
-			String updateToken = encodeHistoryToken(historyToken);
+			String updateToken = CONTEXT_SKIP_ENCODING.is() ? historyToken
+					: encodeHistoryToken(historyToken);
 			get().impl.newToken(updateToken);
 			if (issueEvent) {
 				get().historyEventSource.fireValueChangedEvent(historyToken);

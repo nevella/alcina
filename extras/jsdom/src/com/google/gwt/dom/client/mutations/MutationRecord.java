@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.ClientDomElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.HtmlParser;
 import com.google.gwt.dom.client.IdProtocolList;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.MutationRecordJso;
@@ -17,6 +18,7 @@ import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -213,6 +215,17 @@ public final class MutationRecord {
 		} finally {
 			MutationRecord.deltaFlag(flag, false);
 			LooseContext.pop();
+		}
+	}
+
+	public DomNode additionAsDomNode() {
+		if (type == Type.innerMarkup) {
+			String nodeName = target.getNodeName();
+			return HtmlParser.parseMarkup(
+					Ax.format("<%s>%s</%s>", nodeName, newValue, nodeName))
+					.asDomNode();
+		} else {
+			return null;
 		}
 	}
 

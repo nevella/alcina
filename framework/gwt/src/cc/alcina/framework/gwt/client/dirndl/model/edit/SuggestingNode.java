@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.List;
 
 import com.google.gwt.dom.client.Selection;
+import com.google.gwt.dom.client.behavior.EditAreaBehavior;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;

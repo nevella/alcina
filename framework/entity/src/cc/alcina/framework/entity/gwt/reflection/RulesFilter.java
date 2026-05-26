@@ -60,9 +60,6 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 	@Override
 	public boolean permit(Type type) {
 		Optional<Rule> match = getMatch(type);
-		if (type.nameContains("ShopxTopModel")) {
-			int debug = 3;
-		}
 		if (match.isPresent()) {
 			return match.get().action() == Action.INCLUDE;
 		}
@@ -118,7 +115,8 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 		public Optional<Rule> match(Type type) {
 			TypeHierarchy hierarchy = reflectableTypes.byType.get(type);
 			if (condition.packageName().length() > 0) {
-				if (hierarchy.packageName.startsWith(condition.packageName())) {
+				if (hierarchy != null && hierarchy.packageName
+						.startsWith(condition.packageName())) {
 					return Optional.of(rule);
 				}
 			}

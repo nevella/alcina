@@ -37,8 +37,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.Intersection;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
@@ -195,8 +195,8 @@ public class ReflectionReachabilityLinker extends Linker {
 					compilationResults);
 			typesFile = ReachabilityData
 					.getReachabilityFile("reachability.json");
-			typesReasonsFile = ReachabilityData
-					.getReachabilityFile("reachability-reasons.json");
+			typesReasonsFile = ReachabilityData.getReachabilityFile(
+					Ax.format("reachability-reasons-%s.json", pass));
 			moduleTypes = ReachabilityData.deserialize(ModuleTypes.class,
 					typesFile);
 			appRegistrations = AppImplRegistrations.fromArtifact(artifacts);

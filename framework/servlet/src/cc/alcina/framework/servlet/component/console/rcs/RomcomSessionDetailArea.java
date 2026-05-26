@@ -69,6 +69,8 @@ class RomcomSessionDetailArea
 					.addTo(keyValues);
 			KeyValue.stringValue("Startup bytes", entry.startupBytes)
 					.addTo(keyValues);
+			KeyValue.stringValue("String protocol", entry.stringProtocolCache)
+					.addTo(keyValues);
 		}
 	}
 

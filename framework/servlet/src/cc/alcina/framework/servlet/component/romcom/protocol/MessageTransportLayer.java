@@ -126,7 +126,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class MessageId implements Comparable<MessageId> {
+	public final static class MessageId implements Comparable<MessageId> {
 		public SendChannelId sendChannelId;
 
 		public int number;
@@ -167,7 +167,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class EnvelopeId implements Comparable<EnvelopeId> {
+	public final static class EnvelopeId implements Comparable<EnvelopeId> {
 		public static int nullAwareCompare(EnvelopeId o1, EnvelopeId o2) {
 			return CommonUtils.compareWithNullMinusOne(o1, o2);
 		}
@@ -212,7 +212,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class TransportHistory {
+	public final static class TransportHistory {
 		public MessageId messageId;
 
 		/*
@@ -356,7 +356,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class MessageEnvelope {
+	public final static class MessageEnvelope {
 		public EnvelopeId envelopeId;
 
 		public Date dateSent;

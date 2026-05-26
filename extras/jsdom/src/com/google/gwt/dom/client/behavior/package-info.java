@@ -17,5 +17,9 @@
  * registered is a question for -either- the element (if it say has specific
  * attributes) or the UI framework (Dirndl) (if the model, say, implements a
  * marker interface)
+ * 
+ * <p>
+ * Note that alcina behaviors should *not* go in the dirndl package, rather here
+ * - since dirndl is pruned from the romcom client build
  */
 package com.google.gwt.dom.client.behavior;

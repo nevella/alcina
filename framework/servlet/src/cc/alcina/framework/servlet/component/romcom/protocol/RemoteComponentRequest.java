@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
 
 @Bean(PropertySource.FIELDS)
-public class RemoteComponentRequest {
+public final class RemoteComponentRequest {
 	public RemoteComponentProtocol.Session session;
 
 	public MessageEnvelope messageEnvelope;
