@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  */
 @Bean(PropertySource.FIELDS)
-public class LocationMutation {
+public final class LocationMutation {
 	public boolean replace;
 
 	public static LocationMutation ofWindow(boolean startup) {

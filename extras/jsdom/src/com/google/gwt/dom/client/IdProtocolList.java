@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.reflection.Property;
  * TODO - some unit tests
  */
 @Bean(PropertySource.FIELDS)
-public class IdProtocolList {
+public final class IdProtocolList {
 	static final int PROTOCOL_0_SPECIAL = 0;
 
 	/*

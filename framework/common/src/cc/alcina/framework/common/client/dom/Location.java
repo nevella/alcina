@@ -448,7 +448,7 @@ public class Location implements Comparable<Location> {
 
 		/*
 		 * Preserves start.index and end.index, but changes treeindicies to that
-		 * of the lowest node containing each index
+		 * of the lowest node containing each index (i.e. the text nodes)
 		 */
 		public Range toDeepestStartEndNode() {
 			List<DomNode> startContainers = start.getLocationContext()

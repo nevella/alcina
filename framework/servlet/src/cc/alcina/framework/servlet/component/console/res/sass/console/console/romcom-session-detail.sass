@@ -17,6 +17,7 @@
     @include heading.panel-3
 
   > metadata
+    margin: 1.2rem
     @include key-value.container
 
   > replay
@@ -55,6 +56,14 @@
 
     > sequence > table
       background: white
+
+    > detail 
+      remote-component-event-detail
+        @include key-value.container
+
+        links
+          display: block
+          margin-top: 1rem
 
 
       

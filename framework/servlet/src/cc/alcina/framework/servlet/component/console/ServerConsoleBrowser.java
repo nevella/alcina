@@ -2,19 +2,19 @@ package cc.alcina.framework.servlet.component.console;
 
 import java.util.Set;
 
-import cc.alcina.framework.servlet.component.console.home.ServerConsoleHomePlace;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlace;
-import cc.alcina.framework.gwt.client.place.BasePlace.HrefProvider;
+import cc.alcina.framework.servlet.component.console.ServerConsoleBrowser.CacheableStringProviderImpl.StylesheetProvider;
+import cc.alcina.framework.servlet.component.console.home.ServerConsoleHomePlace;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.IsDomain;
 import cc.alcina.framework.servlet.environment.AbstractUi;
@@ -43,6 +43,8 @@ public class ServerConsoleBrowser {
 
 	@TypedProperties
 	static class Ui extends AbstractUi<ServerConsolePlace> implements DomainUi {
+		static final String STYLES_RESOURCE_PATH = "res/css/styles.css";
+
 		PackageProperties._ServerConsoleBrowser_Ui.InstanceProperties
 				subtypeProperties() {
 			return PackageProperties.serverConsoleBrowser_ui.instance(this);
@@ -91,7 +93,7 @@ public class ServerConsoleBrowser {
 
 		@Override
 		protected DirectedLayout render0() {
-			injectCss("res/css/styles.css");
+			injectCssText(new StylesheetProvider().getValue());
 			Client.get().initAppHistory();
 			DirectedLayout layout = new DirectedLayout();
 			layout.render(resolver(), new RootArea()).getRendered()
@@ -111,6 +113,31 @@ public class ServerConsoleBrowser {
 		public Set<Class<? extends cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext>>
 				getAppCommandContexts() {
 			return Set.of(CommandContext.class);
+		}
+
+		public Class<? extends StringProtocol.CacheableStringProvider>
+				getCacheableStringProviderClass() {
+			return CacheableStringProviderImpl.class;
+		}
+	}
+
+	@Registration(CacheableStringProviderImpl.class)
+	public static interface CacheableStringProviderImpl extends
+			RemoteUi.CacheableStringProviderHash, Registration.AllSubtypes {
+		static class StylesheetProvider implements CacheableStringProviderImpl {
+			StylesheetProvider() {
+			}
+
+			@Override
+			public String getKey() {
+				return "stylesheet";
+			}
+
+			@Override
+			public String getValue() {
+				return getPreferCached(() -> Io.read()
+						.resource(Ui.STYLES_RESOURCE_PATH).asString());
+			}
 		}
 	}
 

@@ -1563,6 +1563,7 @@ body > page > server-console-area > romcom-session-detail.server-console > headi
   display: block;
 }
 body > page > server-console-area > romcom-session-detail.server-console > metadata {
+  margin: 1.2rem;
   display: grid;
   column-gap: 1rem;
   grid-template-columns: min-content min-content;
@@ -2159,6 +2160,22 @@ body > page > server-console-area > romcom-session-detail.server-console > seque
 }
 body > page > server-console-area > romcom-session-detail.server-console > sequence-component > sequence > table {
   background: white;
+}
+body > page > server-console-area > romcom-session-detail.server-console > sequence-component > detail remote-component-event-detail {
+  display: grid;
+  column-gap: 1rem;
+  grid-template-columns: min-content min-content;
+  white-space: nowrap;
+}
+body > page > server-console-area > romcom-session-detail.server-console > sequence-component > detail remote-component-event-detail > key-value {
+  display: contents;
+}
+body > page > server-console-area > romcom-session-detail.server-console > sequence-component > detail remote-component-event-detail > key-value > key {
+  font-weight: bold;
+}
+body > page > server-console-area > romcom-session-detail.server-console > sequence-component > detail remote-component-event-detail links {
+  display: block;
+  margin-top: 1rem;
 }
 body > page > server-console-area[compact-report-ui] > .report table.metadata, body > page > server-console-area[compact-report-ui] > .report about {
   display: none;

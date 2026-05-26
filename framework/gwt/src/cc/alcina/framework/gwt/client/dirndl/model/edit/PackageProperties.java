@@ -23,6 +23,7 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    public static _CheckboxInput checkboxInput = new _CheckboxInput();
     public static _ChoiceEditor choiceEditor = new _ChoiceEditor();
     static _ChoiceEditor_ChoiceNode choiceEditor_choiceNode = new _ChoiceEditor_ChoiceNode();
     public static _ChoicesEditorMultiple choicesEditorMultiple = new _ChoicesEditorMultiple();
@@ -36,6 +37,19 @@ public class PackageProperties {
     public static _StringInput_DateInput stringInput_dateInput = new _StringInput_DateInput();
     public static _StringInput_Editor stringInput_editor = new _StringInput_Editor();
     public static _SuggestingNode suggestingNode = new _SuggestingNode();
+    
+    public static class _CheckboxInput implements TypedProperty.Container {
+      public TypedProperty<CheckboxInput, Boolean> value = new TypedProperty<>(CheckboxInput.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<CheckboxInput> {
+        public  InstanceProperties(CheckboxInput source){super(source);}
+        public InstanceProperty<CheckboxInput, Boolean> value(){return new InstanceProperty<>(source,PackageProperties.checkboxInput.value);}
+      }
+      
+      public  InstanceProperties instance(CheckboxInput instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
     
     public static class _ChoiceEditor implements TypedProperty.Container {
       public TypedProperty<ChoiceEditor, Boolean> changeOnSelectionEvent = new TypedProperty<>(ChoiceEditor.class, "changeOnSelectionEvent");

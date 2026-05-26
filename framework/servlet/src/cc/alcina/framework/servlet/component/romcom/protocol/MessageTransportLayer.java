@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -125,7 +126,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class MessageId implements Comparable<MessageId> {
+	public final static class MessageId implements Comparable<MessageId> {
 		public SendChannelId sendChannelId;
 
 		public int number;
@@ -166,7 +167,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class EnvelopeId implements Comparable<EnvelopeId> {
+	public final static class EnvelopeId implements Comparable<EnvelopeId> {
 		public static int nullAwareCompare(EnvelopeId o1, EnvelopeId o2) {
 			return CommonUtils.compareWithNullMinusOne(o1, o2);
 		}
@@ -211,7 +212,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class TransportHistory {
+	public final static class TransportHistory {
 		public MessageId messageId;
 
 		/*
@@ -355,7 +356,7 @@ public abstract class MessageTransportLayer {
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class MessageEnvelope {
+	public final static class MessageEnvelope {
 		public EnvelopeId envelopeId;
 
 		public Date dateSent;
@@ -398,6 +399,11 @@ public abstract class MessageTransportLayer {
 		public String toMessageIdsString() {
 			return messages.stream().map(m -> "#" + m.messageId.number)
 					.collect(Collectors.joining(","));
+		}
+
+		public boolean contains(Class<? extends Message> messageClass) {
+			return messages.stream().anyMatch(m -> Reflections
+					.isAssignableFrom(messageClass, m.getClass()));
 		}
 	}
 

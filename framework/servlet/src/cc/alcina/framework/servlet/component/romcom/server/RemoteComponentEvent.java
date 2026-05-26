@@ -17,7 +17,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
  * A request/response pair for flightrecording
  */
 @Bean(PropertySource.FIELDS)
-public class RemoteComponentEvent
+public final class RemoteComponentEvent
 		implements GlobalObservable.Debug, FlightEventWrappable {
 	public long start;
 

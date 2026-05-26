@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.MutationRecord.DehydratedValue;
@@ -92,6 +93,8 @@ public class StringProtocol {
 
 			public String valueHash;
 
+			public int length;
+
 			public Key key;
 
 			public Entry() {
@@ -101,12 +104,14 @@ public class StringProtocol {
 				this.key = key;
 				this.value = value;
 				this.valueHash = valueHash;
+				this.length = value.length();
 			}
 
 			Entry toMetadata() {
 				Entry result = new Entry();
 				result.key = key;
 				result.valueHash = valueHash;
+				result.length = length;
 				return result;
 			}
 
@@ -282,6 +287,12 @@ public class StringProtocol {
 		public boolean containsAndIsValid(Entry serverEntry) {
 			return metadataEntries.stream()
 					.anyMatch(e -> e.isMatchesMetadata(serverEntry));
+		}
+
+		public String toMetadataString() {
+			return metadataEntries.stream()
+					.map(FlatTreeSerializer::serializeSingleLine)
+					.collect(Collectors.joining("\n"));
 		}
 	}
 

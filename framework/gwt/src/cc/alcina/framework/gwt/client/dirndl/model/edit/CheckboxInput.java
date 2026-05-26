@@ -1,8 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.Objects;
-
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -41,9 +40,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 	emits = { ModelEvents.Change.class })
 @Registration({ Model.Value.class, FormModel.Editor.class, Boolean.class })
 @Registration({ Model.Value.class, FormModel.Editor.class, boolean.class })
+@TypedProperties
 public class CheckboxInput extends Model.Value<Boolean>
 		implements DomEvents.Change.Handler {
-	public static final transient String VALUE = "value";
+	public PackageProperties._CheckboxInput.InstanceProperties properties() {
+		return PackageProperties.checkboxInput.instance(this);
+	}
 
 	private Boolean value;
 
@@ -68,7 +70,7 @@ public class CheckboxInput extends Model.Value<Boolean>
 
 	@Override
 	public void setValue(Boolean value) {
-		set(VALUE, this.value, value, () -> this.value = value);
+		set("value", this.value, value, () -> this.value = value);
 	}
 
 	public static class To implements ModelTransform<Boolean, CheckboxInput> {

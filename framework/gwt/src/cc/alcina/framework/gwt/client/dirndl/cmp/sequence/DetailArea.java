@@ -26,7 +26,7 @@ class DetailArea extends Model.Fields {
 	@BeanForm.Classes({ ClassName.vertical })
 	Object transformedSequenceElement;
 
-	@Directed(tag = "properties", bindToModel = false)
+	@Directed(tag = "properties")
 	Object transformedAdditional;
 
 	@Directed(tag = "string-representation")

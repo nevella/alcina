@@ -55,6 +55,22 @@ class RomcomSessionDetailArea
 			KeyValue.stringValue("End", entry.end).addTo(keyValues);
 			KeyValue.stringValue("Marked", entry.marked).addTo(keyValues);
 			KeyValue.stringValue("Exception", entry.exception).addTo(keyValues);
+			KeyValue.stringValue("Time to startup message",
+					entry.timeFromSessionStartToStartupMessageEmittedClient)
+					.addTo(keyValues);
+			KeyValue.stringValue("Time startup to first paint",
+					entry.timeFromStartupMessageEmittedClientToFirstMutationRendered)
+					.addTo(keyValues);
+			KeyValue.stringValue("Time to first paint",
+					entry.timeFromStartupMessageEmittedClientToFirstMutationRendered
+							+ entry.timeFromSessionStartToStartupMessageEmittedClient)
+					.addTo(keyValues);
+			KeyValue.stringValue("Shim bytes", entry.shimBytes)
+					.addTo(keyValues);
+			KeyValue.stringValue("Startup bytes", entry.startupBytes)
+					.addTo(keyValues);
+			KeyValue.stringValue("String protocol", entry.stringProtocolCache)
+					.addTo(keyValues);
 		}
 	}
 

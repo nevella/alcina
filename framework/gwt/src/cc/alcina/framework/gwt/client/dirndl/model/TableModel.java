@@ -444,6 +444,11 @@ public class TableModel extends Model
 
 		int selectedRowIndex = -1;
 
+		/*
+		 * TODO - I -think- this can be a event - 'adjunct to the dom structure'
+		 * is sort of a cop-out (the code which handles this is still attached
+		 * somewhere in the structure, and has bind/unbind)
+		 */
 		public Topic<Void> topicSelectedRowsChanged = Topic.create();
 
 		public List<RowMeta> meta = new ArrayList<>();

@@ -65,4 +65,18 @@ public interface Feature_RomcomSessionConsole extends Feature {
 	@Feature.Parent(Feature_RomcomSessionConsole.class)
 	public interface _Replay extends Feature {
 	}
+
+	/**
+	 * *
+	 * <li>Measure startup performance with a StartupPerformance metadata in the
+	 * flight event
+	 * <li>Time from session creation to startup message send
+	 * <li>Time from startupmessage send to first mutation paint
+	 * <li>Size of shim
+	 * <li>Bytes in first paint
+	 * <li>Bytes in second paint
+	 */
+	@Feature.Parent(Feature_RomcomSessionConsole.class)
+	public interface _Performance extends Feature {
+	}
 }

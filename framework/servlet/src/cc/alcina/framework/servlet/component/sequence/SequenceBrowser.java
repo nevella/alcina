@@ -65,7 +65,7 @@ public class SequenceBrowser {
 	}
 
 	static class Ui extends AbstractUi<SequencePlace> implements DomainUi {
-		private static final String STYLES_RESOURCE_PATH = "res/css/styles.css";
+		static final String STYLES_RESOURCE_PATH = "res/css/styles.css";
 
 		PackageProperties._SequenceBrowser_Ui.InstanceProperties
 				subtypeProperties() {
@@ -152,10 +152,9 @@ public class SequenceBrowser {
 	}
 
 	@Registration(CacheableStringProviderImpl.class)
-	public static interface CacheableStringProviderImpl
-			extends RemoteUi.CacheableStringProviderHash {
-		public static class StylesheetProvider
-				implements CacheableStringProviderImpl {
+	public static interface CacheableStringProviderImpl extends
+			RemoteUi.CacheableStringProviderHash, Registration.AllSubtypes {
+		static class StylesheetProvider implements CacheableStringProviderImpl {
 			StylesheetProvider() {
 			}
 

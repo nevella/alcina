@@ -1036,67 +1036,6 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	public static void dispatchBrowserDomEvent(DomEventData eventData) {
-		get().dispatchBrowserDomEvent0(eventData);
-	}
-
-	void dispatchBrowserDomEvent0(DomEventData eventData) {
-		if (eventData.event == null) {
-			// shadow-dom event
-			return;
-		}
-		boolean selectionEvent = Objects.equals(eventData.event.getType(),
-				BrowserEvents.SELECTIONCHANGE);
-		EventTarget eventTarget = eventData.event.getEventTarget();
-		eventTarget.ensureAttachIdTarget(true);
-		switch (eventTarget.type) {
-		case window: {
-			if (eventData.preview) {
-				// as below, this special casing is just munge - remove
-				// (and handle non-element events as per element events)
-				return;//
-			}
-			Event event = eventData.event;
-			switch (event.getType()) {
-			case BrowserEvents.PAGEHIDE:
-				Window.onPageHide();
-				break;
-			case BrowserEvents.SCROLL:
-				Window.onScroll();
-				break;
-			case BrowserEvents.WINDOWRESIZE:
-				Window.onResize();
-				break;
-			default:
-				// ignore, could be implemented
-			}
-			return;
-		}
-		case document:
-			if (!selectionEvent) {
-				return;
-			}
-			break;
-		case other:
-			// not currently handled, could be implemented
-			return;
-		case element:
-			// continue method, most common case
-			if (!Element.is(eventTarget)) {
-				// event target (client) has been removed from the
-				// canonical dom (server)
-				return;
-			}
-			break;
-		}
-		if (!eventData.preview) {
-			/* only dispatch preview events (prevent double-up) */
-			return;
-		} else {
-			eventData.event.dispatchNativeEvent();
-		}
-	}
-
 	/*
 	 * Bridging class between the server-side remote (NodeAttachId) dom and the
 	 * client-side LocalDom

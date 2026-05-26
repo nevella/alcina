@@ -14,11 +14,12 @@ public class RemoteComponentReflectionFilterPeer
 	 */
 	@Override
 	public Boolean emitType(JClassType type, String moduleName) {
-		if (type.getQualifiedSourceName()
+		String qualifiedSourceName = type.getQualifiedSourceName();
+		if (qualifiedSourceName
 				.startsWith("cc.alcina.framework.servlet.component")) {
 			return true;
 		}
-		if (type.getQualifiedSourceName().equals(
+		if (qualifiedSourceName.equals(
 				"cc.alcina.framework.common.client.util.CollectionCreators.HashSetCreator")) {
 			return true;
 		}
