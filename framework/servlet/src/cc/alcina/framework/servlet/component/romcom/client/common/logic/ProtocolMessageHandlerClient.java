@@ -30,6 +30,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
+import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 
 /*
  * FIXME - beans1x5 - package protected
@@ -248,7 +249,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				}
 			}
 			RemoteObjectModelComponentClient.markWindowAsErrorState();
-			// FIXME - remcon - prettier?
+			// FIXME - romcom - prettier?
 			Window.alert(clientMessage);
 		}
 	}
@@ -258,6 +259,31 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		@Override
 		public void handle(Message.PersistSettings message) {
 			RemoteComponentSettings.setSettings(message.value);
+		}
+	}
+
+	public static class ResourceRequiredLoader
+			extends ProtocolMessageHandlerClient<Message.ResourceRequired> {
+		@Override
+		public void handle(Message.ResourceRequired message) {
+			Message.LoadResource loadResource = new Message.LoadResource();
+			loadResource.cacheKey = message.cacheKey;
+			ClientRpc.send(loadResource);
+		}
+	}
+
+	public static class ResourceHandler
+			extends ProtocolMessageHandlerClient<Message.Resource> {
+		@Override
+		public void handle(Message.Resource message) {
+			StringProtocol.Cache stringProtocolCache = MessageTransportLayer
+					.get().getStringProtocolCache();
+			StringProtocol.Cache.Entry entry = stringProtocolCache.ensureEntry(
+					message.cacheKey, message.value, message.valueHash);
+			stringProtocolCache.persistEntry(entry);
+			Message.ResourceLoaded resourceLoaded = new Message.ResourceLoaded();
+			resourceLoaded.cacheKey = message.cacheKey;
+			ClientRpc.send(resourceLoaded);
 		}
 	}
 }

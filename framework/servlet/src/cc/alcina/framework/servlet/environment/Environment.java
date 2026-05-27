@@ -55,6 +55,7 @@ import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
+import cc.alcina.framework.gwt.client.provider.ResourceLoader;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
@@ -70,8 +71,10 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.LoadResource;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.MessageCreated;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ResourceLoaded;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
@@ -666,8 +669,19 @@ class Environment {
 			});
 		}
 
+		/*
+		 * Threading - guaranteed on client thread
+		 */
 		Cookie[] getCookies() {
 			return queue.transportLayer.getCookies();
+		}
+
+		void onLoadResource(LoadResource message) {
+			queue.invoke(() -> resourceLoader.onLoadResource(message));
+		}
+
+		public void onResourceLoaded(ResourceLoaded message) {
+			queue.invoke(() -> resourceLoader.onResourceLoaded(message));
 		}
 	}
 
@@ -762,6 +776,8 @@ class Environment {
 	private ClientExecutionThreadAccess clientExecutionThreadAccess;
 
 	MutationConflictResolutionServer mutationConflictResolution;
+
+	private ResourceLoaderRomcom resourceLoader;
 
 	Environment(RemoteUi ui, Session session) {
 		this.ui = ui;
@@ -917,6 +933,9 @@ class Environment {
 		DispatchRefProvider.context.set(new DispatchRefProviderImpl());
 		Registry.register().singleton(Client.RenderState.RomcomImpl.class,
 				queue.renderStateImpl);
+		resourceLoader = new ResourceLoaderRomcom(this);
+		Registry.register().singleton(ResourceLoader.RomcomImpl.class,
+				resourceLoader);
 	}
 
 	void startMetricObservers() {

@@ -112,6 +112,24 @@ public abstract class MessageHandlerServer<PM extends Message>
 		}
 	}
 
+	public static class LoadResourceHandler
+			extends MessageHandlerServer<Message.LoadResource> {
+		@Override
+		public void handle(MessageProcessingToken token, Environment.Access env,
+				Message.LoadResource message) {
+			env.onLoadResource(message);
+		}
+	}
+
+	public static class ResourceLoadedHandler
+			extends MessageHandlerServer<Message.ResourceLoaded> {
+		@Override
+		public void handle(MessageProcessingToken token, Environment.Access env,
+				Message.ResourceLoaded message) {
+			env.onResourceLoaded(message);
+		}
+	}
+
 	public static class StartupHandler
 			extends MessageHandlerServer<Message.Startup> {
 		@Override

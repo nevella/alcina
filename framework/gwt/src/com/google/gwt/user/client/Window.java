@@ -386,10 +386,16 @@ public class Window {
 	}
 
 	private static void maybeInitializeCloseHandlers() {
-		if (GWT.isClient() && !closeHandlersInitialized) {
-			impl.initWindowCloseHandler();
-			closeHandlersInitialized = true;
-		}
+		/*
+		 * deprecated - https://github.com/vercel/next.js/discussions/91378
+		 * 
+		 * FIXME - attach timer cancel (only non-widget-system use) to PageHide
+		 * :: persisted=false
+		 */
+		// if (GWT.isScript() && !closeHandlersInitialized) {
+		// impl.initWindowCloseHandler();
+		// closeHandlersInitialized = true;
+		// }
 	}
 
 	private static void maybeInitializeResizeHandlers() {

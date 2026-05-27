@@ -93,4 +93,35 @@ public interface Feature_Romcom_Impl extends Feature {
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _Performance extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * The goal here is to defer load of non-essential style/image content (and
+	 * handoff javascript).
+	 * <p>
+	 * Briefly, the algorithm is:
+	 * <ul>
+	 * <li>client calls
+	 * ResourceLoader.injectStyle(resourceName,resourcePrototype) (rather than
+	 * StyleInjector.inject)
+	 * <li>Al.isBrowser - this injects as normal (default ResourceLoader)
+	 * <li>Al.isRomcom - this loads via ResourceLoaderRomcom (EnvRegistration)
+	 * <ul>
+	 * <li>Does the current signature exist on the browser? If yes, inject
+	 * directly (assisted by StringProtocol)
+	 * <li>If no, add a tracker to the queue
+	 * <li>After sufficient time, (possibly just .5s) tracker begins resource
+	 * load:
+	 * <ul>
+	 * <li>Send 'ResourceRequired' message to client
+	 * <li>Client loads (via either url or LoadResource/Resource tx), sends
+	 * 'ResourceLoaded' to server
+	 * <li>Loader/tracker injects style
+	 * </ul>
+	 * </ul>
+	 * </ul>
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _ResourceLoader extends Feature {
+	}
 }
