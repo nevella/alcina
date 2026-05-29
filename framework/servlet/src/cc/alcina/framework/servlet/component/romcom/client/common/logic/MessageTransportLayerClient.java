@@ -9,6 +9,7 @@ import com.google.gwt.http.client.Response;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.servlet.component.romcom.client.common.logic.EnvelopeDispatcherClient.EnvelopeTransportHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
@@ -37,6 +38,11 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 	 */
 	boolean willFinish;
 
+	/*
+	 * set during prepending
+	 */
+	boolean inPrepareMessagePhase;
+
 	class SendChannelImpl extends SendChannel {
 		/*
 		 * If there are no inflight envelopes -- OR there's a single
@@ -48,6 +54,49 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 				send(new AwaitRemote());
 			}
 		}
+
+		boolean logNextDispatch;
+
+		@Override
+		protected boolean shouldSendMessagesOrMetadata() {
+			if (inPrepareMessagePhase) {
+				return false;
+			}
+			synchronized (MessageTransportLayerClient.this) {
+				if (activeMessages.stream()
+						.anyMatch(MessageToken::shouldSendMetadata)) {
+					return true;
+				}
+				List<MessageToken> shouldSend = activeMessages.stream()
+						.filter(MessageToken::shouldSend).toList();
+				if (shouldSend.size() > 0) {
+					if (envelopeDispatcher.inflightEnvelope.size() > 3) {
+						int debug = 3;
+					}
+					if (activeMessages.stream().map(MessageToken::getMessage)
+							.allMatch(
+									MessageTransportLayerClient::isContinuousEventOrWindowUpdate)) {
+						List<EnvelopeTransportHistory> inflight = envelopeDispatcher
+								.getInflightContinuousEventEnvelopes();
+						if (inflight.size() > 2) {
+							logNextDispatch = true;
+							return false;
+						}
+					}
+					if (logNextDispatch) {
+						logNextDispatch = false;
+					}
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+	}
+
+	static boolean isContinuousEventOrWindowUpdate(Message message) {
+		return message instanceof Message.WindowStateUpdate
+				|| Message.DomEventMessage.isContinuousEventMessage(message);
 	}
 
 	class ReceiveChannelImpl extends ReceiveChannel {

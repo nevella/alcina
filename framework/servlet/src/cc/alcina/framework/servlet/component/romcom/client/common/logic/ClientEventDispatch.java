@@ -46,20 +46,9 @@ class ClientEventDispatch {
 	@Feature.Ref(Feature_RemoteObjectComponent._ClientEventThrottling.class)
 	void dispatchEventMessage(Event event, Element listenerElement,
 			boolean preview) {
-		/*
-		 * FIXME - shouldn't need to dedpue
-		 */
 		String typeName = event.getType().toLowerCase();
 		if (preview) {
-			switch (typeName) {
-			case "selectionchange":
-			case "mouseout":
-			case "mouseenter":
-			case "mouseleave":
-			case "mousemove":
-			case "mouseover":
-			case "scroll":
-			case "mousewheel":
+			if (BrowserEvents.isContinuousEventMessage(typeName)) {
 				collatedPreviews.put(typeName, event);
 				repeatedPreviewCollator.eventOccurred();
 				return;
@@ -85,7 +74,7 @@ class ClientEventDispatch {
 				sendCurrentEventMessage();
 			});
 		}
-		String eventType = event.getType();
+		String typeName = event.getType();
 		DomEventData eventData = new DomEventData();
 		currentEventMessage.events.add(eventData);
 		eventData.event = event.serializableForm();
@@ -109,9 +98,9 @@ class ClientEventDispatch {
 			 * 
 			 */
 			boolean focusEvent = false;
-			boolean mouseDownEvent = Objects.equals(eventType,
+			boolean mouseDownEvent = Objects.equals(typeName,
 					BrowserEvents.MOUSEDOWN);
-			switch (eventType) {
+			switch (typeName) {
 			case BrowserEvents.FOCUS:
 			case BrowserEvents.BLUR:
 			case BrowserEvents.FOCUSIN:
@@ -127,7 +116,7 @@ class ClientEventDispatch {
 				if (eventTargetDomNode.ancestors().has("form")) {
 					boolean explicitPrevent = false;
 					boolean explicitStopPropagation = false;
-					if (eventType.equals("keydown")
+					if (typeName.equals("keydown")
 							&& event.getKeyCode() == KeyCodes.KEY_ENTER) {
 						if (elem.hasTagName("textarea")) {
 							explicitStopPropagation = true;
@@ -153,7 +142,7 @@ class ClientEventDispatch {
 			/*
 			 * Propagate value + inputValue property changes
 			 */
-			if (Objects.equals(eventType, "change")) {
+			if (Objects.equals(typeName, "change")) {
 				eventData.value = elem.getPropertyString("value");
 				if (eventTargetDomNode.nameIs("select")) {
 					eventData.selectedIndex = elem
@@ -169,7 +158,7 @@ class ClientEventDispatch {
 					}
 				}
 			}
-			if (Objects.equals(eventType, "input")) {
+			if (Objects.equals(typeName, "input")) {
 				eventData.inputValue = elem.getPropertyString("value");
 			}
 		}

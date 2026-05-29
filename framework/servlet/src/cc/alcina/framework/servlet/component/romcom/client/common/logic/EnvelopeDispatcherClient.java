@@ -46,6 +46,12 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 	 * Because http/2 - there's no reason to not send messages as they come in
 	 * (except possibly server load, but trying to gate that from the client is
 	 * dubious)
+	 * 
+	 * Walking this back ... each message will cause a server (+proxy) thread -
+	 * limit to n 'continuous event' envelopes
+	 * 
+	 * But the filtering is elsewhere (since it's dependent on the to-dispatch
+	 * payload)
 	 */
 	@Override
 	@Feature.Ref(Feature_RemoteObjectComponent._ClientEventThrottling.class)
@@ -177,5 +183,13 @@ class EnvelopeDispatcherClient extends EnvelopeDispatcher {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public List<EnvelopeTransportHistory>
+			getInflightContinuousEventEnvelopes() {
+		return inflightEnvelope.values().stream()
+				.filter(eth -> eth.envelope.messages.stream().allMatch(
+						MessageTransportLayerClient::isContinuousEventOrWindowUpdate))
+				.toList();
 	}
 }

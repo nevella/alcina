@@ -182,6 +182,17 @@ public class RemoteComponentProtocol {
 				implements PrependWindowState {
 			public List<DomEventData> events = new ArrayList<>();
 
+			public static boolean isContinuousEventMessage(Message message) {
+				if (message instanceof DomEventMessage) {
+					DomEventMessage domEventMessage = (DomEventMessage) message;
+					return domEventMessage.events.stream().allMatch(
+							e -> BrowserEvents.isContinuousEventMessage(
+									e.event.getType()));
+				} else {
+					return false;
+				}
+			}
+
 			/* utility method for end-of-app inspection */
 			public boolean provideIsPageHide() {
 				return events.stream().anyMatch(evt -> Objects

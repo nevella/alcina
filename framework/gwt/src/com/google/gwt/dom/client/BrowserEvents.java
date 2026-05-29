@@ -117,4 +117,20 @@ public class BrowserEvents {
 	// Prevents instantiation and subclassing.
 	private BrowserEvents() {
 	}
+
+	public static boolean isContinuousEventMessage(String eventType) {
+		switch (eventType) {
+		case "selectionchange":
+		case "mouseout":
+		case "mouseenter":
+		case "mouseleave":
+		case "mousemove":
+		case "mouseover":
+		case "scroll":
+		case "mousewheel":
+			return true;
+		default:
+			return false;
+		}
+	}
 }

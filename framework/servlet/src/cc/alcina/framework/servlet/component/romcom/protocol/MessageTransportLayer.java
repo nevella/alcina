@@ -417,6 +417,10 @@ public abstract class MessageTransportLayer {
 
 		public Message message;
 
+		public Message getMessage() {
+			return message;
+		}
+
 		/*
 		 * this isn't a property of the transport history, since its computation
 		 * differs if the containing channel is sender or receiver
@@ -488,11 +492,11 @@ public abstract class MessageTransportLayer {
 					message.toDebugString());
 		}
 
-		boolean shouldSend() {
+		public boolean shouldSend() {
 			return transportHistory.shouldSend();
 		}
 
-		boolean shouldSendMetadata() {
+		public boolean shouldSendMetadata() {
 			return transportHistory.received != null
 					&& transportHistory.firstReceiptAcknowledgedEnvelopeId == null;
 		}
@@ -564,7 +568,7 @@ public abstract class MessageTransportLayer {
 		 */
 		protected abstract boolean publishesMessages();
 
-		boolean shouldSendMessagesOrMetadata() {
+		protected boolean shouldSendMessagesOrMetadata() {
 			synchronized (MessageTransportLayer.this) {
 				return activeMessages.stream()
 						.anyMatch(MessageToken::shouldSendMessageOrMetadata);
