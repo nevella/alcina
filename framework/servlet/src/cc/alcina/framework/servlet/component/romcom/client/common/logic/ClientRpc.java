@@ -244,7 +244,9 @@ public class ClientRpc {
 			if (!(message instanceof Mutations)) {
 				windowStateUpdate.selectionRecord = generateSelectionMutation();
 			}
+			transportLayer.inPrepareMessagePhase = true;
 			send(windowStateUpdate);
+			transportLayer.inPrepareMessagePhase = false;
 		} else if (message instanceof Message.WindowStateUpdate) {
 			WindowStateUpdate windowStateUpdate = (WindowStateUpdate) message;
 			windowStateUpdate.windowState = generateWindowState();

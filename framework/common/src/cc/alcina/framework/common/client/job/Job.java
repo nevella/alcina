@@ -574,7 +574,9 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 		/*
 		 * The previous of the previous job will be invariant, so only change
-		 * the cached value if previous changes (during Job creation)
+		 * the cached value if previous changes (during Job creation). This is
+		 * an optimisation for computation of firstInSequence for a long
+		 * sequence
 		 */
 		if (previous != this.previousForComputeFirst) {
 			this.previousForComputeFirst = previous;

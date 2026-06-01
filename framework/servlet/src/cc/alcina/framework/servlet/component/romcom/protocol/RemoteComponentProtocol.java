@@ -182,6 +182,17 @@ public class RemoteComponentProtocol {
 				implements PrependWindowState {
 			public List<DomEventData> events = new ArrayList<>();
 
+			public static boolean isContinuousEventMessage(Message message) {
+				if (message instanceof DomEventMessage) {
+					DomEventMessage domEventMessage = (DomEventMessage) message;
+					return domEventMessage.events.stream().allMatch(
+							e -> BrowserEvents.isContinuousEventMessage(
+									e.event.getType()));
+				} else {
+					return false;
+				}
+			}
+
 			/* utility method for end-of-app inspection */
 			public boolean provideIsPageHide() {
 				return events.stream().anyMatch(evt -> Objects
@@ -281,6 +292,9 @@ public class RemoteComponentProtocol {
 		// FIXME - doc this annotation
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class InvokeResponse extends Message {
+			/*
+			 * the id of the invocation (required before messageId is generated)
+			 */
 			public int id;
 
 			public Object response;
@@ -290,6 +304,36 @@ public class RemoteComponentProtocol {
 			 * exceptions such as NodeNotFound
 			 */
 			public ExceptionTransport exception;
+		}
+
+		/*
+		 * if url is non-null, the client will load from there (the advantage is
+		 * that that uses the browser cache)
+		 */
+		public static class ResourceRequired extends Message {
+			public String cacheKey;
+
+			public String valueHash;
+
+			public String url;
+		}
+
+		public static class LoadResource extends Message {
+			public String cacheKey;
+		}
+
+		public static class Resource extends Message {
+			public String cacheKey;
+
+			public String valueHash;
+
+			public String value;
+		}
+
+		public static class ResourceLoaded extends Message {
+			public String cacheKey;
+
+			public String valueHash;
 		}
 
 		public static class RejectMutation extends Message {

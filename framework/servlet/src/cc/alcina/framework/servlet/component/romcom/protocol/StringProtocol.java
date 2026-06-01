@@ -34,6 +34,9 @@ import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol.Cach
 public class StringProtocol {
 	static final int CACHE_THRESHOLD = 10000;
 
+	/*
+	 * Threading - only mutated on the singleton execution thread (server)
+	 */
 	public static class Cache {
 		public String contextPath;
 
@@ -147,20 +150,20 @@ public class StringProtocol {
 			Cache result = new Cache(contextPath);
 			Registry.query(providerRegistration).implementations()
 					.forEach(provider -> {
-						result.addEntry(provider.getKey(), provider.getValue(),
-								provider.getValueHash());
+						result.ensureEntry(provider.getKey(),
+								provider.getValue(), provider.getValueHash());
 					});
 			return result;
 		}
 
-		Entry addEntry(String keyPart, String value, String valueHash) {
+		public Entry ensureEntry(String keyPart, String value,
+				String valueHash) {
 			Key key = new Key(contextPath, keyPart);
-			Entry entry = new Entry(key, value, valueHash);
-			keyEntry.put(key, entry);
-			return entry;
+			return keyEntry.computeIfAbsent(key,
+					k -> new Entry(key, value, valueHash));
 		}
 
-		void persistEntry(Entry entry) {
+		public void persistEntry(Entry entry) {
 			Storage.getLocalStorageIfSupported().setItem(entry.key.toString(),
 					FlatTreeSerializer.serialize(entry));
 		}
@@ -270,6 +273,19 @@ public class StringProtocol {
 				}
 			});
 			return builder.toString();
+		}
+
+		public boolean clientContains(String key, String value, String hash) {
+			Key cacheKey = new Cache.Key(contextPath, key);
+			Cache.Entry test = new Entry(cacheKey, value, hash);
+			return clientState.containsAndIsValid(test);
+		}
+
+		public void markClientContains(String key, String value,
+				String valueHash) {
+			Key cacheKey = new Cache.Key(contextPath, key);
+			Cache.Entry mark = new Entry(cacheKey, value, valueHash);
+			clientState.metadataEntries.add(mark);
 		}
 	}
 
