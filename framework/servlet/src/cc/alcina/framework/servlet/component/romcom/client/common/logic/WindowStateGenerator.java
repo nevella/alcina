@@ -45,7 +45,7 @@ class WindowStateGenerator {
 			}
 		}
 		List<ElementOffsets> elementOffsets = addedUiStates.stream()
-				.map(ElementOffsets::of).toList();
+				.map(offsetRegistry::getOffsetsWithInvariant).toList();
 		result.offsetsDelta = offsetRegistry
 				.computeOffsetsDelta(elementOffsets);
 		result.clientHeight = Window.getClientHeight();

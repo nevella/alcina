@@ -49,7 +49,10 @@ public interface Feature_Romcom_Impl extends Feature {
 	 * 
 	 * <p>
 	 * wip - ds.late - check the offsetprotocol json size + possibly client-side
-	 * zip
+	 * zip *
+	 * <p>
+	 * FIXME - romcom - add invalidation messages (from server), generally
+	 * triggered by an eventcollation after window resize (e.g. 500ms)
 	 */
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _OffsetProtocol extends Feature {
@@ -64,6 +67,7 @@ public interface Feature_Romcom_Impl extends Feature {
 	 * <p>
 	 * some considerations: onload cache invalidation and client-to-server cache
 	 * comms
+	 * 
 	 */
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _StringProtocol extends Feature {

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.DomRect;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.WindowState.NodeUiState;
 import com.google.gwt.dom.client.WindowState.OffsetsDelta;
@@ -39,6 +40,26 @@ public class OffsetProtocol {
 		Map<AttachId, ElementOffsets> attachIdOffsets = AlcinaCollections
 				.newLinkedHashMap();
 
+		Map<AttachId, ElementOffsets> parentRelativeFixed = AlcinaCollections
+				.newLinkedHashMap();
+
+		public ElementOffsets getOffsetsWithInvariant(Node node) {
+			AttachId attachId = AttachId.forNode(node);
+			ElementOffsets invariant = parentRelativeFixed.get(attachId);
+			if (invariant != null) {
+				return invariant;
+			}
+			ElementOffsets computed = ElementOffsets.of(node);
+			attachIdOffsets.put(attachId, computed);
+			if (node instanceof Element) {
+				if (((Element) node).hasBehavior(
+						ElementOffsetsRequired.ParentRelativeFixed.class)) {
+					parentRelativeFixed.put(attachId, computed);
+				}
+			}
+			return computed;
+		}
+
 		public OffsetsDelta
 				computeOffsetsDelta(List<ElementOffsets> currentOffsets) {
 			OffsetsDelta result = new OffsetsDelta();
@@ -55,8 +76,17 @@ public class OffsetProtocol {
 				}
 				result.changes.add(offsets);
 				attachIdOffsets.put(offsets.id, offsets);
+				Node node = offsets.id.node();
+				if (node instanceof Element) {
+					Element elem = (Element) node;
+					if (elem.hasBehavior(
+							ElementOffsetsRequired.ParentRelativeFixed.class)) {
+						parentRelativeFixed.put(offsets.id, offsets);
+					}
+				}
 			});
 			attachIdOffsets.keySet().removeAll(removed);
+			parentRelativeFixed.keySet().removeAll(removed);
 			result.removed = removed;
 			return result;
 		}
