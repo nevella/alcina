@@ -617,12 +617,6 @@ public class BranchingParser {
 		}
 
 		void enter() {
-			if (group.getName().equals("AT_SUBSEQUENT_LEADIN")) {
-				// if (location.toString().contains("'s 56")) {
-				Ax.out("ASL:%s", location.toString());
-				int debug = 3;
-				// }
-			}
 			ProcessObservers.publish(BeforeBranchEntry.class,
 					() -> new BeforeBranchEntry(this));
 			if (!isComplete()) {
