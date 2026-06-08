@@ -102,6 +102,10 @@ public class MeasureOverlay {
 	public interface StyleResolver {
 		boolean isBlock(DomNode node);
 
+		default boolean isNotBlock(DomNode node) {
+			return !isBlock(node);
+		}
+
 		default DomNode getContainingBlock(DomNode node) {
 			return node.ancestors().orSelf().match(this::isBlock).orElse(null);
 		}

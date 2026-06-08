@@ -173,8 +173,14 @@ public class PackageProperties {
       public TypedProperty<RomcomSessionEntry, Boolean> marked = new TypedProperty<>(RomcomSessionEntry.class, "marked");
       public TypedProperty<RomcomSessionEntry, String> path = new TypedProperty<>(RomcomSessionEntry.class, "path");
       public TypedProperty<RomcomSessionEntry, String> sessionId = new TypedProperty<>(RomcomSessionEntry.class, "sessionId");
+      public TypedProperty<RomcomSessionEntry, Date> sessionStartTime = new TypedProperty<>(RomcomSessionEntry.class, "sessionStartTime");
+      public TypedProperty<RomcomSessionEntry, Integer> shimBytes = new TypedProperty<>(RomcomSessionEntry.class, "shimBytes");
       public TypedProperty<RomcomSessionEntry, Integer> slowestResponse = new TypedProperty<>(RomcomSessionEntry.class, "slowestResponse");
       public TypedProperty<RomcomSessionEntry, Date> start = new TypedProperty<>(RomcomSessionEntry.class, "start");
+      public TypedProperty<RomcomSessionEntry, Integer> startupBytes = new TypedProperty<>(RomcomSessionEntry.class, "startupBytes");
+      public TypedProperty<RomcomSessionEntry, String> stringProtocolCache = new TypedProperty<>(RomcomSessionEntry.class, "stringProtocolCache");
+      public TypedProperty<RomcomSessionEntry, Long> timeFromSessionStartToStartupMessageEmittedClient = new TypedProperty<>(RomcomSessionEntry.class, "timeFromSessionStartToStartupMessageEmittedClient");
+      public TypedProperty<RomcomSessionEntry, Long> timeFromStartupMessageEmittedClientToFirstMutationRendered = new TypedProperty<>(RomcomSessionEntry.class, "timeFromStartupMessageEmittedClientToFirstMutationRendered");
       public static class InstanceProperties extends 	InstanceProperty.Container<RomcomSessionEntry> {
         public  InstanceProperties(RomcomSessionEntry source){super(source);}
         public InstanceProperty<RomcomSessionEntry, Boolean> active(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.active);}
@@ -185,8 +191,14 @@ public class PackageProperties {
         public InstanceProperty<RomcomSessionEntry, Boolean> marked(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.marked);}
         public InstanceProperty<RomcomSessionEntry, String> path(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.path);}
         public InstanceProperty<RomcomSessionEntry, String> sessionId(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.sessionId);}
+        public InstanceProperty<RomcomSessionEntry, Date> sessionStartTime(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.sessionStartTime);}
+        public InstanceProperty<RomcomSessionEntry, Integer> shimBytes(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.shimBytes);}
         public InstanceProperty<RomcomSessionEntry, Integer> slowestResponse(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.slowestResponse);}
         public InstanceProperty<RomcomSessionEntry, Date> start(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.start);}
+        public InstanceProperty<RomcomSessionEntry, Integer> startupBytes(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.startupBytes);}
+        public InstanceProperty<RomcomSessionEntry, String> stringProtocolCache(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.stringProtocolCache);}
+        public InstanceProperty<RomcomSessionEntry, Long> timeFromSessionStartToStartupMessageEmittedClient(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.timeFromSessionStartToStartupMessageEmittedClient);}
+        public InstanceProperty<RomcomSessionEntry, Long> timeFromStartupMessageEmittedClientToFirstMutationRendered(){return new InstanceProperty<>(source,PackageProperties.romcomSessionEntry.timeFromStartupMessageEmittedClientToFirstMutationRendered);}
       }
       
       public  InstanceProperties instance(RomcomSessionEntry instance) {

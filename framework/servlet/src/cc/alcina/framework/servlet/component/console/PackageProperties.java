@@ -122,6 +122,7 @@ public class PackageProperties {
     
     static class _ServerConsoleBrowser_Ui implements TypedProperty.Container {
       TypedProperty<ServerConsoleBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(ServerConsoleBrowser.Ui.class, "appCommandContexts");
+      TypedProperty<ServerConsoleBrowser.Ui, Class> cacheableStringProviderClass = new TypedProperty<>(ServerConsoleBrowser.Ui.class, "cacheableStringProviderClass");
       TypedProperty<ServerConsoleBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(ServerConsoleBrowser.Ui.class, "commandContextProvider");
       TypedProperty<ServerConsoleBrowser.Ui, Boolean> domain = new TypedProperty<>(ServerConsoleBrowser.Ui.class, "domain");
       TypedProperty<ServerConsoleBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(ServerConsoleBrowser.Ui.class, "keybindingsHandler");
@@ -133,6 +134,7 @@ public class PackageProperties {
       static class InstanceProperties extends 	InstanceProperty.Container<ServerConsoleBrowser.Ui> {
          InstanceProperties(ServerConsoleBrowser.Ui source){super(source);}
         InstanceProperty<ServerConsoleBrowser.Ui, Set> appCommandContexts(){return new InstanceProperty<>(source,PackageProperties.serverConsoleBrowser_ui.appCommandContexts);}
+        InstanceProperty<ServerConsoleBrowser.Ui, Class> cacheableStringProviderClass(){return new InstanceProperty<>(source,PackageProperties.serverConsoleBrowser_ui.cacheableStringProviderClass);}
         InstanceProperty<ServerConsoleBrowser.Ui, CommandContext.Provider> commandContextProvider(){return new InstanceProperty<>(source,PackageProperties.serverConsoleBrowser_ui.commandContextProvider);}
         InstanceProperty<ServerConsoleBrowser.Ui, Boolean> domain(){return new InstanceProperty<>(source,PackageProperties.serverConsoleBrowser_ui.domain);}
         InstanceProperty<ServerConsoleBrowser.Ui, KeybindingsHandler> keybindingsHandler(){return new InstanceProperty<>(source,PackageProperties.serverConsoleBrowser_ui.keybindingsHandler);}
