@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * Models a keybinding, e.g. META-SHIFT-F7
@@ -119,33 +118,10 @@ public @interface KeyBinding {
 						.anyMatch(ctx -> this.contexts.contains(ctx))) {
 					if (nativeEvent == null) {
 						return true;
-					}
-					Set<Modifier> modifiers = nativeEvent.getModifiers();
-					if (binding.key().length() > 0) {
-						String key = nativeEvent.getKey();
-						if (!key.equalsIgnoreCase(binding.key())) {
-							return false;
-						}
 					} else {
-						Preconditions.checkArgument(binding.keyCode() != 0);
-						if (nativeEvent.getKeyCode() != binding.keyCode()) {
-							return false;
-						}
-						switch (binding.keyCode()) {
-						case KeyCodes.KEY_TAB:
-						case KeyCodes.KEY_ENTER:
-						case KeyCodes.KEY_SPACE:
-							// these have focus meanings, so don't fire if an
-							// element has focus
-							if (Document.get().getActiveElement() != null) {
-								return false;
-							}
-						}
+						return matchesEvent(nativeEvent, binding.key(),
+								binding.keyCode(), modifiers);
 					}
-					if (!modifiers.equals(this.modifiers)) {
-						return false;
-					}
-					return true;
 				} else {
 					return false;
 				}
@@ -155,6 +131,37 @@ public @interface KeyBinding {
 			public String toString() {
 				return Ax.format("%s '%s'", modifiers, binding.key());
 			}
+		}
+
+		public static boolean matchesEvent(NativeEvent nativeEvent, String key,
+				int keyCode, Set<NativeEvent.Modifier> modifiers) {
+			Set<NativeEvent.Modifier> eventModifiers = nativeEvent
+					.getModifiers();
+			if (key.length() > 0) {
+				String eventKey = nativeEvent.getKey();
+				if (!eventKey.equalsIgnoreCase(key)) {
+					return false;
+				}
+			} else {
+				Preconditions.checkArgument(keyCode != 0);
+				if (nativeEvent.getKeyCode() != keyCode) {
+					return false;
+				}
+				switch (keyCode) {
+				case KeyCodes.KEY_TAB:
+				case KeyCodes.KEY_ENTER:
+				case KeyCodes.KEY_SPACE:
+					// these have focus meanings, so don't fire if an
+					// element has focus
+					if (Document.get().getActiveElement() != null) {
+						return false;
+					}
+				}
+			}
+			if (!modifiers.equals(eventModifiers)) {
+				return false;
+			}
+			return true;
 		}
 	}
 
