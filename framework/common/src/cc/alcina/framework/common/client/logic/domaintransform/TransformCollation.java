@@ -24,6 +24,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.ModificationStat;
+import cc.alcina.framework.common.client.util.ModificationStat.Stats;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -579,5 +581,24 @@ public class TransformCollation {
 		public void removeTransformsFromRequest() {
 			TransformCollation.this.removeTransformsFromRequest(this);
 		}
+	}
+
+	public Stats toModificationStats() {
+		ModificationStat.Stats result = new Stats();
+		ensureLookups();
+		perClass.keySet().stream().forEach(clazz -> {
+			ModificationStat stat = new ModificationStat((Class) clazz);
+			result.stats.add(stat);
+			perClass.allValues().forEach(ec -> {
+				if (ec.isCreated()) {
+					stat.added++;
+				} else if (ec.isDeleted()) {
+					stat.removed++;
+				} else {
+					stat.modified++;
+				}
+			});
+		});
+		return result;
 	}
 }

@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -21,7 +22,6 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken.Pass;
@@ -140,11 +140,23 @@ public class TransformPersister implements AlcinaProcess {
 				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence().expandExceptionInfo(wrapper);
 			}
+			if (wrapper.response
+					.getResult() == DomainTransformResponseResult.OK) {
+				new CommittedObservable(wrapper).publish();
+			}
 			return wrapper;
 		} finally {
 			TransformPersisterInPersistenceContext.ThreadData.get()
 					.observingFlushData(false);
 			LooseContext.pop();
+		}
+	}
+
+	public static class CommittedObservable implements ContextObservable {
+		public DomainTransformLayerWrapper wrapper;
+
+		public CommittedObservable(DomainTransformLayerWrapper wrapper) {
+			this.wrapper = wrapper;
 		}
 	}
 
