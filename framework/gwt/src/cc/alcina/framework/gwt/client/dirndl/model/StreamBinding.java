@@ -552,6 +552,10 @@ public class StreamBinding<T> {
 			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
 					.asBinding();
 			listener.bind();
+		} else if (fromNodeEventClass != null) {
+			if (bindings.bound) {
+				bindings.bindEventPostAttach(this);
+			}
 		} else {
 			// noop (from is null)
 		}

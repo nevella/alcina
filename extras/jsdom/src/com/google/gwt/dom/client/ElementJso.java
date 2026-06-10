@@ -1186,8 +1186,10 @@ public final class ElementJso extends NodeJso implements ElementRemote {
 	}
 
 	@Override
-	public void removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
+	public boolean
+			removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
 		// noop
+		return true;
 	}
 
 	@Override

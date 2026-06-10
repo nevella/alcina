@@ -620,7 +620,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	}
 
 	@Override
-	public void removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
+	public boolean
+			removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.behavior;
 		Element elem = elementFor();
@@ -628,6 +629,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.behaviorRemoved = behaviorClass;
 		emitMutation(record);
+		return true;
 	}
 
 	static void emitBehaviorMutations(Element elem) {

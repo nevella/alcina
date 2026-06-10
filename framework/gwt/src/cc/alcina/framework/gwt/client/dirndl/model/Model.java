@@ -301,7 +301,7 @@ public abstract class Model extends Bindable
 
 		private ListenerBindings listenerBindings = new ListenerBindings();
 
-		private boolean bound;
+		boolean bound;
 
 		public List<StreamBinding> streamBindings = new ArrayList<>();
 
@@ -546,6 +546,14 @@ public abstract class Model extends Bindable
 			StreamBinding binding = new StreamBinding(this);
 			addStreamBinding(binding);
 			return binding.fromNodeEventClass(nodeEventClass);
+		}
+
+		/*
+		 * just validate
+		 */
+		void bindEventPostAttach(StreamBinding<?> streamBinding) {
+			node.provideRootValidator().validate(Model.this.getClass(),
+					List.of(streamBinding.fromNodeEventClass));
 		}
 	}
 

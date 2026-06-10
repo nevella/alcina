@@ -4,6 +4,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reachabil
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Rule;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.RuleSet;
 import cc.alcina.framework.entity.gwt.reflection.RulesFilter;
+import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 
 @Reachability.Rules({
 		@Rule(

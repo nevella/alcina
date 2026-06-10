@@ -58,10 +58,8 @@ public class BehaviorRegistry
 	}
 
 	public static boolean isInitialised() {
-		return get().behaviors != null;
+		return get().initialised;
 	}
-
-	List<ElementBehavior> behaviors;
 
 	Set<String> eventTypes = AlcinaCollections.newUniqueSet();
 
@@ -71,8 +69,8 @@ public class BehaviorRegistry
 			.newUniqueSet();
 
 	/**
-	 * In a romcom context, the server does *not* need to populate the handlers
-	 * (the browser client will)
+	 * In a romcom context, the server does *not* need to populate the
+	 * eventTypes (the browser client will)
 	 * 
 	 * @param registerHandlers
 	 */
@@ -81,14 +79,20 @@ public class BehaviorRegistry
 			return;
 		}
 		initialised = true;
-		behaviors = registerHandlers ? Registry.query(ElementBehavior.class)
-				.implementations().filter(ElementBehavior::isEventHandler)
-				.collect(Collectors.toList()) : List.of();
-		behaviors.stream().map(ElementBehavior::getEventType)
-				.filter(Objects::nonNull).forEach(eventTypes::add);
 		if (registerHandlers) {
 			Event.addNativePreviewHandler(this);
 		}
+		/*
+		 * compute the set of all event types we need to preview (hopefully not
+		 * too many...)
+		 */
+		List<ElementBehavior> behaviors = registerHandlers
+				? Registry.query(ElementBehavior.class).implementations()
+						.filter(ElementBehavior::isEventHandler).collect(
+								Collectors.toList())
+				: List.of();
+		behaviors.stream().map(ElementBehavior::getEventType)
+				.filter(Objects::nonNull).forEach(eventTypes::add);
 	}
 
 	@Override
@@ -124,18 +128,15 @@ public class BehaviorRegistry
 		if (targetElement == null) {
 			return;
 		}
-		if (behaviors.isEmpty()) {
-			return;
-		}
 		Element cursor = targetElement;
 		while (cursor != null) {
 			if (cursor.getBehaviors() != null) {
 				Element registeredElement = cursor;
-				behaviors.stream()
-						.filter(bh -> bh.matches(registeredElement)
-								&& bh.getEventType().equals(eventType))
-						.forEach(bh -> bh.onNativeEvent(event,
-								registeredElement, this));
+				cursor.getBehaviors().forEach(bh -> {
+					if (Objects.equals(bh.getEventType(), eventType)) {
+						bh.onNativeEvent(event, registeredElement, this);
+					}
+				});
 			}
 			cursor = cursor.getParentElement();
 		}

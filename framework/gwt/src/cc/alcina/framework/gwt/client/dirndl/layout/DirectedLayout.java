@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.ToStringFunction;
@@ -501,11 +502,16 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	class NodeEventTypeValidatorImpl implements NodeEventTypeValidator {
-		Set<Class<? extends Model>> checked = AlcinaCollections.newUniqueSet();
+		Multimap<Class<? extends Model>, List<Class<? extends NodeEvent>>> checked = new Multimap<>();
 
 		public void validate(Class<? extends Model> modelType,
 				List<Class<? extends NodeEvent>> modelEventBindings) {
-			if (checked.add(modelType) && modelEventBindings.size() > 0) {
+			if (modelEventBindings.size() > 0) {
+				List<Class<? extends NodeEvent>> eventTypes = checked
+						.getAndEnsure(modelType);
+				if (eventTypes.containsAll(modelEventBindings)) {
+					return;
+				}
 				modelEventBindings.forEach(type -> {
 					// convention hack - nicer would be to use generics or the
 					// registry, but this works
@@ -521,6 +527,7 @@ public class DirectedLayout implements AlcinaProcess {
 								NestedName.get(type)));
 					}
 				});
+				eventTypes.addAll(modelEventBindings);
 			}
 		}
 	}

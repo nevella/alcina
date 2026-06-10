@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 
 /*
