@@ -57,4 +57,8 @@ public class ModificationStat implements TreeSerializable {
 		modified += other.modified;
 		removed += other.removed;
 	}
+
+	public int delta() {
+		return added + modified + removed;
+	}
 }
