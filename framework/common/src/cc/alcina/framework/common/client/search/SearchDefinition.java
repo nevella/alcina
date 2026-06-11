@@ -31,6 +31,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.collections.IsInstanceFilter;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -282,6 +283,19 @@ public abstract class SearchDefinition extends Bindable
 			}
 		}
 		return null;
+	}
+
+	public boolean hasCriterion(Class<? extends SearchCriterion> clazz) {
+		SearchCriterion criterion = firstCriterion(clazz);
+		if (criterion == null) {
+			return false;
+		}
+		if (criterion instanceof HasValue) {
+			if (((HasValue) criterion).getValue() == null) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public <V extends SearchCriterion> V firstCriterion(V sub) {
