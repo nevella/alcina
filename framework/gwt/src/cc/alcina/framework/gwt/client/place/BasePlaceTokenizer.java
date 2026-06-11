@@ -18,6 +18,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchDefinitionSerializer;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -236,5 +238,30 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 
 	public void setParameter(String key, Object value, boolean explicitBlanks) {
 		params.put(key, value == null ? null : value.toString());
+	}
+
+	public static abstract class Flat<P extends BasePlace & TreeSerializable>
+			extends BasePlaceTokenizer<P> {
+		@Override
+		protected P getPlace0(String token) {
+			Class<? extends BasePlace> type = Reflections.at(getClass())
+					.firstGenericBound();
+			Class<? extends TreeSerializable> treeserializableType = (Class<? extends TreeSerializable>) type;
+			P place = (P) Reflections.newInstance(type);
+			if (parts.length > 1) {
+				try {
+					place = (P) FlatTreeSerializer
+							.deserialize(treeserializableType, parts[1]);
+				} catch (Exception e) {
+					Ax.simpleExceptionOut(e);
+				}
+			}
+			return (P) place;
+		}
+
+		@Override
+		protected void getToken0(P place) {
+			addTokenPart(FlatTreeSerializer.serializeSingleLine(place));
+		}
 	}
 }
