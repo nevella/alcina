@@ -240,7 +240,12 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 		params.put(key, value == null ? null : value.toString());
 	}
 
-	public static abstract class Flat<P extends BasePlace & TreeSerializable>
+	/*
+	 * Note that due to conflicting erasure, this can't be Flat<P extends
+	 * BasePlace & TreeSerializable> - but the place *must* extend
+	 * TreeSerializable
+	 */
+	public static abstract class Flat<P extends BasePlace>
 			extends BasePlaceTokenizer<P> {
 		@Override
 		protected P getPlace0(String token) {
@@ -261,7 +266,8 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 
 		@Override
 		protected void getToken0(P place) {
-			addTokenPart(FlatTreeSerializer.serializeSingleLine(place));
+			addTokenPart(FlatTreeSerializer
+					.serializeSingleLine((TreeSerializable) place));
 		}
 	}
 }
