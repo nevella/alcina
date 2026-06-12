@@ -160,10 +160,21 @@ public abstract class Model extends Bindable
 	}
 
 	public void emitEvent(Class<? extends ModelEvent> clazz, Object value) {
-		if (!provideIsBound()) {
-			return;
+		Runnable lambda = () -> NodeEvent.Context.fromNode(provideNode())
+				.dispatch(clazz, value);
+		if (provideIsBound()) {
+			lambda.run();
+		} else {
+			if (node != null) {
+				/*
+				 * called prior to bind, but bind will occur - retry in next
+				 * cycle
+				 */
+				exec(lambda).dispatch();
+			} else {
+				return;
+			}
 		}
-		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, value);
 	}
 
 	/*

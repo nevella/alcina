@@ -610,6 +610,19 @@ public class StreamBinding<T> {
 		return Reflections.at(fromPropertyChangeSource).property(on);
 	}
 
+	/**
+	 * <p>
+	 * Note that this formulation doesn't follow the true binding (doesn't map
+	 * left-to-right on attach, because there's no binding cycle)
+	 * 
+	 * <p>
+	 * So it's *almost* deprecated - basically, if you want full binding, use
+	 * Model, even if the type is never bound to a Node
+	 * 
+	 * @param <T>
+	 * @param property
+	 * @return
+	 */
 	public static <T> StreamBinding<T>
 			ofProperty(InstanceProperty<?, T> property) {
 		return new StreamBinding<>(null).from(property.source)
