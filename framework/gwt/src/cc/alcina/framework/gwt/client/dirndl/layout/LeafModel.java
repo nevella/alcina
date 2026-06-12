@@ -507,4 +507,12 @@ public interface LeafModel {
 			this.text = text;
 		}
 	}
+
+	public static class ListArea extends Model.All {
+		public List<? extends Model> list;
+
+		public ListArea(List<? extends Model> list) {
+			this.list = list;
+		}
+	}
 }
