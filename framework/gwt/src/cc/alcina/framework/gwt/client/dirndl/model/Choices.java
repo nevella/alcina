@@ -965,7 +965,10 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void setValues(List<T> values) {
-			T preChangeSelectedValue = choices == null ? null
+			// this is overuse of lastSelectedValue (during init) - should be
+			// cleaned
+			T preChangeSelectedValue = choices == null || choices.isEmpty()
+					? lastSelectedValue
 					: getSelectedValue();
 			super.setValues(values);
 			/* preserve existing choice if possible */
