@@ -378,4 +378,14 @@ public class Ax {
 	public static String toString(Object obj) {
 		return CommonUtils.nullSafeToString(obj);
 	}
+
+	public static boolean sameClass(Object o1, Object o2) {
+		if (o1 == null && o2 == null) {
+			return true;/// sorta
+		}
+		if (o1 == null || o2 == null) {
+			return false;
+		}
+		return o1.getClass() == o2.getClass();
+	}
 }
