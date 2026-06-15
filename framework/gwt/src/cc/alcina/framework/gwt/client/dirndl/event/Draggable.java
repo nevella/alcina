@@ -6,7 +6,9 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.DoublePair;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseMove;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
@@ -44,6 +46,13 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 			public DoublePair deltaFromLastDragged;
 
 			public DoublePair cumulativeDelta;
+
+			@Override
+			public String toString() {
+				return FormatBuilder.keyValues("deltaFromLastDragged",
+						deltaFromLastDragged, "cumulativeDelta",
+						cumulativeDelta);
+			}
 		}
 	}
 
@@ -83,7 +92,9 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 					nativeEvent.getClientX() - elemRect.left,
 					nativeEvent.getClientY() - elemRect.top);
 			lastPosition = startPosition;
-			DOM.setCapture(elem);
+			if (Al.isBrowser()) {
+				DOM.setCapture(elem);
+			}
 			nativeEvent.preventDefault();
 		}
 
@@ -91,7 +102,9 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 		public void onMouseUp(MouseUp event) {
 			if (isResizing()) {
 				stopResizing();
-				DOM.releaseCapture(model.provideElement());
+				if (Al.isBrowser()) {
+					DOM.releaseCapture(model.provideElement());
+				}
 			}
 		}
 
@@ -106,9 +119,11 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 		@Override
 		public void onMouseMove(MouseMove event) {
 			if (isResizing()) {
+				if (Al.isBrowser()) {
+					assert DOM.getCaptureElement() != null;
+				}
 				NativeEvent nativeEvent = event.getContext()
 						.getOriginatingNativeEvent();
-				assert DOM.getCaptureElement() != null;
 				Element elem = model.provideElement();
 				DomRect elemRect = elem.getBoundingClientRect();
 				DoublePair dragPosition = new DoublePair(

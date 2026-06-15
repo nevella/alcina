@@ -36,7 +36,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorMultiple;
@@ -137,9 +136,6 @@ public class SearchDefinitionEditor extends Model.Fields
 	@ChoiceEditor.RouterType(Router.class)
 	public List<Searchable> searchables = new ArrayList<>();
 
-	@Directed.Wrap("go-container")
-	Link go = Link.button(ModelEvents.Submit.class).withText("Go");
-
 	@Binding(type = Type.PROPERTY)
 	boolean popupsOpen;
 
@@ -205,7 +201,7 @@ public class SearchDefinitionEditor extends Model.Fields
 	}
 
 	void emitSubmitEvent(ModelEvent event) {
-		if (go.isDisabled()) {
+		if (!modified) {
 			return;
 		}
 		event.reemitAs(this, SearchDefinitionEditor.Submit.class,
@@ -225,7 +221,6 @@ public class SearchDefinitionEditor extends Model.Fields
 				.serializeElided(renderedDefinition);
 		boolean modified = !Objects.equals(initialSerializedDefinition,
 				renderedDefinitionSerialized);
-		go.properties().disabled().set(!modified);
 		properties().modified().set(modified);
 	}
 
