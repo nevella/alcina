@@ -62,6 +62,7 @@ import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingToStringComparator;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -432,7 +433,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator
 	void writeAnnotationValue(SourceWriter sourceWriter, Object value,
 			Class declaredType, boolean quoted) {
 		if (value == null) {
-			// annotation has no default value
+			// annotation is non-primitive, and has a null default value
 			sourceWriter.print("null");
 			return;
 		}
@@ -587,8 +588,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator
 				String returnTypeName = returnType.getCanonicalName();
 				String methodName = method.getName();
 				sourceWriter.print("%s %s = ", returnTypeName, methodName);
-				writeAnnotationValue(sourceWriter, method.getDefaultValue(),
-						returnType);
+				Object defaultValue = method.getDefaultValue();
+				if (defaultValue == null) {
+					defaultValue = ClassUtil.getDefaultTypeValue(returnType);
+				}
+				writeAnnotationValue(sourceWriter, defaultValue, returnType);
 				sourceWriter.println(";");
 				sourceWriter.println("public %s %s(){return %s;}",
 						returnTypeName, methodName, methodName);

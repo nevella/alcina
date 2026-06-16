@@ -123,6 +123,28 @@ public class ClassUtil {
 		return clazz1 == clazz2;
 	}
 
+	public static Object getDefaultTypeValue(Class clazz) {
+		if (clazz == int.class) {
+			return 0;
+		} else if (clazz == long.class) {
+			return 0L;
+		} else if (clazz == double.class) {
+			return 0.0;
+		} else if (clazz == boolean.class) {
+			return false;
+		} else if (clazz == short.class) {
+			return 0;
+		} else if (clazz == float.class) {
+			return 0.0f;
+		} else if (clazz == byte.class) {
+			return 0;
+		} else if (clazz == char.class) {
+			return '\u0000';
+		} else {
+			return null;
+		}
+	}
+
 	public static Class getWrapperType(Class clazz) {
 		if (!clazz.isPrimitive()) {
 			return clazz;
