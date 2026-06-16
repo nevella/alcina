@@ -573,10 +573,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator
 			if (!createPrintWriter()) {
 				return false;
 			}
-			composerFactory.addImport(Annotation.class.getCanonicalName());
-			composerFactory.addImplementedInterface(
-					annotationClass.getCanonicalName());
-			sourceWriter = createWriter(composerFactory, printWriter);
+			createWriter(composerFactory, printWriter);
 			List<Method> declaredMethods = Arrays
 					.stream(annotationClass.getDeclaredMethods())
 					.sorted(Comparator.comparing(Method::getName))
