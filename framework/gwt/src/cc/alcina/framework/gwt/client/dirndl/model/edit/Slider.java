@@ -15,6 +15,7 @@ import com.google.gwt.dom.client.NativeEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -34,6 +35,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * rendering as a Slider element.
  */
 @TypedProperties
+@TypeSerialization(reflectiveSerializable = false)
 public class Slider extends Model.Fields implements HandlesModelChange,
 		Draggable.Dragged.Handler, DomEvents.Click.Handler {
 	public static class To implements ModelTransform<Double, Slider> {
