@@ -15,10 +15,15 @@ public class MimeContent implements Serializable {
 	public MimeContent() {
 	}
 
-	public MimeContent(InputStream content, String mimeType) {
+	public MimeContent(byte[] bytes, String contentType) {
+		this.bytes = bytes;
+		this.contentType = contentType;
+	}
+
+	public MimeContent(InputStream content, String contentType) {
 		try {
-			bytes = Io.read().fromStream(content).asBytes();
-			contentType = mimeType;
+			this.bytes = Io.read().fromStream(content).asBytes();
+			this.contentType = contentType;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
