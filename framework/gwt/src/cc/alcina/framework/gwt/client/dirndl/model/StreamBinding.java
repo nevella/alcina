@@ -362,30 +362,30 @@ public class StreamBinding<T> {
 	 */
 	public static class InstanceDistinctLambda
 			implements Runnable, ManagedLambdaEquality {
-		Model model;
+		Object closure;
 
 		Runnable runnable;
 
-		InstanceDistinctLambda(Model model, Runnable runnable) {
-			this.model = model;
+		InstanceDistinctLambda(Object closure, Runnable runnable) {
+			this.closure = closure;
 			this.runnable = runnable;
 		}
 
-		public static InstanceDistinctLambda of(Model model,
+		public static InstanceDistinctLambda of(Object closure,
 				Runnable runnable) {
-			return new InstanceDistinctLambda(model, runnable);
+			return new InstanceDistinctLambda(closure, runnable);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(model, runnable);
+			return Objects.hash(closure, runnable);
 		}
 
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof InstanceDistinctLambda) {
 				InstanceDistinctLambda o = (InstanceDistinctLambda) obj;
-				return model == o.model && runnable == o.runnable;
+				return closure == o.closure && runnable == o.runnable;
 			} else {
 				return false;
 			}
@@ -437,6 +437,11 @@ public class StreamBinding<T> {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
+		return this;
+	}
+
+	public StreamBinding<T> withFireOnce() {
+		fireOnce = true;
 		return this;
 	}
 

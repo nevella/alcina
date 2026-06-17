@@ -420,8 +420,9 @@ public class MeasureOverlay {
 			Measure measure = null;
 			if (highlighter != null) {
 				DomNode highlit = highlighter.highlight(node);
-				measure = Measure.fromNode(highlit, HighlightToken.TYPE)
-						.withData(highlighter);
+				measure = highlit == null ? null
+						: Measure.fromNode(highlit, HighlightToken.TYPE)
+								.withData(highlighter);
 			} else {
 				measure = Measure.fromNode(node.asDomNode(), GenericToken.TYPE);
 			}

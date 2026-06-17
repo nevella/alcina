@@ -4,6 +4,9 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.ContextSensitiveReverseTransform;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.ContextSensitiveTransform;
@@ -85,6 +88,25 @@ public class StringRepresentable {
 			@Override
 			public String apply(String t) {
 				return t;
+			}
+		}
+
+		@Registration({ ToStringRepresentation.class, Object.class })
+		public static class ToStringRepresentationDefault
+				extends Binding.AbstractContextSensitiveTransform<Object>
+				implements ToStringRepresentation<Object> {
+			@Override
+			public String apply(Object t) {
+				if (t == null) {
+					return null;
+				}
+				if (CommonUtils.isStandardJavaClassOrEnum(t.getClass())) {
+					return t.toString();
+				} else {
+					throw new UnsupportedOperationException(Ax.format(
+							"Type %s requires an explicit ToStringRepresentation transformer",
+							NestedName.get(t)));
+				}
 			}
 		}
 	}

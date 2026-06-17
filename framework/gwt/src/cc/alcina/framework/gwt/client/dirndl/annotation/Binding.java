@@ -48,6 +48,11 @@ public @interface Binding {
 
 	Type type();
 
+	/*
+	 * if false, only map from model to element (renderable)
+	 */
+	boolean bidi() default true;
+
 	public abstract static class AbstractContextSensitiveReverseTransform<T>
 			implements ContextSensitiveReverseTransform<T> {
 		protected Node node;
@@ -205,6 +210,8 @@ public @interface Binding {
 
 		Type type;
 
+		boolean bidi;
+
 		public Impl() {
 		}
 
@@ -214,6 +221,7 @@ public @interface Binding {
 			this.to = binding.to();
 			this.transform = binding.transform();
 			this.type = binding.type();
+			this.bidi = binding.bidi();
 		}
 
 		private String __stringValue(Object o) {
@@ -264,7 +272,7 @@ public @interface Binding {
 					&& Objects.equals(this.literal, other.literal)
 					&& Objects.equals(this.to, other.to)
 					&& Objects.equals(this.transform, other.transform)
-					&& this.type == other.type;
+					&& this.type == other.type && this.bidi == other.bidi;
 		}
 
 		@Override
@@ -274,7 +282,7 @@ public @interface Binding {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(from, literal, to, transform, type);
+			return Objects.hash(from, literal, to, transform, type, bidi);
 		}
 
 		@Override
@@ -285,6 +293,11 @@ public @interface Binding {
 		@Override
 		public String to() {
 			return to;
+		}
+
+		@Override
+		public boolean bidi() {
+			return bidi;
 		}
 
 		@Override
@@ -299,6 +312,7 @@ public @interface Binding {
 			append(stringBuilder, "to", Impl::to, elideDefaults);
 			append(stringBuilder, "transform", Impl::transform, elideDefaults);
 			append(stringBuilder, "type", Impl::type, elideDefaults);
+			append(stringBuilder, "type", Impl::bidi, elideDefaults);
 			return stringBuilder.toString();
 		}
 

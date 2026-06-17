@@ -179,7 +179,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 					// fall through to the awaiter
 					dispatchable = dispatchableTokens.stream()
 							.filter(token -> token.isAwaiter()).findFirst()
-							.get();
+							.orElse(null);
 				}
 				return dispatchable;
 			}
@@ -433,7 +433,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	}
 
 	/*
-	 * FIXME - romcom/http - this should be extended?
+	 * FIXME - romcom/http - this should be extended? Also cache last cookies
+	 * (or loop) in cases where there's no awaiter
 	 */
 	public Cookie[] getCookies() {
 		DispatchableToken token = aggregateDispatcher

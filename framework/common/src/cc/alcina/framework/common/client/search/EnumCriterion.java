@@ -107,14 +107,14 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return (T) this;
 	}
 
-	public static abstract class Searchable<E extends Enum, C extends EnumCriterion<E>>
+	public static abstract class EnumSearchable<E extends Enum, C extends EnumCriterion<E>>
 			extends FlatSearchable<C> {
 		protected Class<E> enumClass;
 
 		protected int maxSelectedItems = 999;
 
-		public Searchable(Class<C> clazz, Class<E> enumClass, String objectName,
-				String criteriaName) {
+		public EnumSearchable(Class<C> clazz, Class<E> enumClass,
+				String objectName, String criteriaName) {
 			super(clazz, objectName, criteriaName,
 					Arrays.asList(StandardSearchOperator.EQUALS));
 			this.enumClass = enumClass;

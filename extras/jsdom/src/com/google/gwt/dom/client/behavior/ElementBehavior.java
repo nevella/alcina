@@ -125,6 +125,12 @@ public interface ElementBehavior extends EventBehavior {
 		public void onNativeEvent(NativePreviewEvent event,
 				Element registeredElement,
 				RegisterAllEvents registerAllEvents) {
+			if (!registeredElement.asDomNode().isAttached()) {
+				// a little messy - handle higher up?
+				registerAllEvents.registerAllEvents(registeredElement, this,
+						false);
+				return;
+			}
 			Selection selection = Document.get().getSelection();
 			boolean contains = false;
 			if (selection.hasAttachedSelection()) {

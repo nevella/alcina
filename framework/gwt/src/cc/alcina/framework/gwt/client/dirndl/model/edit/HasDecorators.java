@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.dom.client.Document;
@@ -69,18 +70,28 @@ public interface HasDecorators
 		FragmentModel.Has, DomEvents.Focusout.Handler, HasElementBehaviors {
 	@Override
 	default List<ElementBehavior> getBehaviors() {
-		return List.of(
-				new ElementBehavior.EnsureEditableNodesAtUneditableBoundaries(),
-				new ElementBehavior.EnsureCursorTargetIsTextNode(),
-				// new EditAreaBehavior.ExtendKeyboardNavigationAction(),
-				/*
-				 * wip - decorator - maybe zap? content-editable may fix this.
-				 * anyway, invariant is along the lines of
-				 * "deletion of partially-selected decorator deletes whole decorator"
-				 */
-				// DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
-				new ElementBehavior.UndoEditableAutocreatedBr());
+		List<ElementBehavior> result = new ArrayList<>();
+		result.add(
+				new ElementBehavior.EnsureEditableNodesAtUneditableBoundaries());
+		result.add(new ElementBehavior.EnsureCursorTargetIsTextNode());
+		if (suppressEnter()) {
+			result.add(new ElementBehavior.UndoEditableAutocreatedBr());
+		}
+		return result;
+		// return List.of(
+		// new ElementBehavior.EnsureEditableNodesAtUneditableBoundaries(),
+		// new ElementBehavior.EnsureCursorTargetIsTextNode(),
+		// // new EditAreaBehavior.ExtendKeyboardNavigationAction(),
+		// /*
+		// * wip - decorator - maybe zap? content-editable may fix this.
+		// * anyway, invariant is along the lines of
+		// * "deletion of partially-selected decorator deletes whole decorator"
+		// */
+		// // DecoratorBehavior.ModifyNonEditableSelectionBehaviour.class,
+		// new ElementBehavior.UndoEditableAutocreatedBr());
 	}
+
+	boolean suppressEnter();
 
 	default boolean canDecorate(EditSelection editSelection) {
 		DomNode focusNode = editSelection.focusNode();

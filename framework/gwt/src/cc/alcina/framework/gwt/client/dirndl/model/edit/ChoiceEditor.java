@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -80,6 +81,47 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		DecoratorEvents.EditNodesChanged.Handler, ModelEvents.Commit.Handler,
 		Choices.CommitWithNoSelectedChoice.Handler,
 		DecoratorEvents.SelectedDecoratorDeleted.Handler {
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface RouterType {
+		public static class Impl implements RouterType {
+			public Class<? extends SuggestOracleRouter> value;
+
+			public Impl withValue(Class<? extends SuggestOracleRouter> value) {
+				this.value = value;
+				return this;
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return RouterType.class;
+			}
+
+			@Override
+			public Class<? extends SuggestOracleRouter> value() {
+				return value;
+			}
+		}
+
+		/**
+		 * The answer type
+		 */
+		Class<? extends SuggestOracleRouter> value();
+	}
+
+	/**
+	 * If constrained, suggestions will be rendered relative to the editor, not
+	 * the suggesting node
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface WidthConstrained {
+	}
+
 	@Directed(tag = "choice-node")
 	@Bean(PropertySource.FIELDS)
 	static class ChoiceNode extends DecoratorNode<Choice, Object>
@@ -87,6 +129,10 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		static class Descriptor
 				extends DecoratorNode.Descriptor<Choice, Object, ChoiceNode> {
 			static transient Descriptor INSTANCE = new Descriptor();
+
+			static String choiceToString(Choice choice) {
+				return CommonUtils.nullSafeToString(choice.getValue());
+			}
 
 			@Override
 			public ChoiceNode createNode() {
@@ -113,10 +159,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 						}
 					}
 				};
-			}
-
-			static String choiceToString(Choice choice) {
-				return CommonUtils.nullSafeToString(choice.getValue());
 			}
 
 			public void onCommit(Commit event) {
@@ -175,6 +217,12 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		}
 	}
 
+	class Service implements ContextService {
+		public Function getValueTransformer() {
+			return valueTransformerFunction;
+		}
+	}
+
 	@Directed
 	EditArea editArea;
 
@@ -192,10 +240,17 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	boolean widthConstrained;
 
-	class Service implements ContextService {
-		public Function getValueTransformer() {
-			return valueTransformerFunction;
-		}
+	public ChoiceEditor() {
+		editArea = new EditArea();
+		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
+		keyboardNavigation = new KeyboardNavigation(this);
+		from(editArea.properties().value()).withSetOnInitialise(false)
+				.signal(this::onEditCommit);
+	}
+
+	@Override
+	public boolean suppressEnter() {
+		return true;
 	}
 
 	@Override
@@ -217,12 +272,66 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		editArea.makeLastSuggestingNodeTabbable();
 	}
 
-	public ChoiceEditor() {
-		editArea = new EditArea();
-		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
-		keyboardNavigation = new KeyboardNavigation(this);
-		from(editArea.properties().value()).withSetOnInitialise(false)
-				.signal(this::onEditCommit);
+	@Override
+	public List<ContentDecorator> getDecorators() {
+		return this.decorators;
+	}
+
+	@Override
+	public void onSelected(Selected event) {
+		/*
+		 * this will be from the decorator Selected event (so unrelated to the
+		 * selections of *this* area) and should be squelched
+		 */
+		/*
+		 * NOOP
+		 */
+	}
+
+	@Override
+	public void onKeyDown(KeyDown event) {
+		if (hasActiveDecorator()) {
+			keyboardNavigation.onKeyDown(event);
+		}
+		HasDecorators.super.onKeyDown(event);
+	}
+
+	@Override
+	@Directed.Exclude
+	public List<Model> getElements() {
+		return super.getElements();
+	}
+
+	@Override
+	public FragmentModel provideFragmentModel() {
+		return editArea.provideFragmentModel();
+	}
+
+	@Override
+	public void validateDecorators() {
+	}
+
+	@Override
+	public void onCommit(Commit event) {
+		Model model = event.getModel();
+		if (model == this) {
+			event.bubble();
+			return;
+		}
+		ChoiceNode choiceNode = (ChoiceNode) model;
+		DomNode choiceNodeNode = choiceNode.provideElement().asDomNode();
+		DomNode target = choiceNodeNode.relative().nextSibling();
+		Document.get().getSelection().collapse(target.asLocation());
+	}
+
+	@Override
+	public void onCommitWithNoSelectedChoice(CommitWithNoSelectedChoice event) {
+		event.reemitAs(this, Commit.class, this);
+	}
+
+	@Override
+	public void onSelectedDecoratorDeleted(SelectedDecoratorDeleted event) {
+		exec(editArea::focusLastSuggestingDecorator).dispatch();
 	}
 
 	/*
@@ -264,67 +373,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		this.widthConstrained = node.annotation(WidthConstrained.class) != null;
 		decorators.add(createChoiceDecorator());
 		super.populateFromNodeContext(node, valueFilter);
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface RouterType {
-		/**
-		 * The answer type
-		 */
-		Class<? extends SuggestOracleRouter> value();
-	}
-
-	/**
-	 * If constrained, suggestions will be rendered relative to the editor, not
-	 * the suggesting node
-	 */
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface WidthConstrained {
-	}
-
-	@Override
-	public List<ContentDecorator> getDecorators() {
-		return this.decorators;
-	}
-
-	@Override
-	public void onSelected(Selected event) {
-		/*
-		 * this will be from the decorator Selected event (so unrelated to the
-		 * selections of *this* area) and should be squelched
-		 */
-		/*
-		 * NOOP
-		 */
-	}
-
-	@Override
-	public void onKeyDown(KeyDown event) {
-		if (hasActiveDecorator()) {
-			keyboardNavigation.onKeyDown(event);
-		}
-		HasDecorators.super.onKeyDown(event);
-	}
-
-	@Override
-	@Directed.Exclude
-	public List<Model> getElements() {
-		return super.getElements();
-	}
-
-	@Override
-	public FragmentModel provideFragmentModel() {
-		return editArea.provideFragmentModel();
-	}
-
-	@Override
-	public void validateDecorators() {
 	}
 
 	protected abstract void onSelectedValues(List<T> selectedValues);
@@ -386,28 +434,5 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	void areaContentsFromChoices(List<Choice<?>> choices) {
 		Client.eventBus().queued()
 				.lambda(() -> areaContentsFromChoices0(choices)).dispatch();
-	}
-
-	@Override
-	public void onCommit(Commit event) {
-		Model model = event.getModel();
-		if (model == this) {
-			event.bubble();
-			return;
-		}
-		ChoiceNode choiceNode = (ChoiceNode) model;
-		DomNode choiceNodeNode = choiceNode.provideElement().asDomNode();
-		DomNode target = choiceNodeNode.relative().nextSibling();
-		Document.get().getSelection().collapse(target.asLocation());
-	}
-
-	@Override
-	public void onCommitWithNoSelectedChoice(CommitWithNoSelectedChoice event) {
-		event.reemitAs(this, Commit.class, this);
-	}
-
-	@Override
-	public void onSelectedDecoratorDeleted(SelectedDecoratorDeleted event) {
-		exec(editArea::focusLastSuggestingDecorator).dispatch();
 	}
 }

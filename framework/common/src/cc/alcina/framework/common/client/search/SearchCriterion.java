@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
@@ -275,5 +276,10 @@ public abstract class SearchCriterion extends Bindable
 	@JsonIgnore
 	public List<StandardSearchOperator> getApplicableOperators() {
 		return List.of(StandardSearchOperator.EQUALS);
+	}
+
+	public String provideDisplayName() {
+		return Ax.blankTo(getDisplayName(),
+				getClass().getSimpleName().replace("Criterion", ""));
 	}
 }

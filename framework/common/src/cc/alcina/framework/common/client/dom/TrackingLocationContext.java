@@ -223,7 +223,10 @@ class TrackingLocationContext implements LocationContext {
 				} else {
 					MutationNode removed = Ax.first(mutation.removedNodes);
 					DomNode removedNode = removed.node.asDomNode();
-					result = removedNode.location;
+					/*
+					 * FIXME - this should be removedNode.location
+					 */
+					result = removedNode.asLocation();
 					/*
 					 * This step ensures consecutive removals are o(1) - since
 					 * treePrecding will be constant

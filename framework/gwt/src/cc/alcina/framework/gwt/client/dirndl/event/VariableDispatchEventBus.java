@@ -102,6 +102,13 @@ public class VariableDispatchEventBus extends SimpleEventBus {
 			}
 		}
 
+		/**
+		 * Careful! The lambda may well want to be wrapped in
+		 * InstanceDistinctLambda - since otherwise there's no formal guarantee
+		 * regarding lambda equality (or inequality) wrt closure
+		 * 
+		 * @return
+		 */
 		public QueuedEvent distinct() {
 			distinct = true;
 			return this;

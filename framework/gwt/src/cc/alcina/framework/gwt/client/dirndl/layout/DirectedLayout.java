@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -45,7 +44,6 @@ import cc.alcina.framework.common.client.reflection.AttributeTemplate;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -1007,7 +1005,7 @@ public class DirectedLayout implements AlcinaProcess {
 			org.w3c.dom.Node previousSibling = childW3cNode
 					.getPreviousSibling();
 			ensureChildren();
-			boolean append = previousSibling == null && children.isEmpty()
+			boolean append = children.isEmpty()
 					|| previousSibling == Ax.last(children).rendered.getNode();
 			if (append) {
 				children.add(node);
@@ -1586,10 +1584,13 @@ public class DirectedLayout implements AlcinaProcess {
 			void setLeft() {
 				Property property = getProperty();
 				if (property == null) {
-					// literatl
+					// literal
 					return;
 				}
 				if (property.isReadOnly()) {
+					return;
+				}
+				if (!binding.bidi()) {
 					return;
 				}
 				String stringValue = null;

@@ -388,4 +388,17 @@ public class Ax {
 		}
 		return o1.getClass() == o2.getClass();
 	}
+
+	public static boolean isEmpty(Object object) {
+		if (object == null) {
+			return true;
+		}
+		if (object instanceof Collection) {
+			return ((Collection) object).isEmpty();
+		}
+		if (object instanceof String) {
+			return ((String) object).isEmpty();
+		}
+		return false;
+	}
 }

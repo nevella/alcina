@@ -35,6 +35,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding.InstanceDistinctLambda;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
@@ -211,7 +212,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
 
 	/* reference the runnable via a field to ensure distinct() works */
-	Runnable checkTrigger0Runnable = this::checkTrigger0;
+	Runnable checkTrigger0Runnable = InstanceDistinctLambda.of(this,
+			this::checkTrigger0);
 
 	Runnable validateSelection0Runnable = this::validateSelection0;
 
@@ -449,6 +451,14 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				 * actually - that depends. for the moment, *don't* exit here.
 				 */
 				// return;
+				/*
+				 * but do check this isn't caused by a different decorator
+				 * displaying
+				 * 
+				 */
+				if (decoratorParent.hasActiveDecorator()) {
+					return;
+				}
 				suggestingNode = focussedFragment.ancestors()
 						.get(SuggestingNode.class);
 				showOverlay(suggestingNode.domNode());

@@ -138,13 +138,8 @@ public abstract class DecoratorNode<WT, SR> extends EditNode implements
 	public Object content = null;
 
 	/**
-	 * The serialized form of the object this decorator represents (in
-	 * combination with the decorator tagname)
+	 * see the getter for docs + annotations
 	 */
-	@Binding(
-		type = Type.PROPERTY,
-		to = "_data",
-		transform = RepresentableToStringTransform.class)
 	public SR stringRepresentable;
 
 	public DecoratorNode() {
@@ -155,8 +150,17 @@ public abstract class DecoratorNode<WT, SR> extends EditNode implements
 		return Reflections.at(this).getGenericBounds().bounds.get(1);
 	}
 
+	/**
+	 * The serialized form of the object this decorator represents (in
+	 * combination with the decorator tagname)
+	 */
+	@Binding(
+		type = Type.PROPERTY,
+		to = "_data",
+		transform = RepresentableToStringTransform.class)
 	/*
 	 * for method refs
+	 * 
 	 */
 	public SR getStringRepresentable() {
 		return stringRepresentable;
@@ -171,8 +175,9 @@ public abstract class DecoratorNode<WT, SR> extends EditNode implements
 	public abstract Descriptor<WT, SR, ?> getDescriptor();
 
 	public void putReferenced(DirectedLayout.Node contextNode, WT referenced) {
-		properties().stringRepresentable()
-				.set(getDescriptor().toStringRepresentable(referenced));
+		SR stringRepresentable = getDescriptor()
+				.toStringRepresentable(referenced);
+		properties().stringRepresentable().set(stringRepresentable);
 		String triggerSequence = getDescriptor().triggerSequence();
 		Object renderedReferenced = getDescriptor().itemRenderer()
 				.render(contextNode, referenced);
