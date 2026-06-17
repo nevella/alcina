@@ -12,25 +12,29 @@ public class MimeContent implements Serializable {
 
 	public String contentType;
 
+	public String name;
+
 	public MimeContent() {
 	}
 
-	public MimeContent(byte[] bytes, String contentType) {
+	public MimeContent(byte[] bytes, String contentType, String name) {
 		this.bytes = bytes;
 		this.contentType = contentType;
+		this.name = name;
 	}
 
-	public MimeContent(InputStream content, String contentType) {
+	public MimeContent(InputStream content, String contentType, String name) {
 		try {
 			this.bytes = Io.read().fromStream(content).asBytes();
 			this.contentType = contentType;
+			this.name = name;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	public MimeContent(String out, String contentType) {
+	public MimeContent(String out, String contentType, String name) {
 		this(new ByteArrayInputStream(out.getBytes(StandardCharsets.UTF_8)),
-				contentType);
+				contentType, name);
 	}
 }
