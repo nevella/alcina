@@ -64,6 +64,9 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 		@Override
 		protected void send(Message message) {
+			if (message.toString().contains("annotation::setP")) {
+				int debug = 3;
+			}
 			batcher.add(message);
 		}
 

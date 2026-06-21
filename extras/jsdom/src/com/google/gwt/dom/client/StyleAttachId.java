@@ -720,21 +720,22 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setPosition(Position value) {
-		element.invokeStyleAsync("setPosition", List.of(Position.class),
-				List.of(value));
+		ElementAttachId.emitStylePropertyMutation(element.elementFor(),
+				"setPosition", List.of(Position.class), List.of(value));
 	}
 
 	@Override
 	public void setProperty(String name, double value, Unit unit) {
-		element.invokeStyleAsync("setProperty",
-				List.of(String.class, double.class, Unit.class),
+		ElementAttachId.emitStylePropertyMutation(element.elementFor(),
+				"setProperty", List.of(String.class, double.class, Unit.class),
 				List.of(name, value, unit));
 	}
 
 	@Override
 	public void setProperty(String name, String value) {
-		element.invokeStyleAsync("setProperty",
-				List.of(String.class, String.class), List.of(name, value));
+		ElementAttachId.emitStylePropertyMutation(element.elementFor(),
+				"setProperty", List.of(String.class, String.class),
+				List.of(name, value));
 	}
 
 	@Override
@@ -789,7 +790,8 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setTop(double value, Unit unit) {
-		element.invokeStyleAsync("setTop", List.of(double.class, Unit.class),
+		ElementAttachId.emitStylePropertyMutation(element.elementFor(),
+				"setTop", List.of(double.class, Unit.class),
 				List.of(value, unit));
 	}
 
@@ -815,7 +817,8 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setWidth(double value, Unit unit) {
-		element.invokeStyleAsync("setWidth", List.of(double.class, Unit.class),
+		ElementAttachId.emitStylePropertyMutation(element.elementFor(),
+				"setWidth", List.of(double.class, Unit.class),
 				List.of(value, unit));
 	}
 
@@ -831,7 +834,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void removeProperty(String key) {
-		element.invokeStyleAsync("removeProperty", List.of(String.class),
-				List.of(key));
+		ElementAttachId.emitStylePropertyMutation(element.elementFor(),
+				"removeProperty", List.of(String.class), List.of(key));
 	}
 }

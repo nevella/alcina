@@ -1602,4 +1602,10 @@ public class Element extends Node implements ClientDomElement,
 	public void getFileData(AsyncCallback<InputFileData> callback) {
 		remote.getFileData(callback);
 	}
+
+	public void ensureBehavior(ElementBehavior behavior) {
+		if (!hasBehavior(behavior.getClass())) {
+			addBehavior(behavior);
+		}
+	}
 }

@@ -27,12 +27,11 @@ public class ElementOffsetsRequired extends ElementBehavior.NonParameterised
 	}
 
 	/**
-	 * Optimisiation - this will only change (relative to the parent) if the
-	 * parent size changes. Known by code, it means the browser-side check
-	 * happens only once
+	 * Optimisiation - all descendants do not change unless the parent changes .
+	 * Known by code, it means the browser-side check happens only once
 	 */
-	public static class ParentRelativeFixed extends ElementOffsetsRequired {
-		public static ParentRelativeFixed INSTANCE = new ParentRelativeFixed();
+	public static class DescendantRelativeFixed extends ElementOffsetsRequired {
+		public static DescendantRelativeFixed INSTANCE = new DescendantRelativeFixed();
 
 		public interface SoleBehavior extends HasElementBehaviors {
 			@Property.Not

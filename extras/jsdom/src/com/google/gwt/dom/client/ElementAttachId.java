@@ -1,6 +1,5 @@
 package com.google.gwt.dom.client;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -486,10 +485,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 			} else {
 				// local caching to prevent roundtrips (although those do work)
 				this.value = value;
-				invokeAsync("setPropertyString",
-						List.of(String.class, String.class),
-						// not list.of - does not allow nulls
-						Arrays.asList(name, value));
+				emitPropertyMutation(elementFor(), name, value);
 			}
 			break;
 		}
@@ -499,10 +495,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 			} else {
 				// local caching to prevent roundtrips (although those do work)
 				this.selectedIndex = toValue;
-				invokeAsync("setPropertyString",
-						List.of(String.class, String.class),
-						// not list.of - does not allow nulls
-						Arrays.asList(name, value));
+				emitPropertyMutation(elementFor(), name, value);
 			}
 			break;
 		}
@@ -616,6 +609,28 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 		record.target = MutationNode.forNode(elem);
 		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.behaviorAdded = behavior;
+		emitMutation(elem.getOwnerDocument(), record);
+	}
+
+	static void emitStylePropertyMutation(Element elem, String styleMethodName,
+			List<Class> argumentTypes, List<?> arguments) {
+		MutationRecord record = new MutationRecord();
+		record.type = MutationRecord.Type.style_property;
+		record.target = MutationNode.forNode(elem);
+		record.mutationGroup = elem.mutationGroups().getActiveGroup();
+		record.styleMutation = new MutationRecord.StyleMutation(styleMethodName,
+				argumentTypes, arguments);
+		emitMutation(elem.getOwnerDocument(), record);
+	}
+
+	static void emitPropertyMutation(Element elem, String propertyName,
+			String value) {
+		MutationRecord record = new MutationRecord();
+		record.type = MutationRecord.Type.property;
+		record.target = MutationNode.forNode(elem);
+		record.mutationGroup = elem.mutationGroups().getActiveGroup();
+		record.propertyMutation = new MutationRecord.PropertyMutation(
+				propertyName, value);
 		emitMutation(elem.getOwnerDocument(), record);
 	}
 

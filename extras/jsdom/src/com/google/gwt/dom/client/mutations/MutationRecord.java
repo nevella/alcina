@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
@@ -52,9 +53,46 @@ public final class MutationRecord {
 	public interface FlagApplyingDetachedMutationsToLocalDom extends Flag {
 	}
 
+	@Bean(PropertySource.FIELDS)
+	@TypeSerialization(propertyOrder = PropertyOrder.FIELD)
+	public static final class StyleMutation {
+		public String styleMethodName;
+
+		public List<Class> argumentTypes;
+
+		public List<?> arguments;
+
+		public StyleMutation() {
+		}
+
+		public StyleMutation(String styleMethodName, List<Class> argumentTypes,
+				List<?> arguments) {
+			this.styleMethodName = styleMethodName;
+			this.argumentTypes = argumentTypes;
+			this.arguments = arguments;
+		}
+	}
+
+	@Bean(PropertySource.FIELDS)
+	@TypeSerialization(propertyOrder = PropertyOrder.FIELD)
+	public static final class PropertyMutation {
+		public String propertyName;
+
+		public String value;
+
+		public PropertyMutation() {
+		}
+
+		public PropertyMutation(String propertyName, String value) {
+			this.propertyName = propertyName;
+			this.value = value;
+		}
+	}
+
 	@Reflected
 	public enum Type {
-		attributes, characterData, childList, innerMarkup, behavior
+		attributes, characterData, childList, innerMarkup, behavior, property,
+		style_property
 	}
 
 	enum ApplyDirection {
@@ -395,6 +433,10 @@ public final class MutationRecord {
 
 	public Class<? extends ElementBehavior> behaviorRemoved;
 
+	public StyleMutation styleMutation;
+
+	public PropertyMutation propertyMutation;
+
 	// for serialization
 	public MutationRecord() {
 		flags = LooseContext.get(CONTEXT_FLAGS);
@@ -615,8 +657,23 @@ public final class MutationRecord {
 			} else {
 				elem.removeBehavior(behaviorRemoved);
 			}
-		}
 			break;
+		}
+		case property: {
+			Preconditions.checkState(applyDirection == ApplyDirection.history);
+			Element elem = (Element) target.node();
+			elem.setPropertyString(propertyMutation.propertyName,
+					propertyMutation.value);
+			break;
+		}
+		case style_property: {
+			Preconditions.checkState(applyDirection == ApplyDirection.history);
+			Element elem = (Element) target.node();
+			Reflections.at(elem.getStyle()).invoke(elem.getStyle(),
+					styleMutation.styleMethodName, styleMutation.argumentTypes,
+					styleMutation.arguments, null);
+			break;
+		}
 		default:
 			throw new UnsupportedOperationException();
 		}

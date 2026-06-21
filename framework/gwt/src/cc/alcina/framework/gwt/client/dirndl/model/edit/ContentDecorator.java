@@ -529,23 +529,26 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		suggestor = suggestorProvider.apply(this, decoratorDomNode);
 		attributes.withCssClass("decorator-suggestor");
 		attributes.withConsumeSubmit(true).withFocusOnBind(false);
-		try {
-			DomRect boundingClientRect = rectElement.getBoundingClientRect();
-			overlay = attributes
-					.dropdown(OverlayPosition.Position.START,
-							boundingClientRect, (Model) decoratorParent,
-							suggestor)
-					.withRectSourceElement(rectElement)
-					.withPeerModels(List.of(this.suggestingNode)).create();
-			new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
-					.publish();
-			overlay.open();
-			this.overlayEditNode = decoratorDomNode;
-		} catch (NodeNotFoundException e) {
-			/*
-			 * the suggestor was never rendered due to edit conflicts
-			 */
-		}
+		Client.RenderState.queueWithRenderedState(() -> {
+			try {
+				DomRect boundingClientRect = rectElement
+						.getBoundingClientRect();
+				overlay = attributes
+						.dropdown(OverlayPosition.Position.START,
+								boundingClientRect, (Model) decoratorParent,
+								suggestor)
+						.withRectSourceElement(rectElement)
+						.withPeerModels(List.of(this.suggestingNode)).create();
+				new DecoratorEvent()
+						.withType(DecoratorEvent.Type.overlay_opened).publish();
+				overlay.open();
+				this.overlayEditNode = decoratorDomNode;
+			} catch (NodeNotFoundException e) {
+				/*
+				 * the suggestor was never rendered due to edit conflicts
+				 */
+			}
+		});
 	}
 
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)

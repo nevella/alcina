@@ -203,10 +203,10 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 							.get().firingLocationMutation = false;
 				}
 			}
-			/*
-			 * state changed, emit an update
-			 */
-			ClientRpc.send(new Message.WindowStateUpdate());
+			if (mutations == MessageTransportLayerClient
+					.cast().receiveChannel.lastMutations) {
+				ClientRpc.send(new Message.WindowStateUpdate());
+			}
 		}
 
 		static class DispatchListener implements EventListener {

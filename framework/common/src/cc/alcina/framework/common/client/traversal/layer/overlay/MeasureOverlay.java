@@ -382,9 +382,7 @@ public class MeasureOverlay {
 	}
 
 	public ElementOffsetsRequired getOffsetsBehavior() {
-		return parentRelativeFixed
-				? ElementOffsetsRequired.ParentRelativeFixed.INSTANCE
-				: ElementOffsetsRequired.INSTANCE;
+		return ElementOffsetsRequired.INSTANCE;
 	}
 
 	void markEndpoints() {

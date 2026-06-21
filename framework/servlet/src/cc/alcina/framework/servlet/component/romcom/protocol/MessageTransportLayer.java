@@ -1023,7 +1023,7 @@ public abstract class MessageTransportLayer {
 			return "receive";
 		}
 
-		void publishSequentialMessages() {
+		protected void publishSequentialMessages() {
 			synchronized (MessageTransportLayer.this) {
 				for (MessageToken activeMessageToken : activeMessages) {
 					boolean publish = activeMessageToken.message.messageId.number == highestPublishedMessageId

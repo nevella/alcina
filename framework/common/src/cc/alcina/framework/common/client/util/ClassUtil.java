@@ -87,6 +87,29 @@ public class ClassUtil {
 		return false;
 	}
 
+	public static String toStringValue(Object value) {
+		if (value == null) {
+			return null;
+		}
+		Class valueClass = value.getClass();
+		if (Reflections.isAssignableFrom(Enum.class, valueClass)) {
+			return value.toString();
+		}
+		if (valueClass == Class.class) {
+			return ((Class) value).getName();
+		}
+		if (valueClass == String.class) {
+			return (String) value;
+		}
+		if (valueClass == Long.class || valueClass == Double.class
+				|| valueClass == Integer.class || valueClass == Boolean.class
+				|| valueClass == Float.class || valueClass == Short.class
+				|| valueClass == Byte.class) {
+			return String.valueOf(value);
+		}
+		throw new UnsupportedOperationException();
+	}
+
 	public static Object fromStringValue(String stringValue, Class valueClass) {
 		if (stringValue == null) {
 			return stringValue;
