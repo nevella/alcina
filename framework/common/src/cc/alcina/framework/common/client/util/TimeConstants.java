@@ -66,4 +66,8 @@ public class TimeConstants {
 	public static Date relativeDate(long msDelta) {
 		return new Date(System.currentTimeMillis() + msDelta);
 	}
+
+	public static void logDuration(String message, long start) {
+		Ax.out("[%s] duration: %s ms", message, age(start));
+	}
 }
