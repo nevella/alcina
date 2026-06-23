@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -78,7 +78,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 class NodeEventBinding {
 	static boolean isDescendantBinding(Class<? extends NodeEvent> clazz) {
-		return Reflections.isAssignableFrom(ModelEvent.DescendantEvent.class,
+		return Reflections.isAssignableFrom(ModelEvent.ReflectedEvent.class,
 				clazz);
 	}
 
@@ -317,7 +317,7 @@ class NodeEventBinding {
 		}
 
 		void dispatch(ModelEvent modelEvent) {
-			if (!(modelEvent instanceof DescendantEvent.NotStored)) {
+			if (!(modelEvent instanceof ReflectedEvent.NotStored)) {
 				lastDispatched = modelEvent;
 			}
 			/*

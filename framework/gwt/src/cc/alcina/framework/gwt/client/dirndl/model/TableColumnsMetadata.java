@@ -24,7 +24,7 @@ public interface TableColumnsMetadata {
 	}
 
 	public static class Change extends
-			ModelEvent.DescendantEvent<TableColumnsMetadata, Change.Handler, Change.Emitter> {
+			ModelEvent.ReflectedEvent<TableColumnsMetadata, Change.Handler, Change.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onTableColumnMetadataChange(Change event);
 		}

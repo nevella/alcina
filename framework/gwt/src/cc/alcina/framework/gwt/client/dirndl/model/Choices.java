@@ -245,7 +245,7 @@ public abstract class Choices<T> extends Model implements
 	 * model/payload to true
 	 */
 	public static class ChoiceSelectedDescent extends
-			ModelEvent.DescendantEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
+			ModelEvent.ReflectedEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onChoiceSelectedDescent(ChoiceSelectedDescent event);
 		}

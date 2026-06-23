@@ -65,7 +65,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
@@ -211,7 +211,7 @@ public class DirectedLayout implements AlcinaProcess {
 			Model dispatchDelegate = ((ModelEvent.DelegatesDispatch) sourceModel)
 					.provideDispatchDelegate();
 			if (dispatchDelegate != null) {
-				if (modelEvent instanceof ModelEvent.DescendantEvent) {
+				if (modelEvent instanceof ModelEvent.ReflectedEvent) {
 					Context delegateDescentContext = NodeEvent.Context
 							.fromEvent(modelEvent,
 									dispatchDelegate.provideNode());
@@ -227,7 +227,7 @@ public class DirectedLayout implements AlcinaProcess {
 				return;
 			}
 		}
-		if (modelEvent instanceof ModelEvent.DescendantEvent) {
+		if (modelEvent instanceof ModelEvent.ReflectedEvent) {
 			ModelEventDispatch.dispatchDescent(modelEvent);
 		} else {
 			ModelEventDispatch.dispatchAscent(modelEvent);
@@ -2069,9 +2069,9 @@ public class DirectedLayout implements AlcinaProcess {
 										: reflector.getGenericBounds().bounds
 												.get(0);
 						handlerEvents.put(handlerClass, eventClass);
-						if (Reflections.isAssignableFrom(DescendantEvent.class,
+						if (Reflections.isAssignableFrom(ReflectedEvent.class,
 								eventClass)) {
-							Class<? extends ModelEvent.Emitter> emitterClass = ((DescendantEvent) reflector
+							Class<? extends ModelEvent.Emitter> emitterClass = ((ReflectedEvent) reflector
 									.newInstance()).getEmitterClass();
 							emitterEvents.put(emitterClass,
 									(Class<? extends ModelEvent>) eventClass);

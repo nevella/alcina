@@ -8,8 +8,8 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -133,7 +133,7 @@ public class ModelEvents {
 	 * Choice.value)
 	 */
 	public static class BeforeSelectionChangedDispatchDescent extends
-			ModelEvent.DescendantEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {
+			ModelEvent.ReflectedEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {
 		@Override
 		public void dispatch(
 				BeforeSelectionChangedDispatchDescent.Handler handler) {
@@ -327,7 +327,7 @@ public class ModelEvents {
 	}
 
 	public static class Filter
-			extends DescendantEvent<Object, Filter.Handler, Filter.Emitter> {
+			extends ReflectedEvent<Object, Filter.Handler, Filter.Emitter> {
 		@Override
 		public void dispatch(Filter.Handler handler) {
 			handler.onFilter(this);
@@ -383,7 +383,7 @@ public class ModelEvents {
 	}
 
 	public static class FormElementLabelClicked extends
-			ModelEvent.DescendantEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
+			ModelEvent.ReflectedEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
 		@Override
 		public void dispatch(FormElementLabelClicked.Handler handler) {
 			handler.onFormElementLabelClicked(this);
@@ -672,7 +672,7 @@ public class ModelEvents {
 	}
 
 	public static class Searching extends
-			ModelEvent.DescendantEvent<Object, Searching.Handler, Searching.Emitter> {
+			ModelEvent.ReflectedEvent<Object, Searching.Handler, Searching.Emitter> {
 		@Override
 		public void dispatch(Searching.Handler handler) {
 			handler.onSearching(this);
@@ -868,7 +868,7 @@ public class ModelEvents {
 	 * and they receive and optionally handle it
 	 */
 	public static class TopLevelMissedEvent extends
-			DescendantEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
+			ReflectedEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
 		public static Topic<TopLevelMissedEvent> topicNotHandled() {
 			return EventFrame.get().topicTopLevelMissedEvent;
 		}
@@ -938,11 +938,11 @@ public class ModelEvents {
 
 	/**
 	 * For large component structures, have the service root emit a PlaceChanged
-	 * descendant event, rather than each subcomponent listening on the GWT
-	 * event system. Bind handling etc is significantly easier
+	 * reflected event, rather than each subcomponent listening on the GWT event
+	 * system. Bind handling etc is significantly easier
 	 */
 	public static class PlaceChanged extends
-			ModelEvent.DescendantEvent<Place, PlaceChanged.Handler, PlaceChanged.Emitter> {
+			ModelEvent.ReflectedEvent<Place, PlaceChanged.Handler, PlaceChanged.Emitter> {
 		@Override
 		public void dispatch(PlaceChanged.Handler handler) {
 			handler.onPlaceChanged(this);
@@ -969,7 +969,7 @@ public class ModelEvents {
 	 */
 	public interface Global {
 		public static class WindowScroll extends
-				ModelEvent.DescendantEvent<Integer, WindowScroll.Handler, WindowScroll.Emitter> {
+				ModelEvent.ReflectedEvent<Integer, WindowScroll.Handler, WindowScroll.Emitter> {
 			@Override
 			public void dispatch(WindowScroll.Handler handler) {
 				handler.onWindowScroll(this);
@@ -991,7 +991,7 @@ public class ModelEvents {
 		}
 
 		public static class HistoryChange extends
-				ModelEvent.DescendantEvent<String, HistoryChange.Handler, HistoryChange.Emitter> {
+				ModelEvent.ReflectedEvent<String, HistoryChange.Handler, HistoryChange.Emitter> {
 			@Override
 			public void dispatch(HistoryChange.Handler handler) {
 				handler.onHistoryChange(this);
@@ -1053,7 +1053,7 @@ public class ModelEvents {
 	 * itself
 	 */
 	public static class FocusEditor extends
-			ModelEvent.DescendantEvent<Object, FocusEditor.Handler, FocusEditor.Emitter> {
+			ModelEvent.ReflectedEvent<Object, FocusEditor.Handler, FocusEditor.Emitter> {
 		@Override
 		public void dispatch(FocusEditor.Handler handler) {
 			handler.onFocusEditor(this);
@@ -1079,7 +1079,7 @@ public class ModelEvents {
 	 * itself - i.e. to copy any pending (input) value to its value field
 	 */
 	public static class CommitEditor extends
-			ModelEvent.DescendantEvent<Object, CommitEditor.Handler, CommitEditor.Emitter> {
+			ModelEvent.ReflectedEvent<Object, CommitEditor.Handler, CommitEditor.Emitter> {
 		@Override
 		public void dispatch(CommitEditor.Handler handler) {
 			handler.onCommitEditor(this);
