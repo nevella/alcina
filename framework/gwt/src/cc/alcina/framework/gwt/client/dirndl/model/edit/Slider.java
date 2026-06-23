@@ -169,7 +169,7 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 
 	void deltaZoom(ModelEvent event, int i) {
 		double next = value + ((double) i) * 0.1;
-		next = Math.clamp(next, 0.0, 1.0);
+		next = Math.max(Math.min(next, 1.0), 0.0);
 		properties().value().set(next);
 		event.reemitAs(this, ModelEvents.Change.class, value);
 	}
