@@ -66,6 +66,6 @@ class ModelEventDispatch {
 			newContext.setNodeEvent(modelEvent);
 			modelEvent.setModel(model);
 		}
-		emitterNode.getEventBinding(eventType).dispatchDescent(modelEvent);
+		emitterNode.getEventBinding(eventType).dispatchReflected(modelEvent);
 	}
 }
