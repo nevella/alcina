@@ -673,9 +673,6 @@ public class DirectedLayout implements AlcinaProcess {
 			boolean reemits = directed.reemits().length != 0;
 			ReceivesEmitsEvents.ClassData classData = null;
 			if (model != null) {
-				if (model.getClass().getName().contains("ContentPreview")) {
-					int debug = 3;
-				}
 				classData = ReceivesEmitsEvents
 						.get(ClassUtil.resolveEnumSubclassAndSynthetic(model));
 				if (classData.receives.isEmpty()

@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.Sugge
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
@@ -27,7 +28,7 @@ import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.F
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 class LayerFilterEditor extends Model.All
-		implements ModelEvents.Filter.Handler, SuggestionSelected.Handler {
+		implements ReflectedEvents.Filter.Handler, SuggestionSelected.Handler {
 	interface Host {
 		Filter getLayerFilterAttribute();
 
@@ -46,7 +47,7 @@ class LayerFilterEditor extends Model.All
 
 	@Directed(
 		tag = "existing",
-		reemits = { DomEvents.Click.class, ModelEvents.Filter.class })
+		reemits = { DomEvents.Click.class, ReflectedEvents.Filter.class })
 	LeafModel.TextTitle existing;
 
 	private Overlay overlay;
@@ -55,7 +56,7 @@ class LayerFilterEditor extends Model.All
 
 	LayerFilterEditor(LayerFilterEditor.Host host) {
 		this.host = host;
-		button = Link.of(ModelEvents.Filter.class).withoutHref(true)
+		button = Link.of(ReflectedEvents.Filter.class).withoutHref(true)
 				.withClassName("filter").withText("");
 		StandardLayerAttributes.Filter attr = host.getLayerFilterAttribute();
 		if (attr != null) {
@@ -117,7 +118,7 @@ class LayerFilterEditor extends Model.All
 	}
 
 	@Override
-	public void onFilter(ModelEvents.Filter event) {
+	public void onFilter(ReflectedEvents.Filter event) {
 		WidgetUtils.squelchCurrentEvent();
 		FilterSuggestor suggestor = new FilterSuggestor(host);
 		overlay = Overlay.attributes().dropdown(Position.START,

@@ -25,7 +25,8 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.TopLevelMissedEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.TopLevelMissedEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui.EntityPeer;
@@ -258,7 +259,7 @@ public class EntityBrowser {
 	@Directed.Delegating
 	static class EntityEventHandler extends Model
 			implements ModelEvents.Delete.Handler,
-			ModelEvents.TopLevelMissedEvent.Handler {
+			ReflectedEvents.TopLevelMissedEvent.Handler {
 		@Override
 		public final void onDelete(ModelEvents.Delete event) {
 			PermitDeletion permitDeletion = Registry.impl(PermitDeletion.class);

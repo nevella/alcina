@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.component.console;
 
 import com.google.gwt.activity.shared.PlaceUpdateable;
 
-import cc.alcina.framework.servlet.component.console.ServerConsoleBrowser.Ui;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -17,9 +16,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.console.ServerConsoleBrowser.Ui;
 
 /*
  * TODO - look at an approach to prevent double-fires of say reloadServerConsole
@@ -37,7 +38,7 @@ class ServerConsolePage extends Model.Fields
 		ServerConsoleBrowserCommand.ShowKeyboardShortcuts.Handler,
 		ModelEvents.ApplicationHelp.Handler,
 		ServerConsoleBrowserCommand.ToggleHelp.Handler, Binding.TabIndexZero,
-		ModelEvents.PlaceChanged.Emitter {
+		ReflectedEvents.PlaceChanged.Emitter {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)
@@ -86,7 +87,7 @@ class ServerConsolePage extends Model.Fields
 		reportArea = new ServerConsoleArea(this);
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
 		from(ui.subtypeProperties().place())
-				.emitStreamElement(ModelEvents.PlaceChanged.class);
+				.emitStreamElement(ReflectedEvents.PlaceChanged.class);
 	}
 
 	@Override

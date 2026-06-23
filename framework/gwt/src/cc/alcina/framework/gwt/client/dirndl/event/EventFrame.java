@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.TopLevelMissedEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.TopLevelMissedEvent;
 
 public class EventFrame implements ContextFrame {
 	public static ContextProvider<Void, EventFrame> contextProvider;

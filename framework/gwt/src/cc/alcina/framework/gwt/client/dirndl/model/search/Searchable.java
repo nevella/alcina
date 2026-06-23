@@ -24,8 +24,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -48,9 +48,9 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  */
 @TypedProperties
 @DirectedContextResolver
-class Searchable extends Model.Fields
-		implements SuggestOracle.Suggestion.Noop, HasObject,
-		DecoratorNode.AlllowsPartialSelection, ModelEvents.FocusEditor.Emitter,
+class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
+		HasObject, DecoratorNode.AlllowsPartialSelection,
+		ReflectedEvents.FocusEditor.Emitter,
 		DecoratorNode.EditableDecoratorContents {
 	/**
 	 * Although these are implemented in .sass, this documents *why* they are so

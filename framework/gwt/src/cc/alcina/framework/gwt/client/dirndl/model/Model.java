@@ -726,6 +726,8 @@ public abstract class Model extends Bindable
 
 		boolean distinct;
 
+		boolean immediateIfBound;
+
 		Exec(Runnable lambda) {
 			this.lambda = lambda;
 		}
@@ -745,6 +747,10 @@ public abstract class Model extends Bindable
 		 * bindingAgnostic() was called)
 		 */
 		public void dispatch() {
+			if (immediateIfBound && provideIsBound()) {
+				lambda.run();
+				return;
+			}
 			QueuedEvent event = Client.eventBus().queued().lambda(() -> {
 				if (!ifBound || provideIsBound()) {
 					lambda.run();
@@ -766,6 +772,11 @@ public abstract class Model extends Bindable
 
 		public Exec distinct() {
 			this.distinct = true;
+			return this;
+		}
+
+		public Exec immediateIfBound() {
+			this.immediateIfBound = true;
 			return this;
 		}
 	}

@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
@@ -116,7 +117,7 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 	 */
 	protected void emitChangeModelEvents(T newValue) {
 		emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class, newValue);
-		emitEvent(ModelEvents.BeforeSelectionChangedDispatchDescent.class,
+		emitEvent(ReflectedEvents.BeforeSelectionChangedDispatchDescent.class,
 				newValue);
 		emitEvent(ModelEvents.SelectionChanged.class, newValue);
 	}

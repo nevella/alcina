@@ -24,7 +24,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.Draggable;
 import cc.alcina.framework.gwt.client.dirndl.event.Draggable.Dragged;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.ZoomIn;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.ZoomOut;
 import cc.alcina.framework.gwt.client.dirndl.layout.HandlesModelChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -37,7 +41,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @TypedProperties
 @TypeSerialization(reflectiveSerializable = false)
 public class Slider extends Model.Fields implements HandlesModelChange,
-		Draggable.Dragged.Handler, DomEvents.Click.Handler {
+		Draggable.Dragged.Handler, DomEvents.Click.Handler,
+		ReflectedEvents.ZoomIn.Handler, ReflectedEvents.ZoomOut.Handler {
 	public static class To implements ModelTransform<Double, Slider> {
 		@Override
 		public Slider apply(Double t) {
@@ -149,6 +154,23 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 		newValue = Math.max(0.0, newValue);
 		newValue = Math.min(1.0, newValue);
 		properties().value().set(newValue);
+		event.reemitAs(this, ModelEvents.Change.class, value);
+	}
+
+	@Override
+	public void onZoomOut(ZoomOut event) {
+		deltaZoom(event, 1);
+	}
+
+	@Override
+	public void onZoomIn(ZoomIn event) {
+		deltaZoom(event, -1);
+	}
+
+	void deltaZoom(ModelEvent event, int i) {
+		double next = value + ((double) i) * 0.1;
+		next = Math.clamp(next, 0.0, 1.0);
+		properties().value().set(next);
 		event.reemitAs(this, ModelEvents.Change.class, value);
 	}
 }

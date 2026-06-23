@@ -11,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding.MatchData;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.event.Filterable;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl_Documentation;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -38,12 +39,13 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  */
 @Feature.Ref(Feature_Dirndl_Documentation.DesignNotes.class)
 public class KeyboardShortcutsArea extends Model.All
-		implements ModelEvents.Filter.Emitter {
+		implements ReflectedEvents.Filter.Emitter {
 	public Heading heading = new Heading("Keyboard Shortcuts");
 
 	@FocusOnBindMarker
 	@Directed(tag = "contents-filter")
-	@Directed(reemits = { ModelEvents.Input.class, ModelEvents.Filter.class })
+	@Directed(
+		reemits = { ModelEvents.Input.class, ReflectedEvents.Filter.class })
 	public StringInput filter;
 
 	@Directed.Wrap("shortcuts")
