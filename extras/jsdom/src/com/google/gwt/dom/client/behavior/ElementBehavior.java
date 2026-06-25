@@ -183,6 +183,8 @@ public interface ElementBehavior extends EventBehavior {
 	 */
 	public static class PreventDefaultClickBehaviour
 			extends ElementBehavior.NonParameterised {
+		public static PreventDefaultClickBehaviour INSTANCE = new PreventDefaultClickBehaviour();
+
 		@Override
 		public String getEventType() {
 			return BrowserEvents.CLICK;

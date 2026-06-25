@@ -119,9 +119,12 @@ class NodeEventBinding {
 					.indexOf(type.getName()) == 0);
 			domBinding.nodeEventBinding = this;
 			if (node.rendered == null) {
+				if (node.model == null) {
+					return;
+				}
 				Ax.err(node.toParentStack());
 				throw new IllegalStateException(Ax.format(
-						"No widget for model binding dom event %s - possibly delegating",
+						"No rendered/element for model binding dom event %s - possibly delegating",
 						node.model));
 			}
 			domBinding.bind(getBindingRendered().as(Element.class), node.model,
