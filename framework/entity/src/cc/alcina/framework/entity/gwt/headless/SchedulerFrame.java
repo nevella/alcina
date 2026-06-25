@@ -115,7 +115,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 			if (command instanceof RepeatingCommand) {
 				RepeatingCommand repeatingCommand = (RepeatingCommand) command;
 				boolean repeat = repeatingCommand.execute();
-				if (repeat) {
+				if (repeat && delayMs > 0) {
 					queue.add(repeatingCommand, (int) delayMs);
 				}
 			} else {
@@ -306,12 +306,6 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 				return;
 			}
 			runnable.run();
-			if (cancelled) {
-				return;
-			}
-			if (periodMillis != 0) {
-				schedule(periodMillis);
-			}
 		}
 
 		@Override
