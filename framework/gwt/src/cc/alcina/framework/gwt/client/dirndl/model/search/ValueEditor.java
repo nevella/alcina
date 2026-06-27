@@ -20,7 +20,7 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class ValueEditor extends Model.Fields {
 	@Directed(renderer = BridgingValueRenderer.class)
-	class ValueModelImpl implements ValueModel {
+	class ValueModelImpl extends Model implements ValueModel {
 		@Override
 		public Bindable getBindable() {
 			return (Bindable) instanceProperty.source;

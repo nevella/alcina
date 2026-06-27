@@ -98,7 +98,7 @@ public class FormEvents {
 	 * event - the FormModel will respond with a QueryValidityResult event
 	 */
 	public static class QueryValidity extends
-			ModelEvent.DescendantEvent<QueryValidity.Parameters, QueryValidity.Handler, QueryValidity.Emitter> {
+			ModelEvent.ReflectedEvent<QueryValidity.Parameters, QueryValidity.Handler, QueryValidity.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onQueryValidity(QueryValidity event);
 		}

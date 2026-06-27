@@ -14,6 +14,8 @@ import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -365,6 +367,7 @@ public class Suggestor extends Model.Fields implements
 		void setAcceptedFilterText(String acceptedFilterText);
 	}
 
+	@Bean(PropertySource.FIELDS)
 	public static class StringAsk implements Ask {
 		private String value;
 

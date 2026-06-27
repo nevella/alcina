@@ -12,6 +12,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.EnvelopeDispatcherClient.EnvelopeTransportHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
+import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
@@ -104,6 +105,20 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		protected Message.Handler handler(Message message) {
 			return Registry.impl(ProtocolMessageHandlerClient.class,
 					message.getClass());
+		}
+
+		Message lastMutations = null;
+
+		@Override
+		protected void publishSequentialMessages() {
+			for (int idx = activeMessages.size() - 1; idx >= 0; idx--) {
+				if (activeMessages.get(idx).message instanceof Mutations) {
+					lastMutations = activeMessages.get(idx).message;
+					break;
+				}
+			}
+			super.publishSequentialMessages();
+			lastMutations = null;
 		}
 	}
 
@@ -211,4 +226,8 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		self.@cc.alcina.framework.servlet.component.romcom.client.common.logic.MessageTransportLayerClient::debugProtocol()();
 		};
 		}-*/;
+
+	static MessageTransportLayerClient cast() {
+		return (MessageTransportLayerClient) get();
+	}
 }

@@ -471,4 +471,12 @@ public class AnnotationLocation {
 		return property != null && property.getOwningType() == locationClass
 				&& property.getName().equals(propertyName);
 	}
+
+	public HasAnnotations provideReflector() {
+		if (property != null) {
+			return property;
+		} else {
+			return Reflections.at(classLocation);
+		}
+	}
 }

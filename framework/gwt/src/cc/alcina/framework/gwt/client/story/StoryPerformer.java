@@ -3,12 +3,14 @@ package cc.alcina.framework.gwt.client.story;
 import java.lang.System.Logger.Level;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ContextObservable;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.story.Story.Action;
 import cc.alcina.framework.gwt.client.story.Story.Action.Annotate;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
@@ -240,7 +242,7 @@ public class StoryPerformer {
 			context.visit = visit;
 			contextAttributes.forEach(attr -> {
 				if (add) {
-					Ax.err("context-add: %s", attr.key());
+					logger.debug("context-add: {}", attr.key());
 					String stringValue = attr.value();
 					Object value = stringValue;
 					if (attr.valueType() == int.class) {
@@ -248,10 +250,12 @@ public class StoryPerformer {
 					}
 					context.setAttribute((Class) attr.key(), value);
 				} else {
-					Ax.err("context-remove: %s", attr.key());
+					logger.debug("context-remove: {}", attr.key());
 					context.removeAttribute(attr.key());
 				}
 			});
 		}
 	}
+
+	static Logger logger = LoggerFactory.getLogger(StoryPerformer.class);
 }

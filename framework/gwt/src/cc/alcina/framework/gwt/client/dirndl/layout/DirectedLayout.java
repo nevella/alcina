@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -45,13 +44,13 @@ import cc.alcina.framework.common.client.reflection.AttributeTemplate;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.ToStringFunction;
@@ -66,8 +65,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
@@ -212,7 +211,7 @@ public class DirectedLayout implements AlcinaProcess {
 			Model dispatchDelegate = ((ModelEvent.DelegatesDispatch) sourceModel)
 					.provideDispatchDelegate();
 			if (dispatchDelegate != null) {
-				if (modelEvent instanceof ModelEvent.DescendantEvent) {
+				if (modelEvent instanceof ModelEvent.ReflectedEvent) {
 					Context delegateDescentContext = NodeEvent.Context
 							.fromEvent(modelEvent,
 									dispatchDelegate.provideNode());
@@ -228,7 +227,7 @@ public class DirectedLayout implements AlcinaProcess {
 				return;
 			}
 		}
-		if (modelEvent instanceof ModelEvent.DescendantEvent) {
+		if (modelEvent instanceof ModelEvent.ReflectedEvent) {
 			ModelEventDispatch.dispatchDescent(modelEvent);
 		} else {
 			ModelEventDispatch.dispatchAscent(modelEvent);
@@ -501,11 +500,16 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	class NodeEventTypeValidatorImpl implements NodeEventTypeValidator {
-		Set<Class<? extends Model>> checked = AlcinaCollections.newUniqueSet();
+		Multimap<Class<? extends Model>, List<Class<? extends NodeEvent>>> checked = new Multimap<>();
 
 		public void validate(Class<? extends Model> modelType,
 				List<Class<? extends NodeEvent>> modelEventBindings) {
-			if (checked.add(modelType) && modelEventBindings.size() > 0) {
+			if (modelEventBindings.size() > 0) {
+				List<Class<? extends NodeEvent>> eventTypes = checked
+						.getAndEnsure(modelType);
+				if (eventTypes.containsAll(modelEventBindings)) {
+					return;
+				}
 				modelEventBindings.forEach(type -> {
 					// convention hack - nicer would be to use generics or the
 					// registry, but this works
@@ -521,6 +525,7 @@ public class DirectedLayout implements AlcinaProcess {
 								NestedName.get(type)));
 					}
 				});
+				eventTypes.addAll(modelEventBindings);
 			}
 		}
 	}
@@ -618,9 +623,9 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		NodeEventBinding
-				addDescentEventBinding(Class<? extends NodeEvent> type) {
+				addReflectedEventBinding(Class<? extends NodeEvent> type) {
 			Preconditions
-					.checkArgument(NodeEventBinding.isDescendantBinding(type));
+					.checkArgument(NodeEventBinding.isReflectedBinding(type));
 			NodeEventBinding newBinding = new NodeEventBinding(this, type);
 			eventBindings.add(newBinding);
 			return newBinding;
@@ -671,7 +676,7 @@ public class DirectedLayout implements AlcinaProcess {
 				classData = ReceivesEmitsEvents
 						.get(ClassUtil.resolveEnumSubclassAndSynthetic(model));
 				if (classData.receives.isEmpty()
-						&& classData.emitsDescendant.isEmpty()) {
+						&& classData.emitsReflected.isEmpty()) {
 				} else {
 					receivesOrEmits = true;
 				}
@@ -699,7 +704,8 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			eventBindings.forEach(NodeEventBinding::bind);
 			if (receivesOrEmits) {
-				classData.emitsDescendant.forEach(this::addDescentEventBinding);
+				classData.emitsReflected
+						.forEach(this::addReflectedEventBinding);
 			}
 		}
 
@@ -1000,7 +1006,7 @@ public class DirectedLayout implements AlcinaProcess {
 			org.w3c.dom.Node previousSibling = childW3cNode
 					.getPreviousSibling();
 			ensureChildren();
-			boolean append = previousSibling == null && children.isEmpty()
+			boolean append = children.isEmpty()
 					|| previousSibling == Ax.last(children).rendered.getNode();
 			if (append) {
 				children.add(node);
@@ -1579,10 +1585,13 @@ public class DirectedLayout implements AlcinaProcess {
 			void setLeft() {
 				Property property = getProperty();
 				if (property == null) {
-					// literatl
+					// literal
 					return;
 				}
 				if (property.isReadOnly()) {
+					return;
+				}
+				if (!binding.bidi()) {
 					return;
 				}
 				String stringValue = null;
@@ -2061,9 +2070,9 @@ public class DirectedLayout implements AlcinaProcess {
 										: reflector.getGenericBounds().bounds
 												.get(0);
 						handlerEvents.put(handlerClass, eventClass);
-						if (Reflections.isAssignableFrom(DescendantEvent.class,
+						if (Reflections.isAssignableFrom(ReflectedEvent.class,
 								eventClass)) {
-							Class<? extends ModelEvent.Emitter> emitterClass = ((DescendantEvent) reflector
+							Class<? extends ModelEvent.Emitter> emitterClass = ((ReflectedEvent) reflector
 									.newInstance()).getEmitterClass();
 							emitterEvents.put(emitterClass,
 									(Class<? extends ModelEvent>) eventClass);
@@ -2078,7 +2087,7 @@ public class DirectedLayout implements AlcinaProcess {
 		class ClassData {
 			List<Class<? extends NodeEvent>> receives = new ArrayList<>();
 
-			List<Class<? extends NodeEvent>> emitsDescendant = new ArrayList<>();
+			List<Class<? extends NodeEvent>> emitsReflected = new ArrayList<>();
 
 			Class<?> clazz;
 
@@ -2089,7 +2098,7 @@ public class DirectedLayout implements AlcinaProcess {
 						.filter(Objects::nonNull).forEach(receives::add);
 				Reflections.at(clazz).provideAllImplementedInterfaces()
 						.<Class<? extends NodeEvent>> map(emitterEvents::get)
-						.filter(Objects::nonNull).forEach(emitsDescendant::add);
+						.filter(Objects::nonNull).forEach(emitsReflected::add);
 			}
 		}
 	}

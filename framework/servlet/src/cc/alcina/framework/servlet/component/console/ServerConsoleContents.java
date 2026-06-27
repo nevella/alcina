@@ -5,15 +5,14 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.PlaceChanged;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @TypedProperties
 public abstract class ServerConsoleContents<RP extends ServerConsolePlace>
 		extends Model.All implements Registration.AllSubtypes, IfNotEqual,
-		ModelEvents.PlaceChanged.Handler {
+		ReflectedEvents.PlaceChanged.Handler {
 	@Directed.Exclude
 	public RP place;
 
@@ -35,7 +34,7 @@ public abstract class ServerConsoleContents<RP extends ServerConsolePlace>
 	}
 
 	@Override
-	public void onPlaceChanged(PlaceChanged event) {
+	public void onPlaceChanged(ReflectedEvents.PlaceChanged event) {
 		RP place = event.getModel();
 		if (Reflections.at(this)
 				.firstGenericBound() == ((Class) place.getClass())) {

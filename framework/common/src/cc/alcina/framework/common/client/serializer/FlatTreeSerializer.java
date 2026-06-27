@@ -1823,9 +1823,10 @@ public class FlatTreeSerializer {
 			if (serialized == null) {
 				return null;
 			}
-			if ((clazz != null && !serialized.startsWith("{")
-					&& !serialized.startsWith("["))
-					|| serialized.contains("class$=")) {
+			boolean nonFtsLikelyJson = serialized.startsWith("{")
+					|| !serialized.startsWith("[");
+			if (nonFtsLikelyJson
+					&& (clazz != null || serialized.contains("class$="))) {
 				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
 						.withShortPaths(true);
 				Class<? extends TreeSerializable> tsClazz = (Class<? extends TreeSerializable>) clazz;

@@ -45,7 +45,7 @@ public class SuggestorEvents {
 	}
 
 	public static class FocusInPageSuggestor extends
-			ModelEvent.DescendantEvent<Object, FocusInPageSuggestor.Handler, FocusInPageSuggestor.Emitter> {
+			ModelEvent.ReflectedEvent<Object, FocusInPageSuggestor.Handler, FocusInPageSuggestor.Emitter> {
 		@Override
 		public void dispatch(FocusInPageSuggestor.Handler handler) {
 			handler.onFocusInPageSuggestor(this);

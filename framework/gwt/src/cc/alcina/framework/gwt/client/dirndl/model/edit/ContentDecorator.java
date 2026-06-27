@@ -35,6 +35,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.StreamBinding.InstanceDistinctLambda;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
@@ -211,7 +212,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
 
 	/* reference the runnable via a field to ensure distinct() works */
-	Runnable checkTrigger0Runnable = this::checkTrigger0;
+	Runnable checkTrigger0Runnable = InstanceDistinctLambda.of(this,
+			this::checkTrigger0);
 
 	Runnable validateSelection0Runnable = this::validateSelection0;
 
@@ -449,6 +451,14 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				 * actually - that depends. for the moment, *don't* exit here.
 				 */
 				// return;
+				/*
+				 * but do check this isn't caused by a different decorator
+				 * displaying
+				 * 
+				 */
+				if (decoratorParent.hasActiveDecorator()) {
+					return;
+				}
 				suggestingNode = focussedFragment.ancestors()
 						.get(SuggestingNode.class);
 				showOverlay(suggestingNode.domNode());
@@ -519,23 +529,26 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		suggestor = suggestorProvider.apply(this, decoratorDomNode);
 		attributes.withCssClass("decorator-suggestor");
 		attributes.withConsumeSubmit(true).withFocusOnBind(false);
-		try {
-			DomRect boundingClientRect = rectElement.getBoundingClientRect();
-			overlay = attributes
-					.dropdown(OverlayPosition.Position.START,
-							boundingClientRect, (Model) decoratorParent,
-							suggestor)
-					.withRectSourceElement(rectElement)
-					.withPeerModels(List.of(this.suggestingNode)).create();
-			new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
-					.publish();
-			overlay.open();
-			this.overlayEditNode = decoratorDomNode;
-		} catch (NodeNotFoundException e) {
-			/*
-			 * the suggestor was never rendered due to edit conflicts
-			 */
-		}
+		Client.RenderState.queueWithRenderedState(() -> {
+			try {
+				DomRect boundingClientRect = rectElement
+						.getBoundingClientRect();
+				overlay = attributes
+						.dropdown(OverlayPosition.Position.START,
+								boundingClientRect, (Model) decoratorParent,
+								suggestor)
+						.withRectSourceElement(rectElement)
+						.withPeerModels(List.of(this.suggestingNode)).create();
+				new DecoratorEvent()
+						.withType(DecoratorEvent.Type.overlay_opened).publish();
+				overlay.open();
+				this.overlayEditNode = decoratorDomNode;
+			} catch (NodeNotFoundException e) {
+				/*
+				 * the suggestor was never rendered due to edit conflicts
+				 */
+			}
+		});
 	}
 
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)

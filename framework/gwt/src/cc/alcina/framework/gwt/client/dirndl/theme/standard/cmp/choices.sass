@@ -37,6 +37,16 @@ $selected-editor-choice: #77e
     &[_selected]
       text-decoration: underline
 
+@mixin horizontal-button
+  display: flex
+  gap: 1rem
+
+  > choice
+    color: #777
+
+    &[_selected]
+      color: #000
+
 
 @mixin suggestions
   > edit

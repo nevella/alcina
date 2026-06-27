@@ -319,6 +319,17 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			return super.contextAnnotation(reflector, clazz, resolutionContext);
 		}
 
+		protected <A extends Annotation> List<A> resolveAnnotations1(
+				Class<A> annotationClass, AnnotationLocation location) {
+			for (Customisation<?> customisation : customisations) {
+				if (customisation.matches(location.provideReflector(),
+						annotationClass)) {
+					return (List) List.of(customisation.replacementValue);
+				}
+			}
+			return super.resolveAnnotations1(annotationClass, location);
+		}
+
 		@Override
 		protected Object resolveModel(Node parentNode,
 				AnnotationLocation location, Object model) {

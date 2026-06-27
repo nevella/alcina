@@ -27,7 +27,7 @@ public abstract class EditNode extends FragmentNode
 		return PackageProperties.editNode.instance(this);
 	}
 
-	@Binding(type = Type.CSS_CLASS)
+	@Binding(type = Type.CSS_CLASS, bidi = false)
 	public boolean selected;
 
 	@Binding(

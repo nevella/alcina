@@ -84,6 +84,14 @@ public class FileData extends Bindable
 		return clearTopic;
 	}
 
+	public FileData() {
+	}
+
+	public FileData(byte[] bytes, String fileName) {
+		this.bytes = bytes;
+		this.fileName = fileName;
+	}
+
 	public static FileData fromInputFileData(InputFileData ifd) {
 		FileData result = new FileData();
 		result.setFileName(ifd.fileName);

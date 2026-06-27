@@ -160,10 +160,21 @@ public abstract class Model extends Bindable
 	}
 
 	public void emitEvent(Class<? extends ModelEvent> clazz, Object value) {
-		if (!provideIsBound()) {
-			return;
+		Runnable lambda = () -> NodeEvent.Context.fromNode(provideNode())
+				.dispatch(clazz, value);
+		if (provideIsBound()) {
+			lambda.run();
+		} else {
+			if (node != null) {
+				/*
+				 * called prior to bind, but bind will occur - retry in next
+				 * cycle
+				 */
+				exec(lambda).dispatch();
+			} else {
+				return;
+			}
 		}
-		NodeEvent.Context.fromNode(provideNode()).dispatch(clazz, value);
 	}
 
 	/*
@@ -301,7 +312,7 @@ public abstract class Model extends Bindable
 
 		private ListenerBindings listenerBindings = new ListenerBindings();
 
-		private boolean bound;
+		boolean bound;
 
 		public List<StreamBinding> streamBindings = new ArrayList<>();
 
@@ -547,6 +558,14 @@ public abstract class Model extends Bindable
 			addStreamBinding(binding);
 			return binding.fromNodeEventClass(nodeEventClass);
 		}
+
+		/*
+		 * just validate
+		 */
+		void bindEventPostAttach(StreamBinding<?> streamBinding) {
+			node.provideRootValidator().validate(Model.this.getClass(),
+					List.of(streamBinding.fromNodeEventClass));
+		}
 	}
 
 	public <T extends SourcesPropertyChangeEvents> StreamBinding<T>
@@ -707,6 +726,8 @@ public abstract class Model extends Bindable
 
 		boolean distinct;
 
+		boolean immediateIfBound;
+
 		Exec(Runnable lambda) {
 			this.lambda = lambda;
 		}
@@ -726,6 +747,10 @@ public abstract class Model extends Bindable
 		 * bindingAgnostic() was called)
 		 */
 		public void dispatch() {
+			if (immediateIfBound && provideIsBound()) {
+				lambda.run();
+				return;
+			}
 			QueuedEvent event = Client.eventBus().queued().lambda(() -> {
 				if (!ifBound || provideIsBound()) {
 					lambda.run();
@@ -747,6 +772,11 @@ public abstract class Model extends Bindable
 
 		public Exec distinct() {
 			this.distinct = true;
+			return this;
+		}
+
+		public Exec immediateIfBound() {
+			this.immediateIfBound = true;
 			return this;
 		}
 	}

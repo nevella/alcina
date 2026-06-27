@@ -364,4 +364,10 @@ public final class UnsafeHtmlBuilder {
 			}
 		}
 	}
+
+	public static String escapeText(String text) {
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder(true, false);
+		builder.appendEscapedLines(text);
+		return builder.toSafeHtml().asString();
+	}
 }

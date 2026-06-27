@@ -16,8 +16,8 @@ import org.openqa.selenium.support.ui.Select;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.GlobalObservable;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Configuration;
 
@@ -42,6 +42,13 @@ public class ElementQuery {
 		RequiredElementNotFoundException() {
 			super(String.format("Timed out - %s ms - %s",
 					ElementQuery.this.timeout * 1000, ElementQuery.this));
+		}
+
+		RequiredElementNotFoundException(Exception cause) {
+			super(String.format("Timed out - %s ms - %s\n\tCause: %s",
+					ElementQuery.this.timeout * 1000, ElementQuery.this,
+					cause == null ? null
+							: CommonUtils.toSimpleExceptionMessage(cause)));
 		}
 	}
 
@@ -401,7 +408,7 @@ public class ElementQuery {
 		}
 		if (required) {
 			new RequiredlementNotFound().publish();
-			throw new RequiredElementNotFoundException();
+			throw new RequiredElementNotFoundException(lastException);
 		} else {
 			consumer.accept(new ArrayList<>());
 			return;

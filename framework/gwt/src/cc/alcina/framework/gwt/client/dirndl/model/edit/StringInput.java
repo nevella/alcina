@@ -48,10 +48,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CommitEditor;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
@@ -103,8 +101,9 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
 		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
-		ModelEvents.FormElementLabelClicked.Handler, HasElementBehaviors,
-		ModelEvents.FocusEditor.Handler, ModelEvents.CommitEditor.Handler {
+		ReflectedEvents.FormElementLabelClicked.Handler, HasElementBehaviors,
+		ReflectedEvents.FocusEditor.Handler,
+		ReflectedEvents.CommitEditor.Handler {
 	PackageProperties._StringInput.InstanceProperties properties() {
 		return PackageProperties.stringInput.instance(this);
 	}
@@ -595,7 +594,8 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	}
 
 	@Override
-	public void onFormElementLabelClicked(FormElementLabelClicked event) {
+	public void onFormElementLabelClicked(
+			ReflectedEvents.FormElementLabelClicked event) {
 		focus();
 	}
 
@@ -714,13 +714,13 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	}
 
 	@Override
-	public void onFocusEditor(FocusEditor event) {
+	public void onFocusEditor(ReflectedEvents.FocusEditor event) {
 		setFocusOnBind(true);
 		Model.FocusOnBind.focusIfAttached(provideNode());
 	}
 
 	@Override
-	public void onCommitEditor(CommitEditor event) {
+	public void onCommitEditor(ReflectedEvents.CommitEditor event) {
 		commitCurrentValue();
 	}
 }

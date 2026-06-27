@@ -920,11 +920,18 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		}
 	}
 
-	public void removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
-		behaviors.removeIf(b -> b.getClass() == behaviorClass);
+	@Override
+	public boolean
+			removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
+		if (behaviors == null) {
+			return false;
+		}
+		boolean modified = behaviors
+				.removeIf(b -> b.getClass() == behaviorClass);
 		if (behaviors.isEmpty()) {
 			behaviors = null;
 		}
+		return modified;
 	}
 
 	@Override

@@ -229,10 +229,15 @@ class ClientExecutionQueue implements Runnable {
 			} else {
 				/*
 				 * if no intervening mutations occur, the condition (all ofsets
-				 * available) will be met during finally()
+				 * available) will be met during finally().
+				 * 
+				 * public Runnable reloadSequenceLambda =
+				 * InstanceDistinctLambda.of(this, this::reloadSequence);
 				 */
-				Client.eventBus().queued().lambda(flushLambda).distinct()
-						.dispatch();
+				Client.eventBus().queued().lambda(flushLambda)
+						// There will be only one lambda container instance per
+						// queue, so the distinct runnable test is correct
+						.distinct().dispatch();
 			}
 			QueuedRunnable queuedRunnable = new QueuedRunnable(awaitId,
 					awaitNextMutationId, runnable);

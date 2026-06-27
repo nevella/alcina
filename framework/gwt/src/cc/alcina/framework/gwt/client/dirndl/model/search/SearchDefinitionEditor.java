@@ -7,9 +7,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle;
+import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -36,13 +41,14 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoiceEditor;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorMultiple;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
+import cc.alcina.framework.gwt.client.util.Async;
 
 @TypedProperties
 @DirectedContextResolver
@@ -103,23 +109,67 @@ public class SearchDefinitionEditor extends Model.Fields
 		}
 	}
 
-	static class Router implements SuggestOracleRouter<StringAsk> {
+	public static class Router implements SuggestOracleRouter<StringAsk> {
+		@Bean(PropertySource.FIELDS)
+		public static class CriterionSuggestion
+				implements SuggestOracle.Suggestion.Noop {
+			public CriterionSuggestion() {
+			}
+
+			public CriterionSuggestion(SearchCriterion searchCriterion) {
+				this.searchCriterion = searchCriterion;
+			}
+
+			public SearchCriterion searchCriterion;
+		}
+
 		@Override
 		public void ask(Node node, StringAsk ask,
 				Consumer<SuggestOracle.Response> responseHandler) {
 			Service service = node.service(Service.class);
 			SearchDefinition searchDefinition = service.getSearchDefinition();
 			if (searchDefinition != null) {
-				EditSupport editSupport = searchDefinition.editSupport();
-				List<SuggestOracle.Suggestion> searchables = editSupport
-						.listAvailableCriteria().stream().map(Reflections::at)
-						.map(ClassReflector::newInstance).map(Searchable::new)
-						.sorted(Comparator.comparing(Searchable::provideName))
-						.collect(Collectors.toList());
-				SuggestOracle.Response response = new SuggestOracle.Response(
-						searchables);
-				responseHandler.accept(response);
+				AsyncCallback<SuggestOracle.Response> criteriaResponseCallback = Async.<SuggestOracle.Response> callbackBuilder()
+						.success(criteriaResponse -> mapCriteria(ask,
+								criteriaResponse, responseHandler))
+						.build();
+				requestCriteria(ask, searchDefinition,
+						criteriaResponseCallback);
 			}
+		}
+
+		public void requestCriteria(StringAsk ask,
+				SearchDefinition searchDefinition,
+				AsyncCallback<SuggestOracle.Response> criteriaResponseCallback) {
+			List<CriterionSuggestion> suggestions = listCriteria(
+					searchDefinition).map(CriterionSuggestion::new).toList();
+			SuggestOracle.Response response = new SuggestOracle.Response(
+					(List) suggestions);
+			criteriaResponseCallback.onSuccess(response);
+		}
+
+		void mapCriteria(StringAsk ask, SuggestOracle.Response criteriaResponse,
+				Consumer<Response> responseHandler) {
+			List<SuggestOracle.Suggestion> searchables = criteriaResponse
+					.getSuggestions().stream()
+					.map(suggestion -> ((CriterionSuggestion) suggestion).searchCriterion)
+					.filter(criterion -> SearchUtils.containsIgnoreCase(
+							criterion.toString(), ask.getValue()))
+					.map(Searchable::new)
+					.sorted(Comparator.comparing(Searchable::provideName))
+					.collect(Collectors.toList());
+			SuggestOracle.Response response = new SuggestOracle.Response(
+					searchables);
+			responseHandler.accept(response);
+		}
+
+		Stream<SearchCriterion>
+				listCriteria(SearchDefinition searchDefinition) {
+			EditSupport editSupport = searchDefinition.editSupport();
+			return (Stream) editSupport.listAvailableCriteria().stream()
+					.map(Reflections::at).map(ClassReflector::newInstance)
+					.sorted(Comparator
+							.comparing(SearchCriterion::provideDisplayName));
 		}
 	}
 
@@ -136,9 +186,6 @@ public class SearchDefinitionEditor extends Model.Fields
 	@Directed.Transform(ChoicesEditorMultiple.ListSuggestions.To.class)
 	@ChoiceEditor.RouterType(Router.class)
 	public List<Searchable> searchables = new ArrayList<>();
-
-	@Directed.Wrap("go-container")
-	Link go = Link.button(ModelEvents.Submit.class).withText("Go");
 
 	@Binding(type = Type.PROPERTY)
 	boolean popupsOpen;
@@ -205,7 +252,7 @@ public class SearchDefinitionEditor extends Model.Fields
 	}
 
 	void emitSubmitEvent(ModelEvent event) {
-		if (go.isDisabled()) {
+		if (!modified) {
 			return;
 		}
 		event.reemitAs(this, SearchDefinitionEditor.Submit.class,
@@ -225,13 +272,14 @@ public class SearchDefinitionEditor extends Model.Fields
 				.serializeElided(renderedDefinition);
 		boolean modified = !Objects.equals(initialSerializedDefinition,
 				renderedDefinitionSerialized);
-		go.properties().disabled().set(!modified);
 		properties().modified().set(modified);
 	}
 
 	void onPropertyGraphChange(PropertyGraphListener.ChangeEvent changeEvent) {
 		updateGoState();
 	}
+
+	public static PackageProperties._SearchDefinitionEditor properties = PackageProperties.searchDefinitionEditor;
 
 	PackageProperties._SearchDefinitionEditor.InstanceProperties properties() {
 		return PackageProperties.searchDefinitionEditor.instance(this);

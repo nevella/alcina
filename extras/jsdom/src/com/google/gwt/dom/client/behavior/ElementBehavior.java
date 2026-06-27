@@ -25,28 +25,21 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.util.IntPair;
 
 /**
+ * <p>
  * Perform a few actions client-side that require blocking (such as keyboard
  * navigation), irrespective of whether the app is running in a browser or
  * romcom client
  * 
+ * <p>
  * The basic registration mechanism is that the nativeevent preview traverses up
  * the (local) dom and checks if any elements contain a behavior registered for
  * that event type - which doesn't involve say ElementJso, and only involves
  * ElementAttachId as a transport notifier
- */
-/*
- * FIXME - dirndl 1
- 
- @formatter:off
-* modality to specify behavior [prevent default, say]
-    * magic attribute
-        * deprecate - then remove. even when mutation is originally client-side, 
-		  server propagation (fragmentmodel) should emit behaviour mutation
-	* parameters
-		* if a behavior is parameterised (say prevent defaults for lots of different keycombos), 
-		  send that parameter object as a magic-named attribute (json). Slightly messy, but it's one fewer sync mech to track
-
- @formatter:on
+ * <h2>parameters</h2>
+ * <p>
+ * if a behavior is parameterised (say prevent defaults for lots of different
+ * keycombos), the behavior must extend {@link ElementBehavior.Parameterised}
+ * 
  */
 @Registration.Self
 @Reflected
@@ -132,6 +125,12 @@ public interface ElementBehavior extends EventBehavior {
 		public void onNativeEvent(NativePreviewEvent event,
 				Element registeredElement,
 				RegisterAllEvents registerAllEvents) {
+			if (!registeredElement.asDomNode().isAttached()) {
+				// a little messy - handle higher up?
+				registerAllEvents.registerAllEvents(registeredElement, this,
+						false);
+				return;
+			}
 			Selection selection = Document.get().getSelection();
 			boolean contains = false;
 			if (selection.hasAttachedSelection()) {
@@ -184,6 +183,8 @@ public interface ElementBehavior extends EventBehavior {
 	 */
 	public static class PreventDefaultClickBehaviour
 			extends ElementBehavior.NonParameterised {
+		public static PreventDefaultClickBehaviour INSTANCE = new PreventDefaultClickBehaviour();
+
 		@Override
 		public String getEventType() {
 			return BrowserEvents.CLICK;

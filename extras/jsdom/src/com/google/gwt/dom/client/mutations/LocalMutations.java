@@ -246,10 +246,6 @@ public class LocalMutations {
 				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
 		topicUnbatchedUnattachedMutations.publish(record);
 		if (record.target.node().isAttached()) {
-			if (Al.isBrowser() && !mutationsAccess
-					.isApplyingDetachedMutationsToLocalDom()) {
-				int debug = 3;
-			}
 			mutations.add(record);
 			topicUnbatchedAttachedMutations.publish(record);
 			if (record.removedNodes.isEmpty() && record.mutationGroup == null) {

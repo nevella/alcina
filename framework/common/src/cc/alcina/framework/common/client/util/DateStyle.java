@@ -9,9 +9,9 @@ public enum DateStyle {
 	DATE_SLASH, DATE_MONTH, DATE_MONTH_DAY, DATE_TIME, DATE_TIME_HUMAN,
 	DATE_TIME_MS, SHORT_DAY, DATE_DOT, LONG_DAY, SHORT_MONTH, DATE_SLASH_MONTH,
 	TIMESTAMP, NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, SHORT_MONTH_SLASH,
-	SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, MD_DATE_SLASH, TIMESTAMP_NO_DAY,
-	DATE_MONTH_NO_PAD_DAY, DATE_TIME_SHORT, DATESTAMP_HUMAN, DATE_TIME_TZ,
-	DATESTAMP_DASHED, DATE_MONTH_YEAR_TIME, SQL_DATE_YMD;
+	SHORT_MONTH_DOT, SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, MD_DATE_SLASH,
+	TIMESTAMP_NO_DAY, DATE_MONTH_NO_PAD_DAY, DATE_TIME_SHORT, DATESTAMP_HUMAN,
+	DATE_TIME_TZ, DATESTAMP_DASHED, DATE_MONTH_YEAR_TIME, SQL_DATE_YMD;
 
 	public String format(Date date) {
 		return formatDate(date, this);
@@ -137,6 +137,12 @@ public enum DateStyle {
 		case SHORT_MONTH_SLASH:
 			return CommonUtils
 					.format("%s/%s/%s", CommonUtils.padTwo(date.getDate()),
+							CommonUtils.MONTH_NAMES[date.getMonth() + 1]
+									.substring(0, 3),
+							CommonUtils.padTwo(date.getYear() + 1900));
+		case SHORT_MONTH_DOT:
+			return CommonUtils
+					.format("%s.%s.%s", CommonUtils.padTwo(date.getDate()),
 							CommonUtils.MONTH_NAMES[date.getMonth() + 1]
 									.substring(0, 3),
 							CommonUtils.padTwo(date.getYear() + 1900));

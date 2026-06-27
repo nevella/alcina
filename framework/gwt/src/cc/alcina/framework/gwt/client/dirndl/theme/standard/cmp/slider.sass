@@ -1,0 +1,31 @@
+$tick-height: 8px
+$knob-size: 16px
+
+@mixin contents
+  display: block
+  height: 24px
+  position: relative
+
+  > *
+    display: block
+    position: absolute
+
+  > line
+    left: 0
+    right: 0
+    top: 50%
+    height: 1px
+    background-color:  #999
+
+  > knob
+    top: calc(50% - calc($knob-size/2))
+    margin-left: calc(0px - calc($knob-size/2))
+    height: $knob-size
+    width: $knob-size
+    background-color:  blue
+
+  > tick
+    top: calc(50% - calc($tick-height/2))
+    height: $tick-height
+    width: 1px
+    background-color:  #666

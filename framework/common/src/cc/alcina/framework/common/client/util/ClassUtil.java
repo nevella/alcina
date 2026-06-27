@@ -87,6 +87,29 @@ public class ClassUtil {
 		return false;
 	}
 
+	public static String toStringValue(Object value) {
+		if (value == null) {
+			return null;
+		}
+		Class valueClass = value.getClass();
+		if (Reflections.isAssignableFrom(Enum.class, valueClass)) {
+			return value.toString();
+		}
+		if (valueClass == Class.class) {
+			return ((Class) value).getName();
+		}
+		if (valueClass == String.class) {
+			return (String) value;
+		}
+		if (valueClass == Long.class || valueClass == Double.class
+				|| valueClass == Integer.class || valueClass == Boolean.class
+				|| valueClass == Float.class || valueClass == Short.class
+				|| valueClass == Byte.class) {
+			return String.valueOf(value);
+		}
+		throw new UnsupportedOperationException();
+	}
+
 	public static Object fromStringValue(String stringValue, Class valueClass) {
 		if (stringValue == null) {
 			return stringValue;
@@ -121,6 +144,28 @@ public class ClassUtil {
 		Class clazz1 = o1 == null ? null : o1.getClass();
 		Class clazz2 = o2 == null ? null : o2.getClass();
 		return clazz1 == clazz2;
+	}
+
+	public static Object getDefaultTypeValue(Class clazz) {
+		if (clazz == int.class) {
+			return 0;
+		} else if (clazz == long.class) {
+			return 0L;
+		} else if (clazz == double.class) {
+			return 0.0;
+		} else if (clazz == boolean.class) {
+			return false;
+		} else if (clazz == short.class) {
+			return 0;
+		} else if (clazz == float.class) {
+			return 0.0f;
+		} else if (clazz == byte.class) {
+			return 0;
+		} else if (clazz == char.class) {
+			return '\u0000';
+		} else {
+			return null;
+		}
 	}
 
 	public static Class getWrapperType(Class clazz) {

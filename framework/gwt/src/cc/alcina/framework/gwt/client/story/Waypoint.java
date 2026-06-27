@@ -324,8 +324,14 @@ public class Waypoint implements Story.Point {
 			}
 		}
 		if (contextAttributes == null) {
+			/*
+			 * TODO - attr context is wonky, I think - probably need an
+			 * indepdent context tracking, which inherits?
+			 */
 			contextAttributes = reflector
 					.annotations(Story.Decl.ContextModifier.SetAttribute.class);
+			contextAttributes.forEach(attr -> StoryPerformer.logger
+					.debug("context-add: {}}", attr.key()));
 		}
 	}
 }

@@ -39,6 +39,8 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
@@ -2560,5 +2562,13 @@ public class DomNode {
 	public String toIndexDebug() {
 		return Ax.format("%s :: %s :: %s", asLocation().asIndexTuple(), name(),
 				asLocation().documentMutationPosition);
+	}
+
+	public boolean hasBehavior(Class<? extends ElementBehavior> clazz) {
+		return isElement() && gwtElement().hasBehavior(clazz);
+	}
+
+	public AttachId attachId() {
+		return AttachId.forNode(gwtNode());
 	}
 }

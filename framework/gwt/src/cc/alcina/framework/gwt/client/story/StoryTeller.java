@@ -32,6 +32,7 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResour
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.Story.Attribute;
+import cc.alcina.framework.gwt.client.story.Story.Decl.ContextModifier.SetAttribute;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
@@ -284,7 +285,8 @@ public class StoryTeller {
 
 		public List<Story.Decl.ContextModifier.SetAttribute>
 				getContextAttributes() {
-			return point.getContextAttributes();
+			List<SetAttribute> contextAttributes = point.getContextAttributes();
+			return contextAttributes;
 		}
 
 		public Action.Location getLocation() {

@@ -382,9 +382,7 @@ public class MeasureOverlay {
 	}
 
 	public ElementOffsetsRequired getOffsetsBehavior() {
-		return parentRelativeFixed
-				? ElementOffsetsRequired.ParentRelativeFixed.INSTANCE
-				: ElementOffsetsRequired.INSTANCE;
+		return ElementOffsetsRequired.INSTANCE;
 	}
 
 	void markEndpoints() {
@@ -420,8 +418,9 @@ public class MeasureOverlay {
 			Measure measure = null;
 			if (highlighter != null) {
 				DomNode highlit = highlighter.highlight(node);
-				measure = Measure.fromNode(highlit, HighlightToken.TYPE)
-						.withData(highlighter);
+				measure = highlit == null ? null
+						: Measure.fromNode(highlit, HighlightToken.TYPE)
+								.withData(highlighter);
 			} else {
 				measure = Measure.fromNode(node.asDomNode(), GenericToken.TYPE);
 			}

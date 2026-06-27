@@ -3,15 +3,18 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.gwt.client.dirndl.event.Draggable;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.EditArea;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.Slider;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import java.lang.Boolean;
 import java.lang.Class;
+import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Object;
 import java.lang.String;
@@ -32,6 +35,8 @@ public class PackageProperties {
     public static _EditArea editArea = new _EditArea();
     public static _EditNode editNode = new _EditNode();
     public static _EntityNode entityNode = new _EntityNode();
+    public static _Slider slider = new _Slider();
+    static _Slider_Knob slider_knob = new _Slider_Knob();
     public static _StringInput stringInput = new _StringInput();
     public static _StringInput_DateEditor stringInput_dateEditor = new _StringInput_DateEditor();
     public static _StringInput_DateInput stringInput_dateInput = new _StringInput_DateInput();
@@ -290,6 +295,46 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(EntityNode instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Slider implements TypedProperty.Container {
+      public TypedProperty<Slider, Slider.Knob> knob = new TypedProperty<>(Slider.class, "knob");
+      public TypedProperty<Slider, Object> line = new TypedProperty<>(Slider.class, "line");
+      public TypedProperty<Slider, Integer> tickCount = new TypedProperty<>(Slider.class, "tickCount");
+      public TypedProperty<Slider, List> ticks = new TypedProperty<>(Slider.class, "ticks");
+      public TypedProperty<Slider, Double> value = new TypedProperty<>(Slider.class, "value");
+      public TypedProperty<Slider, Integer> width = new TypedProperty<>(Slider.class, "width");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Slider> {
+        public  InstanceProperties(Slider source){super(source);}
+        public InstanceProperty<Slider, Slider.Knob> knob(){return new InstanceProperty<>(source,PackageProperties.slider.knob);}
+        public InstanceProperty<Slider, Object> line(){return new InstanceProperty<>(source,PackageProperties.slider.line);}
+        public InstanceProperty<Slider, Integer> tickCount(){return new InstanceProperty<>(source,PackageProperties.slider.tickCount);}
+        public InstanceProperty<Slider, List> ticks(){return new InstanceProperty<>(source,PackageProperties.slider.ticks);}
+        public InstanceProperty<Slider, Double> value(){return new InstanceProperty<>(source,PackageProperties.slider.value);}
+        public InstanceProperty<Slider, Integer> width(){return new InstanceProperty<>(source,PackageProperties.slider.width);}
+      }
+      
+      public  InstanceProperties instance(Slider instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _Slider_Knob implements TypedProperty.Container {
+      TypedProperty<Slider.Knob, Draggable.Support> draggableSupport = new TypedProperty<>(Slider.Knob.class, "draggableSupport");
+      TypedProperty<Slider.Knob, Integer> left = new TypedProperty<>(Slider.Knob.class, "left");
+      TypedProperty<Slider.Knob, Draggable.Support> support = new TypedProperty<>(Slider.Knob.class, "support");
+      static class InstanceProperties extends 	InstanceProperty.Container<Slider.Knob> {
+         InstanceProperties(Slider.Knob source){super(source);}
+        InstanceProperty<Slider.Knob, Draggable.Support> draggableSupport(){return new InstanceProperty<>(source,PackageProperties.slider_knob.draggableSupport);}
+        InstanceProperty<Slider.Knob, Integer> left(){return new InstanceProperty<>(source,PackageProperties.slider_knob.left);}
+        InstanceProperty<Slider.Knob, Draggable.Support> support(){return new InstanceProperty<>(source,PackageProperties.slider_knob.support);}
+      }
+      
+       InstanceProperties instance(Slider.Knob instance) {
         return new InstanceProperties( instance);
       }
       

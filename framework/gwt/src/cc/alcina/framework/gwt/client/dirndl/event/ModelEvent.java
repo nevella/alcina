@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.HasDisplayName.ClassDisplayName;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.TopLevelMissedEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.TopLevelMissedEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -70,7 +70,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata;
  * 
  * <p>
  * For a 'componentn' - a large model/ui structures, such as an editor -
- * {@link DescendantEvent} instances are key for intra-model communication. They
+ * {@link ReflectedEvent} instances are key for intra-model communication. They
  * act via "reflected broadcast" - they can be emitted by any model, they ascend
  * until they encounter an emitter (most often the component root).
  * 
@@ -193,12 +193,15 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	/**
 	 * <p>
 	 * The event should be routed to descendant-or-self nodes, rather than
-	 * ancestors-or-self
+	 * ancestors-or-self. The original source of the event may be the Emitter,
+	 * or a descendant of the Emitter (the event 'ascends' to the emitter and is
+	 * handled by 0,n descendants of the emitter - i.e. members of the node
+	 * subtree rooted in the emitter - hence 'reflected')
 	 * 
 	 * <p>
-	 * Note that the emitter of a descendant event can itself be a handler
+	 * Note that the emitter of a reflected event can itself be a handler
 	 */
-	public abstract static class DescendantEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
+	public abstract static class ReflectedEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
 			extends ModelEvent<T, H> {
 		public Class<E> getEmitterClass() {
 			return Reflections.at(getClass()).getGenericBounds().bounds.get(2);

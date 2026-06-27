@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -66,19 +66,19 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * FIXME - dirndl 1x1h - should these in fact be two different bindings - say a
  * base class and subclass?
  *
- * <h3>Descendant bindings</h3>
+ * <h3>Reflected bindings</h3>
  * <p>
  * Ascent binding/dispatch doesn't require optimisation, since the
  * find-receivier algorithm is O(n) where n is the depth of the dispatcher in
  * the dirndl node tree.
  * <p>
- * Descent binding requires that descendants which receive Descent events
- * register themselves with the emitting ancestor on bind (and unbind
+ * Reflected/descent binding requires that descendants which receive Reflected
+ * events register themselves with the emitting ancestor on bind (and unbind
  * appropriately)
  */
 class NodeEventBinding {
-	static boolean isDescendantBinding(Class<? extends NodeEvent> clazz) {
-		return Reflections.isAssignableFrom(ModelEvent.DescendantEvent.class,
+	static boolean isReflectedBinding(Class<? extends NodeEvent> clazz) {
+		return Reflections.isAssignableFrom(ModelEvent.ReflectedEvent.class,
 				clazz);
 	}
 
@@ -93,7 +93,7 @@ class NodeEventBinding {
 
 	DomBinding domBinding;
 
-	DescendantBindings descendantBindings;
+	ReflectedBindings reflectedBindings;
 
 	Class<? extends ModelEvent> reemitAs;
 
@@ -103,8 +103,8 @@ class NodeEventBinding {
 		this.type = type;
 	}
 
-	void addDescendantBinding(NodeEventBinding descendantBinding) {
-		ensureDescendantBindings().addHandler(descendantBinding);
+	void addReflectedBinding(NodeEventBinding reflectedBinding) {
+		ensureReflectedBindings().addHandler(reflectedBinding);
 	}
 
 	/*
@@ -119,9 +119,12 @@ class NodeEventBinding {
 					.indexOf(type.getName()) == 0);
 			domBinding.nodeEventBinding = this;
 			if (node.rendered == null) {
+				if (node.model == null) {
+					return;
+				}
 				Ax.err(node.toParentStack());
 				throw new IllegalStateException(Ax.format(
-						"No widget for model binding dom event %s - possibly delegating",
+						"No rendered/element for model binding dom event %s - possibly delegating",
 						node.model));
 			}
 			domBinding.bind(getBindingRendered().as(Element.class), node.model,
@@ -132,7 +135,7 @@ class NodeEventBinding {
 			 */
 			Preconditions.checkState(Reflections
 					.isAssignableFrom(NodeEvent.WithoutDomBinding.class, type));
-			if (isDescendantBinding(type)) {
+			if (isReflectedBinding(type)) {
 				/*
 				 * find the emitter attached to an ancestor-or-self node which
 				 * emits events of Type type
@@ -147,23 +150,22 @@ class NodeEventBinding {
 					} else {
 						emitterNode = ((Model) emitter).provideNode();
 					}
-					emitterNode.getEventBinding(type)
-							.addDescendantBinding(this);
+					emitterNode.getEventBinding(type).addReflectedBinding(this);
 				}
 			}
 			return;
 		}
 	}
 
-	void dispatchDescent(ModelEvent modelEvent) {
-		ensureDescendantBindings().dispatch(modelEvent);
+	void dispatchReflected(ModelEvent modelEvent) {
+		ensureReflectedBindings().dispatch(modelEvent);
 	}
 
-	DescendantBindings ensureDescendantBindings() {
-		if (descendantBindings == null) {
-			descendantBindings = new DescendantBindings();
+	ReflectedBindings ensureReflectedBindings() {
+		if (reflectedBindings == null) {
+			reflectedBindings = new ReflectedBindings();
 		}
-		return descendantBindings;
+		return reflectedBindings;
 	}
 
 	/*
@@ -265,16 +267,16 @@ class NodeEventBinding {
 		if (domBinding != null) {
 			domBinding.bind(null, null, false);
 		}
-		if (descendantBindings != null) {
-			descendantBindings.unbind(this);
+		if (reflectedBindings != null) {
+			reflectedBindings.unbind(this);
 		}
 	}
 
 	/**
 	 * <p>
-	 * One essential feature of descendant bindings is that they record the last
+	 * One essential feature of reflected bindings is that they record the last
 	 * dispatched event, since an 'initialisation event' is often fired by an
-	 * ancestor before the descendant even exists, let alone is attached
+	 * ancestor before the receiver even exists, let alone is attached
 	 * 
 	 * <p>
 	 * So the last fired event is fired (if it exists) to any handlers on attach
@@ -284,9 +286,9 @@ class NodeEventBinding {
 	 * 
 	 * <p>
 	 * In cases where this behavior is not desired, the event should implement
-	 * DescendantEvent.NotStored
+	 * ReflectedEvent.NotStored
 	 */
-	class DescendantBindings {
+	class ReflectedBindings {
 		Set<NodeEventBinding> handlers = GWT.isScript()
 				? AlcinaCollections.newUniqueSet()
 				// easier debugging
@@ -296,28 +298,28 @@ class NodeEventBinding {
 
 		ModelEvent lastDispatched;
 
-		public void addHandler(NodeEventBinding descendantBinding) {
-			handlers.add(descendantBinding);
-			descendantBinding
-					.ensureDescendantBindings().ancestorEmitter = NodeEventBinding.this;
+		public void addHandler(NodeEventBinding reflectedBinding) {
+			handlers.add(reflectedBinding);
+			reflectedBinding
+					.ensureReflectedBindings().ancestorEmitter = NodeEventBinding.this;
 			if (lastDispatched != null) {
 				ModelEvent lastDispatchedRef = lastDispatched;
 				Client.eventBus().queued().lambda(() -> this
-						.fireAttachEvent(descendantBinding, lastDispatchedRef))
+						.fireAttachEvent(reflectedBinding, lastDispatchedRef))
 						.dispatch();
 			}
 		}
 
-		void fireAttachEvent(NodeEventBinding descendantBinding,
+		void fireAttachEvent(NodeEventBinding reflectedBinding,
 				ModelEvent lastDispatchedRef) {
-			if (descendantBinding.node.bound
+			if (reflectedBinding.node.bound
 					&& lastDispatchedRef == lastDispatched) {
-				descendantBinding.fireEventIfType(lastDispatchedRef);
+				reflectedBinding.fireEventIfType(lastDispatchedRef);
 			}
 		}
 
 		void dispatch(ModelEvent modelEvent) {
-			if (!(modelEvent instanceof DescendantEvent.NotStored)) {
+			if (!(modelEvent instanceof ReflectedEvent.NotStored)) {
 				lastDispatched = modelEvent;
 			}
 			/*
@@ -328,13 +330,13 @@ class NodeEventBinding {
 					.forEach(h -> h.fireEventIfType(modelEvent));
 		}
 
-		public void removeHandler(NodeEventBinding descendantBinding) {
-			handlers.remove(descendantBinding);
+		public void removeHandler(NodeEventBinding reflectedBinding) {
+			handlers.remove(reflectedBinding);
 		}
 
 		void unbind(NodeEventBinding nodeEventBinding) {
 			if (ancestorEmitter != null) {
-				ancestorEmitter.descendantBindings
+				ancestorEmitter.reflectedBindings
 						.removeHandler(NodeEventBinding.this);
 			}
 		}

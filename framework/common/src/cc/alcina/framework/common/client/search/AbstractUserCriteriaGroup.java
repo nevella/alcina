@@ -21,7 +21,7 @@ public abstract class AbstractUserCriteriaGroup<SC extends AbstractUserCriterion
 		if (result != null) {
 			return result;
 		}
-		if (!Permissions.get().isAdmin()
+		if (!Permissions.get().isAdmin() && !Permissions.isRoot()
 				&& getCriteria().iterator().hasNext()) {
 			AbstractUserCriterion uc = getCriteria().iterator().next();
 			if (uc != null && uc.getUserId() != null && uc.getUserId()

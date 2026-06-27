@@ -74,6 +74,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirndlAccess;
@@ -587,7 +588,7 @@ public class FormModel extends Model
 	@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 	public static class FormElement extends Model.Fields
 			implements FormEvents.PropertyValidationChange.Handler,
-			ModelEvents.FormElementLabelClicked.Emitter, Validation.Has {
+			ReflectedEvents.FormElementLabelClicked.Emitter, Validation.Has {
 		public static transient String PREFIX = "";
 
 		private LabelModel label;

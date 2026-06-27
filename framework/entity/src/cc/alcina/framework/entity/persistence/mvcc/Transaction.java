@@ -89,8 +89,15 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
-	public static final String CONTEXT_ALLOW_ABORTED_TX_ACCESS = Transaction.class
-			.getName() + ".CONTEXT_ALLOW_ABORTED_TX_ACCESS";
+	public static final LooseContext.Key<Integer> CONTEXT_ALLOW_ABORTED_TX_ACCESS = LooseContext
+			.key(Transaction.class, "CONTEXT_ALLOW_ABORTED_TX_ACCESS");
+
+	/*
+	 * A centralised marker for app code to ignore partial commits during a
+	 * process
+	 */
+	public static final LooseContext.Key<Integer> CONTEXT_IGNORE_PARTIAL_COMMITS = LooseContext
+			.key(Transaction.class, "CONTEXT_IGNORE_PARTIAL_COMMITS");
 
 	static boolean retainStartEndTraces;
 
@@ -415,7 +422,7 @@ public class Transaction implements Comparable<Transaction> {
 		Transaction transaction = provideCurrentThreadTransaction();
 		if (transaction == null
 				|| (transaction.getPhase() == TransactionPhase.TO_DB_ABORTED
-						&& !LooseContext.is(CONTEXT_ALLOW_ABORTED_TX_ACCESS))) {
+						&& !CONTEXT_ALLOW_ABORTED_TX_ACCESS.is())) {
 			return null;
 		} else {
 			return transaction;
@@ -850,7 +857,8 @@ public class Transaction implements Comparable<Transaction> {
 		//
 		if (endPhase != TransactionPhase.READ_ONLY) {
 			try {
-				LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
+				LooseContext.push();
+				CONTEXT_ALLOW_ABORTED_TX_ACCESS.setTrue();
 				switch (endPhase) {
 				case NON_COMMITAL:
 					ThreadlocalTransformManager.cast().resetTltmNonCommitalTx();

@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.HandlesModelChange;
@@ -18,7 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @TypedProperties
 public class FilteredChoices<T> extends Model.Fields
-		implements ModelEvents.Filter.Emitter, ContextResolver.Has,
+		implements ReflectedEvents.Filter.Emitter, ContextResolver.Has,
 		ValueChange.Container, HandlesModelChange {
 	public static class To implements ModelTransform<List, FilteredChoices<?>> {
 		@Override
@@ -56,7 +57,7 @@ public class FilteredChoices<T> extends Model.Fields
 
 	class Filter extends Model.All {
 		@Directed(
-			reemits = { ModelEvents.Input.class, ModelEvents.Filter.class })
+			reemits = { ModelEvents.Input.class, ReflectedEvents.Filter.class })
 		@Directed.Transform(value = StringInput.To.class, transformsNull = true)
 		@FocusOnBindMarker
 		String filter;

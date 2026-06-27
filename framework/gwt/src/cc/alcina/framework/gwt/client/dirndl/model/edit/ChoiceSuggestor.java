@@ -97,6 +97,11 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 			List<Choice> choices = suggestedObjects.stream().map(Choice::new)
 					.collect(Collectors.toList());
 			StringAskAnswer<Choice> router = new StringAskAnswer<>();
+			if (choiceEditor.suggestOracleRouter != null) {
+				// pre-filtered
+				ask = new StringAsk();
+				ask.setValue("");
+			}
 			Answers answers = router.ask(ask, choices, Object::toString,
 					valueTransformer);
 			answersHandler.accept(answers);

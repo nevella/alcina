@@ -16,7 +16,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Delegating;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -42,7 +42,7 @@ public class RootArea extends Model.Fields
 		implements ModelEvent.DelegatesDispatch,
 		// implemented here (for hookup), but actual dispatch is done by the
 		// dispatch delegate (which must also implement this interface)
-		ModelEvents.TopLevelMissedEvent.Emitter {
+		ReflectedEvents.TopLevelMissedEvent.Emitter {
 	public static transient PackageProperties._RootArea properties = PackageProperties.rootArea;
 
 	@Directed

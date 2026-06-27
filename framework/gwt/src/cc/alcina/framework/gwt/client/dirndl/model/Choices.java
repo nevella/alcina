@@ -58,11 +58,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Filter;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.Filter;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -138,8 +138,8 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  */
 public abstract class Choices<T> extends Model implements
 		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has,
-		ModelEvents.BeforeSelectionChangedDispatchDescent.Emitter,
-		ModelEvents.Filter.Handler {
+		ReflectedEvents.BeforeSelectionChangedDispatchDescent.Emitter,
+		ReflectedEvents.Filter.Handler {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -245,7 +245,7 @@ public abstract class Choices<T> extends Model implements
 	 * model/payload to true
 	 */
 	public static class ChoiceSelectedDescent extends
-			ModelEvent.DescendantEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
+			ModelEvent.ReflectedEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onChoiceSelectedDescent(ChoiceSelectedDescent event);
 		}
@@ -532,7 +532,8 @@ public abstract class Choices<T> extends Model implements
 		protected void emitChangeModelEvents(List<T> newValues) {
 			emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class,
 					newValues);
-			emitEvent(ModelEvents.BeforeSelectionChangedDispatchDescent.class,
+			emitEvent(
+					ReflectedEvents.BeforeSelectionChangedDispatchDescent.class,
 					newValues);
 			emitEvent(ModelEvents.SelectionChanged.class, newValues);
 		}
@@ -544,7 +545,7 @@ public abstract class Choices<T> extends Model implements
 	 */
 	@Directed(tag = "select")
 	public static class Select<T> extends Single<T> implements
-			DomEvents.Change.Handler, ModelEvents.FocusEditor.Handler {
+			DomEvents.Change.Handler, ReflectedEvents.FocusEditor.Handler {
 		public static class To implements ModelTransform<Object, Single<?>> {
 			@Override
 			public Select<?> apply(Object t) {
@@ -555,7 +556,7 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		@Override
-		public void onFocusEditor(FocusEditor event) {
+		public void onFocusEditor(ReflectedEvents.FocusEditor event) {
 			Model.FocusOnBind.focusIfAttached(provideNode());
 		}
 
@@ -956,7 +957,7 @@ public abstract class Choices<T> extends Model implements
 				emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class,
 						newValue);
 				emitEvent(
-						ModelEvents.BeforeSelectionChangedDispatchDescent.class,
+						ReflectedEvents.BeforeSelectionChangedDispatchDescent.class,
 						newValue);
 				emitEvent(ModelEvents.SelectionChanged.class, newValue);
 				selectionChanged.signal();
@@ -965,7 +966,10 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void setValues(List<T> values) {
-			T preChangeSelectedValue = choices == null ? null
+			// this is overuse of lastSelectedValue (during init) - should be
+			// cleaned
+			T preChangeSelectedValue = choices == null || choices.isEmpty()
+					? lastSelectedValue
 					: getSelectedValue();
 			super.setValues(values);
 			/* preserve existing choice if possible */

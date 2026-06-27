@@ -16,6 +16,7 @@ import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
 import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -40,21 +41,61 @@ public class OffsetProtocol {
 		Map<AttachId, ElementOffsets> attachIdOffsets = AlcinaCollections
 				.newLinkedHashMap();
 
-		Map<AttachId, ElementOffsets> parentRelativeFixed = AlcinaCollections
+		Map<AttachId, ElementOffsets> descendantOfRelativeFixed = AlcinaCollections
 				.newLinkedHashMap();
+
+		Set<AttachId> descendantRelativeNotFixed = AlcinaCollections
+				.newHashSet();
+
+		Set<AttachId> descendantRelativeFixed = AlcinaCollections.newHashSet();
 
 		public ElementOffsets getOffsetsWithInvariant(Node node) {
 			AttachId attachId = AttachId.forNode(node);
-			ElementOffsets invariant = parentRelativeFixed.get(attachId);
+			ElementOffsets invariant = descendantOfRelativeFixed.get(attachId);
 			if (invariant != null) {
 				return invariant;
 			}
 			ElementOffsets computed = ElementOffsets.of(node);
 			attachIdOffsets.put(attachId, computed);
 			if (node instanceof Element) {
-				if (((Element) node).hasBehavior(
-						ElementOffsetsRequired.ParentRelativeFixed.class)) {
-					parentRelativeFixed.put(attachId, computed);
+				List<DomNode> ascent = new ArrayList<>();
+				DomNode cursor = node.asDomNode();
+				boolean fixed = false;
+				while (cursor.isElement()) {
+					if (cursor.hasBehavior(
+							ElementOffsetsRequired.DescendantRelativeFixed.class)) {
+						fixed = true;
+						break;
+					}
+					AttachId cursorId = cursor.attachId();
+					if (descendantRelativeFixed.contains(cursorId)) {
+						fixed = true;
+						break;
+					}
+					if (descendantRelativeNotFixed.contains(cursorId)) {
+						fixed = false;
+						break;
+					}
+					if (descendantOfRelativeFixed.containsKey(cursorId)) {
+						fixed = true;
+						break;
+					}
+					ascent.add(cursor);
+					cursor = cursor.parent();
+				}
+				if (!node.asDomNode().hasBehavior(
+						ElementOffsetsRequired.DescendantRelativeFixed.class)) {
+					if (fixed) {
+						descendantOfRelativeFixed.put(attachId, computed);
+					}
+					for (DomNode ascentNode : ascent) {
+						if (!fixed) {
+							descendantRelativeNotFixed
+									.add(ascentNode.attachId());
+						} else {
+							descendantRelativeFixed.add(ascentNode.attachId());
+						}
+					}
 				}
 			}
 			return computed;
@@ -76,17 +117,11 @@ public class OffsetProtocol {
 				}
 				result.changes.add(offsets);
 				attachIdOffsets.put(offsets.id, offsets);
-				Node node = offsets.id.node();
-				if (node instanceof Element) {
-					Element elem = (Element) node;
-					if (elem.hasBehavior(
-							ElementOffsetsRequired.ParentRelativeFixed.class)) {
-						parentRelativeFixed.put(offsets.id, offsets);
-					}
-				}
 			});
 			attachIdOffsets.keySet().removeAll(removed);
-			parentRelativeFixed.keySet().removeAll(removed);
+			descendantOfRelativeFixed.keySet().removeAll(removed);
+			descendantRelativeFixed.removeAll(removed);
+			descendantRelativeNotFixed.removeAll(removed);
 			result.removed = removed;
 			return result;
 		}

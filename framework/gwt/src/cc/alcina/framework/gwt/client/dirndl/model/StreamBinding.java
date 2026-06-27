@@ -362,30 +362,30 @@ public class StreamBinding<T> {
 	 */
 	public static class InstanceDistinctLambda
 			implements Runnable, ManagedLambdaEquality {
-		Model model;
+		Object closure;
 
 		Runnable runnable;
 
-		InstanceDistinctLambda(Model model, Runnable runnable) {
-			this.model = model;
+		InstanceDistinctLambda(Object closure, Runnable runnable) {
+			this.closure = closure;
 			this.runnable = runnable;
 		}
 
-		public static InstanceDistinctLambda of(Model model,
+		public static InstanceDistinctLambda of(Object closure,
 				Runnable runnable) {
-			return new InstanceDistinctLambda(model, runnable);
+			return new InstanceDistinctLambda(closure, runnable);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(model, runnable);
+			return Objects.hash(closure, runnable);
 		}
 
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof InstanceDistinctLambda) {
 				InstanceDistinctLambda o = (InstanceDistinctLambda) obj;
-				return model == o.model && runnable == o.runnable;
+				return closure == o.closure && runnable == o.runnable;
 			} else {
 				return false;
 			}
@@ -437,6 +437,11 @@ public class StreamBinding<T> {
 		Preconditions.checkState(dispatchRef == null);
 		dispatchRef = Ref
 				.of(r -> Scheduler.get().scheduleDeferred(() -> r.run()));
+		return this;
+	}
+
+	public StreamBinding<T> withFireOnce() {
+		fireOnce = true;
 		return this;
 	}
 
@@ -552,6 +557,10 @@ public class StreamBinding<T> {
 			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
 					.asBinding();
 			listener.bind();
+		} else if (fromNodeEventClass != null) {
+			if (bindings.bound) {
+				bindings.bindEventPostAttach(this);
+			}
 		} else {
 			// noop (from is null)
 		}
@@ -606,6 +615,19 @@ public class StreamBinding<T> {
 		return Reflections.at(fromPropertyChangeSource).property(on);
 	}
 
+	/**
+	 * <p>
+	 * Note that this formulation doesn't follow the true binding (doesn't map
+	 * left-to-right on attach, because there's no binding cycle)
+	 * 
+	 * <p>
+	 * So it's *almost* deprecated - basically, if you want full binding, use
+	 * Model, even if the type is never bound to a Node
+	 * 
+	 * @param <T>
+	 * @param property
+	 * @return
+	 */
 	public static <T> StreamBinding<T>
 			ofProperty(InstanceProperty<?, T> property) {
 		return new StreamBinding<>(null).from(property.source)

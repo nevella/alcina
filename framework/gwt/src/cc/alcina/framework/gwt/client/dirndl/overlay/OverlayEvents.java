@@ -5,7 +5,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 public class OverlayEvents {
 	public static class PositionedDescendants extends
-			ModelEvent.DescendantEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
+			ModelEvent.ReflectedEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onPositionedDescendants(PositionedDescendants event);
 		}

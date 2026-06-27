@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsValidationFeedbackSupplier;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanForm;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
@@ -45,7 +46,7 @@ public class FmsForm {
 	@Directed(
 		tag = "form-element",
 		reemits = { ModelEvents.LabelClicked.class,
-				ModelEvents.FormElementLabelClicked.class },
+				ReflectedEvents.FormElementLabelClicked.class },
 		bindings = @Binding(
 			from = "elementName",
 			type = Type.PROPERTY,

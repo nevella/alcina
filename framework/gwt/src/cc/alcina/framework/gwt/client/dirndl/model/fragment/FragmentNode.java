@@ -112,8 +112,9 @@ public abstract class FragmentNode extends Model.Fields
 		return childNodes == null ? Stream.empty()
 				: (Stream<FragmentNode>) (Stream<?>) childNodes.stream()
 						.filter(n -> n.getModel() instanceof FragmentNode)
-						.map(Node::getModel).filter(fn -> ((FragmentNode) fn)
-								.domNode().isAttached());
+						.map(n -> (FragmentNode) n.getModel())
+						.filter(fn -> fn.domNode() != null
+								&& fn.domNode().isAttached());
 	}
 
 	public void copyFromExternal(FragmentNode external) {

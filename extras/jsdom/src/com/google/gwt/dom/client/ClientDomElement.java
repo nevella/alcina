@@ -348,7 +348,7 @@ public interface ClientDomElement extends ClientDomNode {
 
 	List<ElementBehavior> getBehaviors();
 
-	void removeBehavior(Class<? extends ElementBehavior> behaviorClass);
+	boolean removeBehavior(Class<? extends ElementBehavior> behaviorClass);
 
 	void getFileData(AsyncCallback<InputFileData> callback);
 }

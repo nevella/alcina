@@ -9,9 +9,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 public interface Filterable {
 	public interface FilterFilterable
-			extends Filterable, ModelEvents.Filter.Handler {
+			extends Filterable, ReflectedEvents.Filter.Handler {
 		@Override
-		default void onFilter(ModelEvents.Filter event) {
+		default void onFilter(ReflectedEvents.Filter event) {
 			String filterValue = event.provideFilterValue();
 			setVisible(matchesFilter(filterValue));
 		}

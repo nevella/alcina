@@ -12,7 +12,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FocusEditor;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.ColumnMetadata;
 import cc.alcina.framework.gwt.client.dirndl.model.TableColumnsMetadata.EditFilter;
@@ -50,7 +51,7 @@ class PropertyFilter {
 	class FilterCoordinator extends Bindable.Fields
 			implements ModelEvents.Closed.Handler, SuggestionSelected.Handler {
 		class FilterEditor extends Model.All implements ValueChange.Container,
-				ModelEvents.FocusEditor.Emitter {
+				ReflectedEvents.FocusEditor.Emitter {
 			@Directed.Transform(
 				// value = Choices.Select.To.class,
 				value = Choices.Select.To.class,

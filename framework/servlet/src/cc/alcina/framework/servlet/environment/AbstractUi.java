@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
@@ -37,7 +37,7 @@ import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
  * Activity routing - all AbstractUi apps use the {@link Place} and
  * {@link Activity} system for modelling main UI state. Generally the toplevel
  * UI component will observe the app place property and remit
- * {@link ModelEvents.PlaceChanged} events
+ * {@link ReflectedEvents.PlaceChanged} events
  */
 @TypedProperties
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
