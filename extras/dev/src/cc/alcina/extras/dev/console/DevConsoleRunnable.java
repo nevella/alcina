@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdExecRunnable;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,6 +30,11 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 
 	public boolean canUseProductionConn() {
 		return false;
+	}
+
+	@Override
+	public Job perform() {
+		throw new UnsupportedOperationException("Use dub/run, not perform");
 	}
 
 	protected void logJobResultFiles() {

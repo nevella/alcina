@@ -20,8 +20,6 @@ import java.util.Collections;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 
-import cc.alcina.framework.common.client.util.Ax;
-
 /**
  * The create* and delete* methods on the table allow authors to construct and
  * modify tables. [HTML 4.01] specifies that only one of each of the CAPTION,
@@ -429,10 +427,12 @@ public class TableElement extends Element
 
 	@Override
 	protected void validateInsert0(Node newChild) {
-		if (newChild.provideIsElement() && Ax.isTest()) {
+		if (newChild.provideIsElement()) {
 			String tagName = newChild.getNodeName().toLowerCase();
-			Preconditions.checkState(tagName.equals("thead")
-					|| tagName.equals("tbody") || tagName.equals("tfoot"));
+			if (!(tagName.equals("thead") || tagName.equals("tbody")
+					|| tagName.equals("tfoot") || tagName.equals("colgroup"))) {
+				throw new InvalidDomStructureException();
+			}
 		}
 		super.validateInsert0(newChild);
 	}

@@ -201,6 +201,47 @@ public interface ElementBehavior extends EventBehavior {
 		}
 	}
 
+	public static class PreventDefaultAnchorBehaviour
+			extends ElementBehavior.Parameterised {
+		public PreventDefaultAnchorBehaviour() {
+		}
+
+		public PreventDefaultAnchorBehaviour(String hrefRegex) {
+			this.hrefRegex = hrefRegex;
+		}
+
+		@Override
+		public String getEventType() {
+			return BrowserEvents.CLICK;
+		}
+
+		public String hrefRegex;
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			NativeEvent nativeEvent = event.getNativeEvent();
+			if (nativeEvent.getMetaKey() || nativeEvent.getCtrlKey()) {
+				return;
+			}
+			EventTarget eventTarget = nativeEvent.getEventTarget();
+			if (Element.is(eventTarget)) {
+				Element elem = Element.as(eventTarget);
+				String href = elem.asDomNode().ancestors().orSelf()
+						.match(n -> n.has("href")).map(n -> n.attr("href"))
+						.orElse("");
+				if (href.matches(hrefRegex)) {
+					nativeEvent.preventDefault();
+				}
+			}
+		}
+
+		@Override
+		public List<?> provideParameters() {
+			return List.of(hrefRegex);
+		}
+	}
+
 	static class ContentEditable {
 		static boolean is(DomNode node) {
 			return node.attrIs("contenteditable", "true");

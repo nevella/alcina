@@ -18,7 +18,6 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 
 import cc.alcina.framework.common.client.util.TextUtils;
@@ -247,12 +246,14 @@ public class TableRowElement extends Element
 	protected void validateInsert0(Node newChild) {
 		if (newChild.provideIsElement()) {
 			String tagName = newChild.getNodeName().toLowerCase();
-			Preconditions
-					.checkState(tagName.equals("th") || tagName.equals("td"));
+			if (!(tagName.equals("th") || tagName.equals("td"))) {
+				throw new InvalidDomStructureException();
+			}
 		}
 		if (newChild.provideIsText()) {
-			Preconditions.checkState(
-					TextUtils.isWhitespaceOrEmpty(newChild.getTextContent()));
+			if (!(TextUtils.isWhitespaceOrEmpty(newChild.getTextContent()))) {
+				throw new InvalidDomStructureException();
+			}
 		}
 		super.validateInsert0(newChild);
 	}
