@@ -2,10 +2,12 @@ package cc.alcina.framework.gwt.client.dirndl.model.search;
 
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class SearchDefinitionArea extends Model.All {
 	public Link link;
 
