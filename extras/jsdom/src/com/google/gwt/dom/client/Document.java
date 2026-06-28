@@ -208,6 +208,8 @@ public class Document extends Node implements ClientDomDocument,
 	 */
 	public boolean htmlTags = true;
 
+	public static transient boolean htmlTagValidationEnabled;
+
 	public final boolean validateHtmlTags;
 
 	Selection selection;

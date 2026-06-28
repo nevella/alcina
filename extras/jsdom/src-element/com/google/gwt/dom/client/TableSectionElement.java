@@ -18,10 +18,7 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
-
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * The THEAD, TFOOT, and TBODY elements.
@@ -85,9 +82,11 @@ public class TableSectionElement extends Element
 
 	@Override
 	protected void validateInsert0(Node newChild) {
-		if (newChild.provideIsElement() && Ax.isTest()) {
+		if (newChild.provideIsElement()) {
 			String tagName = newChild.getNodeName().toLowerCase();
-			Preconditions.checkState(tagName.equals("tr"));
+			if (!tagName.equals("tr")) {
+				throw new InvalidDomStructureException();
+			}
 		}
 		super.validateInsert0(newChild);
 	}

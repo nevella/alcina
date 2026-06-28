@@ -624,7 +624,8 @@ public abstract class Node
 	}
 
 	protected final void validateInsert(Node newChild) {
-		if (getOwnerDocument().validateHtmlTags) {
+		if (getOwnerDocument().validateHtmlTags
+				&& Document.htmlTagValidationEnabled) {
 			validateInsert0(newChild);
 		}
 	}

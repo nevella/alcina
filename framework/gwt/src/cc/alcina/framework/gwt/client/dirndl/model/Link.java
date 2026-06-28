@@ -480,4 +480,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 		setClassName("secondary");
 		return this;
 	}
+
+	public static Link button(BasePlace place) {
+		return of(place).withTag("button");
+	}
 }
