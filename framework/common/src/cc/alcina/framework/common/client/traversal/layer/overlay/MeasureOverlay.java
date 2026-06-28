@@ -10,6 +10,7 @@ import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.DomNode.SplitResult;
 import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.Location;
@@ -222,6 +223,8 @@ public class MeasureOverlay {
 
 	DepthStrategy depthStrategy;
 
+	public boolean skipForwardsPastImages = true;
+
 	/**
 	 * How should the overlay split its boundary points?
 	 */
@@ -373,12 +376,27 @@ public class MeasureOverlay {
 		}
 		positioningElement = loc.getContainingNode().ancestors()
 				.selfOrContainingElement();
+		if (skipForwardsPastImages) {
+			positioningElement = skipForwardsPastImages(positioningElement);
+		}
 		Element gwtElement = positioningElement.gwtElement();
 		ElementOffsetsRequired offsetsBehavior = getOffsetsBehavior();
 		if (!gwtElement.hasBehavior(offsetsBehavior.getClass())) {
 			gwtElement.addBehavior(offsetsBehavior);
 		}
 		return positioningElement;
+	}
+
+	DomNode skipForwardsPastImages(DomNode container) {
+		DomNodeTree walker = container.tree();
+		DomNode cursor = null;
+		while (((cursor = walker.currentNode()) != null)) {
+			if (cursor.isNonWhitespaceTextContent()) {
+				return cursor.ancestors().selfOrContainingElement();
+			}
+			walker.next();
+		}
+		return container;
 	}
 
 	public ElementOffsetsRequired getOffsetsBehavior() {
