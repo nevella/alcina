@@ -118,6 +118,11 @@ class Header extends Model.All {
 				properties().searchDefinition().set(null);
 				return;
 			}
+			if (sequence instanceof Sequence.Blank
+					&& this.searchDefinition != null) {
+				// out-of-order init
+				return;
+			}
 			if (searchDefinition != null && searchDefinition
 					.sequenceClass() != sequence.getClass()) {
 				properties().searchDefinition().set(null);
