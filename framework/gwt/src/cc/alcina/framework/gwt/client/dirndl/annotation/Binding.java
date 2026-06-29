@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FromStringFunction;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -382,6 +383,14 @@ public @interface Binding {
 		@Override
 		public String apply(Number rem) {
 			return rem + "rem";
+		}
+	}
+
+	@Reflected
+	public static class NestedClassName implements ToStringFunction<Class> {
+		@Override
+		public String apply(Class clazz) {
+			return clazz == null ? null : NestedName.get(clazz);
 		}
 	}
 

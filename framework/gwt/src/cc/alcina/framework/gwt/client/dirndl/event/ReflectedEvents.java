@@ -5,6 +5,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
@@ -50,6 +51,28 @@ public class ReflectedEvents {
 		public interface Binding extends Handler {
 			@Override
 			default void onForward(Forward event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
+	public static class CommittingTransforms extends
+			ModelEvent.ReflectedEvent<TransformCollation, CommittingTransforms.Handler, CommittingTransforms.Emitter> {
+		@Override
+		public void dispatch(CommittingTransforms.Handler handler) {
+			handler.onCommittingTransforms(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCommittingTransforms(CommittingTransforms event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onCommittingTransforms(CommittingTransforms event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}
