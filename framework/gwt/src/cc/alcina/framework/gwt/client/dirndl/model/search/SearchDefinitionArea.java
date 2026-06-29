@@ -29,7 +29,7 @@ public class SearchDefinitionArea extends Model.Fields {
 	@Property.Not
 	SearchDefinition definition;
 
-	public Object modelEventData;
+	public transient Object modelEventData;
 
 	public SearchDefinitionArea(BasePlace searchPlace,
 			SearchDefinition definition, Object modelEventData) {
