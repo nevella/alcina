@@ -244,6 +244,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 		return this.innerHtml;
 	}
 
+	@Binding(type = Type.PROPERTY, transform = Binding.NestedClassName.class)
 	public Class<? extends ModelEvent> getModelEvent() {
 		return this.modelEvent;
 	}
