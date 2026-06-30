@@ -44,7 +44,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.OnlineState;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -86,378 +85,26 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 @EnvironmentSingleton
 public class CommitToStorageTransformListener
 		implements DomainTransformListener {
-	// FIXME - model - this should just be Scheduler.scheduleFinally
-	public static final int DELAY_MS = 100;
-
-	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
-			.getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
-
-	public static final transient String CONTEXT_COMMITTING_REQUEST = CommitToStorageTransformListener.class
-			.getName() + ".CONTEXT_COMMITTING_REQUEST";
-
-	public static final Topic<Throwable> topicCommitDomainException = Topic
-			.create();
-
-	public static final Topic<DomainTransformResponse> topicTransformsCommitted = Topic
-			.create();
-
-	public static final Topic<State> topicStateChanged = Topic.create();
-
-	public static final Topic<DomainTransformEvent> topicTransformAdded = Topic
-			.create();
-
-	public static TransformCollation committingCollation() {
-		List<DomainTransformEvent> events = committingRequest().getEvents();
-		// during pre-commit, request will have zero transforms
-		return new TransformCollation(
-				events.isEmpty() ? get().transformQueue : events);
+	public static enum State {
+		PRE_COMMIT, COMMITTING, COMMITTED, ERROR, OFFLINE, RELOAD
 	}
 
-	public static DomainTransformRequest committingRequest() {
-		return (DomainTransformRequest) LooseContext.get(
-				CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
-	}
-
-	public static void flushAndRun(Runnable runnable) {
-		Registry.impl(WithFlushedTransforms.class).call(runnable);
-	}
-
-	public static void
-			flushAndRunWithCreationConsumer(Consumer<EntityLocator> r2) {
-		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
-				.get().lastCreatedObjectLocator));
-	}
-
-	public static void
-			flushAndRunWithFirstCreationConsumer(Consumer<EntityLocator> r2) {
-		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
-				.get().firstCreatedObjectLocator));
-	}
-
-	public static CommitToStorageTransformListener get() {
-		return Registry.impl(CommitToStorageTransformListener.class);
-	}
-
-	protected Object collectionsMonitor = new Object();
-
-	private EntityLocator lastCreatedObjectLocator;
-
-	private EntityLocator firstCreatedObjectLocator;
-
-	protected List<DomainTransformEvent> transformQueue = new ArrayList<>();
-
-	protected List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<>();
-
-	protected volatile Timer queueingFinishedTimer;
-
-	protected long lastQueueAddMillis;
-
-	private boolean suppressErrors = false;
-
-	private boolean paused;
-
-	protected int localRequestId = 1;
-
-	private List<DomainTransformEvent> synthesisedEvents = new ArrayList<>();
-
-	private boolean reloadRequired = false;
-
-	protected Set<Long> eventIdsToIgnore = new HashSet<Long>();
-
-	private State currentState;
-
-	private boolean localStorageOnly;
-
-	private int lastCommitSize;
-
-	private boolean queueCommitTimerDisabled;
-
-	private Object commitMonitor = new Object();
-
-	private TopicListener<State> stateListener = v -> currentState = v;
-
-	public CommitToStorageTransformListener() {
-		if (GWT.isClient()) {
-			new WindowClosingHandler().add();
-		}
-		topicStateChanged.add(stateListener);
-	}
-
-	protected boolean canTransitionToOnline() {
-		return true;
-	}
-
-	public void clearPriorRequestsWithoutResponse() {
-		synchronized (collectionsMonitor) {
-			priorRequestsWithoutResponse.clear();
-		}
-	}
-
-	protected void commit() {
-		synchronized (collectionsMonitor) {
-			if ((priorRequestsWithoutResponse.size() == 0
-					&& transformQueue.size() == 0) || isPaused()) {
-				return;
-			}
-		}
-		synchronized (commitMonitor) {
-			commit0();
-		}
-	}
-
-	protected synchronized void commit0() {
-		if (queueingFinishedTimer != null) {
-			queueingFinishedTimer.cancel();
-		}
-		queueingFinishedTimer = null;
-		int requestId = localRequestId++;
-		final DomainTransformRequest request = DomainTransformRequest
-				.createPersistableRequest(requestId,
-						Permissions.get().getClientInstanceId());
-		request.setRequestId(requestId);
-		request.setClientInstance(Permissions.get().getClientInstance());
-		if (transformQueue.size() > 0) {
-			/*
-			 * Note that commit and queue modification are not causally related
-			 * - so transforms can be generated at this point
-			 */
-			try {
-				LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
-				topicStateChanged.publish(State.PRE_COMMIT);
-			} finally {
-				LooseContext.pop();
-			}
-		}
-		synchronized (collectionsMonitor) {
-			customProcessTransformQueue(transformQueue);
-			request.getEvents().addAll(transformQueue);
-			lastCommitSize = transformQueue.size();
-			request.getEventIdsToIgnore().addAll(eventIdsToIgnore);
-			request.setTag(DomainTransformRequestTagProvider.get().getTag());
-			updateTransformQueueVersions();
-			transformQueue.clear();
-		}
-		if (request.getEvents().isEmpty()) {
-			topicStateChanged.publish(State.COMMITTED);
-			return;
-		}
-		final AsyncCallback<DomainTransformResponse> commitRemoteCallback = new ResponseCallback(
-				request);
-		// the ordering here is tricky
-		// 'committing' says 'we have a flat list of rqs without response (incl
-		// current)
-		// wheras the transform rpc call requires rq (current) with prior rqs as
-		// a listfield
-		// given listener callbacks can be multi-threaded (jvm version),
-		// use the following ordering - note we use a new list in
-		// dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy)
-		synchronized (collectionsMonitor) {
-			List<DomainTransformRequest> priorRequestsWithoutResponseForCommit = new ArrayList<DomainTransformRequest>(
-					priorRequestsWithoutResponse);
-			request.setPriorRequestsWithoutResponse(
-					priorRequestsWithoutResponseForCommit);
-		}
-		try {
-			LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
-			topicStateChanged.publish(State.COMMITTING);
-		} finally {
-			LooseContext.pop();
-		}
-		synchronized (collectionsMonitor) {
-			priorRequestsWithoutResponse.add(request);
-		}
-		if (isLocalStorageOnly()) {
-			topicStateChanged.publish(State.OFFLINE);
-			return;
-		}
-		if (OnlineState.isOffline()) {
-			Client.commonRemoteService().ping(new AsyncCallback<Void>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					// ignore - expected(ish) behaviour - if it's a
-					// non-'offline' error, it's more graceful to ignore
-					// here than not
-					topicStateChanged.publish(State.OFFLINE);
-				}
-
-				@Override
-				public void onSuccess(Void result) {
-					if (canTransitionToOnline()) {
-						commitRemote(request, commitRemoteCallback);
-					}
-				}
-			});
-		} else {
-			commitRemote(request, commitRemoteCallback);
-		}
-	}
-
-	protected void commitRemote(DomainTransformRequest request,
-			AsyncCallback<DomainTransformResponse> callback) {
-		Client.commonRemoteService().transform(request, callback);
-	}
-
-	protected void customProcessTransformQueue(
-			List<DomainTransformEvent> transformQueue) {
-		// for outré subclassed persistence
-	}
-
-	@Override
-	public void domainTransform(DomainTransformEvent event) {
-		if (event.getCommitType() == CommitType.TO_STORAGE) {
-			if (Objects.equals(event.getPropertyName(),
-					TransformManager.ID_FIELD_NAME)) {
-				return;
-			}
-			TransformManager tm = TransformManager.get();
-			if (tm.isReplayingRemoteEvent()) {
-				return;
-			}
-			synchronized (collectionsMonitor) {
-				transformQueue.add(event);
-			}
-			topicTransformAdded.publish(event);
-			lastQueueAddMillis = System.currentTimeMillis();
-			if (queueingFinishedTimer == null
-					&& !isQueueCommitTimerDisabled()) {
-				queueingFinishedTimer = Registry.impl(Timer.Provider.class)
-						.getTimer(getCommitLoopRunnable());
-				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
-			}
-			return;
-		}
-	}
-
-	public synchronized void flush() {
-		if (currentState == State.RELOAD) {
-			return;
-		}
-		commit();
-	}
-
-	public void flushWithOneoffCallback(AsyncCallback callback) {
-		flushWithOneoffCallback(callback, true);
-	}
-
-	// FIXME - mvcc.5 - remove (coalesce with 1-arg call)
-	public void flushWithOneoffCallback(AsyncCallback callback,
-			boolean commitIfEmptyTransformQueue) {
-		boolean doNotFlush = false;
-		synchronized (collectionsMonitor) {
-			doNotFlush = ((priorRequestsWithoutResponse.size() == 0
-					|| !commitIfEmptyTransformQueue)
-					&& transformQueue.size() == 0) || isPaused();
-		}
-		if (doNotFlush) {
-			callback.onSuccess(null);
-			return;
-		}
-		topicStateChanged.add(new OneoffListenerWrapper(callback));
-		flush();
-	}
-
-	protected Runnable getCommitLoopRunnable() {
-		return new CommitLoopRunnable();
-	}
-
-	public State getCurrentState() {
-		return this.currentState;
-	}
-
-	public int getLastCommitSize() {
-		return this.lastCommitSize;
-	}
-
-	public int getLocalRequestId() {
-		return this.localRequestId;
-	}
-
-	protected int getMaxTransformsPerRequest() {
-		return Integer.MAX_VALUE;
-	}
-
-	public List<DomainTransformRequest> getPriorRequestsWithoutResponse() {
-		synchronized (collectionsMonitor) {
-			return Collections
-					.unmodifiableList(this.priorRequestsWithoutResponse.stream()
-							.collect(Collectors.toList()));
-		}
-	}
-
-	public List<DomainTransformEvent> getSynthesisedEvents() {
-		synchronized (collectionsMonitor) {
-			return Collections.unmodifiableList(this.synthesisedEvents.stream()
-					.collect(Collectors.toList()));
-		}
-	}
-
-	protected ClientTransformExceptionResolver getTransformExceptionResolver() {
-		return Registry.impl(ClientTransformExceptionResolver.class);
-	}
-
-	protected List<DomainTransformEvent> getTransformQueue() {
-		return this.transformQueue;
-	}
-
-	public int getTransformQueueSize() {
-		synchronized (collectionsMonitor) {
-			return transformQueue.size();
+	public static class UnknownTransformFailedException
+			extends WrappedRuntimeException {
+		public UnknownTransformFailedException(Throwable cause) {
+			super(cause);
 		}
 	}
 
 	/*
-	 * Should pretty much always be false. If a transform fails, there are
-	 * consistency issues up and down the line - best to reload and try again
+	 * Default (client) implementation
 	 */
-	public boolean isAllowPartialRetryRequests() {
-		return false;
-	}
-
-	/*
-	 * vaguely hacky, if we're connected but need to do some fancy footwork
-	 * before uploading offline transforms
-	 */
-	public boolean isLocalStorageOnly() {
-		return this.localStorageOnly;
-	}
-
-	public boolean isPaused() {
-		return paused;
-	}
-
-	public boolean isQueueCommitTimerDisabled() {
-		return this.queueCommitTimerDisabled;
-	}
-
-	public boolean isSuppressErrors() {
-		return suppressErrors;
-	}
-
-	public void setLocalRequestId(int localRequestId) {
-		this.localRequestId = localRequestId;
-	}
-
-	public void setLocalStorageOnly(boolean localStorageOnly) {
-		this.localStorageOnly = localStorageOnly;
-	}
-
-	public void setPaused(boolean paused) {
-		this.paused = paused;
-	}
-
-	public void setQueueCommitTimerDisabled(boolean queueCommitTimerDisabled) {
-		this.queueCommitTimerDisabled = queueCommitTimerDisabled;
-	}
-
-	public void setSuppressErrors(boolean suppressErrors) {
-		this.suppressErrors = suppressErrors;
-	}
-
-	/*
-	 * Unimplemented for the moment. This may or may not be necessary to
-	 * accelerate change conflict checking
-	 */
-	void updateTransformQueueVersions() {
+	@Registration.Singleton
+	public static class WithFlushedTransforms {
+		public void call(Runnable runnable) {
+			Registry.impl(CommitToStorageTransformListener.class)
+					.flushWithOneoffCallback(Async.untypedCallback(runnable));
+		}
 	}
 
 	class CommitLoopRunnable implements Runnable {
@@ -692,17 +339,6 @@ public class CommitToStorageTransformListener
 		}
 	}
 
-	public static enum State {
-		PRE_COMMIT, COMMITTING, COMMITTED, ERROR, OFFLINE, RELOAD
-	}
-
-	public static class UnknownTransformFailedException
-			extends WrappedRuntimeException {
-		public UnknownTransformFailedException(Throwable cause) {
-			super(cause);
-		}
-	}
-
 	private static class WindowClosingHandler {
 		public void add() {
 			Window.addWindowClosingHandler(evt -> {
@@ -714,15 +350,256 @@ public class CommitToStorageTransformListener
 		}
 	}
 
-	/*
-	 * Default (client) implementation
-	 */
-	@Registration.Singleton
-	public static class WithFlushedTransforms {
-		public void call(Runnable runnable) {
-			Registry.impl(CommitToStorageTransformListener.class)
-					.flushWithOneoffCallback(Async.untypedCallback(runnable));
+	// FIXME - model - this should just be Scheduler.scheduleFinally
+	public static final int DELAY_MS = 100;
+
+	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
+			.getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
+
+	public static final transient String CONTEXT_COMMITTING_REQUEST = CommitToStorageTransformListener.class
+			.getName() + ".CONTEXT_COMMITTING_REQUEST";
+
+	public static final Topic<Throwable> topicCommitDomainException() {
+		return get().topicCommitDomainException;
+	}
+
+	public static final Topic<DomainTransformResponse>
+			topicTransformsCommitted() {
+		return get().topicTransformsCommitted;
+	}
+
+	public static final Topic<State> topicStateChanged() {
+		return get().topicStateChanged;
+	}
+
+	public static final Topic<DomainTransformEvent> topicTransformAdded() {
+		return get().topicTransformAdded;
+	}
+
+	public static TransformCollation committingCollation() {
+		List<DomainTransformEvent> events = committingRequest().getEvents();
+		// during pre-commit, request will have zero transforms
+		return new TransformCollation(
+				events.isEmpty() ? get().transformQueue : events);
+	}
+
+	public static DomainTransformRequest committingRequest() {
+		return (DomainTransformRequest) LooseContext.get(
+				CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
+	}
+
+	public static void flushAndRun(Runnable runnable) {
+		Registry.impl(WithFlushedTransforms.class).call(runnable);
+	}
+
+	public static void
+			flushAndRunWithCreationConsumer(Consumer<EntityLocator> r2) {
+		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
+				.get().lastCreatedObjectLocator));
+	}
+
+	public static void
+			flushAndRunWithFirstCreationConsumer(Consumer<EntityLocator> r2) {
+		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
+				.get().firstCreatedObjectLocator));
+	}
+
+	public static CommitToStorageTransformListener get() {
+		return Registry.impl(CommitToStorageTransformListener.class);
+	}
+
+	Topic<Throwable> topicCommitDomainException = Topic.create();
+
+	Topic<DomainTransformResponse> topicTransformsCommitted = Topic.create();
+
+	Topic<State> topicStateChanged = Topic.create();
+
+	Topic<DomainTransformEvent> topicTransformAdded = Topic.create();
+
+	protected Object collectionsMonitor = new Object();
+
+	private EntityLocator lastCreatedObjectLocator;
+
+	private EntityLocator firstCreatedObjectLocator;
+
+	protected List<DomainTransformEvent> transformQueue = new ArrayList<>();
+
+	protected List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<>();
+
+	protected volatile Timer queueingFinishedTimer;
+
+	protected long lastQueueAddMillis;
+
+	private boolean suppressErrors = false;
+
+	private boolean paused;
+
+	protected int localRequestId = 1;
+
+	private List<DomainTransformEvent> synthesisedEvents = new ArrayList<>();
+
+	private boolean reloadRequired = false;
+
+	protected Set<Long> eventIdsToIgnore = new HashSet<Long>();
+
+	private State currentState;
+
+	private boolean localStorageOnly;
+
+	private int lastCommitSize;
+
+	private boolean queueCommitTimerDisabled;
+
+	private Object commitMonitor = new Object();
+
+	private TopicListener<State> stateListener = v -> currentState = v;
+
+	public CommitToStorageTransformListener() {
+		if (GWT.isClient()) {
+			new WindowClosingHandler().add();
 		}
+		topicStateChanged.add(stateListener);
+	}
+
+	public void clearPriorRequestsWithoutResponse() {
+		synchronized (collectionsMonitor) {
+			priorRequestsWithoutResponse.clear();
+		}
+	}
+
+	@Override
+	public void domainTransform(DomainTransformEvent event) {
+		if (event.getCommitType() == CommitType.TO_STORAGE) {
+			if (Objects.equals(event.getPropertyName(),
+					TransformManager.ID_FIELD_NAME)) {
+				return;
+			}
+			TransformManager tm = TransformManager.get();
+			if (tm.isReplayingRemoteEvent()) {
+				return;
+			}
+			synchronized (collectionsMonitor) {
+				transformQueue.add(event);
+			}
+			topicTransformAdded.publish(event);
+			lastQueueAddMillis = System.currentTimeMillis();
+			if (queueingFinishedTimer == null
+					&& !isQueueCommitTimerDisabled()) {
+				queueingFinishedTimer = Registry.impl(Timer.Provider.class)
+						.getTimer(getCommitLoopRunnable());
+				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
+			}
+			return;
+		}
+	}
+
+	public synchronized void flush() {
+		if (currentState == State.RELOAD) {
+			return;
+		}
+		commit();
+	}
+
+	public void flushWithOneoffCallback(AsyncCallback callback) {
+		flushWithOneoffCallback(callback, true);
+	}
+
+	// FIXME - mvcc.5 - remove (coalesce with 1-arg call)
+	public void flushWithOneoffCallback(AsyncCallback callback,
+			boolean commitIfEmptyTransformQueue) {
+		boolean doNotFlush = false;
+		synchronized (collectionsMonitor) {
+			doNotFlush = ((priorRequestsWithoutResponse.size() == 0
+					|| !commitIfEmptyTransformQueue)
+					&& transformQueue.size() == 0) || isPaused();
+		}
+		if (doNotFlush) {
+			callback.onSuccess(null);
+			return;
+		}
+		topicStateChanged.add(new OneoffListenerWrapper(callback));
+		flush();
+	}
+
+	public State getCurrentState() {
+		return this.currentState;
+	}
+
+	public int getLastCommitSize() {
+		return this.lastCommitSize;
+	}
+
+	public int getLocalRequestId() {
+		return this.localRequestId;
+	}
+
+	public List<DomainTransformRequest> getPriorRequestsWithoutResponse() {
+		synchronized (collectionsMonitor) {
+			return Collections
+					.unmodifiableList(this.priorRequestsWithoutResponse.stream()
+							.collect(Collectors.toList()));
+		}
+	}
+
+	public List<DomainTransformEvent> getSynthesisedEvents() {
+		synchronized (collectionsMonitor) {
+			return Collections.unmodifiableList(this.synthesisedEvents.stream()
+					.collect(Collectors.toList()));
+		}
+	}
+
+	public int getTransformQueueSize() {
+		synchronized (collectionsMonitor) {
+			return transformQueue.size();
+		}
+	}
+
+	/*
+	 * Should pretty much always be false. If a transform fails, there are
+	 * consistency issues up and down the line - best to reload and try again
+	 */
+	public boolean isAllowPartialRetryRequests() {
+		return false;
+	}
+
+	/*
+	 * vaguely hacky, if we're connected but need to do some fancy footwork
+	 * before uploading offline transforms
+	 */
+	public boolean isLocalStorageOnly() {
+		return this.localStorageOnly;
+	}
+
+	public boolean isPaused() {
+		return paused;
+	}
+
+	public boolean isQueueCommitTimerDisabled() {
+		return this.queueCommitTimerDisabled;
+	}
+
+	public boolean isSuppressErrors() {
+		return suppressErrors;
+	}
+
+	public void setLocalRequestId(int localRequestId) {
+		this.localRequestId = localRequestId;
+	}
+
+	public void setLocalStorageOnly(boolean localStorageOnly) {
+		this.localStorageOnly = localStorageOnly;
+	}
+
+	public void setPaused(boolean paused) {
+		this.paused = paused;
+	}
+
+	public void setQueueCommitTimerDisabled(boolean queueCommitTimerDisabled) {
+		this.queueCommitTimerDisabled = queueCommitTimerDisabled;
+	}
+
+	public void setSuppressErrors(boolean suppressErrors) {
+		this.suppressErrors = suppressErrors;
 	}
 
 	public void
@@ -730,5 +607,141 @@ public class CommitToStorageTransformListener
 		synchronized (collectionsMonitor) {
 			this.priorRequestsWithoutResponse.add(request);
 		}
+	}
+
+	protected boolean canTransitionToOnline() {
+		return true;
+	}
+
+	protected void commit() {
+		synchronized (collectionsMonitor) {
+			if ((priorRequestsWithoutResponse.size() == 0
+					&& transformQueue.size() == 0) || isPaused()) {
+				return;
+			}
+		}
+		synchronized (commitMonitor) {
+			commit0();
+		}
+	}
+
+	protected synchronized void commit0() {
+		if (queueingFinishedTimer != null) {
+			queueingFinishedTimer.cancel();
+		}
+		queueingFinishedTimer = null;
+		int requestId = localRequestId++;
+		final DomainTransformRequest request = DomainTransformRequest
+				.createPersistableRequest(requestId,
+						Permissions.get().getClientInstanceId());
+		request.setRequestId(requestId);
+		request.setClientInstance(Permissions.get().getClientInstance());
+		if (transformQueue.size() > 0) {
+			/*
+			 * Note that commit and queue modification are not causally related
+			 * - so transforms can be generated at this point
+			 */
+			try {
+				LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
+				topicStateChanged.publish(State.PRE_COMMIT);
+			} finally {
+				LooseContext.pop();
+			}
+		}
+		synchronized (collectionsMonitor) {
+			customProcessTransformQueue(transformQueue);
+			request.getEvents().addAll(transformQueue);
+			lastCommitSize = transformQueue.size();
+			request.getEventIdsToIgnore().addAll(eventIdsToIgnore);
+			request.setTag(DomainTransformRequestTagProvider.get().getTag());
+			updateTransformQueueVersions();
+			transformQueue.clear();
+		}
+		if (request.getEvents().isEmpty()) {
+			topicStateChanged.publish(State.COMMITTED);
+			return;
+		}
+		final AsyncCallback<DomainTransformResponse> commitRemoteCallback = new ResponseCallback(
+				request);
+		// the ordering here is tricky
+		// 'committing' says 'we have a flat list of rqs without response (incl
+		// current)
+		// wheras the transform rpc call requires rq (current) with prior rqs as
+		// a listfield
+		// given listener callbacks can be multi-threaded (jvm version),
+		// use the following ordering - note we use a new list in
+		// dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy)
+		synchronized (collectionsMonitor) {
+			List<DomainTransformRequest> priorRequestsWithoutResponseForCommit = new ArrayList<DomainTransformRequest>(
+					priorRequestsWithoutResponse);
+			request.setPriorRequestsWithoutResponse(
+					priorRequestsWithoutResponseForCommit);
+		}
+		try {
+			LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
+			topicStateChanged.publish(State.COMMITTING);
+		} finally {
+			LooseContext.pop();
+		}
+		synchronized (collectionsMonitor) {
+			priorRequestsWithoutResponse.add(request);
+		}
+		if (isLocalStorageOnly()) {
+			topicStateChanged.publish(State.OFFLINE);
+			return;
+		}
+		if (OnlineState.isOffline()) {
+			Client.commonRemoteService().ping(new AsyncCallback<Void>() {
+				@Override
+				public void onFailure(Throwable caught) {
+					// ignore - expected(ish) behaviour - if it's a
+					// non-'offline' error, it's more graceful to ignore
+					// here than not
+					topicStateChanged.publish(State.OFFLINE);
+				}
+
+				@Override
+				public void onSuccess(Void result) {
+					if (canTransitionToOnline()) {
+						commitRemote(request, commitRemoteCallback);
+					}
+				}
+			});
+		} else {
+			commitRemote(request, commitRemoteCallback);
+		}
+	}
+
+	protected void commitRemote(DomainTransformRequest request,
+			AsyncCallback<DomainTransformResponse> callback) {
+		Client.commonRemoteService().transform(request, callback);
+	}
+
+	protected void customProcessTransformQueue(
+			List<DomainTransformEvent> transformQueue) {
+		// for outré subclassed persistence
+	}
+
+	protected Runnable getCommitLoopRunnable() {
+		return new CommitLoopRunnable();
+	}
+
+	protected int getMaxTransformsPerRequest() {
+		return Integer.MAX_VALUE;
+	}
+
+	protected ClientTransformExceptionResolver getTransformExceptionResolver() {
+		return Registry.impl(ClientTransformExceptionResolver.class);
+	}
+
+	protected List<DomainTransformEvent> getTransformQueue() {
+		return this.transformQueue;
+	}
+
+	/*
+	 * Unimplemented for the moment. This may or may not be necessary to
+	 * accelerate change conflict checking
+	 */
+	void updateTransformQueueVersions() {
 	}
 }

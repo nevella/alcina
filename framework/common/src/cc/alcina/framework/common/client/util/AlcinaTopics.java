@@ -22,6 +22,9 @@ public class AlcinaTopics {
 	public static final String LOG_CATEGORY_COMMENT = "comment";
 
 	public static final String LOG_CATEGORY_CONTAINER = "container";
+	/*
+	 * static topics - don't listen with romcom
+	 */
 
 	public static final Topic<String> logMessage = Topic.create();
 

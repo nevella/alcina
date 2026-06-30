@@ -2285,12 +2285,7 @@ public class DomainStore implements IDomainStore {
 
 		public Stream applyEndOfStreamOperators() {
 			ensureStream();
-			if (query.getComparator() != null) {
-				stream = stream.sorted(query.getComparator());
-			}
-			if (query.getLimit() != -1) {
-				stream = stream.limit(query.getLimit());
-			}
+			stream = query.applyEndOfStreamOperators(stream);
 			return stream;
 		}
 

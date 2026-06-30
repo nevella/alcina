@@ -17,31 +17,19 @@ import com.google.gwt.core.client.GWT;
  * final)
  */
 public class Topic<T> {
-	public static <T> Topic<T> create() {
-		return new Topic<>();
-	}
-
-	protected Publisher publisher;
-
-	private boolean wasPublished;
-
-	private boolean retainPublished;
-
-	private T published;
-
 	/**
 	 * This class (unlike topic) only supports one listener at a time -
 	 * otherwise retention of multiple events is overly complex (for which
 	 * listener?), and assumes single-threaded access
 	 */
 	public static class RetainMultiple<T> extends Topic<T> {
-		List<T> retained = new ArrayList<>();
-
 		public static <T> RetainMultiple<T> create() {
 			RetainMultiple<T> retainMultiple = new RetainMultiple<>();
 			retainMultiple.withRetainPublished(true);
 			return retainMultiple;
 		}
+
+		List<T> retained = new ArrayList<>();
 
 		@Override
 		public void publish(T t) {
@@ -63,6 +51,153 @@ public class Topic<T> {
 		}
 	}
 
+	public static class MultichannelTopics<TC> {
+		private TC firingChannel;
+
+		private Map<TC, Topic> byChannel = new LinkedHashMap<>();
+
+		public TC getFiringChannel() {
+			return this.firingChannel;
+		}
+
+		public synchronized void listenerDelta(TC channel,
+				TopicListener listener, boolean add) {
+			ensureTopic(channel).delta(listener, add);
+		}
+
+		public synchronized void publish(TC channel, Object object) {
+			try {
+				firingChannel = channel;
+				ensureTopic(channel).publish(object);
+			} finally {
+				firingChannel = null;
+			}
+		}
+
+		private Topic ensureTopic(TC channel) {
+			return byChannel.computeIfAbsent(channel, c -> Topic.create());
+		}
+	}
+
+	/*
+	 *
+	 * Thread-safe (lookup is copy-on-write, mutation is synchronized, all
+	 * readers of lookup get a single instance on method start)
+	 */
+	public static class Publisher {
+		/*
+		 * use a list - the listener may be added/removed multiple times
+		 * (although that's probably not what's wanted)
+		 */
+		private volatile List<TopicListener> listeners;
+
+		Runnable onUnbind;
+
+		public void addListener(TopicListener listener) {
+			synchronized (this) {
+				List<TopicListener> list = listeners == null ? new ArrayList<>()
+						: new ArrayList<>(listeners);
+				list.add(listener);
+				if (listener instanceof TopicListener.HandlesSubscription) {
+					((TopicListener.HandlesSubscription) listener)
+							.onSubscription(true);
+				}
+				listeners = list;
+			}
+		}
+
+		public void clearListeners() {
+			Preconditions.checkState(GWT.isClient());
+			synchronized (this) {
+				listeners = null;
+			}
+		}
+
+		public boolean hasListeners() {
+			List<TopicListener> lookup = this.listeners;
+			return lookup != null && lookup.size() > 0;
+		}
+
+		public void listenerDelta(TopicListener listener, boolean add) {
+			if (add) {
+				addListener(listener);
+			} else {
+				removeListener(listener);
+			}
+		}
+
+		public void publishTopic(Object message) {
+			List<TopicListener> listeners = this.listeners;
+			if (listeners == null) {
+				return;
+			}
+			for (TopicListener listener : listeners) {
+				listener.topicPublished(message);
+			}
+		}
+
+		public void removeListener(TopicListener listener) {
+			synchronized (this) {
+				if (listeners == null) {
+					return;
+				}
+				List<TopicListener> list = new ArrayList<>(listeners);
+				boolean removed = list.remove(listener);
+				if (removed) {
+					if (listener instanceof TopicListener.HandlesSubscription) {
+						((TopicListener.HandlesSubscription) listener)
+								.onSubscription(false);
+					}
+					if (list.isEmpty() && onUnbind != null) {
+						onUnbind.run();
+					}
+				}
+				listeners = list;
+			}
+		}
+	}
+
+	static class Reference implements ListenerReference {
+		private TopicListener listener;
+
+		private Topic topic;
+
+		public Reference(Topic topic, TopicListener listener) {
+			this.topic = topic;
+			this.listener = listener;
+		}
+
+		@Override
+		public void remove() {
+			topic.remove(listener);
+		}
+
+		@Override
+		public void removeOnFire() {
+			topic.remove(listener);
+			TopicListener wrapper = new TopicListener() {
+				@Override
+				public void topicPublished(Object o) {
+					listener.topicPublished(o);
+					topic.remove(this);
+				}
+			};
+			topic.add(wrapper);
+		}
+	}
+
+	public static <T> Topic<T> create() {
+		return new Topic<>();
+	}
+
+	protected Publisher publisher;
+
+	private boolean wasPublished;
+
+	private boolean retainPublished;
+
+	private T published;
+
 	protected Topic() {
 		publisher = new Publisher();
 	}
@@ -71,37 +206,8 @@ public class Topic<T> {
 		return add(runnable, false);
 	}
 
-	private ListenerReference add(Runnable runnable,
-			boolean fireIfWasPublished) {
-		return add(new TopicListener() {
-			@Override
-			public void topicPublished(Object message) {
-				runnable.run();
-			}
-		}, fireIfWasPublished);
-	}
-
 	public ListenerReference add(TopicListener<T> listener) {
 		return add(listener, false);
-	}
-
-	protected ListenerReference add(TopicListener<T> listener,
-			boolean fireIfWasPublished) {
-		delta(listener, true);
-		if (wasPublished && fireIfWasPublished) {
-			/*
-			 * note - unless retainpublished is set, we don't keep a ref to the
-			 * last published object - this assumes the caller knows how to get
-			 * it. Useful for adding async one-off listeners when the event may
-			 * have already occurred
-			 */
-			fireOnAddWasPublished(listener);
-		}
-		return new Topic.Reference(this, listener);
-	}
-
-	protected void fireOnAddWasPublished(TopicListener<T> listener) {
-		listener.topicPublished(published);
 	}
 
 	public ListenerReference addWithPublishedCheck(Runnable runnable) {
@@ -164,133 +270,36 @@ public class Topic<T> {
 		return (Topic<V>) this;
 	}
 
-	public static class MultichannelTopics<TC> {
-		private TC firingChannel;
-
-		private Map<TC, Topic> byChannel = new LinkedHashMap<>();
-
-		private Topic ensureTopic(TC channel) {
-			return byChannel.computeIfAbsent(channel, c -> Topic.create());
+	protected ListenerReference add(TopicListener<T> listener,
+			boolean fireIfWasPublished) {
+		delta(listener, true);
+		if (wasPublished && fireIfWasPublished) {
+			/*
+			 * note - unless retainpublished is set, we don't keep a ref to the
+			 * last published object - this assumes the caller knows how to get
+			 * it. Useful for adding async one-off listeners when the event may
+			 * have already occurred
+			 */
+			fireOnAddWasPublished(listener);
 		}
-
-		public TC getFiringChannel() {
-			return this.firingChannel;
-		}
-
-		public synchronized void listenerDelta(TC channel,
-				TopicListener listener, boolean add) {
-			ensureTopic(channel).delta(listener, add);
-		}
-
-		public synchronized void publish(TC channel, Object object) {
-			try {
-				firingChannel = channel;
-				ensureTopic(channel).publish(object);
-			} finally {
-				firingChannel = null;
-			}
-		}
+		return new Topic.Reference(this, listener);
 	}
 
-	/*
-	 *
-	 * Thread-safe (lookup is copy-on-write, mutation is synchronized, all
-	 * readers of lookup get a single instance on method start)
-	 */
-	public static class Publisher {
-		/*
-		 * use a list - the listener may be added/removed multiple times
-		 * (although that's probably not what's wanted)
-		 */
-		private volatile List<TopicListener> listeners;
-
-		public void addListener(TopicListener listener) {
-			synchronized (this) {
-				List<TopicListener> list = listeners == null ? new ArrayList<>()
-						: new ArrayList<>(listeners);
-				list.add(listener);
-				if (listener instanceof TopicListener.HandlesSubscription) {
-					((TopicListener.HandlesSubscription) listener)
-							.onSubscription(true);
-				}
-				listeners = list;
-			}
-		}
-
-		public void clearListeners() {
-			Preconditions.checkState(GWT.isClient());
-			synchronized (this) {
-				listeners = null;
-			}
-		}
-
-		public boolean hasListeners() {
-			List<TopicListener> lookup = this.listeners;
-			return lookup != null && lookup.size() > 0;
-		}
-
-		public void listenerDelta(TopicListener listener, boolean add) {
-			if (add) {
-				addListener(listener);
-			} else {
-				removeListener(listener);
-			}
-		}
-
-		public void publishTopic(Object message) {
-			List<TopicListener> listeners = this.listeners;
-			if (listeners == null) {
-				return;
-			}
-			for (TopicListener listener : listeners) {
-				listener.topicPublished(message);
-			}
-		}
-
-		public void removeListener(TopicListener listener) {
-			synchronized (this) {
-				if (listeners == null) {
-					return;
-				}
-				List<TopicListener> list = new ArrayList<>(listeners);
-				boolean removed = list.remove(listener);
-				if (removed) {
-					if (listener instanceof TopicListener.HandlesSubscription) {
-						((TopicListener.HandlesSubscription) listener)
-								.onSubscription(false);
-					}
-				}
-				listeners = list;
-			}
-		}
+	protected void fireOnAddWasPublished(TopicListener<T> listener) {
+		listener.topicPublished(published);
 	}
 
-	static class Reference implements ListenerReference {
-		private TopicListener listener;
+	private ListenerReference add(Runnable runnable,
+			boolean fireIfWasPublished) {
+		return add(new TopicListener() {
+			@Override
+			public void topicPublished(Object message) {
+				runnable.run();
+			}
+		}, fireIfWasPublished);
+	}
 
-		private Topic topic;
-
-		public Reference(Topic topic, TopicListener listener) {
-			this.topic = topic;
-			this.listener = listener;
-		}
-
-		@Override
-		public void remove() {
-			topic.remove(listener);
-		}
-
-		@Override
-		public void removeOnFire() {
-			topic.remove(listener);
-			TopicListener wrapper = new TopicListener() {
-				@Override
-				public void topicPublished(Object o) {
-					listener.topicPublished(o);
-					topic.remove(this);
-				}
-			};
-			topic.add(wrapper);
-		}
+	public void onUnbind(Runnable runnable) {
+		publisher.onUnbind = runnable;
 	}
 }

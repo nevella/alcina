@@ -33,4 +33,24 @@ public interface ListenerReference {
 	void remove();
 
 	void removeOnFire();
+
+	public static class Wrapping implements ListenerReference {
+		public ListenerBinding asBinding() {
+			return wrapped.asBinding();
+		}
+
+		public void remove() {
+			wrapped.remove();
+		}
+
+		public void removeOnFire() {
+			wrapped.removeOnFire();
+		}
+
+		ListenerReference wrapped;
+
+		public Wrapping(ListenerReference wrapped) {
+			this.wrapped = wrapped;
+		}
+	}
 }

@@ -28,6 +28,9 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * C represents the condition type, such as Patttern
  */
 public abstract class LookaheadMatcher<C> {
+	/*
+	 * devconsole only
+	 */
 	public static Topic<Void> topicInvalidateAll = Topic.create();
 
 	TopicListener<Void> invalidationListener;
