@@ -13,16 +13,18 @@
 
 @mixin tree
   &.root-hidden>.node
-    >node-label
+    > node-label
       display: none
-    >nodes
+
+    > nodes
       padding-left: 0
   .node
-    >node-label
+    > node-label
       position: relative
       display: block
       margin-bottom: 5px
-      >span:first-child
+
+      > span:first-child
         display: inline-block
         width: 12px
         border: solid 1px #ccc
@@ -36,10 +38,12 @@
         margin-top: 5px
         margin-right: 8px
         cursor: pointer
-      >node-label
+
+      > node-label
         display: inline-block
         cursor: pointer
-    &:not(.open)>node-label>span:before
+
+    &:not(.open) > node-label > span:before
       content: ' '
       position: absolute
       border-radius: 3px
@@ -49,14 +53,18 @@
       height: 6px
       left: 3px
       top: 7.5px
-    &.leaf>node-label>span
+
+    &.leaf > node-label > span
       visibility: hidden
-    &.keyboard-selected>node-label
+
+    &.keyboard-selected > node-label
       background-color: theme.$tree-selected-background-color
-    >nodes
+
+    > nodes
       padding-left: 20px
       display: none
-    &.open>nodes
+
+    &.open > nodes
       display: block
 
 @mixin flat-tree
@@ -76,9 +84,9 @@
     @include common
     @include tree
     
-@mixin open-toggle-hidden()
+@mixin open-toggle-hidden
   .node > node-label > span:first-child
-    display: none
+    display: none !important
 
 @mixin editable
   &:hover

@@ -126,7 +126,7 @@ public class TreePath<T> extends Model
 		}
 	}
 
-	String childPath(Object segment) {
+	public String childPath(Object segment) {
 		return toString() + "." + asSegment(segment);
 	}
 

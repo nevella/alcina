@@ -179,6 +179,11 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		public void putTree(Tree tree) {
 			getTreePath().putTree(tree);
 		}
+
+		public void expandAll() {
+			getTreePath().walker().stream().filter(n -> !n.isLeaf())
+					.forEach(n -> n.setOpen(true));
+		}
 	}
 
 	public static class LabelClicked
