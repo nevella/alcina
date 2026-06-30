@@ -49,6 +49,8 @@ public class OffsetProtocol {
 
 		Set<AttachId> descendantRelativeFixed = AlcinaCollections.newHashSet();
 
+		Set<AttachId> lastObserved = AlcinaCollections.newHashSet();
+
 		public ElementOffsets getOffsetsWithInvariant(Node node) {
 			AttachId attachId = AttachId.forNode(node);
 			ElementOffsets invariant = descendantOfRelativeFixed.get(attachId);
@@ -102,27 +104,30 @@ public class OffsetProtocol {
 		}
 
 		public OffsetsDelta
-				computeOffsetsDelta(List<ElementOffsets> currentOffsets) {
+				computeOffsetsDelta(Set<Element> observedElementTree) {
 			OffsetsDelta result = new OffsetsDelta();
-			Set<AttachId> removed = AlcinaCollections.newHashSet();
-			removed.addAll(attachIdOffsets.keySet());
+			Set<AttachId> removed = lastObserved;
+			Set<AttachId> observedIds = AlcinaCollections.newHashSet();
 			result.changes = new ArrayList<>();
-			currentOffsets.forEach(offsets -> {
-				ElementOffsets existing = attachIdOffsets.get(offsets.id);
+			observedElementTree.forEach(elem -> {
+				AttachId observedId = AttachId.forNode(elem);
+				observedIds.add(observedId);
+				ElementOffsets existing = attachIdOffsets.get(observedId);
+				ElementOffsets offsets = getOffsetsWithInvariant(elem);
 				if (existing != null) {
-					removed.remove(offsets.id);
+					removed.remove(observedId);
 					if (Objects.equals(existing, offsets)) {
 						return;// no change
 					}
 				}
 				result.changes.add(offsets);
-				attachIdOffsets.put(offsets.id, offsets);
 			});
 			attachIdOffsets.keySet().removeAll(removed);
 			descendantOfRelativeFixed.keySet().removeAll(removed);
 			descendantRelativeFixed.removeAll(removed);
 			descendantRelativeNotFixed.removeAll(removed);
 			result.removed = removed;
+			lastObserved = observedIds;
 			return result;
 		}
 

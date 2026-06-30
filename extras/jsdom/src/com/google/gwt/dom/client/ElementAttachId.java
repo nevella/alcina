@@ -614,6 +614,9 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	static void emitStylePropertyMutation(Element elem, String styleMethodName,
 			List<Class> argumentTypes, List<?> arguments) {
+		if (!elem.isAttached()) {
+			return;
+		}
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.style_property;
 		record.target = MutationNode.forNode(elem);
@@ -625,6 +628,13 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	static void emitPropertyMutation(Element elem, String propertyName,
 			String value) {
+		/*
+		 * this is a totally reasonable case (say a mutation post-detach). It
+		 * could also be checked higher in the call tree
+		 */
+		if (!elem.isAttached()) {
+			return;
+		}
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.property;
 		record.target = MutationNode.forNode(elem);
