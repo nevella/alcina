@@ -554,8 +554,8 @@ public class StreamBinding<T> {
 						}
 					});
 		} else if (fromTopic != null) {
-			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
-					.asBinding();
+			//
+			listener = fromTopic.add(this::acceptStreamElement).asBinding();
 			listener.bind();
 		} else if (fromNodeEventClass != null) {
 			if (bindings.bound) {
@@ -586,7 +586,7 @@ public class StreamBinding<T> {
 				if (fromPropertyChangeSource != null) {
 					acceptStreamElement(resolvePropertyChangeValue());
 				} else if (fromTopic != null) {
-					fromTopic.fireIfPublished((Consumer) consumer);
+					fromTopic.fireIfPublished(this::acceptStreamElement);
 				} else {
 					// noop - from is null
 				}

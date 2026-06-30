@@ -218,7 +218,7 @@ public abstract class JdbcTransformPersistence
 
 			@Override
 			public void onSuccess(Object result) {
-				CommitToStorageTransformListener.topicStateChanged
+				CommitToStorageTransformListener.topicStateChanged()
 						.add(listener);
 				ClientTransformManager.cast()
 						.setPersistableTransformListener(listener);

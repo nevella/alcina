@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -8,8 +9,13 @@ import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
 import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener.State;
 
 public class DomainHandlerClient implements DomainHandler {
 	@Override
@@ -57,8 +63,8 @@ public class DomainHandlerClient implements DomainHandler {
 	}
 
 	@Override
-	public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
-		throw new UnsupportedOperationException();
+	public <V extends Entity> DomainQuery<V> query(Class<V> entityClass) {
+		return new QueryImpl<>(entityClass);
 	}
 
 	@Override
@@ -73,5 +79,50 @@ public class DomainHandlerClient implements DomainHandler {
 	public interface DomainHandlerClientRemoteResolver {
 		<V extends Entity> void resolve(Class<V> clazz, long objectId,
 				Consumer<V> resultConsumer);
+	}
+
+	static class QueryImpl<E extends Entity> extends DomainQuery<E> {
+		public QueryImpl(Class<E> entityClass) {
+			super(entityClass);
+		}
+
+		@Override
+		public Stream<E> stream() {
+			Stream<E> stream = TransformManager.get().getCollection(entityClass)
+					.stream();
+			stream = applyFilters(stream);
+			stream = applyEndOfStreamOperators(stream);
+			return stream;
+		}
+
+		@Override
+		public List<E> list() {
+			return stream().toList();
+		}
+
+		@Override
+		public Topic<Stream<E>> topic() {
+			Topic<Stream<E>> topic = Topic.create().withRetainPublished(true);
+			ListenerReference listenerReference = CommitToStorageTransformListener
+					.topicStateChanged().add(state -> {
+						if (state == State.COMMITTING) {
+							TransformCollation collation = CommitToStorageTransformListener
+									.committingCollation();
+							if (collation.query(entityClass).stream()
+									.findFirst().isPresent()) {
+								topic.publish(stream());
+							}
+						}
+					});
+			topic.publish(stream());
+			topic.onUnbind(() -> listenerReference.remove());
+			return topic;
+		}
+
+		static class WrappingImpl extends ListenerReference.Wrapping {
+			public WrappingImpl(ListenerReference wrapped) {
+				super(wrapped);
+			}
+		}
 	}
 }

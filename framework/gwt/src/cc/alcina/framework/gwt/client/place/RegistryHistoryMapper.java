@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.gwt.client.ClientTopics;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
 
@@ -141,10 +140,13 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		try {
 			return Optional.ofNullable(parseAndReturnPlace(token, false));
 		} catch (UnparseablePlaceException e) {
-			new ClientTopics.DevMessage("unparesable place", token).publish();
+			// fixme - dirndl - send dev warning to server
+			Ax.err("unparesable place: %s", token);
 			return Optional.empty();
 		} catch (Exception e) {
-			new ClientTopics.DevMessage("unparesable place", token).publish();
+			Ax.err("unparesable place: %s", token);
+			// new ClientTopics.DevMessage("unparesable place",
+			// token).publish();
 			return Optional.empty();
 		}
 	}

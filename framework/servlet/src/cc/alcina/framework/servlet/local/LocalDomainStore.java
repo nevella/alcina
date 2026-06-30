@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,7 +18,6 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
-import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.LocalDomain;
@@ -205,17 +203,9 @@ public class LocalDomainStore {
 	}
 
 	<V extends Entity> Stream<V> query0(Class<V> entityClass, Query<V> query) {
-		List<Predicate> predicates = query.getFilters().stream()
-				.map(DomainFilter::asPredicate).collect(Collectors.toList());
-		// naive - does not optimise with indicies -- FIXME - ma.2
-		return Domain.stream(entityClass).filter(e -> {
-			for (Predicate predicate : predicates) {
-				if (!predicate.test(e)) {
-					return false;
-				}
-			}
-			return true;
-		});
+		Stream<V> stream = Domain.stream(entityClass);
+		stream = query.applyFilters(stream);
+		return stream;
 	}
 
 	class CommitToStorageTransformListenerNoRemote

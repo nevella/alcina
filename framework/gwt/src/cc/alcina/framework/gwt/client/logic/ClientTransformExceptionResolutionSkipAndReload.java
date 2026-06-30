@@ -88,13 +88,13 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			@Override
 			protected void onAttach() {
 				super.onAttach();
-				CommitToStorageTransformListener.topicStateChanged.add(
+				CommitToStorageTransformListener.topicStateChanged().add(
 						ClientTransformExceptionResolutionSkipAndReload.this);
 			}
 
 			@Override
 			protected void onDetach() {
-				CommitToStorageTransformListener.topicStateChanged.remove(
+				CommitToStorageTransformListener.topicStateChanged().remove(
 						ClientTransformExceptionResolutionSkipAndReload.this);
 				super.onDetach();
 			}

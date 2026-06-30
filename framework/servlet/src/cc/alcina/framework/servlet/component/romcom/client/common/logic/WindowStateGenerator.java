@@ -7,7 +7,6 @@ import java.util.Set;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.WindowState;
-import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.meta.Feature;
@@ -21,7 +20,7 @@ class WindowStateGenerator {
 
 	List<Element> offsetObservedElements;
 
-	Set<Element> addedUiStates = AlcinaCollections.newUniqueSet();
+	Set<Element> observedElementTree = AlcinaCollections.newUniqueSet();
 
 	OffsetRegistry offsetRegistry;
 
@@ -33,35 +32,34 @@ class WindowStateGenerator {
 
 	WindowState generate() {
 		Document doc = Document.get();
-		addElement(doc.getDocumentElement());
-		addElement(doc.getActiveElement());
+		addTreeElement(doc.getDocumentElement());
+		addTreeElement(doc.getActiveElement());
 		Iterator<Element> itr = offsetObservedElements.iterator();
+		observedElementTree.removeIf(elem -> !elem.isAttached());
 		while (itr.hasNext()) {
 			Element elem = itr.next();
 			if (!elem.isAttached()) {
 				itr.remove();
 			} else {
-				addElement(elem);
+				addTreeElement(elem);
 			}
 		}
-		List<ElementOffsets> elementOffsets = addedUiStates.stream()
-				.map(offsetRegistry::getOffsetsWithInvariant).toList();
 		result.offsetsDelta = offsetRegistry
-				.computeOffsetsDelta(elementOffsets);
+				.computeOffsetsDelta(observedElementTree);
 		result.clientHeight = Window.getClientHeight();
 		result.clientWidth = Window.getClientWidth();
 		result.title = Window.getTitle();
 		return result;
 	}
 
-	void addElement(Element elem) {
+	void addTreeElement(Element elem) {
 		if (elem == null) {
 			return;
 		}
-		if (!addedUiStates.add(elem)) {
+		if (!observedElementTree.add(elem)) {
 			return;
 		}
 		Element parentElement = elem.getParentElement();
-		addElement(parentElement);
+		addTreeElement(parentElement);
 	}
 }

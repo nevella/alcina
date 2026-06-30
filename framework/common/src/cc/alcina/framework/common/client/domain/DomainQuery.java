@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Topic;
 
 public abstract class DomainQuery<E extends Entity> {
 	public static final String CONTEXT_DEBUG_CONSUMER = DomainQuery.class
@@ -278,5 +279,39 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public interface HintResolver {
 		boolean resolve(Hint hint, DomainQuery query);
+	}
+
+	public Topic<Stream<E>> topic() {
+		throw new UnsupportedOperationException();
+	}
+
+	public Stream<E> applyEndOfStreamOperators(Stream<E> stream) {
+		if (comparator != null) {
+			stream = stream.sorted(comparator);
+		}
+		if (limit != -1) {
+			stream = stream.limit(limit);
+		}
+		return stream;
+	}
+
+	/**
+	 * horribly naive - does not optimise with indicies -- (but good
+	 * client-side)
+	 * 
+	 * @param stream
+	 * @return
+	 */
+	public Stream<E> applyFilters(Stream<E> stream) {
+		List<Predicate> predicates = getFilters().stream()
+				.map(DomainFilter::asPredicate).collect(Collectors.toList());
+		return Domain.stream(entityClass).filter(e -> {
+			for (Predicate predicate : predicates) {
+				if (!predicate.test(e)) {
+					return false;
+				}
+			}
+			return true;
+		});
 	}
 }

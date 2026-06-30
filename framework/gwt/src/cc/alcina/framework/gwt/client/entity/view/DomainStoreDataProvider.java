@@ -106,7 +106,7 @@ public class DomainStoreDataProvider<T extends Entity>
 
 	public DomainStoreDataProvider(Class<T> clazz) {
 		this.clazz = clazz;
-		CommitToStorageTransformListener.topicTransformsCommitted
+		CommitToStorageTransformListener.topicTransformsCommitted()
 				.add(m -> lastSearchDefinition = null);
 		topicInvalidateAll.add(m -> lastSearchDefinition = null);
 	}
