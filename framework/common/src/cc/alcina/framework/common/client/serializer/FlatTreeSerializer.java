@@ -1824,8 +1824,8 @@ public class FlatTreeSerializer {
 				return null;
 			}
 			boolean nonFtsLikelyJson = serialized.startsWith("{")
-					|| !serialized.startsWith("[");
-			if (nonFtsLikelyJson
+					|| serialized.startsWith("[");
+			if (!nonFtsLikelyJson
 					&& (clazz != null || serialized.contains("class$="))) {
 				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
 						.withShortPaths(true);
