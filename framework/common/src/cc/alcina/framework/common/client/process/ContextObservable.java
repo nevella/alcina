@@ -13,4 +13,27 @@ public interface ContextObservable extends ProcessObservable {
 	 */
 	public interface Base extends ContextObservable {
 	}
+
+	/*
+	 * An analogue to log.warn() - but for the context procss. It supercedes
+	 * such primitve(s) as AlcinaTopics.devWarning
+	 */
+	public static class ProcessWarning implements ContextObservable {
+		public String message;
+
+		public ProcessWarning(String message) {
+			this.message = message;
+		}
+	}
+
+	/*
+	 * An analogue to log.exception() - but for the context procss
+	 */
+	public static class ProcessException implements ContextObservable {
+		public String message;
+
+		public ProcessException(String message) {
+			this.message = message;
+		}
+	}
 }
