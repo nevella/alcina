@@ -61,6 +61,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.Filter;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
@@ -245,7 +246,7 @@ public abstract class Choices<T> extends Model implements
 	 * model/payload to true
 	 */
 	public static class ChoiceSelectedDescent extends
-			ModelEvent.ReflectedEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
+			ReflectedEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
 			void onChoiceSelectedDescent(ChoiceSelectedDescent event);
 		}

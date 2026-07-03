@@ -66,10 +66,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.RendersNull;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRenderer;
@@ -211,7 +211,7 @@ public class DirectedLayout implements AlcinaProcess {
 			Model dispatchDelegate = ((ModelEvent.DelegatesDispatch) sourceModel)
 					.provideDispatchDelegate();
 			if (dispatchDelegate != null) {
-				if (modelEvent instanceof ModelEvent.ReflectedEvent) {
+				if (modelEvent instanceof ReflectedEvent) {
 					Context delegateDescentContext = NodeEvent.Context
 							.fromEvent(modelEvent,
 									dispatchDelegate.provideNode());
@@ -227,7 +227,7 @@ public class DirectedLayout implements AlcinaProcess {
 				return;
 			}
 		}
-		if (modelEvent instanceof ModelEvent.ReflectedEvent) {
+		if (modelEvent instanceof ReflectedEvent) {
 			ModelEventDispatch.dispatchDescent(modelEvent);
 		} else {
 			ModelEventDispatch.dispatchAscent(modelEvent);

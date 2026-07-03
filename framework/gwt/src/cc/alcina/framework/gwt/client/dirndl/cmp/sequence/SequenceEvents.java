@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.cmp.sequence;
 
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class SequenceEvents {
@@ -83,7 +84,7 @@ public class SequenceEvents {
 	}
 
 	public static class HighlightModelChanged extends
-			ModelEvent.ReflectedEvent<Object, HighlightModelChanged.Handler, HighlightModelChanged.Emitter> {
+			ReflectedEvent<Object, HighlightModelChanged.Handler, HighlightModelChanged.Emitter> {
 		@Override
 		public void dispatch(HighlightModelChanged.Handler handler) {
 			handler.onHighlightModelChanged(this);
@@ -98,7 +99,7 @@ public class SequenceEvents {
 	}
 
 	public static class SelectedIndexChanged extends
-			ModelEvent.ReflectedEvent<Object, SelectedIndexChanged.Handler, SelectedIndexChanged.Emitter> {
+			ReflectedEvent<Object, SelectedIndexChanged.Handler, SelectedIndexChanged.Emitter> {
 		@Override
 		public void dispatch(SelectedIndexChanged.Handler handler) {
 			handler.onSelectedIndexChanged(this);
@@ -154,7 +155,7 @@ public class SequenceEvents {
 	}
 
 	public static class SequenceChanged extends
-			ModelEvent.ReflectedEvent<Sequence, SequenceChanged.Handler, SequenceChanged.Emitter> {
+			ReflectedEvent<Sequence, SequenceChanged.Handler, SequenceChanged.Emitter> {
 		@Override
 		public void dispatch(SequenceChanged.Handler handler) {
 			handler.onSequenceChanged(this);

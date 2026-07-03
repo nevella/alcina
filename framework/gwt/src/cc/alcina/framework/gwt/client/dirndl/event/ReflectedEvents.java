@@ -7,13 +7,12 @@ import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class ReflectedEvents {
-	public static class Back extends
-			ModelEvent.ReflectedEvent<Object, Back.Handler, Back.Emitter>
+	public static class Back
+			extends ReflectedEvent<Object, Back.Handler, Back.Emitter>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(Back.Handler handler) {
@@ -35,8 +34,8 @@ public class ReflectedEvents {
 		}
 	}
 
-	public static class Forward extends
-			ModelEvent.ReflectedEvent<Object, Forward.Handler, Forward.Emitter>
+	public static class Forward
+			extends ReflectedEvent<Object, Forward.Handler, Forward.Emitter>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(Forward.Handler handler) {
@@ -58,8 +57,8 @@ public class ReflectedEvents {
 		}
 	}
 
-	public static class ZoomIn extends
-			ModelEvent.ReflectedEvent<Object, ZoomIn.Handler, ZoomIn.Emitter>
+	public static class ZoomIn
+			extends ReflectedEvent<Object, ZoomIn.Handler, ZoomIn.Emitter>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(ZoomIn.Handler handler) {
@@ -81,8 +80,8 @@ public class ReflectedEvents {
 		}
 	}
 
-	public static class ZoomOut extends
-			ModelEvent.ReflectedEvent<Object, ZoomOut.Handler, ZoomOut.Emitter>
+	public static class ZoomOut
+			extends ReflectedEvent<Object, ZoomOut.Handler, ZoomOut.Emitter>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(ZoomOut.Handler handler) {
@@ -112,7 +111,7 @@ public class ReflectedEvents {
 	 * Choice.value)
 	 */
 	public static class BeforeSelectionChangedDispatchDescent extends
-			ModelEvent.ReflectedEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {
+			ReflectedEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {
 		@Override
 		public void dispatch(
 				BeforeSelectionChangedDispatchDescent.Handler handler) {
@@ -129,7 +128,7 @@ public class ReflectedEvents {
 	}
 
 	public static class FormElementLabelClicked extends
-			ModelEvent.ReflectedEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
+			ReflectedEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
 		@Override
 		public void dispatch(FormElementLabelClicked.Handler handler) {
 			handler.onFormElementLabelClicked(this);
@@ -144,7 +143,7 @@ public class ReflectedEvents {
 	}
 
 	public static class Searching extends
-			ModelEvent.ReflectedEvent<Object, Searching.Handler, Searching.Emitter> {
+			ReflectedEvent<Object, Searching.Handler, Searching.Emitter> {
 		@Override
 		public void dispatch(Searching.Handler handler) {
 			handler.onSearching(this);
@@ -164,7 +163,7 @@ public class ReflectedEvents {
 	 * system. Bind handling etc is significantly easier
 	 */
 	public static class PlaceChanged extends
-			ModelEvent.ReflectedEvent<Place, PlaceChanged.Handler, PlaceChanged.Emitter> {
+			ReflectedEvent<Place, PlaceChanged.Handler, PlaceChanged.Emitter> {
 		@Override
 		public void dispatch(PlaceChanged.Handler handler) {
 			handler.onPlaceChanged(this);
@@ -191,7 +190,7 @@ public class ReflectedEvents {
 	 */
 	public interface Global {
 		public static class WindowScroll extends
-				ModelEvent.ReflectedEvent<Integer, WindowScroll.Handler, WindowScroll.Emitter> {
+				ReflectedEvent<Integer, WindowScroll.Handler, WindowScroll.Emitter> {
 			@Override
 			public void dispatch(WindowScroll.Handler handler) {
 				handler.onWindowScroll(this);
@@ -213,7 +212,7 @@ public class ReflectedEvents {
 		}
 
 		public static class HistoryChange extends
-				ModelEvent.ReflectedEvent<String, HistoryChange.Handler, HistoryChange.Emitter> {
+				ReflectedEvent<String, HistoryChange.Handler, HistoryChange.Emitter> {
 			@Override
 			public void dispatch(HistoryChange.Handler handler) {
 				handler.onHistoryChange(this);
@@ -275,7 +274,7 @@ public class ReflectedEvents {
 	 * itself
 	 */
 	public static class FocusEditor extends
-			ModelEvent.ReflectedEvent<Object, FocusEditor.Handler, FocusEditor.Emitter> {
+			ReflectedEvent<Object, FocusEditor.Handler, FocusEditor.Emitter> {
 		@Override
 		public void dispatch(FocusEditor.Handler handler) {
 			handler.onFocusEditor(this);
@@ -301,7 +300,7 @@ public class ReflectedEvents {
 	 * itself - i.e. to copy any pending (input) value to its value field
 	 */
 	public static class CommitEditor extends
-			ModelEvent.ReflectedEvent<Object, CommitEditor.Handler, CommitEditor.Emitter> {
+			ReflectedEvent<Object, CommitEditor.Handler, CommitEditor.Emitter> {
 		@Override
 		public void dispatch(CommitEditor.Handler handler) {
 			handler.onCommitEditor(this);

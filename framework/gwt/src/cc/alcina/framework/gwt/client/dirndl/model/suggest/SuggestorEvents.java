@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 
 public class SuggestorEvents {
 	public static class EditorAsk
@@ -45,7 +46,7 @@ public class SuggestorEvents {
 	}
 
 	public static class FocusInPageSuggestor extends
-			ModelEvent.ReflectedEvent<Object, FocusInPageSuggestor.Handler, FocusInPageSuggestor.Emitter> {
+			ReflectedEvent<Object, FocusInPageSuggestor.Handler, FocusInPageSuggestor.Emitter> {
 		@Override
 		public void dispatch(FocusInPageSuggestor.Handler handler) {
 			handler.onFocusInPageSuggestor(this);
