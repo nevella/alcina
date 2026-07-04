@@ -38,7 +38,7 @@ class ServerConsolePage extends Model.Fields
 		ServerConsoleBrowserCommand.ShowKeyboardShortcuts.Handler,
 		ModelEvents.ApplicationHelp.Handler,
 		ServerConsoleBrowserCommand.ToggleHelp.Handler, Binding.TabIndexZero,
-		ReflectedEvents.PlaceChanged.Emitter {
+		ReflectedEvents.PlaceChanged.Reflector {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)

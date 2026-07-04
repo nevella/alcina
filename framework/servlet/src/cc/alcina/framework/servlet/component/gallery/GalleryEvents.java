@@ -69,7 +69,7 @@ public class GalleryEvents {
 	}
 
 	public static class HighlightModelChanged extends
-			ReflectedEvent<Object, HighlightModelChanged.Handler, HighlightModelChanged.Emitter> {
+			ReflectedEvent<Object, HighlightModelChanged.Handler, HighlightModelChanged.Reflector> {
 		@Override
 		public void dispatch(HighlightModelChanged.Handler handler) {
 			handler.onHighlightModelChanged(this);
@@ -79,12 +79,12 @@ public class GalleryEvents {
 			void onHighlightModelChanged(HighlightModelChanged event);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
 	public static class SelectedIndexChanged extends
-			ReflectedEvent<Object, SelectedIndexChanged.Handler, SelectedIndexChanged.Emitter> {
+			ReflectedEvent<Object, SelectedIndexChanged.Handler, SelectedIndexChanged.Reflector> {
 		@Override
 		public void dispatch(SelectedIndexChanged.Handler handler) {
 			handler.onSelectedIndexChanged(this);
@@ -94,7 +94,7 @@ public class GalleryEvents {
 			void onSelectedIndexChanged(SelectedIndexChanged event);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 }

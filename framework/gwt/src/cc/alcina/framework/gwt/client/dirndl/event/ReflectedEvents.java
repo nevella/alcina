@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class ReflectedEvents {
 	public static class Back
-			extends ReflectedEvent<Object, Back.Handler, Back.Emitter>
+			extends ReflectedEvent<Object, Back.Handler, Back.Reflector>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(Back.Handler handler) {
@@ -30,12 +30,12 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
 	public static class Forward
-			extends ReflectedEvent<Object, Forward.Handler, Forward.Emitter>
+			extends ReflectedEvent<Object, Forward.Handler, Forward.Reflector>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(Forward.Handler handler) {
@@ -53,12 +53,12 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
 	public static class ZoomIn
-			extends ReflectedEvent<Object, ZoomIn.Handler, ZoomIn.Emitter>
+			extends ReflectedEvent<Object, ZoomIn.Handler, ZoomIn.Reflector>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(ZoomIn.Handler handler) {
@@ -76,12 +76,12 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
 	public static class ZoomOut
-			extends ReflectedEvent<Object, ZoomOut.Handler, ZoomOut.Emitter>
+			extends ReflectedEvent<Object, ZoomOut.Handler, ZoomOut.Reflector>
 			implements ReflectedEvent.NotStored {
 		@Override
 		public void dispatch(ZoomOut.Handler handler) {
@@ -99,7 +99,7 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
@@ -111,14 +111,14 @@ public class ReflectedEvents {
 	 * Choice.value)
 	 */
 	public static class BeforeSelectionChangedDispatchDescent extends
-			ReflectedEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {
+			ReflectedEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Reflector> {
 		@Override
 		public void dispatch(
 				BeforeSelectionChangedDispatchDescent.Handler handler) {
 			handler.onBeforeSelectionChangedDispatchDescent(this);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -128,13 +128,13 @@ public class ReflectedEvents {
 	}
 
 	public static class FormElementLabelClicked extends
-			ReflectedEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
+			ReflectedEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Reflector> {
 		@Override
 		public void dispatch(FormElementLabelClicked.Handler handler) {
 			handler.onFormElementLabelClicked(this);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -143,7 +143,7 @@ public class ReflectedEvents {
 	}
 
 	public static class Searching extends
-			ReflectedEvent<Object, Searching.Handler, Searching.Emitter> {
+			ReflectedEvent<Object, Searching.Handler, Searching.Reflector> {
 		@Override
 		public void dispatch(Searching.Handler handler) {
 			handler.onSearching(this);
@@ -160,7 +160,7 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
@@ -170,7 +170,7 @@ public class ReflectedEvents {
 	 * system. Bind handling etc is significantly easier
 	 */
 	public static class PlaceChanged extends
-			ReflectedEvent<Place, PlaceChanged.Handler, PlaceChanged.Emitter> {
+			ReflectedEvent<Place, PlaceChanged.Handler, PlaceChanged.Reflector> {
 		@Override
 		public void dispatch(PlaceChanged.Handler handler) {
 			handler.onPlaceChanged(this);
@@ -187,7 +187,7 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
@@ -197,7 +197,7 @@ public class ReflectedEvents {
 	 */
 	public interface Global {
 		public static class WindowScroll extends
-				ReflectedEvent<Integer, WindowScroll.Handler, WindowScroll.Emitter> {
+				ReflectedEvent<Integer, WindowScroll.Handler, WindowScroll.Reflector> {
 			@Override
 			public void dispatch(WindowScroll.Handler handler) {
 				handler.onWindowScroll(this);
@@ -214,12 +214,12 @@ public class ReflectedEvents {
 				}
 			}
 
-			public interface Emitter extends ModelEvent.Emitter {
+			public interface Reflector extends ModelEvent.Reflector {
 			}
 		}
 
 		public static class HistoryChange extends
-				ReflectedEvent<String, HistoryChange.Handler, HistoryChange.Emitter> {
+				ReflectedEvent<String, HistoryChange.Handler, HistoryChange.Reflector> {
 			@Override
 			public void dispatch(HistoryChange.Handler handler) {
 				handler.onHistoryChange(this);
@@ -236,12 +236,12 @@ public class ReflectedEvents {
 				}
 			}
 
-			public interface Emitter extends ModelEvent.Emitter {
+			public interface Reflector extends ModelEvent.Reflector {
 			}
 		}
 
-		public interface Emitter extends WindowScroll.Emitter,
-				HistoryChange.Emitter, LayoutEvents.Bind.Handler {
+		public interface Reflector extends WindowScroll.Reflector,
+				HistoryChange.Reflector, LayoutEvents.Bind.Handler {
 			public static class Support implements LayoutEvents.Bind.Handler {
 				HandlerRegistration historyChangeHandlerRef;
 
@@ -269,10 +269,10 @@ public class ReflectedEvents {
 
 			@Override
 			default void onBind(Bind event) {
-				getGlobalEventsEmitterSupport().onBind(event);
+				getGlobalEventsReflectorSupport().onBind(event);
 			}
 
-			Emitter.Support getGlobalEventsEmitterSupport();
+			Reflector.Support getGlobalEventsReflectorSupport();
 		}
 	}
 
@@ -281,7 +281,7 @@ public class ReflectedEvents {
 	 * itself
 	 */
 	public static class FocusEditor extends
-			ReflectedEvent<Object, FocusEditor.Handler, FocusEditor.Emitter> {
+			ReflectedEvent<Object, FocusEditor.Handler, FocusEditor.Reflector> {
 		@Override
 		public void dispatch(FocusEditor.Handler handler) {
 			handler.onFocusEditor(this);
@@ -298,7 +298,7 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
@@ -307,7 +307,7 @@ public class ReflectedEvents {
 	 * itself - i.e. to copy any pending (input) value to its value field
 	 */
 	public static class CommitEditor extends
-			ReflectedEvent<Object, CommitEditor.Handler, CommitEditor.Emitter> {
+			ReflectedEvent<Object, CommitEditor.Handler, CommitEditor.Reflector> {
 		@Override
 		public void dispatch(CommitEditor.Handler handler) {
 			handler.onCommitEditor(this);
@@ -324,7 +324,7 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 	}
 
@@ -334,7 +334,7 @@ public class ReflectedEvents {
 	 * and they receive and optionally handle it
 	 */
 	public static class TopLevelMissedEvent extends
-			ReflectedEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
+			ReflectedEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Reflector> {
 		public static Topic<TopLevelMissedEvent> topicNotHandled() {
 			return EventFrame.get().topicTopLevelMissedEvent;
 		}
@@ -359,7 +359,7 @@ public class ReflectedEvents {
 			}
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		public interface Handler extends NodeEvent.Handler {
@@ -368,7 +368,7 @@ public class ReflectedEvents {
 	}
 
 	public static class Filter
-			extends ReflectedEvent<Object, Filter.Handler, Filter.Emitter> {
+			extends ReflectedEvent<Object, Filter.Handler, Filter.Reflector> {
 		@Override
 		public void dispatch(Filter.Handler handler) {
 			handler.onFilter(this);
@@ -380,7 +380,7 @@ public class ReflectedEvents {
 			return triggeringInput.getCurrentValue();
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		public interface Handler extends NodeEvent.Handler {

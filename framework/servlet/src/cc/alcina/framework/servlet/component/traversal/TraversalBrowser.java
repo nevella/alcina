@@ -154,8 +154,8 @@ public class TraversalBrowser {
 					TraversalCommand.ReloadApp.HandlerImpl.class);
 		}
 
-		public static class TopLevelCatchallHandlerImpl
-				extends ModelEvent.TopLevelCatchallHandler.MissedEventEmitter {
+		public static class TopLevelCatchallHandlerImpl extends
+				ModelEvent.TopLevelCatchallHandler.MissedEventReflector {
 		}
 
 		@Override
@@ -188,7 +188,7 @@ public class TraversalBrowser {
 			layout.render(resolver(), rootArea).getRendered().appendToRoot();
 			Registry.register().singleton(TopLevelCatchallHandler.class,
 					new TopLevelCatchallHandlerImpl()
-							.withEmittingModel(rootArea));
+							.withReflectingModel(rootArea));
 			return layout;
 		}
 

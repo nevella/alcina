@@ -68,10 +68,10 @@ public class SequenceArea extends Model.Fields
 		SequenceEvents.NextSelectable.Handler,
 		SequenceEvents.PreviousSelectable.Handler,
 		SequenceEvents.SetSettingMaxElementRows.Handler,
-		SequenceEvents.HighlightModelChanged.Emitter,
-		SequenceEvents.SelectedIndexChanged.Emitter,
+		SequenceEvents.HighlightModelChanged.Reflector,
+		SequenceEvents.SelectedIndexChanged.Reflector,
 		HasFilteredSequenceElements, TableEvents.ColumnsBound.Binding,
-		TableColumnsMetadata.Change.Emitter {
+		TableColumnsMetadata.Change.Reflector {
 	/**
 	 * The service required by the SequenceArea (provided by the host, generally
 	 * the directed paren t)

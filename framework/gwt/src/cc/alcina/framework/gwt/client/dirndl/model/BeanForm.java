@@ -52,7 +52,7 @@ public class BeanForm extends Model {
 	 * @formatter:on
 	 */
 	public static class MultipleEditorSupport implements
-			ModelEvents.Submit.Handler, FormEvents.QueryValidity.Emitter,
+			ModelEvents.Submit.Handler, FormEvents.QueryValidity.Reflector,
 			FormEvents.ValidationResultEvent.Handler {
 		public interface Host {
 			void setInert(boolean inert);

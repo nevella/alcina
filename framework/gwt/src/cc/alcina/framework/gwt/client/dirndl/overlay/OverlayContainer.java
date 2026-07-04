@@ -34,8 +34,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  */
 @Directed
-public class OverlayContainer extends Model implements HasTag,
-		Model.RerouteBubbledEvents, OverlayEvents.PositionedDescendants.Emitter,
+public class OverlayContainer extends Model
+		implements HasTag, Model.RerouteBubbledEvents,
+		OverlayEvents.PositionedDescendants.Reflector,
 		OverlayEvents.RefreshPositioning.Handler, PlaceChangeEvent.Handler,
 		ElementOffsetsRequired.SoleBehavior {
 	private final Overlay contents;

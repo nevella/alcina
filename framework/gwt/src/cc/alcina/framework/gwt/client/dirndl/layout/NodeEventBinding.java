@@ -139,7 +139,7 @@ class NodeEventBinding {
 				 * find the emitter attached to an ancestor-or-self node which
 				 * emits events of Type type
 				 */
-				ModelEvent.Emitter emitter = node.findEmitter(type);
+				ModelEvent.Reflector emitter = node.findEmitter(type);
 				if (emitter != null) {
 					Node emitterNode = null;
 					if (node.model == emitter) {

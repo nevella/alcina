@@ -588,7 +588,7 @@ public class FormModel extends Model
 	@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 	public static class FormElement extends Model.Fields
 			implements FormEvents.PropertyValidationChange.Handler,
-			ReflectedEvents.FormElementLabelClicked.Emitter, Validation.Has {
+			ReflectedEvents.FormElementLabelClicked.Reflector, Validation.Has {
 		public static transient String PREFIX = "";
 
 		private LabelModel label;

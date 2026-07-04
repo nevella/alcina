@@ -141,7 +141,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 @TypedProperties
 public abstract class Choices<T> extends Model implements
 		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has,
-		ReflectedEvents.BeforeSelectionChangedDispatchDescent.Emitter,
+		ReflectedEvents.BeforeSelectionChangedDispatchDescent.Reflector,
 		ReflectedEvents.Filter.Handler {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
@@ -248,12 +248,12 @@ public abstract class Choices<T> extends Model implements
 	 * model/payload to true
 	 */
 	public static class ChoiceSelectedDescent extends
-			ReflectedEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
+			ReflectedEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Reflector> {
 		public interface Handler extends NodeEvent.Handler {
 			void onChoiceSelectedDescent(ChoiceSelectedDescent event);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		@Override
@@ -276,7 +276,7 @@ public abstract class Choices<T> extends Model implements
 	@TypedProperties
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler,
-			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter, Filterable,
+			ChoiceSelected.Handler, ChoiceSelectedDescent.Reflector, Filterable,
 			HasElementBehaviors {
 		private boolean selected;
 

@@ -6,12 +6,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 
 public class OverlayEvents {
 	public static class PositionedDescendants extends
-			ReflectedEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
+			ReflectedEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Reflector> {
 		public interface Handler extends NodeEvent.Handler {
 			void onPositionedDescendants(PositionedDescendants event);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		@Override

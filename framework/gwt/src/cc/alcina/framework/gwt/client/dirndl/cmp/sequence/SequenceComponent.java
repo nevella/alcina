@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.search.SearchDefinitionEditor
 @ReflectiveSerializer.Checks(ignore = true)
 public class SequenceComponent extends Model.Fields implements
 		Binding.TabIndexZero, SequenceEvents.NavigateToNewSequencePlace.Handler,
-		HasFilteredSequenceElements, SequenceEvents.SequenceChanged.Emitter,
+		HasFilteredSequenceElements, SequenceEvents.SequenceChanged.Reflector,
 		SearchDefinitionEditor.Submit.Handler {
 	class SequenceAreaServiceImpl implements SequenceArea.Service {
 		SequenceAreaServiceImpl() {

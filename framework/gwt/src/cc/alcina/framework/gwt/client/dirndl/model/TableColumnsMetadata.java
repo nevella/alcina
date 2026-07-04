@@ -25,12 +25,12 @@ public interface TableColumnsMetadata {
 	}
 
 	public static class Change extends
-			ReflectedEvent<TableColumnsMetadata, Change.Handler, Change.Emitter> {
+			ReflectedEvent<TableColumnsMetadata, Change.Handler, Change.Reflector> {
 		public interface Handler extends NodeEvent.Handler {
 			void onTableColumnMetadataChange(Change event);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		@Override

@@ -65,7 +65,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Reflector;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
@@ -852,17 +852,17 @@ public class DirectedLayout implements AlcinaProcess {
 			return children;
 		}
 
-		Emitter findEmitter(Class<? extends NodeEvent> type) {
+		Reflector findEmitter(Class<? extends NodeEvent> type) {
 			/*
 			 * See signature of DescendantEvent
 			 */
-			Class<? extends Emitter> emitterType = Reflections.at(type)
+			Class<? extends Reflector> emitterType = Reflections.at(type)
 					.getGenericBounds().bounds.get(2);
 			Node cursor = this;
 			while (cursor != null) {
 				if (cursor.model != null && Reflections.isAssignableFrom(
 						emitterType, cursor.model.getClass())) {
-					return (Emitter) cursor.model;
+					return (Reflector) cursor.model;
 				}
 				cursor = ModelEventDispatch.getParentOrReroutedAncestor(cursor);
 			}
@@ -2046,7 +2046,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 		Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
 
-		Map<Class<? extends ModelEvent.Emitter>, Class<? extends ModelEvent>> emitterEvents;
+		Map<Class<? extends ModelEvent.Reflector>, Class<? extends ModelEvent>> emitterEvents;
 
 		ReceivesEmitsEvents() {
 			classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
@@ -2072,7 +2072,7 @@ public class DirectedLayout implements AlcinaProcess {
 						handlerEvents.put(handlerClass, eventClass);
 						if (Reflections.isAssignableFrom(ReflectedEvent.class,
 								eventClass)) {
-							Class<? extends ModelEvent.Emitter> emitterClass = ((ReflectedEvent) reflector
+							Class<? extends ModelEvent.Reflector> emitterClass = ((ReflectedEvent) reflector
 									.newInstance()).getEmitterClass();
 							emitterEvents.put(emitterClass,
 									(Class<? extends ModelEvent>) eventClass);

@@ -61,7 +61,7 @@ class Page extends Model.Fields
 		SequenceBrowserCommand.DetailDisplayCycle.Handler,
 		SequenceBrowserCommand.ColumnSetCycle.Handler,
 		SequenceEvents.NavigateToNewSequencePlace.Handler,
-		SequenceEvents.SequenceChanged.Emitter, SequenceBehaviorsServer {
+		SequenceEvents.SequenceChanged.Reflector, SequenceBehaviorsServer {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)

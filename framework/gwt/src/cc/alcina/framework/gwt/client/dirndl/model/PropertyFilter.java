@@ -51,7 +51,7 @@ class PropertyFilter {
 	class FilterCoordinator extends Bindable.Fields
 			implements ModelEvents.Closed.Handler, SuggestionSelected.Handler {
 		class FilterEditor extends Model.All implements ValueChange.Container,
-				ReflectedEvents.FocusEditor.Emitter {
+				ReflectedEvents.FocusEditor.Reflector {
 			@Directed.Transform(
 				// value = Choices.Select.To.class,
 				value = Choices.Select.To.class,

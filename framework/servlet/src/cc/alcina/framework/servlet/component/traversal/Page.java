@@ -122,7 +122,7 @@ class Page extends Model.All
 			// register in spite of non-public access
 			implements Registration.AllSubtypes, PlaceUpdateable,
 			ModelEvent.DelegatesDispatch,
-			ReflectedEvents.TopLevelMissedEvent.Emitter {
+			ReflectedEvents.TopLevelMissedEvent.Reflector {
 		@Directed
 		Page page;
 

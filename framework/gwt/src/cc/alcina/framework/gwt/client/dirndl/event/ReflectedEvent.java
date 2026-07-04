@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  * <p>
  * Note that the emitter of a reflected event can itself be a handler
  */
-public abstract class ReflectedEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
+public abstract class ReflectedEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Reflector>
 		extends ModelEvent<T, H> {
 	public Class<E> getEmitterClass() {
 		return Reflections.at(getClass()).getGenericBounds().bounds.get(2);

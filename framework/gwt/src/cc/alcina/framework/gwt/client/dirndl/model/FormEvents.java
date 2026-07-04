@@ -99,7 +99,7 @@ public class FormEvents {
 	 * event - the FormModel will respond with a QueryValidityResult event
 	 */
 	public static class QueryValidity extends
-			ReflectedEvent<QueryValidity.Parameters, QueryValidity.Handler, QueryValidity.Emitter> {
+			ReflectedEvent<QueryValidity.Parameters, QueryValidity.Handler, QueryValidity.Reflector> {
 		public interface Handler extends NodeEvent.Handler {
 			void onQueryValidity(QueryValidity event);
 		}
@@ -114,7 +114,7 @@ public class FormEvents {
 			return result;
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		public static class Parameters {
