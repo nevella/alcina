@@ -37,6 +37,7 @@ public class PackageProperties {
     public static _EntityNode entityNode = new _EntityNode();
     public static _Slider slider = new _Slider();
     static _Slider_Knob slider_knob = new _Slider_Knob();
+    static _Slider_Line_Extent slider_line_extent = new _Slider_Line_Extent();
     public static _StringInput stringInput = new _StringInput();
     public static _StringInput_DateEditor stringInput_dateEditor = new _StringInput_DateEditor();
     public static _StringInput_DateInput stringInput_dateInput = new _StringInput_DateInput();
@@ -302,7 +303,7 @@ public class PackageProperties {
     
     public static class _Slider implements TypedProperty.Container {
       public TypedProperty<Slider, Slider.Knob> knob = new TypedProperty<>(Slider.class, "knob");
-      public TypedProperty<Slider, Object> line = new TypedProperty<>(Slider.class, "line");
+      public TypedProperty<Slider, Slider.Line> line = new TypedProperty<>(Slider.class, "line");
       public TypedProperty<Slider, Integer> tickCount = new TypedProperty<>(Slider.class, "tickCount");
       public TypedProperty<Slider, List> ticks = new TypedProperty<>(Slider.class, "ticks");
       public TypedProperty<Slider, Double> value = new TypedProperty<>(Slider.class, "value");
@@ -310,7 +311,7 @@ public class PackageProperties {
       public static class InstanceProperties extends 	InstanceProperty.Container<Slider> {
         public  InstanceProperties(Slider source){super(source);}
         public InstanceProperty<Slider, Slider.Knob> knob(){return new InstanceProperty<>(source,PackageProperties.slider.knob);}
-        public InstanceProperty<Slider, Object> line(){return new InstanceProperty<>(source,PackageProperties.slider.line);}
+        public InstanceProperty<Slider, Slider.Line> line(){return new InstanceProperty<>(source,PackageProperties.slider.line);}
         public InstanceProperty<Slider, Integer> tickCount(){return new InstanceProperty<>(source,PackageProperties.slider.tickCount);}
         public InstanceProperty<Slider, List> ticks(){return new InstanceProperty<>(source,PackageProperties.slider.ticks);}
         public InstanceProperty<Slider, Double> value(){return new InstanceProperty<>(source,PackageProperties.slider.value);}
@@ -335,6 +336,19 @@ public class PackageProperties {
       }
       
        InstanceProperties instance(Slider.Knob instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _Slider_Line_Extent implements TypedProperty.Container {
+      TypedProperty<Slider.Line.Extent, Integer> width = new TypedProperty<>(Slider.Line.Extent.class, "width");
+      static class InstanceProperties extends 	InstanceProperty.Container<Slider.Line.Extent> {
+         InstanceProperties(Slider.Line.Extent source){super(source);}
+        InstanceProperty<Slider.Line.Extent, Integer> width(){return new InstanceProperty<>(source,PackageProperties.slider_line_extent.width);}
+      }
+      
+       InstanceProperties instance(Slider.Line.Extent instance) {
         return new InstanceProperties( instance);
       }
       
