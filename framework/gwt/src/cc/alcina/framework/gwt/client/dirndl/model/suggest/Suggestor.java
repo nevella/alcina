@@ -85,6 +85,8 @@ public class Suggestor extends Model.Fields implements
 	public static class Answers {
 		public Ask ask;
 
+		public boolean keyboardSelectFirst = false;
+
 		private List<Suggestion> suggestions = new ArrayList<>();
 
 		private int total;

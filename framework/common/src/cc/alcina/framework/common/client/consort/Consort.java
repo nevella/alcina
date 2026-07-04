@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -354,7 +354,7 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
-		return (List) players.stream().filter(new IsInstanceFilter(clazz))
+		return (List) players.stream().filter(IsInstanceFilter.of(clazz))
 				.collect(Collectors.toList());
 	}
 

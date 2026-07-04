@@ -11,6 +11,7 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -99,18 +100,19 @@ public class Dropdown extends Model
 		setDropdown(dropdownSupplier.get());
 	}
 
+	@TypedProperties
 	static class LabelArrow extends Model.All
 			implements DomEvents.Click.Handler, Binding.TabIndexZero,
 			DomEvents.KeyDown.Handler {
+		PackageProperties._Dropdown_LabelArrow.InstanceProperties properties() {
+			return PackageProperties.dropdown_labelArrow.instance(this);
+		}
+
 		@Directed(
 			tag = "label-area",
 			reemits = { DomEvents.Click.class,
 					DropdownEvents.ComboLabelSelected.class })
 		Object label;
-
-		public void setLabel(Object label) {
-			set("label", this.label, label, () -> this.label = label);
-		}
 
 		@Directed(
 			reemits = { DomEvents.Click.class,

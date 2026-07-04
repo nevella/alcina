@@ -336,7 +336,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	/*
 	 * this *may* be called twice - but this is interim, pending a think about
-	 * how to resolve annotations along a transformation chain - and this is
+	 * how to resolve annotations along a transformation chain - and that is
 	 * linked to annotation ResolutionHistory
 	 * 
 	 * 

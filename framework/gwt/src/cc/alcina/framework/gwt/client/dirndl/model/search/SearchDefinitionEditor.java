@@ -86,6 +86,28 @@ public class SearchDefinitionEditor extends Model.Fields
 		}
 	}
 
+	/**
+	 * Inform ancestors that the definition has changed
+	 */
+	public static class Changed
+			extends ModelEvent<SearchDefinition, Changed.Handler> {
+		@Override
+		public void dispatch(Changed.Handler handler) {
+			handler.onChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onChanged(Changed event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onChanged(Changed event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	interface Service extends ContextService {
 		SearchDefinition getSearchDefinition();
 
@@ -273,6 +295,13 @@ public class SearchDefinitionEditor extends Model.Fields
 		boolean modified = !Objects.equals(initialSerializedDefinition,
 				renderedDefinitionSerialized);
 		properties().modified().set(modified);
+		/*
+		 * revisit - fires spuriously during setup, with empty criteria?
+		 */
+		if (modified) {
+			emitEvent(SearchDefinitionEditor.Changed.class,
+					renderedDefinition.copy());
+		}
 	}
 
 	void onPropertyGraphChange(PropertyGraphListener.ChangeEvent changeEvent) {

@@ -72,6 +72,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSupplier;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.SelectResolver.OptionNameTransformer;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.Placeholder;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
@@ -137,6 +138,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  * 
  *
  */
+@TypedProperties
 public abstract class Choices<T> extends Model implements
 		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has,
 		ReflectedEvents.BeforeSelectionChangedDispatchDescent.Emitter,
@@ -276,10 +278,6 @@ public abstract class Choices<T> extends Model implements
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler,
 			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter, Filterable,
 			HasElementBehaviors {
-		PackageProperties._Choices_Choice.InstanceProperties properties() {
-			return PackageProperties.choices_choice.instance(this);
-		}
-
 		private boolean selected;
 
 		private boolean indexSelected;
@@ -290,14 +288,14 @@ public abstract class Choices<T> extends Model implements
 
 		boolean filtered;
 
+		public Choice(T value) {
+			this.value = value;
+		}
+
 		@Override
 		public List<ElementBehavior> getBehaviors() {
 			return List
 					.of(new ElementBehavior.PreventDefaultMousedownBehaviour());
-		}
-
-		public Choice(T value) {
-			this.value = value;
 		}
 
 		@Binding(type = Type.PROPERTY)
@@ -368,6 +366,10 @@ public abstract class Choices<T> extends Model implements
 					|| SearchUtils.matches(filterValue, text);
 			setFiltered(!matched);
 			return matched;
+		}
+
+		PackageProperties._Choices_Choice.InstanceProperties properties() {
+			return PackageProperties.choices_choice.instance(this);
 		}
 	}
 
@@ -586,6 +588,21 @@ public abstract class Choices<T> extends Model implements
 			event.reemitAs(this, ModelEvents.Selected.class, choice);
 		}
 
+		@Override
+		public void setSelectedValue(T value) {
+			boolean change = !Objects.equals(getSelectedValue(), value);
+			super.setSelectedValue(value);
+			if (!change) {
+				return;
+			}
+			Runnable updateLambda = () -> updateSelectedElementIndex(value);
+			if (provideIsBound()) {
+				updateLambda.run();
+			} else {
+				exec(updateLambda).dispatch();
+			}
+		}
+
 		void updateSelectedElementIndex(T value) {
 			if (provideIsBound()) {
 				/*
@@ -605,21 +622,6 @@ public abstract class Choices<T> extends Model implements
 						.getRendered().asElement();
 				int index = getValues().indexOf(value);
 				selectElement.setSelectedIndex(index);
-			}
-		}
-
-		@Override
-		public void setSelectedValue(T value) {
-			boolean change = !Objects.equals(getSelectedValue(), value);
-			super.setSelectedValue(value);
-			if (!change) {
-				return;
-			}
-			Runnable updateLambda = () -> updateSelectedElementIndex(value);
-			if (provideIsBound()) {
-				updateLambda.run();
-			} else {
-				exec(updateLambda).dispatch();
 			}
 		}
 	}
@@ -643,8 +645,6 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		public static class Option extends Choices.Choice<String> {
-			Choice choice;
-
 			public static class Transform extends
 					AbstractContextSensitiveModelTransform<Choices.Choice, Option> {
 				@Override
@@ -657,17 +657,19 @@ public abstract class Choices<T> extends Model implements
 				}
 			}
 
+			Choice choice;
+
+			public Option(String displayName, Choice choice) {
+				super(displayName);
+				this.choice = choice;
+			}
+
 			/*
 			 * must allow default behavior
 			 */
 			@Override
 			public List<ElementBehavior> getBehaviors() {
 				return List.of();
-			}
-
-			public Option(String displayName, Choice choice) {
-				super(displayName);
-				this.choice = choice;
 			}
 
 			@Override
@@ -737,19 +739,23 @@ public abstract class Choices<T> extends Model implements
 		 * Override to customize the default
 		 */
 		protected String transformOptionName(Node node, Choice choice) {
-			return optionNameTransformer != null
-					? optionNameTransformer.apply(choice.getValue())
-					: HasDisplayName.displayName(choice.getValue(), "");
+			Object value = choice.getValue();
+			if (optionNameTransformer != null) {
+				return optionNameTransformer.apply(value);
+			} else {
+				if (value == null) {
+					Choices choices = getRootModel();
+					if (choices.placeholder != null) {
+						return choices.placeholder;
+					}
+				}
+				return HasDisplayName.displayName(value, "");
+			}
 		}
 	}
 
 	public static class CommitWithNoSelectedChoice
 			extends ModelEvent<Object, CommitWithNoSelectedChoice.Handler> {
-		@Override
-		public void dispatch(CommitWithNoSelectedChoice.Handler handler) {
-			handler.onCommitWithNoSelectedChoice(this);
-		}
-
 		public interface Handler extends NodeEvent.Handler {
 			void onCommitWithNoSelectedChoice(CommitWithNoSelectedChoice event);
 		}
@@ -761,6 +767,11 @@ public abstract class Choices<T> extends Model implements
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}
+
+		@Override
+		public void dispatch(CommitWithNoSelectedChoice.Handler handler) {
+			handler.onCommitWithNoSelectedChoice(this);
+		}
 	}
 
 	@TypeSerialization(reflectiveSerializable = false)
@@ -770,6 +781,11 @@ public abstract class Choices<T> extends Model implements
 	public static class Single<T> extends Choices<T>
 			implements KeyboardNavigation.Navigation.Handler, HasValue<T>,
 			HandlesModelChange {
+		public PackageProperties._Choices_Single.InstanceProperties
+				subtypeProperties() {
+			return PackageProperties.choices_single.instance(this);
+		}
+
 		/**
 		 * TODO - dirndl - add inner classes Enumeration and
 		 * Enumeration.WithNull - to change
@@ -1011,6 +1027,16 @@ public abstract class Choices<T> extends Model implements
 			setSelectedValue(t);
 		}
 
+		@Override
+		public boolean handlesModelChange(PropertyChangeEvent evt) {
+			if (hasValueSupplier) {
+				setSelectedValue((T) evt.getNewValue());
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		void onIndexedSelectionChange(IndexedSelection.Change change) {
 			updateIndexSelected(change.oldIndexSelected, false);
 			updateIndexSelected(change.newIndexSelected, true);
@@ -1019,16 +1045,6 @@ public abstract class Choices<T> extends Model implements
 		void updateIndexSelected(int index, boolean indexSelected) {
 			if (index >= 0 && index < choices.size()) {
 				choices.get(index).setIndexSelected(indexSelected);
-			}
-		}
-
-		@Override
-		public boolean handlesModelChange(PropertyChangeEvent evt) {
-			if (hasValueSupplier) {
-				setSelectedValue((T) evt.getNewValue());
-				return true;
-			} else {
-				return false;
 			}
 		}
 	}
@@ -1155,6 +1171,8 @@ public abstract class Choices<T> extends Model implements
 
 	boolean hasValueSupplier;
 
+	String placeholder;
+
 	public Choices() {
 		this(new ArrayList<>());
 	}
@@ -1274,6 +1292,15 @@ public abstract class Choices<T> extends Model implements
 		repeatableChoices = node.has(RepeatableChoices.class);
 		node.optional(NoChangeOnSelectEvent.class)
 				.ifPresent(ann -> setChangeOnSelectionEvent(false));
+		node.optional(Placeholder.class)
+				.ifPresent(ann -> placeholder = ann.value());
+		node.optional(ValueTransformer.class).ifPresent(
+				ann -> valueTransformer = (Class<? extends ModelTransform<T, ?>>) ann
+						.value());
+	}
+
+	PackageProperties._Choices.InstanceProperties properties() {
+		return PackageProperties.choices.instance(this);
 	}
 
 	List<T> filter(List<T> list, Predicate<T> valueFilter) {

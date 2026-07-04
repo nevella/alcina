@@ -149,11 +149,18 @@ public class ReflectedEvents {
 			handler.onSearching(this);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
-		}
-
 		public interface Handler extends NodeEvent.Handler {
 			void onSearching(Searching event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSearching(Searching event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
 

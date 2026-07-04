@@ -890,60 +890,73 @@ public class FlatTreeSerializer {
 		} finally {
 			treeSerializationCustomiser.onAfterTreeSerialize();
 		}
-		String serialized = state.keyValues.sorted(new KeyComparator())
+		/*
+		 * Actually - (5 years on) order is important! Removal of the sorted
+		 * check *may* cause some existing app logic issues, but it's not
+		 * right...
+		 */
+		String serialized = state.keyValues
+				// .sorted(new KeyComparator())
 				.toPropertyString();
 		serialized = treeSerializationCustomiser.mapKeys(serialized, true);
 		if (options.singleLine) {
 			serialized = serialized.replace("\n", ":");
 		}
 		if (options.testSerialized) {
-			DeserializerOptions deserializerOptions = new DeserializerOptions()
-					.withShortPaths(options.shortPaths);
-			TransienceContext[] transienceContext = AlcinaTransient.Support
-					.getTransienceContextsNoDefault();
-			AlcinaTransient.Support.clearTransienceContext();
-			TreeSerializable checkObject = deserialize(object.getClass(),
-					serialized, deserializerOptions);
-			AlcinaTransient.Support.setTransienceContexts(transienceContext);
-			SerializerOptions checkOptions = new SerializerOptions()
-					.withElideDefaults(options.elideDefaults)
-					.withShortPaths(options.shortPaths)
-					.withSingleLine(options.singleLine)
-					.withTopLevelTypeInfo(options.topLevelTypeInfo)
-					.withReadableTime(options.readableTime);
-			String testSerialized = treeSerializationCustomiser
-					.filterTestSerialized(serialized);
-			String checkSerialized = serialize(checkObject, checkOptions);
-			String testCheckSerialized = treeSerializationCustomiser
-					.filterTestSerialized(checkSerialized);
-			if (!Objects.equals(testSerialized, testCheckSerialized)) {
-				unequalSerialized.publish(
-						new StringPair(testSerialized, testCheckSerialized));
-				Preconditions.checkState(
-						Objects.equals(testSerialized, testCheckSerialized),
-						"Unequal serialized:\n\n%s\n========\n%s", serialized,
-						checkSerialized);
-			}
-			/*
-			 * Would be nice - but then we'd need to do fancy things to
-			 * replicate filterTestSerialized (handle fields we deliberately
-			 * drop for client concision)
-			 */
-			// String reflectiveCheck0 = AlcinaBeanSerializer
-			// .serializeHolder(object);
-			// String reflectiveCheck1 = AlcinaBeanSerializer
-			// .serializeHolder(checkObject);
-			// if (!Objects.equals(reflectiveCheck0, reflectiveCheck1)) {
-			// unequalSerialized.publish(
-			// new StringPair(reflectiveCheck0, reflectiveCheck1));
-			// Preconditions.checkState(
-			// Objects.equals(reflectiveCheck0, reflectiveCheck1),
-			// "Unequal serialized (bean):\n\n%s\n========\n%s",
-			// reflectiveCheck0, reflectiveCheck1);
-			// }
-			// FIXME - mvcc.5 - implement once reflectiveserializer up
+			testSerialized(object, options, treeSerializationCustomiser,
+					serialized);
 		}
 		return serialized;
+	}
+
+	void testSerialized(TreeSerializable object, SerializerOptions options,
+			TreeSerializable.Customiser treeSerializationCustomiser,
+			String serialized) {
+		DeserializerOptions deserializerOptions = new DeserializerOptions()
+				.withShortPaths(options.shortPaths);
+		TransienceContext[] transienceContext = AlcinaTransient.Support
+				.getTransienceContextsNoDefault();
+		AlcinaTransient.Support.clearTransienceContext();
+		TreeSerializable checkObject = deserialize(object.getClass(),
+				serialized, deserializerOptions);
+		AlcinaTransient.Support.setTransienceContexts(transienceContext);
+		SerializerOptions checkOptions = new SerializerOptions()
+				.withElideDefaults(options.elideDefaults)
+				.withShortPaths(options.shortPaths)
+				.withSingleLine(options.singleLine)
+				.withTopLevelTypeInfo(options.topLevelTypeInfo)
+				.withReadableTime(options.readableTime);
+		String testSerialized = treeSerializationCustomiser
+				.filterTestSerialized(serialized);
+		String checkSerialized = serialize(checkObject, checkOptions);
+		String testCheckSerialized = treeSerializationCustomiser
+				.filterTestSerialized(checkSerialized);
+		if (!Objects.equals(testSerialized, testCheckSerialized)) {
+			unequalSerialized.publish(
+					new StringPair(testSerialized, testCheckSerialized));
+			Preconditions.checkState(
+					Objects.equals(testSerialized, testCheckSerialized),
+					"Unequal serialized:\n\n%s\n========\n%s", serialized,
+					checkSerialized);
+		}
+		/*
+		 * Would be nice - but then we'd need to do fancy things to replicate
+		 * filterTestSerialized (handle fields we deliberately drop for client
+		 * concision)
+		 */
+		// String reflectiveCheck0 = AlcinaBeanSerializer
+		// .serializeHolder(object);
+		// String reflectiveCheck1 = AlcinaBeanSerializer
+		// .serializeHolder(checkObject);
+		// if (!Objects.equals(reflectiveCheck0, reflectiveCheck1)) {
+		// unequalSerialized.publish(
+		// new StringPair(reflectiveCheck0, reflectiveCheck1));
+		// Preconditions.checkState(
+		// Objects.equals(reflectiveCheck0, reflectiveCheck1),
+		// "Unequal serialized (bean):\n\n%s\n========\n%s",
+		// reflectiveCheck0, reflectiveCheck1);
+		// }
+		// FIXME - mvcc.5 - implement once reflectiveserializer up
 	}
 
 	private Object synthesisePopulatedPropertyValue(Node node,
