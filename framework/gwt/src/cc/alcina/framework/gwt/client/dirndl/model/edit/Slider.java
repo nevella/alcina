@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.Draggable.Dragged;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.ZoomIn;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.ZoomOut;
@@ -82,7 +83,7 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 		}
 
 		public Knob() {
-			support = new Support(this);
+			support = new Draggable.Support(this);
 		}
 
 		@Override
@@ -165,10 +166,15 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 
 	@Override
 	public void onDragged(Dragged event) {
+		updateValueFromNativeEventCoordinates(event);
 	}
 
 	@Override
 	public void onClick(Click event) {
+		updateValueFromNativeEventCoordinates(event);
+	}
+
+	void updateValueFromNativeEventCoordinates(NodeEvent event) {
 		NativeEvent nativeEvent = event.getContext()
 				.getOriginatingNativeEvent();
 		Element elem = provideElement();

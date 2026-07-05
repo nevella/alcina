@@ -1065,7 +1065,11 @@ public class SelectionTraversal
 		this.filter = filter;
 	}
 
+	/**
+	 * Call post-execution to throw any encountered exceptions
+	 */
 	public void throwExceptions() {
+		Preconditions.checkState(!state.beforeExecution);
 		if (selections().exceptions.size() > 0) {
 			throw new UmbrellaException(selections().exceptions.values()
 					.stream().collect(AlcinaCollectors.toLinkedHashSet()));

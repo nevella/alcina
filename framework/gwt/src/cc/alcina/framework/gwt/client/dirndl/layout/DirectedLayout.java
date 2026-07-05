@@ -608,6 +608,15 @@ public class DirectedLayout implements AlcinaProcess {
 			this.bindingsDisabled = bindingsDisabled;
 		}
 
+		Node sameModelOnlyChild() {
+			if (children != null && children.size() == 1
+					&& children.get(0).model == model && model != null) {
+				return children.get(0);
+			} else {
+				return null;
+			}
+		}
+
 		protected Node(ContextResolver resolver, Node parent, Property property,
 				AnnotationLocation annotationLocation, Object model,
 				boolean lastForModel) {
@@ -1510,6 +1519,12 @@ public class DirectedLayout implements AlcinaProcess {
 				if (children.size() == 1) {
 					return children.get(0).vetoReplaceChild(evt);
 				}
+			}
+			// hack for ...yep, annotation history - check the 'real' (lowest
+			// layer) rendering of this prop is not a HandlesModelChange)
+			Node sameModelOnlyChild = sameModelOnlyChild();
+			if (sameModelOnlyChild != null) {
+				return sameModelOnlyChild.vetoReplaceChild(evt);
 			}
 			return false;
 		}

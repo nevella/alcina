@@ -26,6 +26,8 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * Base implementation of {@link com.google.gwt.user.client.impl.DOMImpl} shared
  * by those browsers that come a bit closer to supporting a common standard (ie,
@@ -175,63 +177,60 @@ public abstract class DOMImplStandard extends DOMImpl {
 																};
 																}-*/;
 
-	// dev mode perf improvement, but prevents drag suport
-	private static EventMap getCaptureEventDispatchers() {
-		return getCaptureEventDispatchers0(
-				// !com.google.gwt.core.shared.GWT.isScript()
-				false
-		//
-		);
-	}
+	private static native EventMap getCaptureEventDispatchers()
+	//@formatter:off
+			/*-{
+			return {
+			// Mouse events
+			click:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			dblclick:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			mousedown:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			mouseup:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			mousemove:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),  
+			mouseover:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			mouseout:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			mousewheel: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			
+			// Keyboard events
+			keydown:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			keyup:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			keypress:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			
+			//Nick - focus
+			
+			blur:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			focus:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			
+			//Nick - selection
 
-	private static native EventMap
-			getCaptureEventDispatchers0(boolean noMouseMove) /*-{
-																function noop(){}
-																return {
-																// Mouse events
-																click:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																dblclick:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																mousedown:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																mouseup:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																mousemove: noMouseMove?noop:@com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),  
-																mouseover:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																mouseout:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																mousewheel: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																
-																// Keyboard events
-																keydown:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																keyup:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																keypress:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																
-																//Nick - focus
-																
-																blur:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																focus:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																
-																//Nick - selection
+			selectionchange:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
 
-																selectionchange:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			//Nick - input
 
-																//Nick - input
+			input:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			beforeinput:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
 
-																input:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																beforeinput:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			//Nick - clipboard
 
-																//Nick - clipboard
+			copy:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			paste:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+			
+			// Nick - drag
 
-																copy:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																paste:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
-																
-																// Touch events
-																touchstart:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																touchend:     @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																touchmove:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																touchcancel:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																gesturestart: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																gestureend:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																gesturechange:@com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
-																};
-																}-*/;
+			dragenter: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			dragover:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+
+			// Touch events
+			touchstart:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			touchend:     @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			touchmove:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			touchcancel:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			gesturestart: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			gestureend:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			gesturechange:@com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),
+			};
+		}-*/;
+		//@formatter:on
 
 	private static Element getFirstAncestorWithListener(Event evt) {
 		if (!Element.is(evt.getCurrentEventTarget())) {

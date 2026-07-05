@@ -20,7 +20,9 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
+import cc.alcina.framework.gwt.client.story.Story.Action.Ui;
 import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
+import cc.alcina.framework.gwt.client.story.Story.Decl.Action.DeclarativeAction;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.story.TellerContext.Device;
 import cc.alcina.framework.gwt.client.util.LineCallback;
@@ -889,6 +891,28 @@ public interface Story {
 
 					int toY();
 				}
+
+				/**
+				 * A select area action - select a screen area relative to elem
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface DragAndDropBy {
+					public static class ConverterImpl
+							implements Converter<DragAndDropBy> {
+						@Override
+						public Story.Action convert(DragAndDropBy ann) {
+							return new Story.Action.Ui.DragAndDropBy(ann.x(),
+									ann.y());
+						}
+					}
+
+					int x();
+
+					int y();
+				}
 			}
 		}
 
@@ -1484,6 +1508,20 @@ public interface Story {
 					this.fromY = fromY;
 					this.toX = toX;
 					this.toY = toY;
+				}
+			}
+
+			public static class DragAndDropBy implements Ui {
+				public int x;
+
+				public int y;
+
+				public DragAndDropBy() {
+				}
+
+				DragAndDropBy(int x, int y) {
+					this.x = x;
+					this.y = y;
 				}
 			}
 

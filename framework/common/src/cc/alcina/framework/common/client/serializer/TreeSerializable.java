@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -27,8 +28,12 @@ import cc.alcina.framework.common.client.util.StringMap;
  */
 @Registration(TreeSerializable.class)
 public interface TreeSerializable extends Serializable {
-	public static final String CONTEXT_IGNORE_CUSTOM_CHECKS = TreeSerializable.class
-			.getName() + ".CONTEXT_IGNORE_CUSTOM_CHECKS";
+	/*
+	 * FIXME - this is used in a few places to patch search object behavior
+	 * during test deser - better would be fix the test code
+	 */
+	public static final LooseContext.Key CONTEXT_IGNORE_CUSTOM_CHECKS = LooseContext
+			.key(TreeSerializable.class, "CONTEXT_IGNORE_CUSTOM_CHECKS");
 
 	default <T extends TreeSerializable> T copy() {
 		return (T) FlatTreeSerializer.clone(this);

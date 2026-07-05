@@ -21,8 +21,8 @@ import cc.alcina.framework.common.client.util.Ax;
  * layers (and the use of traversal) is owing to the dependency of LayerParser
  * on the traversal framework
  */
-public class BoundaryParser
-		implements TraversalContext, TraversalContext.ShortTraversal {
+public class BoundaryParser implements TraversalContext,
+		TraversalContext.ShortTraversal, TraversalContext.ThrowOnException {
 	MeasureOverlay measureOverlay;
 
 	SelectionTraversal traversal;
@@ -65,6 +65,7 @@ public class BoundaryParser
 		rootLayer = new BoundaryLayer();
 		traversal.layers().setRoot(rootLayer);
 		traversal.traverse();
+		traversal.throwExceptions();
 		ExtendedMeasureSelection extended = Ax.first(
 				traversal.selections().get(ExtendedMeasureSelection.class));
 		return extended == null ? null : new ExtendResult(extended.get());

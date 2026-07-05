@@ -931,7 +931,13 @@ public class FlatTreeSerializer {
 		String checkSerialized = serialize(checkObject, checkOptions);
 		String testCheckSerialized = treeSerializationCustomiser
 				.filterTestSerialized(checkSerialized);
-		if (!Objects.equals(testSerialized, testCheckSerialized)) {
+		boolean equal = Objects.equals(testSerialized, testCheckSerialized);
+		boolean equalExcludingOrder = false;
+		if (!equal) {
+			equalExcludingOrder = StringMap.fromPropertyString(testSerialized)
+					.equals(StringMap.fromPropertyString(testCheckSerialized));
+		}
+		if (!equal && !equalExcludingOrder) {
 			unequalSerialized.publish(
 					new StringPair(testSerialized, testCheckSerialized));
 			Preconditions.checkState(

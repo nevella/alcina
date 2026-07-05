@@ -1340,6 +1340,7 @@ public class DOM {
 	 * @return <code>false</code> to cancel the event
 	 */
 	public static boolean previewEvent(Event evt) {
+		impl.routePreviewEvent(evt);
 		// Fire a NativePreviewEvent to NativePreviewHandlers
 		boolean ret = Event.fireNativePreviewEvent(evt);
 		// If the preview cancels the event, stop it from bubbling and

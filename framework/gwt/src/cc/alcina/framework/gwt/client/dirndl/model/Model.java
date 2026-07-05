@@ -801,6 +801,11 @@ public abstract class Model extends Bindable
 		}
 
 		@Override
+		public boolean isBound() {
+			return Model.this.provideIsBound();
+		}
+
+		@Override
 		public <T extends ContextService> T service(Class<T> serviceType) {
 			return Model.this.service(serviceType);
 		}

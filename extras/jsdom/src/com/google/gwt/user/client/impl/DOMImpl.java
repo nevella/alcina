@@ -209,6 +209,9 @@ public abstract class DOMImpl {
 		}
 	}
 
+	public void routePreviewEvent(Event evt) {
+	}
+
 	public abstract void releaseCapture(Element elem);
 
 	public abstract void setCapture(Element elem);
