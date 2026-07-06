@@ -34,6 +34,10 @@ import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
+/*
+ * final goal: generate the output tree (removing 'remove keys', computed by
+ * intermediate phases)
+ */
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class TaskRefactorConfigSets extends PerformerTask {
 	private List<String> classpathEntries = new ArrayList<>();
@@ -63,6 +67,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 	private int dirtyWriteLimit = 0;
 
 	private boolean justBundleTree;
+
+	public String outputTreePath = "/tmp/tree.csv";
 
 	public void addProperties(String set, String path) {
 		ConfigurationFile configurationFile = new Configuration.ConfigurationFile(
@@ -136,8 +142,12 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			Stack<String> folders = new Stack<>();
 			folders.push(path);
 			while (folders.size() > 0) {
-				String folder = folders.pop();
-				File[] files = new File(folder).listFiles();
+				String folderPath = folders.pop();
+				File folder = new File(folderPath);
+				if (!folder.exists()) {
+					Ax.err(folder);
+				}
+				File[] files = folder.listFiles();
 				for (File file : files) {
 					if (file.isDirectory()) {
 						folders.push(file.getPath());
@@ -179,7 +189,9 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		}
 		populateTree();
 		String csv = tree.asCsv();
-		Io.write().string(csv).toPath("/tmp/tree.csv");
+		Io.write().string(csv).withNoUpdateIdentical(true)
+				.toPath(outputTreePath);
+		Ax.out("Wrote config tree to %s", outputTreePath);
 		if (justBundleTree) {
 			//
 		} else {
@@ -188,7 +200,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			Io.write()
 					.string(split.firstOnly.stream()
 							.collect(Collectors.joining("\n")))
-					.toPath("/tmp/not-seen.txt");
+					.toPath(Ax.format("%s-not-seen.txt", outputTreePath));
 		}
 	}
 
@@ -197,7 +209,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 				.singletonCache(CompilationUnits.class, getClass())
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, classpathEntries,
-				DeclarationVisitor::new, isRefresh());
+				HasConfigurationVisitor::new, isRefresh());
 		long count = compUnits.declarations.values().stream()
 				.filter(dec -> dec.hasFlag(Type.HasConfiguration)).count();
 		Ax.out("count with config: %s", count);
@@ -256,8 +268,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		this.removeKeys = removeKeys;
 	}
 
-	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
-		public DeclarationVisitor(CompilationUnits units,
+	static class HasConfigurationVisitor extends CompilationUnitWrapperVisitor {
+		public HasConfigurationVisitor(CompilationUnits units,
 				CompilationUnitWrapper compUnit) {
 			super(units, compUnit);
 		}
@@ -272,9 +284,8 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		}
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			UnitType type = new UnitType(unit, node);
+			UnitType type = this.unit.ensureUnitType(node);
 			type.setDeclaration(node);
-			unit.unitTypes.add(type);
 			boolean hasConfiguration = node.toString()
 					.contains("Configuration.");
 			if (hasConfiguration) {
@@ -402,7 +413,10 @@ public class TaskRefactorConfigSets extends PerformerTask {
 							? type
 							: declarationByName(className);
 					if (classDeclByName == null) {
-						throw new UnsupportedOperationException();
+						Ax.out("\t[ext-class?]no classDeclByName: %s",
+								className);
+						return;
+						// throw new UnsupportedOperationException();
 					} else {
 						if (classDeclByName == type) {
 							superfluousExplicitClass = true;
@@ -452,10 +466,15 @@ public class TaskRefactorConfigSets extends PerformerTask {
 					case "TokenSecured":
 					case "GenericServlet":
 					case "Application":
+					case "AppPersistenceBase":
+					case "AppCompatActivity":
+					case "EntityLayerLogging":
 						// no key parent(s)
 						break;
 					default:
-						throw new UnsupportedOperationException();
+						Ax.err("no-types: %s", name);
+						break;
+					// throw new UnsupportedOperationException();
 					}
 					return null;
 				} else if (types.size() == 1) {
