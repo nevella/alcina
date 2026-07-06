@@ -380,7 +380,7 @@ public class Configuration {
 
 		private ClassLoader classLoader;
 
-		private boolean useSets;
+		private boolean useSets = true;
 
 		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap();
 
@@ -1081,7 +1081,8 @@ public class Configuration {
 							row = csv.addRow();
 						}
 						row.set(Header.File, value.file.path);
-						row.set(Header.Value, value.value);
+						row.set(Header.Value, value.value.replace("\n", "")
+								.replace("\r", ""));
 						row.set(Header.InputSet, value.file.set);
 					}
 				}
