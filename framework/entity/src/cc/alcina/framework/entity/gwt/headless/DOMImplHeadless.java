@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.gwt.headless;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.impl.DOMImpl;
 
@@ -41,15 +42,26 @@ public class DOMImplHeadless extends DOMImpl {
 	public void insertChild(Element parent, Element child, int index) {
 	}
 
+	Element captureElement = null;
+
 	@Override
 	public void releaseCapture(Element elem) {
-		throw new UnsupportedOperationException();
+		if (captureElement == elem) {
+			captureElement = null;
+		}
 	}
 
 	@Override
 	public void setCapture(Element elem) {
-		throw new UnsupportedOperationException(
-				"Requires js client (performance)");
+		captureElement = elem;
+	}
+
+	@Override
+	public void routePreviewEvent(Event event) {
+		if (captureElement != null) {
+			DOM.dispatchEvent(event, captureElement,
+					captureElement.eventListener);
+		}
 	}
 
 	@Override

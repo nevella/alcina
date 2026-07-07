@@ -71,12 +71,12 @@ public class TableView extends
 	}
 
 	/*
-	 * Note that if an ancestor implements TableColumnMetadata.Emitter (and
+	 * Note that if an ancestor implements TableColumnMetadata.Reflector (and
 	 * handles sort), this should just pass it through and not handle
 	 * onSortTable.
 	 * 
-	 * But the initial use case of TableColumnMetadata.Emitter _doesn't_ handle
-	 * sort (TraversalBrowser), so currently sort stops here
+	 * But the initial use case of TableColumnMetadata.Reflector _doesn't_
+	 * handle sort (TraversalBrowser), so currently sort stops here
 	 */
 	@Directed.Delegating
 	@DirectedContextResolver

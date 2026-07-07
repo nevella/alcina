@@ -34,8 +34,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  */
 @Directed
-public class OverlayContainer extends Model implements HasTag,
-		Model.RerouteBubbledEvents, OverlayEvents.PositionedDescendants.Emitter,
+public class OverlayContainer extends Model
+		implements HasTag, Model.RerouteBubbledEvents,
+		OverlayEvents.PositionedDescendants.Reflector,
 		OverlayEvents.RefreshPositioning.Handler, PlaceChangeEvent.Handler,
 		ElementOffsetsRequired.SoleBehavior {
 	private final Overlay contents;
@@ -137,16 +138,17 @@ public class OverlayContainer extends Model implements HasTag,
 		if (!canPosition()) {
 			return;
 		}
-		if (containerOptions.position.requiresActualToRect()) {
-			/*
-			 * this double-wrapping seems a bit wobbly - but it's needed at the
-			 * moment
-			 */
-			Scheduler.get().scheduleDeferred(() -> Client.RenderState
-					.queueWithRenderedState(this::position0));
-		} else {
-			Scheduler.get().scheduleDeferred(this::position0);
-		}
+		/*
+		 * Because this can be called by (say) a mutation of the original
+		 * rectSourceElement, run twice - once ensuring offsets.
+		 * 
+		 * The double-run is inefficient but captures all cases
+		 * 
+		 * 
+		 */
+		Scheduler.get().scheduleDeferred(this::position0);
+		Scheduler.get().scheduleDeferred(() -> Client.RenderState
+				.queueWithRenderedState(this::position0));
 	}
 
 	void position0() {

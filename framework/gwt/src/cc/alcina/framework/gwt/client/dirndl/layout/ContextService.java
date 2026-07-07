@@ -71,5 +71,7 @@ public interface ContextService {
 
 		<CS extends ContextService> void registerService(Class<CS> service,
 				CS implementation);
+
+		boolean isBound();
 	}
 }

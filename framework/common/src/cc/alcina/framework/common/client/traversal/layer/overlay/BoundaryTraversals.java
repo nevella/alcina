@@ -1,15 +1,34 @@
 package cc.alcina.framework.common.client.traversal.layer.overlay;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.util.CountingMap;
 
 /**
+ * <p>
  * A simple combined document traversal measurement - tracking various boundary
  * traversals
+ * 
+ * <p>
+ * Note that instances are mutated during traversal, so to reuse a quota for fwd
+ * and back, clone() it
  */
-public class BoundaryTraversals {
+public class BoundaryTraversals implements Cloneable {
 	public enum Unit {
-		character, word, sentence, block, segment, document;
+		character, word, sentence, line, block, segment, document;
 	}
+
+	public BoundaryTraversals clone() {
+		BoundaryTraversals result = new BoundaryTraversals();
+		result.wordsPerLine = wordsPerLine;
+		result.counts = new CountingMap<>();
+		result.counts.putAll(counts);
+		return result;
+	}
+
+	public int wordsPerLine;
+
+	transient int wordsTraversedCurrentLine;
 
 	public CountingMap<Unit> counts = new CountingMap<>();
 
@@ -23,6 +42,11 @@ public class BoundaryTraversals {
 		return this;
 	}
 
+	public BoundaryTraversals withWordsPerLine(int wordsPerLine) {
+		this.wordsPerLine = wordsPerLine;
+		return this;
+	}
+
 	/**
 	 * 
 	 * @param unit
@@ -30,6 +54,22 @@ public class BoundaryTraversals {
 	 * @return false if the unit exists, and its count after decrement is zero
 	 */
 	public boolean decrement(Unit unit) {
+		if (counts.containsKey(Unit.line)) {
+			Preconditions.checkState(wordsPerLine != 0);
+			// lines are computed
+			if (unit == Unit.block) {
+				decrement(Unit.line);
+				decrement(Unit.line);
+			} else if (unit == Unit.word) {
+				if (++wordsTraversedCurrentLine == wordsPerLine) {
+					wordsTraversedCurrentLine = 0;
+					decrement(Unit.line);
+				}
+			}
+			if (counts.get(Unit.line) <= 0) {
+				return false;
+			}
+		}
 		if (!counts.containsKey(unit)) {
 			return true;
 		}

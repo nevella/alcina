@@ -7,8 +7,11 @@ import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DoublePair;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseMove;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
@@ -21,6 +24,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 public interface Draggable extends DomEvents.MouseDown.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.MouseMove.Handler {
+	/*
+	 * actually, no - we *don't* want to implement the HTML draggable interface
+	 */
+	// @Binding(type = Type.PROPERTY)
+	// default boolean isDraggable() {
+	// return true;
+	// }
 	/**
 	 * <p>
 	 * Model the delta from the most recent change (not the total delta)
@@ -92,19 +102,16 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 					nativeEvent.getClientX() - elemRect.left,
 					nativeEvent.getClientY() - elemRect.top);
 			lastPosition = startPosition;
-			if (Al.isBrowser()) {
-				DOM.setCapture(elem);
-			}
+			DOM.setCapture(elem);
 			nativeEvent.preventDefault();
+			Ax.out("START-RESIZE");
 		}
 
 		@Override
 		public void onMouseUp(MouseUp event) {
 			if (isResizing()) {
 				stopResizing();
-				if (Al.isBrowser()) {
-					DOM.releaseCapture(model.provideElement());
-				}
+				DOM.releaseCapture(model.provideElement());
 			}
 		}
 
@@ -119,9 +126,6 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 		@Override
 		public void onMouseMove(MouseMove event) {
 			if (isResizing()) {
-				if (Al.isBrowser()) {
-					assert DOM.getCaptureElement() != null;
-				}
 				NativeEvent nativeEvent = event.getContext()
 						.getOriginatingNativeEvent();
 				Element elem = model.provideElement();

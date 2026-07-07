@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.Draggable.Dragged;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.ZoomIn;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.ZoomOut;
@@ -82,7 +83,7 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 		}
 
 		public Knob() {
-			support = new Support(this);
+			support = new Draggable.Support(this);
 		}
 
 		@Override
@@ -103,13 +104,37 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 
 	public double value;
 
-	int tickCount;
+	int tickCount = 10;
 
 	@Binding(type = Type.STYLE_ATTRIBUTE, transform = Binding.UnitPx.class)
 	int width;
 
 	@Directed
-	Object line = new Object();
+	Line line = new Line();
+
+	class Line extends Model.All {
+		Extent extent = new Extent();
+
+		@TypedProperties
+		class Extent extends Model.All {
+			@Binding(
+				type = Type.STYLE_ATTRIBUTE,
+				transform = Binding.UnitPx.class)
+			int width;
+
+			PackageProperties._Slider_Line_Extent.InstanceProperties
+					properties() {
+				return PackageProperties.slider_line_extent.instance(this);
+			}
+
+			@Override
+			public void onNodeContext(NodeContext event) {
+				from(Slider.this.properties().value())
+						.map(v -> (int) (v * Slider.this.width))
+						.to(properties().width()).oneWay();
+			}
+		}
+	}
 
 	@Directed
 	List<Tick> ticks;
@@ -141,10 +166,15 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 
 	@Override
 	public void onDragged(Dragged event) {
+		updateValueFromNativeEventCoordinates(event);
 	}
 
 	@Override
 	public void onClick(Click event) {
+		updateValueFromNativeEventCoordinates(event);
+	}
+
+	void updateValueFromNativeEventCoordinates(NodeEvent event) {
 		NativeEvent nativeEvent = event.getContext()
 				.getOriginatingNativeEvent();
 		Element elem = provideElement();
@@ -168,7 +198,8 @@ public class Slider extends Model.Fields implements HandlesModelChange,
 	}
 
 	void deltaZoom(ModelEvent event, int i) {
-		double next = value + ((double) i) * 0.1;
+		double tickDelta = 1.0 / tickCount;
+		double next = value + ((double) i) * tickDelta;
 		next = Math.max(Math.min(next, 1.0), 0.0);
 		properties().value().set(next);
 		event.reemitAs(this, ModelEvents.Change.class, value);

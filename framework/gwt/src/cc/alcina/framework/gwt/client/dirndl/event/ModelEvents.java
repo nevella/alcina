@@ -529,6 +529,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Previous extends ModelEvent<Object, Previous.Handler> {
+		@Override
+		public void dispatch(Previous.Handler handler) {
+			handler.onPrevious(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPrevious(Previous event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onPrevious(Previous event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Refresh extends ModelEvent<Object, Refresh.Handler> {
 		@Override
 		public void dispatch(Refresh.Handler handler) {

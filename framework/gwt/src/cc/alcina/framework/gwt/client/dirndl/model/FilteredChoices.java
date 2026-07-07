@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @TypedProperties
 public class FilteredChoices<T> extends Model.Fields
-		implements ReflectedEvents.Filter.Emitter, ContextResolver.Has,
+		implements ReflectedEvents.Filter.Reflector, ContextResolver.Has,
 		ValueChange.Container, HandlesModelChange {
 	public static class To implements ModelTransform<List, FilteredChoices<?>> {
 		@Override

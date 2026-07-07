@@ -785,4 +785,10 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		}
 		return format.toString();
 	}
+
+	@Override
+	public boolean isBound() {
+		return rootModel != null && rootModel instanceof Model
+				&& ((Model) rootModel).provideIsBound();
+	}
 }

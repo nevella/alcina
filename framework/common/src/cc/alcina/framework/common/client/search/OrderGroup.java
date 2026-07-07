@@ -46,7 +46,8 @@ public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 	@XmlTransient
 	@AlcinaTransient
 	public OrderCriterion getSoleCriterion() {
-		if (getCriteria().iterator().hasNext()) {
+		if (getCriteria().iterator().hasNext()
+				&& !TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS.is()) {
 			return getCriteria().iterator().next();
 		}
 		return null;
@@ -85,8 +86,7 @@ public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 		@Override
 		public void onBeforeTreeSerialize() {
 			if (serializable.getCriteria().size() > 1) {
-				if (LooseContext
-						.is(TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS)) {
+				if (TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS.is()) {
 				} else if (LooseContext
 						.is(OrderGroup.CONTEXT_PRUNE_BEFORE_SERIALIZE)) {
 					Iterator<OrderCriterion> itr = serializable.getCriteria()

@@ -50,7 +50,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @DirectedContextResolver
 class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		HasObject, DecoratorNode.AlllowsPartialSelection,
-		ReflectedEvents.FocusEditor.Emitter,
+		ReflectedEvents.FocusEditor.Reflector,
 		DecoratorNode.EditableDecoratorContents {
 	/**
 	 * Although these are implemented in .sass, this documents *why* they are so

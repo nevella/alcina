@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 
 /**
@@ -41,61 +42,66 @@ public class OffsetProtocol {
 		Map<AttachId, ElementOffsets> attachIdOffsets = AlcinaCollections
 				.newLinkedHashMap();
 
-		Map<AttachId, ElementOffsets> descendantOfRelativeFixed = AlcinaCollections
+		Map<AttachId, ElementOffsets> descendantOfRelativeFixedOffsets = AlcinaCollections
 				.newLinkedHashMap();
 
-		Set<AttachId> descendantRelativeNotFixed = AlcinaCollections
-				.newHashSet();
+		/*
+		 * null value means no relativeFixed ancestor
+		 */
+		Map<AttachId, AttachId> descendantToRelativeFixed = AlcinaCollections
+				.newLinkedHashMap();
 
-		Set<AttachId> descendantRelativeFixed = AlcinaCollections.newHashSet();
+		/*
+		 * inverse of descendantToRelativeFixed
+		 */
+		Multimap<AttachId, List<AttachId>> relativeFixedDescendant = new Multimap<>();
 
 		Set<AttachId> lastObserved = AlcinaCollections.newHashSet();
 
 		public ElementOffsets getOffsetsWithInvariant(Node node) {
 			AttachId attachId = AttachId.forNode(node);
-			ElementOffsets invariant = descendantOfRelativeFixed.get(attachId);
+			ElementOffsets invariant = descendantOfRelativeFixedOffsets
+					.get(attachId);
 			if (invariant != null) {
 				return invariant;
 			}
 			ElementOffsets computed = ElementOffsets.of(node);
 			attachIdOffsets.put(attachId, computed);
 			if (node instanceof Element) {
-				List<DomNode> ascent = new ArrayList<>();
+				List<AttachId> ascent = new ArrayList<>();
 				DomNode cursor = node.asDomNode();
 				boolean fixed = false;
+				AttachId descendantRelativeFixedAncestorId = null;
 				while (cursor.isElement()) {
 					if (cursor.hasBehavior(
 							ElementOffsetsRequired.DescendantRelativeFixed.class)) {
+						descendantRelativeFixedAncestorId = cursor.attachId();
 						fixed = true;
 						break;
 					}
 					AttachId cursorId = cursor.attachId();
-					if (descendantRelativeFixed.contains(cursorId)) {
-						fixed = true;
+					if (descendantToRelativeFixed.containsKey(cursorId)) {
+						descendantRelativeFixedAncestorId = descendantToRelativeFixed
+								.get(cursorId);
+						fixed = descendantRelativeFixedAncestorId != null;
 						break;
 					}
-					if (descendantRelativeNotFixed.contains(cursorId)) {
-						fixed = false;
-						break;
-					}
-					if (descendantOfRelativeFixed.containsKey(cursorId)) {
-						fixed = true;
-						break;
-					}
-					ascent.add(cursor);
+					ascent.add(cursor.attachId());
 					cursor = cursor.parent();
 				}
 				if (!node.asDomNode().hasBehavior(
 						ElementOffsetsRequired.DescendantRelativeFixed.class)) {
 					if (fixed) {
-						descendantOfRelativeFixed.put(attachId, computed);
+						descendantOfRelativeFixedOffsets.put(attachId,
+								computed);
 					}
-					for (DomNode ascentNode : ascent) {
-						if (!fixed) {
-							descendantRelativeNotFixed
-									.add(ascentNode.attachId());
-						} else {
-							descendantRelativeFixed.add(ascentNode.attachId());
+					for (AttachId ascentId : ascent) {
+						descendantToRelativeFixed.put(ascentId,
+								descendantRelativeFixedAncestorId);
+						if (descendantRelativeFixedAncestorId != null) {
+							relativeFixedDescendant.add(
+									descendantRelativeFixedAncestorId,
+									ascentId);
 						}
 					}
 				}
@@ -109,6 +115,7 @@ public class OffsetProtocol {
 			Set<AttachId> removed = lastObserved;
 			Set<AttachId> observedIds = AlcinaCollections.newHashSet();
 			result.changes = new ArrayList<>();
+			invalidateRemovedDescendantInvariants();
 			observedElementTree.forEach(elem -> {
 				AttachId observedId = AttachId.forNode(elem);
 				observedIds.add(observedId);
@@ -123,12 +130,32 @@ public class OffsetProtocol {
 				result.changes.add(offsets);
 			});
 			attachIdOffsets.keySet().removeAll(removed);
-			descendantOfRelativeFixed.keySet().removeAll(removed);
-			descendantRelativeFixed.removeAll(removed);
-			descendantRelativeNotFixed.removeAll(removed);
+			descendantOfRelativeFixedOffsets.keySet().removeAll(removed);
+			descendantToRelativeFixed.keySet().removeAll(removed);
 			result.removed = removed;
 			lastObserved = observedIds;
 			return result;
+		}
+
+		/*
+		 * note this doesn't handle invalidation of NON-descendant fixed, but
+		 * that's just a performance, not logic issue
+		 */
+		void invalidateRemovedDescendantInvariants() {
+			List<AttachId> removed = relativeFixedDescendant.keySet().stream()
+					.filter(e -> e.isDetached() || e.node() == null
+							|| !((Element) e.node()).hasBehavior(
+									ElementOffsetsRequired.DescendantRelativeFixed.class))
+					.toList();
+			removed.forEach(removedId -> {
+				List<AttachId> descendants = relativeFixedDescendant
+						.remove(removedId);
+				relativeFixedDescendant.remove(removedId);
+				descendants.forEach(descId -> {
+					descendantOfRelativeFixedOffsets.remove(descId);
+					descendantToRelativeFixed.remove(descId);
+				});
+			});
 		}
 
 		public void update(OffsetsDelta offsetsDelta) {

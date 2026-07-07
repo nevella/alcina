@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.story.Waypoints;
 @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._DefinitionEditor.class)
 @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._CriterionSelectDelete.class)
 @Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._HintBehavior.class)
+@Decl.Child(Point_GalleryBrowser_SearchDefinitionEditor._CriterionDeleteWithKeyboard.class)
 @Feature.Ref(Feature_Dirndl_SearchDefinitionEditor.class)
 public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	static final String XPATH_CREATED_FROM_TITLE = "//search-definition-editor//searchable[@criterion-class='CreatedFromCriterion']/name";
@@ -42,20 +43,21 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 
 	@Decl.Child(_Reset.class)
 	@Decl.Child(_DefinitionOperator.ClickCreatedFromOperator.class)
-	static class _DefinitionOperator extends Waypoint {
+	public static class _DefinitionOperator extends Waypoint {
 		@Decl.Location.Xpath(XPATH_CREATED_FROM_OPERATOR)
 		@Decl.Action.UI.Click
 		static class ClickCreatedFromOperator extends Waypoint {
 		}
 	}
 
+	@Decl.Location.Xpath(XPATH_EDIT_AREA)
+	@Decl.Action.UI.SelectArea(fromX = 300, fromY = -5, toX = 340, toY = 10)
+	static class _ClickEditArea extends Waypoint {
+	}
+
 	@Decl.Child(_Reset.class)
-	@Decl.Child(_HintBehavior.ClickEditArea.class)
-	static class _HintBehavior extends Waypoint {
-		@Decl.Location.Xpath(XPATH_EDIT_AREA)
-		@Decl.Action.UI.SelectArea(fromX = 300, fromY = -5, toX = 340, toY = 10)
-		static class ClickEditArea extends Waypoint {
-		}
+	@Decl.Child(_ClickEditArea.class)
+	public static class _HintBehavior extends Waypoint {
 	}
 
 	@Decl.Child(_Reset.class)
@@ -66,7 +68,7 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	/*
 	 * restore
 	 */
-	static class _CriterionSelectDelete extends Waypoint {
+	public static class _CriterionSelectDelete extends Waypoint {
 		@Decl.Location.Xpath(XPATH_CREATED_FROM_TITLE)
 		@Decl.Action.UI.Click
 		static class ClickCreatedFrom extends Waypoint {
@@ -76,6 +78,16 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 		@Decl.Action.UI.AwaitAbsent
 		static class AwaitCreatedFromAbsent extends Waypoint {
 		}
+	}
+
+	@Decl.Child(_Reset.class)
+	@Decl.Child(_ClickEditArea.class)
+	@Decl.Child(Waypoints.Wait250.class)
+	@Decl.Child(Waypoints.SendKeyBackspace.class)
+	/*
+	 * also checks overlay repositioning
+	 */
+	public static class _CriterionDeleteWithKeyboard extends Waypoint {
 	}
 
 	@Decl.Child(_Reset.class)
@@ -107,7 +119,7 @@ public class Point_GalleryBrowser_SearchDefinitionEditor extends Waypoint {
 	@Decl.Child(_DefinitionEditor.EnterOnCreatedFromText.class)
 	@Decl.Child(_DefinitionEditor.EnterOnCurrentFocus.class)
 	@Decl.Child(_DefinitionEditor.TestGoButtonIsDisabled.class)
-	static class _DefinitionEditor extends Waypoint {
+	public static class _DefinitionEditor extends Waypoint {
 		@Decl.Location.Xpath(XPATH_CREATED_FROM_INPUT)
 		@Decl.Action.UI.Click
 		static class ClickCreatedFrom extends Waypoint {

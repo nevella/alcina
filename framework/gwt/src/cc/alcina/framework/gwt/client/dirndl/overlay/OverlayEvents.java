@@ -2,15 +2,16 @@ package cc.alcina.framework.gwt.client.dirndl.overlay;
 
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 
 public class OverlayEvents {
 	public static class PositionedDescendants extends
-			ModelEvent.ReflectedEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
+			ReflectedEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Reflector> {
 		public interface Handler extends NodeEvent.Handler {
 			void onPositionedDescendants(PositionedDescendants event);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		@Override

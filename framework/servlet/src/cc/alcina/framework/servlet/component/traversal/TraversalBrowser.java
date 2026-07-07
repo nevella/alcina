@@ -25,7 +25,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpContentProvider;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelCatchallHandler;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
@@ -34,7 +33,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
@@ -147,15 +145,14 @@ public class TraversalBrowser {
 		@Override
 		public void init() {
 			FmsForm.registerImplementations();
-			StatusModule.get();
 			Registry.register().singleton(HelpContentProvider.class,
 					new HelpContentProviderImpl());
 			EnvironmentRegistry.registerEnvironmentOptionals(
 					TraversalCommand.ReloadApp.HandlerImpl.class);
 		}
 
-		public static class TopLevelCatchallHandlerImpl
-				extends ModelEvent.TopLevelCatchallHandler.MissedEventEmitter {
+		public static class TopLevelCatchallHandlerImpl extends
+				ModelEvent.TopLevelCatchallHandler.MissedEventReflector {
 		}
 
 		@Override
@@ -188,7 +185,7 @@ public class TraversalBrowser {
 			layout.render(resolver(), rootArea).getRendered().appendToRoot();
 			Registry.register().singleton(TopLevelCatchallHandler.class,
 					new TopLevelCatchallHandlerImpl()
-							.withEmittingModel(rootArea));
+							.withReflectingModel(rootArea));
 			return layout;
 		}
 

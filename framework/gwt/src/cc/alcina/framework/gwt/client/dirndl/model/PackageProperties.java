@@ -32,15 +32,20 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    public static _Choices choices = new _Choices();
     static _Choices_Category choices_category = new _Choices_Category();
     public static _Choices_Choice choices_choice = new _Choices_Choice();
     public static _Choices_Multiple choices_multiple = new _Choices_Multiple();
     public static _Choices_MultipleSelect choices_multipleSelect = new _Choices_MultipleSelect();
+    public static _Choices_Select choices_select = new _Choices_Select();
     public static _Choices_SelectResolver_Option choices_selectResolver_option = new _Choices_SelectResolver_Option();
+    public static _Choices_Single choices_single = new _Choices_Single();
+    public static _Choices_Single_Delegating choices_single_delegating = new _Choices_Single_Delegating();
     public static _ChoicesDropdown choicesDropdown = new _ChoicesDropdown();
     public static _CollectionDeltaModel collectionDeltaModel = new _CollectionDeltaModel();
     static _CollectionDeltaModel_RelativeInsert collectionDeltaModel_relativeInsert = new _CollectionDeltaModel_RelativeInsert();
     public static _DomainViewTree_DomainViewNode domainViewTree_domainViewNode = new _DomainViewTree_DomainViewNode();
+    static _Dropdown_LabelArrow dropdown_labelArrow = new _Dropdown_LabelArrow();
     public static _FilteredChoices filteredChoices = new _FilteredChoices();
     public static _HeadingActions headingActions = new _HeadingActions();
     public static _Link link = new _Link();
@@ -54,6 +59,27 @@ public class PackageProperties {
     public static _Tree_PathNode tree_pathNode = new _Tree_PathNode();
     public static _Tree_TreeNode tree_treeNode = new _Tree_TreeNode();
     public static _Tree_TreeNode_BasicNode tree_treeNode_basicNode = new _Tree_TreeNode_BasicNode();
+    
+    public static class _Choices implements TypedProperty.Container {
+      public TypedProperty<Choices, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.class, "changeOnSelectionEvent");
+      public TypedProperty<Choices, List> choices = new TypedProperty<>(Choices.class, "choices");
+      public TypedProperty<Choices, List> elements = new TypedProperty<>(Choices.class, "elements");
+      public TypedProperty<Choices, Boolean> repeatableChoices = new TypedProperty<>(Choices.class, "repeatableChoices");
+      public TypedProperty<Choices, List> values = new TypedProperty<>(Choices.class, "values");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices> {
+        public  InstanceProperties(Choices source){super(source);}
+        public InstanceProperty<Choices, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices.changeOnSelectionEvent);}
+        public InstanceProperty<Choices, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices.choices);}
+        public InstanceProperty<Choices, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices.elements);}
+        public InstanceProperty<Choices, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices.repeatableChoices);}
+        public InstanceProperty<Choices, List> values(){return new InstanceProperty<>(source,PackageProperties.choices.values);}
+      }
+      
+      public  InstanceProperties instance(Choices instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
     
     static class _Choices_Category implements TypedProperty.Container {
       TypedProperty<Choices.Category, String> category = new TypedProperty<>(Choices.Category.class, "category");
@@ -123,6 +149,7 @@ public class PackageProperties {
       public TypedProperty<Choices.MultipleSelect, Boolean> hasValueSupplier = new TypedProperty<>(Choices.MultipleSelect.class, "hasValueSupplier");
       public TypedProperty<Choices.MultipleSelect, Boolean> multiple = new TypedProperty<>(Choices.MultipleSelect.class, "multiple");
       public TypedProperty<Choices.MultipleSelect, Boolean> nodeContextPopulated = new TypedProperty<>(Choices.MultipleSelect.class, "nodeContextPopulated");
+      public TypedProperty<Choices.MultipleSelect, String> placeholder = new TypedProperty<>(Choices.MultipleSelect.class, "placeholder");
       public TypedProperty<Choices.MultipleSelect, Boolean> repeatableChoices = new TypedProperty<>(Choices.MultipleSelect.class, "repeatableChoices");
       public TypedProperty<Choices.MultipleSelect, List> selectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "selectedValues");
       public TypedProperty<Choices.MultipleSelect, List> unboundSelectedValues = new TypedProperty<>(Choices.MultipleSelect.class, "unboundSelectedValues");
@@ -136,6 +163,7 @@ public class PackageProperties {
         public InstanceProperty<Choices.MultipleSelect, Boolean> hasValueSupplier(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.hasValueSupplier);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> multiple(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.multiple);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> nodeContextPopulated(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.nodeContextPopulated);}
+        public InstanceProperty<Choices.MultipleSelect, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.placeholder);}
         public InstanceProperty<Choices.MultipleSelect, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.repeatableChoices);}
         public InstanceProperty<Choices.MultipleSelect, List> selectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.selectedValues);}
         public InstanceProperty<Choices.MultipleSelect, List> unboundSelectedValues(){return new InstanceProperty<>(source,PackageProperties.choices_multipleSelect.unboundSelectedValues);}
@@ -144,6 +172,35 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(Choices.MultipleSelect instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Choices_Select implements TypedProperty.Container {
+      public TypedProperty<Choices.Select, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.Select.class, "changeOnSelectionEvent");
+      public TypedProperty<Choices.Select, List> choices = new TypedProperty<>(Choices.Select.class, "choices");
+      public TypedProperty<Choices.Select, Boolean> deselectIfSelectedClicked = new TypedProperty<>(Choices.Select.class, "deselectIfSelectedClicked");
+      public TypedProperty<Choices.Select, List> elements = new TypedProperty<>(Choices.Select.class, "elements");
+      public TypedProperty<Choices.Select, Object> provisionalValue = new TypedProperty<>(Choices.Select.class, "provisionalValue");
+      public TypedProperty<Choices.Select, Boolean> repeatableChoices = new TypedProperty<>(Choices.Select.class, "repeatableChoices");
+      public TypedProperty<Choices.Select, Object> selectedValue = new TypedProperty<>(Choices.Select.class, "selectedValue");
+      public TypedProperty<Choices.Select, Object> value = new TypedProperty<>(Choices.Select.class, "value");
+      public TypedProperty<Choices.Select, List> values = new TypedProperty<>(Choices.Select.class, "values");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices.Select> {
+        public  InstanceProperties(Choices.Select source){super(source);}
+        public InstanceProperty<Choices.Select, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_select.changeOnSelectionEvent);}
+        public InstanceProperty<Choices.Select, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_select.choices);}
+        public InstanceProperty<Choices.Select, Boolean> deselectIfSelectedClicked(){return new InstanceProperty<>(source,PackageProperties.choices_select.deselectIfSelectedClicked);}
+        public InstanceProperty<Choices.Select, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_select.elements);}
+        public InstanceProperty<Choices.Select, Object> provisionalValue(){return new InstanceProperty<>(source,PackageProperties.choices_select.provisionalValue);}
+        public InstanceProperty<Choices.Select, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_select.repeatableChoices);}
+        public InstanceProperty<Choices.Select, Object> selectedValue(){return new InstanceProperty<>(source,PackageProperties.choices_select.selectedValue);}
+        public InstanceProperty<Choices.Select, Object> value(){return new InstanceProperty<>(source,PackageProperties.choices_select.value);}
+        public InstanceProperty<Choices.Select, List> values(){return new InstanceProperty<>(source,PackageProperties.choices_select.values);}
+      }
+      
+      public  InstanceProperties instance(Choices.Select instance) {
         return new InstanceProperties( instance);
       }
       
@@ -165,6 +222,64 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(Choices.SelectResolver.Option instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Choices_Single implements TypedProperty.Container {
+      public TypedProperty<Choices.Single, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.Single.class, "changeOnSelectionEvent");
+      public TypedProperty<Choices.Single, List> choices = new TypedProperty<>(Choices.Single.class, "choices");
+      public TypedProperty<Choices.Single, Boolean> deselectIfSelectedClicked = new TypedProperty<>(Choices.Single.class, "deselectIfSelectedClicked");
+      public TypedProperty<Choices.Single, List> elements = new TypedProperty<>(Choices.Single.class, "elements");
+      public TypedProperty<Choices.Single, Object> provisionalValue = new TypedProperty<>(Choices.Single.class, "provisionalValue");
+      public TypedProperty<Choices.Single, Boolean> repeatableChoices = new TypedProperty<>(Choices.Single.class, "repeatableChoices");
+      public TypedProperty<Choices.Single, Object> selectedValue = new TypedProperty<>(Choices.Single.class, "selectedValue");
+      public TypedProperty<Choices.Single, Object> value = new TypedProperty<>(Choices.Single.class, "value");
+      public TypedProperty<Choices.Single, List> values = new TypedProperty<>(Choices.Single.class, "values");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices.Single> {
+        public  InstanceProperties(Choices.Single source){super(source);}
+        public InstanceProperty<Choices.Single, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_single.changeOnSelectionEvent);}
+        public InstanceProperty<Choices.Single, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_single.choices);}
+        public InstanceProperty<Choices.Single, Boolean> deselectIfSelectedClicked(){return new InstanceProperty<>(source,PackageProperties.choices_single.deselectIfSelectedClicked);}
+        public InstanceProperty<Choices.Single, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_single.elements);}
+        public InstanceProperty<Choices.Single, Object> provisionalValue(){return new InstanceProperty<>(source,PackageProperties.choices_single.provisionalValue);}
+        public InstanceProperty<Choices.Single, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_single.repeatableChoices);}
+        public InstanceProperty<Choices.Single, Object> selectedValue(){return new InstanceProperty<>(source,PackageProperties.choices_single.selectedValue);}
+        public InstanceProperty<Choices.Single, Object> value(){return new InstanceProperty<>(source,PackageProperties.choices_single.value);}
+        public InstanceProperty<Choices.Single, List> values(){return new InstanceProperty<>(source,PackageProperties.choices_single.values);}
+      }
+      
+      public  InstanceProperties instance(Choices.Single instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _Choices_Single_Delegating implements TypedProperty.Container {
+      public TypedProperty<Choices.Single.Delegating, Boolean> changeOnSelectionEvent = new TypedProperty<>(Choices.Single.Delegating.class, "changeOnSelectionEvent");
+      public TypedProperty<Choices.Single.Delegating, List> choices = new TypedProperty<>(Choices.Single.Delegating.class, "choices");
+      public TypedProperty<Choices.Single.Delegating, Boolean> deselectIfSelectedClicked = new TypedProperty<>(Choices.Single.Delegating.class, "deselectIfSelectedClicked");
+      public TypedProperty<Choices.Single.Delegating, List> elements = new TypedProperty<>(Choices.Single.Delegating.class, "elements");
+      public TypedProperty<Choices.Single.Delegating, Object> provisionalValue = new TypedProperty<>(Choices.Single.Delegating.class, "provisionalValue");
+      public TypedProperty<Choices.Single.Delegating, Boolean> repeatableChoices = new TypedProperty<>(Choices.Single.Delegating.class, "repeatableChoices");
+      public TypedProperty<Choices.Single.Delegating, Object> selectedValue = new TypedProperty<>(Choices.Single.Delegating.class, "selectedValue");
+      public TypedProperty<Choices.Single.Delegating, Object> value = new TypedProperty<>(Choices.Single.Delegating.class, "value");
+      public TypedProperty<Choices.Single.Delegating, List> values = new TypedProperty<>(Choices.Single.Delegating.class, "values");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Choices.Single.Delegating> {
+        public  InstanceProperties(Choices.Single.Delegating source){super(source);}
+        public InstanceProperty<Choices.Single.Delegating, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.changeOnSelectionEvent);}
+        public InstanceProperty<Choices.Single.Delegating, List> choices(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.choices);}
+        public InstanceProperty<Choices.Single.Delegating, Boolean> deselectIfSelectedClicked(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.deselectIfSelectedClicked);}
+        public InstanceProperty<Choices.Single.Delegating, List> elements(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.elements);}
+        public InstanceProperty<Choices.Single.Delegating, Object> provisionalValue(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.provisionalValue);}
+        public InstanceProperty<Choices.Single.Delegating, Boolean> repeatableChoices(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.repeatableChoices);}
+        public InstanceProperty<Choices.Single.Delegating, Object> selectedValue(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.selectedValue);}
+        public InstanceProperty<Choices.Single.Delegating, Object> value(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.value);}
+        public InstanceProperty<Choices.Single.Delegating, List> values(){return new InstanceProperty<>(source,PackageProperties.choices_single_delegating.values);}
+      }
+      
+      public  InstanceProperties instance(Choices.Single.Delegating instance) {
         return new InstanceProperties( instance);
       }
       
@@ -253,6 +368,21 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(DomainViewTree.DomainViewNode instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    static class _Dropdown_LabelArrow implements TypedProperty.Container {
+      TypedProperty<Dropdown.LabelArrow, Dropdown.LabelArrow.Arrow> arrow = new TypedProperty<>(Dropdown.LabelArrow.class, "arrow");
+      TypedProperty<Dropdown.LabelArrow, Object> label = new TypedProperty<>(Dropdown.LabelArrow.class, "label");
+      static class InstanceProperties extends 	InstanceProperty.Container<Dropdown.LabelArrow> {
+         InstanceProperties(Dropdown.LabelArrow source){super(source);}
+        InstanceProperty<Dropdown.LabelArrow, Dropdown.LabelArrow.Arrow> arrow(){return new InstanceProperty<>(source,PackageProperties.dropdown_labelArrow.arrow);}
+        InstanceProperty<Dropdown.LabelArrow, Object> label(){return new InstanceProperty<>(source,PackageProperties.dropdown_labelArrow.label);}
+      }
+      
+       InstanceProperties instance(Dropdown.LabelArrow instance) {
         return new InstanceProperties( instance);
       }
       

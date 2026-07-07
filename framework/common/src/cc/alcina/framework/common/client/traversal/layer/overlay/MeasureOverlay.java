@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token.DocumentElementToken;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.overlay.BoundaryParser.ExtendResult;
@@ -167,6 +168,7 @@ public class MeasureOverlay {
 	/**
 	 * A measure to be extended
 	 */
+	@Reflected
 	static class ExtendMeasureSelection extends MeasureSelection {
 		BoundaryTraversals quota;
 
@@ -470,5 +472,10 @@ public class MeasureOverlay {
 
 	Element getElement() {
 		return getPositioningElement().gwtElement();
+	}
+
+	public void mergeExtensionRanges(List<ExtendResult> extendResults) {
+		extendResults.stream().filter(Objects::nonNull)
+				.forEach(er -> mergeExtensionRange(er.measure));
 	}
 }

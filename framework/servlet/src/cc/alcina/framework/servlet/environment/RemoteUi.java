@@ -30,6 +30,7 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivityManager;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete.EnvironmentSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
@@ -206,8 +207,11 @@ public interface RemoteUi {
 		/*
 		 * this binds the statusmodule observer to observe all
 		 * NotificationObservables at the correct context level
+		 * 
+		 * ditto overlaypositions (to a different 'global context' observable)
 		 */
 		StatusModule.get();
+		OverlayPositions.get();
 		GWT.setUncaughtExceptionHandler(
 				StatusModule.createUncaughtExceptionHandler());
 	}

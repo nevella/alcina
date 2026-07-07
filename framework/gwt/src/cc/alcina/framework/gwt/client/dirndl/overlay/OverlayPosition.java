@@ -153,13 +153,24 @@ public class OverlayPosition {
 	}
 
 	void apply() {
+		if (rectSourceElement != null) {
+			/*
+			 * refresh, in case this a refresh call
+			 */
+			fromRect = rectSourceElement.getBoundingClientRect();
+		}
 		// allow exactly one of {viewportRelative,non-empty constraints}
 		Preconditions
 				.checkState(viewportRelative != null ^ constraints.size() > 0);
 		if (viewportRelative != null) {
 			return;
 		}
-		Preconditions.checkState(fromRect != null);
+		if (fromRect == null) {
+			/*
+			 * detached
+			 */
+			return;
+		}
 		if (equalWidths) {
 			toElement.getStyle().setWidth(fromRect.width, Unit.PX);
 		}
@@ -168,6 +179,9 @@ public class OverlayPosition {
 			if (parentFixed) {
 				toRect = DomRect.fromOrigin(toRect.width, toRect.height);
 			} else {
+			}
+			if (toRect == null) {
+				return;
 			}
 		} else {
 			// will return a [0,0,0,0] domRect - which is fine if positioning
@@ -294,11 +308,23 @@ public class OverlayPosition {
 
 		void apply() {
 			DoublePair fromLine = line(fromRect);
-			DoublePair toLine = line(toRect);
 			double fromOffset = pos(fromLine, from);
-			double toOffset = pos(toLine, to);
-			double delta = fromOffset - toOffset + paddingPx;
-			set(delta);
+			double toOffset = computeToOffset(fromOffset);
+			set(toOffset);
+		}
+
+		double computeToOffset(double fromOffset) {
+			switch (to) {
+			case START:
+				return fromOffset + paddingPx;
+			case END:
+				return fromOffset - paddingPx;
+			case CENTER:
+				DoublePair toRectLine = line(toRect);
+				return fromOffset - (toRectLine.length() / 2.0);
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		private DoublePair line(DomRect rect) {

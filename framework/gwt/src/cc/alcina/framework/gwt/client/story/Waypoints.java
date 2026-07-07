@@ -59,8 +59,18 @@ public class Waypoints {
 	}
 
 	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.DOWN)
+	public static class SendKeyDownArrow extends Waypoint {
+	}
+
+	@Decl.Location.CurrentFocus
 	@Decl.Action.UI.KeyConstant(SeleniumKeys.DELETE)
 	public static class SendKeyDelete extends Waypoint {
+	}
+
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.BACK_SPACE)
+	public static class SendKeyBackspace extends Waypoint {
 	}
 
 	/*

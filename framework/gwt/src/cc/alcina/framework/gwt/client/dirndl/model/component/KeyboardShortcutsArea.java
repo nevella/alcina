@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  */
 @Feature.Ref(Feature_Dirndl_Documentation.DesignNotes.class)
 public class KeyboardShortcutsArea extends Model.All
-		implements ReflectedEvents.Filter.Emitter {
+		implements ReflectedEvents.Filter.Reflector {
 	public Heading heading = new Heading("Keyboard Shortcuts");
 
 	@FocusOnBindMarker

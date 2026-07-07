@@ -298,6 +298,9 @@ public class StreamBinding<T> {
 	 * Add an intermediate mapping to the pipeline
 	 */
 	public <U> StreamBinding<U> map(Function<T, U> map) {
+		if (this.map != null) {
+			map = ((Function) this.map).andThen(map);
+		}
 		this.map = (Function) map;
 		return (StreamBinding<U>) this;
 	}

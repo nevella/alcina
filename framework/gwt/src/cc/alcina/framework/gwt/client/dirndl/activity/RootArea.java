@@ -42,7 +42,7 @@ public class RootArea extends Model.Fields
 		implements ModelEvent.DelegatesDispatch,
 		// implemented here (for hookup), but actual dispatch is done by the
 		// dispatch delegate (which must also implement this interface)
-		ReflectedEvents.TopLevelMissedEvent.Emitter {
+		ReflectedEvents.TopLevelMissedEvent.Reflector {
 	public static transient PackageProperties._RootArea properties = PackageProperties.rootArea;
 
 	@Directed

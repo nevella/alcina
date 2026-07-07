@@ -45,7 +45,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionT
 @TypeSerialization(reflectiveSerializable = false)
 public class SelectionTableArea extends Model.Fields
 		implements TableEvents.RowClicked.Handler, IfNotEqual,
-		TableColumnsMetadata.Change.Emitter,
+		TableColumnsMetadata.Change.Reflector,
 		TableColumnsMetadata.EditFilter.Handler,
 		LayoutEvents.EmitDescent.Handler, SuggestionSelected.Handler {
 	@Directed.Transform(TableView.class)

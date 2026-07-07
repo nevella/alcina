@@ -110,6 +110,18 @@ public final class WindowState {
 					result.offsetWidth = elem.getOffsetWidth();
 					result.scrollLeft = elem.getScrollLeft();
 					result.scrollTop = elem.getScrollTop();
+					if (elem.hasTagName("li") && Objects
+							.equals(elem.getAttribute("value"), "124")) {
+						Ax.out("124");
+						Ax.out(elem.asDomNode().toMarkup());
+						int debug = 3;
+						if (result.offsetWidth == 0 && result.offsetHeight == 0
+								&& elem.hasTagName("li")) {
+							Ax.out("124-zero");
+						} else {
+							Ax.out("124-nonzero");
+						}
+					}
 				}
 				return result;
 			}

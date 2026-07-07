@@ -14,6 +14,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.extras.webdriver.query.ElementQuery;
+import cc.alcina.extras.webdriver.story.WdActionPerformer.TypedPerformer;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
@@ -359,6 +360,24 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 						.clickAndHold()
 						.moveToElement(elem, action.toX, action.toY).release()
 						.build().perform();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	public static class DragAndDropBy
+			implements TypedPerformer<Story.Action.Ui.DragAndDropBy> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.DragAndDropBy action) throws Exception {
+			WdExec exec = wdPerformer.wdContext.exec;
+			ElementQuery query = WdActionPerformer.createQuery(wdPerformer);
+			WebElement elem = query.getElement();
+			try {
+				Actions actions = exec.actions();
+				actions.dragAndDropBy(elem, action.x, action.y).build()
+						.perform();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

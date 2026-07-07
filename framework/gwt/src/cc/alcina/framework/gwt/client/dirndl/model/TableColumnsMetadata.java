@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
@@ -24,12 +25,12 @@ public interface TableColumnsMetadata {
 	}
 
 	public static class Change extends
-			ModelEvent.ReflectedEvent<TableColumnsMetadata, Change.Handler, Change.Emitter> {
+			ReflectedEvent<TableColumnsMetadata, Change.Handler, Change.Reflector> {
 		public interface Handler extends NodeEvent.Handler {
 			void onTableColumnMetadataChange(Change event);
 		}
 
-		public interface Emitter extends ModelEvent.Emitter {
+		public interface Reflector extends ModelEvent.Reflector {
 		}
 
 		@Override

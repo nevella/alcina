@@ -15,6 +15,10 @@ public interface InternalAnchorHistoryRouter extends Click.Handler {
 	default void onClick(Click event) {
 		NativeEvent nativeEvent = event.getContext()
 				.getOriginatingNativeEvent();
+		handleNativeEvent(nativeEvent);
+	}
+
+	default void handleNativeEvent(NativeEvent nativeEvent) {
 		EventTarget eventTarget = nativeEvent.getEventTarget();
 		if (Element.is(eventTarget)) {
 			Element elem = Element.as(eventTarget);

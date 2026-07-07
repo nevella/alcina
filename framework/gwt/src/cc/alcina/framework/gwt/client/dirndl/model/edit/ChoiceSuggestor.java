@@ -82,6 +82,9 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 		protected void handleSuggestionResponse(StringAsk ask,
 				Consumer<Answers> answersHandler,
 				SuggestOracle.Response response) {
+			if (provideIsUnbound()) {
+				return;
+			}
 			Collection<? extends Suggestion> suggestions = response
 					.getSuggestions();
 			List<?> suggestedObjects = suggestions.stream()
@@ -97,13 +100,17 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 			List<Choice> choices = suggestedObjects.stream().map(Choice::new)
 					.collect(Collectors.toList());
 			StringAskAnswer<Choice> router = new StringAskAnswer<>();
+			boolean keyboardSelectFirst = false;
 			if (choiceEditor.suggestOracleRouter != null) {
 				// pre-filtered
+				keyboardSelectFirst = ask.getValue().length() > 0
+						&& choices.size() > 0;
 				ask = new StringAsk();
 				ask.setValue("");
 			}
 			Answers answers = router.ask(ask, choices, Object::toString,
 					valueTransformer);
+			answers.keyboardSelectFirst = keyboardSelectFirst;
 			answersHandler.accept(answers);
 		}
 	}

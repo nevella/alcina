@@ -549,7 +549,12 @@ class ClientExecutionQueue implements Runnable {
 					transportLayer.flush();
 					synchronized (asyncDispatchQueue) {
 						if (asyncDispatchQueue.isEmpty()) {
-							asyncDispatchQueue.wait(1000);
+							/*
+							 * REVISIT - this ... should be higher? but can
+							 * cause ...ahh, maybe render pauses. Clearly, there
+							 * shouldn't be a timeout
+							 */
+							asyncDispatchQueue.wait(20);
 						}
 					}
 				}

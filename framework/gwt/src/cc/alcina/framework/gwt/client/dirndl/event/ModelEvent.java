@@ -190,33 +190,9 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		return (M) this;
 	}
 
-	/**
-	 * <p>
-	 * The event should be routed to descendant-or-self nodes, rather than
-	 * ancestors-or-self. The original source of the event may be the Emitter,
-	 * or a descendant of the Emitter (the event 'ascends' to the emitter and is
-	 * handled by 0,n descendants of the emitter - i.e. members of the node
-	 * subtree rooted in the emitter - hence 'reflected')
-	 * 
-	 * <p>
-	 * Note that the emitter of a reflected event can itself be a handler
-	 */
-	public abstract static class ReflectedEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
-			extends ModelEvent<T, H> {
-		public Class<E> getEmitterClass() {
-			return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
-		}
-
-		/*
-		 * don't dispatch this on attach of subsequent listeners
-		 */
-		public interface NotStored {
-		}
-	}
-
 	// Marker interface - for descendant events, the receiver (handler) will
 	// bind to the nearest ancestor with this type
-	public interface Emitter {
+	public interface Reflector {
 	}
 
 	/**
@@ -234,13 +210,13 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public static interface TopLevelCatchallHandler {
 		void handle(ModelEvent unhandledEvent);
 
-		public static class MissedEventEmitter
+		public static class MissedEventReflector
 				implements TopLevelCatchallHandler {
-			private Emitter emittingModel;
+			private Reflector reflectingModel;
 
-			public <MEE extends MissedEventEmitter> MEE withEmittingModel(
-					TopLevelMissedEvent.Emitter emittingModel) {
-				this.emittingModel = emittingModel;
+			public <MEE extends MissedEventReflector> MEE withReflectingModel(
+					TopLevelMissedEvent.Reflector reflectingModel) {
+				this.reflectingModel = reflectingModel;
 				return (MEE) this;
 			}
 
@@ -256,8 +232,8 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 						return;
 					}
 					depth++;
-					((Model) emittingModel).emitEvent(TopLevelMissedEvent.class,
-							unhandledEvent);
+					((Model) reflectingModel).emitEvent(
+							TopLevelMissedEvent.class, unhandledEvent);
 				} finally {
 					depth--;
 				}

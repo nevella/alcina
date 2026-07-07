@@ -330,7 +330,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	@Override
 	public void onNodeDelta(NodeDelta event) {
-		refreshOverlayIfShowing();
+		refreshSuggestorIfShowing();
 	}
 
 	@Override
@@ -510,9 +510,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		overlay.close(null, false);
 	}
 
-	void refreshOverlayIfShowing() {
-		if (overlay != null) {
-			overlay.refreshPosition();
+	void refreshSuggestorIfShowing() {
+		if (suggestor != null) {
 			suggestor.refresh();
 		}
 	}

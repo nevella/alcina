@@ -90,7 +90,8 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		if (!visible) {
 			return;
 		}
-		int initialIndexSelectionIndex = answers.ask.isEmpty() ? -1 : 0;
+		int initialIndexSelectionIndex = !answers.ask.isEmpty()
+				|| answers.keyboardSelectFirst ? 0 : -1;
 		choices = new Choices.Single.Delegating<>(answers.getSuggestions(),
 				initialIndexSelectionIndex);
 		contents.properties().model().set(choices);

@@ -19,12 +19,13 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  * 
  * @author Nick Reddel
  */
-public class OrderCriterion extends SearchCriterion {
+public class OrderCriterion extends SearchCriterion implements HasDisplayName {
 	private Direction direction = Direction.ASCENDING;
 
 	public String addDirection(String criterionName) {
@@ -100,5 +101,31 @@ public class OrderCriterion extends SearchCriterion {
 				throw new UnsupportedOperationException();
 			}
 		}
+	}
+
+	public void putToGroup(OrderGroup orderGroup) {
+		orderGroup.clearCriteria();
+		orderGroup.addCriterion(this);
+	}
+
+	@Override
+	public String displayName() {
+		return toString();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (obj.getClass() != getClass()) {
+			return false;
+		}
+		return ((OrderCriterion) obj).direction == direction;
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode() ^ direction.hashCode();
 	}
 }

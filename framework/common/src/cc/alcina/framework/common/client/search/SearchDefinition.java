@@ -150,7 +150,7 @@ public abstract class SearchDefinition extends Bindable
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
 		return (List<SC>) allCriteria().stream()
-				.filter(new IsInstanceFilter(clazz))
+				.filter(IsInstanceFilter.of(clazz))
 				.collect(Collectors.toList());
 	}
 

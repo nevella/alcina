@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.google.gwt.dom.client.Document;
@@ -9,6 +10,7 @@ import com.google.gwt.dom.client.Style.Unit;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -32,24 +34,6 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 public class ChoicesDropdown<T> extends Model.Value<T>
 		implements ModelEvents.SelectionChanged.Handler,
 		Overlay.Positioned.Handler, ModelEvents.Closed.Handler {
-	Choices.Single<T> choices;
-
-	@Directed
-	Dropdown dropdown;
-
-	T value;
-
-	LabelArrow labelArrow;
-
-	class ChoicesSupplier implements Supplier<Model> {
-		@Override
-		public Model get() {
-			choices = new Choices.Single<>();
-			choices.populateFromNodeContext(provideNode(), null);
-			return new KeyboardNavigation.RouteNavigationEvents(choices);
-		}
-	}
-
 	public static class To
 			implements ModelTransform<Object, ChoicesDropdown<?>> {
 		@Override
@@ -60,15 +44,40 @@ public class ChoicesDropdown<T> extends Model.Value<T>
 		}
 	}
 
+	class ChoicesSupplier implements Supplier<Model> {
+		@Override
+		public Model get() {
+			choices = new Choices.Single<>();
+			choices.populateFromNodeContext(provideNode(), null);
+			from(properties().value()).to(choices.subtypeProperties().value())
+					.oneWay();
+			return new KeyboardNavigation.RouteNavigationEvents(choices);
+		}
+	}
+
+	Choices.Single<T> choices;
+
+	@Directed
+	Dropdown dropdown;
+
+	T value;
+
+	LabelArrow labelArrow;
+
 	public ChoicesDropdown() {
-		labelArrow = new Dropdown.LabelArrow(null);
-		dropdown = new Dropdown(labelArrow, new ChoicesSupplier())
-				.withLogicalParent(this).withXalign(Position.END);
-		from(this).on("value").to(labelArrow).on("label").oneWay();
 	}
 
 	@Override
 	public void onNodeContext(NodeContext event) {
+		Function valueTransformer = (Function) node
+				.optional(ValueTransformer.class)
+				.map(ann -> Reflections.newInstance(ann.value())).orElse(null);
+		labelArrow = new Dropdown.LabelArrow(null);
+		dropdown = new Dropdown(labelArrow, new ChoicesSupplier())
+				.withLogicalParent(this).withXalign(Position.END);
+		from(properties().value()).map(
+				v -> valueTransformer == null ? v : valueTransformer.apply(v))
+				.to(labelArrow.properties().label()).oneWay();
 	}
 
 	@Override
@@ -109,5 +118,9 @@ public class ChoicesDropdown<T> extends Model.Value<T>
 			labelArrow.provideElement().focus();
 		}
 		// squelch close events
+	}
+
+	PackageProperties._ChoicesDropdown.InstanceProperties properties() {
+		return PackageProperties.choicesDropdown.instance(this);
 	}
 }

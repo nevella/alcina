@@ -35,7 +35,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
@@ -44,6 +43,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CopyToClipboard;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableEntry;
@@ -122,7 +122,7 @@ class Page extends Model.All
 			// register in spite of non-public access
 			implements Registration.AllSubtypes, PlaceUpdateable,
 			ModelEvent.DelegatesDispatch,
-			ReflectedEvents.TopLevelMissedEvent.Emitter {
+			ReflectedEvents.TopLevelMissedEvent.Reflector {
 		@Directed
 		Page page;
 
@@ -304,8 +304,9 @@ class Page extends Model.All
 	public void onPropertyDisplayCycle(PropertyDisplayCycle event) {
 		TraversalSettings settings = TraversalBrowser.Ui.get().settings;
 		PropertyDisplayMode next = settings.nextPropertyDisplayMode();
-		StatusModule.get().showMessageTransitional(
-				Ax.format("Property display mode -> %s", next));
+		NotificationObservable
+				.of(Ax.format("Property display mode -> %s", next)).publish();
+		;
 	}
 
 	@Override
@@ -317,8 +318,9 @@ class Page extends Model.All
 	public void onSecondaryAreaDisplayCycle(SecondaryAreaDisplayCycle event) {
 		TraversalSettings settings = TraversalBrowser.Ui.get().settings;
 		SecondaryAreaDisplayMode next = settings.nextSecondaryAreaDisplayMode();
-		StatusModule.get().showMessageTransitional(
-				Ax.format("Secondary display mode -> %s", next));
+		NotificationObservable
+				.of(Ax.format("Secondary display mode -> %s", next)).publish();
+		;
 	}
 
 	@Override

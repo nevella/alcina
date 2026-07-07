@@ -2294,4 +2294,10 @@ public class CommonUtils {
 			return testCollection.contains(object);
 		}
 	}
+
+	static final Object[] NULL_UNIT_ARRAY = new Object[] { null };
+
+	public static <V> Stream<V> prependNull(Stream<V> stream) {
+		return (Stream<V>) Stream.concat(Stream.of(NULL_UNIT_ARRAY), stream);
+	}
 }

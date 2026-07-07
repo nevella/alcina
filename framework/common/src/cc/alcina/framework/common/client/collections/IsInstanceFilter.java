@@ -7,7 +7,11 @@ import java.util.function.Predicate;
 public class IsInstanceFilter implements Predicate {
 	private Collection<Class> classes;
 
-	public IsInstanceFilter(Class... classes) {
+	public static IsInstanceFilter of(Class... classes) {
+		return new IsInstanceFilter(classes);
+	}
+
+	IsInstanceFilter(Class... classes) {
 		this.classes = Arrays.asList(classes);
 	}
 

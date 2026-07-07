@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 
 @Feature.Ref(Feature_EntityBrowser._QueryCache.class)
 class NonOptimisedQueryCache {
@@ -51,7 +51,8 @@ class NonOptimisedQueryCache {
 		@Override
 		public void onClick(Click event) {
 			clear();
-			StatusModule.get().showMessageTransitional("Cleared query cache");
+			NotificationObservable.of("Cleared query cache").publish();
+			;
 		}
 
 		public void updateItems() {

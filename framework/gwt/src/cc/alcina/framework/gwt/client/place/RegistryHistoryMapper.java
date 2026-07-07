@@ -137,11 +137,18 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	public Optional<Place> getPlaceIfParseable(String token) {
+		return getPlaceIfParseable(token, true);
+	}
+
+	public Optional<Place> getPlaceIfParseable(String token,
+			boolean logUnparseable) {
 		try {
 			return Optional.ofNullable(parseAndReturnPlace(token, false));
 		} catch (UnparseablePlaceException e) {
 			// fixme - dirndl - send dev warning to server
-			Ax.err("unparesable place: %s", token);
+			if (logUnparseable) {
+				Ax.err("unparesable place: %s", token);
+			}
 			return Optional.empty();
 		} catch (Exception e) {
 			Ax.err("unparesable place: %s", token);

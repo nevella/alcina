@@ -19,9 +19,9 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -78,8 +78,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 class NodeEventBinding {
 	static boolean isReflectedBinding(Class<? extends NodeEvent> clazz) {
-		return Reflections.isAssignableFrom(ModelEvent.ReflectedEvent.class,
-				clazz);
+		return Reflections.isAssignableFrom(ReflectedEvent.class, clazz);
 	}
 
 	final DirectedLayout.Node node;
@@ -140,7 +139,7 @@ class NodeEventBinding {
 				 * find the emitter attached to an ancestor-or-self node which
 				 * emits events of Type type
 				 */
-				ModelEvent.Emitter emitter = node.findEmitter(type);
+				ModelEvent.Reflector emitter = node.findEmitter(type);
 				if (emitter != null) {
 					Node emitterNode = null;
 					if (node.model == emitter) {

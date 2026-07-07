@@ -90,8 +90,8 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 
 	public void checkSerializationIssues(TreeSerializable serializable) {
 		try {
-			LooseContext.pushWithTrue(
-					TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS);
+			LooseContext.push();
+			TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS.setTrue();
 			Reachables reachables = new SerializerOptions.Reachables();
 			FlatTreeSerializer.serialize(serializable,
 					new SerializerOptions().withElideDefaults(false)

@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
@@ -27,9 +28,8 @@ import cc.alcina.framework.common.client.util.Multiset;
  * <p>
  * Transforms a Document into a set of boundary traversal selections
  * 
- * <p>
- * Note that the
  */
+@Reflected
 class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 	public enum Token implements BranchToken {
 		DOCUMENT_BOUNDARY {
