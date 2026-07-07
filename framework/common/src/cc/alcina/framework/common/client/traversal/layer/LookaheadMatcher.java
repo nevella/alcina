@@ -39,14 +39,23 @@ public abstract class LookaheadMatcher<C> {
 
 	Map<Token, LocationMatcher> matchers = AlcinaCollections.newLinkedHashMap();
 
+	class InvalidationListener implements TopicListener<Void> {
+		@Override
+		public void topicPublished(Void message) {
+			invalidate();
+		}
+	}
+
 	public LookaheadMatcher(ParserState parserState) {
 		this.parserState = parserState;
-		this.invalidationListener = this::invalidate;
+		this.invalidationListener = new InvalidationListener();
 		parserState.topicSentenceMatched.add(this.invalidationListener);
 	}
 
-	void invalidate(Void p) {
-		matchers.values().forEach(LocationMatcher::invalidate);
+	void invalidate() {
+		for (LocationMatcher matcher : matchers.values()) {
+			matcher.invalidate();
+		}
 	}
 
 	public Measure match(Token token, C condition) {
@@ -68,6 +77,12 @@ public abstract class LookaheadMatcher<C> {
 		boolean isEmphasis(Location location);
 
 		boolean isUnderline(Location start);
+	}
+
+	static void publishMatchStat(LookaheadMatcher lookaheadMatcher, Token token,
+			long duration) {
+		ProcessObservers.publish(MatchStat.class,
+				() -> new MatchStat(lookaheadMatcher, token, duration));
 	}
 
 	public class LocationMatcher {
@@ -110,13 +125,13 @@ public abstract class LookaheadMatcher<C> {
 			return new Range(start, cursor);
 		}
 
-		private Measure getMeasureMatchingText(CharSequence text) {
+		Measure getMeasureMatchingText(CharSequence text) {
 			Measure match = null;
 			long preMatch = System.nanoTime();
 			MatchResult matchResult = matchText(this, text);
 			long postMatch = System.nanoTime();
-			ProcessObservers.publish(MatchStat.class,
-					() -> new MatchStat(postMatch - preMatch));
+			publishMatchStat(LookaheadMatcher.this, token,
+					postMatch - preMatch);
 			if (matchResult.found()) {
 				int startOffset = parserState.getOffsetInInput()
 						+ matchResult.start();
@@ -226,8 +241,14 @@ public abstract class LookaheadMatcher<C> {
 					textMeasure.clear();
 					textMeasureInvalidated = false;
 				}
-				match = textMeasure.computeIfAbsent(text,
-						this::getMeasureMatchingText);
+				/*
+				 * FIXME - gwt.comp
+				 */
+				if (!textMeasure.containsKey(text)) {
+					match = getMeasureMatchingText(text);
+					textMeasure.put(text, match);
+				}
+				match = textMeasure.get(text);
 			}
 			return match;
 		}
@@ -251,21 +272,20 @@ public abstract class LookaheadMatcher<C> {
 			}
 			return this;
 		}
+	}
 
-		public class MatchStat implements GlobalObservable.Debug {
-			public long nanos;
+	public static class MatchStat implements GlobalObservable.Debug {
+		public LookaheadMatcher lookaheadMatcher;
 
-			MatchStat(long nanos) {
-				this.nanos = nanos;
-			}
+		public Token token;
 
-			public LookaheadMatcher getMatcher() {
-				return LookaheadMatcher.this;
-			}
+		public long duration;
 
-			public Token getToken() {
-				return token;
-			}
+		MatchStat(LookaheadMatcher lookaheadMatcher, Token token,
+				long duration) {
+			this.lookaheadMatcher = lookaheadMatcher;
+			this.token = token;
+			this.duration = duration;
 		}
 	}
 
@@ -328,9 +348,7 @@ public abstract class LookaheadMatcher<C> {
 		}
 
 		public Measure match() {
-			LocationMatcher matcher = matchers
-					.computeIfAbsent(token, LocationMatcher::new)
-					.withOptions(this);
+			LocationMatcher matcher = ensureMatcher(this, token);
 			if (matcher.emphasisOracle == null) {
 				if (matcher.options.matchesEmphasisTypes != MatchesEmphasisTypes.BOTH) {
 					matcher.withOptions(this);
@@ -374,5 +392,12 @@ public abstract class LookaheadMatcher<C> {
 			this.requiresWholeExtentMatch = requiresWholeExtentMatch;
 			return this;
 		}
+	}
+
+	LocationMatcher ensureMatcher(Options options, Token token) {
+		if (!matchers.containsKey(token)) {
+			matchers.put(token, new LocationMatcher(token));
+		}
+		return matchers.get(token).withOptions(options);
 	}
 }
