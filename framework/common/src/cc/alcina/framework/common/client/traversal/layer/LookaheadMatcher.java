@@ -26,6 +26,14 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * via regex, trie...etc
  * 
  * C represents the condition type, such as Patttern
+ * 
+ * Note there are a few places in this class where the code-style is older, due
+ * to a GWTAst generator issue causing js such as
+ * 
+ * function
+ * LookaheadMatcher$3methodref$ctor$Type(cc_alcina_framework_common_client_traversal_layer_LookaheadMatcher<C>){
+ * 
+ * to be generated
  */
 public abstract class LookaheadMatcher<C> {
 	/*
