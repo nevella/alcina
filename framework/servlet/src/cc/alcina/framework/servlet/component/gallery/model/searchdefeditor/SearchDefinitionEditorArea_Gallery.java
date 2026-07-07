@@ -28,12 +28,13 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 @Registration({ GalleryContents.class,
 		SearchDefinitionEditorGalleryPlace.class })
 @TypedProperties
-class Gallery_SearchDefinitionEditorArea
+@Directed(tag = "search-definition-editor-gallery")
+class SearchDefinitionEditorArea_Gallery
 		extends GalleryContents<SearchDefinitionEditorGalleryPlace>
 		implements SearchDefinitionEditor.Submit.Handler {
-	PackageProperties._Gallery_SearchDefinitionEditorArea.InstanceProperties
+	PackageProperties._SearchDefinitionEditorArea_Gallery.InstanceProperties
 			subtypeProperties() {
-		return PackageProperties.gallery_searchDefinitionEditorArea
+		return PackageProperties.searchDefinitionEditorArea_gallery
 				.instance(this);
 	}
 
@@ -44,7 +45,7 @@ class Gallery_SearchDefinitionEditorArea
 
 	InfoModel model;
 
-	Gallery_SearchDefinitionEditorArea() {
+	SearchDefinitionEditorArea_Gallery() {
 		bindings().from(subtypeProperties().place()).acceptChange((o, n) -> {
 			Ax.out("place changed :: %s -> %s", System.identityHashCode(o),
 					System.identityHashCode(n));

@@ -1567,8 +1567,7 @@ app-suggestor {
   box-sizing: border-box;
 }
 app-suggestor:focus-within {
-  border-color: #bfbfbf;
-  border-width: 2px;
+  outline: solid #bfbfbf 2px;
 }
 app-suggestor > editor > input {
   padding: 0.2rem 0.75rem;
@@ -1858,6 +1857,9 @@ help sequence > visit > description {
   grid-area: description;
   margin-bottom: 1rem;
 }
+help sequence > visit > description a {
+  color: #5481b7;
+}
 help sequence > visit > img {
   grid-area: img;
   max-width: 100%;
@@ -2035,19 +2037,6 @@ search-definition-editor > choice-editor > edit choice-node > searchable > value
 }
 search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > input, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > input {
   background-color: white;
-}
-search-definition-editor > go-container {
-  display: block;
-  line-height: 145%;
-  padding: 0.4rem;
-}
-search-definition-editor > go-container > button {
-  color: #3050FF;
-}
-search-definition-editor > go-container > button:hover {
-  color: #5070FF;
-  background: white;
-  border-color: transparent;
 }
 search-definition-editor[popups-open] > choice-editor {
   background: white;

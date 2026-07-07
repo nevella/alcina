@@ -41,6 +41,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel.ModelM
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositionObservable;
 
 /**
  * <p>
@@ -222,6 +223,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 			return decoratorEvent;
 		});
 		fragmentModel.onMutation(event);
+		new OverlayPositionObservable().publish();
 	}
 
 	@Override

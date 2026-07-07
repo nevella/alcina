@@ -25,12 +25,12 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings.DetailDisplayMode;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ClearFilter;
@@ -191,8 +191,8 @@ class Page extends Model.Fields
 		SequenceSettings settings = service(SequenceArea.Service.class)
 				.getSettings();
 		ColumnSet next = settings.nextColumnSet();
-		StatusModule.get()
-				.showMessageTransitional(Ax.format("Column set -> %s", next));
+		NotificationObservable.of("Column set -> %s", next).publish();
+		;
 	}
 
 	@Override
@@ -200,8 +200,7 @@ class Page extends Model.Fields
 		SequenceSettings settings = service(SequenceArea.Service.class)
 				.getSettings();
 		DetailDisplayMode next = settings.nextDetailDisplayMode();
-		StatusModule.get().showMessageTransitional(
-				Ax.format("Detail display mode -> %s", next));
+		NotificationObservable.of("Detail display mode -> %s", next).publish();
 	}
 
 	@Override

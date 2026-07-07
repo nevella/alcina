@@ -10,6 +10,7 @@ import com.google.gwt.dom.client.Element;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -27,10 +28,22 @@ public class OverlayPositions {
 		return Registry.impl(OverlayPositions.class);
 	}
 
+	OverlayPositions() {
+		new PositionObserver().bind();
+	}
+
 	Map<Model, RenderedOverlay> openOverlays = AlcinaCollections.newUnqiueMap();
 
 	public boolean hasOpenOverlays() {
 		return openOverlays.size() > 0;
+	}
+
+	class PositionObserver
+			implements ProcessObserver<OverlayPositionObservable> {
+		@Override
+		public void topicPublished(OverlayPositionObservable message) {
+			openOverlays.values().forEach(ro -> ro.overlay.refreshPosition());
+		}
 	}
 
 	void hide(Overlay model, boolean allowReentrant) {

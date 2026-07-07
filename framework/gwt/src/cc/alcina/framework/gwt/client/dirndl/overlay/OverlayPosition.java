@@ -153,6 +153,12 @@ public class OverlayPosition {
 	}
 
 	void apply() {
+		if (rectSourceElement != null) {
+			/*
+			 * refresh, in case this a refresh call
+			 */
+			fromRect = rectSourceElement.getBoundingClientRect();
+		}
 		// allow exactly one of {viewportRelative,non-empty constraints}
 		Preconditions
 				.checkState(viewportRelative != null ^ constraints.size() > 0);

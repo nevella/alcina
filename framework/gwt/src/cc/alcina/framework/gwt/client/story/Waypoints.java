@@ -68,6 +68,11 @@ public class Waypoints {
 	public static class SendKeyDelete extends Waypoint {
 	}
 
+	@Decl.Location.CurrentFocus
+	@Decl.Action.UI.KeyConstant(SeleniumKeys.BACK_SPACE)
+	public static class SendKeyBackspace extends Waypoint {
+	}
+
 	/*
 	 * Debugging aid
 	 */

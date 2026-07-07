@@ -103,9 +103,10 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 			boolean keyboardSelectFirst = false;
 			if (choiceEditor.suggestOracleRouter != null) {
 				// pre-filtered
+				keyboardSelectFirst = ask.getValue().length() > 0
+						&& choices.size() > 0;
 				ask = new StringAsk();
 				ask.setValue("");
-				keyboardSelectFirst = choices.size() > 0;
 			}
 			Answers answers = router.ask(ask, choices, Object::toString,
 					valueTransformer);
