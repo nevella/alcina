@@ -309,8 +309,22 @@ public class OverlayPosition {
 		void apply() {
 			DoublePair fromLine = line(fromRect);
 			double fromOffset = pos(fromLine, from);
-			double to = fromOffset + paddingPx;
-			set(to);
+			double toOffset = computeToOffset(fromOffset);
+			set(toOffset);
+		}
+
+		double computeToOffset(double fromOffset) {
+			switch (to) {
+			case START:
+				return fromOffset + paddingPx;
+			case END:
+				return fromOffset - paddingPx;
+			case CENTER:
+				DoublePair toRectLine = line(toRect);
+				return fromOffset - (toRectLine.length() / 2.0);
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		private DoublePair line(DomRect rect) {
