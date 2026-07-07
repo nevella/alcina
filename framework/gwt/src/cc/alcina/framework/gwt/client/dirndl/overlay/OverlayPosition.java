@@ -165,7 +165,12 @@ public class OverlayPosition {
 		if (viewportRelative != null) {
 			return;
 		}
-		Preconditions.checkState(fromRect != null);
+		if (fromRect == null) {
+			/*
+			 * detached
+			 */
+			return;
+		}
 		if (equalWidths) {
 			toElement.getStyle().setWidth(fromRect.width, Unit.PX);
 		}
@@ -174,6 +179,9 @@ public class OverlayPosition {
 			if (parentFixed) {
 				toRect = DomRect.fromOrigin(toRect.width, toRect.height);
 			} else {
+			}
+			if (toRect == null) {
+				return;
 			}
 		} else {
 			// will return a [0,0,0,0] domRect - which is fine if positioning
@@ -300,11 +308,9 @@ public class OverlayPosition {
 
 		void apply() {
 			DoublePair fromLine = line(fromRect);
-			DoublePair toLine = line(toRect);
 			double fromOffset = pos(fromLine, from);
-			double toOffset = pos(toLine, to);
-			double delta = fromOffset - toOffset + paddingPx;
-			set(delta);
+			double to = fromOffset + paddingPx;
+			set(to);
 		}
 
 		private DoublePair line(DomRect rect) {

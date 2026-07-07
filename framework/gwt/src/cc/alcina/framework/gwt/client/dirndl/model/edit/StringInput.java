@@ -302,6 +302,8 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 			setPattern(validation.pattern());
 		});
 		node.optional(InputType.class).ifPresent(type -> setType(type.value()));
+		node.optional(SelectAllOnFocus.class)
+				.ifPresent(ann -> setSelectAllOnFocus(true));
 		node.optional(FocusOnBindMarker.class)
 				.ifPresent(ann -> setFocusOnBind(true));
 		node.optional(TextArea.class).ifPresent(ann -> setTag("textarea"));
@@ -433,8 +435,8 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		this.rows = rows;
 	}
 
-	public void setSelectAllOnFocus(boolean selectAllOnBind) {
-		this.selectAllOnFocus = selectAllOnBind;
+	public void setSelectAllOnFocus(boolean selectAllOnFocus) {
+		this.selectAllOnFocus = selectAllOnFocus;
 	}
 
 	public void setSpellcheck(String spellcheck) {
@@ -540,6 +542,13 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface InputType {
 		String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface SelectAllOnFocus {
 	}
 
 	static class SelectionState {
