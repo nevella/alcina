@@ -170,15 +170,23 @@ public class SearchDefinitionEditor extends Model.Fields
 			criteriaResponseCallback.onSuccess(response);
 		}
 
+		protected boolean isSortCriteria() {
+			return true;
+		}
+
 		void mapCriteria(StringAsk ask, SuggestOracle.Response criteriaResponse,
 				Consumer<Response> responseHandler) {
-			List<SuggestOracle.Suggestion> searchables = criteriaResponse
-					.getSuggestions().stream()
+			Stream<Searchable> stream = criteriaResponse.getSuggestions()
+					.stream()
 					.map(suggestion -> ((CriterionSuggestion) suggestion).searchCriterion)
 					.filter(criterion -> SearchUtils.containsIgnoreCase(
 							criterion.toString(), ask.getValue()))
-					.map(Searchable::new)
-					.sorted(Comparator.comparing(Searchable::provideName))
+					.map(Searchable::new);
+			if (isSortCriteria()) {
+				stream = stream
+						.sorted(Comparator.comparing(Searchable::provideName));
+			}
+			List<SuggestOracle.Suggestion> searchables = stream
 					.collect(Collectors.toList());
 			SuggestOracle.Response response = new SuggestOracle.Response(
 					searchables);
