@@ -85,6 +85,7 @@ public class InputEditor extends Model implements Suggestor.Editor,
 		if (Ax.notBlank(input.getValue())) {
 			// deferEmitAsk();
 		}
+		event.reemitAs(this, SuggestorEvents.EditorFocus.class);
 	}
 
 	@Override

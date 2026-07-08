@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCr
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.search.Searchable;
 import cc.alcina.framework.gwt.client.dirndl.model.search.ValueEditor;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
@@ -90,6 +91,7 @@ public class PackageProperties {
     
     static class _Searchable implements TypedProperty.Container {
       TypedProperty<Searchable, String> criterionClass = new TypedProperty<>(Searchable.class, "criterionClass");
+      TypedProperty<Searchable, Link> delete = new TypedProperty<>(Searchable.class, "delete");
       TypedProperty<Searchable, String> name = new TypedProperty<>(Searchable.class, "name");
       TypedProperty<Searchable, Object> operator = new TypedProperty<>(Searchable.class, "operator");
       TypedProperty<Searchable, Searchable.RenderedOperator> renderedOperator = new TypedProperty<>(Searchable.class, "renderedOperator");
@@ -98,6 +100,7 @@ public class PackageProperties {
       static class InstanceProperties extends 	InstanceProperty.Container<Searchable> {
          InstanceProperties(Searchable source){super(source);}
         InstanceProperty<Searchable, String> criterionClass(){return new InstanceProperty<>(source,PackageProperties.searchable.criterionClass);}
+        InstanceProperty<Searchable, Link> delete(){return new InstanceProperty<>(source,PackageProperties.searchable.delete);}
         InstanceProperty<Searchable, String> name(){return new InstanceProperty<>(source,PackageProperties.searchable.name);}
         InstanceProperty<Searchable, Object> operator(){return new InstanceProperty<>(source,PackageProperties.searchable.operator);}
         InstanceProperty<Searchable, Searchable.RenderedOperator> renderedOperator(){return new InstanceProperty<>(source,PackageProperties.searchable.renderedOperator);}

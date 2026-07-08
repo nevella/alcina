@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class SuggestorEvents {
 	public static class EditorAsk
@@ -18,6 +19,25 @@ public class SuggestorEvents {
 
 		public boolean isEmptyAsk() {
 			return getModel().isEmpty();
+		}
+	}
+
+	public static class EditorFocus
+			extends ModelEvent<Object, EditorFocus.Handler> {
+		@Override
+		public void dispatch(EditorFocus.Handler handler) {
+			handler.onEditorFocus(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEditorFocus(EditorFocus event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onEditorFocus(EditorFocus event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
 		}
 	}
 

@@ -8,15 +8,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
-public class SearchDefinitionArea extends Model.Fields {
+public class SearchDefinitionLink extends Model.Fields {
 	class Contents extends Model.All {
 		String name;
 
 		String definition;
 
 		Contents() {
-			this.name = SearchDefinitionArea.this.definition.getName();
-			this.definition = SearchDefinitionArea.this.definition.toString();
+			this.name = SearchDefinitionLink.this.definition.getName();
+			this.definition = SearchDefinitionLink.this.definition.toString();
 		}
 	}
 
@@ -31,7 +31,7 @@ public class SearchDefinitionArea extends Model.Fields {
 
 	public transient Object modelEventData;
 
-	public SearchDefinitionArea(BasePlace searchPlace,
+	public SearchDefinitionLink(BasePlace searchPlace,
 			SearchDefinition definition, Object modelEventData) {
 		this.definition = definition;
 		this.modelEventData = modelEventData;
@@ -39,7 +39,7 @@ public class SearchDefinitionArea extends Model.Fields {
 		link = Link.of(searchPlace).withText(null).withInner(contents);
 	}
 
-	public SearchDefinitionArea withDelete() {
+	public SearchDefinitionLink withDelete() {
 		delete = Link.button(ModelEvents.Delete.class).withModelEventData(this)
 				.withText(null);
 		return this;

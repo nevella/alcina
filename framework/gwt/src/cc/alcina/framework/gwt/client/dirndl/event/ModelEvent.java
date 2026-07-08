@@ -142,6 +142,14 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		getContext().bubble();
 	}
 
+	/**
+	 * Intended for an "if(checkReemitted(thisModel)){return;}" short-circuit of
+	 * event processing - if this model just reemitted the event, we want to
+	 * bubble, not handle it here
+	 * 
+	 * @param hasNode
+	 * @return
+	 */
 	public boolean checkReemitted(HasNode hasNode) {
 		if (wasReemitted(hasNode.provideNode())) {
 			bubble();
