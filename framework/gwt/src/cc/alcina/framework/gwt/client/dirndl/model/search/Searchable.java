@@ -24,6 +24,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.FocusEditor;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
@@ -34,6 +36,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Values;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
@@ -51,7 +54,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		HasObject, DecoratorNode.AlllowsPartialSelection,
 		ReflectedEvents.FocusEditor.Reflector,
-		DecoratorNode.EditableDecoratorContents {
+		DecoratorNode.EditableDecoratorContents, ModelEvents.Delete.Handler {
 	/**
 	 * Although these are implemented in .sass, this documents *why* they are so
 	 */
@@ -215,6 +218,9 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 	@Directed
 	ValueEditor valueEditor;
 
+	@Directed
+	Link delete = Link.button(ModelEvents.Delete.class).withText("");
+
 	RenderedOperator renderedOperator;
 
 	public Searchable() {
@@ -295,5 +301,14 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 
 	String provideName() {
 		return name;
+	}
+
+	@Override
+	public void onDelete(Delete event) {
+		if (event.getContext().getPrevious().node.getModel() == this) {
+			event.bubble();
+			return;
+		}
+		event.reemitAs(this, Delete.class, this);
 	}
 }

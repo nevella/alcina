@@ -34,6 +34,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -80,7 +81,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		implements HasDecorators, DecoratorEvents.DecoratorsChanged.Handler,
 		DecoratorEvents.EditNodesChanged.Handler, ModelEvents.Commit.Handler,
 		Choices.CommitWithNoSelectedChoice.Handler,
-		DecoratorEvents.SelectedDecoratorDeleted.Handler {
+		DecoratorEvents.SelectedDecoratorDeleted.Handler,
+		ModelEvents.Delete.Handler {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -142,9 +144,6 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			@Override
 			public ItemRenderer<Choice> itemRenderer() {
 				return (node, choice) -> {
-					if (node == null) {
-						int debug = 3;
-					}
 					Function valueTransformer = node == null ? null
 							: node.service(ChoiceEditor.Service.class)
 									.getValueTransformer();
@@ -331,6 +330,10 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	@Override
 	public void onSelectedDecoratorDeleted(SelectedDecoratorDeleted event) {
+		focusAfterExternalEdit();
+	}
+
+	private void focusAfterExternalEdit() {
 		exec(editArea::focusLastSuggestingDecorator).dispatch();
 	}
 
@@ -434,5 +437,16 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	void areaContentsFromChoices(List<Choice<?>> choices) {
 		Client.eventBus().queued()
 				.lambda(() -> areaContentsFromChoices0(choices)).dispatch();
+	}
+
+	@Override
+	public void onDelete(Delete event) {
+		Optional<ChoiceNode> node = editArea.fragmentModel
+				.byType(ChoiceNode.class)
+				.filter(choiceNode -> choiceNode
+						.getStringRepresentable() == event.getModel())
+				.findFirst();
+		node.get().nodes().removeFromParent();
+		focusAfterExternalEdit();
 	}
 }

@@ -182,7 +182,7 @@ public class AppSuggestor extends Model.Fields
 	@Directed(tag = "app-suggestor")
 	public Suggestor suggestor;
 
-	Attributes attributes;
+	protected Attributes attributes;
 
 	boolean currentSelectionHandled;
 

@@ -210,6 +210,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 	public void copyStateFrom(StringInput input) {
 		setValue(input.elementValue());
 		selectOnFocus = new SelectionState().snapshot(input.provideElement());
+		selectAllOnFocus = false;
 	}
 
 	String elementValue() {
