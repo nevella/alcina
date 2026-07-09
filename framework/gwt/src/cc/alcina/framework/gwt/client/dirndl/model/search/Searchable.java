@@ -221,6 +221,9 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 	@Directed
 	Link delete = Link.button(ModelEvents.Delete.class).withText("");
 
+	@Binding(type = Type.PROPERTY)
+	boolean emptyValue;
+
 	RenderedOperator renderedOperator;
 
 	public Searchable() {
@@ -237,8 +240,7 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 				new StringInputServiceImpl());
 		node.getResolver().registerService(Service.class, new Service());
 		InstanceProperty<?, ?> valueProperty = searchCriterion.valueProperty();
-		properties().valueEditor()
-				.set(new ValueEditor(valueProperty, node.getResolver()));
+		valueEditor = new ValueEditor(valueProperty, node.getResolver());
 		if (service(SearchDefinitionEditor.Service.class)
 				.isInitialRenderComplete() && Ax.isEmpty(valueProperty.get())) {
 			exec(() -> emitEvent(FocusEditor.class)).dispatch();
@@ -272,7 +274,8 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		Object value = searchCriterion instanceof HasValue
 				? ((HasValue) searchCriterion).getValue()
 				: null;
-		return Ax.format("%s : %s", name, Ax.toString(value));
+		return Ax.isEmpty(value) ? name
+				: Ax.format("%s : %s", name, Ax.toString(value));
 	}
 
 	@Property.Not

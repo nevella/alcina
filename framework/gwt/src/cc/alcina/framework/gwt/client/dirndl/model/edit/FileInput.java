@@ -62,6 +62,9 @@ public class FileInput extends Model.Value<FileData>
 	@Binding(type = Type.PROPERTY)
 	public boolean multiple;
 
+	@Property.Not
+	public boolean populateValueOnChangeRomcom = true;
+
 	public FileInput() {
 	}
 
@@ -87,9 +90,6 @@ public class FileInput extends Model.Value<FileData>
 
 	@Override
 	public void onChange(Change event) {
-		/*
-		 * FIXME - romcom
-		 */
 		if (Al.isBrowser()) {
 			JsArray<Html5File> files = getFiles(provideElement());
 			Preconditions.checkState(files.length() <= 1);
@@ -101,6 +101,12 @@ public class FileInput extends Model.Value<FileData>
 			}
 		} else {
 			event.reemitAs(this, ModelEvents.Change.class);
+			if (populateValueOnChangeRomcom) {
+				AsyncCallback<FileData> callback = Async
+						.<FileData> callbackBuilder().success(this::setValue)
+						.build();
+				getFileData(callback);
+			}
 		}
 	}
 

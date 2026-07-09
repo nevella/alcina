@@ -176,12 +176,15 @@ public class SearchDefinitionEditor extends Model.Fields
 
 		void mapCriteria(StringAsk ask, SuggestOracle.Response criteriaResponse,
 				Consumer<Response> responseHandler) {
+			String value = ask.getValue();
 			Stream<Searchable> stream = criteriaResponse.getSuggestions()
 					.stream()
 					.map(suggestion -> ((CriterionSuggestion) suggestion).searchCriterion)
-					.filter(criterion -> SearchUtils.containsIgnoreCase(
-							criterion.toString(), ask.getValue()))
-					.map(Searchable::new);
+					.filter(criterion -> {
+						return value.isEmpty()
+								|| SearchUtils.containsIgnoreCase(
+										criterion.toString(), value);
+					}).map(Searchable::new);
 			if (isSortCriteria()) {
 				stream = stream
 						.sorted(Comparator.comparing(Searchable::provideName));
