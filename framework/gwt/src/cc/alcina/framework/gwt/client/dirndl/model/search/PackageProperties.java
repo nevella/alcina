@@ -92,6 +92,7 @@ public class PackageProperties {
     static class _Searchable implements TypedProperty.Container {
       TypedProperty<Searchable, String> criterionClass = new TypedProperty<>(Searchable.class, "criterionClass");
       TypedProperty<Searchable, Link> delete = new TypedProperty<>(Searchable.class, "delete");
+      TypedProperty<Searchable, Boolean> emptyValue = new TypedProperty<>(Searchable.class, "emptyValue");
       TypedProperty<Searchable, String> name = new TypedProperty<>(Searchable.class, "name");
       TypedProperty<Searchable, Object> operator = new TypedProperty<>(Searchable.class, "operator");
       TypedProperty<Searchable, Searchable.RenderedOperator> renderedOperator = new TypedProperty<>(Searchable.class, "renderedOperator");
@@ -101,6 +102,7 @@ public class PackageProperties {
          InstanceProperties(Searchable source){super(source);}
         InstanceProperty<Searchable, String> criterionClass(){return new InstanceProperty<>(source,PackageProperties.searchable.criterionClass);}
         InstanceProperty<Searchable, Link> delete(){return new InstanceProperty<>(source,PackageProperties.searchable.delete);}
+        InstanceProperty<Searchable, Boolean> emptyValue(){return new InstanceProperty<>(source,PackageProperties.searchable.emptyValue);}
         InstanceProperty<Searchable, String> name(){return new InstanceProperty<>(source,PackageProperties.searchable.name);}
         InstanceProperty<Searchable, Object> operator(){return new InstanceProperty<>(source,PackageProperties.searchable.operator);}
         InstanceProperty<Searchable, Searchable.RenderedOperator> renderedOperator(){return new InstanceProperty<>(source,PackageProperties.searchable.renderedOperator);}

@@ -32,6 +32,10 @@
   &:hover, &[index-selected]
     background-color: color.$dark_alpha_10
 
+@mixin dropdown-list-item-short
+  padding: 0.4rem 1rem
+  line-height: unset
+
 @mixin dropdown-choices
   @include dropdown-list
   
@@ -40,6 +44,13 @@
 
   > choice, > results > choice
     @include dropdown-list-item
+    
+@mixin dropdown-choices-short
+  @include dropdown-choices
+  padding: 0.8rem 0
+  
+  > choice, > results > choice
+    @include dropdown-list-item-short
 
 @mixin context-menu
   @include dropdown-list

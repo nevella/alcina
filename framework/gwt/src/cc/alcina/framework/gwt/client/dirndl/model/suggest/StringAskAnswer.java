@@ -36,6 +36,10 @@ public class StringAskAnswer<T> {
 		Suggestor.Answers result = new Answers(ask);
 		result.ask = ask;
 		models.stream().map(model -> {
+			/*
+			 * called even if the ask is empty - to render the markup of the
+			 * suggestion
+			 */
 			String string = stringRepresentation.apply(model);
 			MarkupMatch match = new MarkupMatch(string, ask.getValue());
 			if (match.hasMatches()) {

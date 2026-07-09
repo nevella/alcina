@@ -317,11 +317,14 @@ public class OverlayPosition {
 			switch (to) {
 			case START:
 				return fromOffset + paddingPx;
-			case END:
-				return fromOffset - paddingPx;
-			case CENTER:
+			case END: {
+				DoublePair toRectLine = line(toRect);
+				return fromOffset - toRectLine.length() - paddingPx;
+			}
+			case CENTER: {
 				DoublePair toRectLine = line(toRect);
 				return fromOffset - (toRectLine.length() / 2.0);
+			}
 			default:
 				throw new UnsupportedOperationException();
 			}
