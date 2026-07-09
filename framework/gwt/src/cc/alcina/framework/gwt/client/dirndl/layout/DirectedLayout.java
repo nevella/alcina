@@ -1403,6 +1403,7 @@ public class DirectedLayout implements AlcinaProcess {
 			 */
 			children.removeAll(oldChildren);
 			parent.children.remove(this);
+			parent = null;
 			rendered.removeFromParent();
 		}
 
