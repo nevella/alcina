@@ -545,10 +545,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			throw new IllegalArgumentException(message);
 		}
 		Element element = Document.get().createElement(tagName);
-		String cssClass = layoutNode.directed.className();
-		if (cssClass.length() > 0) {
-			element.addStyleName(cssClass);
-		}
+		DirectedRenderer.applyCssClassStatic(layoutNode, element);
 		if (layoutNode.model instanceof HasElementBehaviors) {
 			List<ElementBehavior> behaviors = ((HasElementBehaviors) layoutNode.model)
 					.getBehaviors();
