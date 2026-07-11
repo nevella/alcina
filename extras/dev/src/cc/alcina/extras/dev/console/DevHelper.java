@@ -458,7 +458,6 @@ public abstract class DevHelper {
 		if (!new File(configPath).exists()) {
 			Io.read().path(configPath + ".template").write().toPath(configPath);
 		}
-		Configuration.properties.setUseSets(isUsesSets());
 		Configuration.properties.load(() -> {
 			// reload, since these will have been cleared
 			loadDefaultLoggingProperties();

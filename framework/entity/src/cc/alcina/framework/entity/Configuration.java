@@ -380,8 +380,6 @@ public class Configuration {
 
 		private ClassLoader classLoader;
 
-		private boolean useSets = true;
-
 		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap();
 
 		// access is synchronized
@@ -453,10 +451,6 @@ public class Configuration {
 			return keyValues.containsKey(key);
 		}
 
-		public boolean isUseSets() {
-			return this.useSets;
-		}
-
 		public Stream<String> keys() {
 			return keyValues.keySet().stream();
 		}
@@ -495,16 +489,12 @@ public class Configuration {
 			this.classLoader = classLoader;
 		}
 
-		public void setUseSets(boolean useSets) {
-			this.useSets = useSets;
-		}
-
 		private void ensureBundles(Key key, boolean required) {
 			String packageName = key.clazz.getPackage().getName();
 			if (!packageBundles.containsKey(packageName)) {
-				PackageBundle bundles = new PackageBundle(key.clazz, required);
-				packageBundles.put(packageName, bundles);
-				bundles.load();
+				PackageBundle bundle = new PackageBundle(key.clazz, required);
+				packageBundles.put(packageName, bundle);
+				bundle.load();
 			}
 		}
 
@@ -697,7 +687,7 @@ public class Configuration {
 			}
 
 			void load() {
-				String baseName = useSets ? "configuration" : "Bundle";
+				String baseName = "configuration";
 				String bundleBase = Ax.format("%s.%s", packageName, baseName);
 				try {
 					ResourceBundle bundle = ResourceBundle.getBundle(bundleBase,
