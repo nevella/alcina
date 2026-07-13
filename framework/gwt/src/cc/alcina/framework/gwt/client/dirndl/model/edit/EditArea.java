@@ -31,6 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.SelectionCh
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
@@ -62,7 +63,8 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
 		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
 		InferredDomEvents.SelectionChanged.Handler, FragmentModel.Has,
-		ModelMutation.Handler, HasElementBehaviors, Binding.TabIndexZero {
+		ModelMutation.Handler, HasElementBehaviors, Binding.TabIndexZero,
+		ReflectedEvents.FocusEditor.Handler {
 	PackageProperties._EditArea.InstanceProperties properties() {
 		return PackageProperties.editArea.instance(this);
 	}
@@ -135,6 +137,12 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Override
 	public boolean isFocusOnBind() {
 		return focusOnBind;
+	}
+
+	@Override
+	public void onFocusEditor(ReflectedEvents.FocusEditor event) {
+		focusOnBind = true;
+		Model.FocusOnBind.focusIfAttached(provideNode());
 	}
 
 	DomNode node() {
@@ -260,6 +268,9 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 						lastPublishedDecorators, decorators);
 				lastPublishedDecorators = decorators;
 				emitEvent(DecoratorEvents.DecoratorsChanged.class, data);
+			}
+			if (provideIsUnbound()) {
+				return;
 			}
 			List<EditNode> editNodes = getEditNodes();
 			if (!Objects.equals(editNodes, lastPublishedEditNodes)) {

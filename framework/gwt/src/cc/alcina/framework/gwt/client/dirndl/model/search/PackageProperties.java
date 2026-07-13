@@ -22,7 +22,7 @@ public class PackageProperties {
     public static _OperatorSelector operatorSelector = new _OperatorSelector();
     public static _OrderEditor orderEditor = new _OrderEditor();
     public static _SearchDefinitionEditor searchDefinitionEditor = new _SearchDefinitionEditor();
-    static _Searchable searchable = new _Searchable();
+    public static _Searchable searchable = new _Searchable();
     static _Searchable_RenderedOperator searchable_renderedOperator = new _Searchable_RenderedOperator();
     
     public static class _FilterEditor implements TypedProperty.Container {
@@ -89,28 +89,28 @@ public class PackageProperties {
       
     }
     
-    static class _Searchable implements TypedProperty.Container {
-      TypedProperty<Searchable, String> criterionClass = new TypedProperty<>(Searchable.class, "criterionClass");
-      TypedProperty<Searchable, Link> delete = new TypedProperty<>(Searchable.class, "delete");
-      TypedProperty<Searchable, Boolean> emptyValue = new TypedProperty<>(Searchable.class, "emptyValue");
-      TypedProperty<Searchable, String> name = new TypedProperty<>(Searchable.class, "name");
-      TypedProperty<Searchable, Object> operator = new TypedProperty<>(Searchable.class, "operator");
-      TypedProperty<Searchable, Searchable.RenderedOperator> renderedOperator = new TypedProperty<>(Searchable.class, "renderedOperator");
-      TypedProperty<Searchable, SearchCriterion> searchCriterion = new TypedProperty<>(Searchable.class, "searchCriterion");
-      TypedProperty<Searchable, ValueEditor> valueEditor = new TypedProperty<>(Searchable.class, "valueEditor");
-      static class InstanceProperties extends 	InstanceProperty.Container<Searchable> {
-         InstanceProperties(Searchable source){super(source);}
-        InstanceProperty<Searchable, String> criterionClass(){return new InstanceProperty<>(source,PackageProperties.searchable.criterionClass);}
-        InstanceProperty<Searchable, Link> delete(){return new InstanceProperty<>(source,PackageProperties.searchable.delete);}
-        InstanceProperty<Searchable, Boolean> emptyValue(){return new InstanceProperty<>(source,PackageProperties.searchable.emptyValue);}
-        InstanceProperty<Searchable, String> name(){return new InstanceProperty<>(source,PackageProperties.searchable.name);}
-        InstanceProperty<Searchable, Object> operator(){return new InstanceProperty<>(source,PackageProperties.searchable.operator);}
-        InstanceProperty<Searchable, Searchable.RenderedOperator> renderedOperator(){return new InstanceProperty<>(source,PackageProperties.searchable.renderedOperator);}
-        InstanceProperty<Searchable, SearchCriterion> searchCriterion(){return new InstanceProperty<>(source,PackageProperties.searchable.searchCriterion);}
-        InstanceProperty<Searchable, ValueEditor> valueEditor(){return new InstanceProperty<>(source,PackageProperties.searchable.valueEditor);}
+    public static class _Searchable implements TypedProperty.Container {
+      public TypedProperty<Searchable, String> criterionClass = new TypedProperty<>(Searchable.class, "criterionClass");
+      public TypedProperty<Searchable, Link> delete = new TypedProperty<>(Searchable.class, "delete");
+      public TypedProperty<Searchable, Boolean> emptyValue = new TypedProperty<>(Searchable.class, "emptyValue");
+      public TypedProperty<Searchable, String> name = new TypedProperty<>(Searchable.class, "name");
+      public TypedProperty<Searchable, Object> operator = new TypedProperty<>(Searchable.class, "operator");
+      public TypedProperty<Searchable, Searchable.RenderedOperator> renderedOperator = new TypedProperty<>(Searchable.class, "renderedOperator");
+      public TypedProperty<Searchable, SearchCriterion> searchCriterion = new TypedProperty<>(Searchable.class, "searchCriterion");
+      public TypedProperty<Searchable, ValueEditor> valueEditor = new TypedProperty<>(Searchable.class, "valueEditor");
+      public static class InstanceProperties extends 	InstanceProperty.Container<Searchable> {
+        public  InstanceProperties(Searchable source){super(source);}
+        public InstanceProperty<Searchable, String> criterionClass(){return new InstanceProperty<>(source,PackageProperties.searchable.criterionClass);}
+        public InstanceProperty<Searchable, Link> delete(){return new InstanceProperty<>(source,PackageProperties.searchable.delete);}
+        public InstanceProperty<Searchable, Boolean> emptyValue(){return new InstanceProperty<>(source,PackageProperties.searchable.emptyValue);}
+        public InstanceProperty<Searchable, String> name(){return new InstanceProperty<>(source,PackageProperties.searchable.name);}
+        public InstanceProperty<Searchable, Object> operator(){return new InstanceProperty<>(source,PackageProperties.searchable.operator);}
+        public InstanceProperty<Searchable, Searchable.RenderedOperator> renderedOperator(){return new InstanceProperty<>(source,PackageProperties.searchable.renderedOperator);}
+        public InstanceProperty<Searchable, SearchCriterion> searchCriterion(){return new InstanceProperty<>(source,PackageProperties.searchable.searchCriterion);}
+        public InstanceProperty<Searchable, ValueEditor> valueEditor(){return new InstanceProperty<>(source,PackageProperties.searchable.valueEditor);}
       }
       
-       InstanceProperties instance(Searchable instance) {
+      public  InstanceProperties instance(Searchable instance) {
         return new InstanceProperties( instance);
       }
       

@@ -110,6 +110,17 @@ public abstract class EntityNode<E extends Entity>
 		}
 	}
 
+	@Registration({ ToStringRepresentation.class, Entity.class })
+	public static class ContextLocatorTransformLeftEntity
+			extends Binding.AbstractContextSensitiveTransform<Entity>
+			implements ToStringRepresentation<Entity> {
+		@Override
+		public String apply(Entity t) {
+			return t == null ? null
+					: t.toLocator().toRecoverableNumericString();
+		}
+	}
+
 	@Registration({ FromStringRepresentation.class, EntityLocator.class })
 	public static class ContextLocatorTransformRight extends
 			Binding.AbstractContextSensitiveReverseTransform<EntityLocator>

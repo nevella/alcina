@@ -11,6 +11,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -322,10 +323,6 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			if (node.parent != null
 					&& node.parent.annotationLocation == valueLocation) {
 				/*
-				 * The input model (has Field and Bindable refs)
-				 */
-				ValueModel inputModel = (ValueModel) renderer.input.model;
-				/*
 				 * The rendered model. No need to verify it implements HasValue
 				 * (that's checked in
 				 * BridgingValueRenderer.ValueResolver.contextAnnotation above)
@@ -350,6 +347,12 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			@Override
 			public Property getEditingProperty() {
 				return field.getProperty();
+			}
+
+			@Override
+			public Bindable getEditingModel() {
+				ValueModel valueModel = (ValueModel) ValueResolver.this.rootModel;
+				return valueModel.getBindable();
 			}
 
 			@Override

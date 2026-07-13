@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.domain.HasObject;
+import cc.alcina.framework.common.client.logic.domain.HasSuggestedObject;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -28,7 +28,7 @@ public interface BoundSuggestOracleResponseElement {
 	}
 
 	public static class UntypedSuggestion extends Bindable.Fields
-			implements Suggestion, Serializable, HasObject {
+			implements Suggestion, Serializable, HasSuggestedObject {
 		public UntypedSuggestion() {
 		}
 
@@ -52,13 +52,13 @@ public interface BoundSuggestOracleResponseElement {
 		}
 
 		@Override
-		public Object provideObject() {
+		public Object provideSuggestedObject() {
 			return suggestion;
 		}
 	}
 
 	public static class BoundSuggestOracleSuggestion extends Bindable
-			implements Suggestion, Serializable {
+			implements Suggestion, Serializable, HasSuggestedObject {
 		public static Object nullSuggestion() {
 			BoundSuggestOracleSuggestion suggestion = new BoundSuggestOracleSuggestion();
 			suggestion.displayString = "(empty)";
@@ -94,6 +94,11 @@ public interface BoundSuggestOracleResponseElement {
 
 		public void setDisplayString(String displayString) {
 			this.displayString = displayString;
+		}
+
+		@Override
+		public Object provideSuggestedObject() {
+			return typedValue;
 		}
 
 		public void

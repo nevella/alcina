@@ -1,10 +1,15 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 
 public interface NodeEditorContextService extends ContextService {
 	default Property getEditingProperty() {
+		throw new UnsupportedOperationException();
+	}
+
+	default Bindable getEditingModel() {
 		throw new UnsupportedOperationException();
 	}
 

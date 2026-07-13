@@ -31,7 +31,7 @@ public class FilterEditor extends Model.Value<PropertyCriterion.Filter>
 		return PackageProperties.filterEditor.instance(this);
 	}
 
-	@Directed.Transform(value = Choices.Select.To.class, transformsNull = true)
+	@Directed.Transform(Choices.Select.To.class)
 	@Choices.Values(ValuesImpl.class)
 	String propertyName;
 
@@ -53,7 +53,7 @@ public class FilterEditor extends Model.Value<PropertyCriterion.Filter>
 		}
 	}
 
-	@Directed.Transform(value = StringInput.To.class, transformsNull = true)
+	@Directed.Transform(StringInput.To.class)
 	String filterValue;
 
 	PropertyCriterion.Filter value;

@@ -1233,6 +1233,9 @@ public abstract class Choices<T> extends Model implements
 
 	public void putSupplierValues(List<T> values) {
 		this.hasValueSupplier = true;
+		if (values == null) {
+			return;
+		}
 		setValues(values);
 	}
 
