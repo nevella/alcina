@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -51,6 +52,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  */
 @TypedProperties
 @DirectedContextResolver
+@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 public class Searchable extends Model.Fields
 		implements SuggestOracle.Suggestion.Noop, HasSuggestedObject,
 		DecoratorNode.AlllowsPartialSelection,
