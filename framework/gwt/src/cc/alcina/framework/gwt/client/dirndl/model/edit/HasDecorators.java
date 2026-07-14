@@ -10,6 +10,7 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -197,5 +198,10 @@ public interface HasDecorators
 					.forEach(ContentDecorator::deleteIfSingleDecoratorSelected);
 			break;
 		}
+	}
+
+	@Property.Not
+	default boolean isCheckRepositionPostSelection() {
+		return true;
 	}
 }
