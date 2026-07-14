@@ -52,10 +52,7 @@ class PropertyFilter {
 			implements ModelEvents.Closed.Handler, SuggestionSelected.Handler {
 		class FilterEditor extends Model.All implements ValueChange.Container,
 				ReflectedEvents.FocusEditor.Reflector {
-			@Directed.Transform(
-				// value = Choices.Select.To.class,
-				value = Choices.Select.To.class,
-				transformsNull = true)
+			@Directed.Transform(Choices.Select.To.class)
 			@Choices.EnumValues(StandardSearchOperator.class)
 			@ChoiceEditor.WidthConstrained
 			StandardSearchOperator operator;

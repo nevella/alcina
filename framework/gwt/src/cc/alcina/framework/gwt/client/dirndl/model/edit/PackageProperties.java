@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
@@ -35,6 +36,7 @@ public class PackageProperties {
     public static _EditArea editArea = new _EditArea();
     public static _EditNode editNode = new _EditNode();
     public static _EntityNode entityNode = new _EntityNode();
+    public static _EntitySelector entitySelector = new _EntitySelector();
     public static _Slider slider = new _Slider();
     static _Slider_Knob slider_knob = new _Slider_Knob();
     static _Slider_Line_Extent slider_line_extent = new _Slider_Line_Extent();
@@ -296,6 +298,19 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(EntityNode instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _EntitySelector implements TypedProperty.Container {
+      public TypedProperty<EntitySelector, Entity> value = new TypedProperty<>(EntitySelector.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<EntitySelector> {
+        public  InstanceProperties(EntitySelector source){super(source);}
+        public InstanceProperty<EntitySelector, Entity> value(){return new InstanceProperty<>(source,PackageProperties.entitySelector.value);}
+      }
+      
+      public  InstanceProperties instance(EntitySelector instance) {
         return new InstanceProperties( instance);
       }
       

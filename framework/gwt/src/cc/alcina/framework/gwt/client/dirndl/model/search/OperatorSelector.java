@@ -33,10 +33,7 @@ contenteditable [EditArea]. OnBind, that editor displays a choice-suggestor - wh
 @TypedProperties
 public class OperatorSelector extends Model.Fields
 		implements ValueChange.Container {
-	@Directed.Transform(
-		// value = Choices.Select.To.class,
-		value = ChoicesEditorSingle.SingleSuggestions.To.class,
-		transformsNull = true)
+	@Directed.Transform(ChoicesEditorSingle.SingleSuggestions.To.class)
 	@FocusOnBindMarker
 	@Choices.Values(AvailableOperators.class)
 	@ValueTransformer(ChoiceRenderer.To.class)

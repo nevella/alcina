@@ -102,9 +102,20 @@ public abstract class DirectedRenderer {
 	}
 
 	protected void applyCssClass(Node node, Element element) {
+		applyCssClassStatic(node, element);
+	}
+
+	static void applyCssClassStatic(Node node, Element element) {
 		String cssClass = node.directed.className();
 		if (cssClass.length() > 0) {
 			element.addStyleName(cssClass);
+		}
+		Object model = node.getModel();
+		if (model instanceof HasClassName) {
+			cssClass = ((HasClassName) model).provideClassName();
+			if (cssClass.length() > 0) {
+				element.addStyleName(cssClass);
+			}
 		}
 	}
 

@@ -529,7 +529,7 @@ public @interface Directed {
 				Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
 		mergeStrategy = Transform.MergeStrategy.class)
 	@interface Transform {
-		boolean transformsNull() default false;
+		boolean transformsNull() default true;
 
 		/*
 		 * This originally required the value be a subtype of ModelTransform -

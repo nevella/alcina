@@ -70,6 +70,10 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * 
  * Thread safety: all api operations are thread-safe - access to mutable
  * collections and potentially concurrent modifications is synchronized
+ * 
+ * Note that in a server/romcom environment, queries will route to the server
+ * unless explicitly marked (withUiQuery) - but _dispatch_ of results will be in
+ * the environment context if calling from there
  */
 @Registration.Singleton
 @Registration.EnvironmentSingleton
@@ -106,6 +110,12 @@ public class InstanceOracle {
 		Runnable reemitRunnable;
 
 		boolean async;
+
+		/*
+		 * if not true, the query will be routed to the shared (singleton)
+		 * oracle
+		 */
+		boolean uiQuery;
 
 		/*
 		 * Discard the query after the consumer is fired once
@@ -215,6 +225,11 @@ public class InstanceOracle {
 			return this;
 		}
 
+		public Query<T> withUiQuery(boolean uiQuery) {
+			this.uiQuery = uiQuery;
+			return this;
+		}
+
 		public void reemit() {
 			if (reemitRunnable != null) {
 				reemitRunnable.run();
@@ -239,15 +254,15 @@ public class InstanceOracle {
 
 		@Override
 		public String toString() {
-			return FormatBuilder.keyValues("keys", providerKeys, "parameters",
-					parameters);
+			return FormatBuilder.keyValues("keys",
+					NestedName.list(providerKeys), "parameters", parameters);
 		}
 
 		/**
 		 * Clear the existing value, if any
 		 */
 		public void invalidate() {
-			InstanceOracle.get().invalidate(this);
+			InstanceOracle.get(this).invalidate(this);
 		}
 
 		public <PT extends InstanceQuery.Parameter, V> V
@@ -310,6 +325,7 @@ public class InstanceOracle {
 			while (itr.hasNext()) {
 				Entry<ProviderQueries, ProviderQueries> entry = itr.next();
 				if (entry.getKey().checkEviction()) {
+					Ax.out("evicting %s", entry.getKey());
 					itr.remove();
 				}
 			}
@@ -421,6 +437,13 @@ public class InstanceOracle {
 		@Override
 		public int hashCode() {
 			return definingQuery.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("[provider/queries: %s : %s : [%s]",
+					NestedName.get(provider), definingQuery,
+					awaitingQueries.size());
 		}
 
 		@Override
@@ -580,6 +603,16 @@ public class InstanceOracle {
 		return new Query<>(clazz);
 	}
 
+	static volatile InstanceOracle nonEnvironmentInstance;
+
+	public InstanceOracle() {
+		synchronized (InstanceOracle.class) {
+			if (nonEnvironmentInstance == null) {
+				nonEnvironmentInstance = this;
+			}
+		}
+	}
+
 	static InstanceOracle get() {
 		return Registry.impl(InstanceOracle.class);
 	}
@@ -590,7 +623,24 @@ public class InstanceOracle {
 		store.getProviderQueries(query).invalidate();
 	}
 
+	static InstanceOracle get(Query<?> query) {
+		return get().get0(query);
+	}
+
+	InstanceOracle get0(Query<?> query) {
+		if (!query.uiQuery) {
+			if (nonEnvironmentInstance != this) {
+				return nonEnvironmentInstance;
+			}
+		}
+		return this;
+	}
+
 	<T> ProviderQueries<T> submit(Query<T> query) {
+		InstanceOracle oracle = get0(query);
+		if (oracle != this) {
+			return oracle.submit(query);
+		}
 		query.bind();
 		ProviderQueries<T> providerQueries = store.getProviderQueries(query);
 		providerQueries.ensureSubmitted();

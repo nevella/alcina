@@ -55,7 +55,7 @@ public class OrderEditor extends Model.Value<Order>
 		}
 	}
 
-	@Directed.Transform(value = Choices.Select.To.class, transformsNull = true)
+	@Directed.Transform(Choices.Select.To.class)
 	@Choices.EnumValues(SearchCriterion.Direction.class)
 	SearchCriterion.Direction direction;
 

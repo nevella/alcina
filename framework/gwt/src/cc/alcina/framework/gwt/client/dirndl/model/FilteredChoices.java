@@ -58,7 +58,7 @@ public class FilteredChoices<T> extends Model.Fields
 	class Filter extends Model.All {
 		@Directed(
 			reemits = { ModelEvents.Input.class, ReflectedEvents.Filter.class })
-		@Directed.Transform(value = StringInput.To.class, transformsNull = true)
+		@Directed.Transform(StringInput.To.class)
 		@FocusOnBindMarker
 		String filter;
 	}

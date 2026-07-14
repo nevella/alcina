@@ -55,7 +55,9 @@ public class SearchDefinitionEditorGalleryPlace extends GalleryPlace {
 	@TypedProperties
 	public static class Definition extends Model.Fields
 			implements ContentDefinition {
-		@Directed.Transform(SearchDefinitionEditor.class)
+		@Directed.Transform(
+			value = SearchDefinitionEditor.class,
+			transformsNull = false)
 		public SequenceSearchDefinition def;
 
 		Definition() {

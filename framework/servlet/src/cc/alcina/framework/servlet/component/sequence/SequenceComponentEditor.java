@@ -31,7 +31,9 @@ public class SequenceComponentEditor extends Model.All
 					.instance(this);
 		}
 
-		@Directed.Transform(SearchDefinitionEditor.class)
+		@Directed.Transform(
+			value = SearchDefinitionEditor.class,
+			transformsNull = false)
 		SearchDefinition searchDefinition;
 	}
 

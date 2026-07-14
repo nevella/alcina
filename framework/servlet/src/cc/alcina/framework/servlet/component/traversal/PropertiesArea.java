@@ -37,7 +37,7 @@ class PropertiesArea extends Model.Fields {
 	Choices.Single<TraversalPlace.SelectionType> filter;
 
 	@Directed(bindToModel = false)
-	@Directed.Transform(SelectionArea.class)
+	@Directed.Transform(value = SelectionArea.class, transformsNull = false)
 	Selection selection;
 
 	Page page;

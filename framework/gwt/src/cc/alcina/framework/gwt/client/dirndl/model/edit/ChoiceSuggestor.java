@@ -10,7 +10,7 @@ import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.logic.domain.HasObject;
+import cc.alcina.framework.common.client.logic.domain.HasSuggestedObject;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.StringAskAnswer;
@@ -88,7 +88,7 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 			Collection<? extends Suggestion> suggestions = response
 					.getSuggestions();
 			List<?> suggestedObjects = suggestions.stream()
-					.map(s -> ((HasObject) s).provideObject())
+					.map(s -> ((HasSuggestedObject) s).provideSuggestedObject())
 					.collect(Collectors.toList());
 			/*
 			 * see DecoratorBehavior.RepeatableChoiceHandling

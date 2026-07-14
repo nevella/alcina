@@ -7,7 +7,7 @@ import com.google.gwt.dom.client.EventBehavior;
 import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
-import cc.alcina.framework.common.client.logic.domain.HasObject;
+import cc.alcina.framework.common.client.logic.domain.HasSuggestedObject;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -51,8 +52,10 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  */
 @TypedProperties
 @DirectedContextResolver
-class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
-		HasObject, DecoratorNode.AlllowsPartialSelection,
+@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
+public class Searchable extends Model.Fields
+		implements SuggestOracle.Suggestion.Noop, HasSuggestedObject,
+		DecoratorNode.AlllowsPartialSelection,
 		ReflectedEvents.FocusEditor.Reflector,
 		DecoratorNode.EditableDecoratorContents, ModelEvents.Delete.Handler {
 	/**
@@ -79,7 +82,7 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 		}
 	}
 
-	class Service implements ContextService {
+	public class Service implements ContextService {
 		public SearchCriterion getSearchCriterion() {
 			return searchCriterion;
 		}
@@ -87,9 +90,7 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 
 	@TypedProperties
 	class RenderedOperator extends Model.Fields {
-		@Directed.Transform(
-			value = OperatorRenderer.class,
-			transformsNull = true)
+		@Directed.Transform(OperatorRenderer.class)
 		StandardSearchOperator operator;
 
 		@Override
@@ -265,7 +266,7 @@ class Searchable extends Model.Fields implements SuggestOracle.Suggestion.Noop,
 	}
 
 	@Override
-	public Object provideObject() {
+	public Object provideSuggestedObject() {
 		return this;
 	}
 

@@ -58,7 +58,7 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 	}
 
 	/*
-	 * * Binds a collection property (in an editor) to a MultipleSuggestor
+	 * * Binds a collection property (in an editor) to a SingleSuggestor
 	 */
 	@Directed.Delegating
 	@Bean(PropertySource.FIELDS)
@@ -144,8 +144,8 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 
 	@Override
 	public void onDecoratorsChanged(DecoratorsChanged event) {
-		List<DecoratorNode> model = event.getModel();
-		List<T> decoratorChoiceValues = model.stream()
+		DecoratorEvents.DecoratorsChanged.Data data = event.getModel();
+		List<T> decoratorChoiceValues = data.newValue.stream()
 				.map(n -> (T) n.getStringRepresentable()).toList();
 		if (decoratorChoiceValues.size() >= 1) {
 			setValue(Ax.first(decoratorChoiceValues));

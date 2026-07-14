@@ -108,7 +108,9 @@ class Header extends Model.All {
 					.accept(this::updateSearchDefinitionFromPlace);
 		}
 
-		@Directed.Transform(SearchDefinitionEditor.class)
+		@Directed.Transform(
+			value = SearchDefinitionEditor.class,
+			transformsNull = false)
 		SequenceSearchDefinition searchDefinition;
 
 		@Override

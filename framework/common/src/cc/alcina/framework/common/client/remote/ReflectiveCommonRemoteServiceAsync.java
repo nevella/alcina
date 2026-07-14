@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
@@ -25,6 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 @Reflected
 @EnvironmentSingleton
@@ -139,6 +141,12 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	public void search(SearchDefinition def,
 			AsyncCallback<SearchResultsBase> callback) {
 		call("search", new Class[] { SearchDefinition.class }, callback, def);
+	}
+
+	public void suggest(BoundSuggestOracleRequest request,
+			AsyncCallback<SuggestOracle.Response> callback) {
+		call("suggest", new Class[] { BoundSuggestOracleRequest.class },
+				callback, request);
 	}
 
 	public void submitPublication(

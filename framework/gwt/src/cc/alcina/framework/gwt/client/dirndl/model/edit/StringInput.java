@@ -79,7 +79,9 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * It fires modelevents <code>&lt;Change&gt;</code> and
  * <code>&lt;Input&gt;</code>, wrapping the corresponding DOM events
  *
- *
+ * <p>
+ * Note that any input value null will be normalised to an empty string
+ * 
  * FIXME - dirndl - to Model.Fields
  *
  */
@@ -456,11 +458,14 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 	@Override
 	public void setValue(String value) {
-		if (provideIsBound() && !Objects.equals(value, currentValue)) {
-			provideElement().setPropertyString("value", value);
-			currentValue = value;
+		String normalisedValue = value == null ? "" : value;
+		if (provideIsBound()
+				&& !Objects.equals(normalisedValue, currentValue)) {
+			provideElement().setPropertyString("value", normalisedValue);
+			currentValue = normalisedValue;
 		}
-		set("value", this.value, value, () -> this.value = value);
+		set("value", this.value, normalisedValue,
+				() -> this.value = normalisedValue);
 	}
 
 	void updateSize() {

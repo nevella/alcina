@@ -22,10 +22,10 @@ public class TermDistanceEditor extends Model.Value<TermDistance>
 		return PackageProperties.termDistanceEditor.instance(this);
 	}
 
-	@Directed.Transform(value = StringInput.To.class, transformsNull = true)
+	@Directed.Transform(StringInput.To.class)
 	String text;
 
-	@Directed.Transform(value = Choices.Select.To.class, transformsNull = true)
+	@Directed.Transform(Choices.Select.To.class)
 	@Choices.EnumValues(Depth.class)
 	Depth distance;
 

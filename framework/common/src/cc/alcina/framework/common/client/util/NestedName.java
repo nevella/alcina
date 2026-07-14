@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.dirndl.event.Action.Nested;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 
 @Registration.Singleton
@@ -25,8 +24,13 @@ public class NestedName {
 	}
 
 	public static String get(Object object) {
-		return object == null ? "null"
-				: get().getNestedSimpleName(object.getClass());
+		if (object == null) {
+			return "null";
+		}
+		if (object instanceof Class) {
+			return get((Class) object);
+		}
+		return get().getNestedSimpleName(object.getClass());
 	}
 
 	public static String packageSegments(Object object, int segmentCount) {
@@ -81,5 +85,10 @@ public class NestedName {
 		CountingMap<String> result = new CountingMap<>();
 		objects.stream().map(NestedName::get).forEach(result::add);
 		return result;
+	}
+
+	public static String list(List<?> collection) {
+		return collection.stream().map(NestedName::get)
+				.collect(Collectors.joining(", "));
 	}
 }

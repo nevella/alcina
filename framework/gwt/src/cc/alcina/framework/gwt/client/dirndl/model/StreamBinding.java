@@ -257,9 +257,18 @@ public class StreamBinding<T> {
 			existingFilter = this.preMapPredicate;
 			this.preMapPredicate = predicate;
 		} else {
-			existingFilter = preSupplierPredicate;
+			if (preSupplierPredicate != null) {
+				predicate = preSupplierPredicate.and(predicate);
+			}
+			/*
+			 * existingFilter = preSupplierPredicate;
+			 */
 			this.preSupplierPredicate = predicate;
 		}
+		/*
+		 * allow pre-supplier, pre-map -- but otherwise too confusin (unless we
+		 * go full stream)
+		 */
 		Preconditions.checkState(existingFilter == null,
 				"Cannot set multiple predicates");
 		return this;
