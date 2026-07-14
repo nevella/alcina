@@ -166,4 +166,43 @@ public class EntityCleaner {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	public static String cleanIllegalXmlCharacters(String markup) {
+		boolean containsInvalid = false;
+		for (int idx = 0; idx < markup.length(); idx++) {
+			int codePoint = markup.codePointAt(idx);
+			if (codePoint < 0x20) {
+				switch (codePoint) {
+				case 0x9:
+				case 0xA:
+				case 0xD:
+					break;
+				default:
+					containsInvalid = true;
+					break;
+				}
+			}
+		}
+		if (!containsInvalid) {
+			return markup;
+		}
+		StringBuilder builder = new StringBuilder(markup.length());
+		for (int idx = 0; idx < markup.length(); idx++) {
+			int codePoint = markup.codePointAt(idx);
+			if (codePoint < 0x20) {
+				switch (codePoint) {
+				case 0x9:
+				case 0xA:
+				case 0xD:
+					break;
+				default:
+					// replace
+					codePoint = '?';
+					break;
+				}
+			}
+			builder.appendCodePoint(codePoint);
+		}
+		return builder.toString();
+	}
 }
