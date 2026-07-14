@@ -111,9 +111,15 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 	@JsonIgnore
 	@AlcinaTransient
 	public E getValue() {
-		if (value == null && !GWT.isClient() && id != 0) {
+		if (value == null && id != 0) {
 			value = (E) Domain.find((Class<? extends Entity>) getObjectClass(),
 					id);
+			if (value == null) {
+				if (GWT.isClient()) {
+					value = Reflections.newInstance(getObjectClass());
+					value.setId(id);
+				}
+			}
 		}
 		return value;
 	}
@@ -140,6 +146,9 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 	}
 
 	public void setValue(E value) {
+		if (value != null && value.getClass().getName().contains("Catchword")) {
+			int debug = 3;
+		}
 		setDisplayText(provideDisplayTextFor(value));
 		if (value != null) {
 			setId(value.getId());

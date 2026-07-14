@@ -5,6 +5,7 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class SelectionLocal implements ClientDomSelection {
 	private Selection selectionObject;
@@ -61,6 +62,13 @@ public class SelectionLocal implements ClientDomSelection {
 		selectionRecord.focusNode = selectionRecord.anchorNode;
 		selectionRecord.focusOffset = selectionRecord.anchorOffset;
 		selectionRecord.populateNodeIds();
+		if (node.attachId == 693) {
+			int debug = 3;
+		}
+		Ax.out("selection-collapse: %s %s previous: %s %s", node, node.attachId,
+				node.getPreviousSibling() == null ? "no-prev"
+						: node.getPreviousSibling().asDomNode().toMarkup(),
+				offset);
 		this.selectionRecord = selectionRecord;
 	}
 

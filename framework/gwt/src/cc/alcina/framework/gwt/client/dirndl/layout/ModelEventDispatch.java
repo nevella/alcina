@@ -42,6 +42,7 @@ class ModelEventDispatch {
 		while (cursor != null) {
 			cursor.fireEvent(modelEvent);
 			if (modelEvent.isHandled()) {
+				Object handlingModel = cursor.getModel();
 				break;
 			}
 			cursor = getParentOrReroutedAncestor(cursor);

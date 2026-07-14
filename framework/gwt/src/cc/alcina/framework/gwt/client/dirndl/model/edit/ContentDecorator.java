@@ -122,6 +122,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  *
  * FIXME - less minor - always ensure post deletes that ZWS spaces exist both
  * sides
+ * 
+ * FIXME - explain when cursor repositioning happens - particularly with nested
+ * edit areas (single selection in a searchdef editor e.g.)
  */
 @Feature.Ref(Feature_Dirndl_ContentDecorator.class)
 public class ContentDecorator<T> implements DomEvents.Input.Handler,
@@ -315,8 +318,10 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 					event.getModel());
 			suggestingNode.nodes().insertAfterThis(decorator);
 			suggestingNode.nodes().removeFromParent();
-			if (decorator.isPositionPostDecoratorOnCreate()) {
-				decorator.positionCursorPostReferencedSelection();
+			if (decoratorParent.isCheckRepositionPostSelection()) {
+				if (decorator.isPositionPostDecoratorOnCreate()) {
+					decorator.positionCursorPostReferencedSelection();
+				}
 			}
 		}
 	}

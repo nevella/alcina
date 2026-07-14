@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.beans.PropertyChangeEvent;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.HandlesModelChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.DecoratorsChanged;
@@ -32,39 +34,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvents.Decorato
  */
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
-		implements HasValue<T> {
-	PackageProperties._ChoicesEditorSingle.InstanceProperties properties() {
-		return PackageProperties.choicesEditorSingle.instance(this);
-	}
-
-	public ChoicesEditorSingle() {
-		from(properties().selectedValue())
-				.accept(value -> this.updateAreaFromSelectedValue((T) value));
-		single = true;
-	}
-
-	private T selectedValue;
-
-	public T getSelectedValue() {
-		return selectedValue;
-	}
-
-	public void setSelectedValue(T selectedValue) {
-		if (!Objects.equals(selectedValue, this.selectedValue)) {
-			set("selectedValue", this.selectedValue, selectedValue,
-					() -> this.selectedValue = selectedValue);
-			emitChangeModelEvents(selectedValue);
-		}
-	}
-
+		implements HasValue<T>, HandlesModelChange {
 	/*
 	 * * Binds a collection property (in an editor) to a SingleSuggestor
 	 */
 	@Directed.Delegating
 	@Bean(PropertySource.FIELDS)
 	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
-	public static class SingleSuggestions<T> extends Model.Value<T>
-			implements ModelEvents.SelectionChanged.Handler {
+	public static class SingleSuggestions<T> extends Model.Value<T> implements
+			ModelEvents.SelectionChanged.Handler, HandlesModelChange {
 		public static class To
 				implements ModelTransform<Object, SingleSuggestions> {
 			@Override
@@ -80,6 +58,9 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 
 		private T value;
 
+		public SingleSuggestions() {
+		}
+
 		public T getValue() {
 			return value;
 		}
@@ -87,9 +68,6 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 		public void setValue(T value) {
 			set("value", this.value, value, () -> this.value = value);
 			editor.setSelectedValue(value);
-		}
-
-		public SingleSuggestions() {
 		}
 
 		@Override
@@ -110,26 +88,41 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 			setValue(editor.getSelectedValue());
 			event.reemit();
 		}
+
+		@Override
+		public boolean handlesModelChange(PropertyChangeEvent evt) {
+			return editor.handlesModelChange(evt);
+		}
 	}
 
-	/*
-	 * As per Choices.Multiple
-	 */
-	protected void emitChangeModelEvents(T newValue) {
-		emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class, newValue);
-		emitEvent(ReflectedEvents.BeforeSelectionChangedDispatchDescent.class,
-				newValue);
-		emitEvent(ModelEvents.SelectionChanged.class, newValue);
+	private T selectedValue;
+
+	public ChoicesEditorSingle() {
+		from(properties().selectedValue())
+				.accept(value -> this.updateAreaFromSelectedValue((T) value));
+		single = true;
+	}
+
+	public T getSelectedValue() {
+		return selectedValue;
+	}
+
+	public void setSelectedValue(T selectedValue) {
+		if (!Objects.equals(selectedValue, this.selectedValue)) {
+			set("selectedValue", this.selectedValue, selectedValue,
+					() -> this.selectedValue = selectedValue);
+			emitChangeModelEvents(selectedValue);
+		}
+	}
+
+	@Override
+	public boolean isCheckRepositionPostSelection() {
+		return false;
 	}
 
 	@Override
 	public Object provideSelectedValue() {
 		return getSelectedValue();
-	}
-
-	@Override
-	protected void onSelectedValues(List<T> selectedValues) {
-		setSelectedValue(Ax.first(selectedValues));
 	}
 
 	@Override
@@ -150,5 +143,30 @@ public class ChoicesEditorSingle<T> extends ChoiceEditor<T>
 		if (decoratorChoiceValues.size() >= 1) {
 			setValue(Ax.first(decoratorChoiceValues));
 		}
+	}
+
+	@Override
+	public boolean handlesModelChange(PropertyChangeEvent evt) {
+		return true;
+	}
+
+	/*
+	 * As per Choices.Multiple
+	 */
+	protected void emitChangeModelEvents(T newValue) {
+		emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class, newValue);
+		emitEvent(ReflectedEvents.BeforeSelectionChangedDispatchDescent.class,
+				newValue);
+		emitEvent(ModelEvents.SelectionChanged.class, newValue);
+		emitEvent(ModelEvents.Commit.class);
+	}
+
+	@Override
+	protected void onSelectedValues(List<T> selectedValues) {
+		setSelectedValue(Ax.first(selectedValues));
+	}
+
+	PackageProperties._ChoicesEditorSingle.InstanceProperties properties() {
+		return PackageProperties.choicesEditorSingle.instance(this);
 	}
 }
