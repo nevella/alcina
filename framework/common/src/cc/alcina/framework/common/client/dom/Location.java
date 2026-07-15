@@ -904,9 +904,13 @@ public class Location implements Comparable<Location> {
 			}
 			if (at.treeIndex == treeIndex && at.index == index && start) {
 				/*
-				 * edgy - a delta exactly at this index, when the index is a
+				 * edgy - a delta exactly at this index, when this location is a
 				 * start, will only have effect if the delta is a tree-index
-				 * delta (possibly also an index delta)
+				 * delta (possibly also an index delta).
+				 * 
+				 * For delta.treeIndex > 0, this is 'insterting a node at
+				 * exactly this point pushes locations at this point forwards',
+				 * etc
 				 */
 				return delta.treeIndex != 0;
 			}
