@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.dom;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -200,33 +200,7 @@ public class DomNodeBuilder {
 	}
 
 	public DomNode wrap() {
-		com.google.gwt.dom.client.Node gwtNode = relativeTo.isGwtNode()
-				? relativeTo.gwtNode()
-				: null;
-		try {
-			if (gwtNode != null) {
-				List<com.google.gwt.dom.client.Node> gwtNodes = Stream
-						.of(relativeTo).map(DomNode::gwtNode).toList();
-				gwtNode.getOwnerDocument().setWillReattach(gwtNodes);
-				gwtNode.mutationGroups().enterWrap();
-				/*
-				 * the location mutations will operate directly on the wrapped
-				 * subtree, so ensure current here
-				 */
-				relativeTo.stream()
-						.forEach(n -> n.asLocation().ensureCurrent());
-			}
-			DomNode node = build();
-			relativeTo.node.getParentNode().insertBefore(node.node,
-					relativeTo.node);
-			node.node.appendChild(relativeTo.node);
-			return node;
-		} finally {
-			if (gwtNode != null) {
-				gwtNode.getOwnerDocument().setWillReattach(null);
-				gwtNode.mutationGroups().exit();
-			}
-		}
+		return wrapMultiple(Set.of(relativeTo));
 	}
 
 	public DomNode wrapChildren() {
@@ -239,5 +213,36 @@ public class DomNodeBuilder {
 	public DomNodeBuilder cdata() {
 		this.cdata = true;
 		return this;
+	}
+
+	public DomNode wrapMultiple(Set<DomNode> toWrap) {
+		com.google.gwt.dom.client.Node gwtNode = relativeTo.isGwtNode()
+				? relativeTo.gwtNode()
+				: null;
+		try {
+			if (gwtNode != null) {
+				List<com.google.gwt.dom.client.Node> gwtNodes = toWrap.stream()
+						.map(DomNode::gwtNode).toList();
+				gwtNode.getOwnerDocument().setWillReattach(gwtNodes);
+				gwtNode.mutationGroups().enterWrap();
+				/*
+				 * the location mutations will operate directly on the wrapped
+				 * subtree, so ensure current here
+				 */
+				toWrap.stream().flatMap(DomNode::stream)
+						.forEach(n -> n.asLocation().ensureCurrent());
+			}
+			DomNode node = build();
+			relativeTo.node.getParentNode().insertBefore(node.node,
+					relativeTo.node);
+			toWrap.forEach(
+					toWrapNode -> node.node.appendChild(toWrapNode.node));
+			return node;
+		} finally {
+			if (gwtNode != null) {
+				gwtNode.getOwnerDocument().setWillReattach(null);
+				gwtNode.mutationGroups().exit();
+			}
+		}
 	}
 }

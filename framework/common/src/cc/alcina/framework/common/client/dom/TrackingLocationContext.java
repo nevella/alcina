@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -97,6 +98,8 @@ class TrackingLocationContext implements LocationContext {
 
 		MutationGroup mutationGroup;
 
+		int mutationGroupIndex;
+
 		IndexMutation(TrackingLocationContext context) {
 			this.context = context;
 			mutationIndex = context.mutations.size();
@@ -112,10 +115,20 @@ class TrackingLocationContext implements LocationContext {
 			 */
 			location.markCurrentMutationPosition();
 			at = location.asIndexTuple();
-			delta = computeDelta(firstMutation);
 			mutationGroup = firstMutation.mutationGroup;
+			mutationGroupIndex = firstMutation.mutationGroupIndex;
 			addDomMutation(firstMutation);
 			clearLocationIfRemove(firstMutation);
+			delta = computeDelta(firstMutation);
+			if (mutationGroup == MutationGroup.split) {
+				/*
+				 * special case, split only affects part of the node (the part
+				 * after 'newValue')
+				 */
+				Preconditions.checkArgument(
+						firstMutation.type == Type.characterData);
+				at = at.add(IntPair.of(0, firstMutation.newValue.length()));
+			}
 		}
 
 		void clearLocationIfRemove(MutationRecord mutationRecord) {
@@ -255,9 +268,10 @@ class TrackingLocationContext implements LocationContext {
 		@Override
 		public String toString() {
 			return location == null ? "[null]"
-					: Ax.format("%s :: %s :: %s", at, delta,
+					: Ax.format("%s :: %s :: %s :: [group:%s/%s]", at, delta,
 							location.asIndexTuple().containingNode
-									.toShortDebugString());
+									.toShortDebugString(),
+							mutationGroup, mutationGroupIndex);
 		}
 
 		IndexTuple applyTo(IndexTuple mutatingPointRef) {
@@ -275,7 +289,13 @@ class TrackingLocationContext implements LocationContext {
 				 */
 				return mutatingPointRef;
 			}
-			if (!mutatingPointRef.isAffectedBy(at, delta)) {
+			IndexTuple testDelta = delta;
+			if (mutationGroup != null) {
+				IntPair mutationTuple = mutationGroup.mutationTuple();
+				testDelta = new IndexTuple(mutationTuple.i1, mutationTuple.i2,
+						delta.start, delta.containingNode);
+			}
+			if (!mutatingPointRef.isAffectedBy(at, testDelta)) {
 				return mutatingPointRef;
 			}
 			/*
@@ -301,21 +321,21 @@ class TrackingLocationContext implements LocationContext {
 					 */
 					DomNode createdNode = domMutations.get(1).addedNodes
 							.get(0).node.asDomNode();
-					return mutatingPointRef.add(1, 0)
+					return mutatingPointRef.add(mutationGroup.mutationTuple())
 							.withContainingNode(createdNode);
 				case strip:
 					/*
 					 * the combined effect (on all non-removed nodes) is just
 					 * tree-index : -=1
 					 */
-					return mutatingPointRef.add(-1, 0);
+					return mutatingPointRef.add(mutationGroup.mutationTuple());
 				case wrap:
 					/*
 					 * the combined effect (on all non-removed nodes) is just
 					 * tree-index : +=1
 					 * 
 					 */
-					return mutatingPointRef.add(1, 0);
+					return mutatingPointRef.add(mutationGroup.mutationTuple());
 				default:
 					throw new UnsupportedOperationException();
 				}
@@ -359,7 +379,6 @@ class TrackingLocationContext implements LocationContext {
 				Preconditions.checkState(
 						firstMutation.mutationGroup == mutation.mutationGroup);
 				mutations.add(mutation);
-				boolean lastMutation = false;
 				switch (firstMutation.mutationGroup) {
 				case wrap:
 					if (mutations.size() == 3) {
@@ -369,7 +388,6 @@ class TrackingLocationContext implements LocationContext {
 						wrappeeNode.stream()
 								.forEach(n -> n.asLocation().applyIndexDelta(
 										new IndexTuple(1, 0, true, null)));
-						lastMutation = true;
 					}
 					break;
 				case strip:
@@ -378,7 +396,7 @@ class TrackingLocationContext implements LocationContext {
 						DomNode removedNode = mutation.removedNodes.get(0)
 								.node().asDomNode();
 						if (removedNode == stripee) {
-							lastMutation = true;
+							//
 						} else {
 							removedNode.stream().forEach(
 									n -> n.asLocation().applyIndexDelta(
@@ -389,11 +407,6 @@ class TrackingLocationContext implements LocationContext {
 				default:
 					throw new UnsupportedOperationException();
 				}
-				if (lastMutation) {
-					// remove from parent
-					mutationGroupTracker = null;
-					extendable = false;
-				}
 			}
 		}
 
@@ -403,12 +416,17 @@ class TrackingLocationContext implements LocationContext {
 					|| mutation.type == MutationRecord.Type.characterData) {
 				return false;
 			}
-			if (mutationGroup != null
-					&& mutation.mutationGroup == mutationGroup) {
-				clearLocationIfRemove(mutation);
-				addToGroupTracker(mutation);
-				addDomMutation(mutation);
-				return true;
+			if (mutationGroup != null) {
+				if (mutation.mutationGroup == mutationGroup
+						&& mutation.mutationGroupIndex == mutationGroupIndex) {
+					clearLocationIfRemove(mutation);
+					addToGroupTracker(mutation);
+					addDomMutation(mutation);
+					return true;
+				} else {
+					mutationGroupTracker = null;
+					return false;
+				}
 			}
 			Location affectedLocation = computeAffectedLocation(mutation);
 			int mutationDirection = mutation.addedNodes.size() > 0 ? 1 : -1;
@@ -465,6 +483,15 @@ class TrackingLocationContext implements LocationContext {
 			default:
 				throw new UnsupportedOperationException();
 			}
+		}
+
+		String toDebugString() {
+			FormatBuilder builder = new FormatBuilder();
+			builder.append(toString());
+			builder.indent(2);
+			domMutations.forEach(builder::append);
+			builder.indent(0);
+			return builder.toString();
 		}
 	}
 
@@ -552,6 +579,10 @@ class TrackingLocationContext implements LocationContext {
 		 */
 		IndexTuple cumulativeDelta = IndexTuple.zero;
 
+		IndexMutation lastExtendedWith;
+
+		boolean striclyForwardsMutations = true;
+
 		/**
 		 * 
 		 * Note that I haven't really thought through edge cases here - i.e. if
@@ -559,24 +590,41 @@ class TrackingLocationContext implements LocationContext {
 		 * by making applyPriorMutations run both code paths and check equality
 		 * 
 		 * @param mutatingPointRef
-		 * @return the updated if the mutatingPointRef was updateable, otherwise
+		 * @param documentMutationPosition
+		 * @return the update if the mutatingPointRef was updateable, otherwise
 		 *         null;
 		 */
-		IndexTuple update(IndexTuple mutatingPointRef) {
+		IndexTuple update(IndexTuple mutatingPointRef,
+				int documentMutationPosition) {
+			queryCount++;
+			if (queryCount > hitCount + 100) {
+				int debug = 3;
+			}
 			if (mutatingPointRef == null) {
 				return null;
 			}
 			if (undamagedBefore == null) {
 				return null;
 			}
-			if (undamagedBefore.isAffectedBy(mutatingPointRef,
-					cumulativeDelta)) {
+			if (documentMutationPosition != fromMutationIndex) {
+				if (striclyForwardsMutations) {
+					hitCount++;
+					return mutatingPointRef;
+				} else {
+					return null;
+				}
+			}
+			if (undamagedBefore.isAffectedBy(mutatingPointRef, cumulativeDelta)
+					&& !Objects.equals(mutatingPointRef, undamagedBefore)) {
 				/*
-				 * no change
+				 * no change (i.e. the cumulative mutation is strictly after the
+				 * mutating pointref)
 				 */
+				hitCount++;
 				return mutatingPointRef;
 			} else if (mutatingPointRef.isAffectedBy(undamagedAfter,
 					cumulativeDelta)) {
+				hitCount++;
 				return mutatingPointRef.add(cumulativeDelta);
 			} else {
 				return null;
@@ -587,13 +635,22 @@ class TrackingLocationContext implements LocationContext {
 			if (mutation == null) {
 				return;
 			}
+			/*
+			 * extend() can be called from two paths, so guard against
+			 * double-extension
+			 */
+			if (lastExtendedWith == mutation) {
+				return;
+			}
+			lastExtendedWith = mutation;
+			IndexTuple delta = mutation.delta;
+			IntPair indexMutations = mutation.mutationGroup == null
+					? new IntPair(delta.treeIndex, delta.index)
+					: mutation.mutationGroup.mutationTuple();
 			if (undamagedBefore == null) {
 				// first mutation, initialise
 				undamagedBefore = mutation.at;
 				undamagedAfter = mutation.at;
-			}
-			if (undamagedBefore.isAffectedBy(mutation.at, mutation.delta)) {
-				undamagedBefore = mutation.at;
 			} else {
 				/*
 				 * convert the mutation to the baseline coordinates. this works
@@ -601,15 +658,42 @@ class TrackingLocationContext implements LocationContext {
 				 */
 				IndexTuple baselineMutationAt = mutation.at
 						.subtract(cumulativeDelta);
-				if (!undamagedAfter.isAffectedBy(baselineMutationAt,
-						mutation.delta)) {
-					/*
-					 * the mutation is 'after' the current cumulative boundary
-					 */
-					undamagedAfter = baselineMutationAt;
+				if (undamagedBefore.isAffectedBy(baselineMutationAt, delta)) {
+					undamagedBefore = baselineMutationAt;
+					striclyForwardsMutations = false;
+				} else {
+					if (!undamagedAfter.isAffectedBy(baselineMutationAt,
+							delta)) {
+						/*
+						 * the mutation is 'after' the current cumulative
+						 * boundary
+						 */
+						undamagedAfter = baselineMutationAt;
+					} else {
+						if (!Objects.equals(undamagedAfter,
+								baselineMutationAt)) {
+							striclyForwardsMutations = false;
+						}
+					}
 				}
 			}
-			cumulativeDelta = cumulativeDelta.add(mutation.delta);
+			cumulativeDelta = cumulativeDelta.add(indexMutations);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format(
+					"[cumulative] from: %s - mutation: %s - undamagedBefore: %s - undamagedAfter:%s",
+					fromMutationIndex, cumulativeDelta, undamagedBefore,
+					undamagedAfter);
+		}
+
+		int hitCount;
+
+		int queryCount;
+
+		String toStats() {
+			return Ax.format("%s/%s", hitCount, queryCount);
 		}
 	}
 
@@ -913,6 +997,10 @@ class TrackingLocationContext implements LocationContext {
 				() -> new TrackingLocationMutationObservable(location, false));
 	}
 
+	void dumpMutations() {
+		mutations.forEach(m -> Ax.out(m.toDebugString()));
+	}
+
 	@Override
 	public int getContentLength(DomNode domNode) {
 		if (domNode.isText()) {
@@ -981,6 +1069,7 @@ class TrackingLocationContext implements LocationContext {
 				throw new LocationValidationException();
 			}
 		}
+		Ax.out("cumulative mutation stats: %s", cumulativeMutation.toStats());
 	}
 
 	static class LocationValidationException extends IllegalStateException {
@@ -1034,41 +1123,82 @@ class TrackingLocationContext implements LocationContext {
 		 * it's a sort of pointer/accumulator thing
 		 */
 		IndexTuple initialLocationTuple = location.asIndexTuple();
+		int documentMutationPosition = location.documentMutationPosition;
 		IndexTuple mutatingPointRef = initialLocationTuple
 				.withContainingNode(null);
-		/* wip */
-		IndexTuple updatedByCumulativeMutation = null;
-		// cumulativeMutation
-		// .update(mutatingPointRef);
-		if (updatedByCumulativeMutation != null) {
-			mutatingPointRef = updatedByCumulativeMutation;
-			// optimised, cumulativeMutation groups all except current
-			if (currentMutation != null) {
-				mutatingPointRef = currentMutation.applyTo(mutatingPointRef);
+		IndexTuple cumulativeMutatedRef = null;
+		if (DomDocument.useCumulativeMutation) {
+			IndexTuple updatedByCumulativeMutation = cumulativeMutation.update(
+					mutatingPointRef, location.documentMutationPosition);
+			if (updatedByCumulativeMutation != null) {
+				mutatingPointRef = updatedByCumulativeMutation;
+				// optimised, cumulativeMutation groups all except current
+				if (currentMutation != null) {
+					mutatingPointRef = currentMutation
+							.applyTo(mutatingPointRef);
+				}
+				cumulativeMutatedRef = mutatingPointRef;
 			}
-		} else {
-			for (int idx = location.documentMutationPosition; idx < mutations
-					.size(); idx++) {
-				IndexMutation indexMutation = mutations.get(idx);
-				mutatingPointRef = indexMutation.applyTo(mutatingPointRef);
+		}
+		mutatingPointRef = initialLocationTuple.withContainingNode(null);
+		for (int idx = location.documentMutationPosition; idx < mutations
+				.size(); idx++) {
+			IndexMutation indexMutation = mutations.get(idx);
+			mutatingPointRef = indexMutation.applyTo(mutatingPointRef);
+		}
+		if (cumulativeMutatedRef != null) {
+			if (!Objects.equals(cumulativeMutatedRef, mutatingPointRef)) {
+				/*
+				 * WIP - cumulative mutation
+				 * 
+				 * for the jade case, * mutations need to be more strictly
+				 * incremental when inserting span/span/a - given they're all at
+				 * the same place, we should be able to order em so they're
+				 * monotonic
+				 * 
+				 */
+				// mutatingPointRef = initialLocationTuple
+				// .withContainingNode(null);
+				// mutatingPointRef = dumpMutationComputation(location,
+				// mutatingPointRef);
+				// Ax.out("diff: %s :: %s", cumulativeMutatedRef,
+				// mutatingPointRef);
+				// int debug = 3;
 			}
 		}
 		IndexTuple locationDelta = mutatingPointRef
 				.subtract(initialLocationTuple);
-		// if (Location.debugIndexMutation && locationDelta.index < 0
-		// && initialLocationTuple.start) {
-		// int debug = 3;
-		// }
 		location.applyIndexDelta(locationDelta);
 		if (!locationDelta.isZero()) {
 			flushCurrentMutationIfAffecting(location);
 		}
 	}
 
+	IndexTuple dumpMutationComputation(Location location,
+			IndexTuple mutatingPointRef) {
+		IndexTuple initialPointRef = mutatingPointRef;
+		for (int idx = location.documentMutationPosition; idx < mutations
+				.size(); idx++) {
+			IndexMutation indexMutation = mutations.get(idx);
+			IndexTuple pre = mutatingPointRef;
+			mutatingPointRef = indexMutation.applyTo(mutatingPointRef);
+			boolean isNoop = Objects.equals(pre, mutatingPointRef);
+			if (isNoop) {
+				mutatingPointRef = indexMutation.applyTo(mutatingPointRef);
+			}
+			String noop = isNoop ? " **NOOP**" : "";
+			Ax.out("%s[%s] %s :: %s -> %s", noop, idx, indexMutation, pre,
+					mutatingPointRef);
+		}
+		Ax.out("delta: %s", mutatingPointRef.subtract(initialPointRef));
+		return mutatingPointRef;
+	}
+
 	void flushCurrentMutationIfAffecting(Location updatedLocation) {
 		if (currentMutation != null && currentMutation.at != null) {
 			if (updatedLocation.asIndexTuple().isAffectedBy(currentMutation.at,
 					currentMutation.delta)) {
+				cumulativeMutation.extend(currentMutation);
 				currentMutation = null;
 			}
 		}

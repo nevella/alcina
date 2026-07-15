@@ -591,8 +591,6 @@ public class LocalDom implements ContextFrame {
 
 	boolean applyingDetachedMutationsToLocalDom;
 
-	public MutationGroup mutationGroup;
-
 	void flush0(boolean force) {
 		if (syncing) {
 			return;
@@ -1234,6 +1232,8 @@ public class LocalDom implements ContextFrame {
 	}
 
 	LinkedHashSet<Runnable> onFlushRunnables = new LinkedHashSet<>();
+
+	MutationGroup.MutationGroups mutationGroups = new MutationGroup.MutationGroups();
 
 	void onFlush0(Runnable runnable) {
 		if (pendingSync.isEmpty()) {

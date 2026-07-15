@@ -1,6 +1,5 @@
 package com.google.gwt.dom.client;
 
-import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
 public class TextAttachId extends NodeAttachId implements ClientDomText {
@@ -64,11 +63,8 @@ public class TextAttachId extends NodeAttachId implements ClientDomText {
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(node());
 		record.type = MutationRecord.Type.characterData;
-		Node node = node();
-		record.target = MutationNode.forNode(node);
-		record.mutationGroup = node.mutationGroups().getActiveGroup();
 		record.newValue = nodeValue;
 		emitMutation(record);
 	}

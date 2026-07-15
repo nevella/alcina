@@ -1,7 +1,10 @@
 package com.google.gwt.dom.client.mutations;
 
+import com.google.gwt.dom.client.Document;
+
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * <p>
@@ -24,5 +27,67 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  */
 @Reflected
 public enum MutationGroup {
-	split, wrap, merge, strip
+	split {
+		@Override
+		public IntPair mutationTuple() {
+			return IntPair.of(1, 0);
+		}
+	},
+	wrap {
+		@Override
+		public IntPair mutationTuple() {
+			return IntPair.of(1, 0);
+		}
+	},
+	merge {
+		@Override
+		public IntPair mutationTuple() {
+			throw new UnsupportedOperationException();
+		}
+	},
+	strip {
+		@Override
+		public IntPair mutationTuple() {
+			return IntPair.of(-1, 0);
+		}
+	};
+
+	/*
+	 * sugar to set the special mutation mode of the containing document's
+	 * localdom
+	 */
+	public static class MutationGroups {
+		int mutationGroupIndex;
+
+		MutationGroup mutationGroup;
+
+		public void exit() {
+			mutationGroup = null;
+		}
+
+		public void enterWrap() {
+			mutationGroup = wrap;
+			mutationGroupIndex++;
+		}
+
+		public void enterStrip() {
+			mutationGroup = strip;
+			mutationGroupIndex++;
+		}
+
+		public void enterSplit() {
+			mutationGroup = split;
+			mutationGroupIndex++;
+		}
+
+		public MutationGroup getActiveGroup() {
+			return mutationGroup;
+		}
+
+		public int getActiveGroupIndex() {
+			return mutationGroup == null ? 0 : mutationGroupIndex;
+		}
+	}
+
+	public abstract IntPair mutationTuple();
 }

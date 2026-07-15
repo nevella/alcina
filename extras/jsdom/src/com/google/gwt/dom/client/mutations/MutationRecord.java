@@ -16,6 +16,7 @@ import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.mutations.MutationGroup.MutationGroups;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -156,16 +157,13 @@ public final class MutationRecord {
 		boolean writeAsMarkupTree = hasContextFlag(
 				FlagTransportMarkupTree.class);
 		if (parentElement != null) {
-			creationRecord = new MutationRecord();
+			creationRecord = new MutationRecord(parentElement);
 		} else {
 			// node is the root, just send attr mods (and markup tree if so
 			// flagged)
 		}
 		if (creationRecord != null) {
-			creationRecord.target = MutationNode.forNode(parentElement);
 			creationRecord.type = Type.childList;
-			creationRecord.mutationGroup = node.mutationGroups()
-					.getActiveGroup();
 			creationRecord.addedNodes.add(MutationNode.forNode(node));
 			Node previousSibling = node.getPreviousSibling();
 			if (previousSibling != null) {
@@ -190,9 +188,7 @@ public final class MutationRecord {
 		case Node.ELEMENT_NODE: {
 			ClientDomElement elem = (ClientDomElement) node;
 			elem.getAttributeMap().forEach((k, v) -> {
-				MutationRecord record = new MutationRecord();
-				record.target = MutationNode.forNode(node);
-				record.mutationGroup = node.mutationGroups().getActiveGroup();
+				MutationRecord record = new MutationRecord(node);
 				record.type = Type.attributes;
 				record.attributeName = k;
 				record.newValue = v;
@@ -201,11 +197,8 @@ public final class MutationRecord {
 			List<ElementBehavior> behaviors = elem.getBehaviors();
 			if (behaviors != null) {
 				behaviors.forEach(behavior -> {
-					MutationRecord record = new MutationRecord();
+					MutationRecord record = new MutationRecord(node);
 					record.type = MutationRecord.Type.behavior;
-					record.target = MutationNode.forNode(node);
-					record.mutationGroup = node.mutationGroups()
-							.getActiveGroup();
 					record.behaviorAdded = behavior;
 					records.add(record);
 				});
@@ -233,9 +226,7 @@ public final class MutationRecord {
 	 */
 	public static MutationRecord generateRemoveMutation(Node parent,
 			Node oldChild) {
-		MutationRecord record = new MutationRecord();
-		record.target = MutationNode.forNode(parent);
-		record.mutationGroup = parent.mutationGroups().getActiveGroup();
+		MutationRecord record = new MutationRecord(parent);
 		record.type = Type.childList;
 		record.removedNodes.add(MutationNode.forNode(oldChild));
 		return record;
@@ -278,22 +269,18 @@ public final class MutationRecord {
 				return;
 			}
 			String value = e.getValue();
-			MutationRecord record = new MutationRecord();
+			MutationRecord record = new MutationRecord(elem);
 			record.type = Type.attributes;
-			record.mutationGroup = elem.mutationGroups().getActiveGroup();
 			record.newValue = e.getValue();
 			record.attributeName = e.getKey();
-			record.target = MutationNode.forNode(elem);
 			result.add(record);
 		});
 		String style = elem.implAccess().getLocalAttrPlusLocalStyleCss();
 		if (Ax.notBlank(style)) {
-			MutationRecord record = new MutationRecord();
+			MutationRecord record = new MutationRecord(elem);
 			record.type = Type.attributes;
-			record.mutationGroup = elem.mutationGroups().getActiveGroup();
 			record.newValue = style;
 			record.attributeName = "style";
-			record.target = MutationNode.forNode(elem);
 			result.add(record);
 		}
 		return result;
@@ -327,11 +314,9 @@ public final class MutationRecord {
 
 	static MutationRecord generateMarkupMutationRecord(Node node) {
 		Element elem = (Element) node;
-		MutationRecord markupRecord = new MutationRecord();
+		MutationRecord markupRecord = new MutationRecord(node);
 		markupRecord.type = Type.innerMarkup;
 		markupRecord.newValue = elem.getInnerHTML();
-		markupRecord.target = MutationNode.forNode(node);
-		markupRecord.mutationGroup = node.mutationGroups().getActiveGroup();
 		markupRecord.attachIds = elem.getSubtreeIds();
 		return markupRecord;
 	}
@@ -411,6 +396,8 @@ public final class MutationRecord {
 
 	public MutationGroup mutationGroup;
 
+	public int mutationGroupIndex;
+
 	/**
 	 * If this is an element, the type = childList and flag
 	 * FlagTransportMarkupTree is set this will be the previous outerXml of the
@@ -440,6 +427,14 @@ public final class MutationRecord {
 	// for serialization
 	public MutationRecord() {
 		flags = LooseContext.get(CONTEXT_FLAGS);
+	}
+
+	public MutationRecord(Node targetNode) {
+		this();
+		target = MutationNode.forNode(targetNode);
+		MutationGroups mutationGroups = targetNode.mutationGroups();
+		mutationGroup = mutationGroups.getActiveGroup();
+		mutationGroupIndex = mutationGroups.getActiveGroupIndex();
 	}
 
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {
