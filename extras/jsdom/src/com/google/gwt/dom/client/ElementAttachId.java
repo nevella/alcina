@@ -8,7 +8,6 @@ import java.util.Set;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
-import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -359,9 +358,6 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 		throw new UnsupportedOperationException();
 	}
 
-	public void putElement(Element element) {
-	}
-
 	@Override
 	public void removeAttribute(String name) {
 		setAttribute(name, null);
@@ -392,11 +388,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void setAttribute(String name, String value) {
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(elementFor());
 		record.type = MutationRecord.Type.attributes;
-		Element elem = elementFor();
-		record.target = MutationNode.forNode(elem);
-		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.attributeName = name;
 		record.newValue = value;
 		emitMutation(record);
@@ -604,10 +597,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	}
 
 	static void emitBehaviorMutation(Element elem, ElementBehavior behavior) {
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(elem);
 		record.type = MutationRecord.Type.behavior;
-		record.target = MutationNode.forNode(elem);
-		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.behaviorAdded = behavior;
 		emitMutation(elem.getOwnerDocument(), record);
 	}
@@ -617,10 +608,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 		if (!elem.isAttached()) {
 			return;
 		}
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(elem);
 		record.type = MutationRecord.Type.style_property;
-		record.target = MutationNode.forNode(elem);
-		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.styleMutation = new MutationRecord.StyleMutation(styleMethodName,
 				argumentTypes, arguments);
 		emitMutation(elem.getOwnerDocument(), record);
@@ -635,10 +624,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 		if (!elem.isAttached()) {
 			return;
 		}
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(elem);
 		record.type = MutationRecord.Type.property;
-		record.target = MutationNode.forNode(elem);
-		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.propertyMutation = new MutationRecord.PropertyMutation(
 				propertyName, value);
 		emitMutation(elem.getOwnerDocument(), record);
@@ -647,11 +634,8 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	@Override
 	public boolean
 			removeBehavior(Class<? extends ElementBehavior> behaviorClass) {
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(elementFor());
 		record.type = MutationRecord.Type.behavior;
-		Element elem = elementFor();
-		record.target = MutationNode.forNode(elem);
-		record.mutationGroup = elem.mutationGroups().getActiveGroup();
 		record.behaviorRemoved = behaviorClass;
 		emitMutation(record);
 		return true;

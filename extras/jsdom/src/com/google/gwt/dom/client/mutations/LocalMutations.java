@@ -135,11 +135,9 @@ public class LocalMutations {
 		if (!target.isAttached()) {
 			return;
 		}
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(target);
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.attributes;
-		record.target = MutationNode.forNode(target);
-		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.attributeName = name;
 		record.newValue = data;
 		addMutation(record);
@@ -150,11 +148,9 @@ public class LocalMutations {
 		if (!target.isAttached()) {
 			return;
 		}
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(target);
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.characterData;
-		record.target = MutationNode.forNode(target);
-		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.oldValue = previousValue;
 		record.newValue = newValue;
 		addMutation(record);
@@ -169,11 +165,9 @@ public class LocalMutations {
 	public void notifyChildListMutation(Node target, Node child,
 			Node previousSibling, Node nextSibling, boolean add, boolean deep) {
 		if (add && !target.isAttached()) {
-			MutationRecord record = new MutationRecord();
+			MutationRecord record = new MutationRecord(target);
 			record.mutationsAccess = mutationsAccess;
 			record.type = Type.childList;
-			record.target = MutationNode.forNode(target);
-			record.mutationGroup = target.mutationGroups().getActiveGroup();
 			record.previousSibling = MutationNode.forNode(previousSibling);
 			record.nextSibling = MutationNode.forNode(nextSibling);
 			record.addedNodes.add(MutationNode.forNode(child));
@@ -185,11 +179,9 @@ public class LocalMutations {
 				// .is()
 				).forEach(this::addMutation);
 			} else {
-				MutationRecord record = new MutationRecord();
+				MutationRecord record = new MutationRecord(target);
 				record.mutationsAccess = mutationsAccess;
 				record.type = Type.childList;
-				record.target = MutationNode.forNode(target);
-				record.mutationGroup = target.mutationGroups().getActiveGroup();
 				record.previousSibling = MutationNode.forNode(previousSibling);
 				record.nextSibling = MutationNode.forNode(nextSibling);
 				record.removedNodes.add(MutationNode.forNode(child));
@@ -202,11 +194,9 @@ public class LocalMutations {
 		if (!target.isAttached()) {
 			return;
 		}
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(target);
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.behavior;
-		record.target = MutationNode.forNode(target);
-		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.behaviorAdded = behavior;
 		addMutation(record);
 		topicBehaviorAdded.publish(new BehaviorAdded(target, behavior));
@@ -217,11 +207,9 @@ public class LocalMutations {
 		if (!target.isAttached()) {
 			return;
 		}
-		MutationRecord record = new MutationRecord();
+		MutationRecord record = new MutationRecord(target);
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.behavior;
-		record.target = MutationNode.forNode(target);
-		record.mutationGroup = target.mutationGroups().getActiveGroup();
 		record.behaviorRemoved = behaviorClass;
 		addMutation(record);
 		topicBehaviorRemoved

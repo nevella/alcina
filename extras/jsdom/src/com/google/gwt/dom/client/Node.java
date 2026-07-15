@@ -698,33 +698,7 @@ public abstract class Node
 		}
 	}
 
-	public MutationGroups mutationGroups() {
-		return new MutationGroups();
-	}
-
-	/*
-	 * sugar to set the special mutation mode of the containing document's
-	 * localdom
-	 */
-	public class MutationGroups {
-		public void exit() {
-			getOwnerDocument().localDom.mutationGroup = null;
-		}
-
-		public void enterWrap() {
-			getOwnerDocument().localDom.mutationGroup = MutationGroup.wrap;
-		}
-
-		public void enterStrip() {
-			getOwnerDocument().localDom.mutationGroup = MutationGroup.strip;
-		}
-
-		public void enterSplit() {
-			getOwnerDocument().localDom.mutationGroup = MutationGroup.split;
-		}
-
-		public MutationGroup getActiveGroup() {
-			return getOwnerDocument().localDom.mutationGroup;
-		}
+	public MutationGroup.MutationGroups mutationGroups() {
+		return getOwnerDocument().localDom.mutationGroups;
 	}
 }

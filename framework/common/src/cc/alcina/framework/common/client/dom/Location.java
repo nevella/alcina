@@ -746,8 +746,6 @@ public class Location implements Comparable<Location> {
 		}
 	}
 
-	public static boolean debugIndexMutation;
-
 	public LocationSnapshot toLocationSnapshot() {
 		return new LocationSnapshot();
 	}
@@ -868,6 +866,10 @@ public class Location implements Comparable<Location> {
 
 		IndexTuple add(IndexTuple tuple) {
 			return add(tuple.treeIndex, tuple.index);
+		}
+
+		IndexTuple add(IntPair intPair) {
+			return add(intPair.i1, intPair.i2);
 		}
 
 		IndexTuple subtract(IndexTuple tuple) {
@@ -1162,7 +1164,8 @@ public class Location implements Comparable<Location> {
 
 	@Property.Not
 	public int getTextOffsetInNode() {
-		return index - containingNode.asLocation().index;
+		ensureCurrent();
+		return index - containingNode.asLocation().getIndex();
 	}
 
 	public int getTreeIndex() {
@@ -1448,15 +1451,21 @@ public class Location implements Comparable<Location> {
 		treeIndex += delta.treeIndex;
 		// will never be different
 		// start = delta.start;
-		if (delta.containingNode != null) {
+		int treeIndexDelta = treeIndex
+				- containingNode.asLocation().getTreeIndex();
+		if (treeIndexDelta != 0) {
 			/*
-			 * Note this - split/merge can change container nodeif splitting at
-			 * that location)
+			 * split/wrap can cause container changes
 			 */
-			if (delta.containingNode.relative()
-					.previousSibling() == this.containingNode) {
-				this.containingNode = delta.containingNode;
+			DomNode cursor = containingNode;
+			while (cursor.asLocation().getTreeIndex() != treeIndex) {
+				if (treeIndexDelta > 0) {
+					cursor = cursor.relative().treeSubsequentNode();
+				} else {
+					cursor = cursor.relative().treePreviousNode();
+				}
 			}
+			containingNode = cursor;
 		}
 	}
 

@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.LocationRunnable.OrderedMutations;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token.DocumentElementToken;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -477,5 +478,27 @@ public class MeasureOverlay {
 	public void mergeExtensionRanges(List<ExtendResult> extendResults) {
 		extendResults.stream().filter(Objects::nonNull)
 				.forEach(er -> mergeExtensionRange(er.measure));
+	}
+
+	public void attach(OrderedMutations orderedMutations) {
+		Location location = null;
+		switch (type) {
+		case WRAP:
+			location = initialRange.start;
+			break;
+		case HIGHLIGHT:
+			throw new UnsupportedOperationException();
+		case ENDPOINTS:
+			if (endpoints.start != null) {
+				Preconditions.checkArgument(endpoints.end == null);
+				location = initialRange.start;
+			} else {
+				location = initialRange.end;
+			}
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		orderedMutations.add(location, this::attach);
 	}
 }

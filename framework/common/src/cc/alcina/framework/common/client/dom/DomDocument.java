@@ -291,6 +291,8 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 	}
 
+	public static boolean useCumulativeMutation = false;
+
 	public LocationContext locations() {
 		if (locationContext == null) {
 			if (w3cDoc() instanceof com.google.gwt.dom.client.Document) {
