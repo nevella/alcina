@@ -155,12 +155,12 @@ public class SearchDefinitionEditor extends Model.Fields
 						.success(criteriaResponse -> mapCriteria(ask,
 								criteriaResponse, responseHandler))
 						.build();
-				requestCriteria(ask, searchDefinition,
+				requestCriteria(node, ask, searchDefinition,
 						criteriaResponseCallback);
 			}
 		}
 
-		public void requestCriteria(StringAsk ask,
+		public void requestCriteria(Node node, StringAsk ask,
 				SearchDefinition searchDefinition,
 				AsyncCallback<SuggestOracle.Response> criteriaResponseCallback) {
 			List<CriterionSuggestion> suggestions = listCriteria(
