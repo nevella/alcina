@@ -11,7 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
 
 /**
  * This class manages the validation process (property or bean)
- * 
+ *
  */
 public abstract class Validation {
 	public Topic<Validation> topicStateChange = Topic.create();

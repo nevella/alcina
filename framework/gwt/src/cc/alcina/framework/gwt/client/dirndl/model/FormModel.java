@@ -56,6 +56,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.Environme
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -101,7 +102,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * A property in the rendered Dirndl model tree will be annotated with a
  * directive to transform the property model to a FormModel or FormModel
  * container- e.g.
- * 
+ *
  * <pre>
  * <code>
 class PropertiesArea extends Model.Fields {
@@ -110,7 +111,7 @@ class PropertiesArea extends Model.Fields {
 static class SelectionArea
 </code>
  * </pre>
- * 
+ *
  * <p>
  * The transform sequence is:
  * <ul>
@@ -132,7 +133,7 @@ static class SelectionArea
  * <li>(Dirndl) Generate (render) the DOM elements corresponding to the
  * transformed Field values
  * <li>Populate the FormElement bindable (which will be used for validation)
- * 
+ *
  * </ul>
  * <li>How is it tested?
  * <p>
@@ -154,7 +155,7 @@ static class SelectionArea
 /*
  * Notes:
  * @formatter:off
- 
+
 * trad: validation can be invoked directly
 * modern: invoke as part of set (since that code path can handle async validation)
 
@@ -728,6 +729,10 @@ public class FormModel extends Model
 
 			@Override
 			public String getBeanValidationExceptionMessage() {
+				if (isInvalid()) {
+					Ax.out("Property validation issue - %s - %s - %s", field,
+							getMessage(), getResult());
+				}
 				return null;
 			}
 
@@ -798,12 +803,12 @@ public class FormModel extends Model
 
 	/*
 	 * Override (in the environment) to provide a custom formmodel
-	 * 
+	 *
 	 * FIXME - dirndl - a lot of the complexity is because we don't have the
 	 * child resolver (say form resolver) available when populating the form,
 	 * because the node context is still the property containing the bindable
 	 * which is being transformed.
-	 * 
+	 *
 	 * The solution is to move most form structure generation (FormElement etc)
 	 * to onBeforeRender for the formModel...for the moment, configurable form
 	 * contents are obtained via FormModelProvider.impl rather than (preferred)
@@ -927,9 +932,11 @@ public class FormModel extends Model
 						.withTextFromModelEvent().addTo(formModel.actions);
 			} else {
 				if (state.presentationModel != null) {
-					ObjectActions actions = Reflections
-							.at(state.presentationModel)
-							.annotation(ObjectActions.class);
+					AnnotationLocation presentationModelLocation = new AnnotationLocation(
+							state.presentationModel.getClass(), null,
+							node.getResolver());
+					ObjectActions actions = presentationModelLocation
+							.getAnnotation(ObjectActions.class);
 					if (actions != null) {
 						Arrays.stream(actions.value()).map(Action::actionClass)
 								.filter(clazz -> Reflections.isAssignableFrom(

@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.validator.Validator;
@@ -87,7 +88,8 @@ public class FormValidation {
 	void checkValidationComplete() {
 		if (validations.stream().allMatch(Validation::isComplete)
 				|| validations.stream().anyMatch(Validation::isInvalid)) {
-			if (validations.stream().allMatch(Validation::isValid)) {
+			List<Validation> invalid = validations.stream().filter(Validation::isInvalid).collect(Collectors.toList());
+			if (invalid.isEmpty()) {
 				topicValidationResult
 						.publish(new ValidationResult(ValidationState.VALID));
 			} else {
