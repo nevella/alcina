@@ -1458,11 +1458,19 @@ public class Location implements Comparable<Location> {
 		int treeIndexDelta = treeIndex
 				- containingNode.asLocation().getTreeIndex();
 		if (treeIndexDelta != 0) {
+			// if (Math.abs(treeIndexDelta) > 10000) {
+			// /*
+			// * revisit
+			// */
+			// containingNode = null;
+			// return;
+			// }
 			/*
 			 * split/wrap can cause container changes
 			 */
 			DomNode cursor = containingNode;
-			while (cursor.asLocation().getTreeIndex() != treeIndex) {
+			while (cursor != null
+					&& cursor.asLocation().getTreeIndex() != treeIndex) {
 				if (treeIndexDelta > 0) {
 					cursor = cursor.relative().treeSubsequentNode();
 				} else {
