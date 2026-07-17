@@ -17,6 +17,8 @@ import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.LocationRunnable;
+import cc.alcina.framework.common.client.dom.LocationRunnable.MutationEffect;
 import cc.alcina.framework.common.client.dom.LocationRunnable.OrderedMutations;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token.DocumentElementToken;
@@ -228,6 +230,15 @@ public class MeasureOverlay {
 
 	public boolean skipForwardsPastImages = true;
 
+	RequiredEndpoints requiredEndpoints = RequiredEndpoints.BOTH;
+
+	/**
+	 * If splitting at boundary points, which points are required?
+	 */
+	public enum RequiredEndpoints {
+		START, END, BOTH
+	}
+
 	/**
 	 * How should the overlay split its boundary points?
 	 */
@@ -267,7 +278,8 @@ public class MeasureOverlay {
 				return adjusted;
 			}
 
-			Range splitIfNecessary(Range range, StyleResolver styleResolver) {
+			Range splitIfNecessary(Range range, StyleResolver styleResolver,
+					RequiredEndpoints requiredEndpoints) {
 				Location start = range.start;
 				Location end = range.end;
 				if (start.getContainingNode().parent() != end
@@ -280,7 +292,8 @@ public class MeasureOverlay {
 					end = commonContainer.split(end);
 					return new Range(start, end);
 				} else {
-					return super.splitIfNecessary(range, styleResolver);
+					return super.splitIfNecessary(range, styleResolver,
+							requiredEndpoints);
 				}
 			}
 		};
@@ -288,17 +301,22 @@ public class MeasureOverlay {
 		abstract Range adjustLocationDepths(Range truncateAbsolute,
 				StyleResolver styleResolver);
 
-		Range splitIfNecessary(Range range, StyleResolver styleResolver) {
+		Range splitIfNecessary(Range range, StyleResolver styleResolver,
+				RequiredEndpoints requiredEndpoints) {
 			Location start = range.start;
 			Location end = range.end;
-			if (!start.isAtNodeBoundary()) {
-				SplitResult split = start.split();
-				start = split.after.asLocation();
-				end.getIndex();
+			if (requiredEndpoints != RequiredEndpoints.END) {
+				if (!start.isAtNodeBoundary()) {
+					SplitResult split = start.split();
+					start = split.after.asLocation();
+					end.getIndex();
+				}
 			}
-			if (!end.isAtNodeBoundary()) {
-				SplitResult split = end.split();
-				end = split.contents.asRange().end;
+			if (requiredEndpoints != RequiredEndpoints.START) {
+				if (!end.isAtNodeBoundary()) {
+					SplitResult split = end.split();
+					end = split.contents.asRange().end;
+				}
 			}
 			return new Range(start, end);
 		}
@@ -351,6 +369,11 @@ public class MeasureOverlay {
 			highlightTexts();
 			break;
 		case ENDPOINTS:
+			if (endpoints.start == null) {
+				requiredEndpoints = RequiredEndpoints.END;
+			} else if (endpoints.end == null) {
+				requiredEndpoints = RequiredEndpoints.START;
+			}
 			markEndpoints();
 			break;
 		default:
@@ -411,13 +434,18 @@ public class MeasureOverlay {
 		if (endpoints.start != null) {
 			DomNode containingNode = range.start.getContainingNode();
 			if (containingNode.isText()) {
+				containingNode.relative().treePreviousNode().asLocation()
+						.ensureCurrent();
 				containingNode.relative().insertBeforeThis(endpoints.start);
 			} else {
+				containingNode.asLocation().ensureCurrent();
 				containingNode.children.insertAsFirstChild(endpoints.start);
 			}
 		}
 		if (endpoints.end != null) {
 			DomNode containingNode = range.end.getContainingNode();
+			containingNode.relative().lastDescendant().asLocation()
+					.ensureCurrent();
 			if (containingNode.isText()) {
 				containingNode.relative().insertAfterThis(endpoints.end);
 			} else {
@@ -452,7 +480,7 @@ public class MeasureOverlay {
 	Range ensureSplitRange() {
 		if (splitRange == null) {
 			splitRange = depthStrategy.splitIfNecessary(initialRange,
-					styleResolver);
+					styleResolver, requiredEndpoints);
 		}
 		return splitRange;
 	}
@@ -482,9 +510,13 @@ public class MeasureOverlay {
 
 	public void attach(OrderedMutations orderedMutations) {
 		Location location = null;
+		LocationRunnable.MutationEffect mutationEffect = null;
+		String description = null;
 		switch (type) {
 		case WRAP:
 			location = initialRange.start;
+			mutationEffect = MutationEffect.POSITIVE_TREE_INDEX_MUTATE_INDEX;
+			description = "wrap";
 			break;
 		case HIGHLIGHT:
 			throw new UnsupportedOperationException();
@@ -492,13 +524,17 @@ public class MeasureOverlay {
 			if (endpoints.start != null) {
 				Preconditions.checkArgument(endpoints.end == null);
 				location = initialRange.start;
+				description = "endpoints-start";
 			} else {
 				location = initialRange.end;
+				description = "endpoints-end";
 			}
+			mutationEffect = MutationEffect.POSITIVE_TREE_INDEX_ZERO_INDEX;
 			break;
 		default:
 			throw new UnsupportedOperationException();
 		}
-		orderedMutations.add(location, this::attach);
+		orderedMutations.add(location, this::attach, mutationEffect,
+				description);
 	}
 }

@@ -1405,6 +1405,7 @@ public class DirectedLayout implements AlcinaProcess {
 			parent.children.remove(this);
 			parent = null;
 			rendered.removeFromParent();
+			unbind();
 		}
 
 		public String toParentStack() {

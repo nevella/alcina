@@ -129,6 +129,11 @@ class TrackingLocationContext implements LocationContext {
 						firstMutation.type == Type.characterData);
 				at = at.add(IntPair.of(0, firstMutation.newValue.length()));
 			}
+			if (mutationGroup != null) {
+				IntPair mutationTuple = mutationGroup.mutationTuple();
+				delta = new IndexTuple(mutationTuple.i1, mutationTuple.i2, true,
+						delta.containingNode);
+			}
 		}
 
 		void clearLocationIfRemove(MutationRecord mutationRecord) {
@@ -285,85 +290,36 @@ class TrackingLocationContext implements LocationContext {
 			}
 			if (delta == null) {
 				/*
-				 * dge case - updating subsequent during IndexMutation init.
+				 * edge case - updating subsequent during IndexMutation init.
 				 */
 				return mutatingPointRef;
 			}
 			IndexTuple testDelta = delta;
-			if (mutationGroup != null) {
-				IntPair mutationTuple = mutationGroup.mutationTuple();
-				testDelta = new IndexTuple(mutationTuple.i1, mutationTuple.i2,
-						delta.start, delta.containingNode);
-			}
 			if (!mutatingPointRef.isAffectedBy(at, testDelta)) {
 				return mutatingPointRef;
-			}
-			/*
-			 * Applied non-contiguous, not extendable
-			 */
-			extendable = false;
-			/*
-			 * If in a mutation group, the cumulative effect on any character
-			 * sequence index is 0.
-			 */
-			int indexDelta = delta.index;
-			/*
-			 * special case mutation groups. the indexmutation will always
-			 * combine the mutations into one group
-			 */
-			if (mutationGroup != null) {
-				indexDelta = 0;
-				switch (mutationGroup) {
-				case split:
-					/*
-					 * anything in the split range will have its containing node
-					 * changed
-					 */
-					DomNode createdNode = domMutations.get(1).addedNodes
-							.get(0).node.asDomNode();
-					return mutatingPointRef.add(mutationGroup.mutationTuple())
-							.withContainingNode(createdNode);
-				case strip:
-					/*
-					 * the combined effect (on all non-removed nodes) is just
-					 * tree-index : -=1
-					 */
-					return mutatingPointRef.add(mutationGroup.mutationTuple());
-				case wrap:
-					/*
-					 * the combined effect (on all non-removed nodes) is just
-					 * tree-index : +=1
-					 * 
-					 */
-					return mutatingPointRef.add(mutationGroup.mutationTuple());
-				default:
-					throw new UnsupportedOperationException();
-				}
-				/*
-				 * Fall through if not a special case (such as directly affected
-				 * split)
-				 */
 			}
 			if (mutatingPointRef.treeIndex < at.treeIndex) {
 				/*
 				 * the text run mutation is visible, the tree mutation is not
 				 * (to #mutatingPointRef)
 				 */
-				return mutatingPointRef.add(0, indexDelta);
+				return mutatingPointRef.add(0, delta.index);
 			} else {
-				return mutatingPointRef.add(delta.treeIndex, indexDelta);
+				return mutatingPointRef.add(delta.treeIndex, delta.index);
 			}
 		}
 
 		MutationGroupTracker mutationGroupTracker;
 
+		boolean completed;
+
 		/*
 		 * Handles custom location mods while keeping the whole wrap/split/strip
 		 * to one delta. Must be kept in exact sync with the operation order in
 		 * DomNode/DomNodeBuilder (strip is move-children-remove, wrap is
-		 * insert-wrapper-move-wrapee). Needed because - while the group can be
-		 * reprsented as a group *outside* the OP, it can't *inside* (at least
-		 * for strip/wrap)
+		 * insert-wrapper-move-wrapee(s)). Needed because - while the group can
+		 * be represented as a group *outside* the OP, it can't *inside* (at
+		 * least for strip/wrap)
 		 */
 		class MutationGroupTracker {
 			MutationRecord firstMutation;
@@ -381,13 +337,15 @@ class TrackingLocationContext implements LocationContext {
 				mutations.add(mutation);
 				switch (firstMutation.mutationGroup) {
 				case wrap:
-					if (mutations.size() == 3) {
-						// wrappee
-						DomNode wrappeeNode = mutation.addedNodes.get(0).node()
-								.asDomNode();
-						wrappeeNode.stream()
-								.forEach(n -> n.asLocation().applyIndexDelta(
-										new IndexTuple(1, 0, true, null)));
+					if (mutations.size() >= 3) {
+						if (mutation.addedNodes.size() > 0) {
+							// wrappee insert
+							DomNode wrappeeNode = mutation.addedNodes.get(0)
+									.node().asDomNode();
+							wrappeeNode.stream().forEach(
+									n -> n.asLocation().applyIndexDelta(
+											new IndexTuple(1, 0, true, null)));
+						}
 					}
 					break;
 				case strip:
@@ -458,8 +416,10 @@ class TrackingLocationContext implements LocationContext {
 			default:
 				throw new UnsupportedOperationException();
 			}
-			delta = delta.add(computeDelta(mutation));
-			addDomMutation(mutation);
+			if (mutationGroup == null) {
+				delta = delta.add(computeDelta(mutation));
+				addDomMutation(mutation);
+			}
 			clearLocationIfRemove(mutation);
 			return true;
 		}
@@ -492,6 +452,10 @@ class TrackingLocationContext implements LocationContext {
 			domMutations.forEach(builder::append);
 			builder.indent(0);
 			return builder.toString();
+		}
+
+		void onNotExtensible() {
+			this.completed = true;
 		}
 	}
 
@@ -526,11 +490,16 @@ class TrackingLocationContext implements LocationContext {
 			default:
 				break;
 			}
-			if (currentMutation == null
-					|| !currentMutation.extendWith(mutation)) {
-				if (mutations.size() > 0) {
-					cumulativeMutation.extend(Ax.last(mutations));
+			if (currentMutation != null) {
+				IndexMutation ref = currentMutation;
+				if (!currentMutation.extendWith(mutation)) {
+					// rare, but it can be nulled during extendWith
+					if (currentMutation != null) {
+						flushCurrentMutation();
+					}
 				}
+			}
+			if (currentMutation == null) {
 				currentMutation = new IndexMutation(
 						TrackingLocationContext.this);
 				mutations.add(currentMutation);
@@ -559,7 +528,8 @@ class TrackingLocationContext implements LocationContext {
 	CumulativeMutation cumulativeMutation;
 
 	/**
-	 * This tracks the sum of all mutations *except* the current mutation
+	 * This tracks the sum of all mutations *except* the current mutation. It's
+	 * updated when the indexmutation is flushed
 	 */
 	class CumulativeMutation {
 		int fromMutationIndex = mutations.size();
@@ -579,8 +549,6 @@ class TrackingLocationContext implements LocationContext {
 		 */
 		IndexTuple cumulativeDelta = IndexTuple.zero;
 
-		IndexMutation lastExtendedWith;
-
 		boolean striclyForwardsMutations = true;
 
 		/**
@@ -590,27 +558,35 @@ class TrackingLocationContext implements LocationContext {
 		 * by making applyPriorMutations run both code paths and check equality
 		 * 
 		 * @param mutatingPointRef
-		 * @param documentMutationPosition
+		 * @param locationMutationPosition
 		 * @return the update if the mutatingPointRef was updateable, otherwise
 		 *         null;
 		 */
 		IndexTuple update(IndexTuple mutatingPointRef,
-				int documentMutationPosition) {
+				int locationMutationPosition) {
 			queryCount++;
-			if (queryCount > hitCount + 100) {
-				int debug = 3;
+			if (queryCount % 5000 == 0) {
+				Ax.out(toStats());
 			}
 			if (mutatingPointRef == null) {
+				// init, no miss
 				return null;
 			}
 			if (undamagedBefore == null) {
+				hitCount++;
+				// init, no miss
 				return null;
 			}
-			if (documentMutationPosition != fromMutationIndex) {
+			/*
+			 * any mutation subsequent to locationMutation must have occured
+			 * after this location's position in the document
+			 */
+			if (locationMutationPosition != fromMutationIndex) {
 				if (striclyForwardsMutations) {
 					hitCount++;
 					return mutatingPointRef;
 				} else {
+					miss(mutations.size() - locationMutationPosition);
 					return null;
 				}
 			}
@@ -618,7 +594,8 @@ class TrackingLocationContext implements LocationContext {
 					&& !Objects.equals(mutatingPointRef, undamagedBefore)) {
 				/*
 				 * no change (i.e. the cumulative mutation is strictly after the
-				 * mutating pointref)
+				 * pointref we're checking ) - note though that the cumulative
+				 * mutation will certainly be changed
 				 */
 				hitCount++;
 				return mutatingPointRef;
@@ -627,6 +604,7 @@ class TrackingLocationContext implements LocationContext {
 				hitCount++;
 				return mutatingPointRef.add(cumulativeDelta);
 			} else {
+				miss(mutations.size());
 				return null;
 			}
 		}
@@ -635,14 +613,6 @@ class TrackingLocationContext implements LocationContext {
 			if (mutation == null) {
 				return;
 			}
-			/*
-			 * extend() can be called from two paths, so guard against
-			 * double-extension
-			 */
-			if (lastExtendedWith == mutation) {
-				return;
-			}
-			lastExtendedWith = mutation;
 			IndexTuple delta = mutation.delta;
 			IntPair indexMutations = mutation.mutationGroup == null
 					? new IntPair(delta.treeIndex, delta.index)
@@ -659,8 +629,10 @@ class TrackingLocationContext implements LocationContext {
 				IndexTuple baselineMutationAt = mutation.at
 						.subtract(cumulativeDelta);
 				if (undamagedBefore.isAffectedBy(baselineMutationAt, delta)) {
-					undamagedBefore = baselineMutationAt;
-					striclyForwardsMutations = false;
+					if (!Objects.equals(undamagedAfter, baselineMutationAt)) {
+						undamagedBefore = baselineMutationAt;
+						striclyForwardsMutations = false;
+					}
 				} else {
 					if (!undamagedAfter.isAffectedBy(baselineMutationAt,
 							delta)) {
@@ -690,10 +662,19 @@ class TrackingLocationContext implements LocationContext {
 
 		int hitCount;
 
+		int missCost;
+
+		void miss(int missCost) {
+			if (missCost > 1) {
+				int debug = 3;
+			}
+			this.missCost += missCost;
+		}
+
 		int queryCount;
 
 		String toStats() {
-			return Ax.format("%s/%s", hitCount, queryCount);
+			return Ax.format("%s/%s :: %s", hitCount, queryCount, missCost);
 		}
 	}
 
@@ -957,34 +938,50 @@ class TrackingLocationContext implements LocationContext {
 			 * So node ends currently are not optimised -unless- the node is the
 			 * documentelementnode
 			 */
-			DomNode treePreviousNode = indexTuple.start
+			DomNode indexAffectingTreePreviousNode = indexTuple.start
 					? containingNode.relative().treePreviousNode()
 					: containingNode.relative().lastDescendant();
-			if (treePreviousNode != null && !withoutSideEffects) {
+			if (indexAffectingTreePreviousNode != null && !withoutSideEffects) {
 				/*
 				 * FIXME - location - revisit - rather than
 				 * treePreviousNode.location - the question is, should location
 				 * ever be null? doesn't the act of attaching ensure the
 				 * location? in order, if the attached is a tree?
 				 * 
+				 * note - (and this is an optimisation, remember) - derive index
+				 * mutation from the treeprevious, treeindex from the
+				 * tp-no-descent (i.e. prevsib or parent)
 				 * 
 				 */
-				Location treePreviousLocation = treePreviousNode.asLocation();
-				if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
-					IndexTuple treePreviousTuple = treePreviousLocation
-							.asIndexTuple();
-					IndexTuple nextFromTpl = treePreviousTuple
-							.add(1, treePreviousNode.textLengthSelf())
-							.withContainingNode(null);
-					IndexTuple locationTuple = location.asIndexTuple();
-					location.applyIndexDelta(nextFromTpl.subtract(locationTuple)
-							.withStart(locationTuple.start));
-					flushCurrentMutationIfAffecting(location);
-					ProcessObservers.publish(
-							TrackingLocationMutationObservable.class,
-							() -> new TrackingLocationMutationObservable(
-									location, false));
-					return;
+				Location indexAffectingPreviousLocation = indexAffectingTreePreviousNode
+						.asLocation();
+				DomNode treeIndexAffectingPreviousNode = indexTuple.start
+						? indexAffectingTreePreviousNode
+						: containingNode.relative().treePreviousNode();
+				if (treeIndexAffectingPreviousNode != null) {
+					Location treeIndexAffectingPreviousLocation = treeIndexAffectingPreviousNode
+							.asLocation();
+					if (indexAffectingPreviousLocation.documentMutationPosition == getDocumentMutationPosition()
+							&& treeIndexAffectingPreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
+						IndexTuple locationTuple = location.asIndexTuple();
+						IndexTuple treePreviousTuple = new IndexTuple(
+								treeIndexAffectingPreviousLocation
+										.getTreeIndex(),
+								indexAffectingPreviousLocation.getIndex(),
+								locationTuple.start, null);
+						IndexTuple nextFromTuples = treePreviousTuple
+								.add(1, indexAffectingTreePreviousNode
+										.textLengthSelf())
+								.withContainingNode(null);
+						location.applyIndexDelta(
+								nextFromTuples.subtract(locationTuple));
+						flushCurrentMutationIfAffecting(location);
+						ProcessObservers.publish(
+								TrackingLocationMutationObservable.class,
+								() -> new TrackingLocationMutationObservable(
+										location, false));
+						return;
+					}
 				}
 			}
 		}
@@ -1198,10 +1195,15 @@ class TrackingLocationContext implements LocationContext {
 		if (currentMutation != null && currentMutation.at != null) {
 			if (updatedLocation.asIndexTuple().isAffectedBy(currentMutation.at,
 					currentMutation.delta)) {
-				cumulativeMutation.extend(currentMutation);
-				currentMutation = null;
+				flushCurrentMutation();
 			}
 		}
+	}
+
+	void flushCurrentMutation() {
+		currentMutation.onNotExtensible();
+		cumulativeMutation.extend(currentMutation);
+		currentMutation = null;
 	}
 
 	void resetLocationMutations() {

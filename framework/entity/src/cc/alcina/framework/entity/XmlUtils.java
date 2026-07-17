@@ -599,7 +599,7 @@ public class XmlUtils {
 		DomNode currentBlockAncestor = blockResolver.getContainingBlock(cursor)
 				.orElse(null);
 		while (true) {
-			cursor = cursor.relative().previousSibOrParentSibNode();
+			cursor = cursor.relative().treePreviousNodeNoDescent();
 			if (cursor.isDocumentNode()) {
 				tuple.prevBlock = null;
 				break;

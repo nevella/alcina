@@ -503,4 +503,8 @@ public interface LocationContext {
 				? location.relativeLocation(RelativeDirection.CURRENT_NODE_END)
 				: location;
 	}
+
+	default boolean isCurrent(Location location) {
+		return location.documentMutationPosition == getDocumentMutationPosition();
+	}
 }

@@ -1153,7 +1153,7 @@ public class Location implements Comparable<Location> {
 		return index;
 	}
 
-	void ensureCurrent() {
+	public void ensureCurrent() {
 		locationContext.ensureCurrent(this);
 	}
 
@@ -1458,13 +1458,6 @@ public class Location implements Comparable<Location> {
 		int treeIndexDelta = treeIndex
 				- containingNode.asLocation().getTreeIndex();
 		if (treeIndexDelta != 0) {
-			// if (Math.abs(treeIndexDelta) > 10000) {
-			// /*
-			// * revisit
-			// */
-			// containingNode = null;
-			// return;
-			// }
 			/*
 			 * split/wrap can cause container changes
 			 */
@@ -1504,5 +1497,9 @@ public class Location implements Comparable<Location> {
 		DomNode parent = getContainingNode().parent();
 		return new Location(parent.asLocation().getTreeIndex(), index, start,
 				parent, locationContext);
+	}
+
+	boolean isCurrent() {
+		return locationContext.isCurrent(this);
 	}
 }

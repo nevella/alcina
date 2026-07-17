@@ -1774,7 +1774,7 @@ public class DomNode {
 		/**
 		 * Note - this is *not* treePreviousNode
 		 */
-		public DomNode previousSibOrParentSibNode() {
+		public DomNode treePreviousNodeNoDescent() {
 			if (hasPreviousSibling()) {
 				return previousSibling();
 			} else {
