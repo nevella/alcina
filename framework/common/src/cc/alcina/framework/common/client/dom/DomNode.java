@@ -240,6 +240,10 @@ public class DomNode {
 
 	Location location;
 
+	void invalidateLocation() {
+		location = null;
+	}
+
 	/*
 	 * Support class to handle location operations
 	 */

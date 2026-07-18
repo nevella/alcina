@@ -155,7 +155,7 @@ class TrackingLocationContext implements LocationContext {
 						return;
 					}
 				}
-				toClear.stream().forEach(n -> n.location = null);
+				toClear.stream().forEach(DomNode::invalidateLocation);
 			}
 		}
 
@@ -568,10 +568,7 @@ class TrackingLocationContext implements LocationContext {
 		IndexTuple update(IndexTuple mutatingPointRef,
 				int locationMutationPosition) {
 			queryCount++;
-			if (queryCount % 100 == 0) {
-				if (queryCount == 9800) {
-					int debug = 3;
-				}
+			if (queryCount % 5000 == 0) {
 				Ax.out(toStats());
 			}
 			if (mutatingPointRef == null) {
@@ -742,6 +739,9 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public String getSubsequentText(Location location, int chars) {
+		if (!location.isCurrent()) {
+			return "[non-current]";
+		}
 		return buildSubstring(location,
 				new IntPair(location.getIndex(), location.getIndex() + chars));
 	}
@@ -765,7 +765,8 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public void invalidate() {
-		// NOOP
+		document.stream().forEach(DomNode::invalidateLocation);
+		document.stream().forEach(DomNode::asLocation);
 	}
 
 	@Override
