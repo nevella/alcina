@@ -202,10 +202,16 @@ public class Location implements Comparable<Location> {
 		private transient String normalisedTextContent;
 
 		public Range(Location start, Location end) {
-			if (start.isAfter(end)) {
-				Location tmp = start;
-				start = end;
-				end = tmp;
+			this(start, end, true);
+		}
+
+		public Range(Location start, Location end, boolean ensureOrdered) {
+			if (ensureOrdered) {
+				if (start.isAfter(end)) {
+					Location tmp = start;
+					start = end;
+					end = tmp;
+				}
 			}
 			this.start = start;
 			this.end = end;

@@ -318,7 +318,10 @@ public class MeasureOverlay {
 					end = split.contents.asRange().end;
 				}
 			}
-			return new Range(start, end);
+			/*
+			 * use the non-checking constructor to avoid a location update
+			 */
+			return new Range(start, end, false);
 		}
 	}
 
@@ -509,12 +512,14 @@ public class MeasureOverlay {
 	}
 
 	public void attach(OrderedMutations orderedMutations) {
-		Location location = null;
+		Location from = null;
+		Location to = null;
 		LocationRunnable.MutationEffect mutationEffect = null;
 		String description = null;
 		switch (type) {
 		case WRAP:
-			location = initialRange.start;
+			from = initialRange.start;
+			to = initialRange.end;
 			mutationEffect = MutationEffect.POSITIVE_TREE_INDEX_MUTATE_INDEX;
 			description = "wrap";
 			break;
@@ -523,10 +528,10 @@ public class MeasureOverlay {
 		case ENDPOINTS:
 			if (endpoints.start != null) {
 				Preconditions.checkArgument(endpoints.end == null);
-				location = initialRange.start;
+				from = initialRange.start;
 				description = "endpoints-start";
 			} else {
-				location = initialRange.end;
+				from = initialRange.end;
 				description = "endpoints-end";
 			}
 			mutationEffect = MutationEffect.POSITIVE_TREE_INDEX_ZERO_INDEX;
@@ -534,7 +539,7 @@ public class MeasureOverlay {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		orderedMutations.add(location, this::attach, mutationEffect,
+		orderedMutations.add(from, to, this::attach, mutationEffect,
 				description);
 	}
 }

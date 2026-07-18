@@ -12,9 +12,9 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 public class LocationRunnable
 		implements Comparable<LocationRunnable>, Runnable {
-	public Location location;
+	public Location from;
 
-	IndexTuple initialIndicies;
+	IndexTuple initialFrom;
 
 	public Runnable runnable;
 
@@ -24,14 +24,24 @@ public class LocationRunnable
 
 	public int index;
 
-	public LocationRunnable(int index, Location location, Runnable runnable,
-			MutationEffect mutationEffect, String description) {
+	public Location to;
+
+	IndexTuple initialTo;
+
+	public LocationRunnable(int index, Location from, Location to,
+			Runnable runnable, MutationEffect mutationEffect,
+			String description) {
 		this.index = index;
-		this.location = location;
+		this.from = from;
+		this.to = to;
 		this.runnable = runnable;
 		this.mutationEffect = mutationEffect;
 		this.description = description;
-		this.initialIndicies = location.asIndexTuple();
+		this.initialFrom = from.asIndexTuple();
+		if (this.initialFrom.toString().contains("2781,41538")) {
+			int debug = 3;
+		}
+		this.initialTo = to == null ? null : to.asIndexTuple();
 	}
 
 	public enum MutationEffect {
@@ -41,13 +51,16 @@ public class LocationRunnable
 
 	@Override
 	public String toString() {
-		return Ax.format("%s - %s - %s", index, initialIndicies, description);
+		String initialToStr = initialTo == null ? ""
+				: "-" + initialTo.toString();
+		return Ax.format("%s - %s%s - %s", index, initialFrom, initialToStr,
+				description);
 	}
 
 	@Override
 	public int compareTo(LocationRunnable o) {
 		{
-			int cmp = location.compareTo(o.location);
+			int cmp = from.compareTo(o.from);
 			if (cmp != 0) {
 				return cmp;
 			}
@@ -68,16 +81,13 @@ public class LocationRunnable
 			runnables.sort(null);
 			for (int idx = 0; idx < runnables.size(); idx++) {
 				LocationRunnable locationRunnable = runnables.get(idx);
-				if (idx == 8) {
-					int debug = 3;
-				}
 				locationRunnable.run();
 			}
 		}
 
-		public void add(Location location, Runnable runnable,
+		public void add(Location from, Location to, Runnable runnable,
 				MutationEffect mutationEffect, String description) {
-			runnables.add(new LocationRunnable(runnables.size(), location,
+			runnables.add(new LocationRunnable(runnables.size(), from, to,
 					runnable, mutationEffect, description));
 		}
 	}

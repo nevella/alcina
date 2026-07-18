@@ -233,6 +233,11 @@ public class DomNodeBuilder {
 						.forEach(n -> n.asLocation().ensureCurrent());
 			}
 			DomNode node = build();
+			/*
+			 * revisit - push down?
+			 */
+			relativeTo.relative().treePreviousNode().asLocation()
+					.ensureCurrent();
 			relativeTo.node.getParentNode().insertBefore(node.node,
 					relativeTo.node);
 			toWrap.forEach(
