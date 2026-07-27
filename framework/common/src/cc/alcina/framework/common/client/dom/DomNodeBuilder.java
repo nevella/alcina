@@ -236,8 +236,10 @@ public class DomNodeBuilder {
 			/*
 			 * revisit - push down?
 			 */
-			relativeTo.relative().treePreviousNode().asLocation()
-					.ensureCurrent();
+			if (gwtNode != null) {
+				relativeTo.relative().treePreviousNode().asLocation()
+						.ensureCurrent();
+			}
 			relativeTo.node.getParentNode().insertBefore(node.node,
 					relativeTo.node);
 			toWrap.forEach(
