@@ -4,19 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * TrackingLocationContext is nice - but works even better when mutations occur
  * in document order, after the mutation locations are computed
  */
+@Bean(PropertySource.FIELDS)
 public class LocationRunnable
 		implements Comparable<LocationRunnable>, Runnable {
-	public Location from;
+	public transient Location from;
 
-	IndexTuple initialFrom;
+	transient IndexTuple initialFrom;
 
-	public Runnable runnable;
+	public transient Runnable runnable;
 
 	public MutationEffect mutationEffect;
 
@@ -24,9 +27,21 @@ public class LocationRunnable
 
 	public int index;
 
-	public Location to;
+	public transient Location to;
 
-	IndexTuple initialTo;
+	transient IndexTuple initialTo;
+
+	_SerializableForm serializableForm;
+
+	@Bean(PropertySource.FIELDS)
+	static class _SerializableForm {
+	}
+
+	public void beforeSerialization() {
+	}
+
+	public void afterDeserialization() {
+	}
 
 	public LocationRunnable(int index, Location from, Location to,
 			Runnable runnable, MutationEffect mutationEffect,
@@ -38,9 +53,6 @@ public class LocationRunnable
 		this.mutationEffect = mutationEffect;
 		this.description = description;
 		this.initialFrom = from.asIndexTuple();
-		if (this.initialFrom.toString().contains("2781,41538")) {
-			int debug = 3;
-		}
 		this.initialTo = to == null ? null : to.asIndexTuple();
 	}
 
@@ -74,14 +86,24 @@ public class LocationRunnable
 		return 0;
 	}
 
+	@Bean(PropertySource.FIELDS)
 	public static class OrderedMutations {
 		List<LocationRunnable> runnables = new ArrayList<>();
 
-		public void run() {
+		public void run(boolean continueOnException) {
 			runnables.sort(null);
 			for (int idx = 0; idx < runnables.size(); idx++) {
 				LocationRunnable locationRunnable = runnables.get(idx);
-				locationRunnable.run();
+				if (continueOnException) {
+					try {
+						locationRunnable.run();
+					} catch (Exception e) {
+						Ax.out("DEVEX-1 - Location mutation exception");
+						e.printStackTrace();
+					}
+				} else {
+					locationRunnable.run();
+				}
 			}
 		}
 
@@ -89,6 +111,14 @@ public class LocationRunnable
 				MutationEffect mutationEffect, String description) {
 			runnables.add(new LocationRunnable(runnables.size(), from, to,
 					runnable, mutationEffect, description));
+		}
+
+		public void beforeSerialization() {
+			runnables.forEach(LocationRunnable::beforeSerialization);
+		}
+
+		public void afterDeserialization() {
+			runnables.forEach(LocationRunnable::afterDeserialization);
 		}
 	}
 
