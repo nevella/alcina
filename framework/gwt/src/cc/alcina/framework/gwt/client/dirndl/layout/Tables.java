@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanForm;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -134,15 +135,15 @@ public class Tables {
 			@Directed.Exclude
 			String gridColumnWidth;
 
-			IntermediateModel(List<? extends Model> rows) {
+			@Override
+			public void onNodeContext(NodeContext event) {
 				ColumnWidth defaultWidth = node.annotationLocation
 						.getAnnotation(ColumnWidth.class);
 				gridColumnWidth = defaultWidth != null ? defaultWidth.value()
 						: "auto";
-				this.rows = rows;
 				Predicate<Property> propertyFilter = p -> p.provideRenderable()
 						&& !p.has(Exclude.class);
-				if (rows.isEmpty()) {
+				if (rows == null || rows.isEmpty()) {
 					this.columnNames = new ArrayList<>();
 				} else {
 					Model template = rows.iterator().next();
@@ -169,6 +170,10 @@ public class Tables {
 												: gridColumnWidth;
 									}).collect(Collectors.joining(" "));
 				}
+			}
+
+			IntermediateModel(List<? extends Model> rows) {
+				this.rows = rows;
 			}
 		}
 	}
