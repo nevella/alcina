@@ -94,15 +94,15 @@ public class LocationRunnable
 			runnables.sort(null);
 			for (int idx = 0; idx < runnables.size(); idx++) {
 				LocationRunnable locationRunnable = runnables.get(idx);
-				if (continueOnException) {
-					try {
-						locationRunnable.run();
-					} catch (Exception e) {
+				try {
+					locationRunnable.run();
+				} catch (RuntimeException e) {
+					if (continueOnException) {
 						Ax.out("DEVEX-1 - Location mutation exception");
 						e.printStackTrace();
+					} else {
+						throw e;
 					}
-				} else {
-					locationRunnable.run();
 				}
 			}
 		}
