@@ -219,7 +219,7 @@ public class ClientUtils {
 	}
 
 	public static void invokeJsDebugger() {
-		int debug = 3;
+		int debug = 4;
 		invokeJsDebugger0();
 	}
 

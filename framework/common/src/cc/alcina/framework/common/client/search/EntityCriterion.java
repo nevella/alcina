@@ -146,9 +146,6 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 	}
 
 	public void setValue(E value) {
-		if (value != null && value.getClass().getName().contains("Catchword")) {
-			int debug = 3;
-		}
 		setDisplayText(provideDisplayTextFor(value));
 		if (value != null) {
 			setId(value.getId());

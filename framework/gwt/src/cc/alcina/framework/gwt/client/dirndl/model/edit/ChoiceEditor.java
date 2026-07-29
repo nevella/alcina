@@ -446,7 +446,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 				.filter(choiceNode -> choiceNode
 						.getStringRepresentable() == event.getModel())
 				.findFirst();
-		node.get().nodes().removeFromParent();
+		node.get().removeFromParent();
 		focusAfterExternalEdit();
 	}
 }

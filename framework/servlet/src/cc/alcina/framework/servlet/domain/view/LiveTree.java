@@ -875,7 +875,7 @@ public class LiveTree {
 					change.path = childPath.getValue().path;
 					addPathChange(change);
 				} else {
-					int debug = 3;
+					// revisit
 				}
 				return childPath;
 			} else {

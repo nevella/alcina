@@ -1042,14 +1042,23 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			to.ensureChildren();
 			Preconditions.checkState(to.children.isEmpty());
-			from.children.stream().collect(Collectors.toList())
-					.forEach(child -> {
-						child.remove(true);
-						child.parent = to;
-						to.children.add(child);
-						to.rendered.append(child.rendered);
-						child.bind(false);
-					});
+			from.children.stream().toList().forEach(child -> {
+				boolean alreadyChildOfToRendered = child.parent.rendered != null
+						&& child.parent.rendered.asDomNode() == to.rendered
+								.asDomNode();
+				/*
+				 * if already child, don't remove from dom but do remove from
+				 * parent bindings - otherwise the reverse
+				 */
+				child.remove(!alreadyChildOfToRendered,
+						alreadyChildOfToRendered);
+				child.parent = to;
+				to.children.add(child);
+				if (!alreadyChildOfToRendered) {
+					to.rendered.append(child.rendered);
+				}
+				child.bind(false);
+			});
 		}
 
 		/**

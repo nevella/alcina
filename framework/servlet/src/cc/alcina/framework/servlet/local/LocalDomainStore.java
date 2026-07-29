@@ -252,9 +252,6 @@ public class LocalDomainStore {
 		@Override
 		public void domainTransform(DomainTransformEvent event) {
 			LocalDomainQueue.checkInDomainContext();
-			if (committing) {
-				int debug = 3;
-			}
 			super.domainTransform(event);
 		}
 

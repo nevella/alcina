@@ -147,9 +147,6 @@ public class TaskSortClass extends PerformerTask.Fields {
 		}
 
 		void add() {
-			if (name().equals("Inner3")) {
-				int debug = 3;
-			}
 			declaration.addMember(member);
 		}
 

@@ -1074,7 +1074,7 @@ public class DomUtils implements NodeFromXpathProvider {
 						flushToUnwrap();
 						if (e.getChildNodes().getLength() == 0
 								&& e.getTagName().equalsIgnoreCase("A")) {
-							int debug = 3;
+							// skip
 						} else {
 							DomNode domNode = DomNode.from(e);
 							List<DomNode> nonProcesingInstructionChildren = domNode

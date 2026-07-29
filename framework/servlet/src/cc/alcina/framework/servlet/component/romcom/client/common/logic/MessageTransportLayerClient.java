@@ -71,9 +71,6 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 				List<MessageToken> shouldSend = activeMessages.stream()
 						.filter(MessageToken::shouldSend).toList();
 				if (shouldSend.size() > 0) {
-					if (envelopeDispatcher.inflightEnvelope.size() > 3) {
-						int debug = 3;
-					}
 					if (activeMessages.stream().map(MessageToken::getMessage)
 							.allMatch(
 									MessageTransportLayerClient::isContinuousEventOrWindowUpdate)) {

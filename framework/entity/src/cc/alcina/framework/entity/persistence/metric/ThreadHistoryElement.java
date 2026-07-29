@@ -24,9 +24,6 @@ public class ThreadHistoryElement {
 	public void elideIfMoreLinesThan(int maxFrames) {
 		int size = threadInfo.stackTrace.size();
 		if (size > maxFrames) {
-			if (size > 10000) {
-				int debug = 3;
-			}
 			threadInfo.stackTrace = threadInfo.stackTrace.stream()
 					.limit(maxFrames).collect(Collectors.toList());
 			this.elidedStacktraceFrameCount += size - maxFrames;

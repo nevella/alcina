@@ -963,7 +963,9 @@ class Environment {
 			messageHistory.executionQueueStates = queue.processSnapshot
 					.getQueueStates(sendTraces);
 			if (messageHistory.executionQueueStates.size() > 1) {
-				int debug = 3;
+				/*
+				 * revisit
+				 */
 			}
 		}
 	}

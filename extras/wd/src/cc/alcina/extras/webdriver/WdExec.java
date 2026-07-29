@@ -83,7 +83,7 @@ public class WdExec {
 				sleep(100);
 			} catch (Exception e) {
 				// removed
-				int debug = 3;
+				int debug = 4;
 				return;
 			}
 		}

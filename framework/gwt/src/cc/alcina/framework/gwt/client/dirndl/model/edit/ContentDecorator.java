@@ -317,7 +317,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			decorator.putReferenced(((Model) decoratorParent).provideNode(),
 					event.getModel());
 			suggestingNode.nodes().insertAfterThis(decorator);
-			suggestingNode.nodes().removeFromParent();
+			suggestingNode.removeFromParent();
 			if (decoratorParent.isCheckRepositionPostSelection()) {
 				if (decorator.isPositionPostDecoratorOnCreate()) {
 					decorator.positionCursorPostReferencedSelection();
@@ -632,7 +632,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				&& endFragment == startFragment) {
 			if (Objects.equals(editSelection.range.toIntPair(),
 					startFragment.domNode().asRange().toIntPair())) {
-				startFragment.nodes().removeFromParent();
+				startFragment.removeFromParent();
 				((Model) decoratorParent).emitEvent(
 						DecoratorEvents.SelectedDecoratorDeleted.class);
 			}

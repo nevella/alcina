@@ -955,7 +955,7 @@ public abstract class MessageTransportLayer {
 										.updateTransportHistoryFromRemote(
 												remoteHistory);
 							} else {
-								int debug = 3;
+								//
 							}
 						});
 				EnvelopeId highestReceivedEnvelopeId = envelope.highestReceivedEnvelopeId;

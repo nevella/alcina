@@ -43,10 +43,6 @@ public class Notification extends Model {
 
 	Model model;
 
-	Notification() {
-		int debug = 3;
-	}
-
 	public String getClassName() {
 		return this.className;
 	}

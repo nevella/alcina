@@ -144,7 +144,7 @@ public class DomainTransformPersistenceEvents
 				switch (persistenceEventType) {
 				// REVISIT - check this is fired;
 				case COMMIT_ERROR:
-					int debug = 3;
+					int debug = 4;
 					// deliberate fallthrough
 				case COMMIT_OK:
 					/*

@@ -294,9 +294,6 @@ public class EnvironmentManager {
 					long eventTime = firstEvent.event.getEventTime();
 					long now = System.currentTimeMillis();
 					Ax.out("%s - %sms", types, now - eventTime);
-					if (now - eventTime > 200) {
-						int debug = 3;
-					}
 				}
 			}
 		}

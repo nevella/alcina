@@ -304,9 +304,6 @@ public class ReflectiveSerializer {
 			out = root.getChild(1);
 		}
 		String json = out.toJson(options.pretty);
-		if (json.length() > 500000) {
-			int debug = 3;
-		}
 		return json;
 	}
 

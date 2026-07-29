@@ -357,7 +357,6 @@ class JobAllocator {
 					 * while awaiting child jobs which are themselves awaiting
 					 * sequence completion - which means it does nothing
 					 */
-					int debug = 3;
 					// missed event?
 					queue.publish(EventType.WAKEUP);
 				} else {

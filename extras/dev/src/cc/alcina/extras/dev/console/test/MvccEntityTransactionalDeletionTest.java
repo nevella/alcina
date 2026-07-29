@@ -71,9 +71,6 @@ public class MvccEntityTransactionalDeletionTest<IU extends Entity & IUser, IG e
 					String txUserName = createdUser.getUserName();
 					Preconditions.checkState(txUserName != null);
 					Domain.stream(userClass).forEach(u -> {
-						if (u.getId() == createdUser.getId()) {
-							int debug = 3;
-						}
 						DomainStore.writableStore().getCache()
 								.get(u.toLocator());
 						((IUser) u).getUserName();
