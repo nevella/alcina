@@ -731,7 +731,9 @@ public class DomNode {
 				 * the location mutations will operate directly on the stripped
 				 * subtree, so ensure current here
 				 */
-				stream().forEach(n -> n.asLocation().ensureCurrent());
+				if (document.hasLocations()) {
+					stream().forEach(n -> n.asLocation().ensureCurrent());
+				}
 			}
 			/**
 			 * need to insert the children *after* the parent so the parent

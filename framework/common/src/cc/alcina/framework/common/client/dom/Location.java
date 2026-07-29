@@ -1508,4 +1508,11 @@ public class Location implements Comparable<Location> {
 	boolean isCurrent() {
 		return locationContext.isCurrent(this);
 	}
+
+	/*
+	 * debug aid
+	 */
+	DomNode _pkgContainingNode() {
+		return containingNode;
+	}
 }

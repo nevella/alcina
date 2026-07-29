@@ -582,8 +582,15 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public void removeAllChildren() {
-			children().toList().forEach(fn -> fn.nodes().removeFromParent());
+			children().toList().forEach(FragmentNode::removeFromParent);
 		}
+	}
+
+	/*
+	 * sugar, since this is often called as a method handle
+	 */
+	public void removeFromParent() {
+		nodes().removeFromParent();
 	}
 
 	// text DOM structure

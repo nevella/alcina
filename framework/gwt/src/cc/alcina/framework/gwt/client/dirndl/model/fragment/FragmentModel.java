@@ -16,6 +16,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.collections.NotifyingList.Notification;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -130,6 +131,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	List<NodeTransformer> matchingTransformers;
 
+	Set<DomNode> preregisteredNodes = Set.of();
+
 	FragmentRoot fragmentRoot;
 
 	public final Events events = new Events();
@@ -138,6 +141,17 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		this.rootModel = rootModel;
 		fragmentRoot = new FragmentRoot(this, rootModel);
 		addDefaultModelledTypes();
+	}
+
+	/*
+	 * This could probably be done better - essentially, onFragmentRegistration
+	 * only applies the first time a domnode/FragmentNode is effectively
+	 * registered for a given doc. If deserializing, all the existing domNodes
+	 * should not fire onFragmentRegistration
+	 */
+	protected void registerPreregisteredNodes(DomDocument domDocument) {
+		preregisteredNodes = AlcinaCollections.newUniqueSet();
+		domDocument.stream().forEach(preregisteredNodes::add);
 	}
 
 	protected void addDefaultModelledTypes() {
@@ -343,7 +357,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			NodeTransformer transformer = createNodeTransformer(domNode);
 			transformer.setLayoutNode(node.provideNode());
 			registerTransformer(domNode, transformer);
-			if (fragmentRegisteredOnce.add(node)) {
+			if (fragmentRegisteredOnce.add(node)
+					&& !preregisteredNodes.contains(domNode)) {
 				node.onFragmentRegistration();
 			}
 		}

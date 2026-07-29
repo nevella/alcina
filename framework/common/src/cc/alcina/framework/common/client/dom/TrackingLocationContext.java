@@ -496,10 +496,7 @@ class TrackingLocationContext implements LocationContext {
 			if (currentMutation != null) {
 				IndexMutation ref = currentMutation;
 				if (!currentMutation.extendWith(mutation)) {
-					// rare, but it can be nulled during extendWith
-					if (currentMutation != null) {
-						flushCurrentMutation();
-					}
+					flushCurrentMutation();
 				}
 			}
 			if (currentMutation == null) {
@@ -716,9 +713,6 @@ class TrackingLocationContext implements LocationContext {
 		int missCost;
 
 		void miss(int missCost) {
-			if (missCost > 20) {
-				int debug = 3;
-			}
 			this.missCost += missCost;
 		}
 
@@ -1093,6 +1087,7 @@ class TrackingLocationContext implements LocationContext {
 	}
 
 	void validateLocations(boolean withoutSideEffects) {
+		flushCurrentMutation();
 		IndexTuple cumulative = IndexTuple.zero;
 		List<DomNode> list = gwtDocument.domDocument.stream().toList();
 		for (int idx = 0; idx < list.size(); idx++) {
@@ -1174,6 +1169,7 @@ class TrackingLocationContext implements LocationContext {
 		 * reference to the an index tuple (as index mutations are applied) -
 		 * it's a sort of pointer/accumulator thing
 		 */
+		DomNode node = location._pkgContainingNode();
 		IndexTuple initialLocationTuple = location.asIndexTuple();
 		int documentMutationPosition = location.documentMutationPosition;
 		IndexTuple mutatingPointRef = initialLocationTuple
@@ -1217,7 +1213,6 @@ class TrackingLocationContext implements LocationContext {
 					// mutatingPointRef);
 					Ax.out("diff: %s :: %s", cumulativeMutatedRef,
 							mutatingPointRef);
-					int debug = 3;
 				}
 			}
 		}
@@ -1259,9 +1254,11 @@ class TrackingLocationContext implements LocationContext {
 	}
 
 	void flushCurrentMutation() {
-		currentMutation.onNotExtensible();
-		cumulativeMutation.extend(currentMutation);
-		currentMutation = null;
+		if (currentMutation != null) {
+			currentMutation.onNotExtensible();
+			cumulativeMutation.extend(currentMutation);
+			currentMutation = null;
+		}
 	}
 
 	void resetLocationMutations() {

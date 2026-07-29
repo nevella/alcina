@@ -297,14 +297,14 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public LocationContext locations() {
 		if (locationContext == null) {
-			if (w3cDoc() instanceof com.google.gwt.dom.client.Document) {
-				TrackingLocationContext locationContext3 = new TrackingLocationContext(
-						this);
-				locationContext = locationContext3;
-				locationContext3.init();
-			} else {
-				synchronized (this) {
-					if (locationContext == null) {
+			synchronized (this) {
+				if (locationContext == null) {
+					if (w3cDoc() instanceof com.google.gwt.dom.client.Document) {
+						TrackingLocationContext trackingLocationContext = new TrackingLocationContext(
+								this);
+						locationContext = trackingLocationContext;
+						trackingLocationContext.init();
+					} else {
 						locationContext = new NonTrackingLocationContext();
 					}
 				}
@@ -781,5 +781,9 @@ public class DomDocument extends DomNode implements Cloneable {
 		stream().forEach(
 				domNode -> result.put(result.size() + 1, domNode.w3cNode()));
 		return result;
+	}
+
+	boolean hasLocations() {
+		return locationContext != null;
 	}
 }
