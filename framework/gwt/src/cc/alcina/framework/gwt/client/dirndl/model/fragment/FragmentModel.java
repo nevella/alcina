@@ -151,7 +151,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	 */
 	protected void registerPreregisteredNodes(DomDocument domDocument) {
 		preregisteredNodes = AlcinaCollections.newUniqueSet();
-		domDocument.stream().forEach(preregisteredNodes::add);
+		if (domDocument != null) {
+			domDocument.stream().forEach(preregisteredNodes::add);
+		}
 	}
 
 	protected void addDefaultModelledTypes() {

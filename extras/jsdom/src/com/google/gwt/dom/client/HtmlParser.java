@@ -523,7 +523,10 @@ public class HtmlParser {
 		if (!Al.isBrowser()) {
 			markup = cleanPreamble(markup);
 		}
-		this.closeToValidateCloseTag = !CONTEXT_DO_NOT_CLOSE_TO_VALIDATE.is();
+		if (CONTEXT_DO_NOT_CLOSE_TO_VALIDATE.has()) {
+			this.closeToValidateCloseTag = !CONTEXT_DO_NOT_CLOSE_TO_VALIDATE
+					.is();
+		}
 		this.markup = markup;
 		this.replaceContents = replaceContents;
 		this.lineNumber = 1;
