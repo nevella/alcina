@@ -2082,4 +2082,43 @@ public class SEUtilities {
 			return 0;
 		}
 	}
+
+	public static boolean deleteDirectory(File folder, boolean justContents) {
+		if (!folder.exists()) {
+			return false;
+		}
+		if (!folder.isDirectory()) {
+			return folder.delete();
+		}
+		Stack<File> pathStack = new Stack<File>();
+		Stack<File> dirStack = new Stack<File>();
+		pathStack.push(folder);
+		dirStack.push(folder);
+		while (pathStack.size() != 0) {
+			File dInf = pathStack.pop();
+			File[] files = dInf.listFiles();
+			for (File file : files) {
+				if (file.isDirectory()) {
+					pathStack.push(file);
+					dirStack.push(file);
+				} else {
+					boolean b = file.delete();
+					if (!b) {
+						return b;
+					}
+				}
+			}
+		}
+		while (dirStack.size() != 0) {
+			File dInf = dirStack.pop();
+			if (justContents && dInf.equals(folder)) {
+				continue;
+			}
+			boolean b = dInf.delete();
+			if (!b) {
+				return b;
+			}
+		}
+		return true;
+	}
 }
