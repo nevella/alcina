@@ -1042,23 +1042,45 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			to.ensureChildren();
 			Preconditions.checkState(to.children.isEmpty());
-			from.children.stream().toList().forEach(child -> {
-				boolean alreadyChildOfToRendered = child.parent.rendered != null
-						&& child.parent.rendered.asDomNode() == to.rendered
-								.asDomNode();
-				/*
-				 * if already child, don't remove from dom but do remove from
-				 * parent bindings - otherwise the reverse
-				 */
-				child.remove(!alreadyChildOfToRendered,
-						alreadyChildOfToRendered);
-				child.parent = to;
-				to.children.add(child);
-				if (!alreadyChildOfToRendered) {
-					to.rendered.append(child.rendered);
-				}
-				child.bind(false);
-			});
+			/*
+			 * because the caller has already de-parented the node children,
+			 * don't try to avoid node operations (as per the commented block
+			 * below) - an optimisation of this type might eventually work, but
+			 * it would need to be implemented in the caller as well - and
+			 * subtree moves are not *all* that common
+			 */
+			from.children.stream().collect(Collectors.toList())
+					.forEach(child -> {
+						child.remove(true);
+						child.parent = to;
+						to.children.add(child);
+						to.rendered.append(child.rendered);
+						child.bind(false);
+					});
+			// from.children.stream().toList().forEach(child -> {
+			// boolean alreadyChildOfToRendered = child.parent.rendered != null
+			// && child.parent.rendered.asDomNode() == to.rendered
+			// .asDomNode();
+			// /*
+			// * if already child, don't remove from dom but do remove from
+			// * parent bindings - otherwise the reverse. Note that already a
+			// * child causes a non-descending attach/detach (children should
+			// * remain blissfully unaware). If there are future context
+			// * considerations (such as subtree-sensitive FragmentNode
+			// * indicies), handle those with an observable or other event, if
+			// * possible, rather than subtree attach/detach
+			// */
+			// if (alreadyChildOfToRendered) {
+			// child.unbind(false);
+			// child.parent = to;
+			// child.bind(true);
+			// } else {
+			// child.remove(true);
+			// child.parent = to;
+			// to.children.add(child);
+			// to.rendered.append(child.rendered);
+			// child.bind(false);
+			// });
 		}
 
 		/**

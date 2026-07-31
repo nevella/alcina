@@ -1206,7 +1206,15 @@ public class Location implements Comparable<Location> {
 
 	// FIXME - location.mutation - cache textContent() computation
 	public boolean isAtNodeEnd() {
-		return getTextOffsetInNode() == containingNode.textContent().length();
+		DomNode containingNode = getContainingNode();
+		if (containingNode.isComment()
+				|| containingNode.isProcessingInstruction()
+				|| containingNode.isCDataSectionNode()) {
+			return !start;
+		} else {
+			return getTextOffsetInNode() == containingNode.textContent()
+					.length();
+		}
 	}
 
 	public boolean isAtNodeStart() {

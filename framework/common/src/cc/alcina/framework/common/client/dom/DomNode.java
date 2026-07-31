@@ -2577,4 +2577,8 @@ public class DomNode {
 	public AttachId attachId() {
 		return AttachId.forNode(gwtNode());
 	}
+
+	public boolean isCDataSectionNode() {
+		return node.getNodeType() == Node.CDATA_SECTION_NODE;
+	}
 }
