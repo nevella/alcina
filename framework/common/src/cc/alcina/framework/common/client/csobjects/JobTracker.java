@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Status.StatusReason;
 
 public interface JobTracker {
 	public abstract Date getEndTime();
@@ -74,6 +75,22 @@ public interface JobTracker {
 
 		public void setTrackers(List<JobTracker> trackers) {
 			this.trackers = trackers;
+		}
+	}
+
+	default StatusReason asResultStatusReason() {
+		String jobResult = getJobResult();
+		switch (getJobResultType()) {
+		case DID_NOT_COMPLETE:
+		case EXCEPTION:
+		case FAIL:
+			return StatusReason.error(jobResult, jobResult);
+		case WARN:
+			return StatusReason.warn(jobResult, jobResult);
+		case OK:
+			return StatusReason.ok(jobResult);
+		default:
+			throw new UnsupportedOperationException();
 		}
 	}
 }

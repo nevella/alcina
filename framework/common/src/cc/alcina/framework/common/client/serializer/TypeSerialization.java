@@ -35,6 +35,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 public @interface TypeSerialization {
 	boolean flatSerializable() default true;
 
+	boolean reflectiveSerializable() default true;
+
 	/*
 	 * Specialised aliasing (for say criteriagroup/criteria tuples)
 	 */
