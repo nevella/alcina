@@ -38,6 +38,10 @@ public class DomDocument extends DomNode {
 		return perDocumentSupplier.get(document);
 	}
 
+	public static DomDocument from(Document document) {
+		return documentFor(document);
+	}
+
 	public static DomDocument from(String xml) {
 		return new DomDocument(xml);
 	}

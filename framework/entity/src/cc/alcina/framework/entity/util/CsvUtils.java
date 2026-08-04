@@ -139,4 +139,41 @@ public class CsvUtils {
 		}
 		return results;
 	}
+
+	static StringBuilder headerValuesToOutput(List<String> headers,
+			List<List<String>> values, boolean quoteHeaders, boolean tsv) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < headers.size(); i++) {
+			String header = headers.get(i);
+			if (quoteHeaders) {
+			} else {
+				headers.set(i, header.replace(" ", "_"));
+			}
+		}
+		sb.append(asOutputRow(headers, tsv));
+		sb.append("\n");
+		for (int j = 0; j < values.size(); j++) {
+			List<String> row = values.get(j);
+			sb.append(asOutputRow(row, tsv));
+			sb.append("\n");
+		}
+		return sb;
+	}
+
+	private static String asOutputRow(Collection values, boolean tsv) {
+		int i = 0;
+		StringBuilder sb = new StringBuilder();
+		for (Object object : values) {
+			String value = object == null ? "" : object.toString();
+			if (i++ > 0) {
+				sb.append(tsv ? "\t" : ",");
+			}
+			value = value.replace("\n", "\\n");
+			value = value.replace("\"", "\"\"");
+			sb.append(wrapInQuotesPattern.matcher(value).find()
+					? "\"" + value + "\""
+					: value);
+		}
+		return sb.toString();
+	}
 }
