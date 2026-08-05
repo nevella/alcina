@@ -710,7 +710,7 @@ class TrackingLocationContext implements LocationContext {
 
 		int hitCount;
 
-		int missCost;
+		long missCost;
 
 		void miss(int missCost) {
 			this.missCost += missCost;

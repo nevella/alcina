@@ -912,8 +912,8 @@ public class Location implements Comparable<Location> {
 				return true;
 			}
 			if (at.index == index) {
-				if (at.treeIndex == treeIndex) {
-					if (start) {
+				if (start) {
+					if (at.treeIndex == treeIndex) {
 						/*
 						 * edgy - a delta exactly at this index, when this
 						 * location is a start, will only have effect if the
@@ -929,17 +929,29 @@ public class Location implements Comparable<Location> {
 						 */
 						return delta.treeIndex > 0;
 					} else {
-						/*
-						 * end
-						 */
-						/*
-						 * again, 'edgy' - a *text* insert pushes the location
-						 * forward, text removal or node delta does not
-						 */
-						return delta.index > 0 && delta.treeIndex == 0;
+						return false;
 					}
 				} else {
-					return false;
+					/*
+					 * end
+					 */
+					/*
+					 * again, 'edgy' - a *text* insert pushes the location
+					 * forward, text removal or node delta does not
+					 * 
+					 * in fact, this is the hardest part - and wip. to determine
+					 * end update applicability, for an end node at the same
+					 * index, we need to know containment - and TLC doesn't
+					 * (yet) always give us that
+					 */
+					return delta.index > 0
+							&& (delta.treeIndex == 0 || (containingNode != null
+									&& at.containingNode != null
+									&& containingNode
+											.isAncestorOf(at.containingNode)))
+							||
+							// document or documentelementnode
+							treeIndex <= 1;
 				}
 			}
 			/*
