@@ -899,6 +899,9 @@ public class Location implements Comparable<Location> {
 		 * Note that this is not symmettric (since the coordinates are related
 		 * but there's an ordering between [treeindex|start,index], not
 		 * [treeindex,index]
+		 * 
+		 * This function is *key* and probably deserves a book - or at least a
+		 * diagram
 		 */
 		boolean isAffectedBy(IndexTuple at, IndexTuple delta) {
 			/*
@@ -908,17 +911,36 @@ public class Location implements Comparable<Location> {
 			if (at.treeIndex < treeIndex) {
 				return true;
 			}
-			if (at.treeIndex == treeIndex && at.index == index && start) {
-				/*
-				 * edgy - a delta exactly at this index, when this location is a
-				 * start, will only have effect if the delta is a tree-index
-				 * delta (possibly also an index delta).
-				 * 
-				 * For delta.treeIndex > 0, this is 'insterting a node at
-				 * exactly this point pushes locations at this point forwards',
-				 * etc
-				 */
-				return delta.treeIndex != 0;
+			if (at.index == index) {
+				if (at.treeIndex == treeIndex) {
+					if (start) {
+						/*
+						 * edgy - a delta exactly at this index, when this
+						 * location is a start, will only have effect if the
+						 * delta is a tree-index *positive* delta (possibly also
+						 * an index delta).
+						 * 
+						 * For delta.treeIndex > 0, this is 'inserting a node at
+						 * exactly this point pushes locations at this point
+						 * forwards', etc. If there's no treeindex delta , text
+						 * has been inserted/removed (but location stays
+						 * pointing to where it was). If there's a negative
+						 * treeindex, no effect (lemma)
+						 */
+						return delta.treeIndex > 0;
+					} else {
+						/*
+						 * end
+						 */
+						/*
+						 * again, 'edgy' - a *text* insert pushes the location
+						 * forward, text removal or node delta does not
+						 */
+						return delta.index > 0 && delta.treeIndex == 0;
+					}
+				} else {
+					return false;
+				}
 			}
 			/*
 			 * text-index affecting. handle before/start separately

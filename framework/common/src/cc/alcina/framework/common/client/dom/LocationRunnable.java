@@ -99,6 +99,7 @@ public class LocationRunnable
 				} catch (RuntimeException e) {
 					if (continueOnException) {
 						Ax.out("DEVEX-1 - Location mutation exception");
+						Ax.err(locationRunnable);
 						e.printStackTrace();
 					} else {
 						throw e;
