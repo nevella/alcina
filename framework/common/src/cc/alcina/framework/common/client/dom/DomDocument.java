@@ -291,7 +291,7 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 	}
 
-	public static boolean useCumulativeMutation = false;
+	public static boolean useCumulativeMutation = true;
 
 	public static boolean verifyCumulativeMutation = false;
 
