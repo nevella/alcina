@@ -77,6 +77,7 @@ public class Field {
 			return super.resolvedCache();
 		}
 
+		@Override
 		public BindingsCache bindingsCache() {
 			return bindingsCache;
 		}
@@ -206,7 +207,7 @@ public class Field {
 
 	@Override
 	public String toString() {
-		return Ax.format("Field: %s", getPropertyName());
+		return Ax.format("Field: %s", getProperty());
 	}
 
 	public Validator provideReverseValidator() {

@@ -36,6 +36,8 @@ public class FormValidation {
 
 	List<Validation> validations;
 
+	boolean preparing = false;
+
 	FormValidation(FormModel formModel) {
 		this.formModel = formModel;
 	}
@@ -83,12 +85,17 @@ public class FormValidation {
 			validations.forEach(
 					v -> v.topicStateChange.add(this::checkValidationComplete));
 		}
+		preparing = true;
+		validations.forEach(Validation::onBeforeValidation);
+		preparing = false;
 	}
 
 	void checkValidationComplete() {
-		if (validations.stream().allMatch(Validation::isComplete)
-				|| validations.stream().anyMatch(Validation::isInvalid)) {
-			List<Validation> invalid = validations.stream().filter(Validation::isInvalid).collect(Collectors.toList());
+		if (!preparing && validations.stream().allMatch(Validation::isComplete)
+				|| validations.stream()
+						.anyMatch(v -> v.isComplete() && v.isInvalid())) {
+			List<Validation> invalid = validations.stream()
+					.filter(Validation::isInvalid).collect(Collectors.toList());
 			if (invalid.isEmpty()) {
 				topicValidationResult
 						.publish(new ValidationResult(ValidationState.VALID));

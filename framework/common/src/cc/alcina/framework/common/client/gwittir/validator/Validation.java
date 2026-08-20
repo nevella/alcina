@@ -6,6 +6,7 @@ import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
 
@@ -30,6 +31,11 @@ public abstract class Validation {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return Ax.format("Validator :: %s", getBinding());
+	}
+
 	public void validate() {
 		if (getBinding() != null) {
 			getBinding().setRight();
@@ -38,10 +44,20 @@ public abstract class Validation {
 				setResult(new ValidationResult(ValidationState.VALIDATING));
 				getValidator().validate(getValidationInput());
 				setResult(new ValidationResult(ValidationState.VALID));
+				setException(null);
 			} catch (ValidationException e) {
 				setResult(ValidationResult.invalid(e.getMessage()));
+				setException(e);
 			}
 		}
+	}
+
+	public void onBeforeValidation() {
+		result.onBeforeValidation();
+	}
+
+	protected void setException(ValidationException e) {
+		// NOOP
 	}
 
 	public boolean isComplete() {

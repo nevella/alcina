@@ -75,6 +75,12 @@ public class FormEvents {
 		public static ValidationResult invalid(String message) {
 			return new ValidationResult(null, ValidationState.INVALID, message);
 		}
+
+		public void onBeforeValidation() {
+			if (state.isComplete()) {
+				state = ValidationState.NOT_VALIDATED;
+			}
+		}
 	}
 
 	public static class PropertyValidationChange
