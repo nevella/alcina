@@ -61,6 +61,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
@@ -703,6 +704,12 @@ public class FormModel extends Model
 			}
 
 			@Override
+			public String toString() {
+				return Ax.format("Validator :: %s - %s", field,
+						NestedName.get(field.getValidator()));
+			}
+
+			@Override
 			public void validate() {
 				if (feedback != null || hasWidgetFeedback) {
 					super.validate();
@@ -730,6 +737,39 @@ public class FormModel extends Model
 			public Validator getValidator() {
 				if (hasWidgetFeedback) {
 					return field.getValidator();
+				} else {
+					// the validator should not be accessed directly, rather
+					// it's
+					// triggered by binding.set()
+					throw new UnsupportedOperationException();
+				}
+			}
+
+			@Override
+			protected void setException(ValidationException e) {
+				if (e != null) {
+					if (hasWidgetFeedback) {
+						field.getFeedback()
+								.handleException(getValidationWidget(), e);
+					} else {
+						// feedback.handleException(bindable, e);
+					}
+				} else {
+					if (hasWidgetFeedback) {
+						field.getFeedback().resolve(getValidationWidget());
+					} else {
+						// feedback.resolve(bindable);
+					}
+				}
+			}
+
+			Object getValidationWidget() {
+				if (hasWidgetFeedback) {
+					Binding elementBinding = formBinding.getChildren().stream()
+							.filter(b -> b.getRight().property == field
+									.getProperty())
+							.findFirst().get();
+					return elementBinding.getLeft().object;
 				} else {
 					// the validator should not be accessed directly, rather
 					// it's

@@ -3,12 +3,14 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.gwittir.validator.Validation;
 import cc.alcina.framework.common.client.gwittir.validator.ValidationState;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
@@ -23,13 +25,18 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class FormValidation {
-	static final String DEFAULT_BEAN_EXCEPTION_MESSAGE = "Please correct the problems in the form";
+	public static final String DEFAULT_BEAN_EXCEPTION_MESSAGE = "Please correct the problems in the form";
+
+	public static final String BEAN_EXCEPTION_MESSAGE = FormValidation.class
+			.getName() + ".BEAN_EXCEPTION_MESSAGE";
 
 	Topic<ValidationResult> topicValidationResult = Topic.create();
 
 	FormModel formModel;
 
 	List<Validation> validations;
+
+	boolean preparing = false;
 
 	FormValidation(FormModel formModel) {
 		this.formModel = formModel;
@@ -78,19 +85,27 @@ public class FormValidation {
 			validations.forEach(
 					v -> v.topicStateChange.add(this::checkValidationComplete));
 		}
+		preparing = true;
+		validations.forEach(Validation::onBeforeValidation);
+		preparing = false;
 	}
 
 	void checkValidationComplete() {
-		if (validations.stream().allMatch(Validation::isComplete)
-				|| validations.stream().anyMatch(Validation::isInvalid)) {
-			if (validations.stream().allMatch(Validation::isValid)) {
+		if (!preparing && validations.stream().allMatch(Validation::isComplete)
+				|| validations.stream()
+						.anyMatch(v -> v.isComplete() && v.isInvalid())) {
+			List<Validation> invalid = validations.stream()
+					.filter(Validation::isInvalid).collect(Collectors.toList());
+			if (invalid.isEmpty()) {
 				topicValidationResult
 						.publish(new ValidationResult(ValidationState.VALID));
 			} else {
 				String beanValidationExceptionMessage = validations.stream()
 						.map(Validation::getBeanValidationExceptionMessage)
 						.filter(Objects::nonNull).findFirst()
-						.orElse(DEFAULT_BEAN_EXCEPTION_MESSAGE);
+						.orElse(TextProvider.get().getUiObjectText(
+								FormValidation.class, BEAN_EXCEPTION_MESSAGE,
+								DEFAULT_BEAN_EXCEPTION_MESSAGE));
 				topicValidationResult.publish(ValidationResult
 						.invalid(beanValidationExceptionMessage));
 			}
