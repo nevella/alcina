@@ -539,7 +539,7 @@ public abstract class TransformManager
 			break;
 		}
 		case DELETE_OBJECT:
-			performDeleteObject((Entity) token.object);
+			performDeleteObject(token.object);
 			break;
 		case CREATE_OBJECT:
 			// various possibilities:
@@ -694,6 +694,7 @@ public abstract class TransformManager
 		T newInstance = newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
 		registerProvisionalObject(newInstance);
+		fireCreateObjectEvent(objectClass, 0, localId);
 		return newInstance;
 	}
 
@@ -1664,11 +1665,14 @@ public abstract class TransformManager
 
 	protected void fireCreateObjectEvent(Class clazz, long id, long localId) {
 		DomainTransformEvent dte = createTransformEvent();
-		dte.setSource(null);
 		dte.setObjectId(id);
 		dte.setObjectLocalId(localId);
 		dte.setObjectClass(clazz);
 		dte.setTransformType(TransformType.CREATE_OBJECT);
+		getObject(dte);
+		if (dte.getSource() == null) {
+			dte.setSource(getProvisionalCreatedObject(localId));
+		}
 		addTransform(dte);
 		try {
 			fireDomainTransform(dte);
@@ -1678,6 +1682,13 @@ public abstract class TransformManager
 			dtre.setEvent(e.getEvent());
 			throw dtre;
 		}
+	}
+
+	public Entity getProvisionalCreatedObject(long localId) {
+		return provisionalObjects == null ? null
+				: (Entity) provisionalObjects.keySet().stream()
+						.filter(e -> ((Entity) e).getLocalId() == localId)
+						.findFirst().get();
 	}
 
 	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
@@ -1810,12 +1821,9 @@ public abstract class TransformManager
 		return false;
 	}
 
-	protected void maybeAddVersionNumbers(DomainTransformEvent evt, Entity obj,
-			Object tgt) {
-		if (obj instanceof HasVersionNumber) {
-			evt.setObjectVersionNumber(
-					((HasVersionNumber) obj).getVersionNumber());
-		}
+	protected void maybeAddVersionNumbers(DomainTransformEvent evt,
+			Entity entity, Object tgt) {
+		evt.setObjectVersionNumber(entity.getVersionNumber());
 		if (tgt instanceof HasVersionNumber) {
 			evt.setValueVersionNumber(
 					((HasVersionNumber) tgt).getVersionNumber());
