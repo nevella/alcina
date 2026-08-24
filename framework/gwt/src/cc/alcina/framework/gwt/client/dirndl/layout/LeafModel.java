@@ -502,6 +502,15 @@ public interface LeafModel {
 
 		public String text;
 
+		public static class To extends
+				AbstractContextSensitiveModelTransform<String, LabelText> {
+			@Override
+			public LabelText apply(String text) {
+				String label = node.annotationLocation.property.name();
+				return new LabelText(CommonUtils.deInfix(label), text);
+			}
+		}
+
 		public LabelText(String label, String text) {
 			this.label = label;
 			this.text = text;

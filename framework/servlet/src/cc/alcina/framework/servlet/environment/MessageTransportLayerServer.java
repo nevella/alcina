@@ -25,25 +25,25 @@ import cc.alcina.framework.servlet.environment.MessageTransportLayerServer.Aggre
 /**
  * <p>
  * The server end of the message transport layer
- * 
+ *
  * <p>
  * FIXME - synchronisation could be cleaner - there are two distinct areas
  * (envelopes; unacknowledged messages) - is there some formal documentation
  * around sync validation?
- * 
+ *
  * <p>
  * FIXME - perf - some of the logging is heavyweight - use some conditional form
- * 
+ *
  * @see {@link MessageBatcher} - performance optimiser, which batches messages
  *      such as interleaved invoke/js and mutation
- * 
- * 
+ *
+ *
  */
 /*
  * synchronization - basically most things synchronize on the top-level instance
  * (MessageTransportLayerServer) instance. Calls are quick + infrequent, and
  * finer-grained locks caused deadlocks
- * 
+ *
  * On a completely different note, note that you want http/2 - http/1.1 limit of
  * 6 connections will cause eventual packet/message backlog if generating gt 6
  * messages per [latency cycle], since 6 is the standard max tcp conns per
@@ -71,15 +71,16 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		 * future - re-implement to allow MessageBatcherServer to access this
 		 * method
 		 */
+		@Override
 		protected void send(List<Message> messages) {
 			super.send(messages);
 		}
 	}
 
-	class ReceiveChannelImpl extends ReceiveChannel {
-		static final Configuration.Key RECEIVE_DELAY = Configuration
-				.key("receiveDelay");
+	static final Configuration.Key RECEIVE_DELAY = Configuration
+			.key("receiveDelay");
 
+	class ReceiveChannelImpl extends ReceiveChannel {
 		public Date lastEnvelopeReceived = new Date(0);
 
 		@Override
@@ -141,6 +142,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			}
 		}
 
+		@Override
 		public String toDebugString() {
 			synchronized (transportLayer) {
 				return dispatchableTokens.stream()
@@ -268,6 +270,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 	StringProtocol.Cache stringProtocolCache;
 
+	@Override
 	public StringProtocol.Cache getStringProtocolCache() {
 		return stringProtocolCache;
 	}
@@ -327,11 +330,11 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	}
 
 	/*
-	 * 
+	 *
 	 * Threading - this is not on the execution thread, so synchronized (it's
 	 * just a quick routing of incoming data). This synchronizes on the envelope
 	 * dispatcher to ensure no races with
-	 * 
+	 *
 	 */
 	void onReceivedToken(RequestToken token) {
 		synchronized (this) {
@@ -367,7 +370,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	 * For easier debugging, wait until this point to flush any non-awaiter
 	 * envelopes. That'll ensure that, in the normal case, the http roundtrip
 	 * contains the incoming message and any response messages
-	 * 
+	 *
 	 * Calls to this method will be immediately preceded by
 	 * environment.access().flush();
 	 */

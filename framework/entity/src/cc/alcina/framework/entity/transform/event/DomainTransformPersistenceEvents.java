@@ -308,7 +308,8 @@ public class DomainTransformPersistenceEvents
 								// about 5*10^8
 								//
 								// assume we don't get that many per-instance
-								// creation events (for jade, that's guaranteed)
+								// creation events (for ivory, that's
+								// guaranteed)
 								new AtomicLong(1 << 29));
 				// tm.sequentialidgenerator throws an
 				// exception at 1^29

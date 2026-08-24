@@ -293,6 +293,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Export extends ModelEvent<Object, Export.Handler> {
+		@Override
+		public void dispatch(Export.Handler handler) {
+			handler.onExport(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onExport(Export event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onExport(Export event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	/**
 	 * The most common use of Filter is as a subtree notification - so
 	 * {@link Filter} is a DescendantEvent, this is the Ascending

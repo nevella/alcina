@@ -515,7 +515,8 @@ public class InstanceOracle {
 				 * In a browser environment, the provider code will necessarily
 				 * run same-thread, but will not return a result ()
 				 */
-				if (provider.isOneOff() || !Al.isPermitSameThreadAwait()) {
+				if (provider.isOneOff() || !Al.isPermitSameThreadAwait()
+						|| !definingQuery.async) {
 					provider.provide(definingQuery, this::acceptInstance,
 							this::acceptException);
 				} else {

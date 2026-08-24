@@ -29,7 +29,7 @@ public class ProcessMetrics {
 			// log using alcina metrics framework
 			/*
 			 * sample gwt stats are installed via
-			 * /private/var/local/git/jade/client/src/au/com/barnet/jade/public/
+			 * /private/var/local/git/ivory/client/src/es/ivori/ivory/public/
 			 * static/stats.js
 			 *
 			 * then LogStoreInterceptors.installStats

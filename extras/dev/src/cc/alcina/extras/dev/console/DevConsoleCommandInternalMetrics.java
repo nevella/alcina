@@ -190,7 +190,7 @@ public class DevConsoleCommandInternalMetrics {
 				return true;
 			}
 			if (lastElement.getClassName()
-					.equals("au.com.barnet.jade.server.JadeRemoteServiceImpl")
+					.equals("es.ivori.jade.server.JadeRemoteServiceImpl")
 					&& element.getClassName().matches(
 							"sun.reflect.NativeMethodAccessorImpl|sun.reflect.DelegatingMethodAccessorImpl|java.lang.reflect.Method")) {
 				return true;

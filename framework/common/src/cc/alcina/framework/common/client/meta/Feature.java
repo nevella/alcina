@@ -40,8 +40,23 @@ public interface Feature extends Registration.AllSubtypes {
 	@Inherited
 	@Documented
 	@Target({ ElementType.TYPE })
+	@Repeatable(DependsMultiple.class)
 	@interface Depends {
 		Class<? extends Feature>[] value();
+	}
+
+	/**
+	 * Container for multiple {@link Ref} annotations
+	 *
+	 *
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.TYPE })
+	@interface DependsMultiple {
+		Depends[] value();
 	}
 
 	@Registration(Note.class)
@@ -125,6 +140,9 @@ public interface Feature extends Registration.AllSubtypes {
 	 */
 	public interface Status{
 		public interface Complete extends Status{}
+		/* Complete 'enough' for the current version */
+		public interface CompleteCurrentVersion extends Status{}
+		
 		@Retention(RetentionPolicy.RUNTIME)
 		@Inherited
 		@Documented

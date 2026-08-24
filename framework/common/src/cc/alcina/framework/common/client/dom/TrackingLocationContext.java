@@ -1201,7 +1201,7 @@ class TrackingLocationContext implements LocationContext {
 					/*
 					 * WIP - cumulative mutation
 					 * 
-					 * for the jade case, * mutations need to be more strictly
+					 * for the ivory case, * mutations need to be more strictly
 					 * incremental when inserting span/span/a - given they're
 					 * all at the same place, we should be able to order em so
 					 * they're monotonic

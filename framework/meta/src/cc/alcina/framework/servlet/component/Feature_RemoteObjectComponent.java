@@ -91,7 +91,7 @@ public interface Feature_RemoteObjectComponent extends Feature {
 	- create a state model [server/romcom - browser/Client] - sync
 	- state is either global [tm etc] or on the model [dca]
 	- global state must register, and implement an interface. can be in a temp non-syncable state
-	- in the meantime...just flip at the appropriate point (in the case of jade, with the model calls cached]
+	- in the meantime...just flip at the appropriate point (in the case of ivory, with the model calls cached]
 	- use instanceoracle
 	 -- write to local storage, cli-id, model signature, date
 	 -- hvae the idea of a safepoint (top-level place switch)

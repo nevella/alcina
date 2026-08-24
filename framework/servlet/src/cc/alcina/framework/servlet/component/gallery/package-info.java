@@ -1,5 +1,5 @@
 /*
- * THe Jade gallerys admin app
+ * THe Ivory gallerys admin app
  */
 @ReflectiveSerializer.Checks(ignore = true)
 package cc.alcina.framework.servlet.component.gallery;

@@ -81,7 +81,7 @@ public class TowardsAMoreDesirableSituation {
 				.getTransformCommitPosition();
 		/*
 		 * note resubmit is required for future consistency aborts (unless task
-		 * has other logical consistency ensurance mechanism - e.g. jade
+		 * has other logical consistency ensurance mechanism - e.g. ivory
 		 * parsers)
 		 * 
 		 */

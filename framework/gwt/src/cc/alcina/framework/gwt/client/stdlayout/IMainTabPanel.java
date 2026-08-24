@@ -64,7 +64,7 @@ public interface IMainTabPanel extends IsWidget,
 
 	void appendBar(Widget bar);
 
-	void ensureDebugId(String jadeMainTabPanel);
+	void ensureDebugId(String ivoryMainTabPanel);
 
 	int getWidgetCount();
 }

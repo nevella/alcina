@@ -117,13 +117,13 @@ public class RemoteComponentObservables<T> {
 		return ensureTopic(traversalKey).addWithPublishedCheck(subscriber);
 	}
 
+	public static final Configuration.Key evictionDisabled = Configuration
+			.key("evictionDisabled");
+
+	public static final Configuration.Key evictNullId = Configuration
+			.key("evictNullId");
+
 	public class ObservableEntry {
-		public static final Configuration.Key evictionDisabled = Configuration
-				.key("evictionDisabled");
-
-		public static final Configuration.Key evictNullId = Configuration
-				.key("evictNullId");
-
 		T observable;
 
 		public T getObservable() {

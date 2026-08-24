@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -309,5 +311,25 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 								.collect(Collectors.toList()),
 						grid.subList(1, grid.size()), quoteHeaders, tsv)
 				.toString();
+	}
+
+	public String toMarkup() {
+		DomDocument doc = DomDocument.basicGwtHtmlDoc();
+		DomNode table = doc.html().body().builder().tag("table").append();
+		DomNode headerRow = table.builder().tag("thead").append().builder()
+				.tag("tr").append();
+		headers().forEach(header -> {
+			headerRow.builder().tag("th").text(header).append();
+		});
+		DomNode tbody = table.builder().tag("tbody").append();
+		stream().forEach(row -> {
+			DomNode tableRow = tbody.builder().tag("tr").append();
+			headers().forEach(header -> {
+				String text = row.get(header);
+				text = Ax.isBlank(text) ? "\u00a0" : text;
+				tableRow.builder().tag("td").text(text).append();
+			});
+		});
+		return doc.toMarkup();
 	}
 }

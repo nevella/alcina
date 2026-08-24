@@ -1,8 +1,7 @@
 #!/bin/bash
 # run :: export DEBUG=true &&  ./launch.alcina.devconsole.sh for tcp/JDWP debugging
 # run :: ./launch.alcina.devconsole.sh --http-port=5401 to listen on a non-default port
-CLASSPATH=/g/jade/server/lib/war/httpclient-4.5.13.jar:\
-/g/alcina/subproject/console/bin:\
+CLASSPATH=/g/alcina/subproject/console/bin:\
 /g/alcina/lib/framework/entity/commons-lang-2.5.jar:\
 /g/alcina/lib/extras/jetty/jetty-all-uber.jar:\
 /g/alcina/extras/dev/bin:\

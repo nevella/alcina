@@ -408,7 +408,7 @@ public class Configuration {
 
 		private ClassLoader classLoader;
 
-		private boolean useSets;
+		private boolean useSets = true;
 
 		private Map<String, PropertyValues> keyValues = new ConcurrentHashMap();
 
@@ -544,7 +544,17 @@ public class Configuration {
 			topicInvalidated.signal();
 		}
 
-		private boolean processInclude(String line) {
+		boolean processInclude(String line) {
+			try {
+				return processInclude0(line);
+			} catch (RuntimeException e) {
+				Ax.out("Issue processing include line:\n%s\n", line);
+				e.printStackTrace();
+				throw e;
+			}
+		}
+
+		boolean processInclude0(String line) {
 			Matcher matcher = includePattern.matcher(line);
 			if (matcher.matches()) {
 				String type = matcher.group(1);

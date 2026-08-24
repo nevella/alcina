@@ -91,7 +91,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		itr.setRoot(elt);
 		Node n;
 		TextVisibilityObserver textVisibilityObserver = new TextVisibilityObserver();
-		// duplicates ArticleTextModel (Jade)
+		// duplicates ArticleTextModel (Ivory)
 		while ((n = itr.getCurrentNode()) != null) {
 			if (n.getNodeType() == Node.TEXT_NODE
 					&& !textVisibilityObserver.isIgnoreText()) {

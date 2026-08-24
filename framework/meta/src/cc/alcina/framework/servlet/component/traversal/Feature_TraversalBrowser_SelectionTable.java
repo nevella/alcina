@@ -23,7 +23,7 @@ public interface Feature_TraversalBrowser_SelectionTable extends Feature {
 
 	/**
 	 * <p>
-	 * This is implemented and works for the Jade entity browser
+	 * This is implemented and works for the Ivory entity browser
 	 * <p>
 	 * Generalising to a TraversalBrowser implementation wouldn't be hard
 	 * (essentially just abstracting the <code>EntityAnswers</code>

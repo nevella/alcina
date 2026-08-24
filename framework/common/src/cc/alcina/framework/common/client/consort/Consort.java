@@ -384,7 +384,7 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	private void maybeRemovePlayersFromQueue(Player<D> player) {
-		// to handle jadeClientState use cases - but think this can be done
+		// to handle ivoryClientState use cases - but think this can be done
 		// better via signals?
 		// if (player.isPerConsortSingleton()) {
 		// CollectionFilters.filterInPlace(players, new InverseFilter(

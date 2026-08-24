@@ -59,7 +59,7 @@ public static class ContextTaskExample extends PerformerTask {
 	public static void test() {
 		ContextTaskExample example = new ContextTaskExample();
 		example.contextProperties = StringMap.property(
-				"au.com.barnet.jade.dev.console.JDevLocal.ContextTaskExample.CONTEXT_LOG_LEVEL",
+				"es.ivori.ivory.dev.console.JDevLocal.ContextTaskExample.CONTEXT_LOG_LEVEL",
 				"WARN").toPropertyString();
 		example.perform();
 	}

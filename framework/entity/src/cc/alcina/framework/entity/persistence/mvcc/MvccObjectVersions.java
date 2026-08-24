@@ -455,7 +455,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				 * This works - I think. But I really need a language to talk
 				 * about all the possible cases/states.
 				 * 
-				 * Repro: jade romcom with tests (once things are compiled I
+				 * Repro: ivory romcom with tests (once things are compiled I
 				 * guess)
 				 */
 				mostRecentObject = domainIdentity;
