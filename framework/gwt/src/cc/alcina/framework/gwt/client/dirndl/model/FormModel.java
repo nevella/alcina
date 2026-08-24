@@ -153,8 +153,8 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 					Place currentPlace = Client.currentPlace();
 					if (currentPlace instanceof EntityPlace) {
 						/*
-						 * behaviour currently identical for either CREATE or
-						 * EDIT ( -> view)
+						 * behaviour identical for either CREATE or EDIT ( ->
+						 * view)
 						 */
 						EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
 						EntityPlace entityPlace = (EntityPlace) Reflections
@@ -162,12 +162,13 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 						entityPlace.id = currentEntityPlace.action == EntityAction.CREATE
 								? createdLocator.id
 								: currentEntityPlace.id;
-						Client.goTo(entityPlace);
+						entityPlace.go();
+					} else {
+						// NOOP, place has changed (since the created event
+						// should only
+						// have been fired from activity.place of type
+						// EntityPlace
 					}
-					EntityPlace entityPlace = ((EntityPlace) Client
-							.currentPlace()).copy();
-					entityPlace.action = EntityAction.VIEW;
-					Client.goTo(entityPlace);
 				};
 				CommitToStorageTransformListener
 						.flushAndRunWithFirstCreationConsumer(callback);
