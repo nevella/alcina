@@ -931,10 +931,12 @@ public class FormModel extends Model
 			if (state.adjunct) {
 				new Link().withModelEvent(ModelEvents.Submit.class)
 						.withClassName(Link.PRIMARY_ACTION)
-						.withTextFromModelEvent().addTo(formModel.actions);
+						.withTextFromModelEvent()
+						.addTo((List) formModel.getActions());
 				if (state.cancel) {
 					new Link().withModelEvent(ModelEvents.Cancel.class)
-							.withTextFromModelEvent().addTo(formModel.actions);
+							.withTextFromModelEvent()
+							.addTo((List) formModel.getActions());
 				}
 			} else {
 				if (state.presentationModel != null) {
@@ -951,7 +953,8 @@ public class FormModel extends Model
 											.withText(Reflections
 													.newInstance(clazz)
 													.getActionName())
-											.addTo(formModel.actions);
+											.addTo((List) formModel
+													.getActions());
 								});
 					}
 				}

@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase.PersistenceInitPasswordEncryption;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.module.login.LoginAttempts;
@@ -241,7 +242,8 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return loginModel.user != null;
 	}
 
-	public interface PasswordEncryptionSupport {
+	public interface PasswordEncryptionSupport
+			extends PersistenceInitPasswordEncryption {
 		public static PasswordEncryptionSupport get() {
 			return Registry.impl(PasswordEncryptionSupport.class);
 		}

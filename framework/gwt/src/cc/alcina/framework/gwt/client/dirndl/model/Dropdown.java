@@ -12,6 +12,7 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.HasName;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -44,8 +45,9 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  *
  */
 @Directed
-public class Dropdown extends Model
-		implements DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
+//
+public class Dropdown extends Model implements HasName,
+		DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
 	private boolean open;
 
 	protected Model button;
@@ -67,6 +69,17 @@ public class Dropdown extends Model
 	private boolean display = true;
 
 	private boolean parentFixed = false;
+
+	private String name;
+
+	@Binding(type = Type.PROPERTY)
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		set("name", this.name, name, () -> this.name = name);
+	}
 
 	public Dropdown withParentFixed(boolean parentFixed) {
 		this.parentFixed = parentFixed;

@@ -437,6 +437,10 @@ public interface LeafModel {
 
 		public Button() {
 		}
+
+		public Button(String text) {
+			this.text = text;
+		}
 	}
 
 	public static class EditableDateModel extends Bindable.Fields.All {

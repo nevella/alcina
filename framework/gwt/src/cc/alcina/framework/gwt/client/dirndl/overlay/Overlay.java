@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -553,10 +554,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 	}
 
 	public void setCssClass(String cssClass) {
-		String old_cssClass = this.cssClass;
-		this.cssClass = cssClass;
-		propertyChangeSupport().firePropertyChange("cssClass", old_cssClass,
-				cssClass);
+		set("cssClass", this.cssClass, cssClass,
+				() -> this.cssClass = cssClass);
 	}
 
 	@Override
@@ -583,14 +582,26 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		// control of the class selector (via logicalAncestors)...this is good
 		// enough, I think
 		//
-		// FIXME - dirndl 1x3 - actually, at least for contentdecorator it would
-		// be nice
 		Stream<String> derivedClasses = Stream
 				.concat(attributes.logicalAncestors.stream(),
 						Stream.of(attributes.logicalParent, this,
 								attributes.contents))
-				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
-				.map(Class::getSimpleName);
+				.filter(Objects::nonNull).flatMap(obj -> {
+					Class classOrSelf = CommonUtils.classOrSelf(obj);
+					String simpleName = classOrSelf.getSimpleName();
+					if (obj instanceof HasName) {
+						String name = ((HasName) obj).getName();
+						if (Ax.notBlank(name)) {
+							return List.of(simpleName,
+									Ax.format("%s_%s", simpleName, name))
+									.stream();
+						} else {
+							return List.of(simpleName).stream();
+						}
+					} else {
+						return List.of(simpleName).stream();
+					}
+				});
 		String cssClass = Stream
 				.concat(derivedClasses, Stream.of(cssClassParameter))
 				.filter(Objects::nonNull).map(Ax::cssify)

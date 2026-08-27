@@ -87,6 +87,10 @@ public abstract class AppPersistenceBase {
 		initDb();
 	}
 
+	public interface PersistenceInitPasswordEncryption {
+		String encryptPassword(String password, String salt);
+	}
+
 	protected void initDb() throws Exception {
 		createSystemGroupsAndUsers();
 		populateEntities();

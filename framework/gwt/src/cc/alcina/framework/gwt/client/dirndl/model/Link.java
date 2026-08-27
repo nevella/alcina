@@ -213,8 +213,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag,
 		return this;
 	}
 
-	public void addTo(Collection<Link> hasLinks) {
-		hasLinks.add(this);
+	public void addTo(Collection<Model> hasModels) {
+		hasModels.add(this);
 	}
 
 	public void addTo(HasLinks hasLinks) {
