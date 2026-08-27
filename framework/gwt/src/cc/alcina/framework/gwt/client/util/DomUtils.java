@@ -681,7 +681,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		lastNodeType = Node.DOCUMENT_NODE;
 		awareNodeIterator = new WrappingAwareNodeIterator(container);
 		node = null;
-		// double count totals due to strange issues with overlays (jcv)
+		// double count totals due to strange issues with overlays
 		total = mapSupplier.get();
 		while ((node = awareNodeIterator.next()) != null) {
 			short nodeType = node.getNodeType();

@@ -218,6 +218,8 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	int consoleOutputFileMark;
 
+	boolean performCurrentCommandInThread;
+
 	public DevConsole(String[] args) {
 		System.setProperty("java.util.logging.config.file",
 				"/g/alcina/extras/dev/src/cc/alcina/extras/dev/console/logging.properties");
@@ -551,7 +553,12 @@ public abstract class DevConsole implements ClipboardOwner {
 		initialised = true;
 		noHistory = launchConfiguration.noHistory;
 		if (launchConfiguration.hasCommandString()) {
-			performCommand(launchConfiguration.getCommandString());
+			try {
+				performCurrentCommandInThread = true;
+				performCommand(launchConfiguration.getCommandString());
+			} finally {
+				performCurrentCommandInThread = false;
+			}
 		} else if (!props.lastCommand.matches("|q|re|restart")
 				&& !launchConfiguration.noRerunLastCommand) {
 			runningLastCommand = true;
@@ -802,10 +809,15 @@ public abstract class DevConsole implements ClipboardOwner {
 				}
 			};
 			currentCommandLatch = new CountDownLatch(1);
-			new AlcinaChildContextRunner(
-					"dev-runner-" + command.getClass().getSimpleName())
-							.callNewThread(runnable);
-		} catch (Exception e) {
+			if (performCurrentCommandInThread) {
+				runnable.run();
+			} else {
+				new AlcinaChildContextRunner(
+						"dev-runner-" + command.getClass().getSimpleName())
+								.callNewThread(runnable);
+			}
+		} catch (Throwable e) {
+			Ax.out("rr2");
 			throw new WrappedRuntimeException(e);
 		}
 	}
@@ -851,7 +863,7 @@ public abstract class DevConsole implements ClipboardOwner {
 				}
 				serializeObject(history, consoleHistoryFile);
 			}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if (!(e instanceof CancelledException)) {
 				e.printStackTrace();
 			}
