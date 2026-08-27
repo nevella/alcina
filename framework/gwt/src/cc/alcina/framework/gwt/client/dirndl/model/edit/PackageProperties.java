@@ -160,6 +160,7 @@ public class PackageProperties {
     
     public static class _ChoicesEditorSingle implements TypedProperty.Container {
       public TypedProperty<ChoicesEditorSingle, Boolean> changeOnSelectionEvent = new TypedProperty<>(ChoicesEditorSingle.class, "changeOnSelectionEvent");
+      public TypedProperty<ChoicesEditorSingle, Boolean> checkRepositionPostSelection = new TypedProperty<>(ChoicesEditorSingle.class, "checkRepositionPostSelection");
       public TypedProperty<ChoicesEditorSingle, List> choices = new TypedProperty<>(ChoicesEditorSingle.class, "choices");
       public TypedProperty<ChoicesEditorSingle, List> decorators = new TypedProperty<>(ChoicesEditorSingle.class, "decorators");
       public TypedProperty<ChoicesEditorSingle, EditArea> editArea = new TypedProperty<>(ChoicesEditorSingle.class, "editArea");
@@ -176,6 +177,7 @@ public class PackageProperties {
       public static class InstanceProperties extends 	InstanceProperty.Container<ChoicesEditorSingle> {
         public  InstanceProperties(ChoicesEditorSingle source){super(source);}
         public InstanceProperty<ChoicesEditorSingle, Boolean> changeOnSelectionEvent(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.changeOnSelectionEvent);}
+        public InstanceProperty<ChoicesEditorSingle, Boolean> checkRepositionPostSelection(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.checkRepositionPostSelection);}
         public InstanceProperty<ChoicesEditorSingle, List> choices(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.choices);}
         public InstanceProperty<ChoicesEditorSingle, List> decorators(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.decorators);}
         public InstanceProperty<ChoicesEditorSingle, EditArea> editArea(){return new InstanceProperty<>(source,PackageProperties.choicesEditorSingle.editArea);}

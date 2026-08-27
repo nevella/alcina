@@ -29,7 +29,11 @@ public class DevUtils {
 	}
 
 	public static String fileToDataUrl(String path) {
-		return fileToDataUrl(path, "image/png");
+		String mimeType = "image/png";
+		if (path.endsWith(".svg")) {
+			mimeType = "image/svg+xml";
+		}
+		return fileToDataUrl(path, mimeType);
 	}
 
 	public static String fileToDataUrl(String path, String mimeType) {
