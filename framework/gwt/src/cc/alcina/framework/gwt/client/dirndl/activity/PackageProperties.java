@@ -20,6 +20,7 @@ public class PackageProperties {
     //@formatter:off
     
     public static _DirectedActivity directedActivity = new _DirectedActivity();
+    public static _DirectedActivity_All directedActivity_all = new _DirectedActivity_All();
     public static _DirectedBindableSearchActivity directedBindableSearchActivity = new _DirectedBindableSearchActivity();
     public static _DirectedBindableSearchActivity_DirectedBindableSearchActivity_Entity directedBindableSearchActivity_directedBindableSearchActivity_entity = new _DirectedBindableSearchActivity_DirectedBindableSearchActivity_Entity();
     public static _DirectedCategoriesActivity directedCategoriesActivity = new _DirectedCategoriesActivity();
@@ -36,6 +37,21 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(DirectedActivity instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _DirectedActivity_All implements TypedProperty.Container {
+      public TypedProperty<DirectedActivity.All, Class> channel = new TypedProperty<>(DirectedActivity.All.class, "channel");
+      public TypedProperty<DirectedActivity.All, BasePlace> place = new TypedProperty<>(DirectedActivity.All.class, "place");
+      public static class InstanceProperties extends 	InstanceProperty.Container<DirectedActivity.All> {
+        public  InstanceProperties(DirectedActivity.All source){super(source);}
+        public InstanceProperty<DirectedActivity.All, Class> channel(){return new InstanceProperty<>(source,PackageProperties.directedActivity_all.channel);}
+        public InstanceProperty<DirectedActivity.All, BasePlace> place(){return new InstanceProperty<>(source,PackageProperties.directedActivity_all.place);}
+      }
+      
+      public  InstanceProperties instance(DirectedActivity.All instance) {
         return new InstanceProperties( instance);
       }
       

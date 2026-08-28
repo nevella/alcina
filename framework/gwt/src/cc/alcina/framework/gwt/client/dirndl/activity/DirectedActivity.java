@@ -12,11 +12,14 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.action.PlaceAction;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -48,6 +51,11 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 @TypedProperties
 public class DirectedActivity<P extends BasePlace> extends Model
 		implements Activity, HasPlace<P> {
+	@Bean(PropertySource.FIELDS)
+	@Directed.AllProperties
+	public static class All<P extends BasePlace> extends DirectedActivity<P> {
+	}
+
 	@Registration.Singleton
 	@Registration.EnvironmentSingleton
 	public static class Topics {
