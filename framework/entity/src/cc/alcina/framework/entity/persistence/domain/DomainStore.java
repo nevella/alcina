@@ -91,6 +91,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.NonDomainNotifier;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -2027,6 +2028,8 @@ public class DomainStore implements IDomainStore {
 
 		private LooseContextInstance contextInstance;
 
+		private PermissionsManagerState permissionsManagerState;
+
 		QueryPool() {
 			pool = new ForkJoinPool(
 					Configuration.getInt(DomainStore.class, "queryPoolSize"),
@@ -2058,6 +2061,8 @@ public class DomainStore implements IDomainStore {
 						transaction = current;
 						this.contextInstance = LooseContext.getContext()
 								.snapshot();
+						this.permissionsManagerState = PermissionsManager.get()
+								.snapshotState();
 					}
 				}
 			}
@@ -2071,6 +2076,7 @@ public class DomainStore implements IDomainStore {
 					synchronized (this) {
 						contextInstance = null;
 						transaction = null;
+						this.permissionsManagerState = null;
 					}
 				}
 			} else {
@@ -2095,6 +2101,10 @@ public class DomainStore implements IDomainStore {
 					LooseContext.push();
 					if (contextInstance != null) {
 						LooseContext.putSnapshotProperties(contextInstance);
+					}
+					if (permissionsManagerState != null) {
+						permissionsManagerState
+								.copyTo(PermissionsManager.get());
 					}
 					super.run();
 				} finally {
