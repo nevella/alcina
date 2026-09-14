@@ -18,6 +18,10 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFiel
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 public class GraphProjections {
+	public static <T> T projectInstance(T t) {
+		return defaultProjections().project(t);
+	}
+
 	public static GraphProjections allow(Class... classes) {
 		GraphProjections instance = new GraphProjections();
 		instance.permittedClasses.addAll(Arrays.asList(classes));

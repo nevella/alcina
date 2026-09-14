@@ -16,10 +16,6 @@ import cc.alcina.framework.servlet.component.console.ServerConsolePage;
 import cc.alcina.framework.servlet.component.console.ServerConsolePlace;
 import cc.alcina.framework.servlet.component.console.ServerConsoleSettings;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.Object;
-import java.lang.String;
 import java.util.Set;
 
 public class PackageProperties {

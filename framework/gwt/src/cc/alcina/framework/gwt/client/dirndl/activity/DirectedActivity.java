@@ -17,6 +17,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.action.PlaceAction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -120,6 +122,8 @@ public class DirectedActivity<P extends BasePlace> extends Model
 					directedActivity = Registry.impl(DirectedActivity.class,
 							place.getClass());
 				} catch (MultipleImplementationsException e) {
+					Ax.err("Multiple implementations for %s",
+							NestedName.get(place));
 					// no activity
 					return null;
 				}

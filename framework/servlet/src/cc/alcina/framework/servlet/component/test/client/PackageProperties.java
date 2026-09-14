@@ -4,7 +4,6 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.servlet.component.test.client.TestChubbyTree;
-import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {

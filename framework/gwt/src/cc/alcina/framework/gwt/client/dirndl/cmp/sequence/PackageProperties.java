@@ -15,9 +15,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceTable;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import com.google.gwt.dom.client.StyleElement;
-import java.lang.Integer;
-import java.lang.Runnable;
-import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {

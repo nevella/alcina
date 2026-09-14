@@ -21,9 +21,6 @@ import cc.alcina.framework.servlet.component.sequence.Page;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentServer;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.String;
 import java.util.Set;
 
 public class PackageProperties {

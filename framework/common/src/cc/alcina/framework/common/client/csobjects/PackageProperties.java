@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.csobjects;
 
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
-import java.lang.Object;
 
 public class PackageProperties {
     // auto-generated, do not modify

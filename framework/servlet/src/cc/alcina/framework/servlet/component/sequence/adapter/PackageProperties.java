@@ -4,8 +4,6 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
-import java.lang.Boolean;
-import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {

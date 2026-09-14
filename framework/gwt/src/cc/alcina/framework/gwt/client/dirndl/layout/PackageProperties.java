@@ -2,8 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
-import java.lang.Boolean;
-import java.lang.Object;
 
 public class PackageProperties {
     // auto-generated, do not modify

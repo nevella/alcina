@@ -205,16 +205,15 @@ public abstract class LookaheadMatcher<C> {
 			}
 			if (matchedFrom == null) {
 				matchedFrom = parserState.location;
-				String text = null;
+				CharSequence text = null;
 				switch (options.matchesEmphasisTypes) {
 				case BOTH:
-					text = parserState.inputContent().toString();
+					text = parserState.inputContent();
 					break;
 				case SINGLE:
 				case EMPHASIS:
 					Location.Range currentStyleRange = computeCurrentStyleRange();
-					text = parserState.inputContent(currentStyleRange)
-							.toString();
+					text = parserState.inputContent(currentStyleRange);
 					invalidateAt = currentStyleRange.end.relativeLocation(
 							RelativeDirection.NEXT_LOCATION,
 							TextTraversal.EXIT_NODE);
@@ -226,11 +225,12 @@ public abstract class LookaheadMatcher<C> {
 					text = TextUtils.normalizeSpaces(text.toString());
 				}
 				if (options.matchesNormalisedToLowerCase) {
-					text = text.toLowerCase();
+					text = text.toString().toLowerCase();
 				}
 				if (options.matchesNormalisedQuotes) {
 					// FIXME -- optimise
-					text = text.replaceAll("[\u0060\u00B4\u2018\u2019]", "'");
+					text = text.toString()
+							.replaceAll("[\u0060\u00B4\u2018\u2019]", "'");
 				}
 				switch (options.matchesEmphasisTypes) {
 				case EMPHASIS:
@@ -249,14 +249,19 @@ public abstract class LookaheadMatcher<C> {
 					textMeasure.clear();
 					textMeasureInvalidated = false;
 				}
+				if (parserState.branchingParser.layerParser.isLookahead()) {
+					if (!textMeasure.containsKey(text)) {
+						match = getMeasureMatchingText(text);
+						textMeasure.put(text, match);
+					} else {
+						match = textMeasure.get(text);
+					}
+				} else {
+					match = getMeasureMatchingText(text);
+				}
 				/*
 				 * FIXME - gwt.comp
 				 */
-				if (!textMeasure.containsKey(text)) {
-					match = getMeasureMatchingText(text);
-					textMeasure.put(text, match);
-				}
-				match = textMeasure.get(text);
 			}
 			return match;
 		}
@@ -336,7 +341,7 @@ public abstract class LookaheadMatcher<C> {
 
 		boolean requiresWholeExtentMatch;
 
-		boolean matchesNormalisedQuotes = true;
+		boolean matchesNormalisedQuotes = false;
 
 		Options(Token token, C condition) {
 			this.token = token;

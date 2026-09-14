@@ -358,7 +358,10 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		 */
 		public Bindable contents;
 
-		private List<NM> children = new IdentityArrayList<>();
+		/*
+		 * protected to allow lazy init
+		 */
+		protected List<NM> children = new IdentityArrayList<>();
 
 		private NM parent;
 

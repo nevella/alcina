@@ -6,9 +6,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeTable;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.treetable.TreeTableArea;
-import java.lang.Boolean;
-import java.lang.Integer;
-import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {

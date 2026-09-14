@@ -10,8 +10,6 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
-import java.lang.Boolean;
-import java.lang.Class;
 import java.util.Map;
 import java.util.stream.Stream;
 

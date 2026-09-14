@@ -4,8 +4,6 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import com.totsp.gwittir.client.ui.table.Field;
-import java.lang.Class;
-import java.lang.String;
 
 public class PackageProperties {
     // auto-generated, do not modify

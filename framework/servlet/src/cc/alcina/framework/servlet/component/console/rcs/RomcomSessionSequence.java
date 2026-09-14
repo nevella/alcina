@@ -118,10 +118,5 @@ public class RomcomSessionSequence
 					.getSessions().toList();
 			return new RomcomSessionSequence().withElements(entries);
 		}
-
-		@Override
-		public boolean isOneOff() {
-			return true;
-		}
 	}
 }

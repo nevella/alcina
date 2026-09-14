@@ -10,7 +10,6 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 import com.google.gwt.place.shared.Place;
-import java.lang.Boolean;
 import java.util.List;
 import java.util.Set;
 

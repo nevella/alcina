@@ -317,8 +317,7 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 
 	public enum Standard implements BranchToken {
 		LINE_SEPARATOR {
-			private Pattern PATTERN = Pattern.compile("\n",
-					Pattern.CASE_INSENSITIVE);
+			private Pattern PATTERN = Pattern.compile("\n");
 
 			@Override
 			public Measure match(ParserState state) {
@@ -326,8 +325,7 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			}
 		},
 		LINE {
-			private Pattern PATTERN = Pattern.compile("[^\n]+",
-					Pattern.CASE_INSENSITIVE);
+			private Pattern PATTERN = Pattern.compile("[^\n]+");
 
 			@Override
 			public Measure match(ParserState state) {
@@ -335,9 +333,8 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			}
 		},
 		WHITESPACE {
-			private Pattern PATTERN = Pattern.compile(
-					TextUtils.NON_LINE_WS_PATTERN_STR,
-					Pattern.CASE_INSENSITIVE);
+			private Pattern PATTERN = Pattern
+					.compile(TextUtils.NON_LINE_WS_PATTERN_STR);
 
 			@Override
 			public Measure match(ParserState state) {
@@ -345,9 +342,8 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			}
 		},
 		WHITESPACE_NON_INITIAL {
-			private Pattern PATTERN = Pattern.compile(
-					TextUtils.NON_LINE_WS_PATTERN_STR,
-					Pattern.CASE_INSENSITIVE);
+			private Pattern PATTERN = Pattern
+					.compile(TextUtils.NON_LINE_WS_PATTERN_STR);
 
 			@Override
 			public Measure match(ParserState state) {
@@ -458,6 +454,17 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 		QUOTED {
 			public Group getGroup() {
 				return Group.of(DOUBLE_QUOTE, NON_DOUBLE_QUOTE, DOUBLE_QUOTE);
+			}
+		}
+	}
+
+	public enum Identifiers implements BranchToken {
+		JAVA_STYLE {
+			Pattern PATTERN = Pattern.compile("([A-Za-z_][A-Za-z_0-9]*)");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
 			}
 		}
 	}

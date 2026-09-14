@@ -164,7 +164,11 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			imports.add(TypedProperty.class.getName());
 			imports.add(InstanceProperty.class.getName());
 			typeWriters.forEach(TypeWriter::addImports);
-			imports.forEach(composerFactory::addImport);
+			imports.stream()
+					.filter(className -> !className.startsWith("java.lang.")
+							&& className.contains("."))
+					.map(className -> className.replace("[", ""))
+					.forEach(composerFactory::addImport);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			printWriter = new PrintWriter(baos);
 			sourceWriter = composerFactory.createSourceWriter(printWriter);

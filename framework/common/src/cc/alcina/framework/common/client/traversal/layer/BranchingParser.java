@@ -641,17 +641,24 @@ public class BranchingParser {
 					if (match != null) {
 						boolean testMeasureEnd = !layerParser.forwardsTraversalOrder
 								&& !location.getContainingNode().isText();
-						/*
-						 * This is a little tricky. For the purposes of
-						 * continuation of a branch (match), just check indexes
-						 * are contiguous. Otherwise node containment will cause
-						 * contiguous _text_ runs to not be continuous - and
-						 * thus fail the sequence
-						 */
-						matchesLocation = Objects.equals(
-								testMeasureEnd ? match.end.getIndex()
-										: match.start.getIndex(),
-								location.getIndex());
+						if (getMostRecentMatchedMeasure() == null) {
+							/*
+							 * this is the first matching non-complex token
+							 */
+							matchesLocation = true;
+						} else {
+							/*
+							 * This is a little tricky. For the purposes of
+							 * continuation of a branch (match), just check
+							 * indexes are contiguous. Otherwise node
+							 * containment will cause contiguous _text_ runs to
+							 * not be continuous - and thus fail the sequence
+							 */
+							matchesLocation = Objects.equals(
+									testMeasureEnd ? match.end.getIndex()
+											: match.start.getIndex(),
+									location.getIndex());
+						}
 					}
 					if (group.negated) {
 						if (matchesLocation) {

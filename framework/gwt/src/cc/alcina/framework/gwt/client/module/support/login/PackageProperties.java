@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.place.BasePlace;
-import java.lang.Object;
 
 public class PackageProperties {
     // auto-generated, do not modify

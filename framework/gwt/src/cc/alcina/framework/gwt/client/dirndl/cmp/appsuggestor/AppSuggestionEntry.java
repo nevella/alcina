@@ -17,8 +17,12 @@ public class AppSuggestionEntry<C extends AppSuggestionCategory>
 
 	public Class<? extends ModelEvent> modelEvent;
 
-	@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 	public C category;
+
+	@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
+	public C getCategory() {
+		return category;
+	}
 
 	@Override
 	public Object eventData() {

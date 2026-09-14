@@ -96,7 +96,6 @@ import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
-import cc.alcina.framework.servlet.authentication.Authenticator.PasswordEncryptionSupport;
 import cc.alcina.framework.servlet.environment.EnvironmentManager;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -407,9 +406,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Mvcc.initialiseTransactionEnvironment();
 		ProcessObservable.Id.setGenerator(new AtomicSequentialIdGenerator());
 		initLoggers();
-		Registry.register().singleton(
-				AppPersistenceBase.PersistenceInitPasswordEncryption.class,
-				PasswordEncryptionSupport.get());
 	}
 
 	public static class RemotePerformerDirect implements Task.RemotePerformer {

@@ -13,10 +13,6 @@ import cc.alcina.framework.servlet.component.console.rcs.PresetsArea;
 import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionDetailArea;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
 import cc.alcina.framework.servlet.environment.replay.SessionReplay;
-import java.lang.Boolean;
-import java.lang.Integer;
-import java.lang.Long;
-import java.lang.String;
 import java.util.Date;
 import java.util.List;
 

@@ -6,8 +6,6 @@ import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeCriterion;
-import java.lang.Boolean;
-import java.lang.String;
 
 public class PackageProperties {
     // auto-generated, do not modify

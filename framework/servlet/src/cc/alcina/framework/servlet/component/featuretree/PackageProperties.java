@@ -12,8 +12,6 @@ import cc.alcina.framework.servlet.component.featuretree.Page;
 import cc.alcina.framework.servlet.component.featuretree.Properties;
 import cc.alcina.framework.servlet.component.featuretree.Table;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
-import java.lang.Class;
-import java.lang.String;
 import java.util.Set;
 
 public class PackageProperties {

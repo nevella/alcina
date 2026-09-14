@@ -5,7 +5,6 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpArea;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.place.BasePlace;
-import java.lang.Class;
 
 public class PackageProperties {
     // auto-generated, do not modify

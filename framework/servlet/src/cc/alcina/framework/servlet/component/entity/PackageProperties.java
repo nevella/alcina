@@ -13,9 +13,6 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
-import java.lang.Boolean;
-import java.lang.Object;
-import java.lang.String;
 import java.util.Set;
 
 public class PackageProperties {

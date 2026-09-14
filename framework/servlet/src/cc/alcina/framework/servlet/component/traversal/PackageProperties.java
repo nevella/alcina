@@ -31,10 +31,6 @@ import cc.alcina.framework.servlet.component.traversal.SelectionTableArea;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 import com.google.gwt.dom.client.StyleElement;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.Integer;
-import java.lang.String;
 import java.util.List;
 import java.util.Set;
 

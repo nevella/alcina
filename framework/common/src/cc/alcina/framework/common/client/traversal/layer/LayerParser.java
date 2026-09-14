@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.traversal.layer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -148,21 +149,6 @@ public class LayerParser {
 
 			class SuccessorFollowingMatch {
 				Location get(Measure match) {
-					if (forwardsTraversalOrder) {
-						return location.relativeLocation(
-								RelativeDirection.NEXT_LOCATION,
-								TextTraversal.NEXT_CHARACTER);
-					} else {
-						return location.relativeLocation(
-								RelativeDirection.PREVIOUS_LOCATION,
-								TextTraversal.PREVIOUS_CHARACTER);
-					}
-				}
-			}
-
-			class SuccessorFollowingMatchLookahead
-					extends SuccessorFollowingMatch {
-				Location get(Measure match) {
 					BranchToken branchToken = (BranchToken) match.token;
 					if (forwardsTraversalOrder) {
 						if (match.provideIsPoint()
@@ -220,9 +206,7 @@ public class LayerParser {
 								|| bestMatch.start.isAfter(measure.start)
 						: measure -> bestMatch == null
 								|| bestMatch.end.isBefore(measure.end);
-				successorFollowingMatch = lookahead
-						? new SuccessorFollowingMatchLookahead()
-						: new SuccessorFollowingMatch();
+				successorFollowingMatch = new SuccessorFollowingMatch();
 				successorFollowingNoMatch = lookahead
 						? new SuccessorFollowingNoMatchLookahead()
 						: new SuccessorFollowingNoMatch();
@@ -336,10 +320,15 @@ public class LayerParser {
 				baseContent = new CharSequenceArray(charArray, 0,
 						charArray.length);
 			}
-			return inputSubSequences.computeIfAbsent(range,
-					r -> baseContent.subSequence(
-							r.start.getIndex() - input.start.getIndex(),
-							r.end.getIndex() - input.start.getIndex()));
+			Function<? super Range, ? extends CharSequence> mappingFunction = r -> baseContent
+					.subSequence(r.start.getIndex() - input.start.getIndex(),
+							r.end.getIndex() - input.start.getIndex());
+			if (baseContent.length() > 10000) {
+				return mappingFunction.apply(range);
+			} else {
+				return inputSubSequences.computeIfAbsent(range,
+						mappingFunction);
+			}
 		}
 
 		public boolean isAtEnd(Measure match) {

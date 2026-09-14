@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
-import java.lang.Object;
 
 public class PackageProperties {
     // auto-generated, do not modify

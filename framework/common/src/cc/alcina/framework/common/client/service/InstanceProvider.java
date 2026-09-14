@@ -73,11 +73,15 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 	}
 
 	/**
+	 * <p>
 	 * If true, an individual provider must be constructed for each query, even
 	 * if a current provision operation is in-flight
+	 * 
+	 * <p>
+	 * Default is true
 	 */
 	default boolean isOneOff() {
-		return false;
+		return true;
 	}
 
 	/*

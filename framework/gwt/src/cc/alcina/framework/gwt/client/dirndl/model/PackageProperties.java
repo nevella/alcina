@@ -20,11 +20,6 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import com.google.gwt.dom.client.Element;
 import com.totsp.gwittir.client.ui.table.Field;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.Integer;
-import java.lang.Object;
-import java.lang.String;
 import java.util.Collection;
 import java.util.List;
 

@@ -16,8 +16,6 @@ import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.GallerySettings;
 import cc.alcina.framework.servlet.component.gallery.Header;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
-import java.lang.Class;
-import java.lang.String;
 import java.util.Set;
 
 public class PackageProperties {

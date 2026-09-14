@@ -93,6 +93,9 @@ public interface Feature extends Registration.AllSubtypes {
 
 			public interface See_also extends Type {
 			}
+
+			public interface Uses extends Type {
+			}
 		}
 	}
 

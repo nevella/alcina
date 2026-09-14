@@ -9,9 +9,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.search.Searchable;
 import cc.alcina.framework.gwt.client.dirndl.model.search.ValueEditor;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
-import java.lang.Boolean;
-import java.lang.Object;
-import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {

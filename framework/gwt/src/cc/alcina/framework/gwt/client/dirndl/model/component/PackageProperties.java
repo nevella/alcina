@@ -3,8 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.model.component;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
-import java.lang.Boolean;
-import java.lang.String;
 
 public class PackageProperties {
     // auto-generated, do not modify

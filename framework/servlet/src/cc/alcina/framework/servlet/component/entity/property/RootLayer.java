@@ -19,7 +19,7 @@ public class RootLayer extends Layer<Query> {
 	public static class NamerImpl extends RootLayerNamer<RootLayer> {
 		@Override
 		public String rootLayerName(RootLayer layer) {
-			return "Recipe parser";
+			return "Entity query parser";
 		}
 	}
 }

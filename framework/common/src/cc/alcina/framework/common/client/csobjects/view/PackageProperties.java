@@ -4,9 +4,6 @@ import cc.alcina.framework.common.client.csobjects.view.EntityTransformModel;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
-import java.lang.Integer;
-import java.lang.Long;
-import java.lang.String;
 import java.util.Date;
 
 public class PackageProperties {

@@ -2,6 +2,9 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
+
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -197,5 +200,32 @@ public class ClassUtil {
 			return Character.class;
 		}
 		return null;
+	}
+
+	public static String sourceNameToBinaryName(String name) {
+		String regex = "(.+?\\.[A-Z][^.]*)(\\..+)";
+		RegExp re = RegExp.compile(regex);
+		MatchResult matchResult = re.exec(name);
+		if (matchResult == null) {
+			return name;
+		} else {
+			return Ax.format("%s%s", matchResult.getGroup(1),
+					matchResult.getGroup(2).replace(".", "$"));
+		}
+	}
+
+	public static String sourceNameToNestedName(String name) {
+		String regex = "(.+?\\.)([A-Z].+)";
+		RegExp re = RegExp.compile(regex);
+		MatchResult matchResult = re.exec(name);
+		if (matchResult == null) {
+			return name;
+		} else {
+			return matchResult.getGroup(2);
+		}
+	}
+
+	public static String getSourceName(Class clazz) {
+		return clazz.getName().replace("$", ".");
 	}
 }
