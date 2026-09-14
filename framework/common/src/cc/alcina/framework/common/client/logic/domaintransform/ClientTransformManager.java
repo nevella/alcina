@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -78,8 +81,7 @@ public abstract class ClientTransformManager extends TransformManager {
 			throws DomainTransformException {
 		if (isReplayingRemoteEvent() && obj instanceof HasVersionNumber
 				&& CommonUtils.iv(event.getObjectVersionNumber()) > 0) {
-			((HasVersionNumber) obj)
-					.setVersionNumber(event.getObjectVersionNumber());
+			obj.setVersionNumber(event.getObjectVersionNumber());
 		}
 	}
 
@@ -88,6 +90,10 @@ public abstract class ClientTransformManager extends TransformManager {
 		requiresEditPrep.clear();
 		super.clearUserObjects();
 	}
+
+	IdentityHashMap<Entity, List<Object>> projectedProvisionals = new IdentityHashMap<>();
+
+	private List<Object> currentProvisionalProjection;
 
 	public Entity ensureEditable(Entity<?> entity) {
 		if (Reflections.at(entity).has(NonDomainTransformPersistable.class)) {
@@ -102,7 +108,10 @@ public abstract class ClientTransformManager extends TransformManager {
 		if (isProvisionalEditing()) {
 			if (!isProvisionalObject(entity)) {
 				entity = new CloneHelper().shallowishBeanClone(entity);
-				registerProvisionalObject(entity);
+				currentProvisionalProjection = new ArrayList<>();
+				projectedProvisionals.put(entity, currentProvisionalProjection);
+				prepareObject(entity, false, false, true);
+				currentProvisionalProjection = null;
 			}
 		} else {
 			registerDomainObject(entity);
@@ -158,6 +167,18 @@ public abstract class ClientTransformManager extends TransformManager {
 						fromPropertyChange));
 	}
 
+	@Override
+	protected void promoteToDomain(Collection objects, boolean deregister) {
+		Set<Object> withProjected = new LinkedHashSet<>(objects);
+		objects.forEach(o -> {
+			List<Object> projected = projectedProvisionals.get(o);
+			if (projected != null) {
+				withProjected.addAll(projected);
+			}
+		});
+		super.promoteToDomain(withProjected, deregister);
+	}
+
 	public Collection prepareObject(Entity domainObject, boolean autoSave,
 			boolean afterCreation, boolean forEditing) {
 		List children = new ArrayList();
@@ -165,6 +186,12 @@ public abstract class ClientTransformManager extends TransformManager {
 				.at(domainObject);
 		if (!classReflector.provideIsReflective()) {
 			return children;
+		}
+		if (!autoSave) {
+			registerProvisionalObject(domainObject);
+			if (currentProvisionalProjection != null) {
+				currentProvisionalProjection.add(domainObject);
+			}
 		}
 		Collection<Property> properties = classReflector.properties();
 		Class<? extends Object> c = domainObject.getClass();
