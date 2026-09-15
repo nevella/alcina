@@ -300,10 +300,6 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public void singleton(Class type, Object implementation) {
-			if (type.toString().contains("CeresModelResolver")) {
-				Ax.out("registering %s for %s", type,
-						EnvironmentRegister.this.hashCode());
-			}
 			Object existingImplementation = environmentImplementations
 					.get(type);
 			if (existingImplementation != null

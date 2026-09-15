@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
@@ -2152,6 +2153,14 @@ public class SEUtilities {
 			Thread.sleep(delayMs);
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
+	public static Throwable unwrapInvocationTargetException(Exception e) {
+		if (e instanceof InvocationTargetException) {
+			return e.getCause();
+		} else {
+			return e;
 		}
 	}
 }

@@ -264,7 +264,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			return serialized;
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw new WrappedRuntimeException(
+					SEUtilities.unwrapInvocationTargetException(e));
 		}
 	}
 

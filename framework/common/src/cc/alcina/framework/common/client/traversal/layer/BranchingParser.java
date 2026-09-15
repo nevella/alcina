@@ -256,7 +256,7 @@ public class BranchingParser {
 	to visualise in a devconsole:
 	
 	@formatter:off
-
+		//BranchingParserNodeSequence.observe();
 		BranchingParserNodeSearchDefinition def = new BranchingParserNodeSearchDefinition();
 		SequencePlace place = new SequencePlace();
 		place.search = def;
@@ -266,7 +266,7 @@ public class BranchingParser {
 
 		...
 		
-[console]/seq#sequence/instanceQuery.bpnsdparam=+:instanceQuery.querytype=cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeSequence
+[console]/seq#sequence/instanceQuery.querytype=cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeSequence:search.bpnsd.text=+
 
 
 	@formatter:on
