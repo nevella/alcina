@@ -364,11 +364,9 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			}
 		},
 		ANY_TEXT {
-			private Pattern PATTERN = Pattern.compile(".+");
-
 			@Override
 			public Measure match(ParserState state) {
-				return state.patternMatcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, ANY_TEXT_PATTERN);
 			}
 		},
 		/*
@@ -424,6 +422,8 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 				return state.patternMatcher().match(this, PATTERN);
 			}
 		};
+
+		public static final Pattern ANY_TEXT_PATTERN = Pattern.compile(".+");
 	}
 
 	/**
@@ -460,13 +460,14 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 
 	public enum Identifiers implements BranchToken {
 		JAVA_STYLE {
-			Pattern PATTERN = Pattern.compile("([A-Za-z_][A-Za-z_0-9]*)");
-
 			@Override
 			public Measure match(ParserState state) {
-				return state.patternMatcher().match(this, PATTERN);
+				return state.patternMatcher().match(this, JAVA_STYLE_PATTERN);
 			}
-		}
+		};
+
+		public static final Pattern JAVA_STYLE_PATTERN = Pattern
+				.compile("([A-Za-z_][A-Za-z_0-9]*)");
 	}
 
 	public enum Clause implements BranchToken {

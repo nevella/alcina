@@ -5,6 +5,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Selection;
+
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -12,11 +16,13 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusElement.CloseEleme
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusElement.ElementClicked;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule.Message;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import rocket.selection.client.Selection;
 
 @Directed(className = "dl-status")
 public class StatusModel extends Model
 		implements ElementClicked.Handler, StatusElement.CloseElement.Handler {
+	public static final LooseContext.Key<Integer> CONTEXT_DELAY = LooseContext
+			.key(StatusModel.class, "CONTEXT_DELAY");
+
 	static long delayMillis = 2000;
 
 	static long removingMillis = 300;
@@ -42,8 +48,8 @@ public class StatusModel extends Model
 	@Override
 	public void onElementClicked(ElementClicked event) {
 		StatusElement model = event.getModel();
-		Selection selection = Selection.getSelection();
-		if (!selection.isEmpty()) {
+		Selection selection = Document.get().getSelection();
+		if (!selection.isCollapsed()) {
 			model.delay = 999999;
 		} else {
 			if (model.isCloseOnClick()) {
@@ -84,6 +90,9 @@ public class StatusModel extends Model
 			element.delay = message.priority.getDelay();
 			if (message.model != null) {
 				element.delay = 999999;
+			}
+			if (CONTEXT_DELAY.has()) {
+				element.delay = CONTEXT_DELAY.getTyped();
 			}
 			List<StatusElement> update = elements.stream()
 					.collect(Collectors.toList());

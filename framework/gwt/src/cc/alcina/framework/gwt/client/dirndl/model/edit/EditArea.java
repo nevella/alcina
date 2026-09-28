@@ -65,7 +65,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		InferredDomEvents.SelectionChanged.Handler, FragmentModel.Has,
 		ModelMutation.Handler, HasElementBehaviors, Binding.TabIndexZero,
 		ReflectedEvents.FocusEditor.Handler {
-	PackageProperties._EditArea.InstanceProperties properties() {
+	public PackageProperties._EditArea.InstanceProperties properties() {
 		return PackageProperties.editArea.instance(this);
 	}
 

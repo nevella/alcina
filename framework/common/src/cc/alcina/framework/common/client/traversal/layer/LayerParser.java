@@ -253,6 +253,10 @@ public class LayerParser {
 			this.input = input;
 		}
 
+		public Branch getEvaluatingBranch() {
+			return branchingParser.state.evaluatingBranch;
+		}
+
 		public String absoluteHref(String relativeHref) {
 			return selection.ancestor(AbstractUrlSelection.class)
 					.absoluteHref(relativeHref);

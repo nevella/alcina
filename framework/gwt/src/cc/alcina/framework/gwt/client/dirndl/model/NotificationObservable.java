@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 /**
@@ -35,6 +36,12 @@ public class NotificationObservable implements ContextObservable.Base {
 		return result;
 	}
 
+	public static NotificationObservable of(Model model) {
+		NotificationObservable result = new NotificationObservable();
+		result.model = model;
+		return result;
+	}
+
 	public static NotificationObservable of(Throwable throwable) {
 		NotificationObservable result = new NotificationObservable();
 		result.message = CommonUtils.toSimpleExceptionMessage(throwable);
@@ -48,10 +55,13 @@ public class NotificationObservable implements ContextObservable.Base {
 
 	public String message;
 
+	public Model model;
+
 	public LogLevel level = LogLevel.INFO;
 
 	@Override
 	public String toString() {
-		return Ax.format("[%s] %s", level, message);
+		return Ax.format("[%s] %s", level,
+				message != null ? message : NestedName.get(model));
 	}
 }

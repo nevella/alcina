@@ -1451,9 +1451,11 @@ public class BranchingParser {
 			Location nextLocationAfterNoMatch;
 
 			LookaheadMatches() {
-				matches = lookaheadTokens.stream().map(parserState::match)
-						.filter(Objects::nonNull).sorted()
-						.collect(Collectors.toList());
+				if (layerParser.lookahead) {
+					matches = lookaheadTokens.stream().map(parserState::match)
+							.filter(Objects::nonNull).sorted()
+							.collect(Collectors.toList());
+				}
 				minimalNext = Ax.first(matches);
 				if (minimalNext != null) {
 					Location after = nextLocationAfterNoMatch();

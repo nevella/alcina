@@ -483,4 +483,11 @@ public class AuthenticationManager {
 	public static boolean canAuthenticate() {
 		return Registry.query(Authenticator.class).hasImplementation();
 	}
+
+	public ClientInstance ensureContextClientInstance() {
+		if (getContextClientInstance().isEmpty()) {
+			AuthenticationManager.get().hello();
+		}
+		return getContextClientInstance().get();
+	}
 }

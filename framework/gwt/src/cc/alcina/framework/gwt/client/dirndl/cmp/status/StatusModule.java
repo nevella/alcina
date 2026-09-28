@@ -69,17 +69,24 @@ public class StatusModule {
 			implements ProcessObserver<NotificationObservable> {
 		@Override
 		public void topicPublished(NotificationObservable message) {
+			Channel channel = null;
 			switch (message.level) {
 			case DEBUG:
 				Ax.out(message);
 				break;
 			case ERROR:
-				showMessage(message.message,
-						Channel.EXCEPTION_MESSAGE_PUBLISHED);
+				channel = Channel.EXCEPTION_MESSAGE_PUBLISHED;
 				break;
 			default:
-				showMessage(message.message, Channel.MESSAGE_PUBLISHED);
+				channel = Channel.MESSAGE_PUBLISHED;
 				break;
+			}
+			if (channel != null) {
+				if (message.message != null) {
+					showMessage(message.message, channel);
+				} else {
+					showMessage(message.model, channel);
+				}
 			}
 		}
 	}

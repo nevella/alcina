@@ -8,11 +8,14 @@ import com.google.web.bindery.event.shared.SimpleEventBus;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ClassSerialization;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.HasDisplayName.ClassDisplayName;
@@ -131,6 +134,22 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		}
 		return TextProvider.get().getUiObjectText(clazz,
 				TextProvider.DISPLAY_NAME, value);
+	}
+
+	@Bean(PropertySource.FIELDS)
+	@TypeSerialization(flatSerializable = false)
+	public static class SerializedForm {
+		public SerializedForm() {
+		}
+
+		public SerializedForm(ModelEvent<?, ?> modelEvent) {
+			clazz = modelEvent.getClass();
+			model = modelEvent.getModel();
+		}
+
+		public Class<? extends ModelEvent> clazz;
+
+		public Object model;
 	}
 
 	private boolean handled;
@@ -284,5 +303,9 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 */
 	public interface DelegatesDispatch {
 		Model provideDispatchDelegate();
+	}
+
+	public SerializedForm toSerializedForm() {
+		return new SerializedForm(this);
 	}
 }
