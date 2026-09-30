@@ -43,7 +43,7 @@ import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  * <p>
- * A general brnaching matcher, matching a BNLF grammar composed of arbitrary
+ * A general branching matcher, matching a BNLF grammar composed of arbitrary
  * (not just textual) tokens, which matches sentences composed of tokens
  * (elements of the grammar).
  * 
@@ -71,6 +71,8 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * 
  * -------------------------
  * 
+ * DEBUG - debugging the parser tree - see SequenceObserver
+ * 
  * @formatter:off
  * 
  * * Regex boundary matches are dangerous - i.e \\A|and|or - since the region
@@ -92,12 +94,14 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * by default a text primitive will not match if the match cursor is at a node-end boundary - 
  * to change this behaviour (which can cause unexpected 'no matches'), use LayerParser#setToNextStartIfAtNodeEnd
  * 
+ * * matches are _not_ necessarily in token order (rather, currently, depth) - if the matches are of the same measure
+ * 
  * * @formatter:on
  */
 /*
  * The naive algorithm is:
  * 
- * Defina an object 'branch' which has a method "nextPossibleBranches" which
+ * Define an object 'branch' which has a method "nextPossibleBranches" which
  * returns all potential valid branches/tokens given the current branch state. A
  * recursive partner to this method returns "nextPossibleLeafBranches"
  * 
@@ -705,37 +709,39 @@ public class BranchingParser {
 					}
 				}
 				/*
-				 * generate the containing mesaure by traversing to the start of
+				 * generate the containing measure by traversing to the start of
 				 * the group repetition to determine the start + end measures
 				 */
-				Range start = null;
-				Range end = null;
-				Branch cursor = this;
-				do {
-					cursor = cursor.predecessor;
-					if (cursor.match != null && end == null) {
-						end = cursor.match;
-						// root tokens will only have one child
-						if (parent == null) {
-							start = cursor.match;
-							break;
-						}
-					}
-					if ((cursor.group == group && cursor.indexInGroup == 0)
-							|| cursor.predecessor == null) {
-						if (end == null) {
-							end = new Range(cursor.location, cursor.location);
-						}
-						if (cursor.predecessor == null && parent != null) {
-							start = end;
-						} else {
-							start = new Range(cursor.location, cursor.location);
-						}
-					}
-				} while (start == null);
 				// only match on rep > 0 (zero will satisfy a zero-or-more
 				// group, but won't have a match)
 				if (repetitionIndex != 0) {
+					Range start = null;
+					Range end = null;
+					Branch cursor = this;
+					Branch matchParent = null;
+					for (;;) {
+						cursor = cursor.predecessor;
+						if ((cursor.group == group
+								&& cursor.indexInGroup == 0)) {
+							matchParent = cursor;
+							break;
+						}
+					}
+					cursor = this;
+					for (;;) {
+						cursor = cursor.predecessor;
+						if (cursor.match != null
+								&& cursor.parent.parent == matchParent.parent) {
+							if (end == null) {
+								end = cursor.match;
+							}
+							start = cursor.match;
+						}
+						if ((cursor.group == group
+								&& cursor.indexInGroup == 0)) {
+							break;
+						}
+					}
 					Location.Range range = Location.Range
 							.fromPossiblyReversedEndpoints(start, end);
 					match = Measure.fromRange(range, matchToken);

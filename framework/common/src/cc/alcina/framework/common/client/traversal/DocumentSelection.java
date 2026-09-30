@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
+import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.AbstractSelection.AllowsNullValue;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
@@ -42,7 +43,13 @@ public abstract class DocumentSelection extends MeasureSelection
 		documentToMeasure();
 	}
 
-	private Measure documentToMeasure() {
+	public DocumentSelection(Node parentNode, DomDocument document) {
+		super(parentNode, null);
+		this.document = document;
+		documentToMeasure();
+	}
+
+	protected Measure documentToMeasure() {
 		Location.Range documentRange = document.getLocationRange();
 		Measure measure = new Measure(documentRange.start, documentRange.end,
 				DocumentToken.TYPE);
