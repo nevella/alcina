@@ -52,13 +52,13 @@ class ModelEventDispatch {
 	static void dispatchDescent(ModelEvent modelEvent) {
 		Node cursor = modelEvent.getContext().node;
 		Class<? extends ModelEvent> eventType = modelEvent.getClass();
-		Reflector emitter = cursor.findEmitter(eventType);
-		if (emitter == null) {
+		Reflector reflector = cursor.findReflector(eventType);
+		if (reflector == null) {
 			throw new IllegalStateException(Ax.format(
-					"Type %s has no ancestor that implements the %s Emitter",
+					"Type %s has no ancestor that implements the %s.Reflector",
 					NestedName.get(cursor.model), NestedName.get(eventType)));
 		}
-		Node emitterNode = ((Model) emitter).provideNode();
+		Node emitterNode = ((Model) reflector).provideNode();
 		if (emitterNode != cursor) {
 			Object model = modelEvent.getModel();
 			Context newContext = NodeEvent.Context

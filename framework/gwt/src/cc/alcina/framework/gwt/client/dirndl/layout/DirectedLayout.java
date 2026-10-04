@@ -861,16 +861,16 @@ public class DirectedLayout implements AlcinaProcess {
 			return children;
 		}
 
-		Reflector findEmitter(Class<? extends NodeEvent> type) {
+		Reflector findReflector(Class<? extends NodeEvent> type) {
 			/*
 			 * See signature of DescendantEvent
 			 */
-			Class<? extends Reflector> emitterType = Reflections.at(type)
+			Class<? extends Reflector> reflectorType = Reflections.at(type)
 					.getGenericBounds().bounds.get(2);
 			Node cursor = this;
 			while (cursor != null) {
 				if (cursor.model != null && Reflections.isAssignableFrom(
-						emitterType, cursor.model.getClass())) {
+						reflectorType, cursor.model.getClass())) {
 					return (Reflector) cursor.model;
 				}
 				cursor = ModelEventDispatch.getParentOrReroutedAncestor(cursor);

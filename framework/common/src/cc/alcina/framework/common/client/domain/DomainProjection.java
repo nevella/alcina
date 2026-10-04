@@ -35,4 +35,17 @@ public interface DomainProjection<T>
 	default boolean isIgnoreForIndexing(EntityCollation entityCollation) {
 		return false;
 	}
+
+	public interface Enabled<T> extends DomainProjection<T> {
+		@Override
+		default boolean isEnabled() {
+			return true;
+		}
+
+		@Override
+		default void setEnabled(boolean enabled) {
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'setEnabled'");
+		}
+	}
 }

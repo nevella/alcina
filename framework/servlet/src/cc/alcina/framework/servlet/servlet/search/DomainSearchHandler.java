@@ -70,9 +70,12 @@ public class DomainSearchHandler {
 			T t = null;
 			Class<T> clazz = Reflections.forName(className);
 			t = Domain.find(clazz, objectId);
-			t.domain().ensurePopulated();
 			List<T> list = new ArrayList<>();
-			list.add(t);
+			if (t == null) {
+			} else {
+				t.domain().ensurePopulated();
+				list.add(t);
+			}
 			return getModelSearchResults(list, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

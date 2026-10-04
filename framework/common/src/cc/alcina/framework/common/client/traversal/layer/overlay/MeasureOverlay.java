@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.overlay.BoundaryParser.ExtendResult;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.IntPair;
 
 /* 
@@ -115,12 +116,67 @@ public class MeasureOverlay {
 			return node.ancestors().orSelf().match(this::isBlock).orElse(null);
 		}
 
-		boolean isSegmentBoundary(DomNode containingNode);
+		default boolean isSegmentBoundary(DomNode containingNode) {
+			return false;
+		}
 
 		/*
 		 * i.e. -not- a TR
 		 */
 		boolean allowsArbitraryInsert(DomNode node);
+
+		public static class Html implements StyleResolver {
+			@Override
+			public boolean isBlock(DomNode node) {
+				if (node == node.document.getDocumentElementNode()) {
+					return true;
+				}
+				String name = node.name().toLowerCase();
+				return HtmlConstants.isHtmlBlock(name);
+			}
+
+			@Override
+			public boolean allowsArbitraryInsert(DomNode node) {
+				if (!node.isElement()) {
+					return false;
+				}
+				String name = node.name().toLowerCase();
+				switch (name) {
+				case "table":
+				case "tr":
+				case "thead":
+				case "tfoot":
+				case "tbody":
+				case "ol":
+				case "ul":
+					return false;
+				default:
+					return true;
+				}
+			}
+
+			public DomNode getDeepestFullHorizontalSpanBlock(DomNode block,
+					DomNode contentNode) {
+				if (!block.ancestors().stream().toList()
+						.contains(contentNode)) {
+					return block;
+				}
+				DomNode result = block;
+				DomNode cursor = block;
+				while (cursor != contentNode) {
+					String name = cursor.name().toLowerCase();
+					switch (name) {
+					// style model edge containers
+					case "tr":
+					case "li":
+						result = cursor;
+						break;
+					}
+					cursor = cursor.parent();
+				}
+				return result;
+			}
+		}
 	}
 
 	public enum Type {

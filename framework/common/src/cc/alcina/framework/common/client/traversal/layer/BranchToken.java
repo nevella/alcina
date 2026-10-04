@@ -464,10 +464,19 @@ public interface BranchToken extends Measure.Token, BranchGroupMember {
 			public Measure match(ParserState state) {
 				return state.patternMatcher().match(this, JAVA_STYLE_PATTERN);
 			}
+		},
+		CSS_STYLE {
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, CSS_STYLE_PATTERN);
+			}
 		};
 
 		public static final Pattern JAVA_STYLE_PATTERN = Pattern
 				.compile("([A-Za-z_][A-Za-z_0-9]*)");
+
+		public static final Pattern CSS_STYLE_PATTERN = Pattern
+				.compile("([A-Za-z_][A-Za-z_0-9\\-]*)");
 	}
 
 	public enum Clause implements BranchToken {

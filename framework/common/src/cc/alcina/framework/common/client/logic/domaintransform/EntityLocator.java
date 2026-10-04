@@ -98,6 +98,9 @@ public class EntityLocator implements Serializable, TreeSerializable {
 
 	public static EntityLocator parseRecoverable(String recoverable,
 			Class clazz) {
+		if (recoverable == null) {
+			return null;
+		}
 		String[] parts = recoverable.split("/");
 		EntityLocator locator = new EntityLocator(clazz, 0L,
 				Long.parseLong(parts[1]));
