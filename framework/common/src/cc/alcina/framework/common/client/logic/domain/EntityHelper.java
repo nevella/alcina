@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -15,6 +17,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -87,6 +90,38 @@ public class EntityHelper {
 		return CommonUtils.compareLongs(o1.getId(), o2.getId());
 	}
 
+	/**
+	 * This is an alternative to full-bore 'change the entity schema from long
+	 * localId to LocalId localId, where LocalId models both localId and
+	 * clientInstanceId'
+	 * 
+	 * The latter would probably be better - but it's a big refactor. There's
+	 * basically no likelihood of serious leaks here (since the retained object
+	 * size is linear in the number of ui-triggered csacaded user object
+	 * creations), and it does the job of differentiating cascaded locals
+	 */
+	static class LocalEntityClientInstanceId {
+		static Map<Entity, Long> nonDefaultClientInstanceEntiyId = Collections
+				.synchronizedMap(new IdentityHashMap<>());
+
+		static Long getClientInstanceId(Entity entityWithIdZero) {
+			return nonDefaultClientInstanceEntiyId.get(entityWithIdZero);
+		}
+
+		static void registerNonDefaultClientInstanceCreatedEntity(
+				Entity entityWithIdZero) {
+			nonDefaultClientInstanceEntiyId.put(entityWithIdZero,
+					ClientInstance.current().getId());
+		}
+	}
+
+	public static void registerNonDefaultClientInstanceCreatedEntity(
+			Entity entityWithIdZero) {
+		LocalEntityClientInstanceId
+				.registerNonDefaultClientInstanceCreatedEntity(
+						entityWithIdZero);
+	}
+
 	public static boolean equals(Entity o1, Entity o2) {
 		if (o1 == null) {
 			return o2 == null;
@@ -103,7 +138,11 @@ public class EntityHelper {
 		if (o1.getId() != 0 || o2.getId() != 0) {
 			return o1.getId() == o2.getId();
 		}
-		return o2.getLocalId() == o1.getLocalId();
+		if (o2.getLocalId() != o1.getLocalId()) {
+			return false;
+		}
+		return LocalEntityClientInstanceId.getClientInstanceId(
+				o1) == LocalEntityClientInstanceId.getClientInstanceId(o2);
 	}
 
 	public static <T extends HasId> T getById(Collection<T> values, long id) {

@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -88,6 +89,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -1006,6 +1008,11 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	public <T extends Entity> T registerDomainObject(T entity,
 			boolean listenToMvccObjectVersion) {
+		if (entity.getId() == 0
+				&& ClientInstance.current() != EntityLayerObjects.get()
+						.getServerAsClientInstance()) {
+			EntityHelper.registerNonDefaultClientInstanceCreatedEntity(entity);
+		}
 		boolean mvccObject = Mvcc.isMvccObject(entity);
 		if (!mvccObject
 				&& DomainStore.writableStore().isCached(entity.entityClass())

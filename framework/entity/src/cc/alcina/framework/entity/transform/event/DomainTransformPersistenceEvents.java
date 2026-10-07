@@ -299,7 +299,7 @@ public class DomainTransformPersistenceEvents
 				return;
 			} else {
 				AtomicLong idCounter = perClientInstanceLocalIdCounter
-						.getOrDefault(threadInstance.getId(),
+						.computeIfAbsent(threadInstance.getId(),
 								// allow some headroom for alcina fast gwt long
 								// impl - it has maxvalue of 1 << 30 -1
 								//
@@ -310,7 +310,7 @@ public class DomainTransformPersistenceEvents
 								// assume we don't get that many per-instance
 								// creation events (for ivory, that's
 								// guaranteed)
-								new AtomicLong(1 << 29));
+								id -> new AtomicLong(1 << 29));
 				// tm.sequentialidgenerator throws an
 				// exception at 1^29
 				try {
