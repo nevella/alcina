@@ -9,6 +9,7 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public interface InternalAnchorHistoryRouter extends Click.Handler {
 	@Override
@@ -26,6 +27,9 @@ public interface InternalAnchorHistoryRouter extends Click.Handler {
 					.match(n -> n.has("href")).map(n -> n.attr("href"))
 					.orElse("");
 			if (Ax.isBlank(href)) {
+				return;
+			}
+			if (WidgetUtils.isNewTabModifier(nativeEvent)) {
 				return;
 			}
 			Url url = Url.parse(Window.Location.getHref());
