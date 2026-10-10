@@ -132,6 +132,15 @@ class TrackingLocationContext implements LocationContext {
 						firstMutation.type == Type.characterData);
 				at = at.add(IntPair.of(0, firstMutation.newValue.length()));
 			}
+			if (mutationGroup == MutationGroup.strip) {
+				/*
+				 * the strip starts at the firstmutation target parent
+				 * (first-mutation-minus-one) - aka the stripped container
+				 * 
+				 * FIXME - check wrap doesn't require the same
+				 */
+				at = at.add(IntPair.of(-1, 0));
+			}
 			if (mutationGroup != null) {
 				IntPair mutationTuple = mutationGroup.mutationTuple();
 				delta = new IndexTuple(mutationTuple.i1, mutationTuple.i2, true,

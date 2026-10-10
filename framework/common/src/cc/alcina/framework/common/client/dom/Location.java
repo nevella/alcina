@@ -71,8 +71,8 @@ mutation of parent.children.offset (only required if the child is not at the end
  the location is at the start of the node, otherwise at the end (FIXME - doc - show a worked example)
 
  Note that because indicies in a text node are controlled by the index (not treeindex) field, 'before' and 'start' is not a
- useful distinction, so Locations in a text node created with start == true and normalised to start == false, and
- the serialized (tostring) form of a text location has no before/start info
+ useful distinction, so Locations in a text node created with start == true are normalised to start == false, and
+ the serialized (tostring) form of a text location has no before/start info [202610 - that's not currently true - but maybe should be implemented]
 
 
 (bf1) El1                                                                                   (af1)
@@ -80,7 +80,7 @@ mutation of parent.children.offset (only required if the child is not at the end
 			(bf3.0) T3:'a'                      (af3)
 					  (3.1)'b' (3.2)
 
-Traversal is the 'tree' of bf/afs (before/start) shown above. before/start is ignored when
+Traversal is the 'tree' of bf/afs (before/start) shown above. before/start is ignored when (?? in a text node?)
 
 # Mutation continued
 
@@ -463,6 +463,16 @@ public class Location implements Comparable<Location> {
 					.getContainingNodes(end, end.getIndex(), end.start);
 			Location toStart = Ax.last(startContainers).asLocation();
 			Location toEnd = Ax.last(endContainers).asLocation();
+			/*
+			 * #alcina #impl #future Hack for inconsistencies around
+			 * location.start when location.containingNode is a text node
+			 */
+			if (start.getContainingNode().isText()) {
+				toStart = start;
+			}
+			if (end.getContainingNode().isText()) {
+				toEnd = end;
+			}
 			return new Range(
 					toStart.textRelativeLocation(
 							start.getIndex() - toStart.getIndex(), start.start),
@@ -1364,7 +1374,7 @@ public class Location implements Comparable<Location> {
 					classData, getSubsequentDebugText(50));
 		}
 		String dir = start ? "<" : ">";
-		// deliberately avoids index updea
+		// deliberately avoids index update
 		if (containingNode.isText() && containingNode.location.index
 				+ containingNode.textContent().length() == index) {
 			dir = "> [#EOT]";
@@ -1490,7 +1500,7 @@ public class Location implements Comparable<Location> {
 	 * This is for internal use, and deliberately does not ensure the indicies
 	 * are current
 	 */
-	IndexTuple asIndexTuple() {
+	public IndexTuple asIndexTuple() {
 		return new IndexTuple(treeIndex, index, start, containingNode);
 	}
 
@@ -1507,7 +1517,10 @@ public class Location implements Comparable<Location> {
 				- containingNode.asLocation().getTreeIndex();
 		if (treeIndexDelta != 0) {
 			/*
-			 * split/wrap can cause container changes
+			 * if location is a start-of-node location, containingNode is
+			 * immutable, (unless containingnode itself was removed)
+			 * 
+			 * otherwise split/wrap can cause container changes
 			 */
 			DomNode cursor = containingNode;
 			while (cursor != null
