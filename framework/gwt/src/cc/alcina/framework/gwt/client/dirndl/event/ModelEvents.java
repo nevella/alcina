@@ -848,4 +848,23 @@ public class ModelEvents {
 			void onView(View event);
 		}
 	}
+
+	public static class WindowTitleChange
+			extends ModelEvent<String, WindowTitleChange.Handler> {
+		@Override
+		public void dispatch(WindowTitleChange.Handler handler) {
+			handler.onWindowTitleChange(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onWindowTitleChange(WindowTitleChange event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onWindowTitleChange(WindowTitleChange event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
 }
