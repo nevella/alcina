@@ -96,7 +96,8 @@ public interface UserPropertyPersistable
 		}
 
 		public void persist() {
-			property.serializeObject(persistable);
+			UserProperty.CONTEXT_PERSISTING
+					.runWithTrue(() -> property.serializeObject(persistable));
 		}
 
 		public void setPersistable(UserPropertyPersistable persistable) {

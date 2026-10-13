@@ -193,6 +193,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Collapse extends ModelEvent<Object, Collapse.Handler> {
+		@Override
+		public void dispatch(Collapse.Handler handler) {
+			handler.onCollapse(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCollapse(Collapse event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onCollapse(Collapse event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Commit extends ModelEvent<Object, Commit.Handler> {
 		@Override
 		public void dispatch(Commit.Handler handler) {

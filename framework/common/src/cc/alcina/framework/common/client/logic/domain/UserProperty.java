@@ -8,6 +8,7 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -37,8 +38,11 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 @Registration({ PersistentImpl.class, UserProperty.class })
 public abstract class UserProperty<T extends UserProperty>
 		extends VersionableEntity<T> implements HasIUser, HasOwner {
-	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
-			.getName() + ".CONTEXT_NO_COMMIT";
+	public static final transient LooseContext.Key CONTEXT_NO_COMMIT = LooseContext
+			.key(UserProperty.class, "CONTEXT_NO_COMMIT");
+
+	public static final transient LooseContext.Key CONTEXT_PERSISTING = LooseContext
+			.key(UserProperty.class, "CONTEXT_PERSISTING");
 
 	public static <P extends UserProperty<?>> Stream<P>
 			allByClass(Class<? extends UserPropertyPersistable> clazz) {
@@ -194,7 +198,8 @@ public abstract class UserProperty<T extends UserProperty>
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
 		if (!Objects.equals(old_value, value) && Ax.notBlank(value)) {
 			if (userPropertySupport != null
-					&& userPropertySupport.getPersistable() != null) {
+					&& userPropertySupport.getPersistable() != null
+					&& !CONTEXT_PERSISTING.is()) {
 				TransformManager.ignoreChanges(() -> new CloneHelper()
 						.copyBeanProperties(deserialize(),
 								userPropertySupport.getPersistable(),
