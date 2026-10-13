@@ -24,10 +24,10 @@ import cc.alcina.framework.common.client.domain.search.SearchContext;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearcherCollectionSource;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -64,12 +64,10 @@ public class DomainSearchHandler {
 		to.setPageNumber(from.getPageNumber());
 	}
 
-	public <T extends Entity> ModelSearchResults getForClass(String className,
-			long objectId) {
+	public <T extends Entity> ModelSearchResults
+			searchEntity(EntityLocator locator) {
 		try {
-			T t = null;
-			Class<T> clazz = Reflections.forName(className);
-			t = Domain.find(clazz, objectId);
+			T t = locator.find();
 			List<T> list = new ArrayList<>();
 			if (t == null) {
 			} else {

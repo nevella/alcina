@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.place;
 
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -20,6 +21,8 @@ public abstract class BindablePlace<SD extends BindableSearchDefinition>
 	public String fromClass;
 
 	public long id;
+
+	public EntityLocator locator;
 
 	public SD def;
 

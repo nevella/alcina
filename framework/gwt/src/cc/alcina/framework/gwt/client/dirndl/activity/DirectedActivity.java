@@ -90,7 +90,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		} else {
 			if (place instanceof EntityPlace) {
 				EntityPlace entityPlace = (EntityPlace) place;
-				if (entityPlace.id != 0
+				if (entityPlace.hasIdOrLocator()
 						|| entityPlace.action == EntityAction.CREATE) {
 					directedActivity = Registry.impl(
 							DirectedEntityActivity.class, place.getClass());

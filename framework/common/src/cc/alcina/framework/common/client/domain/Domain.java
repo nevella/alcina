@@ -43,9 +43,9 @@ public class Domain {
 		return handler.stream(clazz).collect(Collectors.toSet());
 	}
 
-	public static <T extends Entity> void async(Class<T> clazz, long objectId,
+	public static <T extends Entity> void async(EntityLocator locator,
 			boolean create, Consumer<T> resultConsumer) {
-		handler.async(clazz, objectId, create, resultConsumer);
+		handler.async(locator, create, resultConsumer);
 	}
 
 	public static <V extends Entity> V by(Class<V> clazz,
@@ -213,7 +213,7 @@ public class Domain {
 	}
 
 	public interface DomainHandler {
-		public <V extends Entity> void async(Class<V> clazz, long objectId,
+		public <V extends Entity> void async(EntityLocator locator,
 				boolean create, Consumer<V> resultConsumer);
 
 		default <V extends Entity> V byProperty(Class<V> clazz,
@@ -278,8 +278,9 @@ public class Domain {
 
 	public static class DomainHandlerNonTransactional implements DomainHandler {
 		@Override
-		public <V extends Entity> void async(Class<V> clazz, long objectId,
+		public <V extends Entity> void async(EntityLocator locator,
 				boolean create, Consumer<V> resultConsumer) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

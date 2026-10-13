@@ -9,6 +9,7 @@ import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
 import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -19,19 +20,16 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener.Sta
 
 public class DomainHandlerClient implements DomainHandler {
 	@Override
-	public <V extends Entity> void async(Class<V> clazz, long objectId,
-			boolean create, Consumer<V> resultConsumer) {
+	public <V extends Entity> void async(EntityLocator locator, boolean create,
+			Consumer<V> resultConsumer) {
 		if (create) {
-			V obj = TransformManager.get().createProvisionalObject(clazz);
+			V obj = (V) TransformManager.get()
+					.createProvisionalObject(locator.getClazz());
 			Scheduler.get().scheduleDeferred(() -> resultConsumer.accept(obj));
 			return;
 		} else {
-			if (objectId == 0) {
-				resultConsumer.accept(null);
-			} else {
-				Registry.impl(DomainHandlerClientRemoteResolver.class, clazz)
-						.resolve(clazz, objectId, resultConsumer);
-			}
+			Registry.impl(DomainHandlerClientRemoteResolver.class,
+					locator.getClazz()).resolve(locator, resultConsumer);
 		}
 	}
 
@@ -77,7 +75,7 @@ public class DomainHandlerClient implements DomainHandler {
 	}
 
 	public interface DomainHandlerClientRemoteResolver {
-		<V extends Entity> void resolve(Class<V> clazz, long objectId,
+		<V extends Entity> void resolve(EntityLocator locator,
 				Consumer<V> resultConsumer);
 	}
 

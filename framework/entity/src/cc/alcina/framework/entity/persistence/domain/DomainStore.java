@@ -1486,7 +1486,7 @@ public class DomainStore implements IDomainStore {
 
 	class DomainStoreDomainHandler implements DomainHandler {
 		@Override
-		public <V extends Entity> void async(Class<V> clazz, long objectId,
+		public <V extends Entity> void async(EntityLocator locator,
 				boolean create, Consumer<V> resultConsumer) {
 			throw new UnsupportedOperationException();
 		}
@@ -1893,9 +1893,9 @@ public class DomainStore implements IDomainStore {
 
 		class DomainStoresDomainHandler implements DomainHandler {
 			@Override
-			public <V extends Entity> void async(Class<V> clazz, long objectId,
+			public <V extends Entity> void async(EntityLocator locator,
 					boolean create, Consumer<V> resultConsumer) {
-				storeHandler(clazz).async(clazz, objectId, create,
+				storeHandler(locator.getClazz()).async(locator, create,
 						resultConsumer);
 			}
 

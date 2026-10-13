@@ -42,8 +42,12 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 	public EntityAction action = EntityAction.VIEW;
 
 	public EntityLocator asLocator() {
-		return entity != null ? entity.toLocator()
-				: new EntityLocator(provideEntityClass(), id, 0);
+		if (locator != null) {
+			return locator;
+		} else {
+			return entity != null ? entity.toLocator()
+					: new EntityLocator(provideEntityClass(), id, 0);
+		}
 	}
 
 	@Override
@@ -152,7 +156,20 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 
 	public <EP extends EntityPlace> EP withEntity(Entity entity) {
 		this.entity = entity;
-		withHasId(entity);
+		if (entity.getId() == 0) {
+			withLocator(entity.toLocator());
+		} else {
+			withHasId(entity);
+		}
 		return (EP) this;
+	}
+
+	public <EP extends EntityPlace> EP withLocator(EntityLocator locator) {
+		this.locator = locator;
+		return (EP) this;
+	}
+
+	public boolean hasIdOrLocator() {
+		return id != 0 || locator != null;
 	}
 }

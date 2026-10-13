@@ -182,9 +182,10 @@ public class EnvironmentManager {
 			}
 		}
 
-		public <V extends Entity> void async(Class<V> clazz, long objectId,
+		@Override
+		public <V extends Entity> void async(EntityLocator locator,
 				boolean create, Consumer<V> resultConsumer) {
-			handler().async(clazz, objectId, create, resultConsumer);
+			handler().async(locator, create, resultConsumer);
 		}
 
 		public <V extends Entity> V byProperty(Class<V> clazz,

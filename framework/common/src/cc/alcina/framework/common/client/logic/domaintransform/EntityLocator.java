@@ -101,7 +101,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		if (recoverable == null) {
 			return null;
 		}
-		String[] parts = recoverable.split("/");
+		String[] parts = recoverable.split("[/,]");
 		EntityLocator locator = new EntityLocator(clazz, 0L,
 				Long.parseLong(parts[1]));
 		locator.setClientInstanceId(Long.parseLong(parts[0]));
@@ -155,7 +155,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		if (id == 0) {
 			if (Permissions.hasContext()) {
 				this.clientInstanceId = CommonUtils
-						.lv(Permissions.get().getClientInstanceId());
+						.lv(specifiedOrCurrentClientInstanceId());
 			}
 		}
 	}
@@ -302,8 +302,17 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		if (id != 0) {
 			return String.valueOf(id);
 		}
-		return Ax.format("%s%s%s", Permissions.get().getClientInstanceId(),
+		return Ax.format("%s%s%s", specifiedOrCurrentClientInstanceId(),
 				separator, localId);
+	}
+
+	private Long specifiedOrCurrentClientInstanceId() {
+		return clientInstanceId != 0 ? clientInstanceId
+				: Permissions.get().getClientInstanceId();
+	}
+
+	public String toRecoverableString() {
+		return toRecoverableString(specifiedOrCurrentClientInstanceId());
 	}
 
 	public String toRecoverableString(long clientInstanceId) {
@@ -319,7 +328,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	public String toString() {
 		if (id == 0) {
 			long clientInstanceId = CommonUtils
-					.lv(Permissions.get().getClientInstanceId());
+					.lv(specifiedOrCurrentClientInstanceId());
 			return toRecoverableString(clientInstanceId);
 		}
 		return Ax.format("%s - %s",

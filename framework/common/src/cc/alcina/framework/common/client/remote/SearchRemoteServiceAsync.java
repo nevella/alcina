@@ -18,6 +18,7 @@ import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 /**
@@ -25,7 +26,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface SearchRemoteServiceAsync {
-	void getForClass(String className, long objectId,
+	void searchEntity(EntityLocator locator,
 			AsyncCallback<ModelSearchResults> callback);
 
 	void searchModel(BindableSearchDefinition def,

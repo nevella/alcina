@@ -276,7 +276,7 @@ public class LocalDomainStore {
 
 	class DomainHandlerLds implements Domain.DomainHandler {
 		@Override
-		public <V extends Entity> void async(Class<V> clazz, long objectId,
+		public <V extends Entity> void async(EntityLocator locator,
 				boolean create, Consumer<V> resultConsumer) {
 			throw new UnsupportedOperationException();
 		}

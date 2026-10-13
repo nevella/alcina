@@ -61,9 +61,9 @@ public abstract class TypedModelActivity<P extends Place, VM extends ViewModel>
 			boolean create = place.action == EntityAction.CREATE;
 			model.setModelObject(null);
 			model.setAction(place.action);
-			Domain.async(getDomainClass(), place.id, create, modelObject -> {
+			Domain.async(place.asLocator(), create, modelObject -> {
 				if (create) {
-					onCreate(modelObject);
+					onCreate((T) modelObject);
 				}
 				model.setModelObject(modelObject);
 			});

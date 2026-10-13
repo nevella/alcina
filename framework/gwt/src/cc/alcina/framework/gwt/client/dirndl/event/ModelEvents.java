@@ -513,6 +513,24 @@ public class ModelEvents {
 		}
 	}
 
+	public static class NotFound extends ModelEvent<Object, NotFound.Handler> {
+		@Override
+		public void dispatch(NotFound.Handler handler) {
+			handler.onNotFound(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onNotFound(NotFound event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onNotFound(NotFound event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
 	public static class Open extends ModelEvent<Object, Open.Handler> {
 		@Override
 		public void dispatch(Open.Handler handler) {

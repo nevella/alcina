@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.entity.place;
 
 import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.place.BindablePlaceTokenizer;
@@ -36,8 +37,11 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 				place.fromClass = parts[4 + offset];
 			}
 		} else {
-			if (detail.matches("[\\-0-9]+")) {
+			if (detail.matches("-?\\d+")) {
 				place.id = Long.parseLong(detail);
+			} else if (detail.matches("\\d+,\\d+")) {
+				place.locator = EntityLocator.parseRecoverable(detail,
+						getModelClass());
 			} else {
 				parseMap(detail);
 				deserializeSearchDefinition(place);
@@ -58,6 +62,8 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 		if (place.provideIsDefaultDefs()) {
 			if (place.id != 0) {
 				addTokenPart(place.id);
+			} else if (place.locator != null) {
+				addTokenPart(place.locator.toClazzLocatableString());
 			}
 		} else {
 			setParameter(P_DEF,
