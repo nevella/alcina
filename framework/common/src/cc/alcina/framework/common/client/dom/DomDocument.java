@@ -216,6 +216,10 @@ public class DomDocument extends DomNode implements Cloneable {
 		return super.w3cDoc();
 	}
 
+	public com.google.gwt.dom.client.Document gwtDoc() {
+		return (com.google.gwt.dom.client.Document) super.w3cDoc();
+	}
+
 	private void ensureByLookups() {
 		if (byTag == null) {
 			byTag = new Multimap<>();

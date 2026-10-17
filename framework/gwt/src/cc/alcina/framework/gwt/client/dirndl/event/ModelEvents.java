@@ -1,6 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
+import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -207,6 +210,41 @@ public class ModelEvents {
 			@Override
 			default void onCollapse(Collapse event) {
 				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+	}
+
+	public static class CommandContextRegistration extends
+			ModelEvent<CommandContextRegistration.Data, CommandContextRegistration.Handler> {
+		@Override
+		public void dispatch(CommandContextRegistration.Handler handler) {
+			handler.onCommandContextRegistration(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCommandContextRegistration(CommandContextRegistration event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onCommandContextRegistration(
+					CommandContextRegistration event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public static class Data {
+			public boolean attached;
+
+			public List<Class<? extends CommandContext>> contexts;
+
+			public Data() {
+			}
+
+			public Data(boolean attached,
+					List<Class<? extends CommandContext>> contexts) {
+				this.attached = attached;
+				this.contexts = contexts;
 			}
 		}
 	}

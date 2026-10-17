@@ -222,6 +222,7 @@ public class PackageProperties {
       public TypedProperty<EditArea, List> behaviors = new TypedProperty<>(EditArea.class, "behaviors");
       public TypedProperty<EditArea, Boolean> contentEditable = new TypedProperty<>(EditArea.class, "contentEditable");
       public TypedProperty<EditArea, String> currentValue = new TypedProperty<>(EditArea.class, "currentValue");
+      public TypedProperty<EditArea, Boolean> editSoleChild = new TypedProperty<>(EditArea.class, "editSoleChild");
       public TypedProperty<EditArea, Boolean> focusOnBind = new TypedProperty<>(EditArea.class, "focusOnBind");
       public TypedProperty<EditArea, FragmentModel> fragmentModel = new TypedProperty<>(EditArea.class, "fragmentModel");
       public TypedProperty<EditArea, Boolean> inputDirty = new TypedProperty<>(EditArea.class, "inputDirty");
@@ -238,6 +239,7 @@ public class PackageProperties {
         public InstanceProperty<EditArea, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.editArea.behaviors);}
         public InstanceProperty<EditArea, Boolean> contentEditable(){return new InstanceProperty<>(source,PackageProperties.editArea.contentEditable);}
         public InstanceProperty<EditArea, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.editArea.currentValue);}
+        public InstanceProperty<EditArea, Boolean> editSoleChild(){return new InstanceProperty<>(source,PackageProperties.editArea.editSoleChild);}
         public InstanceProperty<EditArea, Boolean> focusOnBind(){return new InstanceProperty<>(source,PackageProperties.editArea.focusOnBind);}
         public InstanceProperty<EditArea, FragmentModel> fragmentModel(){return new InstanceProperty<>(source,PackageProperties.editArea.fragmentModel);}
         public InstanceProperty<EditArea, Boolean> inputDirty(){return new InstanceProperty<>(source,PackageProperties.editArea.inputDirty);}

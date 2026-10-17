@@ -72,6 +72,10 @@ public class KeybindingsHandler implements KeyboardShortcuts.Handler {
 
 	CommandContext.Provider commandContextProvider;
 
+	public CommandContext.Provider getCommandContextProvider() {
+		return commandContextProvider;
+	}
+
 	InterceptKeys lastBehavior;
 
 	Model topModel;

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.behavior.EditAreaBehavior;
@@ -30,6 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
@@ -86,6 +88,8 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Binding(type = Type.PROPERTY, to = "contenteditable")
 	public boolean contentEditable = true;
 
+	public boolean editSoleChild = false;
+
 	/*
 	 * true if the user has entered text - used by single-selection
 	 */
@@ -121,7 +125,12 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 
 	private String elementValue() {
 		if (!provideIsShowingPlaceholder()) {
-			return provideElement().getInnerHTML();
+			String innerHTML = provideElement().getInnerHTML();
+			if (editSoleChild) {
+				innerHTML = innerHTML.replaceFirst(" contenteditable=\"true\"",
+						"");
+			}
+			return innerHTML;
 		} else {
 			return null;
 		}
@@ -132,6 +141,18 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 			currentValue = elementValue();
 		}
 		return this.currentValue;
+	}
+
+	@Override
+	public void onNodeContext(NodeContext event) {
+		from(properties().editSoleChild()).withSetOnInitialise(false)
+				.signal(() -> {
+					throw new IllegalStateException(
+							"Cannot update after initialisation");
+				});
+		if (editSoleChild) {
+			contentEditable = false;
+		}
 	}
 
 	@Override
@@ -160,6 +181,11 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	public void onBind(Bind event) {
 		super.onBind(event);
 		fragmentModel.onBind(event);
+		if (event.isBound() && editSoleChild) {
+			Preconditions.checkState(provideElement().getChildCount() == 1);
+			provideElement().getFirstChildElement()
+					.setAttribute("contenteditable", Boolean.TRUE.toString());
+		}
 	}
 
 	@Override
@@ -207,7 +233,7 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 
 	@Override
 	public void onInput(Input event) {
-		currentValue = elementValue();
+		currentValue = null;
 		if (stripFontTagsOnInput) {
 			new EditSelection().strip(provideElement(), "font");
 		}
@@ -422,8 +448,10 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		 * wip - decorator - shouldn't be needed - is because browser
 		 * synchronous attr change isn't syncing?
 		 */
-		properties().contentEditable().set(false);
-		properties().contentEditable().set(true);
+		if (!editSoleChild) {
+			properties().contentEditable().set(false);
+			properties().contentEditable().set(true);
+		}
 	}
 
 	/*

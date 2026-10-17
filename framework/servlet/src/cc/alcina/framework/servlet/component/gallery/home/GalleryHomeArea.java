@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.choiceeditor.ChoiceEditorGalleryPlace;
+import cc.alcina.framework.servlet.component.gallery.model.fragmentdocument.FragmentDocumentGalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.searchdefeditor.SearchDefinitionEditorGalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.sequencearea.GallerySequenceAreaReportPlace;
 import cc.alcina.framework.servlet.component.gallery.model.tree.TreeGalleryPlace;
@@ -46,6 +47,7 @@ class GalleryHomeArea extends GalleryContents {
 		add(TreeTableGalleryPlace.class);
 		add(SearchDefinitionEditorGalleryPlace.class);
 		add(GallerySequenceAreaReportPlace.class);
+		add(FragmentDocumentGalleryPlace.class);
 	}
 
 	void add(Class<? extends GalleryPlace> clazz) {

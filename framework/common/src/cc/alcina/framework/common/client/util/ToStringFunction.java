@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.function.Function;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
@@ -94,6 +96,36 @@ public interface ToStringFunction<T> extends Function<T, String> {
 		@Override
 		public String apply(Boolean t) {
 			return t == null || !t ? null : Boolean.TRUE.toString();
+		}
+	}
+
+	@Reflected
+	public static abstract class EntityLocatorTypedTransform
+			implements Bidi<EntityLocator> {
+		@Override
+		public Function<EntityLocator, String> leftToRight() {
+			return t -> t == null ? null : t.toClazzLocatableString();
+		}
+
+		@Override
+		public Function<String, EntityLocator> rightToLeft() {
+			return t -> t == null ? null
+					: EntityLocator.parse(getEntityClass(), t);
+		}
+
+		protected abstract Class<? extends Entity> getEntityClass();
+	}
+
+	@Reflected
+	public static class EntityLocatorTransform implements Bidi<EntityLocator> {
+		@Override
+		public Function<EntityLocator, String> leftToRight() {
+			return t -> t == null ? null : t.toRecoverableString();
+		}
+
+		@Override
+		public Function<String, EntityLocator> rightToLeft() {
+			return t -> t == null ? null : EntityLocator.parse(t);
 		}
 	}
 }

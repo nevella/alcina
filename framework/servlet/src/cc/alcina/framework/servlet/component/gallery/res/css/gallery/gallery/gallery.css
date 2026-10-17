@@ -1201,3 +1201,29 @@ gallery-sequence-area > sequence-component > header > search-definition-editor e
 gallery-sequence-area > sequence-component > sequence > table {
   background: white;
 }
+
+fragment-document-area > contents {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 3rem;
+  background: white;
+  max-width: 500px;
+  margin: 0 auto;
+}
+fragment-document-area > contents > textarea {
+  height: 10rem;
+}
+fragment-document-area > contents > document-tree-representation {
+  display: block;
+}
+fragment-document-area > contents > document-tree-representation > textarea {
+  padding: 1rem;
+  border: solid 1px #ccc;
+  height: 20rem;
+  width: 30rem;
+  size-adjust: none;
+}
+fragment-document-area > contents > a {
+  align-self: center;
+}

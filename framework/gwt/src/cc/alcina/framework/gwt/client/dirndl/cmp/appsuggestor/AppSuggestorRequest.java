@@ -17,8 +17,10 @@ public class AppSuggestorRequest extends SuggestOracle.Request {
 
 	public BasePlace contextPlace;
 
-	public void populateContext() {
+	public void populateContext(
+			Set<Class<? extends CommandContext>> commandContexts) {
 		contextPlace = Client.currentPlace();
+		this.commandContexts = commandContexts;
 	}
 
 	@Override

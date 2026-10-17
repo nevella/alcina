@@ -5,6 +5,7 @@
 @use 'tree-table'
 @use 'search-definition-editor'
 @use 'gallery-sequence-area'
+@use 'fragment-document-area'
 
 
 gallery
@@ -81,6 +82,9 @@ search-definition-editor-gallery
 
 gallery-sequence-area
   @include gallery-sequence-area.content
+
+fragment-document-area
+  @include fragment-document-area.content
 
 @mixin overlay
   @include gallery-sequence-area.overlay

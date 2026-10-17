@@ -1127,8 +1127,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerText(String text) {
-		if (Ax.isBlank(text)) {
-		}
 		/*
 		 * Note that empty text nodes are *not* created (in fact, are removed)
 		 */

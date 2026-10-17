@@ -1337,8 +1337,14 @@ public class Document extends Node implements ClientDomDocument,
 		}
 	}
 
+	public void addBatchedLocalMutationListener(
+			TopicListener<List<MutationRecord>> listener) {
+		localDom.localMutations.topicBatchedMutations.add(listener);
+	}
+
 	public void flushLocalMutations() {
 		localDom.flush0();
+		localDom.localMutations.fireMutations();
 	}
 
 	@Override

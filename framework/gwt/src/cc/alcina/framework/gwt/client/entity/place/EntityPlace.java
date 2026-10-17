@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -35,6 +36,15 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 	public static EntityPlace forEntity(Entity entity) {
 		return forClassAndId(entity.getClass(), entity.getId())
 				.withEntity(entity);
+	}
+
+	@Override
+	public String toString() {
+		if (locator != null) {
+			return Ax.format("%s:%s", NestedName.get(this), locator);
+		} else {
+			return super.toString();
+		}
 	}
 
 	public transient Entity entity;

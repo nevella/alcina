@@ -56,6 +56,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 @Reflected
@@ -422,5 +423,9 @@ public abstract class Client implements ContextFrame {
 						Thread.currentThread().getName(), message);
 			}
 		}
+	}
+
+	public static void goToRespectNewTab(BasePlace place) {
+		WidgetUtils.showInNewTabOrThisWindow(place.toAbsoluteHrefString());
 	}
 }

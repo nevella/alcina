@@ -79,9 +79,8 @@ public class FmsForm {
 		public FmsFormModel() {
 		}
 
-		@Override
 		@Directed.Wrap("actions")
-		public List<Link> getActions() {
+		public List<Link> getRenderableActions() {
 			List<Link> actions = super.getActions().stream()
 					.collect(Collectors.toList());
 			if (actions.isEmpty()) {

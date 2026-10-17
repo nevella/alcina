@@ -17,8 +17,6 @@ package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
 
-import com.google.gwt.dom.client.mutations.MutationGroup;
-
 import cc.alcina.framework.common.client.util.Ax;
 
 /**

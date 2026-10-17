@@ -562,6 +562,16 @@ public abstract class FragmentNode extends Model.Fields
 			other.nodes().append(FragmentNode.this);
 		}
 
+		public void wrap(FragmentNode toWrap) {
+			toWrap.nodes().wrapWith(FragmentNode.this);
+		}
+
+		public void wrapMultiple(List<FragmentNode> toWrapNodes) {
+			FragmentNode first = Ax.first(toWrapNodes);
+			wrap(first);
+			toWrapNodes.stream().skip(1).forEach(this::append);
+		}
+
 		public void strip() {
 			withMutating(() -> provideNode().strip());
 		}

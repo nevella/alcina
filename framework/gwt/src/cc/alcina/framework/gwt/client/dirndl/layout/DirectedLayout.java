@@ -58,7 +58,6 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Bidi;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
@@ -1694,7 +1693,7 @@ public class DirectedLayout implements AlcinaProcess {
 				boolean hasTransform = (Class) binding
 						.transform() != ToStringFunction.Identity.class;
 				if (hasTransform) {
-					ToStringFunction.Bidi bidiTransform = (Bidi) Registry
+					ToStringFunction.Bidi bidiTransform = (ToStringFunction.Bidi) Registry
 							.newInstanceOrImpl(binding.transform());
 					Function<String, ?> transform = bidiTransform.rightToLeft();
 					if (transform instanceof Binding.ContextSensitiveReverseTransform) {

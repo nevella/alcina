@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.FilterService;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 @Registration({ Model.Value.class, FormModel.Editor.class,
@@ -54,6 +55,7 @@ public class FilterEditor extends Model.Value<PropertyCriterion.Filter>
 	}
 
 	@Directed.Transform(StringInput.To.class)
+	@FocusOnBindMarker
 	String filterValue;
 
 	PropertyCriterion.Filter value;

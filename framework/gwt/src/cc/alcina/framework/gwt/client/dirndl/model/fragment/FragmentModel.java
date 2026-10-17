@@ -162,6 +162,26 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				FragmentNode.GenericComment.class));
 	}
 
+	/*
+	 * Transitional - for using both dom mutation and fragmentmodel on purely
+	 * server-side dom
+	 * 
+	 * Eventually, the server side dom should listen synthesize mutation events
+	 * and update via a batched Mutation event (as the client does)
+	 */
+	public void ensure(DomNode node) {
+		DomNode cursor = node;
+		for (;;) {
+			NodeTransformer transformer = domNodeTransformer.get(cursor);
+			if (transformer == null) {
+				cursor = cursor.parent();
+			} else {
+				addDescent(cursor);
+				break;
+			}
+		}
+	}
+
 	void addDescent(DomNode node) {
 		DomNode.DomNodeTraversal traversal = node.traversal();
 		traversal.forEach(n -> {

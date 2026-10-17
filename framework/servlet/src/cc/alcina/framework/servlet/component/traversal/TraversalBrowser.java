@@ -105,6 +105,10 @@ public class TraversalBrowser {
 			return get().place;
 		}
 
+		/*
+		 * #impl - if you see an NPE here, check your configuration - it
+		 * requires TraversalObserver.enabled=true
+		 */
 		public static SelectionTraversal traversal() {
 			return get().traversal;
 		}

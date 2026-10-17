@@ -255,7 +255,7 @@ public class RemoteComponentUi {
 	/**
 	 * <p>
 	 * Most mutations of browser dom are either upstream (Environment/Romcom
-	 * server) of 'downstream' (user modification of a ContentEditable).
+	 * server) or 'downstream' (user modification of a ContentEditable).
 	 * <p>
 	 * But there's a _small_ window of this-app-modifying-dom behaviour:
 	 * AttributeBehaviorHandler. This class propagates those changes back to the

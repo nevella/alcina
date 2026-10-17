@@ -372,6 +372,9 @@ edit-value textarea {
   opacity: 0;
   transform: translateX(-100%);
 }
+.dl-status > .element > a {
+  color: #ccf;
+}
 
 caught {
   display: block;
@@ -1313,6 +1316,32 @@ gallery-sequence-area > sequence-component > sequence > table {
   background: white;
 }
 
+fragment-document-area > contents {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 3rem;
+  background: white;
+  max-width: 500px;
+  margin: 0 auto;
+}
+fragment-document-area > contents > textarea {
+  height: 10rem;
+}
+fragment-document-area > contents > document-tree-representation {
+  display: block;
+}
+fragment-document-area > contents > document-tree-representation > textarea {
+  padding: 1rem;
+  border: solid 1px #ccc;
+  height: 20rem;
+  width: 30rem;
+  size-adjust: none;
+}
+fragment-document-area > contents > a {
+  align-self: center;
+}
+
 overlay > menu {
   background: white;
   user-select: none;
@@ -1964,6 +1993,7 @@ overlay > .decorator-suggestor > suggestor {
   border-radius: 4px;
   display: flex;
   flex-direction: column;
+  padding: 0.8rem 0;
 }
 overlay > .decorator-suggestor > suggestor > results {
   display: contents;
@@ -1976,6 +2006,10 @@ overlay > .decorator-suggestor > suggestor > choice, overlay > .decorator-sugges
 }
 overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-suggestor > suggestor > choice[index-selected], overlay > .decorator-suggestor > suggestor > results > choice:hover, overlay > .decorator-suggestor > suggestor > results > choice[index-selected] {
   background-color: #00000010;
+}
+overlay > .decorator-suggestor > suggestor > choice, overlay > .decorator-suggestor > suggestor > results > choice {
+  padding: 0.4rem 1rem;
+  line-height: unset;
 }
 
 search-definition-editor {
@@ -2011,6 +2045,7 @@ search-definition-editor > choice-editor > edit choice-node {
 }
 search-definition-editor > choice-editor > edit choice-node > searchable {
   display: inline-flex;
+  align-items: center;
 }
 search-definition-editor > choice-editor > edit choice-node > searchable > name {
   display: inline-block;
@@ -2034,6 +2069,9 @@ search-definition-editor > choice-editor > edit choice-node > searchable > value
 search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable > value-editor > input {
   border-color: transparent;
   background-color: transparent;
+}
+search-definition-editor > choice-editor > edit choice-node > searchable > button[model-event="ModelEvents.Delete"] {
+  display: none;
 }
 search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:focus-within > value-editor > input, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > select, search-definition-editor > choice-editor > edit choice-node > searchable:hover > value-editor > input {
   background-color: white;
