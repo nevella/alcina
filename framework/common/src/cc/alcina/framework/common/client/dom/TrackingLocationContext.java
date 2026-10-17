@@ -985,9 +985,13 @@ class TrackingLocationContext implements LocationContext {
 		 * false but the ancestry chain to document still intact
 		 */
 		DomNode documentElementNode = document.getDocumentElementNode();
-		Preconditions.checkState(containingNode.isAttached()
+		/*
+		 * if the containingnode was detached, there's no optimisation possible
+		 */
+		boolean detached = !(containingNode.isAttached()
 				|| documentElementNode.isAncestorOf(containingNode));
-		if (indexTuple.start || containingNode == documentElementNode) {
+		if (!detached && (indexTuple.start
+				|| containingNode == documentElementNode)) {
 			/*
 			 * note - almost always the former case. We *could* optimise for
 			 * node ends (not internal locations) - but that would require

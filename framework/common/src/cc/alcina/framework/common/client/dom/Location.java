@@ -1511,27 +1511,38 @@ public class Location implements Comparable<Location> {
 		markCurrentMutationPosition();
 		index += delta.index;
 		treeIndex += delta.treeIndex;
-		// will never be different
-		// start = delta.start;
-		int treeIndexDelta = treeIndex
-				- containingNode.asLocation().getTreeIndex();
-		if (treeIndexDelta != 0) {
-			/*
-			 * if location is a start-of-node location, containingNode is
-			 * immutable, (unless containingnode itself was removed)
-			 * 
-			 * otherwise split/wrap can cause container changes
-			 */
-			DomNode cursor = containingNode;
-			while (cursor != null
-					&& cursor.asLocation().getTreeIndex() != treeIndex) {
-				if (treeIndexDelta > 0) {
-					cursor = cursor.relative().treeSubsequentNode();
-				} else {
-					cursor = cursor.relative().treePreviousNode();
+		/*
+		 * Optimised search for modified containingNode (if attached)
+		 */
+		if (containingNode.isAttached()) {
+			// will never be different
+			// start = delta.start;
+			int treeIndexDelta = treeIndex
+					- containingNode.asLocation().getTreeIndex();
+			if (treeIndexDelta != 0) {
+				/*
+				 * if location is a start-of-node location, containingNode is
+				 * immutable, (unless containingnode itself was removed)
+				 * 
+				 * otherwise split/wrap can cause container changes
+				 */
+				DomNode cursor = containingNode;
+				while (cursor != null
+						&& cursor.asLocation().getTreeIndex() != treeIndex) {
+					if (treeIndexDelta > 0) {
+						cursor = cursor.relative().treeSubsequentNode();
+					} else {
+						cursor = cursor.relative().treePreviousNode();
+					}
 				}
+				containingNode = cursor;
 			}
-			containingNode = cursor;
+		} else {
+			/*
+			 * non-optimised case (detached containingNode) - binary search
+			 */
+			containingNode = locationContext.getContainingNode(this,
+					locationContext.getDocumentElementNode().location);
 		}
 	}
 
