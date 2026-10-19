@@ -72,6 +72,8 @@ import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
  */
 public class Element extends Node implements ClientDomElement,
 		org.w3c.dom.Element, EventListener, HasHandlers {
+	private static final transient String CONTENTEDITABLE = "contenteditable";
+
 	/*
 	 * merker for table structural elements, indicating their content cannot
 	 * include arbitrary elements
@@ -1604,6 +1606,18 @@ public class Element extends Node implements ClientDomElement,
 	public void ensureBehavior(ElementBehavior behavior) {
 		if (!hasBehavior(behavior.getClass())) {
 			addBehavior(behavior);
+		}
+	}
+
+	public boolean isContentEditable() {
+		return Boolean.valueOf(getAttribute(CONTENTEDITABLE));
+	}
+
+	public void setContentEditable(boolean contentEditable) {
+		if (!contentEditable) {
+			removeAttribute(CONTENTEDITABLE);
+		} else {
+			setAttribute(CONTENTEDITABLE, Boolean.TRUE.toString());
 		}
 	}
 }

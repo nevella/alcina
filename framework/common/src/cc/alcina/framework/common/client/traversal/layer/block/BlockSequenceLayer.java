@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser;
 import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TextUtils;
 
@@ -91,7 +92,9 @@ public class BlockSequenceLayer extends Layer<MeasureSelection>
 
 		@Override
 		public String toString() {
-			return String.format("%10s %s", get().start.getIndex(),
+			return Ax.format("%s %s",
+					CommonUtils.padStringLeft(
+							String.valueOf(get().start.getIndex()), 10, ' '),
 					TextUtils.normalizeWhitespace(get().text()));
 		}
 	}

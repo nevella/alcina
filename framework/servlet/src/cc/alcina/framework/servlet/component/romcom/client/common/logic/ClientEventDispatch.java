@@ -118,7 +118,9 @@ class ClientEventDispatch {
 					boolean explicitStopPropagation = false;
 					if (typeName.equals("keydown")
 							&& event.getKeyCode() == KeyCodes.KEY_ENTER) {
-						if (elem.hasTagName("textarea")) {
+						if (elem.hasTagName("textarea") || elem
+								.firstInAncestry(Element::isContentEditable)
+								.isPresent()) {
 							explicitStopPropagation = true;
 						} else {
 							explicitPrevent = true;
