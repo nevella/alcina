@@ -1161,9 +1161,12 @@ public class WidgetUtils {
 	}
 
 	public static void showInNewTabOrThisWindow(String url) {
-		Event currentEvent = Event.getCurrentEvent();
-		currentEvent.preventDefault();
-		if (WidgetUtils.isNewTabModifier(currentEvent)) {
+		showInNewTabOrThisWindow(url, Event.getCurrentEvent());
+	}
+
+	public static void showInNewTabOrThisWindow(String url, NativeEvent event) {
+		event.preventDefault();
+		if (WidgetUtils.isNewTabModifier(event)) {
 			showInNewTab(url);
 		} else {
 			Window.Location.assign(url);

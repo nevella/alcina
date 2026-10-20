@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,16 +28,13 @@ public interface InternalAnchorHistoryRouter extends Click.Handler {
 			if (Ax.isBlank(href)) {
 				return;
 			}
-			if (WidgetUtils.isNewTabModifier(nativeEvent)) {
-				return;
-			}
 			Url url = Url.parse(Window.Location.getHref());
 			String strUrlEndingAtPath = url.strUrlEndingAtPath();
 			if (href.startsWith(strUrlEndingAtPath)) {
 				href = href.substring(strUrlEndingAtPath.length());
 			}
 			if (href.startsWith("/")) {
-				History.newItem(href);
+				WidgetUtils.showInNewTabOrThisWindow(href, nativeEvent);
 			}
 		}
 	}

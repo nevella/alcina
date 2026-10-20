@@ -1613,11 +1613,11 @@ public class Element extends Node implements ClientDomElement,
 		return Boolean.valueOf(getAttribute(CONTENTEDITABLE));
 	}
 
+	public void removeContentEditable() {
+		removeAttribute(CONTENTEDITABLE);
+	}
+
 	public void setContentEditable(boolean contentEditable) {
-		if (!contentEditable) {
-			removeAttribute(CONTENTEDITABLE);
-		} else {
-			setAttribute(CONTENTEDITABLE, Boolean.TRUE.toString());
-		}
+		setAttribute(CONTENTEDITABLE, String.valueOf(contentEditable));
 	}
 }

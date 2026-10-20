@@ -7,7 +7,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -183,7 +182,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	@AlcinaTransient
 	@JsonIgnore
 	public Class<? extends Entity> getClazz() {
-		if (!GWT.isClient() && clazz == null && entityClassName != null) {
+		if (clazz == null && entityClassName != null) {
 			clazz = Reflections.forName(entityClassName);
 		}
 		return this.clazz;

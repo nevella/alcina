@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Query;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -22,14 +23,18 @@ public class DomainHandlerClient implements DomainHandler {
 	@Override
 	public <V extends Entity> void async(EntityLocator locator, boolean create,
 			Consumer<V> resultConsumer) {
+		Class<? extends Entity> clazz = locator.getClazz();
 		if (create) {
-			V obj = (V) TransformManager.get()
-					.createProvisionalObject(locator.getClazz());
+			V obj = (V) TransformManager.get().createProvisionalObject(clazz);
 			Scheduler.get().scheduleDeferred(() -> resultConsumer.accept(obj));
 			return;
 		} else {
-			Registry.impl(DomainHandlerClientRemoteResolver.class,
-					locator.getClazz()).resolve(locator, resultConsumer);
+			Query<DomainHandlerClientRemoteResolver> query = Registry
+					.query(DomainHandlerClientRemoteResolver.class);
+			if (clazz != null) {
+				query.addKeys(clazz);
+			}
+			query.impl().resolve(locator, resultConsumer);
 		}
 	}
 
