@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
@@ -551,6 +552,17 @@ public class BranchingParser {
 
 		public List<BranchNode> getNodes() {
 			return sequenceObserver.branchNodes.values().stream().toList();
+		}
+	}
+
+	public static class BranchSelection extends MeasureSelection {
+		public BranchSelection(Selection parent, Branch branch) {
+			super(parent, branch.match);
+			branch.match.setData(branch);
+		}
+
+		public BranchingParser.Branch getBranch() {
+			return (Branch) get().getData();
 		}
 	}
 
