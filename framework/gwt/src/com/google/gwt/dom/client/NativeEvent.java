@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Al;
 
 /**
  * <p>
@@ -302,6 +303,9 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	}
 
 	public BeforeInputEventData getBeforeInputEventData() {
+		if (Al.isBrowser()) {
+			data.populateBeforeInput(this);
+		}
 		return new BeforeInputEventData();
 	}
 
@@ -613,6 +617,15 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 				return mac ? Modifier.META : CTRL;
 			default:
 				return this;
+			}
+		}
+
+		public boolean isNonInput() {
+			switch (this) {
+			case SHIFT:
+				return false;
+			default:
+				return true;
 			}
 		}
 	}

@@ -14,6 +14,7 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding.MatchData;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
@@ -64,6 +65,16 @@ public final class InterceptKeys extends ElementBehavior.Parameterised {
 			return KeyBinding.MatchData.matchesEvent(nativeEvent, key, keyCode,
 					modifiers);
 		}
+
+		public boolean hasNonInputModifiers() {
+			return modifiers.stream().anyMatch(Modifier::isNonInput);
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("key", key, "keyCode", keyCode,
+					"modifiers", modifiers);
+		}
 	}
 
 	List<Entry> entries = new ArrayList<>();
@@ -90,7 +101,6 @@ public final class InterceptKeys extends ElementBehavior.Parameterised {
 		return Objects.hash(entries);
 	}
 
-	@Override
 	public String getEventType() {
 		return BrowserEvents.KEYDOWN;
 	}
@@ -99,11 +109,15 @@ public final class InterceptKeys extends ElementBehavior.Parameterised {
 	public void onNativeEvent(NativePreviewEvent event,
 			Element registeredElement) {
 		NativeEvent nativeEvent = event.getNativeEvent();
-		if (KeyboardShortcuts
-				.eventFiredFromInputish(nativeEvent.getEventTarget())) {
-			return;
-		}
-		if (entries.stream().anyMatch(e -> e.matches(nativeEvent))) {
+		boolean eventFiredFromInputish = KeyboardShortcuts
+				.eventFiredFromInputish(nativeEvent.getEventTarget());
+		if (entries.stream().anyMatch(e -> {
+			boolean matches = e.matches(nativeEvent);
+			if (matches && eventFiredFromInputish) {
+				matches &= e.hasNonInputModifiers();
+			}
+			return matches;
+		})) {
 			nativeEvent.preventDefault();
 		}
 	}
@@ -111,5 +125,13 @@ public final class InterceptKeys extends ElementBehavior.Parameterised {
 	@Override
 	public List<?> provideParameters() {
 		return List.of(entries);
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder format = new FormatBuilder();
+		format.line("%s - registered shortcuts", getClass().getSimpleName());
+		entries.forEach(format::line);
+		return format.toString();
 	}
 }
