@@ -22,8 +22,10 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 
+import cc.alcina.framework.common.client.gwittir.validator.Iso8601DateValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ShortIso8601DateValidator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -587,10 +589,26 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		focus();
 	}
 
-	@Registration({ Model.Value.class, FormModel.Editor.class, Date.class })
+	public static class DateTimeInput extends DateInput {
+		public DateTimeInput() {
+		}
+
+		protected void setType() {
+			setType("datetime-local");
+		}
+
+		protected void checkType(String type) {
+			Preconditions.checkArgument(type.equals("datetime-local"));
+		}
+	}
+
 	public static class DateInput extends StringInput
 			implements DomEvents.KeyPress.Handler, DomEvents.Focusout.Handler {
 		public DateInput() {
+			setType();
+		}
+
+		protected void setType() {
 			setType("date");
 		}
 
@@ -609,8 +627,12 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 		@Override
 		public void setType(String type) {
-			Preconditions.checkArgument(type.equals("date"));
+			checkType(type);
 			super.setType(type);
+		}
+
+		protected void checkType(String type) {
+			Preconditions.checkArgument(type.equals("date"));
 		}
 
 		long lastKeyPress;
@@ -630,9 +652,42 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		}
 	}
 
+	@Registration(
+		value = { Model.Value.class, FormModel.Editor.class, Date.class },
+		priority = Priority.REMOVE)
+	public static class DateTimeEditor extends DateEditor {
+		@Override
+		public void onNodeContext(NodeContext event) {
+			input = new DateTimeInput();
+			Iso8601DateValidator validator = new Iso8601DateValidator();
+			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
+					.inverseValidator();
+			Function<String, Date> typedValidator = (Function<String, Date>) validator;
+			from(properties().value()).map(revTypedValidator)
+					.to(input.properties().value()).map(typedValidator).bidi();
+			from(properties().value()).withSetOnInitialise(false)
+					.signal(this::emitValueChange);
+		}
+
+		public static class To implements ModelTransform<Date, DateTimeEditor> {
+			@Override
+			public DateTimeEditor apply(Date t) {
+				return new DateTimeEditor(t);
+			}
+		}
+
+		public DateTimeEditor() {
+		}
+
+		public DateTimeEditor(Date date) {
+			super(date);
+		}
+	}
+
 	@Directed.Delegating
 	@Bean(PropertySource.FIELDS)
 	@TypedProperties
+	@Registration({ Model.Value.class, FormModel.Editor.class, Date.class })
 	public static class DateEditor extends Model.Value<Date>
 			implements ModelEvents.Change.Handler {
 		PackageProperties._StringInput_DateEditor.InstanceProperties
@@ -647,14 +702,22 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		}
 
 		@Directed
-		DateInput input = new DateInput();
+		DateInput input;
 
 		public void setValue(Date value) {
 			set("value", this.value, value, () -> this.value = value);
 		}
 
+		public DateEditor() {
+		}
+
 		public DateEditor(Date date) {
 			setValue(date);
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			input = new DateInput();
 			ShortIso8601DateValidator validator = new ShortIso8601DateValidator();
 			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
 					.inverseValidator();

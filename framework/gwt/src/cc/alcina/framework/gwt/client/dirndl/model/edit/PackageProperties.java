@@ -37,6 +37,8 @@ public class PackageProperties {
     public static _StringInput stringInput = new _StringInput();
     public static _StringInput_DateEditor stringInput_dateEditor = new _StringInput_DateEditor();
     public static _StringInput_DateInput stringInput_dateInput = new _StringInput_DateInput();
+    public static _StringInput_DateTimeEditor stringInput_dateTimeEditor = new _StringInput_DateTimeEditor();
+    public static _StringInput_DateTimeInput stringInput_dateTimeInput = new _StringInput_DateTimeInput();
     public static _StringInput_Editor stringInput_editor = new _StringInput_Editor();
     public static _SuggestingNode suggestingNode = new _SuggestingNode();
     
@@ -479,6 +481,72 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(StringInput.DateInput instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _StringInput_DateTimeEditor implements TypedProperty.Container {
+      public TypedProperty<StringInput.DateTimeEditor, StringInput.DateInput> input = new TypedProperty<>(StringInput.DateTimeEditor.class, "input");
+      public TypedProperty<StringInput.DateTimeEditor, Date> value = new TypedProperty<>(StringInput.DateTimeEditor.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<StringInput.DateTimeEditor> {
+        public  InstanceProperties(StringInput.DateTimeEditor source){super(source);}
+        public InstanceProperty<StringInput.DateTimeEditor, StringInput.DateInput> input(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeEditor.input);}
+        public InstanceProperty<StringInput.DateTimeEditor, Date> value(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeEditor.value);}
+      }
+      
+      public  InstanceProperties instance(StringInput.DateTimeEditor instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _StringInput_DateTimeInput implements TypedProperty.Container {
+      public TypedProperty<StringInput.DateTimeInput, String> autocomplete = new TypedProperty<>(StringInput.DateTimeInput.class, "autocomplete");
+      public TypedProperty<StringInput.DateTimeInput, List> behaviors = new TypedProperty<>(StringInput.DateTimeInput.class, "behaviors");
+      public TypedProperty<StringInput.DateTimeInput, Boolean> commitOnEnter = new TypedProperty<>(StringInput.DateTimeInput.class, "commitOnEnter");
+      public TypedProperty<StringInput.DateTimeInput, String> currentValue = new TypedProperty<>(StringInput.DateTimeInput.class, "currentValue");
+      public TypedProperty<StringInput.DateTimeInput, Boolean> disabled = new TypedProperty<>(StringInput.DateTimeInput.class, "disabled");
+      public TypedProperty<StringInput.DateTimeInput, Boolean> ensureContentVisible = new TypedProperty<>(StringInput.DateTimeInput.class, "ensureContentVisible");
+      public TypedProperty<StringInput.DateTimeInput, Boolean> focusOnBind = new TypedProperty<>(StringInput.DateTimeInput.class, "focusOnBind");
+      public TypedProperty<StringInput.DateTimeInput, String> inputMode = new TypedProperty<>(StringInput.DateTimeInput.class, "inputMode");
+      public TypedProperty<StringInput.DateTimeInput, Integer> maxLength = new TypedProperty<>(StringInput.DateTimeInput.class, "maxLength");
+      public TypedProperty<StringInput.DateTimeInput, Boolean> moveCaretToEndOnFocus = new TypedProperty<>(StringInput.DateTimeInput.class, "moveCaretToEndOnFocus");
+      public TypedProperty<StringInput.DateTimeInput, String> pattern = new TypedProperty<>(StringInput.DateTimeInput.class, "pattern");
+      public TypedProperty<StringInput.DateTimeInput, String> placeholder = new TypedProperty<>(StringInput.DateTimeInput.class, "placeholder");
+      public TypedProperty<StringInput.DateTimeInput, Boolean> preserveSelectionOverFocusChange = new TypedProperty<>(StringInput.DateTimeInput.class, "preserveSelectionOverFocusChange");
+      public TypedProperty<StringInput.DateTimeInput, String> rows = new TypedProperty<>(StringInput.DateTimeInput.class, "rows");
+      public TypedProperty<StringInput.DateTimeInput, Boolean> selectAllOnFocus = new TypedProperty<>(StringInput.DateTimeInput.class, "selectAllOnFocus");
+      public TypedProperty<StringInput.DateTimeInput, String> spellcheck = new TypedProperty<>(StringInput.DateTimeInput.class, "spellcheck");
+      public TypedProperty<StringInput.DateTimeInput, String> tag = new TypedProperty<>(StringInput.DateTimeInput.class, "tag");
+      public TypedProperty<StringInput.DateTimeInput, String> title = new TypedProperty<>(StringInput.DateTimeInput.class, "title");
+      public TypedProperty<StringInput.DateTimeInput, String> type = new TypedProperty<>(StringInput.DateTimeInput.class, "type");
+      public TypedProperty<StringInput.DateTimeInput, String> value = new TypedProperty<>(StringInput.DateTimeInput.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<StringInput.DateTimeInput> {
+        public  InstanceProperties(StringInput.DateTimeInput source){super(source);}
+        public InstanceProperty<StringInput.DateTimeInput, String> autocomplete(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.autocomplete);}
+        public InstanceProperty<StringInput.DateTimeInput, List> behaviors(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.behaviors);}
+        public InstanceProperty<StringInput.DateTimeInput, Boolean> commitOnEnter(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.commitOnEnter);}
+        public InstanceProperty<StringInput.DateTimeInput, String> currentValue(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.currentValue);}
+        public InstanceProperty<StringInput.DateTimeInput, Boolean> disabled(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.disabled);}
+        public InstanceProperty<StringInput.DateTimeInput, Boolean> ensureContentVisible(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.ensureContentVisible);}
+        public InstanceProperty<StringInput.DateTimeInput, Boolean> focusOnBind(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.focusOnBind);}
+        public InstanceProperty<StringInput.DateTimeInput, String> inputMode(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.inputMode);}
+        public InstanceProperty<StringInput.DateTimeInput, Integer> maxLength(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.maxLength);}
+        public InstanceProperty<StringInput.DateTimeInput, Boolean> moveCaretToEndOnFocus(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.moveCaretToEndOnFocus);}
+        public InstanceProperty<StringInput.DateTimeInput, String> pattern(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.pattern);}
+        public InstanceProperty<StringInput.DateTimeInput, String> placeholder(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.placeholder);}
+        public InstanceProperty<StringInput.DateTimeInput, Boolean> preserveSelectionOverFocusChange(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.preserveSelectionOverFocusChange);}
+        public InstanceProperty<StringInput.DateTimeInput, String> rows(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.rows);}
+        public InstanceProperty<StringInput.DateTimeInput, Boolean> selectAllOnFocus(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.selectAllOnFocus);}
+        public InstanceProperty<StringInput.DateTimeInput, String> spellcheck(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.spellcheck);}
+        public InstanceProperty<StringInput.DateTimeInput, String> tag(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.tag);}
+        public InstanceProperty<StringInput.DateTimeInput, String> title(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.title);}
+        public InstanceProperty<StringInput.DateTimeInput, String> type(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.type);}
+        public InstanceProperty<StringInput.DateTimeInput, String> value(){return new InstanceProperty<>(source,PackageProperties.stringInput_dateTimeInput.value);}
+      }
+      
+      public  InstanceProperties instance(StringInput.DateTimeInput instance) {
         return new InstanceProperties( instance);
       }
       
