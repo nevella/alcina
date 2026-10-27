@@ -22,6 +22,12 @@ public abstract class SearchOrder<T, V extends Comparable>
 		return apply(o);
 	}
 
+	public void setAsFirstOrder(BindableSearchDefinition def,
+			boolean ascending) {
+		def.getSearchOrders().clear();
+		def.getSearchOrders().addOrder(this, ascending);
+	}
+
 	@Override
 	public int compare(T o1, T o2) {
 		int comparison = CommonUtils.compareWithNullMinusOne(comparable(o1),

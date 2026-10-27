@@ -172,8 +172,14 @@ public abstract class SearchCriterion extends Bindable
 		group.addCriterion(this);
 	}
 
-	public void addToSoleCriteriaGroup(SearchDefinition def) {
+	public <SC extends SearchCriterion> SC
+			addToSoleCriteriaGroup(SearchDefinition def) {
 		def.addCriterionToSoleCriteriaGroup(this);
+		return (SC) this;
+	}
+
+	public void addTo(LogicalCriterion logicalCriterion) {
+		logicalCriterion.add(this);
 	}
 
 	public CollectionProvider collectionProvider() {

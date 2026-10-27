@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher.DomainSearcherFilter;
@@ -25,6 +26,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class SearchHandlers {
+	public static LooseContext.Key<SearchDefinition> CONTEXT_DEFINITION = LooseContext
+			.key(SearchHandlers.class, "CONTEXT_DEFINITION");
+
 	// immutable post-setup
 	static UnsortedMultikeyMap<DomainCriterionHandler> handlers = new UnsortedMultikeyMap<DomainCriterionHandler>(
 			2);
@@ -65,9 +69,15 @@ public class SearchHandlers {
 		}
 	}
 
-	private static DomainCriterionHandler
+	public static DomainCriterionHandler
 			getCriterionHandler(SearchDefinition def, SearchCriterion sc) {
-		return SearchHandlers.handlers.get(def.getClass(), sc.getClass());
+		DomainCriterionHandler handler = SearchHandlers.handlers
+				.get(def.getClass(), sc.getClass());
+		if (handler == null) {
+			handler = SearchHandlers.handlers.get(SearchDefinition.class,
+					sc.getClass());
+		}
+		return handler;
 	}
 
 	static void processDefinitionHandler(SearchDefinition def,
@@ -91,8 +101,10 @@ public class SearchHandlers {
 
 	static void processHandlers(SearchDefinition def,
 			Consumer<DomainFilter> filterConsumer) {
-		processHandlers(def, filterConsumer, 0);
-		processHandlers(def, filterConsumer, 1);
+		CONTEXT_DEFINITION.runWithValue(() -> {
+			processHandlers(def, filterConsumer, 0);
+			processHandlers(def, filterConsumer, 1);
+		}, def);
 	}
 
 	/*
