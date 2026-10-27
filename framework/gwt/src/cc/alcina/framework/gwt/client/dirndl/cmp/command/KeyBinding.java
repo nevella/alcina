@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.cmp.command;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -35,6 +36,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Target({ ElementType.TYPE })
+@Repeatable(KeyBinding.Keybindings.class)
 public @interface KeyBinding {
 	Class<? extends CommandContext>[] context() default {};
 
@@ -137,13 +139,31 @@ public @interface KeyBinding {
 				int keyCode, Set<NativeEvent.Modifier> modifiers) {
 			Set<NativeEvent.Modifier> eventModifiers = nativeEvent
 					.getModifiers();
+			if (!modifiers.equals(eventModifiers)) {
+				return false;
+			}
 			if (key.length() > 0) {
 				String eventKey = nativeEvent.getKey();
 				if (eventKey != null && !eventKey.equalsIgnoreCase(key)) {
 					// handle alt-x being translated to a adifferent key */
-					if (nativeEvent.getKeyCode() != (int) key.toUpperCase()
-							.charAt(0)) {
+					if (eventModifiers.isEmpty()) {
 						return false;
+					} else {
+						if (nativeEvent.getKeyCode() != (int) key.toUpperCase()
+								.charAt(0)) {
+							// handle alt-/ being translated to a adifferent
+							// key. Can flesh out with other codes
+							// */
+							boolean keyEventCodeMatch = false;
+							switch (nativeEvent.getKeyEventCode()) {
+							case "Slash":
+								keyEventCodeMatch = key.equals("/");
+								break;
+							}
+							if (!keyEventCodeMatch) {
+								return false;
+							}
+						}
 					}
 				}
 			} else {
@@ -162,9 +182,6 @@ public @interface KeyBinding {
 					}
 				}
 			}
-			if (!modifiers.equals(eventModifiers)) {
-				return false;
-			}
 			return true;
 		}
 	}
@@ -180,8 +197,8 @@ public @interface KeyBinding {
 				.newUnqiueMap();
 
 		/*
-		 * If there are multiple keybinding annotations (for a chord), just use
-		 * the first
+		 * If there are multiple keybinding annotations (for a chord - or for
+		 * multiple bindings for the one command), just use the first
 		 */
 		public static synchronized Set<Class<? extends CommandContext>>
 				getContexts(Class<? extends ModelEvent> clazz) {

@@ -184,6 +184,10 @@ public class DomDispatch implements DomDispatchContract {
 		return jsoImpl().eventGetKeyCode(evt);
 	}
 
+	public String eventGetKeyEventCode(NativeEventJso evt) {
+		return jsoImpl().eventGetKeyEventCode(evt);
+	}
+
 	public boolean eventGetMetaKey(NativeEventJso evt) {
 		return jsoImpl().eventGetMetaKey(evt);
 	}

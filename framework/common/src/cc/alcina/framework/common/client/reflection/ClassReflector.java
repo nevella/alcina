@@ -246,6 +246,17 @@ public class ClassReflector<T> implements HasAnnotations {
 		return annotationProvider.hasAnnotation(annotationClass);
 	}
 
+	public <A extends Annotation> boolean
+			hasMaybeRepeated(Class<A> annotationClass) {
+		if (has(annotationClass)) {
+			return true;
+		}
+		if (annotations(annotationClass).size() > 0) {
+			return true;
+		}
+		return false;
+	}
+
 	public boolean hasNoArgsConstructor() {
 		return noArgsConstructor != null;
 	}

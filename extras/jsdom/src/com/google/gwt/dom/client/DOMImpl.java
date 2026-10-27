@@ -153,7 +153,11 @@ abstract class DOMImpl {
 	}
 
 	protected final native int eventGetKeyCode(NativeEventJso evt) /*-{
-    return evt.keyCode | 0;
+    return evt.keyCode || 0;
+	}-*/;
+
+	protected final native String eventGetKeyEventCode(NativeEventJso evt) /*-{
+    return evt.code || null;
 	}-*/;
 
 	protected native boolean eventGetMetaKey(NativeEventJso evt) /*-{

@@ -248,6 +248,20 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	}
 
 	/**
+	 * Gets the key code (code associated with the physical key) associated with
+	 * this event.
+	 *
+	 * @return the key code
+	 * @see com.google.gwt.event.dom.client.KeyCodes
+	 */
+	public final String getKeyEventCode() {
+		if (data.keyEventCode == null && jso != null) {
+			data.keyEventCode = DOMImpl.impl.eventGetKeyEventCode(jso);
+		}
+		return data.keyEventCode;
+	}
+
+	/**
 	 * Gets whether the META key was depressed when the given event occurred.
 	 *
 	 * @return <code>true</code> if META was depressed when the event occurred
@@ -474,6 +488,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		getShiftKey();
 		getCtrlKey();
 		getString();
+		getKeyEventCode();
 		data.populateBeforeInput(this);
 		data.toSerializableForm();
 		jso = null;
@@ -557,6 +572,11 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		String beforeInputType;
 
 		Boolean beforeInputComposing;
+
+		/*
+		 * https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code
+		 */
+		String keyEventCode;
 
 		void toSerializableForm() {
 			this.eventTarget = EventTarget.serializableForm(this.eventTarget);
