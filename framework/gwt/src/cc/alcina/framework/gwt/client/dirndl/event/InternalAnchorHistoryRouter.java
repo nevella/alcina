@@ -33,8 +33,10 @@ public interface InternalAnchorHistoryRouter extends Click.Handler {
 			if (href.startsWith(strUrlEndingAtPath)) {
 				href = href.substring(strUrlEndingAtPath.length());
 			}
-			if (href.startsWith("/")
-					&& !WidgetUtils.isNewTabModifier(nativeEvent)) {
+			boolean fireContentEditable = elem
+					.firstInAncestry(Element::isContentEditable).isPresent();
+			if (fireContentEditable || (href.startsWith("/")
+					&& !WidgetUtils.isNewTabModifier(nativeEvent))) {
 				WidgetUtils.showInNewTabOrThisWindow(href, nativeEvent);
 			}
 		}

@@ -139,7 +139,7 @@ public @interface KeyBinding {
 					.getModifiers();
 			if (key.length() > 0) {
 				String eventKey = nativeEvent.getKey();
-				if (!eventKey.equalsIgnoreCase(key)) {
+				if (eventKey != null && !eventKey.equalsIgnoreCase(key)) {
 					// handle alt-x being translated to a adifferent key */
 					if (nativeEvent.getKeyCode() != (int) key.toUpperCase()
 							.charAt(0)) {
