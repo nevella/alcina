@@ -3,7 +3,7 @@ var __gwtModuleFunction = $wnd.cc_alcina_framework_servlet_component_romcom_Remo
 var $sendStats = __gwtModuleFunction.__sendStats;
 $sendStats('moduleStartup', 'moduleEvalStart');
 var $gwt_version = "0.0.0";
-var $strongName = 'BFCA45A60A0909D9B7E7E0C90F3D6A8E';
+var $strongName = 'E0B31282E6C5307FAB4D7AE6BE3D3F53';
 var $gwt = {};
 var $doc = $wnd.document;
 var $moduleName, $moduleBase;
@@ -4140,7 +4140,7 @@ _.apply_1 = function apply_97(arg0){
   return $clinit_StreamImpl() , initUnidimensionalArray(Ljava_lang_Object_2_classLit, $intern_6, 1, arg0, 5, 1);
 }
 ;
-function $lambda$0_13(this$static, action_1, u_1){
+function $lambda$0_12(this$static, action_1, u_1){
   action_1.accept(this$static.map_0.apply_0(u_1));
 }
 
@@ -4164,7 +4164,7 @@ function StreamImpl$MapToObjSpliterator$lambda$0$Type($$outer_0, action_1){
 
 defineClass(1026, 1, $intern_27, StreamImpl$MapToObjSpliterator$lambda$0$Type);
 _.accept = function accept_580(arg0){
-  $lambda$0_13(this.$$outer_0, this.action_1, arg0);
+  $lambda$0_12(this.$$outer_0, this.action_1, arg0);
 }
 ;
 function $accept_1(this$static, value_0){
@@ -80136,16 +80136,12 @@ function SyncMutations2(mutationsAccess){
 defineClass(1221, 1, {}, SyncMutations2);
 var Lcom_google_gwt_dom_client_mutations_SyncMutations2_2_classLit = createForClass('com.google.gwt.dom.client.mutations', 'SyncMutations2', 1221, Ljava_lang_Object_2_classLit);
 function $apply_2(this$static){
-  this$static.mutations.stream().flatMap(new SyncMutations2$SyncRemoteToLocal$lambda$8$Type).filter_0(new SyncMutations2$SyncRemoteToLocal$2methodref$remoteHasAttachId$Type).forEach_0(new SyncMutations2$SyncRemoteToLocal$lambda$10$Type(this$static));
+  this$static.mutations.stream().flatMap(new SyncMutations2$SyncRemoteToLocal$lambda$8$Type).filter_0(new SyncMutations2$SyncRemoteToLocal$3methodref$remoteHasAttachId$Type).forEach_0(new SyncMutations2$SyncRemoteToLocal$lambda$10$Type(this$static));
   this$static.mutations.stream().filter_0(new SyncMutations2$SyncRemoteToLocal$lambda$11$Type).filter_0(new SyncMutations2$SyncRemoteToLocal$lambda$12$Type).forEach_0(new SyncMutations2$SyncRemoteToLocal$lambda$13$Type(this$static));
   this$static.mutations.stream().filter_0(new SyncMutations2$SyncRemoteToLocal$lambda$5$Type).filter_0(new SyncMutations2$SyncRemoteToLocal$lambda$6$Type).forEach_0(new SyncMutations2$SyncRemoteToLocal$lambda$7$Type(this$static));
-  this$static.detach.forEach_0(new SyncMutations2$SyncRemoteToLocal$lambda$0$Type(this$static));
-  this$static.damaged.stream().map_3(new SyncMutations2$SyncRemoteToLocal$0methodref$ctor$Type(this$static)).forEach_0(new SyncMutations2$SyncRemoteToLocal$1methodref$sync$Type);
+  this$static.detach.forEach_0(new SyncMutations2$SyncRemoteToLocal$0methodref$removeFromParent$Type);
+  this$static.damaged.stream().map_3(new SyncMutations2$SyncRemoteToLocal$1methodref$ctor$Type(this$static)).forEach_0(new SyncMutations2$SyncRemoteToLocal$2methodref$sync$Type);
   this$static.mutations.stream().filter_0(new SyncMutations2$SyncRemoteToLocal$lambda$1$Type).forEach_0(new SyncMutations2$SyncRemoteToLocal$lambda$2$Type);
-}
-
-function $lambda$0_10(this$static, n_0){
-  $setAttached(n_0, false, false);
 }
 
 function $lambda$10_0(this$static, n_0){
@@ -80169,11 +80165,20 @@ function SyncMutations2$SyncRemoteToLocal(this$0, mutations){
 
 defineClass(658, 1, {}, SyncMutations2$SyncRemoteToLocal);
 var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal_2_classLit = createForClass('com.google.gwt.dom.client.mutations', 'SyncMutations2/SyncRemoteToLocal', 658, Ljava_lang_Object_2_classLit);
-function SyncMutations2$SyncRemoteToLocal$0methodref$ctor$Type(com_google_gwt_dom_client_mutations_SyncMutations2_SyncRemoteToLocal){
+function SyncMutations2$SyncRemoteToLocal$0methodref$removeFromParent$Type(){
+}
+
+defineClass(659, 1, $intern_27, SyncMutations2$SyncRemoteToLocal$0methodref$removeFromParent$Type);
+_.accept = function accept_546(arg0){
+  castTo(arg0, 24).removeFromParent();
+}
+;
+var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$0methodref$removeFromParent$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 659);
+function SyncMutations2$SyncRemoteToLocal$1methodref$ctor$Type(com_google_gwt_dom_client_mutations_SyncMutations2_SyncRemoteToLocal){
   this.com_google_gwt_dom_client_mutations_SyncMutations2_SyncRemoteToLocal = com_google_gwt_dom_client_mutations_SyncMutations2_SyncRemoteToLocal;
 }
 
-defineClass(662, 1, {}, SyncMutations2$SyncRemoteToLocal$0methodref$ctor$Type);
+defineClass(662, 1, {}, SyncMutations2$SyncRemoteToLocal$1methodref$ctor$Type);
 _.andThen = function andThen_84(after){
   return checkCriticalNotNull(after) , new Function$lambda$1$Type(this, after);
 }
@@ -80182,20 +80187,20 @@ _.apply_0 = function apply_88(arg0){
   return new SyncMutations2$SyncRemoteToLocal$Damaged(this.com_google_gwt_dom_client_mutations_SyncMutations2_SyncRemoteToLocal, castTo(arg0, 19));
 }
 ;
-var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$0methodref$ctor$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 662);
-function SyncMutations2$SyncRemoteToLocal$1methodref$sync$Type(){
+var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$1methodref$ctor$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 662);
+function SyncMutations2$SyncRemoteToLocal$2methodref$sync$Type(){
 }
 
-defineClass(663, 1, $intern_27, SyncMutations2$SyncRemoteToLocal$1methodref$sync$Type);
-_.accept = function accept_546(arg0){
+defineClass(663, 1, $intern_27, SyncMutations2$SyncRemoteToLocal$2methodref$sync$Type);
+_.accept = function accept_547(arg0){
   $sync_2(castTo(arg0, 525));
 }
 ;
-var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$1methodref$sync$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 663);
-function SyncMutations2$SyncRemoteToLocal$2methodref$remoteHasAttachId$Type(){
+var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$2methodref$sync$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 663);
+function SyncMutations2$SyncRemoteToLocal$3methodref$remoteHasAttachId$Type(){
 }
 
-defineClass(668, 1, {}, SyncMutations2$SyncRemoteToLocal$2methodref$remoteHasAttachId$Type);
+defineClass(668, 1, {}, SyncMutations2$SyncRemoteToLocal$3methodref$remoteHasAttachId$Type);
 _.negate = function negate_517(){
   return new Predicate$lambda$2$Type(this);
 }
@@ -80204,7 +80209,7 @@ _.test_1 = function test_521(arg0){
   return $getAttachId0(castTo(arg0, 49).remoteNode) != 0;
 }
 ;
-var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$2methodref$remoteHasAttachId$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 668);
+var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$3methodref$remoteHasAttachId$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 668);
 function $getNextCursor(this$static){
   var cursor, next;
   cursor = this$static.appendCursor;
@@ -80254,16 +80259,6 @@ function SyncMutations2$SyncRemoteToLocal$Damaged(this$1, elem){
 
 defineClass(525, 1, {525:1}, SyncMutations2$SyncRemoteToLocal$Damaged);
 var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$Damaged_2_classLit = createForClass('com.google.gwt.dom.client.mutations', 'SyncMutations2/SyncRemoteToLocal/Damaged', 525, Ljava_lang_Object_2_classLit);
-function SyncMutations2$SyncRemoteToLocal$lambda$0$Type($$outer_0){
-  this.$$outer_0 = $$outer_0;
-}
-
-defineClass(659, 1, $intern_27, SyncMutations2$SyncRemoteToLocal$lambda$0$Type);
-_.accept = function accept_547(arg0){
-  $lambda$0_10(this.$$outer_0, castTo(arg0, 24));
-}
-;
-var Lcom_google_gwt_dom_client_mutations_SyncMutations2$SyncRemoteToLocal$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 659);
 function SyncMutations2$SyncRemoteToLocal$lambda$1$Type(){
 }
 
@@ -87367,7 +87362,7 @@ function $advanceToNextSpliterator(this$static){
   return true;
 }
 
-function $lambda$0_11(this$static, n_0){
+function $lambda$0_10(this$static, n_0){
   if (n_0) {
     this$static.nextStream = n_0;
     this$static.next_0 = n_0.spliterator_0();
@@ -87401,7 +87396,7 @@ function StreamImpl$1$lambda$0$Type($$outer_0){
 
 defineClass(1035, 1, $intern_27, StreamImpl$1$lambda$0$Type);
 _.accept = function accept_577(arg0){
-  $lambda$0_11(this.$$outer_0, castTo(arg0, 3710));
+  $lambda$0_10(this.$$outer_0, castTo(arg0, 3710));
 }
 ;
 var Ljava_util_stream_StreamImpl$1$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1035);
@@ -87450,7 +87445,7 @@ _.accept = function accept_578(arg0){
 }
 ;
 var Ljava_util_stream_StreamImpl$5$2methodref$add$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1038);
-function $lambda$0_12(this$static, action_1, item_1){
+function $lambda$0_11(this$static, action_1, item_1){
   if (this$static.filter.test_1(item_1)) {
     this$static.found = true;
     action_1.accept(item_1);
@@ -87482,7 +87477,7 @@ function StreamImpl$FilterSpliterator$lambda$0$Type($$outer_0, action_1){
 
 defineClass(1027, 1, $intern_27, StreamImpl$FilterSpliterator$lambda$0$Type);
 _.accept = function accept_579(arg0){
-  $lambda$0_12(this.$$outer_0, this.action_1, arg0);
+  $lambda$0_11(this.$$outer_0, this.action_1, arg0);
 }
 ;
 var Ljava_util_stream_StreamImpl$FilterSpliterator$lambda$0$Type_2_classLit = createForAnonymousClass(Ljava_lang_Object_2_classLit, 1027);

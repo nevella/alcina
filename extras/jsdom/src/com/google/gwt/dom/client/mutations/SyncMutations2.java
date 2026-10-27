@@ -91,7 +91,15 @@ class SyncMutations2 {
 		}
 
 		void detach() {
-			detach.forEach(n -> mutationsAccess.setDetached(n));
+			// detach.forEach(n -> mutationsAccess.setDetached(n));
+			/*
+			 * setting detached without removing from the domtree causes
+			 * invalidity in TLC (because - well, it is). The goal of this
+			 * algorithm is that the DOMs are isomorphic at the end of sync -
+			 * although these removals are possibly out of order (WRT adds), the
+			 * end result is the same
+			 */
+			detach.forEach(Node::removeFromParent);
 		}
 
 		void applyNonTreeMods() {
