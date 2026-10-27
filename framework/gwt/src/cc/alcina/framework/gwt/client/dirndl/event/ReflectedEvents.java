@@ -192,6 +192,13 @@ public class ReflectedEvents {
 	}
 
 	/**
+	 * Apply to the root of the dirndl hierarchy (if desired) - obviates the
+	 * need for many top-level reflectors
+	 */
+	public interface TopLevelReflector extends ModelEvent.Reflector {
+	}
+
+	/**
 	 * Application (browser-wide) events, essentially a recasting of events from
 	 * other sources (window:scroll - history - etc)
 	 */

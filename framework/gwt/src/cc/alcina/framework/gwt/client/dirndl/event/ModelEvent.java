@@ -217,8 +217,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		return (M) this;
 	}
 
-	// Marker interface - for descendant events, the receiver (handler) will
-	// bind to the nearest ancestor with this type
+	/**
+	 * Marker interface - for descendant events, the receiver (handler) will
+	 * bind to the nearest ancestor with this type
+	 */
 	public interface Reflector {
 	}
 

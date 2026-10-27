@@ -69,6 +69,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.RendersNull;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRenderer;
@@ -868,9 +869,11 @@ public class DirectedLayout implements AlcinaProcess {
 					.getGenericBounds().bounds.get(2);
 			Node cursor = this;
 			while (cursor != null) {
-				if (cursor.model != null && Reflections.isAssignableFrom(
-						reflectorType, cursor.model.getClass())) {
-					return (Reflector) cursor.model;
+				if (cursor.model != null) {
+					if (Reflections.isAssignableFrom(reflectorType,
+							cursor.model.getClass())
+							|| cursor.model instanceof ReflectedEvents.TopLevelReflector)
+						return (Reflector) cursor.model;
 				}
 				cursor = ModelEventDispatch.getParentOrReroutedAncestor(cursor);
 			}
@@ -913,11 +916,17 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		NodeEventBinding getEventBinding(Class<? extends NodeEvent> type) {
-			return eventBindings.stream().filter(eb -> eb.type == type)
-					.findFirst()
-					.orElseThrow(() -> new IllegalStateException(Ax.format(
-							"Type %s does not implement the %s Emitter",
-							NestedName.get(this.model), NestedName.get(type))));
+			NodeEventBinding binding = eventBindings.stream()
+					.filter(eb -> eb.type == type).findFirst().orElse(null);
+			if (binding != null) {
+				return binding;
+			}
+			if (model instanceof ReflectedEvents.TopLevelReflector) {
+				return addReflectedEventBinding(type);
+			}
+			throw new IllegalStateException(
+					Ax.format("Type %s does not implement the %s Reflector",
+							NestedName.get(this.model), NestedName.get(type)));
 		}
 
 		public <T> T getModel() {
