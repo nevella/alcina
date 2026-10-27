@@ -3,7 +3,7 @@ var __gwtModuleFunction = $wnd.cc_alcina_framework_servlet_component_romcom_Remo
 var $sendStats = __gwtModuleFunction.__sendStats;
 $sendStats('moduleStartup', 'moduleEvalStart');
 var $gwt_version = "0.0.0";
-var $strongName = 'E0B31282E6C5307FAB4D7AE6BE3D3F53';
+var $strongName = '013DED625C4A5B0D40545922A825CA90';
 var $gwt = {};
 var $doc = $wnd.document;
 var $moduleName, $moduleBase;
@@ -30488,7 +30488,7 @@ function matchesEvent(nativeEvent, key, keyCode, modifiers){
   eventModifiers = $getModifiers(nativeEvent);
   if (key.length > 0) {
     eventKey = (nativeEvent.data_0.key_0 == null && !!nativeEvent.jso && (nativeEvent.data_0.key_0 = nativeEvent.jso.key) , nativeEvent.data_0.key_0);
-    if (!$equalsIgnoreCase(eventKey, key)) {
+    if (eventKey != null && !$equalsIgnoreCase(eventKey, key)) {
       !nativeEvent.data_0.keyCode_0 && !!nativeEvent.jso && (nativeEvent.data_0.keyCode_0 = valueOf_5($eventGetKeyCode(($clinit_DOMImpl() , impl_2), nativeEvent.jso)));
       if (nativeEvent.data_0.keyCode_0.value_0 != $charAt_0(key.toUpperCase(), 0)) {
         return false;

@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Submit;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
@@ -52,8 +53,7 @@ class FragmentDocumentGalleryArea
 	String markup = "<recipe>\n\t<ingredient>flour</ingredient>\n\t<ingredient>water</ingredient>\n\t<div>some generic div</div>\n\t<unknown/>\n</recipe>";
 
 	@Directed.Wrap("document-tree-representation")
-	@Directed.Transform(StringInput.To.class)
-	@StringInput.TextArea
+	@Directed.Transform(LeafModel.HtmlBlock.To.class)
 	String documentTreeRepresentation;
 
 	Link submit = Link.of(ModelEvents.Submit.class);
@@ -72,9 +72,13 @@ class FragmentDocumentGalleryArea
 		FormatBuilder format = new FormatBuilder();
 		format.line("parsed! %s %s nodes", System.currentTimeMillis(),
 				fragmentDocument.getRoot().stream().count());
-		fragmentDocument.getRoot().stream()
-				.forEach(node -> format.line(NestedName.get(node)));
-		subtypeProperties().documentTreeRepresentation().set(format.toString());
+		format.newLine();
+		fragmentDocument.getRoot().stream().forEach(node -> {
+			format.indent((int) (node.ancestors().stream().count() * 2 - 2));
+			format.line(NestedName.get(node));
+		});
+		String string = format.toString();
+		subtypeProperties().documentTreeRepresentation().set(string);
 	}
 
 	@Override

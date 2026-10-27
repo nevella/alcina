@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.common.client.search.DateRange;
+import cc.alcina.framework.common.client.search.LogicalCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
@@ -28,6 +29,11 @@ public class PackageProperties {
     public static _EnumCriterion enumCriterion = new _EnumCriterion();
     public static _EnumMultipleCriterion enumMultipleCriterion = new _EnumMultipleCriterion();
     public static _IdMultipleCriterion idMultipleCriterion = new _IdMultipleCriterion();
+    public static _LogicalCriterion logicalCriterion = new _LogicalCriterion();
+    public static _LogicalCriterion_All logicalCriterion_all = new _LogicalCriterion_All();
+    public static _LogicalCriterion_Any logicalCriterion_any = new _LogicalCriterion_Any();
+    public static _LogicalCriterion_Criteria logicalCriterion_criteria = new _LogicalCriterion_Criteria();
+    public static _LogicalCriterion_None logicalCriterion_none = new _LogicalCriterion_None();
     public static _LongCriterion longCriterion = new _LongCriterion();
     public static _OrderCriterion orderCriterion = new _OrderCriterion();
     public static _PersistentObjectCriterion persistentObjectCriterion = new _PersistentObjectCriterion();
@@ -264,6 +270,95 @@ public class PackageProperties {
       }
       
       public  InstanceProperties instance(IdMultipleCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _LogicalCriterion implements TypedProperty.Container {
+      public TypedProperty<LogicalCriterion, String> displayName = new TypedProperty<>(LogicalCriterion.class, "displayName");
+      public TypedProperty<LogicalCriterion, StandardSearchOperator> operator = new TypedProperty<>(LogicalCriterion.class, "operator");
+      public TypedProperty<LogicalCriterion, String> targetPropertyName = new TypedProperty<>(LogicalCriterion.class, "targetPropertyName");
+      public TypedProperty<LogicalCriterion, LogicalCriterion.Criteria> value = new TypedProperty<>(LogicalCriterion.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<LogicalCriterion> {
+        public  InstanceProperties(LogicalCriterion source){super(source);}
+        public InstanceProperty<LogicalCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion.displayName);}
+        public InstanceProperty<LogicalCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion.operator);}
+        public InstanceProperty<LogicalCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion.targetPropertyName);}
+        public InstanceProperty<LogicalCriterion, LogicalCriterion.Criteria> value(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion.value);}
+      }
+      
+      public  InstanceProperties instance(LogicalCriterion instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _LogicalCriterion_All implements TypedProperty.Container {
+      public TypedProperty<LogicalCriterion.All, String> displayName = new TypedProperty<>(LogicalCriterion.All.class, "displayName");
+      public TypedProperty<LogicalCriterion.All, StandardSearchOperator> operator = new TypedProperty<>(LogicalCriterion.All.class, "operator");
+      public TypedProperty<LogicalCriterion.All, String> targetPropertyName = new TypedProperty<>(LogicalCriterion.All.class, "targetPropertyName");
+      public TypedProperty<LogicalCriterion.All, LogicalCriterion.Criteria> value = new TypedProperty<>(LogicalCriterion.All.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<LogicalCriterion.All> {
+        public  InstanceProperties(LogicalCriterion.All source){super(source);}
+        public InstanceProperty<LogicalCriterion.All, String> displayName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_all.displayName);}
+        public InstanceProperty<LogicalCriterion.All, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_all.operator);}
+        public InstanceProperty<LogicalCriterion.All, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_all.targetPropertyName);}
+        public InstanceProperty<LogicalCriterion.All, LogicalCriterion.Criteria> value(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_all.value);}
+      }
+      
+      public  InstanceProperties instance(LogicalCriterion.All instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _LogicalCriterion_Any implements TypedProperty.Container {
+      public TypedProperty<LogicalCriterion.Any, String> displayName = new TypedProperty<>(LogicalCriterion.Any.class, "displayName");
+      public TypedProperty<LogicalCriterion.Any, StandardSearchOperator> operator = new TypedProperty<>(LogicalCriterion.Any.class, "operator");
+      public TypedProperty<LogicalCriterion.Any, String> targetPropertyName = new TypedProperty<>(LogicalCriterion.Any.class, "targetPropertyName");
+      public TypedProperty<LogicalCriterion.Any, LogicalCriterion.Criteria> value = new TypedProperty<>(LogicalCriterion.Any.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<LogicalCriterion.Any> {
+        public  InstanceProperties(LogicalCriterion.Any source){super(source);}
+        public InstanceProperty<LogicalCriterion.Any, String> displayName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_any.displayName);}
+        public InstanceProperty<LogicalCriterion.Any, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_any.operator);}
+        public InstanceProperty<LogicalCriterion.Any, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_any.targetPropertyName);}
+        public InstanceProperty<LogicalCriterion.Any, LogicalCriterion.Criteria> value(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_any.value);}
+      }
+      
+      public  InstanceProperties instance(LogicalCriterion.Any instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _LogicalCriterion_Criteria implements TypedProperty.Container {
+      public TypedProperty<LogicalCriterion.Criteria, List> criteria = new TypedProperty<>(LogicalCriterion.Criteria.class, "criteria");
+      public static class InstanceProperties extends 	InstanceProperty.Container<LogicalCriterion.Criteria> {
+        public  InstanceProperties(LogicalCriterion.Criteria source){super(source);}
+        public InstanceProperty<LogicalCriterion.Criteria, List> criteria(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_criteria.criteria);}
+      }
+      
+      public  InstanceProperties instance(LogicalCriterion.Criteria instance) {
+        return new InstanceProperties( instance);
+      }
+      
+    }
+    
+    public static class _LogicalCriterion_None implements TypedProperty.Container {
+      public TypedProperty<LogicalCriterion.None, String> displayName = new TypedProperty<>(LogicalCriterion.None.class, "displayName");
+      public TypedProperty<LogicalCriterion.None, StandardSearchOperator> operator = new TypedProperty<>(LogicalCriterion.None.class, "operator");
+      public TypedProperty<LogicalCriterion.None, String> targetPropertyName = new TypedProperty<>(LogicalCriterion.None.class, "targetPropertyName");
+      public TypedProperty<LogicalCriterion.None, LogicalCriterion.Criteria> value = new TypedProperty<>(LogicalCriterion.None.class, "value");
+      public static class InstanceProperties extends 	InstanceProperty.Container<LogicalCriterion.None> {
+        public  InstanceProperties(LogicalCriterion.None source){super(source);}
+        public InstanceProperty<LogicalCriterion.None, String> displayName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_none.displayName);}
+        public InstanceProperty<LogicalCriterion.None, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_none.operator);}
+        public InstanceProperty<LogicalCriterion.None, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_none.targetPropertyName);}
+        public InstanceProperty<LogicalCriterion.None, LogicalCriterion.Criteria> value(){return new InstanceProperty<>(source,PackageProperties.logicalCriterion_none.value);}
+      }
+      
+      public  InstanceProperties instance(LogicalCriterion.None instance) {
         return new InstanceProperties( instance);
       }
       
