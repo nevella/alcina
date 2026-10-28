@@ -71,7 +71,7 @@ public abstract interface Inline {
 
 		@Override
 		public void onBind(Bind event) {
-			if (!event.isBound()) {
+			if (!event.isBound() && provideNode() != null) {
 				this.value = provideNode().getRendered().getNode()
 						.getNodeValue();
 			}

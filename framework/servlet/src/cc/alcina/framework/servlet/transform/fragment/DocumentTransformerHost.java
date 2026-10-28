@@ -36,15 +36,12 @@ public class DocumentTransformerHost {
 		}
 	}
 
-	public String filterHtml(String inputMarkup, DocumentTransformerPeer peer)
+	public String transform(String inputMarkup, DocumentTransformerPeer peer)
 			throws Exception {
 		new IndentStylesObserver().bind();
 		/*
 		 * Convert to fragment document
 		 */
-		if (peer == null) {
-			peer = new DocumentTransformerPeer();
-		}
 		DocumentTransformer transformer = new DocumentTransformer(peer,
 				inputMarkup);
 		if (logSource.is()) {

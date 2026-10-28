@@ -50,12 +50,13 @@ import cc.alcina.framework.servlet.transform.fragment.structure.SectionHeadingLa
  * the {@link DocumentTransformerPeer} subclass. } for an extensive example
  * 
  */
-public class DocumentTransformerPeer implements HasFragmentDocumentRoot,
-		HasMarkup, TraversalContext, Measure.Token.Order.Has,
-		StyleAttributeLayer.Peer.Has, SectionHeadingLayer.Peer.Has,
-		ListItemLabelLayer.Peer.Has, OutputIndentNormalisation.Peer.Has,
-		BlockIndentLayer.Peer.Has, TableLayer.Peer.Has, ParaLayer.Peer.Has,
-		LinkLayer.Peer.Has, PositioningLayer.Peer.Has, SelectionMarkup.Has,
+public abstract class DocumentTransformerPeer
+		implements HasFragmentDocumentRoot, HasMarkup, TraversalContext,
+		Measure.Token.Order.Has, StyleAttributeLayer.Peer.Has,
+		SectionHeadingLayer.Peer.Has, ListItemLabelLayer.Peer.Has,
+		OutputIndentNormalisation.Peer.Has, BlockIndentLayer.Peer.Has,
+		TableLayer.Peer.Has, ParaLayer.Peer.Has, LinkLayer.Peer.Has,
+		PositioningLayer.Peer.Has, SelectionMarkup.Has,
 		StyledNodeLayer.Peer.Has, OutputCleanupLayer.Peer.Has,
 		MeasureSplitAndHandleTextOverlaps.Peer.Has,
 		FragmentDocument.HasOutputDocument, ImageLayer.Peer.Has,
@@ -107,7 +108,7 @@ public class DocumentTransformerPeer implements HasFragmentDocumentRoot,
 		return mergedIndentLayerPeer;
 	}
 
-	protected DocumentTransformerPeer() {
+	public DocumentTransformerPeer() {
 		init();
 	}
 
@@ -227,8 +228,7 @@ public class DocumentTransformerPeer implements HasFragmentDocumentRoot,
 		return null;
 	}
 
-	protected void initialiseTraversal() {
-	}
+	protected abstract void initialiseTraversal();
 
 	protected void init() {
 		createPeers();
