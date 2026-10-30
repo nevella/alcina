@@ -44,7 +44,7 @@ public class TaskSortClass extends PerformerTask.Fields {
 				.asSingletonCache();
 		compUnits = CompilationUnits.load(cache, classPathList,
 				CompilationUnitWrapperVisitor.Noop::new, refresh);
-		compUnits.unitTypeByName.allValues().stream()
+		compUnits.unitTypesByName.allValues().stream()
 				.map(type -> type.unitWrapper).distinct()
 				.map(unitWrapper -> unitWrapper.unitTypes.get(0))
 				.filter(type -> type.qualifiedSourceName

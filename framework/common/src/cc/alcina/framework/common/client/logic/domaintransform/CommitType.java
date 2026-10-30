@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,6 +18,17 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 /**
  * TO_STORAGE transforms will be recorded to client-local storage (and replayed
  * on offline restart), and applied to server graph (db) store
+ */
+/**
+ * Note that implementation of these phases is not intuitive - since on the
+ * client events reach TO_STORAGE after the early listeners
+ * (RecordTransformListener, AssociationPropagationTransformListener,
+ * CommitToLocalDomainTransformListener) have fired - so filtering by phase
+ * doesn't really work
+ *
+ *
+ * @author nick@alcina.cc
+ *
  */
 @Reflected
 public enum CommitType {

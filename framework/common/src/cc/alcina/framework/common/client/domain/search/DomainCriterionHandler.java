@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  */
 @Registration(DomainCriterionHandler.class)
 public abstract class DomainCriterionHandler<SC extends SearchCriterion>
-		implements DomainCriterionFilter<SC> {
+		implements DomainCriterionFilter<SC>, Registration.AllSubtypes {
 	public Class<SC> handlesSearchCriterion() {
 		return Reflections.at(getClass()).firstGenericBound();
 	}

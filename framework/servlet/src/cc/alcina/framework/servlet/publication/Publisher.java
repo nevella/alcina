@@ -342,8 +342,8 @@ public class Publisher {
 			if (TransformCommit.isCommitting()) {
 				return 0L;
 			}
-			return TransformCommit.commitTransformsAndReturnId(true,
-					publication);
+			Transaction.commit();
+			return publication.getId();
 		}
 
 		public void persistContentRendererResults(

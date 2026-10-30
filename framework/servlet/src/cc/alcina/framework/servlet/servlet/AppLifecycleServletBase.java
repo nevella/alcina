@@ -135,7 +135,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				.filter(typeFilter::isAssignableFrom).
 				/*
 				 * each class implementing LifecycleService must also have a
-				 * 
+				 *
 				 * @Registration.Singleton
 				 */
 				map(Registry::impl).forEach(service -> {
@@ -615,7 +615,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 							String file = Io.read().path(path).asString();
 							if (idx++ == 0) {
 								if (file.contains("include.resource=")) {
-									Configuration.properties.setUseSets(true);
 									Configuration.properties.setClassLoader(
 											getClass().getClassLoader());
 									// re-register in v2 mode
@@ -688,7 +687,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				if (cancelStartupOnSignatureGenerationFailure) {
 					/*
 					 * will throw an exception if there's an issue.
-					 * 
+					 *
 					 * FIXME - startup - this is never performed scheduled if
 					 * run as a job - probably an interplay with the signature
 					 * generation? Fix it anyway

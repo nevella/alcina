@@ -86,6 +86,7 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  *
  */
+//
 @Resolution(
 	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE },
 	mergeStrategy = Registration.MergeStrategy.class)

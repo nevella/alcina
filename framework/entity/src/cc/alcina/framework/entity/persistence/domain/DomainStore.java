@@ -96,6 +96,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.NonDomainNotifier;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsContext;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -858,7 +859,7 @@ public class DomainStore implements IDomainStore {
 			postProcessThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();
-			List<DomainTransformEventPersistent> events = (List) persistenceEvent
+			List<DomainTransformEventPersistent> events = persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
 			List<DomainTransformEventPersistent> filtered = removeNonApplicableTransforms(
 					events);
@@ -1093,7 +1094,7 @@ public class DomainStore implements IDomainStore {
 					: query.getFilters().get(idx + 1);
 			applyFilter(clazz, cacheFilter, nextFilter, token);
 			if (debugMetrics) {
-				double ms = (double) (System.nanoTime() - start) / 1000000.0;
+				double ms = (System.nanoTime() - start) / 1000000.0;
 				String filters = token.lastFilterString;
 				debugMetricBuilder.append(String.format("\t%.3f ms - %s\n", ms,
 						CommonUtils.trimToWsChars(filters, 100, true)));
@@ -2163,6 +2164,8 @@ public class DomainStore implements IDomainStore {
 
 		private LooseContextInstance contextInstance;
 
+		private PermissionsContext permissionsContext;
+
 		QueryPool() {
 			pool = new ForkJoinPool(
 					Configuration.getInt(DomainStore.class, "queryPoolSize"),
@@ -2194,6 +2197,8 @@ public class DomainStore implements IDomainStore {
 						transaction = current;
 						this.contextInstance = LooseContext.getContext()
 								.snapshot();
+						this.permissionsContext = Permissions.get()
+								.snapshotContext();
 					}
 				}
 			}
@@ -2207,6 +2212,7 @@ public class DomainStore implements IDomainStore {
 					synchronized (this) {
 						contextInstance = null;
 						transaction = null;
+						this.permissionsContext = null;
 					}
 				}
 			} else {
@@ -2231,6 +2237,9 @@ public class DomainStore implements IDomainStore {
 					LooseContext.push();
 					if (contextInstance != null) {
 						LooseContext.putSnapshotProperties(contextInstance);
+					}
+					if (permissionsContext != null) {
+						permissionsContext.copyTo(Permissions.get());
 					}
 					super.run();
 				} finally {

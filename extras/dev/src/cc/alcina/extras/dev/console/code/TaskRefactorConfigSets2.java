@@ -21,15 +21,19 @@ import cc.alcina.framework.entity.util.Csv;
 import cc.alcina.framework.entity.util.Csv.Row;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
+/*
+ * generates the configuration.properties files - and configuration sets, if
+ * used
+ */
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class TaskRefactorConfigSets2 extends PerformerTask {
 	private String propertiesCsv;
 
-	private String appSetsTsv;
+	private String appSetsTsv = "";
 
-	private String setPathsTsv;
+	private String setPathsTsv = "";
 
-	private String nonStandardSetsTsv;
+	private String nonStandardSetsTsv = "";
 
 	transient String packageName;
 
@@ -73,7 +77,8 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 		});
 		String collisionsString = collisionBuilder.toString();
 		String collisionsHash = EncryptionUtils.get().SHA1(collisionsString);
-		if (!Objects.equals(collisionsHash, this.collisionsHash)) {
+		if (!collisionsString.isEmpty()
+				&& !Objects.equals(collisionsHash, this.collisionsHash)) {
 			Ax.err("Collisions hash: %s", collisionsHash);
 			Ax.out(collisionsString);
 			throw new IllegalStateException();
@@ -111,6 +116,10 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 				.forEach(row -> {
 					OutputBundle bundle = outputBundles.computeIfAbsent(
 							row.packageName, OutputBundle::new);
+					if (Ax.isBlank(row.file)) {
+						Ax.err("generating for blank row: %s", row);
+						throw new IllegalStateException();
+					}
 					bundle.path = row.file;
 					bundle.map.put(row.key, normalise(row.value));
 				});
@@ -219,8 +228,13 @@ public class TaskRefactorConfigSets2 extends PerformerTask {
 
 	private void writePackageBundles() {
 		outputBundles.values().stream().limit(limit).forEach(bundle -> {
-			Io.write().string(bundle.computeOutputString())
-					.toPath(bundle.computeOutputPath());
+			try {
+				Io.write().string(bundle.computeOutputString())
+						.toPath(bundle.computeOutputPath());
+			} catch (RuntimeException e) {
+				Ax.err("cannot write to '%s'", bundle.computeOutputPath());
+				throw e;
+			}
 		});
 	}
 

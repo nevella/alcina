@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 
 /**
  *
- * 
+ *
  * <p>
  * NR - note, a validator is really a "converter plus" - particularly because
  * validators can form chains
@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.reflection.Property;
  * FIXME - alcina - In fact, it makes more sense for converter to subclass
  * validator - it's an always-succeeding validator basically (and validator
  * should be typed)
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
@@ -60,7 +60,7 @@ public interface Validator extends Function {
 	/**
 	 * A noop implementation for sync validators, this allows async validation
 	 * to exit the sync validation process and reenter once complete
-	 * 
+	 *
 	 * @param value
 	 *            the value to validate
 	 * @param postAsyncValidation
@@ -74,7 +74,7 @@ public interface Validator extends Function {
 	/**
 	 * Makes the defining property available to the validator for configuration
 	 * from property annotations
-	 * 
+	 *
 	 * @param property
 	 */
 	default void onProperty(Property property) {

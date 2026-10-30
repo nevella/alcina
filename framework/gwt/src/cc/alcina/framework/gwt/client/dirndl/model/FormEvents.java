@@ -16,14 +16,6 @@ public class FormEvents {
 	 * Note that a result can be intermediate - i.e. with a non-complete state
 	 */
 	public static class ValidationResult extends Bindable.Fields {
-		public static ValidationResult invalid(Throwable e) {
-			return invalid(CommonUtils.toSimpleExceptionMessage(e));
-		}
-
-		public static ValidationResult invalid(String message) {
-			return new ValidationResult(null, ValidationState.INVALID, message);
-		}
-
 		public ValidationState state;
 
 		public String exceptionMessage;
@@ -75,6 +67,20 @@ public class FormEvents {
 		public ValidationResult copy() {
 			return new ValidationResult(originatingEvent, state,
 					exceptionMessage);
+		}
+
+		public static ValidationResult invalid(Throwable e) {
+			return invalid(CommonUtils.toSimpleExceptionMessage(e));
+		}
+
+		public static ValidationResult invalid(String message) {
+			return new ValidationResult(null, ValidationState.INVALID, message);
+		}
+
+		public void onBeforeValidation() {
+			if (state.isComplete()) {
+				state = ValidationState.NOT_VALIDATED;
+			}
 		}
 	}
 

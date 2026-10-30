@@ -261,7 +261,6 @@ public class CompilationUnits {
 						unit.compute(file, units);
 						unit.unit().accept(visitorCreator.apply(units, unit),
 								null);
-						units.addUnit(unit);
 					} catch (Throwable e) {
 						Ax.out(e);
 						Ax.err("Could not load unit: %s", file);
@@ -282,10 +281,10 @@ public class CompilationUnits {
 			}
 			fileUnits.put(unit.getFile(), unit);
 			units.add(unit);
-			unit.unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
+			unit.unitTypes.forEach(d -> {
 				unitTypes.put(d.qualifiedSourceName, d);
+				unitTypesByName.add(d.name, d);
 			});
-			unit.unitTypes.forEach(d -> unitTypeByName.add(d.name, d));
 		}
 	}
 
@@ -296,7 +295,7 @@ public class CompilationUnits {
 			unit.unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
 				unitTypes.remove(d.qualifiedSourceName, d);
 			});
-			unit.unitTypes.forEach(d -> unitTypeByName.remove(d.name, d));
+			unit.unitTypes.forEach(d -> unitTypesByName.remove(d.name, d));
 		}
 	}
 
@@ -308,7 +307,7 @@ public class CompilationUnits {
 
 	public Map<String, UnitType> unitTypes = new LinkedHashMap<>();
 
-	public Multimap<String, List<UnitType>> unitTypeByName = new Multimap<>();
+	Multimap<String, List<UnitType>> unitTypesByName = new Multimap<>();
 
 	public CompilationUnits() {
 		CombinedTypeSolver typeSolver = new CombinedTypeSolver();
@@ -321,7 +320,7 @@ public class CompilationUnits {
 	}
 
 	public List<UnitType> unitTypeByName(String simpleName) {
-		return unitTypeByName.get(simpleName);
+		return unitTypesByName.get(simpleName);
 	}
 
 	public SolverUtils solverUtils() {
@@ -383,7 +382,7 @@ public class CompilationUnits {
 			public <T extends PersistentUnitData> T ensure(Class<T> clazz,
 					File file, CompilationUnits compilationUnits) {
 				FsObjectCache<T> cache = getCache(clazz);
-				T instance = (T) cache.get(file.getPath());
+				T instance = cache.get(file.getPath());
 				if (instance != null) {
 					if (!instance.isCurrent()) {
 						instance = null;
@@ -448,6 +447,7 @@ public class CompilationUnits {
 			}
 		}
 
+		@Override
 		public File getFile() {
 			return new File(path);
 		}
@@ -525,14 +525,7 @@ public class CompilationUnits {
 		protected void compute(File file, CompilationUnits units) {
 			this.path = file.getPath();
 			ensureUnitTypeDeclarations();
-			synchronized (units) {
-				units.units.add(this);
-				unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
-					units.unitTypes.put(d.qualifiedSourceName, d);
-				});
-				unitTypes.forEach(d -> units.unitTypeByName.add(d.name, d));
-			}
-			updateMetadata();
+			units.addUnit(this);
 		}
 
 		class EnsureUnitTypesAdapter extends VoidVisitorAdapter<Void> {
