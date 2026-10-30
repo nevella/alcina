@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.dom;
 
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
-import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.util.Ax;
 
-public class TrackingLocationMutationObservable implements ProcessObservable {
+public class TrackingLocationMutationObservable implements ContextObservable {
 	public Location location;
 
 	public boolean pre;
