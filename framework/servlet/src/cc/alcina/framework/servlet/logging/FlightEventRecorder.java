@@ -135,7 +135,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 
 	public static final Configuration.Key path = Configuration.key("path");
 
-	static final Configuration.Key extractFolderPath = Configuration
+	public static final Configuration.Key extractFolderPath = Configuration
 			.key("extractFolder");
 
 	static final Configuration.Key maxEvents = Configuration.key("maxEvents");

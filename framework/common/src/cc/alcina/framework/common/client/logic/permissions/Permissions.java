@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 
@@ -65,15 +66,15 @@ import cc.alcina.framework.common.client.util.Topic;
  * <p>
  * FIXME - dirndl 1x2 - move Permission.rule to a type, (Rule) - rule is the
  * name + the evaluator.
- * 
+ *
  * <p>
  * FIXME - possibly (probably) clientinstance should be a normal part of
  * context, but that'll take testing
- * 
+ *
  * Note re clientinstances and context - most of the time when pushing/popping,
  * the clientinstance will not be specified - rather just the user and/or root
  * state.
- * 
+ *
  * So if the pushed context has null clientinstance, and the current
  * clientinstance is non null, the null will effectively be replaced by the
  * current non-null client instance. Which implies that once clientInstance is
@@ -109,6 +110,7 @@ public class Permissions implements DomainTransformListener {
 					LoginState.LOGGED_IN, true, null);
 		}
 
+		@Override
 		public PermissionsContext clone() {
 			return new PermissionsContext(user, loginState, root,
 					clientInstance);
@@ -319,6 +321,14 @@ public class Permissions implements DomainTransformListener {
 		return get().topicLoginStateChange;
 	}
 
+	public static Topic<ClientInstance> topicClientInstanceChange() {
+		return get().topicClientInstanceChange;
+	}
+
+	public static Topic<OnlineState> topicOnlineStateChange() {
+		return get().topicOnlineStateChange;
+	}
+
 	public static int depth() {
 		if (factoryInstance == null) {
 			return 0;
@@ -427,7 +437,7 @@ public class Permissions implements DomainTransformListener {
 	/**
 	 * For checking permissions when the type of o may have an @Permission
 	 * annotation
-	 * 
+	 *
 	 * @param o
 	 * @param ruleName
 	 * @return
@@ -550,11 +560,18 @@ public class Permissions implements DomainTransformListener {
 
 	protected Topic<ClientInstance> topicClientInstanceChange = Topic.create();
 
+	protected Topic<OnlineState> topicOnlineStateChange = Topic.create();
+
 	private Topic<LoginState> topicLoginStateChange = Topic.create();
 
 	private LoginState loginState = LoginState.NOT_LOGGED_IN;
 
-	private OnlineState onlineState = OnlineState.ONLINE;
+	/*
+	 * Although online state _really is_ a singleton (an offline app can't
+	 * connect via romcom) - consistency points to
+	 * "store here in a  threaded version, rather than as a static field on the OnlineState"
+	 */
+	OnlineState onlineState = OnlineState.ONLINE;
 
 	private IUser user;
 
@@ -1047,5 +1064,12 @@ public class Permissions implements DomainTransformListener {
 			permitted = b;
 		}
 		return permitted;
+	}
+
+	public static void replaceContext(Consumer<PermissionsContext> replacer) {
+		PermissionsContext permissionsContext = get().toPermissionsContext();
+		popContext();
+		replacer.accept(permissionsContext);
+		Permissions.pushContext(permissionsContext);
 	}
 }

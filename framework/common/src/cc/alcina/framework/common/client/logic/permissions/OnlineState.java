@@ -3,15 +3,16 @@ package cc.alcina.framework.common.client.logic.permissions;
 public enum OnlineState {
 	OFFLINE, ONLINE;
 
-	private static OnlineState state;
-
 	public static OnlineState get() {
-		return state;
+		return Permissions.get().onlineState;
 	}
 
 	public static void set(OnlineState state) {
-		OnlineState oldState = OnlineState.state;
-		OnlineState.state = state;
+		OnlineState oldState = get();
+		Permissions.get().onlineState = state;
+		if (oldState != state) {
+			Permissions.topicOnlineStateChange().publish(state);
+		}
 	}
 
 	public static boolean isOffline() {
