@@ -13,11 +13,6 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Inline;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocumentNode;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocumentNode.FilteringOutputTreeChildren;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.FragmentDocumentOverlayToken;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.FragmentDocumentOverlayToken.Transformer;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
@@ -34,6 +29,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocumentNode;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocumentNode.FilteringOutputTreeChildren;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Inline;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.FragmentDocumentOverlayToken;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.FragmentDocumentOverlayToken.Transformer;
 
 /**
  * <p>
@@ -47,11 +47,11 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * <li>From this point on, containment is a function of position in the output
  * tree, not the source (measurecontainment) tree
  * </ol>
- * 
+ *
  * <p>
  * Note that the inputs will already be in a containment structure with no
  * overlaps (that's required for deterministic behaviour for this layer)
- * 
+ *
  * <p>
  * Note there are several ways to omit incoming MeasureSelections from output -
  * if the type extends NonOutput, or if its omit field is set, or if the
@@ -143,11 +143,11 @@ public class MeasureOutput extends Layer<MeasureSelection>
 		super.onAfterIteration();
 	}
 
+	static transient Logger logger = org.slf4j.LoggerFactory
+			.getLogger(MeasureOutput.class);
+
 	public class MeasureTree {
 		MeasureNode root;
-
-		static Logger logger = org.slf4j.LoggerFactory
-				.getLogger(MeasureTree.class);
 
 		/*
 		 * the current 'point in the tree' - used as the insertion parent
@@ -207,11 +207,11 @@ public class MeasureOutput extends Layer<MeasureSelection>
 				 * note the containment relation is defined as either text
 				 * containment or logical output containment - *not* necessarily
 				 * source element containment (although it -can- be that)
-				 * 
+				 *
 				 * for instance, indentruns are multiple nested selections
 				 * generated from various things (like styles) and they have a
 				 * significant containment relationship here
-				 * 
+				 *
 				 * So check index/order containment (via measureContainment) and
 				 * then text containment (via intpair)
 				 */
@@ -238,7 +238,7 @@ public class MeasureOutput extends Layer<MeasureSelection>
 					&& selection.get().provideIsPoint()) {
 				/*
 				 * e.g. an empty text node. should probably not be emitted
-				 * 
+				 *
 				 * // FIXME - st.bn - low
 				 */
 				return;
@@ -326,15 +326,15 @@ public class MeasureOutput extends Layer<MeasureSelection>
 		 * output node is a leaf. This handles say a source text node containing
 		 * multiple catchwords - and thus multiple output elements rather than a
 		 * single output text node
-		 * 
+		 *
 		 * FIXME - this is a hack - and makes it harder to reason about the
 		 * transformation as a whole (instead, bind the source to the target -
 		 * i.e. FragmentDocumentNode.TextContainer.setValue)
-		 * 
+		 *
 		 * Possibly this isn't really a problem - just make all
 		 * FragmentDocumentNode & FragmentDocumentNode.TextContainer be
 		 * behavioural decendants of Inline.Anonymous
-		 * 
+		 *
 		 * But really the original Inline.Anonymous should be bound to its
 		 * source model
 		 */

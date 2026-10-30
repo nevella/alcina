@@ -237,7 +237,7 @@ public class Toolbar extends Composite
 					actions.add(action);
 					if (isHideUnpermittedActions()
 							&& action instanceof Permissible && !Permissions
-									.get().isPermitted((Permissible) action)) {
+									.isPermitted((Permissible) action)) {
 						button.setVisible(false);
 					}
 				}

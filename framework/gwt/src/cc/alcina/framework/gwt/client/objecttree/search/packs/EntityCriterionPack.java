@@ -61,9 +61,9 @@ public class EntityCriterionPack {
 		}
 	}
 
-	public static abstract class BaseEntityCriterionSearchable<TC extends EntityCriterion>
+	public static abstract class EntityCriterionSearchable<TC extends EntityCriterion>
 			extends FlatSuggestorSearchable<TC> {
-		public BaseEntityCriterionSearchable(String category, Class<TC> clazz) {
+		public EntityCriterionSearchable(String category, Class<TC> clazz) {
 			super(clazz, category, "", StandardSearchOperator.EQUAL_OR_NOT);
 			this.name = Ax.friendly(Reflections.at(getCriterionClass())
 					.templateInstance().getObjectClass().getSimpleName());
@@ -80,7 +80,7 @@ public class EntityCriterionPack {
 			return super.isNonDefaultValue(sc);
 		}
 
-		public <S extends BaseEntityCriterionSearchable> S
+		public <S extends EntityCriterionSearchable> S
 				withOverrideName(String name) {
 			this.name = name;
 			this.category = "";

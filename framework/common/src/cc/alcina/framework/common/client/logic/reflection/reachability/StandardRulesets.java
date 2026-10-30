@@ -290,7 +290,7 @@ public class StandardRulesets {
 			cc.alcina.framework.gwt.client.gwittir.HasBinding.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.Customiser.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser.Args.class,
-			cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser.BoundSuggestOracleResponseTypeRenderer.class,
+			cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser.BoundSuggestOracleResponseElementRenderer.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectSuggestCustomiser.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.EnumCustomiser.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser.class,

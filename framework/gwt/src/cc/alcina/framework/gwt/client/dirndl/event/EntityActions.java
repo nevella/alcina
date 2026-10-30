@@ -38,7 +38,7 @@ public class EntityActions {
 			Optional<EntityCriterion> o_ownerCriterion = Entity.Ownership
 					.getOwnerReflectors(entityPlace.provideEntityClass()).map(
 							ownerReflector -> currentPlace.def
-									.provideTruncatedObjectCriterion(
+									.provideEntityCriterion(
 											ownerReflector
 													.annotation(
 															Association.class)

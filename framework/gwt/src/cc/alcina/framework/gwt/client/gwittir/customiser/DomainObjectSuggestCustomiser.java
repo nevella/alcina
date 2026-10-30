@@ -105,7 +105,7 @@ public class DomainObjectSuggestCustomiser
 				TARGET_CLASS, void.class);
 		rendererClassValue = NamedParameter.Support.classValue(
 				custom.parameters(), RENDERER_CLASS,
-				BoundSuggestOracleResponseTypeRenderer.class);
+				BoundSuggestOracleResponseElementRenderer.class);
 		readonlyCustomiserClassValue = NamedParameter.Support.classValue(
 				custom.parameters(), READONLY_CUSTOMISER_CLASS, null);
 		hintValue = NamedParameter.Support.stringValue(custom.parameters(),
@@ -185,7 +185,7 @@ public class DomainObjectSuggestCustomiser
 
 		String placeholder() default "Type for suggestions";
 
-		Class<? extends Renderer> rendererClass() default BoundSuggestOracleResponseTypeRenderer.class;
+		Class<? extends Renderer> rendererClass() default BoundSuggestOracleResponseElementRenderer.class;
 
 		boolean showOnFocus() default false;
 
@@ -193,7 +193,7 @@ public class DomainObjectSuggestCustomiser
 	}
 
 	@Reflected
-	public static class BoundSuggestOracleResponseTypeRenderer
+	public static class BoundSuggestOracleResponseElementRenderer
 			implements Renderer<BoundSuggestOracleResponseElement, String> {
 		@Override
 		public String render(BoundSuggestOracleResponseElement o) {
@@ -202,7 +202,7 @@ public class DomainObjectSuggestCustomiser
 	}
 
 	@Reflected
-	public static class BoundSuggestOracleResponseTypeSuggestionRenderer
+	public static class BoundSuggestOracleResponseElementSuggestionRenderer
 			implements Renderer<BoundSuggestOracleResponseElement, String> {
 		@Override
 		public String render(BoundSuggestOracleResponseElement o) {

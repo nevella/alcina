@@ -486,7 +486,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 				addModifier(entityCriteriaGroup, Keyword.PUBLIC);
 				addModifier(entityCriteriaGroup, Keyword.STATIC);
 				ClassOrInterfaceType extendsType = new ClassOrInterfaceType();
-				extendsType.getName().setIdentifier("EntityCriteriaGroup");
+				extendsType.getName().setIdentifier("BindableCriteriaGroup");
 				entityCriteriaGroup.getExtendedTypes().add(extendsType);
 				declaration.addMember(entityCriteriaGroup);
 			}

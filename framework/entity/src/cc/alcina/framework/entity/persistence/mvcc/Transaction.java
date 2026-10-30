@@ -235,6 +235,7 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void end() {
 		if (!Transactions.isInitialised()) {
 			return;
@@ -248,7 +249,7 @@ public class Transaction implements Comparable<Transaction> {
 			perThreadTransaction.endTransaction();
 			logger.debug("Removing tx - {} {} {}", perThreadTransaction,
 					Thread.currentThread().getName(),
-					Thread.currentThread().threadId());
+					Thread.currentThread().getId());
 		}
 		removeThreadLocalTransaction();
 	}
@@ -347,7 +348,7 @@ public class Transaction implements Comparable<Transaction> {
 	 * Intended for multi-threaded objects such as jobs, this debounces 'start a
 	 * new tx to check for changes' to prevent 1000s of new transactions per
 	 * second, while having a reasonable cross-thread object update period
-	 * 
+	 *
 	 * @param ageMs
 	 *            the maxage of the transaction before beginning a new one
 	 */

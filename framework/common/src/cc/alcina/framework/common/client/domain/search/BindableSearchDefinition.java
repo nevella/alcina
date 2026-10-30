@@ -151,7 +151,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	public Optional<EntityCriterion>
-			provideTruncatedObjectCriterion(Class clazz) {
+			provideEntityCriterion(Class clazz) {
 		return allCriteria().stream()
 				.filter(sc -> sc instanceof EntityCriterion)
 				.map(sc -> (EntityCriterion) sc).filter(toc -> toc.getId() != 0
