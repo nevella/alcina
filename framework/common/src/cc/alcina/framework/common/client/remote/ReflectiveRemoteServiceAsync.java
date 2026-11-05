@@ -1,12 +1,10 @@
 package cc.alcina.framework.common.client.remote;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
@@ -16,7 +14,6 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializationException;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.Async;
 
 /*
@@ -30,6 +27,7 @@ import cc.alcina.framework.gwt.client.util.Async;
  *   recipient end
  * - still, for versioning, we can tie gwt app hash (xor of modules) > server serialization hash
  * - this will let us see the server serialization diff, which is a superset of the client serialization diff
+ * - security is handled by requiring a WebMethod annotation on the receiver method
  *
  * @formatter:on
  */
@@ -46,9 +44,8 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 	protected <T> void call(String methodName, Class[] methodArgumentTypes,
 			AsyncCallback callback, Object... methodArguments) {
 		try {
-			ReflectiveRemoteServicePayload payload = new ReflectiveRemoteServicePayload(
-					getClass(), methodName, methodArgumentTypes,
-					methodArguments);
+			AlcinaRpc.Request payload = new AlcinaRpc.Request(getClass(),
+					methodName, methodArgumentTypes, methodArguments);
 			String serializedPayload = null;
 			try {
 				LooseContext.push();
@@ -77,23 +74,32 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 
 						@Override
 						public void onSuccess(String result) {
-							T t = null;
+							boolean throwWrapped = false;
 							try {
 								try {
 									LooseContext.push();
 									AlcinaTransient.Support
 											.setTransienceContexts(
 													TransienceContext.CLIENT);
-									t = ReflectiveSerializer
+									AlcinaRpc.Response response = ReflectiveSerializer
 											.deserialize(result);
+									if (response.success) {
+										throwWrapped = true;
+										callback.onSuccess(response.payload);
+									} else {
+										onFailure((Throwable) response.payload);
+									}
 								} finally {
 									LooseContext.pop();
 								}
 							} catch (Exception e) {
-								onFailure(e);
-								return;
+								if (throwWrapped) {
+									WrappedRuntimeException.throwWrapped(e);
+								} else {
+									onFailure(e);
+									return;
+								}
 							}
-							callback.onSuccess(t);
 						}
 					});
 		} catch (Exception e) {
@@ -103,64 +109,5 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 
 	protected AsyncCallback successCallback(Consumer consumer) {
 		return Async.callbackBuilder().success(consumer::accept).build();
-	}
-
-	public static class ReflectiveRemoteServicePayload extends Model {
-		private String methodName;
-
-		private Class<? extends ReflectiveRemoteServiceAsync> asyncInterfaceClass;
-
-		private List<?> methodArguments;
-
-		private List<Class> methodArgumentTypes;
-
-		public ReflectiveRemoteServicePayload() {
-		}
-
-		public ReflectiveRemoteServicePayload(
-				Class<? extends ReflectiveRemoteServiceAsync> asyncInterfaceClass,
-				String methodName, Class[] methodArgumentTypes,
-				Object[] methodArguments) {
-			this.methodName = methodName;
-			this.asyncInterfaceClass = asyncInterfaceClass;
-			this.methodArgumentTypes = Arrays.stream(methodArgumentTypes)
-					.collect(Collectors.toList());
-			this.methodArguments = Arrays.stream(methodArguments)
-					.collect(Collectors.toList());
-		}
-
-		public Class<? extends ReflectiveRemoteServiceAsync>
-				getAsyncInterfaceClass() {
-			return this.asyncInterfaceClass;
-		}
-
-		public List<?> getMethodArguments() {
-			return this.methodArguments;
-		}
-
-		public List<Class> getMethodArgumentTypes() {
-			return this.methodArgumentTypes;
-		}
-
-		public String getMethodName() {
-			return this.methodName;
-		}
-
-		public void setAsyncInterfaceClass(
-				Class<? extends ReflectiveRemoteServiceAsync> asyncInterfaceClass) {
-			this.asyncInterfaceClass = asyncInterfaceClass;
-		}
-
-		public void setMethodArguments(List<?> methodArguments) {
-			this.methodArguments = methodArguments;
-		}
-
-		public void setMethodArgumentTypes(List<Class> methodArgumentTypes) {
-			this.methodArgumentTypes = methodArgumentTypes;
-		}
-
-		public void setMethodName(String methodName) {
-			this.methodName = methodName;
-		}
 	}
 }

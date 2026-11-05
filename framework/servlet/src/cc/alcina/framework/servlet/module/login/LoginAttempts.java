@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import cc.alcina.framework.servlet.servlet.AlcinaRpcServlet;
 
 public class LoginAttempts {
 	protected boolean checkLockedOut() {
@@ -52,10 +52,10 @@ public class LoginAttempts {
 				loginModel.loginRequest.getUserName().toLowerCase());
 		loginAttempt.setDate(new Date());
 		loginAttempt.setIpAddress(ServletLayerUtils.robustGetRemoteAddress(
-				CommonRemoteServiceServlet.getContextThreadLocalRequest()));
+				AlcinaRpcServlet.CONTEXT_REQUEST.getTyped()));
 		loginAttempt.setSuccess(loginModel.loginResponse.isOk());
-		loginAttempt.setUserAgent(ServletLayerUtils.getUserAgent(
-				CommonRemoteServiceServlet.getContextThreadLocalRequest()));
+		loginAttempt.setUserAgent(ServletLayerUtils
+				.getUserAgent(AlcinaRpcServlet.CONTEXT_REQUEST.getTyped()));
 		Transaction.commit();
 	}
 }

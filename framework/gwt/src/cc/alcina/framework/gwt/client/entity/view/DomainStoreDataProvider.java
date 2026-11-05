@@ -19,14 +19,12 @@ import com.google.gwt.user.cellview.client.ColumnSortList.ColumnSortInfo;
 import com.google.gwt.user.cellview.client.DataGridWithScrollAccess;
 import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.view.client.AsyncDataProvider;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
@@ -37,6 +35,7 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders.Serializable
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.util.Ax;
@@ -391,7 +390,7 @@ public class DomainStoreDataProvider<T extends Entity>
 				Ax.out("calling searchmodel:\n\t%s %s %s", searchDefinition,
 						searchRange, this);
 				searchDefinition.setPageNumber(pageNumber);
-				Registry.impl(SearchModelPerformer.class)
+				Registry.impl(SearchRemoteServiceAsync.class)
 						.searchModel(searchDefinition, activeCallback);
 			}
 		}
@@ -577,10 +576,5 @@ public class DomainStoreDataProvider<T extends Entity>
 			groupedResult = result.getGroupedResult();
 			sortOrFireGroupedResults(null);
 		}
-	}
-
-	public interface SearchModelPerformer {
-		void searchModel(BindableSearchDefinition def,
-				AsyncCallback<ModelSearchResults> callback);
 	}
 }

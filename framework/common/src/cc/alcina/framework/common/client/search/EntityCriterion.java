@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
@@ -159,6 +160,9 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 
 	@Override
 	public String toString() {
+		if (getId() == 0) {
+			return CommonUtils.deInfix(NestedName.get(this));
+		}
 		return Ax.blankTo(getDisplayText(),
 				() -> Ax.format("(id:%s)", getId()));
 	}

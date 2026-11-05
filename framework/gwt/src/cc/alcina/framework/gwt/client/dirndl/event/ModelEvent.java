@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ClassSerialization;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
@@ -138,6 +139,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 
 	@Bean(PropertySource.FIELDS)
 	@TypeSerialization(flatSerializable = false)
+	@ReflectiveSerializer.Checks(ignore = true)
 	public static class SerializedForm {
 		public SerializedForm() {
 		}

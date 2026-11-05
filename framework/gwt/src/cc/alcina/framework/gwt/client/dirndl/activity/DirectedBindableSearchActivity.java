@@ -7,6 +7,7 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -16,7 +17,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -42,18 +46,59 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 				old_searchResults, searchResults);
 	}
 
+	public static class SearchReturned extends
+			ReflectedEvent<ModelSearchResults, SearchReturned.Handler, SearchReturned.Reflector> {
+		@Override
+		public void dispatch(SearchReturned.Handler handler) {
+			handler.onSearchReturned(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSearchReturned(SearchReturned event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSearchReturned(SearchReturned event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Reflector extends ModelEvent.Reflector {
+		}
+	}
+
+	public static class Searching extends
+			ReflectedEvent<BindableSearchDefinition, Searching.Handler, Searching.Reflector> {
+		@Override
+		public void dispatch(Searching.Handler handler) {
+			handler.onSearching(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSearching(Searching event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSearching(Searching event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Reflector extends ModelEvent.Reflector {
+		}
+	}
+
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
+		exec(() -> node.dispatch(ReflectedEvents.Searching.class, place.def))
+				.dispatch();
 		Registry.impl(SearchRemoteServiceAsync.class).searchModel(place.def,
 				AsyncCallbackStd.<ModelSearchResults> consumerForm(results -> {
 					setSearchResults(results);
 					if (provideIsBound()) {
-						// search result rendering is normally tree-shaped
-						Node node = provideNode();
-						node.dispatch(ModelEvents.SearchResultsReturned.class,
-								results);
-						// note this may cause node to become unbound
-						node.dispatch(ModelEvents.TransformSourceModified.class,
+						node.dispatch(ReflectedEvents.SearchReturned.class,
 								results);
 					}
 				}));

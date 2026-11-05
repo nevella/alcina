@@ -88,7 +88,7 @@ public class EntityCriterionPack {
 		}
 	}
 
-	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends Entity, SC extends EntityCriterion<O>>
+	public interface MultipleEntityCriterionHandler<I extends HasId, O extends Entity, SC extends EntityCriterion<O>>
 			extends DomainCriterionFilter<SC> {
 		@Override
 		default DomainFilter getFilter(SC sc) {

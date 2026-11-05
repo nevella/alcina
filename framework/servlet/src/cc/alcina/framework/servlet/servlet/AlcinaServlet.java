@@ -133,7 +133,7 @@ public abstract class AlcinaServlet extends HttpServlet
 			}
 		} catch (Throwable t) {
 			logger.warn("Alcina servlet request issue - user {} - url {}",
-					Permissions.get().getUser().toIdNameString(),
+					Permissions.getUser().toIdNameString(),
 					request.getRequestURI());
 			// If the connection has been reset, we can't print anything to the
 			// response

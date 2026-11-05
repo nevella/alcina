@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -2299,5 +2300,46 @@ public class CommonUtils {
 
 	public static <V> Stream<V> prependNull(Stream<V> stream) {
 		return (Stream<V>) Stream.concat(Stream.of(NULL_UNIT_ARRAY), stream);
+	}
+
+	public static <K extends Comparable, V> V
+			getGreatestLte(SortedMap<K, V> map, K key) {
+		return getGreatestLte(map, key, false);
+	}
+
+	/**
+	 * 
+	 * @param <K>
+	 * @param <V>
+	 * @param map
+	 * @param key
+	 * @param returnFirstKeyIfGt
+	 *            this seems like it should always be true - but pre-UI2
+	 *            behaviour is not so
+	 * @return
+	 */
+	public static <K extends Comparable, V> V getGreatestLte(
+			SortedMap<K, V> map, K key, boolean returnFirstKeyIfGt) {
+		V v = null;
+		if (map.isEmpty()) {
+			return null;
+		}
+		if (map.containsKey(key)) {
+			v = map.get(key);
+		} else {
+			SortedMap<K, V> headMap = map.headMap(key);
+			K key2 = null;
+			if (headMap == null || headMap.isEmpty()) {
+				if (returnFirstKeyIfGt) {
+					key2 = map.firstKey();
+				}
+			} else {
+				key2 = headMap.lastKey();
+			}
+			if (key2 != null) {
+				v = map.get(key2);
+			}
+		}
+		return v;
 	}
 }

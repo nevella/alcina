@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
@@ -28,7 +29,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 public interface IUser
 		extends IVersionable, HasDisplayName.Settable, AclSubject {
 	public static <IU extends IUser> IU current() {
-		return (IU) Permissions.get().getUser();
+		return (IU) Permissions.getUser();
 	}
 
 	@Override
@@ -62,7 +63,7 @@ public interface IUser
 	 * Provide if this user is the current user
 	 */
 	default boolean provideIsCurrent() {
-		return this.equals(Permissions.get().getUser());
+		return this.equals(Permissions.getUser());
 	}
 
 	default boolean provideIsMemberOf(IGroup group) {
@@ -93,5 +94,21 @@ public interface IUser
 
 	default String toIdNameString() {
 		return Ax.format("%s/%s", getId(), getUserName());
+	}
+
+	default String provideInitials() {
+		String initials = "";
+		if (Ax.notBlank(getFirstName())) {
+			initials += getFirstName().charAt(0);
+		}
+		if (Ax.notBlank(getLastName())) {
+			initials += getLastName().charAt(0);
+		}
+		if (initials.length() == 0) {
+			String username = Ax.blankTo(getUserName(), "??");
+			initials = username.toLowerCase().matches("anon.+") ? "Anon"
+					: username.substring(0, 2);
+		}
+		return initials.toUpperCase();
 	}
 }

@@ -411,6 +411,13 @@ public class ReflectiveSerializer {
 		boolean ignore() default false;
 	}
 
+	/**
+	 * Force package load for reflection checks
+	 */
+	@Registration.Self
+	public interface ForcePackage {
+	}
+
 	public static class DeserializerOptions {
 		boolean continueOnException;
 

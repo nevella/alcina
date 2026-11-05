@@ -48,6 +48,12 @@ public class Domain {
 		handler.async(locator, create, resultConsumer);
 	}
 
+	public static <T extends Entity> void async(Class<T> entityClass, long id,
+			boolean create, Consumer<T> resultConsumer) {
+		handler.async(new EntityLocator(entityClass, id, 0), create,
+				resultConsumer);
+	}
+
 	public static <V extends Entity> V by(Class<V> clazz,
 			PropertyEnum propertyName, Object value) {
 		return by(clazz, propertyName.name(), value);

@@ -238,6 +238,10 @@ public abstract class LooseContext {
 			return LooseContext.has(contextKey);
 		}
 
+		public boolean unset() {
+			return !has();
+		}
+
 		@Override
 		public long longValue() {
 			return LooseContext.getLong(contextKey);
@@ -273,12 +277,12 @@ public abstract class LooseContext {
 		}
 
 		public <V> V callWithTrue(Callable<V> callable) {
-			return callWith(callable, true);
+			return callWith(callable, (T) (Object) true);
 		}
 
-		public <V> V callWith(Callable<V> callable, boolean b) {
+		public <V> V callWith(Callable<V> callable, T t) {
 			try {
-				LooseContext.pushWithBoolean(getPath(), b);
+				LooseContext.pushWithKey(getPath(), t);
 				return callable.call();
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);

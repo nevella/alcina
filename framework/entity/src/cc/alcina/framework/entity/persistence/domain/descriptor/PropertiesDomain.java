@@ -31,14 +31,14 @@ public class PropertiesDomain {
 			getUserPropertyContainer(Class<P> clazz) {
 		IUser user = PersistentSingleton.class.isAssignableFrom(clazz)
 				? new UserlandProvider().getSystemUser()
-				: Permissions.get().getUser();
+				: Permissions.getUser();
 		return UserProperty.byUserClass(user, clazz);
 	}
 
 	public <P extends UserPropertyPersistable> P getProperties(Class<P> clazz) {
 		IUser user = PersistentSingleton.class.isAssignableFrom(clazz)
 				? new UserlandProvider().getSystemUser()
-				: Permissions.get().getUser();
+				: Permissions.getUser();
 		Optional<UserProperty> byUserClass = UserProperty.byUserClass(user,
 				clazz);
 		if (!byUserClass.isPresent()) {

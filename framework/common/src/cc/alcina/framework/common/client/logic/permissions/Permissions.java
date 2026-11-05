@@ -722,8 +722,8 @@ public class Permissions implements DomainTransformListener {
 		}
 	}
 
-	public IUser getUser() {
-		return this.user;
+	public static IUser getUser() {
+		return get().user;
 	}
 
 	// poss cache
@@ -837,7 +837,7 @@ public class Permissions implements DomainTransformListener {
 					permitted |= permitDueToOwnership((HasOwner) o);
 				}
 			} else {
-				permitted |= Objects.equals(Permissions.get().getUser(), o);
+				permitted |= Objects.equals(Permissions.getUser(), o);
 			}
 		}
 		if (!permitted && !doNotEvaluateNullObjectPermissions) {

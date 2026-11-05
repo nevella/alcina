@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -371,6 +372,10 @@ public class Suggestor extends Model.Fields implements
 
 	@Bean(PropertySource.FIELDS)
 	public static class StringAsk implements Ask {
+		public static class Parameter
+				extends InstanceQuery.Parameter<StringAsk> {
+		}
+
 		private String value;
 
 		private IntPair resultRange;

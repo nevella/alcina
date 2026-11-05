@@ -236,6 +236,12 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 			Registry.optional(AppPersistenceBase.InitRegistrySupport.class)
 					.ifPresent(r -> r.muteClassloaderLogging(false));
 		}
+		/*
+		 * Force package instantiation
+		 */
+		Registry.query(ReflectiveSerializer.ForcePackage.class).registrations()
+				.forEach(clazz -> {
+				});
 		serializables.forEach(this::checkSerializationIssues);
 		Preconditions.checkState(serializationIssues.isEmpty());
 		serializables.forEach(

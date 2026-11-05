@@ -236,10 +236,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	@Override
 	public String getEmailAddress() {
-		return emailAddress == null
-				? Permissions.get().getUser() == null ? null
-						: Permissions.get().getUser().getEmail()
-				: this.emailAddress;
+		return emailAddress == null ? Permissions.getUser() == null ? null
+				: Permissions.getUser().getEmail() : this.emailAddress;
 	}
 
 	@Override

@@ -1148,7 +1148,7 @@ public class JobRegistry {
 		public Job create() {
 			checkAnnotatedPermissions(task);
 			Job job = PersistentImpl.create(Job.class);
-			job.setUser(Permissions.get().getUser());
+			job.setUser(Permissions.getUser());
 			job.setState(initialState);
 			try {
 				LooseContext.push();

@@ -178,13 +178,14 @@ public class SearchDefinitionEditor extends Model.Fields
 				Consumer<Response> responseHandler) {
 			String value = ask.getValue();
 			Stream<Searchable> stream = criteriaResponse.getSuggestions()
-					.stream()
-					.map(suggestion -> ((CriterionSuggestion) suggestion).searchCriterion)
-					.filter(criterion -> {
+					.stream().filter(suggestion -> {
+						CriterionSuggestion cs = (CriterionSuggestion) suggestion;
 						return value.isEmpty()
 								|| SearchUtils.containsIgnoreCase(
-										criterion.toString(), value);
-					}).map(Searchable::new);
+										cs.searchCriterion.toString(), value);
+					})
+					.map(suggestion -> ((CriterionSuggestion) suggestion).searchCriterion)
+					.map(Searchable::new);
 			if (isSortCriteria()) {
 				stream = stream
 						.sorted(Comparator.comparing(Searchable::provideName));

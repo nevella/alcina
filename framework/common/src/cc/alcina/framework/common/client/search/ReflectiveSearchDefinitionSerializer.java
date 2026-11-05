@@ -117,7 +117,7 @@ public class ReflectiveSearchDefinitionSerializer
 			Class<? extends SearchDefinition> clazz, String serializedDef) {
 		Exception flatTreeDeserializationException = null;
 		if (clazz != null
-				&& (serializedDef.contains("=") || serializedDef.isEmpty())
+				&& (Ax.isBlank(serializedDef) || serializedDef.contains("="))
 				&& canFlatTreeSerialize(clazz)) {
 			try {
 				return (SD) FlatTreeSerializer.deserialize(clazz, serializedDef,

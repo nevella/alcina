@@ -137,4 +137,23 @@ public class ModelSearchResults<B extends IsBindable & SearchResult>
 		return Ax.format("Search: %s\n%s results", def,
 				queriedResultObjects.size());
 	}
+
+	public int computePageNumberHuman() {
+		return pageNumber + 1;
+	}
+
+	public int computeNumberOfPages() {
+		if (recordCount == 0) {
+			return 0;
+		}
+		return recordCount / def.getResultsPerPage();
+	}
+
+	public boolean computeHasNext() {
+		return pageNumber < computeNumberOfPages() - 1;
+	}
+
+	public boolean computeHasPrevious() {
+		return pageNumber != 0;
+	}
 }

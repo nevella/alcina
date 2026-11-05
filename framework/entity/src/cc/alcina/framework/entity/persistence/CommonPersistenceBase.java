@@ -103,14 +103,14 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	// note - this'll be a function of the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 5000;
 
-	public static final transient String CONTEXT_CLIENT_IP_ADDRESS = CommonPersistenceBase.class
-			.getName() + ".CONTEXT_CLIENT_IP_ADDRESS";
+	public static final LooseContext.Key<String> CONTEXT_CLIENT_IP_ADDRESS = LooseContext
+			.key(CommonPersistenceBase.class, "CONTEXT_CLIENT_IP_ADDRESS");
 
-	public static final transient String CONTEXT_CLIENT_INSTANCE_ID = CommonPersistenceBase.class
-			.getName() + ".CONTEXT_CLIENT_INSTANCE_ID";
+	public static final LooseContext.Key<Long> CONTEXT_CLIENT_INSTANCE_ID = LooseContext
+			.key(CommonPersistenceBase.class, "CONTEXT_CLIENT_INSTANCE_ID");
 
-	public static final transient String CONTEXT_PROJECT_ENTITIES = CommonPersistenceBase.class
-			.getName() + ".CONTEXT_PROJECT_ENTITIES";
+	public static final LooseContext.Key<Boolean> CONTEXT_PROJECT_ENTITIES = LooseContext
+			.key(CommonPersistenceBase.class, "CONTEXT_PROJECT_ENTITIES");
 
 	private static <A> Class<? extends A> getImplementation(Class<A> clazz) {
 		return PersistentImpl.getImplementation(clazz);
@@ -588,7 +588,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				"select  e from %s e where e.id >= ?1 and e.id < ?2 order by id desc",
 				implementationClass.getSimpleName())).setParameter(1, fromId)
 				.setParameter(2, toId).getResultList();
-		if (LooseContext.is(CONTEXT_PROJECT_ENTITIES)) {
+		if (CONTEXT_PROJECT_ENTITIES.is()) {
 			GraphProjectionDataFilter dataFilter = Registry
 					.impl(JPAImplementation.class)
 					.getResolvingFilter(null, null, true);
@@ -836,8 +836,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 					.getNewImplementationInstance(AuthenticationSession.class);
 			authenticationSession.setSessionId(authenticationSessionUid);
 			authenticationSession.setStartTime(new Date());
-			authenticationSession.setUser((IUser) persistentImpl(em,
-					(Entity) Permissions.get().getUser()));
+			authenticationSession.setUser(
+					(IUser) persistentImpl(em, (Entity) Permissions.getUser()));
 			authenticationSession.setAuthenticationType("server-instance");
 			authenticationSession.setIid(iid);
 			em.persist(authenticationSession);

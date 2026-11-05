@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.dom.DomNode.SplitResult;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -247,6 +248,10 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	public boolean isActive() {
 		return suggestor != null;
+	}
+
+	public Class<? extends DecoratorNode> getDecoratorNodeType() {
+		return Reflections.at(descriptor).getGenericBounds().bounds.get(2);
 	}
 
 	@Override

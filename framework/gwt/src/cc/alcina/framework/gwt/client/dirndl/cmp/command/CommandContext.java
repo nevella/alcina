@@ -4,10 +4,12 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CommandContextRegistration;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CommandContextRegistration.Data;
 
+@Reflected
 public interface CommandContext {
 	public interface Provider {
 		/*

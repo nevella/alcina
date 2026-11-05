@@ -47,32 +47,9 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		// direct access ok
 		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
 			cmps = (Map) serializableSearchOrders.stream()
-					.collect(AlcinaCollectors.toLinkedHashMap(sso -> {
-						String key = sso.getKey();
-						if (key.contains(".")) {
-							Class clazz = Reflections.forName(key);
-							return (SearchOrder) Reflections.newInstance(clazz);
-						} else {
-							Optional<Class<? extends SearchOrder>> typeSerializationMatch = Registry
-									.query(SearchOrder.class).registrations()
-									.filter(orderClass -> {
-										String typeKey = Reflections
-												.at(orderClass)
-												.annotationOptional(
-														TypeSerialization.class)
-												.map(TypeSerialization::value)
-												.orElse(null);
-										return Objects.equals(typeKey, key);
-									}).findFirst();
-							if (typeSerializationMatch.isPresent()) {
-								return Reflections.newInstance(
-										typeSerializationMatch.get());
-							}
-							DisplaySearchOrder displaySearchOrder = new DisplaySearchOrder();
-							displaySearchOrder.setFieldName(key);
-							return displaySearchOrder;
-						}
-					}, sso -> sso.isAscending()));
+					.collect(AlcinaCollectors.toLinkedHashMap(
+							SerializableSearchOrder::toSearchOrder,
+							SerializableSearchOrder::isAscending));
 		}
 		return cmps;
 	}
@@ -307,6 +284,29 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			return this.ascending;
 		}
 
+		public SearchOrder toSearchOrder() {
+			if (key.contains(".")) {
+				Class clazz = Reflections.forName(key);
+				return (SearchOrder) Reflections.newInstance(clazz);
+			} else {
+				Optional<Class<? extends SearchOrder>> typeSerializationMatch = Registry
+						.query(SearchOrder.class).registrations()
+						.filter(orderClass -> {
+							String typeKey = Reflections.at(orderClass)
+									.annotationOptional(TypeSerialization.class)
+									.map(TypeSerialization::value).orElse(null);
+							return Objects.equals(typeKey, key);
+						}).findFirst();
+				if (typeSerializationMatch.isPresent()) {
+					return Reflections
+							.newInstance(typeSerializationMatch.get());
+				}
+				DisplaySearchOrder displaySearchOrder = new DisplaySearchOrder();
+				displaySearchOrder.setFieldName(key);
+				return displaySearchOrder;
+			}
+		}
+
 		public void setAscending(boolean ascending) {
 			this.ascending = ascending;
 		}
@@ -331,5 +331,9 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		public Integer apply(H t) {
 			return sorted.indexOf(Long.valueOf(t.getId()));
 		}
+	}
+
+	public boolean isSingleOrder() {
+		return _getCmps().size() == 1;
 	}
 }

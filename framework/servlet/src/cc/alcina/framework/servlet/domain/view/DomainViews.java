@@ -504,7 +504,7 @@ public abstract class DomainViews {
 
 		public ViewsTask() {
 			loginState = Permissions.getLoginState();
-			user = Permissions.get().getUser();
+			user = Permissions.getUser();
 		}
 
 		void await() {

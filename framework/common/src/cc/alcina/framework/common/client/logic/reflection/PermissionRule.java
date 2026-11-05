@@ -46,7 +46,7 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			throwIfFalse(e.containsUser(Permissions.get().getUser()));
+			throwIfFalse(e.containsUser(Permissions.getUser()));
 			return e;
 		}
 	}
@@ -55,8 +55,7 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			throwIfFalse(
-					Objects.equals(e.getOwner(), Permissions.get().getUser()));
+			throwIfFalse(Objects.equals(e.getOwner(), Permissions.getUser()));
 			return e;
 		}
 	}

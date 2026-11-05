@@ -133,6 +133,11 @@ public abstract class ExtensibleEnum {
 		return (E) valueLookup.get(registryPoint, name);
 	}
 
+	public static synchronized <E extends ExtensibleEnum> E
+			valueOf(Class<E> instanceClass) {
+		return valueOf(instanceClass, instanceClass.getSimpleName());
+	}
+
 	public static synchronized <E extends ExtensibleEnum> List<E>
 			values(Class<E> enumClass) {
 		return (List<E>) superLookup.get(enumClass);

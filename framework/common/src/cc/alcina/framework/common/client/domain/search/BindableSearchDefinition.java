@@ -150,8 +150,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		}
 	}
 
-	public Optional<EntityCriterion>
-			provideEntityCriterion(Class clazz) {
+	public Optional<EntityCriterion> provideEntityCriterion(Class clazz) {
 		return allCriteria().stream()
 				.filter(sc -> sc instanceof EntityCriterion)
 				.map(sc -> (EntityCriterion) sc).filter(toc -> toc.getId() != 0

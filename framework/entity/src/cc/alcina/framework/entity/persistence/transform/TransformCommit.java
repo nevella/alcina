@@ -267,7 +267,7 @@ public class TransformCommit {
 						}
 						if (wrapperUser == null) {
 							// admin persistence
-							wrapperUser = Permissions.get().getUser();
+							wrapperUser = Permissions.getUser();
 						}
 						boolean asRoot = wrapperUser == UserlandProvider.get()
 								.getSystemUser();
@@ -277,11 +277,11 @@ public class TransformCommit {
 						if (!Objects.equals(
 								request.getClientInstance().domain()
 										.domainVersion().provideUser(),
-								Permissions.get().getUser())) {
+								Permissions.getUser())) {
 							throw new UnsupportedOperationException(
 									"May need to create an additional authenticationSession");
 							// request.getClientInstance()
-							// .setUser(Permissions.get().getUser());
+							// .setUser(Permissions.getUser());
 						}
 					}
 					boolean last = idx == records.size() - 1;

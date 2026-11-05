@@ -140,4 +140,8 @@ public abstract class EntityNode<E extends Entity>
 			return wrappedType.toLocator();
 		}
 	}
+
+	public static abstract class IntermediateDescriptor<WT>
+			extends DecoratorNode.Descriptor<WT, EntityLocator, EntityNode> {
+	}
 }

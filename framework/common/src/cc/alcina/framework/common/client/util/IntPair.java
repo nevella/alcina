@@ -203,6 +203,18 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		return null;
 	}
 
+	public static List<IntPair> intersections(List<IntPair> ranges,
+			IntPair range) {
+		List<IntPair> result = new ArrayList<>();
+		for (IntPair intPair : ranges) {
+			IntPair intersection = range.intersection(intPair);
+			if (intersection != null && !intersection.isPoint()) {
+				result.add(intersection);
+			}
+		}
+		return result;
+	}
+
 	public static List<IntPair> asContinuousRangeList(IntPair intPair,
 			List<IntPair> truncateTos) {
 		TreeSet<Integer> points = new TreeSet<>();
@@ -606,5 +618,44 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 
 	public boolean isBoundary(int index) {
 		return i1 == index || i2 == index;
+	}
+
+	public interface HasRanges {
+		List<IntPair> getIntRanges();
+	}
+
+	public static class Intersection<T extends HasRanges>
+			implements Comparable<Intersection<T>> {
+		public List<IntPair> intersections;
+
+		public T hasIntersections;
+
+		public Intersection(T hasIntersections, IntPair intersector) {
+			this.hasIntersections = hasIntersections;
+			intersections = intersections(hasIntersections.getIntRanges(),
+					intersector);
+		}
+
+		@Override
+		public int compareTo(Intersection<T> o) {
+			if (intersections.isEmpty()) {
+				if (o.intersections.isEmpty()) {
+					return 0;
+				} else {
+					return 1;
+				}
+			} else {
+				if (o.intersections.isEmpty()) {
+					return -1;
+				} else {
+					return Ax.first(intersections)
+							.compareTo(Ax.first(o.intersections));
+				}
+			}
+		}
+
+		public boolean isEmpty() {
+			return intersections.isEmpty();
+		}
 	}
 }

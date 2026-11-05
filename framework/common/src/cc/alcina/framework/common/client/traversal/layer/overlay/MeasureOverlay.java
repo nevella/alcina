@@ -154,28 +154,27 @@ public class MeasureOverlay {
 					return true;
 				}
 			}
+		}
 
-			public DomNode getDeepestFullHorizontalSpanBlock(DomNode block,
-					DomNode contentNode) {
-				if (!block.ancestors().stream().toList()
-						.contains(contentNode)) {
-					return block;
-				}
-				DomNode result = block;
-				DomNode cursor = block;
-				while (cursor != contentNode) {
-					String name = cursor.name().toLowerCase();
-					switch (name) {
-					// style model edge containers
-					case "tr":
-					case "li":
-						result = cursor;
-						break;
-					}
-					cursor = cursor.parent();
-				}
-				return result;
+		default DomNode getDeepestFullHorizontalSpanBlock(DomNode block,
+				DomNode contentNode) {
+			if (!block.ancestors().stream().toList().contains(contentNode)) {
+				return block;
 			}
+			DomNode result = block;
+			DomNode cursor = block;
+			while (cursor != contentNode) {
+				String name = cursor.name().toLowerCase();
+				switch (name) {
+				// style model edge containers
+				case "tr":
+				case "li":
+					result = cursor;
+					break;
+				}
+				cursor = cursor.parent();
+			}
+			return result;
 		}
 	}
 

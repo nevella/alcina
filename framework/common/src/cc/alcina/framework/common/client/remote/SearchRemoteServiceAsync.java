@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.SuggestOracle.Response;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 /**
@@ -34,4 +35,7 @@ public interface SearchRemoteServiceAsync {
 
 	public void suggest(BoundSuggestOracleRequest request,
 			AsyncCallback<Response> asyncCallback);
+
+	void suggestCriteria(StringAsk ask, boolean showAllCriteria,
+			AsyncCallback<Response> transformingCallback);
 }

@@ -55,7 +55,7 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public static <P extends UserProperty<?>> Optional<P> byKey(String key) {
-		return byUserKey(Permissions.get().getUser(), key);
+		return byUserKey(Permissions.getUser(), key);
 	}
 
 	public static <P extends UserProperty<?>> Optional<P> byUserClass(
@@ -90,7 +90,7 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public static <P extends UserProperty<?>> P ensure(String key) {
-		return ensure(Permissions.get().getUser(), key);
+		return ensure(Permissions.getUser(), key);
 	}
 
 	private static <P extends UserProperty<?>> Class<P> implementation() {

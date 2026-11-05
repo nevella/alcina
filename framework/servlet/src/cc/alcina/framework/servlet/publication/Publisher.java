@@ -121,7 +121,7 @@ public class Publisher {
 						&& definition.provideDeliveryModel() == deliveryModel);
 		publication.setDefinition(definition);
 		publication.setDefinitionDescription(definition.toString());
-		publication.setUser(Permissions.get().getUser());
+		publication.setUser(Permissions.getUser());
 		publication.setPublicationDate(new Date());
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
@@ -204,7 +204,7 @@ public class Publisher {
 		boolean persistPublication = forPublication
 				&& !AppPersistenceBase.isInstanceReadOnly();
 		if (persistPublication) {
-			IUser user = Permissions.get().getUser();
+			IUser user = Permissions.getUser();
 			if (user == null) {
 				user = UserlandProvider.get().getSystemUser();
 			}

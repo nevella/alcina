@@ -1566,7 +1566,7 @@ public class DomainStore implements IDomainStore {
 										+ "\n\t Current user: {}"
 										+ "\n\t Current pm instance: {}"
 										+ "\n\t Service instance: {}",
-								locator, Permissions.get().getUser(),
+								locator, Permissions.getUser(),
 								Permissions.get().getClientInstance(),
 								ServerClientInstance.get());
 					} else {

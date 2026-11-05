@@ -888,30 +888,6 @@ public class ModelEvents {
 		}
 	}
 
-	/**
-	 * The nested model knows (with its cleverness) that it's the source of the
-	 * transform. But of course the ancestor decides whether it should refresh
-	 * the transform
-	 *
-	 * FIXME - dirndl 1x1e - for top-level properties of a transformed object,
-	 * should be replaced by a listener controlled and defined by the transform.
-	 * Use only for deeper properties of an object that have essentially a
-	 * computed representation (a direct representation will be handled by the
-	 * property's propertychangelistener)
-	 *
-	 */
-	public static class TransformSourceModified
-			extends ModelEvent<Object, TransformSourceModified.Handler> {
-		@Override
-		public void dispatch(TransformSourceModified.Handler handler) {
-			handler.onTransformSourceModified(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onTransformSourceModified(TransformSourceModified event);
-		}
-	}
-
 	public static class View extends ModelEvent<Object, View.Handler> {
 		@Override
 		public void dispatch(View.Handler handler) {

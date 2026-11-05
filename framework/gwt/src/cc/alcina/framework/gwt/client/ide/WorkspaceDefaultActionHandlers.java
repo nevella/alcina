@@ -132,7 +132,7 @@ public class WorkspaceDefaultActionHandlers {
 				TextProvider.get().putDisplayName(newObj, "New " + tdn);
 				if (newObj instanceof IVersionableOwnable) {
 					((IVersionableOwnable) newObj)
-							.setOwner(Permissions.get().getUser());
+							.setOwner(Permissions.getUser());
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

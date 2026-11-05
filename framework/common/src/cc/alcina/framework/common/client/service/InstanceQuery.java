@@ -51,6 +51,10 @@ public final class InstanceQuery implements TreeSerializable {
 	@ReflectiveSerializer.Checks(ignore = true)
 	public abstract static class Parameter<V>
 			implements TreeSerializable, Registration.AllSubtypes {
+		public static class BooleanParameter
+				extends InstanceQuery.Parameter<Boolean> {
+		}
+
 		/**
 		 * When comparing queries, this parameter may be ignored (if it is
 		 * essentially empty)
@@ -77,17 +81,21 @@ public final class InstanceQuery implements TreeSerializable {
 					getSoleParameterOfType(Class clazz) {
 				if (valueTypeParameterType == null) {
 					valueTypeParameterType = AlcinaCollections.newUnqiueMap();
+				}
+				Class<? extends Parameter> parameterClass = valueTypeParameterType
+						.get(clazz);
+				if (parameterClass == null) {
 					List<Class<? extends Parameter>> candidates = Registry
 							.query(Parameter.class).registrations()
 							.filter(t -> Reflections.at(t)
 									.firstGenericBound() == clazz)
 							.toList();
 					if (candidates.size() == 1) {
-						valueTypeParameterType.put(clazz, candidates.get(0));
+						parameterClass = candidates.get(0);
+						valueTypeParameterType.put(clazz, parameterClass);
 					}
 				}
-				return Reflections
-						.newInstance(valueTypeParameterType.get(clazz));
+				return Reflections.newInstance(parameterClass);
 			}
 		}
 

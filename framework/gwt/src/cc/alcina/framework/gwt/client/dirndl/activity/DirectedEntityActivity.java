@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -81,14 +82,8 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 					exec(() -> emitEvent(ModelEvents.NotFound.class,
 							getPlace().asLocator())).deferred().dispatch();
 				}
-				// FIXME - dirndl - can't we just use listeners on
-				// entity/entitynotfound? this is not the transform
-				// target, it
-				// *is* the transform source
-				if (provideIsBound()) {
-					// entity rendering is normally tree-shaped
-					provideNode().dispatch(
-							ModelEvents.TransformSourceModified.class, e);
+				if (e != null && provideIsBound()) {
+					emitEvent(ReflectedEvents.EntityLoaded.class, e);
 				}
 			};
 			if (provideIsCreate()) {

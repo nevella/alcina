@@ -5,6 +5,9 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -143,7 +146,7 @@ public class ReflectedEvents {
 	}
 
 	public static class Searching extends
-			ReflectedEvent<Object, Searching.Handler, Searching.Reflector> {
+			ReflectedEvent<SearchDefinition, Searching.Handler, Searching.Reflector> {
 		@Override
 		public void dispatch(Searching.Handler handler) {
 			handler.onSearching(this);
@@ -156,6 +159,50 @@ public class ReflectedEvents {
 		public interface Binding extends Handler {
 			@Override
 			default void onSearching(Searching event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Reflector extends ModelEvent.Reflector {
+		}
+	}
+
+	public static class SearchReturned extends
+			ReflectedEvent<ModelSearchResults, SearchReturned.Handler, SearchReturned.Reflector> {
+		@Override
+		public void dispatch(SearchReturned.Handler handler) {
+			handler.onSearchReturned(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSearchReturned(SearchReturned event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onSearchReturned(SearchReturned event) {
+				((Model) this).bindings().onNodeEvent(event);
+			}
+		}
+
+		public interface Reflector extends ModelEvent.Reflector {
+		}
+	}
+
+	public static class EntityLoaded extends
+			ReflectedEvent<Entity, EntityLoaded.Handler, EntityLoaded.Reflector> {
+		@Override
+		public void dispatch(EntityLoaded.Handler handler) {
+			handler.onEntityLoaded(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEntityLoaded(EntityLoaded event);
+		}
+
+		public interface Binding extends Handler {
+			@Override
+			default void onEntityLoaded(EntityLoaded event) {
 				((Model) this).bindings().onNodeEvent(event);
 			}
 		}

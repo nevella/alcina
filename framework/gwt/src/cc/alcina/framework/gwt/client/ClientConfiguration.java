@@ -42,7 +42,7 @@ public class ClientConfiguration {
 	protected void extraConfiguration() {
 	}
 
-	protected void initCommonClient() {
+	public void initCommonClient() {
 		TransformManager.register(createTransformManager());
 		Domain.registerHandler(new DomainHandlerClient());
 		LooseContext.register(new ClientLooseContextProvider());

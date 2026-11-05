@@ -69,8 +69,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			LooseContext.setTrue(
 					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
 			LooseContext.setTrue(KryoUtils.CONTEXT_BYPASS_POOL);
-			LooseContext
-					.setTrue(CommonPersistenceBase.CONTEXT_PROJECT_ENTITIES);
+			CommonPersistenceBase.CONTEXT_PROJECT_ENTITIES.setTrue();
 			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);
 			LooseContext.setTrue(
 					ThreadlocalTransformManager.CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS);
