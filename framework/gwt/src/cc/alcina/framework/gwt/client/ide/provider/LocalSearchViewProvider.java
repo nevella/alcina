@@ -24,7 +24,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.search.LocalSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -35,6 +34,7 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.InputButton;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 /**
  *

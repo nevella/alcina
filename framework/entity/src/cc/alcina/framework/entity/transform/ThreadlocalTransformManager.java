@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.SliceProcessor;
@@ -102,6 +101,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.util.MethodContext;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *

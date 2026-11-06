@@ -5,10 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.validator.ValidationFeedback;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -19,6 +15,9 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsTable.FmsTreeTableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationFeedback;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;

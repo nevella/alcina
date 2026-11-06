@@ -25,8 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  *

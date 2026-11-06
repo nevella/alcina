@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 public class CollectionDisplayNameRenderer extends FlexibleToStringRenderer {
 	public static final CollectionDisplayNameRenderer INSTANCE = new CollectionDisplayNameRenderer();
 
-	public String render(Object o) {
+	public String apply(Object o) {
 		if (o == null || !(o instanceof Collection)) {
 			return "(Undefined)";
 		}

@@ -13,9 +13,8 @@
  */
 package cc.alcina.framework.common.client.actions;
 
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * Limits serialization options for gwt serialization generator

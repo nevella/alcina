@@ -48,17 +48,8 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Binding.BindingInstance;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.table.DataProvider;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
 
+import java.util.function.Function;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
@@ -117,6 +108,15 @@ import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.layout.ExpandableListPanel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding.BindingInstance;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.DataProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  *
@@ -250,7 +250,7 @@ public class ContentViewFactory {
 	}
 
 	public ActionTableHolder createActionTable(Collection<?> beans,
-			Class beanClass, Converter converter,
+			Class beanClass, Function converter,
 			Collection<PermissibleAction> actions,
 			PermissibleActionListener listener, boolean withObjectActions,
 			boolean multiple) {
@@ -287,7 +287,7 @@ public class ContentViewFactory {
 	}
 
 	public PaneWrapperWithObjects createActionTableWithCaption(Collection beans,
-			Class beanClass, Converter converter,
+			Class beanClass, Function converter,
 			Collection<PermissibleAction> actions,
 			PermissibleActionListener listener, boolean withObjectActions,
 			boolean multiple) {
@@ -1437,7 +1437,7 @@ public class ContentViewFactory {
 	public static class WidgetList<T> extends Composite {
 		private FlowPanel fp;
 
-		public WidgetList(Collection<T> beans, Converter<T, Widget> converter,
+		public WidgetList(Collection<T> beans, Function<T, Widget> converter,
 				String emptyMessage) {
 			this.fp = new FlowPanel();
 			initWidget(fp);
@@ -1448,7 +1448,7 @@ public class ContentViewFactory {
 				fp.add(l);
 			} else {
 				for (T t : beans) {
-					fp.add(converter.convert(t));
+					fp.add(converter.apply(t));
 				}
 			}
 		}

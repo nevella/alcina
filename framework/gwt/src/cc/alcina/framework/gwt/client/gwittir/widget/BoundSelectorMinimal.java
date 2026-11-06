@@ -17,7 +17,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
@@ -61,7 +61,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
-			int maxSelectedItems, Renderer renderer, String hint) {
+			int maxSelectedItems, Function renderer, String hint) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer, false,
 				() -> TransformManager.get()
 						.getCollection(selectionObjectClass),

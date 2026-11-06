@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
-public class PassthroughWithNullRenderer implements Renderer<String, String> {
+public class PassthroughWithNullRenderer implements Function<String, String> {
 	private final String nullValue;
 
 	public PassthroughWithNullRenderer(String nullValue) {
@@ -10,7 +10,7 @@ public class PassthroughWithNullRenderer implements Renderer<String, String> {
 	}
 
 	@Override
-	public String render(String o) {
+	public String apply(String o) {
 		return o == null ? nullValue : o;
 	}
 }

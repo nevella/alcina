@@ -1,7 +1,8 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.table.Field;
+
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 public interface GridFormCellRenderer {
 	public void addButtonWidget(Widget widget);

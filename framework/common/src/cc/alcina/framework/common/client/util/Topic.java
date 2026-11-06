@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
+
+import cc.alcina.framework.common.client.Preconditions;
 
 /*
  * A message passing mechanism. Previously topics also had a string key - this

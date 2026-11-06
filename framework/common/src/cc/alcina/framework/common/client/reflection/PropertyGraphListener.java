@@ -6,13 +6,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Intersection;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * Enables listening to a graph (generally a tree) of object/property changes,

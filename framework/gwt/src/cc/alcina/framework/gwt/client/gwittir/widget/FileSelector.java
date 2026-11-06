@@ -16,9 +16,9 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HasEnabled;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  * A very, very, very simple, rapid implementation. Very.

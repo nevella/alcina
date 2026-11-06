@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -28,11 +29,10 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.RadioButton;
-import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
-import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
 
 @SuppressWarnings("deprecation")
 /**
@@ -48,11 +48,11 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 
 	private Collection<T> values;
 
-	private Renderer<T, String> renderer;
+	private Function<T, String> renderer;
 
 	private String groupName;
 
-	private Renderer<T, ImageResource> iconRenderer;
+	private Function<T, ImageResource> iconRenderer;
 
 	private int columnCount = 1;
 
@@ -68,17 +68,17 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 	}
 
 	public RadioButtonList(String groupName, Collection<T> values,
-			Renderer<T, String> renderer) {
+			Function<T, String> renderer) {
 		this(groupName, values, renderer, 1);
 	}
 
 	public RadioButtonList(String groupName, Collection<T> values,
-			Renderer<T, String> renderer, int columnCount) {
+			Function<T, String> renderer, int columnCount) {
 		this(groupName, values, renderer, columnCount, null);
 	}
 
 	public RadioButtonList(String groupName, Collection<T> values,
-			Renderer<T, String> renderer, int columnCount,
+			Function<T, String> renderer, int columnCount,
 			String radioButtonContainerStyleName) {
 		this.groupName = groupName;
 		this.renderer = renderer;
@@ -90,7 +90,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 	}
 
 	public RadioButtonList(String groupName, Object[] values,
-			Renderer<T, String> renderer, int columnCount) {
+			Function<T, String> renderer, int columnCount) {
 		this(groupName, (Collection<T>) Arrays.asList(values), renderer,
 				columnCount);
 	}
@@ -107,7 +107,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 		return columnCount;
 	}
 
-	public Renderer<T, ImageResource> getIconRenderer() {
+	public Function<T, ImageResource> getIconRenderer() {
 		return this.iconRenderer;
 	}
 
@@ -172,10 +172,10 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 		table = new FlexTable();
 		int x = 0, y = 0;
 		for (T o : getValues()) {
-			String displayHtml = renderer.render(o);
+			String displayHtml = renderer.apply(o);
 			if (iconRenderer != null) {
 				String imgHtml = AbstractImagePrototype
-						.create(iconRenderer.render(o)).getHTML();
+						.create(iconRenderer.apply(o)).getHTML();
 				displayHtml = Ax.format(
 						"<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>",
 						imgHtml, displayHtml);
@@ -197,7 +197,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 		render();
 	}
 
-	public void setIconRenderer(Renderer<T, ImageResource> iconRenderer) {
+	public void setIconRenderer(Function<T, ImageResource> iconRenderer) {
 		this.iconRenderer = iconRenderer;
 		render();
 	}

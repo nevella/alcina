@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.objecttree;
 
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * 

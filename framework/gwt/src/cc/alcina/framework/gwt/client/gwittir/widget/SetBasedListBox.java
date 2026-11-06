@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -60,11 +61,6 @@ import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.SourcesChangeEvents;
 import com.google.gwt.user.client.ui.SourcesFocusEvents;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.SimpleComparator;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.actions.InlineButtonHandler;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -80,6 +76,10 @@ import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.Prompter;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.SimpleComparator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
 
 /**
  *
@@ -139,7 +139,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 
 	public void addItem(final Object o) {
 		options.add(o);
-		this.base.addItem((String) this.getRenderer().render(o));
+		this.base.addItem((String) this.getRenderer().apply(o));
 	}
 
 	@Override
@@ -460,7 +460,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		}
 		for (Iterator it = options.iterator(); it.hasNext();) {
 			Object item = it.next();
-			this.base.addItem((String) this.getRenderer().render(item));
+			this.base.addItem((String) this.getRenderer().apply(item));
 			if (contains(this.selected, item)) {
 				this.base.setItemSelected(this.base.getItemCount() - 1, true);
 				newSelected.add(item);
@@ -492,7 +492,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 	}
 
 	@Override
-	public void setRenderer(Renderer renderer) {
+	public void setRenderer(Function renderer) {
 		super.setRenderer(renderer);
 		this.setOptions(this.options);
 	}

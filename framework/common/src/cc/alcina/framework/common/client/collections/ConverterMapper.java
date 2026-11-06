@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PathMapper.PathMapping;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
-public class ConverterMapper<A, B> implements Converter<A, B> {
+public class ConverterMapper<A, B> implements Function<A, B> {
 	protected Class<A> leftClass;
 
 	protected Class<B> rightClass;
@@ -44,7 +44,7 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	}
 
 	@Override
-	public B convert(A a) {
+	public B apply(A a) {
 		try {
 			B b = rightSupplier == null ? Reflections.newInstance(rightClass)
 					: rightSupplier.get();
@@ -99,12 +99,12 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	public class BidiConverterAdapter implements BidiConverter<A, B> {
 		@Override
 		public B leftToRight(A a) {
-			return convert(a);
+			return apply(a);
 		}
 
 		@Override
 		public A rightToLeft(B b) {
-			return invert().convert(b);
+			return invert().apply(b);
 		}
 	}
 }

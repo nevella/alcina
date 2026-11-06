@@ -13,10 +13,9 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import java.util.function.Function;
+
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -28,6 +27,8 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -55,11 +56,11 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 		return new ModelPlaceRenderer();
 	}
 
-	public static class ModelPlaceRenderer implements Renderer<Object, String> {
+	public static class ModelPlaceRenderer implements Function<Object, String> {
 		private RenderingHtml html;
 
 		@Override
-		public String render(Object value) {
+		public String apply(Object value) {
 			if (value == null) {
 				return "";
 			}

@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.sync;
 import java.util.Collections;
 import java.util.List;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -15,7 +15,7 @@ public interface StringKeyProvider<T> {
 	public String firstKey(T object);
 
 	public static class StringKeyProviderAllKeysConverter<T>
-			implements Converter<T, String> {
+			implements Function<T, String> {
 		private StringKeyProvider<T> provider;
 
 		public StringKeyProviderAllKeysConverter(
@@ -24,7 +24,7 @@ public interface StringKeyProvider<T> {
 		}
 
 		@Override
-		public String convert(T original) {
+		public String apply(T original) {
 			return CommonUtils.join(provider.allKeys(original), ", ");
 		}
 	}

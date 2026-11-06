@@ -25,7 +25,7 @@ public class TitleCaseConstantRenderer extends FlexibleToStringRenderer {
 	public static final TitleCaseConstantRenderer INSTANCE = new TitleCaseConstantRenderer();
 
 	@Override
-	public String render(Object o) {
+	public String apply(Object o) {
 		if (o == null) {
 			return "-- Any --";
 		}

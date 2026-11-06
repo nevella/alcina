@@ -15,7 +15,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
@@ -27,6 +26,7 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObje
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.ClientUtils.EditContentViewWidgets;
 import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBinding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 public class ContentViewSections {
 	public List<ContentViewSection> sections = new ArrayList<>();

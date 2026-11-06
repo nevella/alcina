@@ -13,12 +13,12 @@ public class ISODatePlaceCustomiser extends ModelPlaceCustomiser {
 
 	private static class ISODateRenderer extends ModelPlaceRenderer {
 		@Override
-		public String render(Object value) {
+		public String apply(Object value) {
 			if (value instanceof Date) {
 				value = DateTimeFormat.getFormat(PredefinedFormat.ISO_8601)
 						.format((Date) value);
 			}
-			return super.render(value);
+			return super.apply(value);
 		}
 	}
 }

@@ -13,8 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Label;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Label;
 
 /**
  *

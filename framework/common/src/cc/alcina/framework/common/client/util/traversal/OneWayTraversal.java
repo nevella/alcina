@@ -4,8 +4,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.function.Supplier;
 
-import com.google.common.base.Preconditions;
-
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal.TraversalNode;
 

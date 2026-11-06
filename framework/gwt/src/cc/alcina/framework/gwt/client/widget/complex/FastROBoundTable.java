@@ -45,12 +45,6 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.table.DataProvider;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
@@ -65,6 +59,12 @@ import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.DataProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  *

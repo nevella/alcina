@@ -2,7 +2,8 @@ package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public class BoundToggleLink extends AbstractBoundWidget<Boolean>
 		implements SelectionHandler<Integer> {

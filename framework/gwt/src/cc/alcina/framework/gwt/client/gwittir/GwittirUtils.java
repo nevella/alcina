@@ -20,16 +20,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.RadioButton;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Checkbox;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
@@ -43,6 +37,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Checkbox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  *
@@ -102,18 +102,18 @@ public class GwittirUtils {
 	}
 
 	public static SetBasedListBox getForEnumAndRenderer(
-			Class<? extends Enum> clazz, Renderer renderer) {
+			Class<? extends Enum> clazz, Function renderer) {
 		return getForEnumAndRenderer(clazz, renderer, new ArrayList());
 	}
 
 	public static SetBasedListBox getForEnumAndRenderer(
-			Class<? extends Enum> clazz, Renderer renderer,
+			Class<? extends Enum> clazz, Function renderer,
 			Collection<? extends Enum> ignore) {
 		return getForEnumAndRenderer(clazz, renderer, ignore, false);
 	}
 
 	public static SetBasedListBox getForEnumAndRenderer(
-			Class<? extends Enum> clazz, Renderer renderer,
+			Class<? extends Enum> clazz, Function renderer,
 			Collection<? extends Enum> ignore, boolean withNull) {
 		SetBasedListBox listBox = new SetBasedListBox();
 		Enum[] enumValues = clazz.getEnumConstants();
@@ -130,7 +130,7 @@ public class GwittirUtils {
 	}
 
 	public static SetBasedListBox getForExtensibleEnumAndRenderer(
-			Class<? extends ExtensibleEnum> clazz, Renderer renderer,
+			Class<? extends ExtensibleEnum> clazz, Function renderer,
 			Collection<? extends ExtensibleEnum> ignore) {
 		SetBasedListBox listBox = new SetBasedListBox();
 		List options = new ArrayList(ExtensibleEnum.values(clazz));
@@ -304,10 +304,10 @@ public class GwittirUtils {
 		}
 	}
 
-	public static ArrayList sortByStringValue(Collection c, Renderer renderer) {
+	public static ArrayList sortByStringValue(Collection c, Function renderer) {
 		Map<String, List> m = new HashMap<String, List>();
 		for (Object o : c) {
-			String key = o == null ? null : (String) renderer.render(o);
+			String key = o == null ? null : (String) renderer.apply(o);
 			if (!m.containsKey(key)) {
 				m.put(key, new ArrayList());
 			}

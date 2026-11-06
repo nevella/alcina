@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import java.util.function.Function;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public class AbstractBoundWidgetWrapper<T, C> extends AbstractBoundWidget<T>
 		implements HasComplexPanel {
@@ -11,12 +11,12 @@ public class AbstractBoundWidgetWrapper<T, C> extends AbstractBoundWidget<T>
 
 	private final AbstractBoundWidget<C> wrappee;
 
-	private final Converter<T, C> converter;
+	private final Function<T, C> converter;
 
 	private FlowPanel fp;
 
 	public AbstractBoundWidgetWrapper(AbstractBoundWidget<C> wrappee,
-			Converter<T, C> converter) {
+			Function<T, C> converter) {
 		this.wrappee = wrappee;
 		this.converter = converter;
 		fp = new FlowPanel();
@@ -46,6 +46,6 @@ public class AbstractBoundWidgetWrapper<T, C> extends AbstractBoundWidget<T>
 
 	public void setValue(T value) {
 		this.value = value;
-		wrappee.setValue(converter.convert(value));
+		wrappee.setValue(converter.apply(value));
 	}
 }

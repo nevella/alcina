@@ -14,21 +14,20 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.Comparator;
-
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class RendererComparator implements Comparator {
-	private final Renderer renderer;
+	private final Function renderer;
 
-	public RendererComparator(Renderer<?, ? extends Comparable> renderer) {
+	public RendererComparator(Function<?, ? extends Comparable> renderer) {
 		this.renderer = renderer;
 	}
 
 	public int compare(Object o1, Object o2) {
 		return CommonUtils.compareWithNullMinusOne(
-				(Comparable) renderer.render(o1),
-				(Comparable) renderer.render(o2));
+				(Comparable) renderer.apply(o1),
+				(Comparable) renderer.apply(o2));
 	}
 }

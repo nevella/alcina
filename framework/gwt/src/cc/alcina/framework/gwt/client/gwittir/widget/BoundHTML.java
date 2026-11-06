@@ -25,9 +25,9 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  *

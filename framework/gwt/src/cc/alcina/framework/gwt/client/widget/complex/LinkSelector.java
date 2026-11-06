@@ -7,9 +7,9 @@ import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineLabel;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public class LinkSelector<T> extends AbstractBoundWidget<T> {
 	private FlowPanel fp;

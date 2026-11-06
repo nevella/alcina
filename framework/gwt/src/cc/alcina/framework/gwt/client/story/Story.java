@@ -215,10 +215,10 @@ public interface Story {
 				}
 			}
 
-			@Registration.NonGenericSubtypes(Converter.class)
-			public interface Converter<A extends Annotation>
+			@Registration.NonGenericSubtypes(Function.class)
+			public interface Function<A extends Annotation>
 					extends Registration.AllSubtypes {
-				Story.Action convert(A ann);
+				Story.Action apply(A ann);
 			}
 
 			public interface Code {
@@ -234,9 +234,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface MarkDownloads {
 					public static class ConverterImpl
-							implements Converter<MarkDownloads> {
+							implements Function<MarkDownloads> {
 						@Override
-						public Story.Action convert(MarkDownloads ann) {
+						public Story.Action apply(MarkDownloads ann) {
 							return new Story.Action.Environment.MarkDownloads();
 						}
 					}
@@ -257,9 +257,9 @@ public interface Story {
 					String value() default ".*";
 
 					public static class ConverterImpl
-							implements Converter<AwaitNewDownload> {
+							implements Function<AwaitNewDownload> {
 						@Override
-						public Story.Action convert(AwaitNewDownload ann) {
+						public Story.Action apply(AwaitNewDownload ann) {
 							return new Story.Action.Environment.AwaitNewDownload(
 									ann.value());
 						}
@@ -287,9 +287,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface Highlight {
 					public static class ConverterImpl
-							implements Converter<Highlight> {
+							implements Function<Highlight> {
 						@Override
-						public Story.Action convert(Highlight ann) {
+						public Story.Action apply(Highlight ann) {
 							return new Story.Action.Annotate.Highlight();
 						}
 					}
@@ -306,9 +306,9 @@ public interface Story {
 					String value();
 
 					public static class ConverterImpl
-							implements Converter<Caption> {
+							implements Function<Caption> {
 						@Override
-						public Story.Action.Annotate convert(Caption ann) {
+						public Story.Action.Annotate apply(Caption ann) {
 							return new Story.Action.Annotate.Caption();
 						}
 					}
@@ -323,9 +323,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface Screenshot {
 					public static class ConverterImpl
-							implements Converter<Screenshot> {
+							implements Function<Screenshot> {
 						@Override
-						public Story.Action.Annotate convert(Screenshot ann) {
+						public Story.Action.Annotate apply(Screenshot ann) {
 							return new Story.Action.Annotate.Screenshot();
 						}
 					}
@@ -340,9 +340,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface Clear {
 					public static class ConverterImpl
-							implements Converter<Clear> {
+							implements Function<Clear> {
 						@Override
-						public Story.Action.Annotate convert(Clear ann) {
+						public Story.Action.Annotate apply(Clear ann) {
 							return new Story.Action.Annotate.Clear();
 						}
 					}
@@ -375,10 +375,10 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface HighlightScreenshotClear {
 					public static class ConverterImpl
-							implements Converter<HighlightScreenshotClear> {
+							implements Function<HighlightScreenshotClear> {
 						@Override
 						public Story.Action.Annotate
-								convert(HighlightScreenshotClear ann) {
+								apply(HighlightScreenshotClear ann) {
 							return new Story.Action.Annotate.HighlightScreenshotClear();
 						}
 					}
@@ -397,9 +397,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface Click {
 					public static class ConverterImpl
-							implements Converter<Click> {
+							implements Function<Click> {
 						@Override
-						public Story.Action convert(Click ann) {
+						public Story.Action apply(Click ann) {
 							return new Story.Action.Ui.Click();
 						}
 					}
@@ -413,9 +413,9 @@ public interface Story {
 				//
 				public @interface Hover {
 					public static class ConverterImpl
-							implements Converter<Hover> {
+							implements Function<Hover> {
 						@Override
-						public Story.Action convert(Hover ann) {
+						public Story.Action apply(Hover ann) {
 							return new Story.Action.Ui.Hover();
 						}
 					}
@@ -429,9 +429,9 @@ public interface Story {
 				////
 				public @interface TestPresent {
 					public static class ConverterImpl
-							implements Converter<TestPresent> {
+							implements Function<TestPresent> {
 						@Override
-						public Story.Action convert(TestPresent ann) {
+						public Story.Action apply(TestPresent ann) {
 							return new Story.Action.Ui.TestPresent();
 						}
 					}
@@ -444,9 +444,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface AwaitPresent {
 					public static class ConverterImpl
-							implements Converter<AwaitPresent> {
+							implements Function<AwaitPresent> {
 						@Override
-						public Story.Action convert(AwaitPresent ann) {
+						public Story.Action apply(AwaitPresent ann) {
 							return new Story.Action.Ui.AwaitPresent();
 						}
 					}
@@ -459,9 +459,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface AwaitSelection {
 					public static class ConverterImpl
-							implements Converter<AwaitSelection> {
+							implements Function<AwaitSelection> {
 						@Override
-						public Story.Action convert(AwaitSelection ann) {
+						public Story.Action apply(AwaitSelection ann) {
 							return new Story.Action.Ui.AwaitSelection();
 						}
 					}
@@ -474,9 +474,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface ScrollIntoView {
 					public static class ConverterImpl
-							implements Converter<ScrollIntoView> {
+							implements Function<ScrollIntoView> {
 						@Override
-						public Story.Action convert(ScrollIntoView ann) {
+						public Story.Action apply(ScrollIntoView ann) {
 							return new Story.Action.Ui.ScrollIntoView();
 						}
 					}
@@ -489,9 +489,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface AwaitAbsent {
 					public static class ConverterImpl
-							implements Converter<AwaitAbsent> {
+							implements Function<AwaitAbsent> {
 						@Override
-						public Story.Action convert(AwaitAbsent ann) {
+						public Story.Action apply(AwaitAbsent ann) {
 							return new Story.Action.Ui.AwaitAbsent();
 						}
 					}
@@ -506,9 +506,9 @@ public interface Story {
 					int resetIfPresent() default 0;
 
 					public static class ConverterImpl
-							implements Converter<TestAbsent> {
+							implements Function<TestAbsent> {
 						@Override
-						public Story.Action convert(TestAbsent ann) {
+						public Story.Action apply(TestAbsent ann) {
 							return new Story.Action.Ui.TestAbsent()
 									.withRetestIfPresent(ann.resetIfPresent());
 						}
@@ -536,9 +536,9 @@ public interface Story {
 					boolean clear() default false;
 
 					public static class ConverterImpl
-							implements Converter<Keys> {
+							implements Function<Keys> {
 						@Override
-						public Story.Action convert(Keys ann) {
+						public Story.Action apply(Keys ann) {
 							return new Story.Action.Ui.Keys()
 									.withClear(ann.clear())
 									.withText(ann.value());
@@ -554,9 +554,9 @@ public interface Story {
 					String value();
 
 					public static class ConverterImpl
-							implements Converter<KeysWithClear> {
+							implements Function<KeysWithClear> {
 						@Override
-						public Story.Action convert(KeysWithClear ann) {
+						public Story.Action apply(KeysWithClear ann) {
 							return new Story.Action.Ui.Keys().withClear(true)
 									.withText(ann.value());
 						}
@@ -571,9 +571,9 @@ public interface Story {
 					SeleniumKeys value() default SeleniumKeys.NULL;
 
 					public static class ConverterImpl
-							implements Converter<KeyConstant> {
+							implements Function<KeyConstant> {
 						@Override
-						public Story.Action convert(KeyConstant ann) {
+						public Story.Action apply(KeyConstant ann) {
 							return new Story.Action.Ui.Keys()
 									.withConstant(ann.value());
 						}
@@ -589,9 +589,9 @@ public interface Story {
 					String value();
 
 					public static class ConverterImpl
-							implements Converter<Script> {
+							implements Function<Script> {
 						@Override
-						public Story.Action convert(Script ann) {
+						public Story.Action apply(Script ann) {
 							return new Story.Action.Ui.Script()
 									.withText(ann.value());
 						}
@@ -611,9 +611,9 @@ public interface Story {
 					boolean maximise() default false;
 
 					public static class ConverterImpl
-							implements Converter<ResizeViewport> {
+							implements Function<ResizeViewport> {
 						@Override
-						public Story.Action convert(ResizeViewport ann) {
+						public Story.Action apply(ResizeViewport ann) {
 							return new Story.Action.Ui.ResizeViewport(
 									ann.width(), ann.height(), ann.maximise());
 						}
@@ -627,9 +627,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface FocusWindow {
 					public static class ConverterImpl
-							implements Converter<FocusWindow> {
+							implements Function<FocusWindow> {
 						@Override
-						public Story.Action convert(FocusWindow ann) {
+						public Story.Action apply(FocusWindow ann) {
 							return new Story.Action.Ui.FocusWindow();
 						}
 					}
@@ -642,9 +642,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface CloseWindow {
 					public static class ConverterImpl
-							implements Converter<CloseWindow> {
+							implements Function<CloseWindow> {
 						@Override
-						public Story.Action convert(CloseWindow ann) {
+						public Story.Action apply(CloseWindow ann) {
 							return new Story.Action.Ui.CloseWindow();
 						}
 					}
@@ -660,9 +660,9 @@ public interface Story {
 						String value();
 
 						public static class ConverterImpl
-								implements Converter<ByValue> {
+								implements Function<ByValue> {
 							@Override
-							public Story.Action convert(ByValue ann) {
+							public Story.Action apply(ByValue ann) {
 								return new Story.Action.Ui.SelectByValue()
 										.withText(ann.value());
 							}
@@ -678,9 +678,9 @@ public interface Story {
 						String value();
 
 						public static class ConverterImpl
-								implements Converter<ByText> {
+								implements Function<ByText> {
 							@Override
-							public Story.Action convert(ByText ann) {
+							public Story.Action apply(ByText ann) {
 								return new Story.Action.Ui.SelectByText()
 										.withText(ann.value());
 							}
@@ -701,9 +701,9 @@ public interface Story {
 					int value();
 
 					public static class ConverterImpl
-							implements Converter<Wait> {
+							implements Function<Wait> {
 						@Override
-						public Story.Action convert(Wait ann) {
+						public Story.Action apply(Wait ann) {
 							return new Story.Action.Ui.Wait()
 									.withValue(ann.value());
 						}
@@ -719,9 +719,9 @@ public interface Story {
 					String value();
 
 					public static class ConverterImpl
-							implements Converter<AwaitAttributePresent> {
+							implements Function<AwaitAttributePresent> {
 						@Override
-						public Story.Action convert(AwaitAttributePresent ann) {
+						public Story.Action apply(AwaitAttributePresent ann) {
 							return new Story.Action.Ui.AwaitAttributePresent()
 									.withText(ann.value());
 						}
@@ -737,9 +737,9 @@ public interface Story {
 					String value();
 
 					public static class ConverterImpl
-							implements Converter<TestAttributePresent> {
+							implements Function<TestAttributePresent> {
 						@Override
-						public Story.Action convert(TestAttributePresent ann) {
+						public Story.Action apply(TestAttributePresent ann) {
 							return new Story.Action.Ui.TestAttributePresent()
 									.withText(ann.value());
 						}
@@ -759,9 +759,9 @@ public interface Story {
 					FilterOperator operator() default FilterOperator.EQ;
 
 					public static class ConverterImpl
-							implements Converter<TestAttributeValue> {
+							implements Function<TestAttributeValue> {
 						@Override
-						public Story.Action convert(TestAttributeValue ann) {
+						public Story.Action apply(TestAttributeValue ann) {
 							Story.Action.Ui.TestAttributeValue action = new Story.Action.Ui.TestAttributeValue();
 							action.withName(ann.name());
 							action.withText(ann.value());
@@ -784,9 +784,9 @@ public interface Story {
 					FilterOperator operator() default FilterOperator.EQ;
 
 					public static class ConverterImpl
-							implements Converter<AwaitAttributeValue> {
+							implements Function<AwaitAttributeValue> {
 						@Override
-						public Story.Action convert(AwaitAttributeValue ann) {
+						public Story.Action apply(AwaitAttributeValue ann) {
 							Story.Action.Ui.AwaitAttributeValue action = new Story.Action.Ui.AwaitAttributeValue();
 							action.withName(ann.name());
 							action.withText(ann.value());
@@ -804,9 +804,9 @@ public interface Story {
 					@Registration(DeclarativeAction.class)
 					public @interface Go {
 						public static class ConverterImpl
-								implements Converter<Go> {
+								implements Function<Go> {
 							@Override
-							public Story.Action convert(Go ann) {
+							public Story.Action apply(Go ann) {
 								return new Story.Action.Ui.Go();
 							}
 						}
@@ -822,9 +822,9 @@ public interface Story {
 					@Registration(DeclarativeAction.class)
 					public @interface Get {
 						public static class ConverterImpl
-								implements Converter<Get> {
+								implements Function<Get> {
 							@Override
-							public Story.Action convert(Get ann) {
+							public Story.Action apply(Get ann) {
 								return new Story.Action.Ui.Get();
 							}
 						}
@@ -837,9 +837,9 @@ public interface Story {
 					@Registration(DeclarativeAction.class)
 					public @interface Refresh {
 						public static class ConverterImpl
-								implements Converter<Refresh> {
+								implements Function<Refresh> {
 							@Override
-							public Story.Action convert(Refresh ann) {
+							public Story.Action apply(Refresh ann) {
 								return new Story.Action.Ui.Refresh();
 							}
 						}
@@ -856,9 +856,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface Mark {
 					public static class ConverterImpl
-							implements Converter<Mark> {
+							implements Function<Mark> {
 						@Override
-						public Story.Action convert(Mark ann) {
+						public Story.Action apply(Mark ann) {
 							return new Story.Action.Ui.Mark();
 						}
 					}
@@ -873,9 +873,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface SelectArea {
 					public static class ConverterImpl
-							implements Converter<SelectArea> {
+							implements Function<SelectArea> {
 						@Override
-						public Story.Action convert(SelectArea ann) {
+						public Story.Action apply(SelectArea ann) {
 							return new Story.Action.Ui.SelectArea(ann.fromX(),
 									ann.fromY(), ann.toX(), ann.toY());
 						}
@@ -899,9 +899,9 @@ public interface Story {
 				@Registration(DeclarativeAction.class)
 				public @interface DragAndDropBy {
 					public static class ConverterImpl
-							implements Converter<DragAndDropBy> {
+							implements Function<DragAndDropBy> {
 						@Override
-						public Story.Action convert(DragAndDropBy ann) {
+						public Story.Action apply(DragAndDropBy ann) {
 							return new Story.Action.Ui.DragAndDropBy(ann.x(),
 									ann.y());
 						}
@@ -923,10 +923,10 @@ public interface Story {
 			public interface DeclarativeLocation {
 			}
 
-			@Registration.NonGenericSubtypes(Converter.class)
-			public interface Converter<A extends Annotation>
+			@Registration.NonGenericSubtypes(Function.class)
+			public interface Function<A extends Annotation>
 					extends Registration.AllSubtypes {
-				Story.Action.Location convert(A ann);
+				Story.Action.Location apply(A ann);
 			}
 
 			/** Define an xpath location */
@@ -937,9 +937,9 @@ public interface Story {
 			public @interface Xpath {
 				String[] value();
 
-				public static class ConverterImpl implements Converter<Xpath> {
+				public static class ConverterImpl implements Function<Xpath> {
 					@Override
-					public Story.Action.Location convert(Xpath ann) {
+					public Story.Action.Location apply(Xpath ann) {
 						return new Story.Action.Location.Xpath()
 								.withText(Arrays.stream(ann.value())
 										.collect(Collectors.joining()));
@@ -953,9 +953,9 @@ public interface Story {
 			@Target({ ElementType.TYPE })
 			@Registration(DeclarativeLocation.class)
 			public @interface Marked {
-				public static class ConverterImpl implements Converter<Marked> {
+				public static class ConverterImpl implements Function<Marked> {
 					@Override
-					public Story.Action.Location convert(Marked ann) {
+					public Story.Action.Location apply(Marked ann) {
 						return new Story.Action.Location.Marked();
 					}
 				}
@@ -969,9 +969,9 @@ public interface Story {
 			public @interface Url {
 				String value();
 
-				public static class ConverterImpl implements Converter<Url> {
+				public static class ConverterImpl implements Function<Url> {
 					@Override
-					public Story.Action.Location convert(Url ann) {
+					public Story.Action.Location apply(Url ann) {
 						return new Story.Action.Location.Url()
 								.withText(ann.value());
 					}
@@ -985,9 +985,9 @@ public interface Story {
 			@Registration(DeclarativeLocation.class)
 			public @interface CurrentFocus {
 				public static class ConverterImpl
-						implements Converter<CurrentFocus> {
+						implements Function<CurrentFocus> {
 					@Override
-					public Story.Action.Location convert(CurrentFocus ann) {
+					public Story.Action.Location apply(CurrentFocus ann) {
 						return new Story.Action.Location.CurrentFocus();
 					}
 				}

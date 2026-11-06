@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,8 +32,6 @@ import java.util.stream.Collectors;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
-
-import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -229,7 +228,7 @@ public class ExcelExporter {
 					Object value = pdm.pd.getReadMethod().invoke(o,
 							CommonUtils.EMPTY_OBJECT_ARRAY);
 					if (pdm.renderer != null) {
-						value = pdm.renderer.render(value);
+						value = pdm.renderer.apply(value);
 					}
 					cell.setAttributeNS(SS_NS, "ss:Index",
 							String.valueOf(colIndex++));
@@ -320,14 +319,14 @@ public class ExcelExporter {
 
 		PropertyDescriptor pd;
 
-		Renderer renderer;
+		Function renderer;
 
 		public PdMultiplexer(PropertyDescriptor pd) {
 			this.pd = pd;
 			Method readMethod = pd.getReadMethod();
 			this.xfa = readMethod.getAnnotation(GridFormatAnnotation.class);
 			this.dia = readMethod.getAnnotation(Display.class);
-			this.renderer = (Renderer) (xfa == null
+			this.renderer = (Function) (xfa == null
 					|| xfa.rendererClass() == Void.class ? null
 							: Registry.impl(xfa.rendererClass()));
 		}

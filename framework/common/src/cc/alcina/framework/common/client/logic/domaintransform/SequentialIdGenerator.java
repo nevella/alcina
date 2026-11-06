@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 public class SequentialIdGenerator {
 	private long id;

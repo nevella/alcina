@@ -33,16 +33,16 @@ import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HasFocus;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.action.BindingAction;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.HasDefaultBinding;
-import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
-import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.action.BindingAction;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.HasDefaultBinding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.AbstractTableWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 /**
  *

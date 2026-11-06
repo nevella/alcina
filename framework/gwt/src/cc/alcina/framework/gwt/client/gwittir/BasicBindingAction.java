@@ -13,9 +13,9 @@
  */
 package cc.alcina.framework.gwt.client.gwittir;
 
-import com.totsp.gwittir.client.action.BindingAction;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.action.BindingAction;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 
 /**
  * 

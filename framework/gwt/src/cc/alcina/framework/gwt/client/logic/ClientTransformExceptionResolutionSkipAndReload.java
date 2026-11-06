@@ -10,7 +10,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
@@ -44,6 +43,7 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener.State;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 @Reflected
 @Registration.Singleton(ClientTransformExceptionResolver.class)

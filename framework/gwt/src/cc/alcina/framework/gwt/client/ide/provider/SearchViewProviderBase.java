@@ -28,9 +28,7 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.ui.table.Field;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -50,6 +48,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarButton;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
 /**
@@ -84,7 +83,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 
 	private String searchButtonTitle;
 
-	protected Converter converter;
+	protected Function converter;
 
 	private boolean editableToggle = false;
 
@@ -143,7 +142,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 	}
 
 	public Widget getViewForObject(Object obj, String searchButtonTitle,
-			Converter converter) {
+			Function converter) {
 		this.searchButtonTitle = searchButtonTitle;
 		this.converter = converter;
 		action = (LocalActionWithParameters<SingleTableSearchDefinition>) obj;

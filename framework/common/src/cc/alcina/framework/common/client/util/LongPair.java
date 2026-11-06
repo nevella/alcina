@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -190,9 +190,9 @@ public class LongPair
 	}
 
 	public static class LongPairFromStringConverter
-			implements Converter<String, LongPair> {
+			implements Function<String, LongPair> {
 		@Override
-		public LongPair convert(String original) {
+		public LongPair apply(String original) {
 			return parseLongPair(original);
 		}
 	}

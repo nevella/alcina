@@ -261,10 +261,10 @@ public class Waypoint implements Story.Point {
 							.annotation((Class<? extends Annotation>) clazz))
 					.filter(Objects::nonNull).findFirst().orElse(null);
 			if (actionAnnotation != null) {
-				Story.Decl.Action.Converter converter = Registry.impl(
-						Story.Decl.Action.Converter.class,
+				Story.Decl.Action.Function converter = Registry.impl(
+						Story.Decl.Action.Function.class,
 						actionAnnotation.annotationType());
-				action = converter.convert(actionAnnotation);
+				action = converter.apply(actionAnnotation);
 			}
 		}
 		if (annotateActions == null) {
@@ -275,10 +275,9 @@ public class Waypoint implements Story.Point {
 							.annotation((Class<? extends Annotation>) clazz))
 					.filter(Objects::nonNull).collect(Collectors.toList());
 			annotateActions = annotateActionAnnotations.stream().map(ann -> {
-				Story.Decl.Action.Converter converter = Registry.impl(
-						Story.Decl.Action.Converter.class,
-						ann.annotationType());
-				return (Story.Action.Annotate) converter.convert(ann);
+				Story.Decl.Action.Function converter = Registry.impl(
+						Story.Decl.Action.Function.class, ann.annotationType());
+				return (Story.Action.Annotate) converter.apply(ann);
 			}).collect(Collectors.toList());
 			if (action != null && annotateActions.size() > 0) {
 				throw new IllegalStateException(
@@ -292,10 +291,10 @@ public class Waypoint implements Story.Point {
 							.annotation((Class<? extends Annotation>) clazz))
 					.filter(Objects::nonNull).findFirst().orElse(null);
 			if (locationAnnotation != null) {
-				Story.Decl.Location.Converter converter = Registry.impl(
-						Story.Decl.Location.Converter.class,
+				Story.Decl.Location.Function converter = Registry.impl(
+						Story.Decl.Location.Function.class,
 						locationAnnotation.annotationType());
-				location = converter.convert(locationAnnotation);
+				location = converter.apply(locationAnnotation);
 			}
 		}
 		if (conditional == null) {

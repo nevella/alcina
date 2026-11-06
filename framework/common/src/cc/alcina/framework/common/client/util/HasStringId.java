@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
@@ -17,11 +17,11 @@ public interface HasStringId {
 
 	@Reflected
 	public static class HasStringIdRenderer
-			implements Renderer<HasStringId, String> {
+			implements Function<HasStringId, String> {
 		public static final HasStringIdRenderer INSTANCE = new HasStringIdRenderer();
 
 		@Override
-		public String render(HasStringId o) {
+		public String apply(HasStringId o) {
 			return o == null ? "" : o.stringId();
 		}
 	}

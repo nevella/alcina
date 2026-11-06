@@ -2,9 +2,8 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.beans.PropertyChangeListener;
 
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * Access like so:

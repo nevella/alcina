@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -130,7 +131,7 @@ public abstract class AlcinaRpcServlet extends AlcinaServlet {
 			if (rpcRequest != null) {
 				logRpcException(throwable, rpcRequest);
 			}
-			response.payload = throwable;
+			response.payload = new AlcinaRpc.RpcException(throwable);
 		}
 		return ReflectiveRemoteServiceHandler.serializeForClient(response);
 	}
@@ -172,7 +173,7 @@ public abstract class AlcinaRpcServlet extends AlcinaServlet {
 
 	void checkWebMethod(WebMethod webMethod, Method method) throws Exception {
 		if (webMethod == null) {
-			throw new IllegalArgumentException(
+			throw new PermissionsException(
 					Ax.format("No WebMethod annotation for %s - %s",
 							method.getName(), method));
 		}

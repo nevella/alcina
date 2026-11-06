@@ -13,14 +13,16 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.function.Function;
+
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.Hyperlink;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
+
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
 
 /**
  *
@@ -36,7 +38,7 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 
 	private T value;
 
-	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+	private Function<T, String> renderer = (Function) ToStringRenderer.INSTANCE;
 
 	/** Creates a new instance of Label */
 	public BoundHyperlink() {
@@ -89,7 +91,7 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 	 * 
 	 * @return the value of renderer
 	 */
-	public Renderer<T, String> getRenderer() {
+	public Function<T, String> getRenderer() {
 		return this.renderer;
 	}
 
@@ -163,7 +165,7 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 	 * @param newrenderer
 	 *            new value of renderer
 	 */
-	public void setRenderer(Renderer<T, String> newrenderer) {
+	public void setRenderer(Function<T, String> newrenderer) {
 		this.renderer = newrenderer;
 	}
 
@@ -196,7 +198,7 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		Object old = this.getValue();
 		this.value = value;
 		String renderedString = this.getRenderer() != null
-				? (String) this.getRenderer().render(value)
+				? (String) this.getRenderer().apply(value)
 				: value == null ? "" : value.toString();
 		if (isAsHtml()) {
 			this.base.setHTML(renderedString);

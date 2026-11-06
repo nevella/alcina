@@ -30,7 +30,7 @@ public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
 	}
 
 	@Override
-	public String render(Object o) {
+	public String apply(Object o) {
 		if (o == null) {
 			return "";
 		}

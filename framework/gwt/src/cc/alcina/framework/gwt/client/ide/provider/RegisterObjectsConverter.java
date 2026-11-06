@@ -1,13 +1,13 @@
 package cc.alcina.framework.gwt.client.ide.provider;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
-public class RegisterObjectsConverter implements Converter {
+public class RegisterObjectsConverter implements Function {
 	@Override
-	public Object convert(Object original) {
+	public Object apply(Object original) {
 		if (original instanceof Entity) {
 			Entity entity1 = (Entity) original;
 			Entity entity2 = TransformManager.get().getObject(entity1);

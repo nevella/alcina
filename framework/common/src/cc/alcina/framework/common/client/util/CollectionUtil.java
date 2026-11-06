@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 public class CollectionUtil {
 	public static <T> Class<T> getCommonType(Collection<?> collection) {

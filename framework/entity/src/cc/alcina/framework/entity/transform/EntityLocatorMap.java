@@ -16,7 +16,7 @@ package cc.alcina.framework.entity.transform;
 import java.io.Serializable;
 import java.util.Map;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -139,7 +139,7 @@ public class EntityLocatorMap implements Serializable {
 	}
 
 	public static class ToCreatedIdConverter<H extends Entity>
-			implements Converter<H, Long> {
+			implements Function<H, Long> {
 		private EntityLocatorMap map;
 
 		public ToCreatedIdConverter(EntityLocatorMap map) {
@@ -147,7 +147,7 @@ public class EntityLocatorMap implements Serializable {
 		}
 
 		@Override
-		public Long convert(H original) {
+		public Long apply(H original) {
 			return map.containsKey(original.getLocalId())
 					? map.getForLocalId(original.getLocalId()).getId()
 					: null;

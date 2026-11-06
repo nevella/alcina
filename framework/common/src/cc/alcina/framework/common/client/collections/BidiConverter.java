@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.collections;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 public abstract interface BidiConverter<A, B> {
 	default BidiConverter<B, A> invertBidi() {
@@ -20,10 +20,10 @@ public abstract interface BidiConverter<A, B> {
 
 	public B leftToRight(A a);
 
-	default Converter<A, B> leftToRightConverter() {
-		return new Converter<A, B>() {
+	default Function<A, B> leftToRightConverter() {
+		return new Function<A, B>() {
 			@Override
-			public B convert(A a) {
+			public B apply(A a) {
 				return leftToRight(a);
 			}
 		};
@@ -31,10 +31,10 @@ public abstract interface BidiConverter<A, B> {
 
 	public abstract A rightToLeft(B b);
 
-	default Converter<B, A> rightToLeftConverter() {
-		return new Converter<B, A>() {
+	default Function<B, A> rightToLeftConverter() {
+		return new Function<B, A>() {
 			@Override
-			public A convert(B b) {
+			public A apply(B b) {
 				return rightToLeft(b);
 			}
 		};

@@ -16,9 +16,7 @@ package cc.alcina.framework.gwt.client.dirndl;
 import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.validator.ValidationFeedback;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Al;
@@ -26,6 +24,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationFeedback;
 
 /**
  *
@@ -100,8 +99,8 @@ public class RenderContext extends LooseContextInstance {
 		return super.get(key);
 	}
 
-	public Renderer getNodeTypeRenderer(TreeRenderer node) {
-		Function<TreeRenderer, Renderer> nodeToEnumRenderer = get(
+	public Function getNodeTypeRenderer(TreeRenderer node) {
+		Function<TreeRenderer, Function> nodeToEnumRenderer = get(
 				ENUM_RENDERER_PROVIDER);
 		return nodeToEnumRenderer == null ? null
 				: nodeToEnumRenderer.apply(node);
@@ -147,7 +146,7 @@ public class RenderContext extends LooseContextInstance {
 	}
 
 	public void setNodeTypeRenderer(
-			Function<TreeRenderer, Renderer> nodeToEnumRenderer) {
+			Function<TreeRenderer, Function> nodeToEnumRenderer) {
 		set(ENUM_RENDERER_PROVIDER, nodeToEnumRenderer);
 	}
 

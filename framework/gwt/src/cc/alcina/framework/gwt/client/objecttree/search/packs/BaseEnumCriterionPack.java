@@ -3,8 +3,6 @@ package cc.alcina.framework.gwt.client.objecttree.search.packs;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.search.EnumCriterion;
@@ -12,6 +10,7 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public class BaseEnumCriterionPack {
 	public interface BaseEnumCriterionHandler<T, E extends Enum, C extends EnumCriterion<E>>

@@ -15,7 +15,6 @@ import java.util.zip.CRC32;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
-import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -42,6 +41,7 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.annotations.Omit;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;

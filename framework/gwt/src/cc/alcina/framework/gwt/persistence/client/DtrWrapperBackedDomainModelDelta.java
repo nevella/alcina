@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -130,9 +130,9 @@ public class DtrWrapperBackedDomainModelDelta
 	}
 
 	public static class DeltaApplicationRecordToDomainModelDeltaConverter
-			implements Converter<DeltaApplicationRecord, DomainModelDelta> {
+			implements Function<DeltaApplicationRecord, DomainModelDelta> {
 		@Override
-		public DomainModelDelta convert(DeltaApplicationRecord wrapper) {
+		public DomainModelDelta apply(DeltaApplicationRecord wrapper) {
 			return new DtrWrapperBackedDomainModelDelta(wrapper);
 		}
 	}

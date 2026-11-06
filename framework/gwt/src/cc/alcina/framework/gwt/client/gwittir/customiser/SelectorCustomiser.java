@@ -16,10 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -31,6 +28,8 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeColle
 import cc.alcina.framework.gwt.client.gwittir.provider.SelectorProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  *
@@ -88,7 +87,7 @@ public class SelectorCustomiser implements Customiser {
 				filter = impl.orElse((Predicate) Reflections
 						.newInstance(parameter.classValue()));
 			}
-			Renderer renderer = NamedParameter.Support
+			Function renderer = NamedParameter.Support
 					.instantiateClass(info.parameters(), RENDERER_CLASS);
 			parameter = NamedParameter.Support.getParameter(info.parameters(),
 					MAX_SELECTED_ITEMS);
@@ -127,7 +126,7 @@ public class SelectorCustomiser implements Customiser {
 				return new ExpandableDomainNodeCollectionLabelProvider(
 						maxLength, forceColumnWidth);
 			} else {
-				Class<? extends Renderer> rendererClass = NamedParameter.Support
+				Class<? extends Function> rendererClass = NamedParameter.Support
 						.classValue(info.parameters(), RENDERER_CLASS,
 								DisplayNameRenderer.class);
 				return new RenderedLabelProvider(rendererClass, null);

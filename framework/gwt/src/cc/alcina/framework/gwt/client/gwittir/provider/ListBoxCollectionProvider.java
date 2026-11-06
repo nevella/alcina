@@ -16,13 +16,12 @@ package cc.alcina.framework.gwt.client.gwittir.provider;
 import java.util.Comparator;
 import java.util.function.Predicate;
 
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ListAddItemHandler;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox.DomainListBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 public class ListBoxCollectionProvider implements BoundWidgetProvider {
 	private final Class clazz;
@@ -33,7 +32,7 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 
 	private Predicate filter;
 
-	private Renderer renderer;
+	private Function renderer;
 
 	private Comparator comparator;
 
@@ -52,13 +51,13 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 	}
 
 	public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
-			boolean noNullOption, Renderer renderer, Comparator comparator) {
+			boolean noNullOption, Function renderer, Comparator comparator) {
 		this(clazz, propertyIsCollection, noNullOption, renderer, comparator,
 				null);
 	}
 
 	public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
-			boolean noNullOption, Renderer renderer, Comparator comparator,
+			boolean noNullOption, Function renderer, Comparator comparator,
 			ListAddItemHandler addHandler) {
 		this.clazz = clazz;
 		this.propertyIsCollection = propertyIsCollection;

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -24,6 +23,7 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObje
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public abstract class MultilineGridEditor<H extends Entity>
 		extends AbstractBoundWidget<Set<H>> implements MultilineWidget {

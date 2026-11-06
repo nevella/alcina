@@ -2,11 +2,10 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.function.Function;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundLink;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 public abstract class BaseLinkCustomiser<T>
 		implements Customiser, BoundWidgetProvider {

@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir;
 
-import com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
 
 /**
  *

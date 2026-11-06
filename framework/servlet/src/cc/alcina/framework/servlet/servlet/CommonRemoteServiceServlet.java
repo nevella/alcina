@@ -35,7 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 import com.google.gwt.user.server.rpc.RPCRequest;
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.RemoteAction;
@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFiel
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleModel;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -243,9 +244,9 @@ public abstract class CommonRemoteServiceServlet extends AlcinaRpcServlet
 
 	@Override
 	public void logClientRecords(String serializedLogRecords) {
-		Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
+		Function<String, ClientLogRecords> converter = new Function<String, ClientLogRecord.ClientLogRecords>() {
 			@Override
-			public ClientLogRecords convert(String original) {
+			public ClientLogRecords apply(String original) {
 				try {
 					return TransformManager.deserialize(original);
 				} catch (Exception e) {
@@ -366,13 +367,21 @@ public abstract class CommonRemoteServiceServlet extends AlcinaRpcServlet
 	}
 
 	@Override
+	@WebMethod
 	public Response suggest(BoundSuggestOracleRequest request) {
 		try {
 			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
 			Class<? extends BoundSuggestOracleResponseElement> clazz = (Class<? extends BoundSuggestOracleResponseElement>) Class
 					.forName(request.getTargetClassName());
-			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
-					.handleRequest(clazz, request, request.getHint());
+			Registry.Query<BoundSuggestOracleRequestHandler> query = Registry
+					.query(BoundSuggestOracleRequestHandler.class);
+			query.addKeys(clazz);
+			BoundSuggestOracleModel model = request.getModel();
+			if (model != null) {
+				query.addKeys(model.getClass());
+			}
+			return query.impl().handleRequest(clazz, request,
+					request.getHint());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

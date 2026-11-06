@@ -13,10 +13,9 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import java.util.function.Function;
+
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -28,6 +27,8 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -51,24 +52,24 @@ public class ModelPlaceValueCustomiser
 	}
 
 	private static class ModelPlaceValueRenderer
-			implements Renderer<Entity, String> {
+			implements Function<Entity, String> {
 		public ModelPlaceValueRenderer() {
 		}
 
 		@Override
-		public String render(Entity entity) {
+		public String apply(Entity entity) {
 			if (entity == null) {
 				return "(Undefined)";
 			}
 			String name = null;
 			BasePlace place = null;
 			if (!Registry.optional(RegistryHistoryMapper.class).isPresent()) {
-				return DisplayNameRenderer.INSTANCE.render(entity);
+				return DisplayNameRenderer.INSTANCE.apply(entity);
 			}
 			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
 					.get().getPlaceByModelClass(entity.entityClass());
 			if (instancePlace == null) {
-				return DisplayNameRenderer.INSTANCE.render(entity);
+				return DisplayNameRenderer.INSTANCE.apply(entity);
 			} else {
 				instancePlace.withEntity(entity);
 				place = instancePlace;

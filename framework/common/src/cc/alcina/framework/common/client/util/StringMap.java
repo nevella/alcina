@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 public class StringMap extends LinkedHashMap<String, String> {
 	private static final transient long serialVersionUID = 8219302205025519855L;

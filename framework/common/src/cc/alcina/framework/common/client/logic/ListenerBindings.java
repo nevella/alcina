@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.logic;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 public class ListenerBindings implements ListenerBinding {
 	private List<ListenerBinding> listenerBindings = new ArrayList<>();

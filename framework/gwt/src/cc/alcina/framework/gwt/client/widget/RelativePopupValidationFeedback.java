@@ -28,16 +28,16 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
 import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.AbstractValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationFeedback;
 
 /**
  *

@@ -47,7 +47,6 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Binding;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -65,6 +64,7 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObje
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
 
 /**
  *

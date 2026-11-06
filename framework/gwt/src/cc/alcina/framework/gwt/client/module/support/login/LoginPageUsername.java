@@ -1,8 +1,6 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
 import com.google.gwt.user.client.History;
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator;
@@ -11,6 +9,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 @Directed
 public class LoginPageUsername extends LoginPage

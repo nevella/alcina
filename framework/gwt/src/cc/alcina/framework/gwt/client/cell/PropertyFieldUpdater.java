@@ -2,9 +2,6 @@ package cc.alcina.framework.gwt.client.cell;
 
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.user.client.Window;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -12,6 +9,9 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
 
 public class PropertyFieldUpdater implements FieldUpdater {
 	private Field field;

@@ -14,15 +14,15 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseE
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleSuggestion;
 
 @Registration.NonGenericSubtypes(BoundSuggestOracleRequestHandler.class)
-public abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseElement> {
-	protected abstract List<T> getResponses(String query,
-			BoundSuggestOracleModel model, String hint);
+public interface BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseElement> {
+	List<T> getResponses(String query, BoundSuggestOracleModel model,
+			String hint);
 
-	protected long getSuggestionLimit() {
+	default int getSuggestionLimit() {
 		return 50;
 	}
 
-	public Response handleRequest(Class<T> clazz,
+	default Response handleRequest(Class<T> clazz,
 			BoundSuggestOracleRequest request, String hint) {
 		Response response = new Response();
 		List<T> responses = getResponses(request.getQuery(), request.getModel(),
@@ -38,15 +38,15 @@ public abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOra
 		return projectResponse(response);
 	}
 
-	protected boolean offerNullSuggestion() {
+	default boolean offerNullSuggestion() {
 		return true;
 	}
 
-	protected Response projectResponse(Response response) {
+	default Response projectResponse(Response response) {
 		return GraphProjections.defaultProjections().project(response);
 	}
 
-	protected List<T> projectResponses(List<T> list, Class<T> clazz) {
+	default List<T> projectResponses(List<T> list, Class<T> clazz) {
 		if (Entity.class.isAssignableFrom(clazz)) {
 			list = GraphProjections.defaultProjections().maxDepth(1)
 					.project(list);

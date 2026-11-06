@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 public interface MultikeyMap<V> {
 	default void addInteger(int delta, Object... objects) {
@@ -21,7 +21,7 @@ public interface MultikeyMap<V> {
 	}
 
 	public abstract <T> void addTupleObjects(List<T> tupleObjects,
-			Converter<T, List> converter);
+			Function<T, List> converter);
 
 	public abstract void addTuples(List<List> tuples);
 
@@ -35,7 +35,7 @@ public interface MultikeyMap<V> {
 			Object... objects);
 
 	public abstract <T> List<T> asTupleObjects(int maxDepth,
-			Converter<List, T> converter);
+			Function<List, T> converter);
 
 	public abstract List<List> asTuples(int depth);
 

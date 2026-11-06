@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.util.HasPluralToString;
 
@@ -24,10 +24,10 @@ import cc.alcina.framework.common.client.util.HasPluralToString;
  *
  * @param <T>
  */
-public class HasPluralToStringRenderer<T> implements Renderer<T, String> {
+public class HasPluralToStringRenderer<T> implements Function<T, String> {
 	public static final HasPluralToStringRenderer<Object> INSTANCE = new HasPluralToStringRenderer<Object>();
 
-	public String render(T o) {
+	public String apply(T o) {
 		if (o == null) {
 			return null;
 		}

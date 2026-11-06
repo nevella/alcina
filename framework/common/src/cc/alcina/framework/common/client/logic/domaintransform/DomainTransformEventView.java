@@ -5,11 +5,7 @@ import java.util.Date;
 
 import javax.persistence.Transient;
 
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -22,6 +18,9 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomis
 import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 // has no pcls, read-only on client
 @Bean
@@ -179,9 +178,9 @@ public class DomainTransformEventView extends DomainTransformEvent
 
 	@Reflected
 	public static class ShortTransformTypeRenderer
-			implements Renderer<TransformType, String> {
+			implements Function<TransformType, String> {
 		@Override
-		public String render(TransformType o) {
+		public String apply(TransformType o) {
 			if (o == null) {
 				return "(null)";
 			}

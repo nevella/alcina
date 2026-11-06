@@ -62,18 +62,6 @@ import com.google.gwt.user.client.ui.SourcesClickEvents;
 import com.google.gwt.user.client.ui.SourcesTableEvents;
 import com.google.gwt.user.client.ui.TableListener;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Button;
-import com.totsp.gwittir.client.ui.Checkbox;
-import com.totsp.gwittir.client.ui.Label;
-import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
-import com.totsp.gwittir.client.ui.table.DataProvider;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.table.HasChunks;
-import com.totsp.gwittir.client.ui.table.SortableDataProvider;
-import com.totsp.gwittir.client.util.ListSorter;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -87,6 +75,18 @@ import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.Ha
 import cc.alcina.framework.gwt.client.objecttree.HasRenderContext;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 import cc.alcina.framework.gwt.client.widget.SpanPanel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Button;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Checkbox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Label;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.AbstractTableWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.DataProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.HasChunks;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.SortableDataProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.util.ListSorter;
 
 /**
  * This is an option-rich table for use with objects implementing the
@@ -94,7 +94,7 @@ import cc.alcina.framework.gwt.client.widget.SpanPanel;
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
- * @see com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents
+ * @see cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents
  * @author Nick Reddel
  *         <p>
  *         <b>Changes from gwittir.BoundTable</b>
@@ -132,7 +132,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	public static final int NONE_MASK = 0;
 
 	/**
-	 * Renderer the table inside a scroll panel.
+	 * Function the table inside a scroll panel.
 	 *
 	 * <p>
 	 * If the table has a DataProvider, it will use the "Google Reader"
@@ -190,7 +190,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	 * Enables the click in widget insertion. Note: This will use the default
 	 * widget type for the model object from the BoundWidgetTypeFactory
 	 *
-	 * @see com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory
+	 * @see cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory
 	 */
 	public static final int INSERT_WIDGET_MASK = 512;
 

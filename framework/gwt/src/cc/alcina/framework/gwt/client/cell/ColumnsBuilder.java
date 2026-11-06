@@ -20,10 +20,7 @@ import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -35,6 +32,8 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 public class ColumnsBuilder<T> {
 	private AbstractCellTable<T> table;
@@ -379,13 +378,13 @@ public class ColumnsBuilder<T> {
 					ListBoxEnumProvider listBoxEnumProvider = (ListBoxEnumProvider) cellProvider;
 					Class<? extends Enum> enumClass = listBoxEnumProvider
 							.getEnumClass();
-					Renderer renderer = listBoxEnumProvider.getRenderer();
+					Function renderer = listBoxEnumProvider.getRenderer();
 					editInfo.cell = new PropertySingleSelectorCell(enumClass,
 							renderer, new FlatSearchSelector(enumClass, 1,
 									renderer, new EnumSupplier(enumClass)));
 				} else if (cellProvider instanceof DomainObjectSuggestCustomiser) {
 					DomainObjectSuggestCustomiser suggestCustomiser = (DomainObjectSuggestCustomiser) cellProvider;
-					Renderer renderer = suggestCustomiser.getRenderer();
+					Function renderer = suggestCustomiser.getRenderer();
 					editInfo.cell = new PropertyDomainSuggestCell(renderer,
 							(BoundSuggestBox) suggestCustomiser.get());
 				} else if (cellProvider instanceof DateBoxProvider) {

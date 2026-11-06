@@ -27,12 +27,8 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.BindingBuilder;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.table.Field;
 
+import java.util.function.Function;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -47,6 +43,10 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.BindingBuilder;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 /**
  *
@@ -339,7 +339,7 @@ public class ObjectTreeRenderer {
 				lbcp.setFilter(node.predicate());
 			}
 			if (f.getCellProvider() instanceof ListBoxEnumProvider) {
-				Renderer renderer = node.renderer();
+				Function renderer = node.renderer();
 				if (renderer != null) {
 					((ListBoxEnumProvider) f.getCellProvider())
 							.setRenderer(renderer);

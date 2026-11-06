@@ -13,13 +13,12 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 import cc.alcina.framework.gwt.client.gwittir.widget.ExpandableLabel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  *
@@ -57,7 +56,7 @@ public class ExpandableStringLabelProvider
 		label.setEscapeHtml(escapeHtml);
 		if (rendererClass != null) {
 			label.setRenderer(
-					(Renderer) Reflections.newInstance(rendererClass));
+					(Function) Reflections.newInstance(rendererClass));
 		}
 		return label;
 	}

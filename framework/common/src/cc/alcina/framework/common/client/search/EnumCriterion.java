@@ -18,7 +18,6 @@ import java.util.Arrays;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.Ax;
@@ -27,6 +26,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName.PreferDisplayNameRe
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  *

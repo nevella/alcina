@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
+
+import cc.alcina.framework.common.client.Preconditions;
 
 /*
  *

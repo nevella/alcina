@@ -1,15 +1,14 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
 import java.util.List;
-
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracle;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public class FlatSuggestorSearchable<TC extends EntityCriterion>
 		extends FlatSearchable<TC> {
@@ -59,7 +58,7 @@ public class FlatSuggestorSearchable<TC extends EntityCriterion>
 		return sc.getId() != 0;
 	}
 
-	class TruncatedObjectHelperRenderer implements Renderer<Object, String> {
+	class TruncatedObjectHelperRenderer implements Function<Object, String> {
 		private Object initialObject;
 
 		private String initialDisplayText;
@@ -70,7 +69,7 @@ public class FlatSuggestorSearchable<TC extends EntityCriterion>
 		}
 
 		@Override
-		public String render(Object o) {
+		public String apply(Object o) {
 			if (o == initialObject) {
 				return initialDisplayText;
 			}

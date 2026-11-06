@@ -80,7 +80,6 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SimpleKeyProvider;
 import com.google.gwt.view.client.SingleSelectionModel;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
@@ -97,6 +96,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight.ScrollPanel100pcHeight300px;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
 
 @SuppressWarnings({ "unchecked", "deprecation" })
 /**

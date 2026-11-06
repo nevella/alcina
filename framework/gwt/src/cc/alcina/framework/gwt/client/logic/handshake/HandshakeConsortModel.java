@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
@@ -266,10 +266,10 @@ public class HandshakeConsortModel {
 	}
 
 	public class TransportToDeltaConverter implements
-			Converter<DomainModelDeltaTransport, DeltaApplicationRecord> {
+			Function<DomainModelDeltaTransport, DeltaApplicationRecord> {
 		@Override
 		public DeltaApplicationRecord
-				convert(DomainModelDeltaTransport transport) {
+				apply(DomainModelDeltaTransport transport) {
 			ClientInstance clientInstance = Permissions.get()
 					.getClientInstance();
 			return new DeltaApplicationRecord(0, transport.getSignature(),

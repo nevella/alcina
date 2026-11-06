@@ -13,9 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -26,6 +24,8 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundHyperlink;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -108,7 +108,7 @@ public class DomainObjectActionLinkCustomiser implements Customiser {
 				info.setLocalId(entity.getLocalId());
 				setTargetHistoryToken(info.toTokenString());
 				String renderedString = this.getRenderer() != null
-						? (String) this.getRenderer().render(model)
+						? (String) this.getRenderer().apply(model)
 						: model == null ? "" : model.toString();
 				if (getDisplayName() != null) {
 					renderedString = getDisplayName();
@@ -139,7 +139,7 @@ public class DomainObjectActionLinkCustomiser implements Customiser {
 
 		private final String displayName;
 
-		private final Class<? extends Renderer> rendererClass;
+		private final Class<? extends Function> rendererClass;
 
 		private final boolean asHtml;
 

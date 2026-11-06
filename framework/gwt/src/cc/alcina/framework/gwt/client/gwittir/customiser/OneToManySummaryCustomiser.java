@@ -13,9 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManySummary;
@@ -28,6 +26,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -51,7 +51,7 @@ public class OneToManySummaryCustomiser
 	}
 
 	private static class OneToManySummaryToHtmlRenderer
-			implements Renderer<OneToManySummary, String> {
+			implements Function<OneToManySummary, String> {
 		private RenderingHtml html;
 
 		public OneToManySummaryToHtmlRenderer(RenderingHtml html) {
@@ -59,7 +59,7 @@ public class OneToManySummaryCustomiser
 		}
 
 		@Override
-		public String render(OneToManySummary o) {
+		public String apply(OneToManySummary o) {
 			Entity source = (Entity) html.getModel();
 			Entity mostRecent = o.getLastModified();
 			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper

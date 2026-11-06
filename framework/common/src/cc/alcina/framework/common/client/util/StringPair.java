@@ -9,7 +9,7 @@ import java.util.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 /**
  * A string tuple
@@ -19,7 +19,7 @@ import com.totsp.gwittir.client.beans.Converter;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class StringPair implements Serializable {
-	public static final Converter<StringPair, Object> SECOND_ITEM_CONVERTER = null;
+	public static final Function<StringPair, Object> SECOND_ITEM_CONVERTER = null;
 
 	public String s1;
 
@@ -53,7 +53,7 @@ public class StringPair implements Serializable {
 	}
 
 	public static class StringPairFlattener
-			implements Converter<StringPair, String> {
+			implements Function<StringPair, String> {
 		private boolean second;
 
 		public StringPairFlattener(boolean second) {
@@ -61,7 +61,7 @@ public class StringPair implements Serializable {
 		}
 
 		@Override
-		public String convert(StringPair original) {
+		public String apply(StringPair original) {
 			return second ? original.s2 : original.s1;
 		}
 	}

@@ -13,16 +13,16 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 /**
  *
  * @author Nick Reddel
  */
-public class ClassSimpleNameRenderer implements Renderer {
-	public static final Renderer INSTANCE = new ClassSimpleNameRenderer();
+public class ClassSimpleNameRenderer implements Function {
+	public static final Function INSTANCE = new ClassSimpleNameRenderer();
 
-	public Object render(Object o) {
+	public Object apply(Object o) {
 		if (o == null) {
 			return null;
 		}

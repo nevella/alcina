@@ -17,15 +17,15 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.TextBox;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * No validation (yet) - this is definitely an admin-only widget. Will throw
@@ -91,7 +91,7 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 		currentValue = value;
 		if (CommonUtils.isNullOrEmpty(tb.getText())) {
 			tb.setText(IdToStringRenderer.BLANK_NULLS_INSTANCE
-					.render((Entity) currentValue));
+					.apply((Entity) currentValue));
 		}
 		changes.firePropertyChange("value", old, getValue());
 	}

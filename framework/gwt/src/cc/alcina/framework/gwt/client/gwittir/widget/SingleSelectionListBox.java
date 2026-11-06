@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ClickListener;
@@ -32,12 +33,11 @@ import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.SourcesChangeEvents;
 import com.google.gwt.user.client.ui.SourcesFocusEvents;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.SimpleComparator;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.SimpleComparator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
 
 /**
  *
@@ -57,13 +57,13 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 
 	private Vector<ChangeListener> changeListeners = new Vector<ChangeListener>();
 
-	private Renderer<T, String> renderer;
+	private Function<T, String> renderer;
 
 	/** Creates a new instance of ListBox */
 	public SingleSelectionListBox() {
 		super();
 		this.base = new com.google.gwt.user.client.ui.ListBox();
-		this.setRenderer((Renderer<T, String>) ToStringRenderer.INSTANCE);
+		this.setRenderer((Function<T, String>) ToStringRenderer.INSTANCE);
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addClickListener(new ClickListener() {
 			@Override
@@ -97,7 +97,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 
 	public void addItem(final T o) {
 		options.add(o);
-		this.base.addItem(this.getRenderer().render(o));
+		this.base.addItem(this.getRenderer().apply(o));
 	}
 
 	@Override
@@ -187,7 +187,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 	 *
 	 * @return the value of renderer
 	 */
-	public Renderer<T, String> getRenderer() {
+	public Function<T, String> getRenderer() {
 		return this.renderer;
 	}
 
@@ -324,7 +324,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		T old = this.selected;
 		for (Iterator<T> it = options.iterator(); it.hasNext();) {
 			T item = it.next();
-			this.base.addItem(this.getRenderer().render(item));
+			this.base.addItem(this.getRenderer().apply(item));
 			if (CommonUtils.equalsWithNullEquality(item, this.selected)) {
 				this.base.setItemSelected(this.base.getItemCount() - 1, true);
 				this.selected = item;
@@ -340,7 +340,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.setPixelSize(width, height);
 	}
 
-	public void setRenderer(Renderer<T, String> renderer) {
+	public void setRenderer(Function<T, String> renderer) {
 		this.renderer = renderer;
 		this.setOptions(this.options);
 	}

@@ -25,7 +25,7 @@ public class FriendlyEnumRenderer extends FlexibleToStringRenderer {
 	public static final FriendlyEnumRenderer INSTANCE = new FriendlyEnumRenderer();
 
 	@Override
-	public String render(Object o) {
+	public String apply(Object o) {
 		if (o == null) {
 			return "(not set)";
 		}

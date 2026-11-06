@@ -19,10 +19,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Set;
-
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -35,6 +32,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -75,7 +74,7 @@ public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 	}
 
 	private static class RendererImpl
-			implements Renderer<Set<? extends Entity>, String> {
+			implements Function<Set<? extends Entity>, String> {
 		private RenderingHtml html;
 
 		private AnnotationLocation propertyLocation;
@@ -87,7 +86,7 @@ public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 		}
 
 		@Override
-		public String render(Set<? extends Entity> o) {
+		public String apply(Set<? extends Entity> o) {
 			Entity source = (Entity) html.getModel();
 			Args args = propertyLocation.getAnnotation(Args.class);
 			EntityPlace searchPlace = (EntityPlace) RegistryHistoryMapper.get()

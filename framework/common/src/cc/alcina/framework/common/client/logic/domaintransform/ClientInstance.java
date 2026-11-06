@@ -19,7 +19,7 @@ import java.util.Optional;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;

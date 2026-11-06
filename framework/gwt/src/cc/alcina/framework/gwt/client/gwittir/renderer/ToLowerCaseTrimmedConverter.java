@@ -1,10 +1,10 @@
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
-public class ToLowerCaseTrimmedConverter implements Converter<Object, String> {
+public class ToLowerCaseTrimmedConverter implements Function<Object, String> {
 	@Override
-	public String convert(Object original) {
+	public String apply(Object original) {
 		return original == null ? null
 				: original.toString().toLowerCase().trim();
 	}

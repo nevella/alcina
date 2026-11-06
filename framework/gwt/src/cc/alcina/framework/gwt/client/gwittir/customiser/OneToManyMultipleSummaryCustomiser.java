@@ -13,15 +13,15 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -45,7 +45,7 @@ public class OneToManyMultipleSummaryCustomiser
 	}
 
 	private static class OneToManyMultipleSummaryToHtmlRenderer
-			implements Renderer<OneToManyMultipleSummary, String> {
+			implements Function<OneToManyMultipleSummary, String> {
 		@SuppressWarnings("unused")
 		private RenderingHtml html;
 
@@ -54,7 +54,7 @@ public class OneToManyMultipleSummaryCustomiser
 		}
 
 		@Override
-		public String render(OneToManyMultipleSummary o) {
+		public String apply(OneToManyMultipleSummary o) {
 			String template = "<a href='#%s'>%s</a>";
 			String token = o.getPlace() != null ? o.getPlace().toTokenString()
 					: "";

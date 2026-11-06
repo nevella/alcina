@@ -11,6 +11,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -20,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.remote.ReflectiveCommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -29,6 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.util.Async;
 
 @Directed.Delegating
@@ -81,12 +84,23 @@ public class EntitySelector<E extends Entity> extends Model.Value<E>
 			NodeEditorContextService editorContextService = node
 					.service(NodeEditorContextService.class);
 			BoundSuggestOracleRequest request = new BoundSuggestOracleRequest();
-			EntityType entityType = Reflections
-					.at(editorContextService.getEditingModel())
+			Class<? extends Entity> entityType = null;
+			Bindable editingModel = editorContextService.getEditingModel();
+			EntityType entityTypeAnnotation = Reflections.at(editingModel)
 					.annotation(EntitySelector.EntityType.class);
+			if (entityTypeAnnotation != null) {
+				entityType = entityTypeAnnotation.value();
+			} else if (editingModel instanceof EntityCriterion) {
+				entityType = ((EntityCriterion) editingModel).getObjectClass();
+			} else {
+				throw new UnsupportedOperationException();
+			}
 			// boundRequest.setLimit(request.getLimit());
+			if (editingModel instanceof BoundSuggestOracleModel) {
+				request.setModel((BoundSuggestOracleModel) editingModel);
+			}
 			request.setQuery(ask.getValue());
-			request.setTargetClassName(entityType.value().getName());
+			request.setTargetClassName(entityType.getName());
 			// boundRequest.setHint(hint);
 			ReflectiveCommonRemoteServiceAsync.get().suggest(request, callback);
 		}

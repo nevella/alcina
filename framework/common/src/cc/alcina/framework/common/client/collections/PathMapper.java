@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -81,9 +81,9 @@ public class PathMapper {
 
 		private String rightName;
 
-		private Converter leftToRightConverter;
+		private Function leftToRightConverter;
 
-		private Converter rightToLeftConverter;
+		private Function rightToLeftConverter;
 
 		private Predicate applyToLeftFilter;
 
@@ -130,7 +130,7 @@ public class PathMapper {
 			return this.rightName;
 		}
 
-		public PathMapping leftToRightConverter(Converter leftConverter) {
+		public PathMapping leftToRightConverter(Function leftConverter) {
 			this.leftToRightConverter = leftConverter;
 			return this;
 		}
@@ -150,7 +150,7 @@ public class PathMapper {
 				Object value = mapper.leftAccessor.getPropertyValue(left,
 						leftName);
 				if (leftToRightConverter != null) {
-					value = leftToRightConverter.convert(value);
+					value = leftToRightConverter.apply(value);
 				}
 				mapper.rightAccessor.setPropertyValue(right, rightName, value);
 			} catch (NoSuchVariantPropertyException e) {
@@ -176,7 +176,7 @@ public class PathMapper {
 			return mapping;
 		}
 
-		public PathMapping rightToLeftConverter(Converter rightConverter) {
+		public PathMapping rightToLeftConverter(Function rightConverter) {
 			this.rightToLeftConverter = rightConverter;
 			return this;
 		}

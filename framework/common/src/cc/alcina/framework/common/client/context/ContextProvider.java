@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.context;
 
 import java.util.function.Function;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 public interface ContextProvider<C, F extends ContextFrame> {
 	static <C, F extends ContextFrame> ContextProvider<C, F> createProvider(

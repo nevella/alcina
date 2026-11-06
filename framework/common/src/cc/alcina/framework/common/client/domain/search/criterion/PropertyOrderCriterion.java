@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;

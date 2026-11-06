@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -26,13 +27,12 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.Link;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  *
@@ -51,7 +51,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 
 	private boolean hiding;
 
-	private Renderer renderer;
+	private Function renderer;
 
 	private final int maxLength;
 
@@ -106,7 +106,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 		return maxLength;
 	}
 
-	public Renderer getRenderer() {
+	public Function getRenderer() {
 		return this.renderer;
 	}
 
@@ -135,7 +135,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 		this.escapeHtml = escapeHtml;
 	}
 
-	public void setRenderer(Renderer renderer) {
+	public void setRenderer(Function renderer) {
 		this.renderer = renderer;
 	}
 
@@ -185,7 +185,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			}
 		} else {
 			fullText = renderer == null ? o.toString()
-					: renderer.render(o).toString();
+					: renderer.apply(o).toString();
 			fullTextNoBrs = fullText;
 			if (isShowNewlinesAsBreaks()) {
 				fullText = SafeHtmlUtils.htmlEscape(fullText).replace("\n",

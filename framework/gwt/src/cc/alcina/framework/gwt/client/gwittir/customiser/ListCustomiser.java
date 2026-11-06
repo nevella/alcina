@@ -16,15 +16,14 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import java.util.Comparator;
 import java.util.function.Predicate;
 
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * 
@@ -58,7 +57,7 @@ public class ListCustomiser implements Customiser {
 		if (editable) {
 			Predicate filter = NamedParameter.Support
 					.instantiateClass(parameters, FILTER_CLASS);
-			Renderer renderer = NamedParameter.Support
+			Function renderer = NamedParameter.Support
 					.instantiateClass(parameters, RENDERER_CLASS);
 			Comparator comparator = NamedParameter.Support
 					.instantiateClass(parameters, COMPARATOR_CLASS);

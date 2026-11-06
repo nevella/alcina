@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
@@ -285,7 +286,7 @@ public abstract class SearchCriterion extends Bindable
 	}
 
 	public String provideDisplayName() {
-		return Ax.blankTo(getDisplayName(),
-				getClass().getSimpleName().replace("Criterion", ""));
+		return Ax.blankTo(getDisplayName(), CommonUtils
+				.deInfix(NestedName.get(this).replace("Criterion", "")));
 	}
 }

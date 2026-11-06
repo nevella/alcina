@@ -2,17 +2,17 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Date;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 public class BooleanEnsureNonNullCoverter
-		implements Converter<Boolean, Boolean> {
+		implements Function<Boolean, Boolean> {
 	public static final BooleanEnsureNonNullCoverter INSTANCE = new BooleanEnsureNonNullCoverter();
 
-	public Boolean convert(Boolean original) {
+	public Boolean apply(Boolean original) {
 		return original == null ? Boolean.FALSE : original;
 	}
 
-	public String convert(Date original) {
+	public String apply(Date original) {
 		return original == null ? null : String.valueOf(original.getTime());
 	}
 }

@@ -18,13 +18,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  *
@@ -41,7 +40,7 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 
 	private int visibleItemCount = 4;
 
-	private Renderer renderer = FriendlyEnumRenderer.INSTANCE;
+	private Function renderer = FriendlyEnumRenderer.INSTANCE;
 
 	private HasValue<Collection> provider;
 
@@ -86,7 +85,7 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 		return hiddenValues;
 	}
 
-	public Renderer getRenderer() {
+	public Function getRenderer() {
 		return renderer;
 	}
 
@@ -114,7 +113,7 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 		this.provider = provider;
 	}
 
-	public void setRenderer(Renderer renderer) {
+	public void setRenderer(Function renderer) {
 		this.renderer = renderer;
 	}
 

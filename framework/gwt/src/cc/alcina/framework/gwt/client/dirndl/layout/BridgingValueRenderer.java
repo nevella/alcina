@@ -5,12 +5,8 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.table.Field;
 
+import java.util.function.Function;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -32,6 +28,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 /**
  * <p>
@@ -142,7 +142,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
-		Converter inverseConverter = BeanFields
+		Function inverseConverter = BeanFields
 				.getInverseConverter(field.getConverter());
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;

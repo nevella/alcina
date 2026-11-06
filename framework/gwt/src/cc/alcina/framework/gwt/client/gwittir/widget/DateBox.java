@@ -23,12 +23,12 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.datepicker.client.DateBox.DefaultFormat;
 import com.google.gwt.user.datepicker.client.DateBox.Format;
 import com.google.gwt.user.datepicker.client.DatePicker;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.collections.BidiConverter;
 import cc.alcina.framework.common.client.collections.BidiConverter.BidiIdentityConverter;
 import cc.alcina.framework.common.client.util.DateTzAdjustment;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * This class is a bit hacked, to support Gwittir validation. It requires an

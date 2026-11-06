@@ -13,15 +13,15 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -40,7 +40,7 @@ public class AliasCustomiser implements Customiser {
 	}
 
 	public static class AliasProvider
-			implements BoundWidgetProvider, Renderer<Object, String> {
+			implements BoundWidgetProvider, Function<Object, String> {
 		private String propertyName;
 
 		private RenderingLabel label;
@@ -57,7 +57,7 @@ public class AliasCustomiser implements Customiser {
 		}
 
 		@Override
-		public String render(Object o) {
+		public String apply(Object o) {
 			return (String) Reflections.at(label.getModel())
 					.property(propertyName).get(label.getModel());
 		}

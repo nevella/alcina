@@ -3,11 +3,11 @@ package cc.alcina.framework.gwt.client.dirndl.impl.form;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
-import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.AbstractValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
 
 public class FmsValidationFeedback extends AbstractValidationFeedback {
 	private FlowPanel validationWidget = null;

@@ -2,13 +2,12 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Objects;
 
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
-
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  * This class manages the validation process (property or bean)

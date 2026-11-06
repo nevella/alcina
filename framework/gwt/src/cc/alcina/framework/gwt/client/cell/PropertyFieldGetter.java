@@ -2,12 +2,11 @@ package cc.alcina.framework.gwt.client.cell;
 
 import java.util.function.Function;
 
-import com.totsp.gwittir.client.ui.table.Field;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 public class PropertyFieldGetter<O> implements Function<O, Object> {
 	private Field field;
@@ -33,7 +32,7 @@ public class PropertyFieldGetter<O> implements Function<O, Object> {
 			}
 		}
 		if (field.getConverter() != null) {
-			value = field.getConverter().convert(value);
+			value = field.getConverter().apply(value);
 		}
 		return value;
 	}

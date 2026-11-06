@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
-import com.totsp.gwittir.client.ui.table.Field;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -16,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class ValueEditor extends Model.Fields {
@@ -50,7 +49,7 @@ public class ValueEditor extends Model.Fields {
 
 		@Override
 		public void onChildBindingCreated(
-				com.totsp.gwittir.client.beans.Binding binding) {
+				cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding binding) {
 		}
 	}
 

@@ -15,11 +15,8 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -28,6 +25,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -43,7 +42,7 @@ public class ClassLookupCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		NamedParameter[] parameters = info.parameters();
-		Renderer renderer = NamedParameter.Support.instantiateClass(parameters,
+		Function renderer = NamedParameter.Support.instantiateClass(parameters,
 				RENDERER_CLASS);
 		return new RendererClassProvider(editable, NamedParameter.Support
 				.getParameter(info.parameters(), REGISTRY_POINT).classValue(),
@@ -51,11 +50,11 @@ public class ClassLookupCustomiser implements Customiser {
 	}
 
 	public static class ClassShortnameRenderer
-			implements Renderer<Class, String> {
+			implements Function<Class, String> {
 		public static final ClassShortnameRenderer INSTANCE = new ClassShortnameRenderer();
 
 		@Override
-		public String render(Class clazz) {
+		public String apply(Class clazz) {
 			return clazz == null ? "----" : CommonUtils.simpleClassName(clazz);
 		}
 	}
@@ -65,10 +64,10 @@ public class ClassLookupCustomiser implements Customiser {
 
 		private final Class registryPoint;
 
-		private final Renderer renderer;
+		private final Function renderer;
 
 		public RendererClassProvider(boolean editable, Class registryPoint,
-				Renderer renderer) {
+				Function renderer) {
 			this.editable = editable;
 			this.registryPoint = registryPoint;
 			this.renderer = renderer == null ? ClassShortnameRenderer.INSTANCE

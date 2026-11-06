@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
-import com.google.common.base.Preconditions;
-
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class RegistryKey implements Comparable<RegistryKey> {

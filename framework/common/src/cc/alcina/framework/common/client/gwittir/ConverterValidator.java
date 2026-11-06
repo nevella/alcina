@@ -1,18 +1,18 @@
 package cc.alcina.framework.common.client.gwittir;
 
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
+import java.util.function.Function;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 public class ConverterValidator implements Validator {
-	private final Converter converter;
+	private final Function converter;
 
-	public ConverterValidator(Converter converter) {
+	public ConverterValidator(Function converter) {
 		this.converter = converter;
 	}
 
 	@Override
 	public Object validate(Object value) throws ValidationException {
-		return converter.convert(value);
+		return converter.apply(value);
 	}
 }

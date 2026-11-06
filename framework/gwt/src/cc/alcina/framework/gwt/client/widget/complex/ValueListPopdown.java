@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.widget.complex;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -10,7 +11,6 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
@@ -21,12 +21,12 @@ public class ValueListPopdown<T> {
 	private PopdownSelect select;
 
 	public void showPopdown(Widget eventSource, Collection<T> values,
-			Renderer renderer, Callback<T> callback) {
+			Function renderer, Callback<T> callback) {
 		ArrayList<T> list = new ArrayList<T>(values);
 		showPopdown(eventSource, (T[]) list.toArray(), renderer, callback);
 	}
 
-	public void showPopdown(Widget eventSource, T[] values, Renderer renderer,
+	public void showPopdown(Widget eventSource, T[] values, Function renderer,
 			Callback<T> callback) {
 		if (popupPanel != null) {
 			popupPanel.hide();
@@ -49,18 +49,18 @@ public class ValueListPopdown<T> {
 
 		private final Callback<T> callback;
 
-		public PopdownSelect(Renderer r, List<T> availableValues,
+		public PopdownSelect(Function r, List<T> availableValues,
 				Callback<T> callback) {
 			this(r, (T[]) availableValues.toArray(), callback);
 		}
 
-		public PopdownSelect(Renderer r, T[] availableValues,
+		public PopdownSelect(Function r, T[] availableValues,
 				Callback<T> callback) {
 			this.callback = callback;
 			this.fp = new FlowPanel();
 			fp.setStyleName("popdown-select");
 			for (Object o : availableValues) {
-				BlockLink nh = new BlockLink(r.render(o).toString());
+				BlockLink nh = new BlockLink(r.apply(o).toString());
 				nh.setStyleName("block");
 				nh.setUserObject(o);
 				nh.addClickHandler(this);

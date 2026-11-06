@@ -15,9 +15,6 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.List;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -26,6 +23,8 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.HasDisplayName.HasDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**

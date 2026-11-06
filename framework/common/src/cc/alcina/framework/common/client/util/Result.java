@@ -3,8 +3,7 @@ package cc.alcina.framework.common.client.util;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.google.common.base.Preconditions;
-
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;

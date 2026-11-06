@@ -26,16 +26,16 @@ import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Request;
 import com.google.gwt.user.client.ui.TextBoxBase;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
 
+import java.util.function.Function;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleSuggestion;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
 
 /**
  * 
@@ -48,7 +48,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 
 	private T value;
 
-	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+	private Function<T, String> renderer = (Function) ToStringRenderer.INSTANCE;
 
 	private BoundSuggestOracle suggestOracle;
 
@@ -75,7 +75,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 	 * 
 	 * @return the value of renderer
 	 */
-	public Renderer<T, String> getRenderer() {
+	public Function<T, String> getRenderer() {
 		return this.renderer;
 	}
 
@@ -124,7 +124,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 		this.placeholderText = placeholderText;
 	}
 
-	public void setRenderer(Renderer<T, String> newrenderer) {
+	public void setRenderer(Function<T, String> newrenderer) {
 		this.renderer = newrenderer;
 	}
 

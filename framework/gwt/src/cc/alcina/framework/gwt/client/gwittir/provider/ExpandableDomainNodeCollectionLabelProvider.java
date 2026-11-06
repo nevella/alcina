@@ -13,11 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 import cc.alcina.framework.gwt.client.gwittir.widget.ExpandableLabel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  *

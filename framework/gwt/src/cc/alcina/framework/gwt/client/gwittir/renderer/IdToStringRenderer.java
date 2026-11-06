@@ -39,7 +39,7 @@ public class IdToStringRenderer extends FlexibleToStringRenderer<HasId> {
 	}
 
 	@Override
-	public String render(HasId hasId) {
+	public String apply(HasId hasId) {
 		if (hasId == null) {
 			return nullsAsBlanks ? "" : "(Undefined)";
 		}

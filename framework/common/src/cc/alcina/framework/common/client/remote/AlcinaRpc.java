@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 public class AlcinaRpc {
@@ -100,5 +101,22 @@ public class AlcinaRpc {
 
 		@ReflectiveSerializer.Checks(ignore = true)
 		public Object payload;
+	}
+
+	@Bean
+	public static class RpcException extends Exception {
+		public String message;
+
+		public RpcException() {
+		}
+
+		public RpcException(Throwable wrappedException) {
+			message = CommonUtils.toSimpleExceptionMessage(wrappedException);
+		}
+
+		@Override
+		public String getMessage() {
+			return message;
+		}
 	}
 }

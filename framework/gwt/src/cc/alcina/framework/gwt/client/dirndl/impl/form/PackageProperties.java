@@ -3,11 +3,11 @@ package cc.alcina.framework.gwt.client.dirndl.impl.form;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
-import com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _FmsTable_FmsTreeTableColumn fmsTable_fmsTreeTableColumn = new _FmsTable_FmsTreeTableColumn();
     

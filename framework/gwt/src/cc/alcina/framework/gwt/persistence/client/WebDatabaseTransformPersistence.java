@@ -27,7 +27,7 @@ import com.google.code.gwt.database.client.SQLResultSet;
 import com.google.code.gwt.database.client.SQLResultSetRowList;
 import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -278,9 +278,9 @@ public class WebDatabaseTransformPersistence
 	protected void transformPersisted(
 			final List<DeltaApplicationRecord> persistedWrappers,
 			final AsyncCallback callback) {
-		Converter<DeltaApplicationRecord, Integer> getIdConverter = new Converter<DeltaApplicationRecord, Integer>() {
+		Function<DeltaApplicationRecord, Integer> getIdConverter = new Function<DeltaApplicationRecord, Integer>() {
 			@Override
-			public Integer convert(DeltaApplicationRecord original) {
+			public Integer apply(DeltaApplicationRecord original) {
 				return original.getId();
 			}
 		};

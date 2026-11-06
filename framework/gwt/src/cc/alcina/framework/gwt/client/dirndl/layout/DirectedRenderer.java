@@ -334,7 +334,7 @@ public abstract class DirectedRenderer {
 	}
 
 	/*
-	 * Renderer will attempt to render null
+	 * Function will attempt to render null
 	 */
 	interface RendersNull {
 	}

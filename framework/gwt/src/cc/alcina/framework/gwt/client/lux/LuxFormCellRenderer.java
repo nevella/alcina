@@ -9,7 +9,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRenderer;
@@ -17,6 +16,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 import cc.alcina.framework.gwt.client.widget.FormLabel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 public class LuxFormCellRenderer implements GridFormCellRenderer {
 	private FlowPanel panel;
@@ -78,7 +78,7 @@ public class LuxFormCellRenderer implements GridFormCellRenderer {
 			});
 		}
 		if (widget instanceof TextBox || widget instanceof PasswordTextBox
-				|| widget instanceof com.totsp.gwittir.client.ui.TextBox) {
+				|| widget instanceof cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.TextBox) {
 			LuxFormStyle.TEXT.addTo(container);
 			widget.getElement().setPropertyString("placeholder", " ");
 			if (Ax.notBlank(field.getAutocompleteName())) {

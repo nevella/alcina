@@ -22,21 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
-import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
-import com.totsp.gwittir.client.validator.IntegerValidator;
-import com.totsp.gwittir.client.validator.ValidationFeedback;
-import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.gwittir.validator.BooleanEnsureNonNullCoverter;
@@ -70,6 +58,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateStyle;
+import cc.alcina.framework.common.client.util.Functions;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
@@ -80,6 +69,16 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.AbstractValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.IntegerValidator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  * @author Nick Reddel
@@ -151,33 +150,33 @@ public class BeanFields {
 		}
 	};
 
-	public static final Renderer DATE_TIME_RENDERER = new Renderer() {
+	public static final Function DATE_TIME_RENDERER = new Function() {
 		@Override
-		public Object render(Object o) {
+		public Object apply(Object o) {
 			Date d = (Date) o;
 			return d == null ? "" : DateStyle.DATE_TIME.format(d);
 		}
 	};
 
-	public static final Renderer DATE_TIME_RENDERER_TZ = new Renderer() {
+	public static final Function DATE_TIME_RENDERER_TZ = new Function() {
 		@Override
-		public Object render(Object o) {
+		public Object apply(Object o) {
 			Date d = (Date) o;
 			return d == null ? "" : DateStyle.DATE_TIME_TZ.format(d);
 		}
 	};
 
-	public static final Renderer DATE_SLASH_RENDERER_WITH_NULL = new Renderer() {
+	public static final Function DATE_SLASH_RENDERER_WITH_NULL = new Function() {
 		@Override
-		public Object render(Object o) {
+		public Object apply(Object o) {
 			Date d = (Date) o;
 			return d == null ? null : DateStyle.DATE_SLASH.format(d);
 		}
 	};
 
-	public static final Renderer YES_NO_RENDERER = new Renderer() {
+	public static final Function YES_NO_RENDERER = new Function() {
 		@Override
-		public Object render(Object o) {
+		public Object apply(Object o) {
 			Boolean b = (Boolean) o;
 			return CommonUtils.bv(b) ? "Yes" : "No";
 		}
@@ -218,7 +217,7 @@ public class BeanFields {
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
-		Converter inverseConverter = getInverseConverter(field.getConverter());
+		Function inverseConverter = getInverseConverter(field.getConverter());
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;
 		}
@@ -229,7 +228,7 @@ public class BeanFields {
 		return widget;
 	}
 
-	public static Converter getDefaultConverter(BoundWidgetProvider bwp,
+	public static Function getDefaultConverter(BoundWidgetProvider bwp,
 			Class propertyType) {
 		if (bwp == null) {
 			return null;
@@ -238,11 +237,11 @@ public class BeanFields {
 			return BooleanEnsureNonNullCoverter.INSTANCE;
 		}
 		if (propertyType == Double.class) {
-			return Converter.DOUBLE_TO_STRING_CONVERTER;
+			return Functions.DOUBLE_TO_STRING_CONVERTER;
 		}
 		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER
 				|| bwp.getClass() == BoundWidgetProviderTextBox.class) {
-			return Converter.TO_STRING_CONVERTER;
+			return Functions.TO_STRING_CONVERTER;
 			/*
 			 * these seem to be being introspected as value-type object, not
 			 * string - at least w JVMIntrospector
@@ -255,12 +254,12 @@ public class BeanFields {
 		return null;
 	}
 
-	public static Converter getInverseConverter(Converter c) {
+	public static Function getInverseConverter(Function c) {
 		if (c == null) {
 			return null;
 		}
-		if (c == Converter.DOUBLE_TO_STRING_CONVERTER) {
-			return Converter.STRING_TO_DOUBLE_CONVERTER;
+		if (c == Functions.DOUBLE_TO_STRING_CONVERTER) {
+			return Functions.STRING_TO_DOUBLE_CONVERTER;
 		}
 		return null;
 	}

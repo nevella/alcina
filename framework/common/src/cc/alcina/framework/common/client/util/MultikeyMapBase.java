@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.ImmutableMap;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
@@ -47,9 +47,9 @@ public abstract class MultikeyMapBase<V>
 
 	@Override
 	public <T> void addTupleObjects(List<T> tupleObjects,
-			Converter<T, List> converter) {
+			Function<T, List> converter) {
 		for (T t : tupleObjects) {
-			put(converter.convert(t).toArray());
+			put(converter.apply(t).toArray());
 		}
 	}
 
@@ -100,7 +100,7 @@ public abstract class MultikeyMapBase<V>
 
 	@Override
 	public <T> List<T> asTupleObjects(int maxDepth,
-			Converter<List, T> converter) {
+			Function<List, T> converter) {
 		List<List> tuples = asTuples(maxDepth);
 		return tuples.stream().map(converter).collect(Collectors.toList());
 	}

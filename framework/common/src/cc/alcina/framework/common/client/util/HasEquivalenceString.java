@@ -14,7 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 public interface HasEquivalenceString<T> extends HasEquivalence<T> {
 	String NULL = "<--null-->";
@@ -80,13 +80,13 @@ public interface HasEquivalenceString<T> extends HasEquivalence<T> {
 	public class StringLookup {
 		public static <T> Multimap<String, List<T>> generateLookup(
 				Collection<? extends T> collection,
-				Converter<T, String> converter) {
+				Function<T, String> converter) {
 			return collection.stream()
 					.collect(AlcinaCollectors.toKeyMultimap(converter));
 		}
 
 		public static <T> Collection<T> intersection(Collection<T> o1,
-				Collection<T> o2, Converter<T, String> converter) {
+				Collection<T> o2, Function<T, String> converter) {
 			Multimap<String, List<T>> l1 = generateLookup(o1, converter);
 			Multimap<String, List<T>> l2 = generateLookup(o2, converter);
 			l1.keySet().retainAll(l2.keySet());
@@ -94,7 +94,7 @@ public interface HasEquivalenceString<T> extends HasEquivalence<T> {
 		}
 
 		public static <T> Collection<T> removeAll(Collection<T> o1,
-				Collection<T> o2, Converter<T, String> converter) {
+				Collection<T> o2, Function<T, String> converter) {
 			Multimap<String, List<T>> l1 = generateLookup(o1, converter);
 			Multimap<String, List<T>> l2 = generateLookup(o2, converter);
 			l1.keySet().removeAll(l2.keySet());

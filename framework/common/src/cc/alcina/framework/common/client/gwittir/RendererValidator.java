@@ -13,22 +13,22 @@
  */
 package cc.alcina.framework.common.client.gwittir;
 
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
+import java.util.function.Function;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  *
  * @author Nick Reddel
  */
 public class RendererValidator implements Validator {
-	private final Renderer renderer;
+	private final Function renderer;
 
-	public RendererValidator(Renderer renderer) {
+	public RendererValidator(Function renderer) {
 		this.renderer = renderer;
 	}
 
 	public Object validate(Object value) throws ValidationException {
-		return renderer.render(value);
+		return renderer.apply(value);
 	}
 }

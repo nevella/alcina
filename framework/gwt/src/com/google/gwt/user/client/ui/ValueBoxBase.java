@@ -16,6 +16,7 @@
 package com.google.gwt.user.client.ui;
 
 import java.text.ParseException;
+import java.util.function.Function;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
@@ -33,7 +34,6 @@ import com.google.gwt.i18n.client.BidiUtils;
 import com.google.gwt.i18n.shared.DirectionEstimator;
 import com.google.gwt.i18n.shared.HasDirectionEstimator;
 import com.google.gwt.text.shared.Parser;
-import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
@@ -55,7 +55,7 @@ public class ValueBoxBase<T> extends FocusWidget implements HasChangeHandlers,
 
 	private final Parser<T> parser;
 
-	private final Renderer<T> renderer;
+	private final Function<T, String> renderer;
 
 	private ValueBoxEditor<T> editor;
 
@@ -70,7 +70,7 @@ public class ValueBoxBase<T> extends FocusWidget implements HasChangeHandlers,
 	 * @param elem
 	 *            the browser element to wrap
 	 */
-	protected ValueBoxBase(Element elem, Renderer<T> renderer,
+	protected ValueBoxBase(Element elem, Function<T, String> renderer,
 			Parser<T> parser) {
 		super(elem);
 		autoDirHandler = AutoDirectionHandler.addTo(this,
@@ -399,7 +399,7 @@ public class ValueBoxBase<T> extends FocusWidget implements HasChangeHandlers,
 	@Override
 	public void setValue(T value, boolean fireEvents) {
 		T oldValue = fireEvents ? getValue() : null;
-		setText(renderer.render(value));
+		setText(renderer.apply(value));
 		if (fireEvents) {
 			T newValue = getValue();
 			ValueChangeEvent.fireIfNotEqual(this, oldValue, newValue);

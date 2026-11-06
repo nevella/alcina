@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -81,6 +80,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.util.ClassNames;
 import cc.alcina.framework.gwt.client.util.StyleUtil;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *
@@ -399,7 +399,7 @@ public class DirectedLayout implements AlcinaProcess {
 				return registration;
 			} catch (RuntimeException e) {
 				throw new RendererNotFoundException(Ax.format(
-						"Renderer for %s not found at %s - if a class to be rendered does not extend Model.class"
+						"Function for %s not found at %s - if a class to be rendered does not extend Model.class"
 								+ ", it will require a registered DirectedRenderer class "
 								+ "- for examples of such classes, see the nested classes of LeafRenderer.class",
 						clazz.getSimpleName(), location), e);

@@ -20,10 +20,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -31,6 +28,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -72,8 +71,8 @@ public class EnumCustomiser implements Customiser {
 				.intValue(info.parameters(), VISIBLE_ITEM_COUNT, 4));
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
-		final Renderer renderer = parameter != null
-				? (Renderer) Reflections.newInstance(parameter.classValue())
+		final Function renderer = parameter != null
+				? (Function) Reflections.newInstance(parameter.classValue())
 				: null;
 		if (renderer != null) {
 			provider.setRenderer(renderer);

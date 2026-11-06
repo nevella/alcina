@@ -9,7 +9,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
@@ -51,7 +51,7 @@ public class DomainLookup<T, E extends Entity>
 
 	private Predicate<E> relevanceFilter;
 
-	private Converter<T, T> normaliser;
+	private Function<T, T> normaliser;
 
 	private boolean distributionWarned = false;
 
@@ -66,11 +66,11 @@ public class DomainLookup<T, E extends Entity>
 				getListenedClass());
 		this.relevanceFilter = descriptor.getRelevanceFilter();
 		if (indexClass == Long.class) {
-			Converter<Long, Long> normaliser = l -> l == null ? 0 : l;
-			this.normaliser = (Converter<T, T>) normaliser;
+			Function<Long, Long> normaliser = l -> l == null ? 0 : l;
+			this.normaliser = (Function<T, T>) normaliser;
 		} else if (indexClass == Long.class) {
-			Converter<Long, Long> normaliser = l -> l == null ? 0 : l;
-			this.normaliser = (Converter<T, T>) normaliser;
+			Function<Long, Long> normaliser = l -> l == null ? 0 : l;
+			this.normaliser = (Function<T, T>) normaliser;
 		}
 	}
 
@@ -131,7 +131,7 @@ public class DomainLookup<T, E extends Entity>
 		return descriptor.clazz;
 	}
 
-	public Converter<T, T> getNormaliser() {
+	public Function<T, T> getNormaliser() {
 		return this.normaliser;
 	}
 
@@ -193,7 +193,7 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	private T normalise(T key) {
-		return normaliser == null ? key : normaliser.convert(key);
+		return normaliser == null ? key : normaliser.apply(key);
 	}
 
 	@Override
@@ -223,7 +223,7 @@ public class DomainLookup<T, E extends Entity>
 		this.enabled = enabled;
 	}
 
-	public void setNormaliser(Converter<T, T> normaliser) {
+	public void setNormaliser(Function<T, T> normaliser) {
 		this.normaliser = normaliser;
 	}
 

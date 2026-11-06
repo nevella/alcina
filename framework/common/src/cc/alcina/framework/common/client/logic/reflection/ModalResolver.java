@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.Modal;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.Mode;

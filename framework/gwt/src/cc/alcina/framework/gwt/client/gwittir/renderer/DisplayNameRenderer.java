@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 public class DisplayNameRenderer extends FlexibleToStringRenderer {
 	public static final DisplayNameRenderer INSTANCE = new DisplayNameRenderer();
 
-	public String render(Object o) {
+	public String apply(Object o) {
 		if (o == null) {
 			return "(Undefined)";
 		}

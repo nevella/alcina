@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.place.shared.Place;
-import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
@@ -83,6 +82,7 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 /**
  * <p>
@@ -891,7 +891,7 @@ public class TableModel extends Model
 
 		@Override
 		public void onChildBindingCreated(
-				com.totsp.gwittir.client.beans.Binding binding) {
+				cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding binding) {
 			// NOOP
 		}
 

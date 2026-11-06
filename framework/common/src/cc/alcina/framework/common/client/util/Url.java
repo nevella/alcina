@@ -4,10 +4,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**

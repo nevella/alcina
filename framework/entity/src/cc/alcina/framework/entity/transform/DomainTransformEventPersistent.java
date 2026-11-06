@@ -22,7 +22,7 @@ import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gwt.user.client.rpc.GwtTransient;
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -192,10 +192,10 @@ public abstract class DomainTransformEventPersistent
 	public abstract void wrap(DomainTransformEvent evt);
 
 	public static class DomainTransformFromPersistentConverter implements
-			Converter<DomainTransformEventPersistent, DomainTransformEvent> {
+			Function<DomainTransformEventPersistent, DomainTransformEvent> {
 		@Override
 		public DomainTransformEvent
-				convert(DomainTransformEventPersistent original) {
+				apply(DomainTransformEventPersistent original) {
 			return original.toNonPersistentEvent(true);
 		}
 	}

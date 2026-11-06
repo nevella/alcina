@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -63,33 +63,33 @@ public interface HasDisplayName {
 
 	@Reflected
 	public static class HasDisplayNameRenderer
-			implements Renderer<HasDisplayName, String> {
+			implements Function<HasDisplayName, String> {
 		public static final HasDisplayNameRenderer INSTANCE = new HasDisplayNameRenderer();
 
 		@Override
-		public String render(HasDisplayName o) {
+		public String apply(HasDisplayName o) {
 			return o == null ? "" : o.displayName();
 		}
 	}
 
 	@Reflected
 	public static class HasDisplayNameRendererNull
-			implements Renderer<HasDisplayName, String> {
+			implements Function<HasDisplayName, String> {
 		public static final HasDisplayNameRenderer INSTANCE = new HasDisplayNameRenderer();
 
 		@Override
-		public String render(HasDisplayName o) {
+		public String apply(HasDisplayName o) {
 			return o == null ? "-----" : o.displayName();
 		}
 	}
 
 	@Reflected
 	public static class PreferDisplayNameRenderer
-			implements Renderer<Object, String> {
+			implements Function<Object, String> {
 		public static final PreferDisplayNameRenderer INSTANCE = new PreferDisplayNameRenderer();
 
 		@Override
-		public String render(Object o) {
+		public String apply(Object o) {
 			return o == null ? "" : displayName(o);
 		}
 	}

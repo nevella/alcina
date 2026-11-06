@@ -20,10 +20,10 @@
 package cc.alcina.framework.gwt.client.lux;
 
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
-import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.AbstractValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
 
 /**
  *

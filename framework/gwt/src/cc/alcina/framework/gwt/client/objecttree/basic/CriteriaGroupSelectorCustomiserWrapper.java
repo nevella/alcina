@@ -4,17 +4,17 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  * We're not obeying all bound widget stuff here...
@@ -30,8 +30,8 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup>
 
 	protected RadioButtonList<FilterCombinator> filterRbl;
 
-	protected Renderer<FilterCombinator, String> fcRend = new Renderer<FilterCombinator, String>() {
-		public String render(FilterCombinator o) {
+	protected Function<FilterCombinator, String> fcRend = new Function<FilterCombinator, String>() {
+		public String apply(FilterCombinator o) {
 			if (o == null) {
 				return "";
 			}

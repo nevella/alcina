@@ -7,9 +7,6 @@ import java.util.stream.Collectors;
 
 import javax.lang.model.element.ModuleElement.RequiresDirective;
 
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.validator.Validator;
-
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.gwittir.validator.Validation;
@@ -28,6 +25,8 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 public class FormValidation {
 	public static final String DEFAULT_BEAN_EXCEPTION_MESSAGE = "Please correct the problems in the form";

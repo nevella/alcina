@@ -16,13 +16,12 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * Note - rather than having this in a separate class to the (CriteriaGroup)
@@ -84,7 +83,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public BoundWidgetProvider renderCustomiser();
 
-	public default Renderer<?, String> renderer() {
+	public default Function<?, String> renderer() {
 		return null;
 	}
 

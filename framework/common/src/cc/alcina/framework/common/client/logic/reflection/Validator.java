@@ -45,7 +45,7 @@ public @interface Validator {
 
 	boolean validateBeanOnly() default false;
 
-	Class<? extends com.totsp.gwittir.client.validator.Validator> value();
+	Class<? extends cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator> value();
 
 	@Reflected
 	public static class MergeStrategy extends

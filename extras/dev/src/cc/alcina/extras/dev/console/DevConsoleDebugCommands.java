@@ -31,7 +31,7 @@ import javax.script.ScriptEngineManager;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths;
 import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths.ModuleSymbolPaths;
@@ -634,9 +634,9 @@ public class DevConsoleDebugCommands {
 		private void dumpHistory(String serializedLogRecords) {
 			List<ClientLogRecord> clrs = parseSerializedLogRecords(
 					serializedLogRecords);
-			Converter<ClientLogRecord, String> recordsConverter = new Converter<ClientLogRecord, String>() {
+			Function<ClientLogRecord, String> recordsConverter = new Function<ClientLogRecord, String>() {
 				@Override
-				public String convert(ClientLogRecord record) {
+				public String apply(ClientLogRecord record) {
 					return String.format("%-30s | %-30s | %s", record.getTime(),
 							record.getTopic(), console.breakAndPad(0, 100,
 									record.getMessage(), 66));
@@ -769,9 +769,9 @@ public class DevConsoleDebugCommands {
 
 		public List<ClientLogRecord>
 				parseSerializedLogRecords(String serializedLogRecords) {
-			Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
+			Function<String, ClientLogRecords> converter = new Function<String, ClientLogRecord.ClientLogRecords>() {
 				@Override
-				public ClientLogRecords convert(String original) {
+				public ClientLogRecords apply(String original) {
 					try {
 						return TransformManager.deserialize(original);
 					} catch (Exception e) {

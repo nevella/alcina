@@ -22,7 +22,6 @@ import com.google.gwt.core.ext.typeinfo.JField;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JType;
-import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
@@ -40,6 +39,7 @@ import cc.alcina.framework.entity.ClassUtilEntity;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationExistenceResolver;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.annotations.Omit;
 
 /**
  * Builds a class reflector (or data required for ClassReflector source

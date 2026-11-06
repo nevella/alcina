@@ -10,11 +10,11 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
-import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.AbstractValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
 
 public class CombiningValidationFeedback extends AbstractValidationFeedback {
 	protected final CombiningValidationFeedbackCollector collector;

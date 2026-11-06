@@ -14,12 +14,10 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.Date;
+import java.util.function.Function;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.collections.BidiConverter;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -28,6 +26,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -86,16 +86,16 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 
 	@Reflected
 	public static class ISO_8601_DateRenderer
-			implements Renderer<Date, String> {
+			implements Function<Date, String> {
 		@Override
-		public String render(Date date) {
+		public String apply(Date date) {
 			return date == null ? ""
 					: DateTimeFormat.getFormat(PredefinedFormat.ISO_8601)
 							.format(date);
 		}
 	}
 
-	public static class UtcDateRenderer implements Renderer<Date, String> {
+	public static class UtcDateRenderer implements Function<Date, String> {
 		public static final native String render0(double millis) /*-{
       var jsDate = new Date(millis);
       function pad(n) {
@@ -107,7 +107,7 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 		}-*/;
 
 		@Override
-		public String render(Date date) {
+		public String apply(Date date) {
 			return date == null ? "" : render0(date.getTime());
 		}
 	}

@@ -20,14 +20,13 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  *
@@ -40,7 +39,7 @@ public class SelectorProvider implements BoundWidgetProvider {
 
 	private final int maxSelectedItems;
 
-	private final Renderer renderer;
+	private final Function renderer;
 
 	private boolean useCellList;
 
@@ -55,7 +54,7 @@ public class SelectorProvider implements BoundWidgetProvider {
 	private boolean withNull;
 
 	public SelectorProvider(Class selectionObjectClass, Predicate filter,
-			int maxSelectedItems, Renderer renderer, boolean useCellList,
+			int maxSelectedItems, Function renderer, boolean useCellList,
 			boolean useMinimalSelector, boolean useFlatSelector, String hint,
 			Class providerClass, boolean withNull) {
 		this.selectionObjectClass = selectionObjectClass;

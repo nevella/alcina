@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
@@ -26,10 +26,10 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  */
 @Reflected
 public class ReflectInstantiableToStringRenderer<T>
-		implements Renderer<T, String> {
+		implements Function<T, String> {
 	public static final ReflectInstantiableToStringRenderer<Object> INSTANCE = new ReflectInstantiableToStringRenderer<Object>();
 
-	public String render(T o) {
+	public String apply(T o) {
 		return (o == null) ? "" : o.toString();
 	}
 }

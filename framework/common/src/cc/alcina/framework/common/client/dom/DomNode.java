@@ -38,7 +38,7 @@ import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.regexp.shared.MatchResult;

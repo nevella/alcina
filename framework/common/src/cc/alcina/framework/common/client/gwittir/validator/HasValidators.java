@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.totsp.gwittir.client.validator.Validator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  *

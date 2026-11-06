@@ -2,10 +2,9 @@ package cc.alcina.framework.gwt.client.objecttree.search;
 
 import java.util.List;
 
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-
 import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public class DateCriterionSearchable<DC extends DateCriterion>
 		extends FlatSearchable<DC> {

@@ -10,7 +10,7 @@ import java.util.stream.StreamSupport;
 
 import org.w3c.dom.Text;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.dom.DomNode.SplitResult;

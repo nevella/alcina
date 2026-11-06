@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.util.FloatPair;
 public class FuzzyCache<I, O> {
 	public static ResultConvertor<List, List> LIST_CONVERTER = new ResultConvertor<List, List>() {
 		@Override
-		public List convert(SortedMap<Float, List> map) {
+		public List apply(SortedMap<Float, List> map) {
 			List result = new ArrayList();
 			for (List l : map.values()) {
 				result.addAll(l);
@@ -24,7 +24,7 @@ public class FuzzyCache<I, O> {
 
 	static ResultConvertor<SortedMap, SortedMap> SORTED_MAP_CONVERTER = new ResultConvertor<SortedMap, SortedMap>() {
 		@Override
-		public SortedMap convert(SortedMap<Float, SortedMap> map) {
+		public SortedMap apply(SortedMap<Float, SortedMap> map) {
 			SortedMap result = new TreeMap();
 			for (SortedMap m : map.values()) {
 				result.putAll(m);
@@ -36,7 +36,7 @@ public class FuzzyCache<I, O> {
 	public static ResultConvertor<SortedMap<Object, Integer>, SortedMap<Object, Integer>> SORTED_MAP_CONVERTER_INT = new ResultConvertor<SortedMap<Object, Integer>, SortedMap<Object, Integer>>() {
 		@Override
 		public SortedMap<Object, Integer>
-				convert(SortedMap<Float, SortedMap<Object, Integer>> map) {
+				apply(SortedMap<Float, SortedMap<Object, Integer>> map) {
 			SortedMap<Object, Integer> result = new TreeMap();
 			for (SortedMap<Object, Integer> m : map.values()) {
 				for (Object key : m.keySet()) {
@@ -90,7 +90,7 @@ public class FuzzyCache<I, O> {
 
 	public O getFuzzy(Float around) {
 		SortedMap<Float, I> subMap = map.subMap(around - fuzz, around + fuzz);
-		return converter.convert(subMap);
+		return converter.apply(subMap);
 	}
 
 	public List<FloatPairWithWeight> getSortedRanges() {
@@ -183,6 +183,6 @@ public class FuzzyCache<I, O> {
 	}
 
 	public interface ResultConvertor<I, O> {
-		O convert(SortedMap<Float, I> map);
+		O apply(SortedMap<Float, I> map);
 	}
 }

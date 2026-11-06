@@ -25,12 +25,11 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 public class IdDisplayNameRenderer extends FlexibleToStringRenderer<HasId> {
 	public static final IdDisplayNameRenderer INSTANCE = new IdDisplayNameRenderer();
 
-	public String render(HasId hasId) {
+	public String apply(HasId hasId) {
 		if (hasId == null) {
 			return "(Undefined)";
 		}
 		String dn = HasDisplayName.displayName(hasId);
-		return hasId.getId() + " : "
-				+ ((dn == null) ? super.render(hasId) : dn);
+		return hasId.getId() + " : " + ((dn == null) ? super.apply(hasId) : dn);
 	}
 }

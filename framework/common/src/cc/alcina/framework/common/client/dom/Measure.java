@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.dom;
 import java.util.Comparator;
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;

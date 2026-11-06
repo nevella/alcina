@@ -21,12 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.totsp.gwittir.client.ui.table.HasChunks;
-import com.totsp.gwittir.client.ui.table.SortableDataProvider;
-
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.HasChunks;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.SortableDataProvider;
 
 /**
  *

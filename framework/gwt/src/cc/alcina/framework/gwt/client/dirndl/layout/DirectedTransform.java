@@ -21,7 +21,7 @@ public class DirectedTransform {
 	@Reflected
 	public static class FriendlyEnumNullBlank extends FriendlyEnumRenderer {
 		@Override
-		public Object apply(Object t) {
+		public String apply(Object t) {
 			return t == null ? "" : super.apply(t);
 		}
 	}

@@ -1,10 +1,10 @@
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
-public class ToStringConverter implements Converter<Object, String> {
+public class ToStringConverter implements Function<Object, String> {
 	@Override
-	public String convert(Object o) {
+	public String apply(Object o) {
 		return o == null ? "null" : o.toString();
 	}
 }

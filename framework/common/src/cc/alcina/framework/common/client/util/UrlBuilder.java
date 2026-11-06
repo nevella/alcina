@@ -2,8 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
-
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 

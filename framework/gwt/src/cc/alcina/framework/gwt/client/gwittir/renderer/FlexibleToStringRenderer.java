@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 /**
  * To allow subclassing
@@ -22,10 +22,10 @@ import com.totsp.gwittir.client.ui.Renderer;
  *
  * @param <T>
  */
-public class FlexibleToStringRenderer<T> implements Renderer<T, String> {
+public class FlexibleToStringRenderer<T> implements Function<T, String> {
 	public static final FlexibleToStringRenderer<Object> INSTANCE = new FlexibleToStringRenderer<Object>();
 
-	public String render(T o) {
+	public String apply(T o) {
 		return (o == null) ? "" : o.toString();
 	}
 }

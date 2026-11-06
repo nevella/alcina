@@ -6,15 +6,14 @@ import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.google.common.base.Preconditions;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.Serializers;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 public interface UserPropertyPersistable
 		extends Serializable, SourcesPropertyChangeEvents, TreeSerializable {

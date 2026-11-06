@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
@@ -44,8 +44,8 @@ public class DocumentMatcher {
 
 		Measure match() {
 			if (matchedNode == null) {
-				matchedNode = matcher
-						.apply(parserState.input.start.getContainingNode().document
+				matchedNode = matcher.apply(
+						parserState.input.start.getContainingNode().document
 								.getDocumentElementNode());
 				if (matchedNode.isPresent()) {
 					matchedLocation = matchedNode.get().asLocation();

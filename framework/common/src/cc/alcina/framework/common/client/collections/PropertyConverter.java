@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.collections;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.util.PropertyPath;
 
-public class PropertyConverter<I, O> implements Converter<I, O> {
+public class PropertyConverter<I, O> implements Function<I, O> {
 	private PropertyPath accessor;
 
 	public PropertyConverter(String path) {
@@ -12,7 +12,7 @@ public class PropertyConverter<I, O> implements Converter<I, O> {
 	}
 
 	@Override
-	public O convert(I o) {
+	public O apply(I o) {
 		Object propertyValue = accessor.getChainedProperty(o);
 		return (O) propertyValue;
 	}

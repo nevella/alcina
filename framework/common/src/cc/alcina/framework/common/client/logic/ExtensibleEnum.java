@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.logic;
 import java.util.Collection;
 import java.util.List;
 
-import com.totsp.gwittir.client.beans.Converter;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -202,7 +202,7 @@ public abstract class ExtensibleEnum {
 	}
 
 	public static class FromSerializedFormConverter
-			implements Converter<String, ExtensibleEnum> {
+			implements Function<String, ExtensibleEnum> {
 		private final Class<? extends ExtensibleEnum> enumClass;
 
 		public FromSerializedFormConverter(
@@ -211,18 +211,18 @@ public abstract class ExtensibleEnum {
 		}
 
 		@Override
-		public ExtensibleEnum convert(String original) {
+		public ExtensibleEnum apply(String original) {
 			return ExtensibleEnum.valueOf(enumClass, original);
 		}
 	}
 
 	// due to double-triple conversions, be lenient
 	public static class ToSerializedFormConverter
-			implements Converter<Object, String> {
+			implements Function<Object, String> {
 		public static final ToSerializedFormConverter INSTANCE = new ToSerializedFormConverter();
 
 		@Override
-		public String convert(Object original) {
+		public String apply(Object original) {
 			return original == null ? null
 					: original instanceof ExtensibleEnum
 							? ((ExtensibleEnum) original).serializedForm()

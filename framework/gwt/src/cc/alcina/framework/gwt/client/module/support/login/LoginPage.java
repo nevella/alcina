@@ -3,9 +3,6 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
-
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -19,6 +16,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.NavArea;
 import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 @Directed(className = "login-page")
 @TypeSerialization(reflectiveSerializable = false)

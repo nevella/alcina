@@ -19,6 +19,8 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.function.Function;
+
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -27,9 +29,9 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
 import com.google.gwt.user.client.ui.MouseListener;
 import com.google.gwt.user.client.ui.MouseWheelListener;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
+
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
 
 /**
  * 
@@ -45,9 +47,9 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 
 	private T value;
 
-	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+	private Function<T, String> renderer = (Function) ToStringRenderer.INSTANCE;
 
-	private Renderer<T, String> titleRenderer = null;
+	private Function<T, String> titleRenderer = null;
 
 	/** Creates a new instance of Label */
 	public RenderingLabel() {
@@ -122,7 +124,7 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 	 * 
 	 * @return the value of renderer
 	 */
-	public Renderer<T, String> getRenderer() {
+	public Function<T, String> getRenderer() {
 		return this.renderer;
 	}
 
@@ -146,7 +148,7 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
-	public Renderer<T, String> getTitleRenderer() {
+	public Function<T, String> getTitleRenderer() {
 		return this.titleRenderer;
 	}
 
@@ -209,7 +211,7 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 	 * @param newrenderer
 	 *            new value of renderer
 	 */
-	public void setRenderer(Renderer<T, String> newrenderer) {
+	public void setRenderer(Function<T, String> newrenderer) {
 		this.renderer = newrenderer;
 	}
 
@@ -232,7 +234,7 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 		this.base.setTitle(title);
 	}
 
-	public void setTitleRenderer(Renderer<T, String> titleRenderer) {
+	public void setTitleRenderer(Function<T, String> titleRenderer) {
 		this.titleRenderer = titleRenderer;
 	}
 
@@ -240,9 +242,9 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
 		this.value = value;
-		this.setText(renderer.render(value));
+		this.setText(renderer.apply(value));
 		if (titleRenderer != null) {
-			setTitle(titleRenderer.render(value));
+			setTitle(titleRenderer.apply(value));
 		}
 		if (this.getValue() != old && this.getValue() != null
 				&& this.getValue().equals(old)) {

@@ -161,7 +161,8 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 	@Override
 	public String toString() {
 		if (getId() == 0) {
-			return CommonUtils.deInfix(NestedName.get(this));
+			return CommonUtils
+					.deInfix(NestedName.get(this).replace("Criterion", ""));
 		}
 		return Ax.blankTo(getDisplayText(),
 				() -> Ax.format("(id:%s)", getId()));

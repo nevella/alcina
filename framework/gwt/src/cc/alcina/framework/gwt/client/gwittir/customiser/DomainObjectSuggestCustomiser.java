@@ -18,10 +18,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -34,6 +31,8 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.ReflectInstantiableToStri
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracle;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -134,8 +133,8 @@ public class DomainObjectSuggestCustomiser
 												multiple, custom);
 	}
 
-	public Renderer getRenderer() {
-		return (Renderer) Reflections.newInstance(rendererClassValue);
+	public Function getRenderer() {
+		return (Function) Reflections.newInstance(rendererClassValue);
 	}
 
 	public boolean isShowOnFocus() {
@@ -185,7 +184,7 @@ public class DomainObjectSuggestCustomiser
 
 		String placeholder() default "Type for suggestions";
 
-		Class<? extends Renderer> rendererClass() default BoundSuggestOracleResponseElementRenderer.class;
+		Class<? extends Function> rendererClass() default BoundSuggestOracleResponseElementRenderer.class;
 
 		boolean showOnFocus() default false;
 
@@ -194,18 +193,18 @@ public class DomainObjectSuggestCustomiser
 
 	@Reflected
 	public static class BoundSuggestOracleResponseElementRenderer
-			implements Renderer<BoundSuggestOracleResponseElement, String> {
+			implements Function<BoundSuggestOracleResponseElement, String> {
 		@Override
-		public String render(BoundSuggestOracleResponseElement o) {
+		public String apply(BoundSuggestOracleResponseElement o) {
 			return o == null ? null : o.toSuggestionResultString();
 		}
 	}
 
 	@Reflected
 	public static class BoundSuggestOracleResponseElementSuggestionRenderer
-			implements Renderer<BoundSuggestOracleResponseElement, String> {
+			implements Function<BoundSuggestOracleResponseElement, String> {
 		@Override
-		public String render(BoundSuggestOracleResponseElement o) {
+		public String apply(BoundSuggestOracleResponseElement o) {
 			return o == null ? null : o.toSuggestionString();
 		}
 	}

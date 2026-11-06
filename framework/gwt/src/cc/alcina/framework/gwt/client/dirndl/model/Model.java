@@ -15,11 +15,8 @@ import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.BindingBuilder;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import java.util.function.Function;
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.HasChanges;
@@ -52,6 +49,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.BindingBuilder;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * <p>
@@ -317,9 +317,9 @@ public abstract class Model extends Bindable
 		public List<StreamBinding> streamBindings = new ArrayList<>();
 
 		public Binding add(Object leftPropertyName,
-				Converter leftToRightConverter,
+				Function leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
-				Converter rightToLeftConverter) {
+				Function rightToLeftConverter) {
 			SourcesPropertyChangeEvents left = getSource();
 			return add(left, leftPropertyName, leftToRightConverter, right,
 					rightPropertyName, rightToLeftConverter);
@@ -331,9 +331,9 @@ public abstract class Model extends Bindable
 		}
 
 		public Binding add(SourcesPropertyChangeEvents left,
-				Object leftPropertyName, Converter leftToRightConverter,
+				Object leftPropertyName, Function leftToRightConverter,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
-				Converter rightToLeftConverter) {
+				Function rightToLeftConverter) {
 			String leftPropertyNameString = PropertyEnum
 					.asPropertyName(leftPropertyName);
 			String rightPropertyNameString = PropertyEnum
@@ -402,15 +402,14 @@ public abstract class Model extends Bindable
 
 		public <I, O> void addOneway(Object leftPropertyName,
 				SourcesPropertyChangeEvents right, Object rightPropertyName,
-				Converter<I, O> rightToLeftConverter) {
+				Function<I, O> rightToLeftConverter) {
 			addOneway(getSource(), leftPropertyName, right, rightPropertyName,
 					rightToLeftConverter);
 		}
 
 		public <I, O> void addOneway(SourcesPropertyChangeEvents left,
 				Object leftPropertyName, SourcesPropertyChangeEvents right,
-				Object rightPropertyName,
-				Converter<I, O> rightToLeftConverter) {
+				Object rightPropertyName, Function<I, O> rightToLeftConverter) {
 			add(left, leftPropertyName, Binding.IGNORE_CHANGE, right,
 					rightPropertyName, rightToLeftConverter);
 		}

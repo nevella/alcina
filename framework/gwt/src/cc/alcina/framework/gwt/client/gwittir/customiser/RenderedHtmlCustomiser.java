@@ -13,17 +13,16 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields.BoundWidgetProviderTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @Reflected
 /**
@@ -56,13 +55,13 @@ public class RenderedHtmlCustomiser implements Customiser {
 	public static class RenderedHtmlProvider implements BoundWidgetProvider {
 		private final String widgetCssClass;
 
-		private Renderer renderer;
+		private Function renderer;
 
 		public RenderedHtmlProvider(Class rendererClass,
 				String widgetCssClass) {
 			this.widgetCssClass = widgetCssClass;
 			renderer = rendererClass == null ? ToStringRenderer.INSTANCE
-					: (Renderer) Reflections.newInstance(rendererClass);
+					: (Function) Reflections.newInstance(rendererClass);
 		}
 
 		@Override

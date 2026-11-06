@@ -483,7 +483,7 @@ public abstract class JdbcTransformPersistence
 		@Override
 		public DomainModelDelta next() {
 			return new DeltaApplicationRecordToDomainModelDeltaConverter()
-					.convert(itr.next());
+					.apply(itr.next());
 		}
 	}
 

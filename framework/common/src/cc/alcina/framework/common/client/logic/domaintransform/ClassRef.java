@@ -23,7 +23,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.totsp.gwittir.client.ui.Renderer;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -144,11 +144,11 @@ public abstract class ClassRef extends Entity implements TreeSerializable {
 	}
 
 	public static class ClassRefSimpleNameRenderer
-			implements Renderer<ClassRef, String> {
+			implements Function<ClassRef, String> {
 		public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
 
 		@Override
-		public String render(ClassRef o) {
+		public String apply(ClassRef o) {
 			return o == null ? "(undefined)"
 					: CommonUtils.simpleClassName(o.getRefClass());
 		}

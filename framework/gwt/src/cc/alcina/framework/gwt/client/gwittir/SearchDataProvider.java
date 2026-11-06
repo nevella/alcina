@@ -18,10 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.ui.table.HasChunks;
-import com.totsp.gwittir.client.ui.table.SortableDataProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -32,6 +29,8 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.HasChunks;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.SortableDataProvider;
 
 /**
  * 
@@ -42,12 +41,12 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 	private final AsyncCallback completionCallback;
 
-	private final Converter converter;
+	private final Function converter;
 
 	private SearchCallback runningCallback;
 
 	public SearchDataProvider(SingleTableSearchDefinition def,
-			AsyncCallback completionCallback, Converter converter) {
+			AsyncCallback completionCallback, Function converter) {
 		this.def = def;
 		this.completionCallback = completionCallback;
 		this.converter = converter;
@@ -143,7 +142,7 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 	public static class SearchDataProviderCommon extends SearchDataProvider {
 		public SearchDataProviderCommon(SingleTableSearchDefinition def,
-				AsyncCallback completionCallback, Converter converter) {
+				AsyncCallback completionCallback, Function converter) {
 			super(def, completionCallback, converter);
 		}
 

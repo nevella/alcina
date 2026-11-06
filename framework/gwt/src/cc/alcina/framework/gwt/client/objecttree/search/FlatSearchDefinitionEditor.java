@@ -6,13 +6,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
 
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 
 public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 	private FlowPanel fp;

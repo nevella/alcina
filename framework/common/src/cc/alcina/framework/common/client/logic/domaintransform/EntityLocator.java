@@ -6,25 +6,25 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 
 /*
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @Bean
 public class EntityLocator implements Serializable, TreeSerializable {
-	static final transient long serialVersionUID = 1L;
-
 	public static <E extends Entity> E find(Class<E> clazz, String string) {
 		if (string.matches("\\d+")) {
 			long id = Long.parseLong(string);
@@ -297,19 +297,6 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return toRecoverableNumericString0('/');
 	}
 
-	private String toRecoverableNumericString0(char separator) {
-		if (id != 0) {
-			return String.valueOf(id);
-		}
-		return Ax.format("%s%s%s", specifiedOrCurrentClientInstanceId(),
-				separator, localId);
-	}
-
-	private Long specifiedOrCurrentClientInstanceId() {
-		return clientInstanceId != 0 ? clientInstanceId
-				: Permissions.get().getClientInstanceId();
-	}
-
 	public String toRecoverableString() {
 		return toRecoverableString(specifiedOrCurrentClientInstanceId());
 	}
@@ -345,5 +332,39 @@ public class EntityLocator implements Serializable, TreeSerializable {
 
 	public boolean hasLocalId() {
 		return localId != 0;
+	}
+
+	private String toRecoverableNumericString0(char separator) {
+		if (id != 0) {
+			return String.valueOf(id);
+		}
+		return Ax.format("%s%s%s", specifiedOrCurrentClientInstanceId(),
+				separator, localId);
+	}
+
+	private Long specifiedOrCurrentClientInstanceId() {
+		return clientInstanceId != 0 ? clientInstanceId
+				: Permissions.get().getClientInstanceId();
+	}
+
+	@Bean(PropertySource.FIELDS)
+	public static class Suggestion
+			implements BoundSuggestOracleResponseElement {
+		EntityLocator locator;
+
+		String suggestionString;
+
+		public Suggestion() {
+		}
+
+		public Suggestion(EntityLocator locator, String suggestionString) {
+			this.locator = locator;
+			this.suggestionString = suggestionString;
+		}
+
+		@Override
+		public String toSuggestionString() {
+			return suggestionString;
+		}
 	}
 }

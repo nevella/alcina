@@ -1,14 +1,13 @@
 package cc.alcina.framework.gwt.client.widget;
 
-import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
-import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
-import com.totsp.gwittir.client.validator.StyleValidationFeedback;
-import com.totsp.gwittir.client.validator.ValidationFeedback;
-
 import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.gwt.client.widget.CombiningValidationFeedback.CombiningValidationFeedbackCollector;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.AbstractValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.CompositeValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.StyleValidationFeedback;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationFeedback;
 
 public class ValidationFeedbacks {
 	public CombiningValidationFeedbackCollector collector = new CombiningValidationFeedbackCollector();

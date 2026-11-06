@@ -16,16 +16,15 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
+import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * 
@@ -51,7 +50,7 @@ public class RadioButtonListCustomiser implements Customiser {
 		if (editable) {
 			Supplier supplier = NamedParameter.Support
 					.instantiateClass(parameters, SUPPLIER_CLASS);
-			Renderer renderer = NamedParameter.Support
+			Function renderer = NamedParameter.Support
 					.instantiateClass(parameters, RENDERER_CLASS);
 			String groupName = NamedParameter.Support.stringValue(parameters,
 					GROUP_NAME, null);
@@ -75,7 +74,7 @@ public class RadioButtonListCustomiser implements Customiser {
 	public static class RadioButtonListProvider implements BoundWidgetProvider {
 		private Supplier supplier;
 
-		private Renderer renderer;
+		private Function renderer;
 
 		private String groupName;
 
@@ -83,7 +82,7 @@ public class RadioButtonListCustomiser implements Customiser {
 
 		private String radioButtonStyleName;
 
-		public RadioButtonListProvider(Supplier supplier, Renderer renderer,
+		public RadioButtonListProvider(Supplier supplier, Function renderer,
 				String groupName, int columnCount,
 				String radioButtonStyleName) {
 			this.supplier = supplier;

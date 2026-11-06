@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir;
 
-import com.totsp.gwittir.client.validator.Validator;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 /**
  *

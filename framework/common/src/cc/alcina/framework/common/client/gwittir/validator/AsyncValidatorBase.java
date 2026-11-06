@@ -2,15 +2,15 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.remote.ReflectiveValidationRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
 import cc.alcina.framework.gwt.client.util.Async;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
 
 /*
  * Async validators request validation on the server (for a given

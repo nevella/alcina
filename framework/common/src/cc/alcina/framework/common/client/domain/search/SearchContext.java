@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.domain.search;
 
 import java.util.List;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;

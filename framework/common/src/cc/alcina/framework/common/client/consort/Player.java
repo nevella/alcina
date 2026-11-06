@@ -8,10 +8,10 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

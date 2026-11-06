@@ -15,10 +15,9 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Collection;
 
-import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
-
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 
 @Reflected
 public class NotEmptyValidator implements Validator {
