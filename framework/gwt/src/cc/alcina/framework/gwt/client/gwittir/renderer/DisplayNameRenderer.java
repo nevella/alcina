@@ -29,6 +29,6 @@ public class DisplayNameRenderer extends FlexibleToStringRenderer {
 			return "(Undefined)";
 		}
 		String dn = HasDisplayName.displayName(o);
-		return (dn == null) ? super.render(o) : dn;
+		return (dn == null) ? super.apply(o) : dn;
 	}
 }

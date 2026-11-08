@@ -40,21 +40,20 @@ public class StringAskAnswer<T> {
 			 * called even if the ask is empty - to render the markup of the
 			 * suggestion
 			 */
+			if (valueTransformer != null) {
+				Suggestion.ModelSuggestion suggestion = new Suggestion.ModelSuggestion.Rendered(
+						model, valueTransformer);
+				suggestion.match = true;
+				return suggestion;
+			}
 			String string = stringRepresentation.apply(model);
 			MarkupMatch match = new MarkupMatch(string, ask.getValue());
 			if (match.hasMatches()) {
-				if (valueTransformer != null) {
-					Suggestion.ModelSuggestion suggestion = new Suggestion.ModelSuggestion.Rendered(
-							model, valueTransformer);
-					suggestion.match = true;
-					return suggestion;
-				} else {
-					Suggestion.Markup suggestion = new Suggestion.Markup();
-					suggestion.setMarkup(match.toMarkup());
-					suggestion.setMatch(true);
-					suggestion.setModel(model);
-					return suggestion;
-				}
+				Suggestion.Markup suggestion = new Suggestion.Markup();
+				suggestion.setMarkup(match.toMarkup());
+				suggestion.setMatch(true);
+				suggestion.setModel(model);
+				return suggestion;
 			} else {
 				return null;
 			}

@@ -1,8 +1,5 @@
 package cc.alcina.framework.common.client.search;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,20 +8,16 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
-public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
+public abstract class EntityCriterion<E extends Entity> extends SearchCriterion
 		implements HasId {
-	private static transient Map<EntityLocator, String> clientDisplayTexts;
-
 	static final transient long serialVersionUID = 1;
 
 	private String displayText;
@@ -49,13 +42,6 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 		return getId() == 0;
 	}
 
-	private Map<EntityLocator, String> ensureClientDisplayTexts() {
-		if (clientDisplayTexts == null) {
-			clientDisplayTexts = new LinkedHashMap<>();
-		}
-		return clientDisplayTexts;
-	}
-
 	public E ensurePlaceholderObject() {
 		if (value == null && id != 0) {
 			value = Reflections.newInstance(getObjectClass());
@@ -75,26 +61,6 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 
 	@PropertySerialization(fromClient = false)
 	public String getDisplayText() {
-		if (GWT.isClient()) {
-			Map<EntityLocator, String> clientDisplayTexts = ensureClientDisplayTexts();
-			if (id != 0 && Reflections.isAssignableFrom(Entity.class,
-					getObjectClass())) {
-				EntityLocator locator = new EntityLocator(
-						(Class) getObjectClass(), id, 0L);
-				if (Ax.notBlank(displayText)) {
-					clientDisplayTexts.put(locator, displayText);
-				} else {
-					this.displayText = clientDisplayTexts.get(locator);
-					if (this.displayText == null) {
-						Entity entity = Domain.find(locator);
-						if (entity != null) {
-							this.displayText = HasDisplayName
-									.displayName(entity);
-						}
-					}
-				}
-			}
-		}
 		return this.displayText;
 	}
 
@@ -147,7 +113,9 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 	}
 
 	public void setValue(E value) {
-		setDisplayText(provideDisplayTextFor(value));
+		if (Ax.isBlank(getDisplayText())) {
+			setDisplayText(provideDisplayTextFor(value));
+		}
 		if (value != null) {
 			setId(value.getId());
 		} else {
@@ -171,5 +139,10 @@ public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
 	public <T extends EntityCriterion<E>> T withObject(E withValue) {
 		setValue(withValue);
 		return (T) this;
+	}
+
+	@Override
+	public boolean requiresDisplayText() {
+		return getId() == 0 ? false : Ax.notBlank(getDisplayName());
 	}
 }

@@ -19,15 +19,13 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
-
 import com.google.gwt.dom.client.Element;
-
 import java.util.Collection;
 import java.util.List;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _Choices choices = new _Choices();
     static _Choices_Category choices_category = new _Choices_Category();

@@ -6,8 +6,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _FmsTable_FmsTreeTableColumn fmsTable_fmsTreeTableColumn = new _FmsTable_FmsTreeTableColumn();
     

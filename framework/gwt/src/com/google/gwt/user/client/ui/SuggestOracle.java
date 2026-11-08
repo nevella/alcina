@@ -296,6 +296,10 @@ public abstract class SuggestOracle {
 		}
 	}
 
+	public interface HasSuggestedObject {
+		Object provideSuggestedObject();
+	}
+
 	/**
 	 * Suggestion supplied by the
 	 * {@link com.google.gwt.user.client.ui.SuggestOracle}. Each suggestion has
@@ -348,7 +352,7 @@ public abstract class SuggestOracle {
 	 * subinterface.
 	 * </p>
 	 */
-	public interface Suggestion {
+	public interface Suggestion extends HasSuggestedObject {
 		/**
 		 * Gets the display string associated with this suggestion. The
 		 * interpretation of the display string depends upon the value of its
@@ -368,6 +372,11 @@ public abstract class SuggestOracle {
 		 *         this suggestion is selected
 		 */
 		String getReplacementString();
+
+		@Override
+		default Object provideSuggestedObject() {
+			return getDisplayString();
+		}
 
 		/**
 		 * Allow a type to be returned from a suggestoracle but without

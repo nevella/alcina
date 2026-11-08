@@ -56,7 +56,6 @@ public class AbstractDateCriterion extends SearchCriterion
 	@SuppressWarnings("deprecation")
 	@Override
 	@PropertySerialization(defaultProperty = true)
-	@Validator(ShortIso8601DateValidator.class)
 	public Date getValue() {
 		if (value != null) {
 			try {

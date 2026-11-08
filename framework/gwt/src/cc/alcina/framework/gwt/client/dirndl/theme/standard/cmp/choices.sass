@@ -99,21 +99,23 @@ $selected-editor-choice: #77e
     suggesting-node + choice-node
       margin-left: 3px
 
+@mixin choice-editor-contents
+  @include suggestions
+
+  &.single
+    edit
+      > .decorator-node
+        border: none
+
+      &[input-dirty]
+        > .decorator-node
+          display: none
+
 @mixin choice-editor-tag
   choice-editor
-    @include suggestions
-
-    &.single
-      edit
-        > .decorator-node
-          border: none
-
-        &[input-dirty]
-          > .decorator-node
-            display: none
-
+    @include choice-editor-contents
     
-@mixin decorator-suggestor
+@mixin decorator-suggestor-overlay
   overlay 
     //sass-unify: edit(-area)
     > .decorator-suggestor

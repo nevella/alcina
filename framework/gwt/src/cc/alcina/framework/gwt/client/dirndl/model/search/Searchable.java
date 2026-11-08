@@ -1,13 +1,15 @@
 package cc.alcina.framework.gwt.client.dirndl.model.search;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import com.google.gwt.dom.client.EventBehavior;
 import com.google.gwt.user.client.ui.SuggestOracle;
+import com.google.gwt.user.client.ui.SuggestOracle.HasSuggestedObject;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
-import cc.alcina.framework.common.client.logic.domain.HasSuggestedObject;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -15,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -40,6 +43,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.EntitySelector;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.EntitySelector.EntityContextTextProviderService;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.ToStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
@@ -235,11 +240,29 @@ public class Searchable extends Model.Fields
 		populateFromCriterion();
 	}
 
+	class EntityContextTextProviderServiceImpl
+			implements EntityContextTextProviderService {
+		@Override
+		public String getEntityDisplayText(Entity entity) {
+			if (searchCriterion instanceof EntityCriterion) {
+				EntityCriterion entityCriterion = (EntityCriterion) searchCriterion;
+				if (Objects.equals(entityCriterion.getValue(), entity)) {
+					return entityCriterion.getDisplayText();
+				}
+			}
+			return null;
+		}
+	}
+
 	public void onNodeContext(NodeContext event) {
 		populateFromCriterion();
-		node.getResolver().registerService(StringInput.Service.class,
+		event.registerService(StringInput.Service.class,
 				new StringInputServiceImpl());
-		node.getResolver().registerService(Service.class, new Service());
+		event.registerService(Service.class, new Service());
+		event.registerService(
+				EntitySelector.EntityContextTextProviderService.class,
+				new EntityContextTextProviderServiceImpl());
+		event.registerService(Service.class, new Service());
 		InstanceProperty<?, ?> valueProperty = searchCriterion.valueProperty();
 		valueEditor = new ValueEditor(valueProperty, node.getResolver());
 		if (service(SearchDefinitionEditor.Service.class)
@@ -298,10 +321,9 @@ public class Searchable extends Model.Fields
 	SearchCriterion searchCriterion() {
 		return searchCriterion;
 	}
-
-	PackageProperties._Searchable.InstanceProperties properties() {
-		return PackageProperties.searchable.instance(this);
-	}
+	// PackageProperties._Searchable.InstanceProperties properties() {
+	// return PackageProperties.searchable.instance(this);
+	// }
 
 	String provideName() {
 		return name;

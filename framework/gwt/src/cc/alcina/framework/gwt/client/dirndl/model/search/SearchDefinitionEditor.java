@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SearchDefinition.EditSupport;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -256,7 +257,8 @@ public class SearchDefinitionEditor extends Model.Fields
 		event.registerService(Service.class, new ServiceImpl());
 		this.initialSerializedDefinition = FlatTreeSerializer
 				.serializeElided(this.originalDefinition);
-		this.renderedDefinition = this.originalDefinition.cloneObject();
+		this.renderedDefinition = ReflectiveSerializer
+				.clone(this.originalDefinition);
 		searchables = renderedDefinition.allCriteria().stream()
 				.map(Searchable::new).toList();
 		searchablesListener = new PropertyGraphListener(

@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.SerializerReflection;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -86,6 +87,10 @@ public abstract class SearchDefinition extends Bindable
 			.getName() + ".CONTEXT_CURRENT_SEARCH_DEFINITION";
 
 	public static final transient String PROPERTY_CRITERIA_GROUPS = "criteriaGroups";
+
+	public static class Parameter
+			extends InstanceQuery.Parameter<SearchDefinition> {
+	}
 
 	/*
 	 * Instructs the searcher to not project (results are for an identity with

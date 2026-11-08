@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.io.Serializable;
 
+import com.google.gwt.user.client.ui.SuggestOracle.HasSuggestedObject;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.domain.HasSuggestedObject;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -28,7 +28,7 @@ public interface BoundSuggestOracleResponseElement {
 	}
 
 	public static class UntypedSuggestion extends Bindable.Fields
-			implements Suggestion, Serializable, HasSuggestedObject {
+			implements Suggestion, Serializable {
 		public UntypedSuggestion() {
 		}
 
@@ -98,7 +98,12 @@ public interface BoundSuggestOracleResponseElement {
 
 		@Override
 		public Object provideSuggestedObject() {
-			return typedValue;
+			if (typedValue instanceof HasSuggestedObject) {
+				return ((HasSuggestedObject) typedValue)
+						.provideSuggestedObject();
+			} else {
+				return typedValue;
+			}
 		}
 
 		public void

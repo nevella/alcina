@@ -103,6 +103,10 @@ public class StringRepresentable {
 				if (CommonUtils.isStandardJavaClassOrEnum(t.getClass())) {
 					return t.toString();
 				} else {
+					/*
+					 * converting to/from a hydratable form can't be generalised
+					 * (in general)
+					 */
 					throw new UnsupportedOperationException(Ax.format(
 							"Type %s requires an explicit ToStringRepresentation transformer",
 							NestedName.get(t)));

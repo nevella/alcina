@@ -602,15 +602,17 @@ public final class MutationRecord {
 			break;
 		}
 		case characterData: {
-			String characterData = applyDirection == ApplyDirection.history
-					? newValue
-					: oldValue;
-			String previousValue = target.putCharacterData(applyTo,
-					characterData);
-			if (applyDirection == ApplyDirection.history_reversed) {
-				newValue = previousValue;
-			} else {
-				oldValue = previousValue;
+			if (target.node() != null) {
+				String characterData = applyDirection == ApplyDirection.history
+						? newValue
+						: oldValue;
+				String previousValue = target.putCharacterData(applyTo,
+						characterData);
+				if (applyDirection == ApplyDirection.history_reversed) {
+					newValue = previousValue;
+				} else {
+					oldValue = previousValue;
+				}
 			}
 			break;
 		}

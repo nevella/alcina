@@ -5,7 +5,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle;
@@ -22,9 +24,13 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.search.EntityCriterion;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
@@ -32,6 +38,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleModel;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleSuggestion;
 import cc.alcina.framework.gwt.client.util.Async;
 
 @Directed.Delegating
@@ -48,39 +55,47 @@ public class EntitySelector<E extends Entity> extends Model.Value<E>
 		Class<? extends Entity> value();
 	}
 
-	private E value;
-
-	@Override
-	@Directed.Transform(ChoicesEditorSingle.SingleSuggestions.To.class)
-	@ChoiceEditor.RouterType(Router.class)
-	public E getValue() {
-		return value;
-	}
-
-	@Override
-	public void setValue(E value) {
-		set("value", this.value, value, () -> this.value = value);
+	public interface EntityContextTextProviderService extends ContextService {
+		String getEntityDisplayText(Entity entity);
 	}
 
 	public static class Router implements SuggestOracleRouter<StringAsk> {
 		@Bean(PropertySource.FIELDS)
 		public static class EntitySuggestion
 				implements SuggestOracle.Suggestion.Noop {
+			public EntityLocator entityLocator;
+
 			public EntitySuggestion() {
 			}
 
 			public EntitySuggestion(EntityLocator entityLocator) {
 				this.entityLocator = entityLocator;
 			}
+		}
 
-			public EntityLocator entityLocator;
+		Function<Entity, Model> entityRenderer = this::renderSuggestionString;
+
+		private EntityContextTextProviderService textProviderService;
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			event.getContext().node.service(ChoiceEditor.Service.class)
+					.setValueTransformer(entityRenderer);
+			textProviderService = event.getContext().node
+					.service(EntityContextTextProviderService.class);
 		}
 
 		@Override
 		public void ask(Node node, StringAsk ask,
 				Consumer<SuggestOracle.Response> responseHandler) {
+			Function valueTransformer = node.service(ChoiceEditor.Service.class)
+					.getValueTransformer();
+			Consumer<SuggestOracle.Response> wrappedConsumer = response -> {
+				registerResponseStrings(response);
+				responseHandler.accept(response);
+			};
 			AsyncCallback<Response> callback = Async.<SuggestOracle.Response> callbackBuilder()
-					.success(responseHandler).build();
+					.success(wrappedConsumer).build();
 			NodeEditorContextService editorContextService = node
 					.service(NodeEditorContextService.class);
 			BoundSuggestOracleRequest request = new BoundSuggestOracleRequest();
@@ -104,5 +119,50 @@ public class EntitySelector<E extends Entity> extends Model.Value<E>
 			// boundRequest.setHint(hint);
 			ReflectiveCommonRemoteServiceAsync.get().suggest(request, callback);
 		}
+
+		Model renderSuggestionString(Entity entity) {
+			String text = null;
+			text = entityTexts.get(entity);
+			if (text == null) {
+				if (textProviderService != null) {
+					text = textProviderService.getEntityDisplayText(entity);
+				}
+			}
+			if (text == null) {
+				text = entity.toStringId();
+			}
+			return new LeafModel.TagText("entity", text);
+		}
+
+		Map<Entity, String> entityTexts = AlcinaCollections.newLinkedHashMap();
+
+		void registerResponseStrings(Response response) {
+			entityTexts.clear();
+			response.getSuggestions().forEach(suggestion -> {
+				if (suggestion instanceof BoundSuggestOracleSuggestion) {
+					Object typedValue = ((BoundSuggestOracleSuggestion) suggestion)
+							.getTypedValue();
+					if (typedValue instanceof Entity.Suggestion) {
+						Entity.Suggestion entitySuggestion = (Entity.Suggestion) typedValue;
+						entityTexts.put(entitySuggestion.entity,
+								entitySuggestion.suggestionString);
+					}
+				}
+			});
+		}
+	}
+
+	private E value;
+
+	@Override
+	@Directed.Transform(ChoicesEditorSingle.SingleSuggestions.To.class)
+	@ChoiceEditor.RouterType(Router.class)
+	public E getValue() {
+		return value;
+	}
+
+	@Override
+	public void setValue(E value) {
+		set("value", this.value, value, () -> this.value = value);
 	}
 }

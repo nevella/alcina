@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -10,7 +11,8 @@ import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.logic.domain.HasSuggestedObject;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.StringAskAnswer;
@@ -87,9 +89,9 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 			}
 			Collection<? extends Suggestion> suggestions = response
 					.getSuggestions();
-			List<?> suggestedObjects = suggestions.stream()
-					.map(s -> ((HasSuggestedObject) s).provideSuggestedObject())
-					.collect(Collectors.toList());
+			Set<?> suggestedObjects = suggestions.stream()
+					.map(Suggestion::provideSuggestedObject)
+					.collect(AlcinaCollectors.toLinkedHashSet());
 			/*
 			 * see DecoratorBehavior.RepeatableChoiceHandling
 			 */
@@ -97,7 +99,9 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 				List<?> selectedValues = choiceEditor.getEditorValues();
 				suggestedObjects.removeIf(selectedValues::contains);
 			}
-			List<Choice> choices = suggestedObjects.stream().map(Choice::new)
+			List<Choice> choices = suggestions.stream()
+					.map(Suggestion::provideSuggestedObject)
+					.filter(suggestedObjects::contains).map(Choices.Choice::new)
 					.collect(Collectors.toList());
 			StringAskAnswer<Choice> router = new StringAskAnswer<>();
 			boolean keyboardSelectFirst = false;

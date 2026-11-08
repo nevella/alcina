@@ -148,11 +148,11 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 							: node.service(ChoiceEditor.Service.class)
 									.getValueTransformer();
 					Object value = choice.getValue();
-					if (value instanceof Model) {
-						return value;
+					if (valueTransformer != null) {
+						return valueTransformer.apply(value);
 					} else {
-						if (valueTransformer != null) {
-							return valueTransformer.apply(choice.getValue());
+						if (value instanceof Model) {
+							return value;
 						} else {
 							return choiceToString(choice);
 						}
@@ -217,8 +217,12 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	}
 
 	class Service implements ContextService {
-		public Function getValueTransformer() {
+		Function getValueTransformer() {
 			return valueTransformerFunction;
+		}
+
+		void setValueTransformer(Function valueTransformerFunction) {
+			setValueTransformerFunction(valueTransformerFunction);
 		}
 	}
 
@@ -236,6 +240,10 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 
 	@ReflectiveSerializer.Checks(ignore = true)
 	Function valueTransformerFunction;
+
+	void setValueTransformerFunction(Function valueTransformerFunction) {
+		this.valueTransformerFunction = valueTransformerFunction;
+	}
 
 	boolean widthConstrained;
 
@@ -255,6 +263,9 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Override
 	public void onNodeContext(NodeContext event) {
 		event.registerService(Service.class, new Service());
+		if (suggestOracleRouter != null) {
+			suggestOracleRouter.onNodeContext(event);
+		}
 	}
 
 	@Override
@@ -353,20 +364,20 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 			return;
 		}
 		{
+			Optional<Class<? extends Function>> valueTransformerOptional = node
+					.optional(ValueTransformer.class)
+					.map(ValueTransformer::value);
+			if (valueTransformerOptional.isPresent()) {
+				setValueTransformerFunction(valueTransformerFunction);
+				Reflections.newInstance(valueTransformerOptional.get());
+			}
+		}
+		{
 			Optional<Class<? extends SuggestOracleRouter>> routerTypeOptional = node
 					.optional(RouterType.class).map(RouterType::value);
 			SuggestOracleRouter suggestOracleRouter = routerTypeOptional
 					.map(Reflections::newInstance).orElse(null);
-			if (suggestOracleRouter != null) {
-				this.suggestOracleRouter = suggestOracleRouter;
-			}
-		}
-		{
-			Optional<Class<? extends Function>> valueTransformerOptional = node
-					.optional(ValueTransformer.class)
-					.map(ValueTransformer::value);
-			valueTransformerFunction = valueTransformerOptional
-					.map(Reflections::newInstance).orElse(null);
+			this.suggestOracleRouter = suggestOracleRouter;
 		}
 		{
 			boolean focusOnBind = node.optional(FocusOnBindMarker.class)

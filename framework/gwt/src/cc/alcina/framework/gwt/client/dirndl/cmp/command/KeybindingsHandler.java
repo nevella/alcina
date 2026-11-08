@@ -109,6 +109,10 @@ public class KeybindingsHandler implements KeyboardShortcuts.Handler {
 		if (nativeEvent != null && type.equals("keydown")) {
 			Set<Class<? extends CommandContext>> contexts = commandContextProvider
 					.getContexts();
+			if (altKey && keyCode != 18) {
+				int debug = 3;
+				commandContextProvider.getContexts();
+			}
 			Optional<Class<? extends ModelEvent>> match = boundEvents.stream()
 					.filter(eventType -> KeyBinding.Support.matches(contexts,
 							eventType, nativeEvent))

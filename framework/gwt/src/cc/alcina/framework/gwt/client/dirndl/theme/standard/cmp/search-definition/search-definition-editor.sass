@@ -1,4 +1,5 @@
 @use '../../../theme/theme'
+@use '../choices'
 
 @mixin hint
   > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after
@@ -15,6 +16,7 @@
 
   > choice-editor
     flex-grow: 1
+    @include choices.choice-editor-contents
 
     > edit 
       border: none
@@ -76,22 +78,18 @@
   search-definition-editor
     @include contents
 
+@mixin overlay
   overlay > choice-suggestor.decorator-suggestor
     border-color: #ffffff00
     box-shadow: none
 
-  overlay.searchable.operator-selector
-    background-color: white
+    overlay.searchable.operator-selector
+      background-color: white
 
-    choice-editor > edit
-      width: 20.2rem
-      border-color: #ccc
+      choice-editor > edit
+        width: 20.2rem
+        border-color: #ccc
 
-    choice-renderer
-      display: inline-flex
-      gap: 0.8rem
-
-      > operator-char
-        width: 1rem
-
-      
+      choice-renderer
+        display: inline-flex
+        gap: 0.8rem

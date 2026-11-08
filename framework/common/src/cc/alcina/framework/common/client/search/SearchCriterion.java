@@ -289,4 +289,11 @@ public abstract class SearchCriterion extends Bindable
 		return Ax.blankTo(getDisplayName(), CommonUtils
 				.deInfix(NestedName.get(this).replace("Criterion", "")));
 	}
+
+	public boolean requiresDisplayText() {
+		return false;
+	}
+
+	public void populateDisplayText() {
+	}
 }

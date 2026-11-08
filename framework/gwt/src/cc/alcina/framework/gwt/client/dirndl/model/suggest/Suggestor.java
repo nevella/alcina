@@ -31,6 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
@@ -78,9 +79,14 @@ public class Suggestor extends Model.Fields implements
 	}
 
 	@Reflected
-	public interface SuggestOracleRouter<A extends Ask> {
+	public interface SuggestOracleRouter<A extends Ask>
+			extends LayoutEvents.NodeContext.Handler {
 		public void ask(DirectedLayout.Node node, A ask,
 				Consumer<SuggestOracle.Response> responseHandler);
+
+		@Override
+		default void onNodeContext(NodeContext event) {
+		}
 	}
 
 	public static class Answers {

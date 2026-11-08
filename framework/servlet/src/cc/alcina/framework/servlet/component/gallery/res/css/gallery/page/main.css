@@ -2019,13 +2019,87 @@ search-definition-editor {
   width: 100%;
 }
 search-definition-editor > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
-  content: "Type, or [Enter] to search";
+  content2: "Type, or [Enter] to search";
 }
 search-definition-editor[modified] > choice-editor > edit > suggesting-node[contains-cursor]:last-of-type:empty:after {
-  content: "[Enter] to search";
+  content2: "[Enter] to search";
 }
 search-definition-editor > choice-editor {
   flex-grow: 1;
+}
+search-definition-editor > choice-editor > edit {
+  font-size: 16px;
+  color: #666;
+  width: 100%;
+  background-color: transparent;
+  border: solid 1px transparent;
+  font-family: "Helvetica Neue", Arial;
+  resize: none;
+  padding: 0.4rem 0.4rem;
+  box-sizing: border-box;
+  border-color: #aaa;
+  background-color: #ffffff20;
+  display: block;
+  color: #333;
+  height: 100%;
+  line-height: 145%;
+  width: 30rem;
+}
+search-definition-editor > choice-editor > edit::-webkit-input-placeholder {
+  color: transparent;
+}
+search-definition-editor > choice-editor > edit:focus::-webkit-input-placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+search-definition-editor > choice-editor > edit:hover {
+  border-color: #aaa;
+  background-color: #ffffff20;
+}
+search-definition-editor > choice-editor > edit:focus {
+  border-color: #555;
+  background-color: #FFF;
+}
+search-definition-editor > choice-editor > edit:focus-within, search-definition-editor > choice-editor > edit:hover {
+  outline: solid 1px #005fcc;
+}
+search-definition-editor > choice-editor > edit suggesting-node {
+  display: inline-block;
+  white-space: nowrap;
+  display: inline-block;
+  min-height: 16px;
+  padding-right: 1px;
+  cursor: text;
+}
+search-definition-editor > choice-editor > edit suggesting-node:empty:after {
+  content: " ";
+  display: inline-block;
+  color: #aaa;
+}
+search-definition-editor > choice-editor > edit choice-node {
+  background: none;
+  border-radius: 4px;
+  border: solid 1px #333;
+  padding: 2px 6px;
+  margin: 0 4px;
+  user-select: all;
+  outline: none;
+}
+search-definition-editor > choice-editor > edit choice-node.selected, search-definition-editor > choice-editor > edit choice-node:focus {
+  border-color: #77e;
+  color: #77e;
+}
+search-definition-editor > choice-editor > edit choice-node.selected::selection, search-definition-editor > choice-editor > edit choice-node:focus::selection {
+  background-color: transparent;
+}
+search-definition-editor > choice-editor > edit suggesting-node + choice-node {
+  margin-left: 3px;
+}
+search-definition-editor > choice-editor.single edit > .decorator-node {
+  border: none;
+}
+search-definition-editor > choice-editor.single edit[input-dirty] > .decorator-node {
+  display: none;
 }
 search-definition-editor > choice-editor > edit {
   border: none;
@@ -2086,20 +2160,16 @@ overlay > choice-suggestor.decorator-suggestor {
   border-color: #ffffff00;
   box-shadow: none;
 }
-
-overlay.searchable.operator-selector {
+overlay > choice-suggestor.decorator-suggestor overlay.searchable.operator-selector {
   background-color: white;
 }
-overlay.searchable.operator-selector choice-editor > edit {
+overlay > choice-suggestor.decorator-suggestor overlay.searchable.operator-selector choice-editor > edit {
   width: 20.2rem;
   border-color: #ccc;
 }
-overlay.searchable.operator-selector choice-renderer {
+overlay > choice-suggestor.decorator-suggestor overlay.searchable.operator-selector choice-renderer {
   display: inline-flex;
   gap: 0.8rem;
-}
-overlay.searchable.operator-selector choice-renderer > operator-char {
-  width: 1rem;
 }
 
 overlay.string-area string-area-expanded {

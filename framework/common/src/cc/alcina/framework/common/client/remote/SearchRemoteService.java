@@ -14,11 +14,13 @@
 package cc.alcina.framework.common.client.remote;
 
 import com.google.gwt.user.client.rpc.RemoteService;
+import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
@@ -34,4 +36,14 @@ public interface SearchRemoteService extends RemoteService {
 	Response suggest(BoundSuggestOracleRequest request);
 
 	Response suggestCriteria(StringAsk ask, boolean showAllCriteria);
+
+	SearchDefinition populateDisplayText(SearchDefinition searchDefinition);
+
+	public static class SuggestCriteriaResponse {
+		public SuggestOracle.Response response;
+	}
+
+	public static class PopulateDisplayTextResponse {
+		public SearchDefinition searchDefinition;
+	}
 }

@@ -13,12 +13,10 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 
 /*
  */
@@ -345,26 +343,5 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	private Long specifiedOrCurrentClientInstanceId() {
 		return clientInstanceId != 0 ? clientInstanceId
 				: Permissions.get().getClientInstanceId();
-	}
-
-	@Bean(PropertySource.FIELDS)
-	public static class Suggestion
-			implements BoundSuggestOracleResponseElement {
-		EntityLocator locator;
-
-		String suggestionString;
-
-		public Suggestion() {
-		}
-
-		public Suggestion(EntityLocator locator, String suggestionString) {
-			this.locator = locator;
-			this.suggestionString = suggestionString;
-		}
-
-		@Override
-		public String toSuggestionString() {
-			return suggestionString;
-		}
 	}
 }

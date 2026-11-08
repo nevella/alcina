@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 import java.util.List;
 
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -245,6 +246,12 @@ public class ModelEvents {
 					List<Class<? extends CommandContext>> contexts) {
 				this.attached = attached;
 				this.contexts = contexts;
+			}
+
+			@Override
+			public String toString() {
+				return FormatBuilder.keyValues("attached", attached, "contexts",
+						contexts);
 			}
 		}
 	}
