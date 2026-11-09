@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -231,9 +232,15 @@ class NodeEventBinding {
 		if (event.getClass() == type) {
 			Context context = NodeEvent.Context.fromContext(event.getContext(),
 					node);
-			// set before we dispatch to the handler, so the handler can
-			// unset
-			event.setHandled(true);
+			/*
+			 * set before we dispatch to the handler, so the handler can unset
+			 * 
+			 * do not set if the event is a ReflectedEvent (in general, we want
+			 * to propagate to all receivers)
+			 */
+			if (!(event instanceof ReflectedEvent)) {
+				event.setHandled(true);
+			}
 			fireEvent(event.getClass(), context, event.getModel());
 		}
 	}
@@ -325,8 +332,12 @@ class NodeEventBinding {
 			 * it's guaranteed that the handler NodeEventBinding is the right
 			 * type
 			 */
-			new ArrayList<>(handlers)
-					.forEach(h -> h.fireEventIfType(modelEvent));
+			for (NodeEventBinding binding : handlers.stream().toList()) {
+				binding.fireEventIfType(modelEvent);
+				if (modelEvent.isHandled()) {
+					break;
+				}
+			}
 		}
 
 		public void removeHandler(NodeEventBinding reflectedBinding) {

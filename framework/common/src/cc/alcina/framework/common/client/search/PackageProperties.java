@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.search;
 
-import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
@@ -196,7 +196,7 @@ public class PackageProperties {
       public TypedProperty<EntityCriterion, Class> objectClass = new TypedProperty<>(EntityCriterion.class, "objectClass");
       public TypedProperty<EntityCriterion, StandardSearchOperator> operator = new TypedProperty<>(EntityCriterion.class, "operator");
       public TypedProperty<EntityCriterion, String> targetPropertyName = new TypedProperty<>(EntityCriterion.class, "targetPropertyName");
-      public TypedProperty<EntityCriterion, HasId> value = new TypedProperty<>(EntityCriterion.class, "value");
+      public TypedProperty<EntityCriterion, Entity> value = new TypedProperty<>(EntityCriterion.class, "value");
       public static class InstanceProperties extends 	InstanceProperty.Container<EntityCriterion> {
         public  InstanceProperties(EntityCriterion source){super(source);}
         public InstanceProperty<EntityCriterion, String> displayName(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.displayName);}
@@ -205,7 +205,7 @@ public class PackageProperties {
         public InstanceProperty<EntityCriterion, Class> objectClass(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.objectClass);}
         public InstanceProperty<EntityCriterion, StandardSearchOperator> operator(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.operator);}
         public InstanceProperty<EntityCriterion, String> targetPropertyName(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.targetPropertyName);}
-        public InstanceProperty<EntityCriterion, HasId> value(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.value);}
+        public InstanceProperty<EntityCriterion, Entity> value(){return new InstanceProperty<>(source,PackageProperties.entityCriterion.value);}
       }
       
       public  InstanceProperties instance(EntityCriterion instance) {

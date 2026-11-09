@@ -766,6 +766,7 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 
 	@Override
 	public void onFocusEditor(ReflectedEvents.FocusEditor event) {
+		event.setHandled(true);
 		setFocusOnBind(true);
 		Model.FocusOnBind.focusIfAttached(provideNode());
 	}
