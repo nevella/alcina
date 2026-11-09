@@ -179,11 +179,11 @@ public class MeasureOverlay {
 	}
 
 	public enum Type {
-		HIGHLIGHT, WRAP, ENDPOINTS
+		HIGHLIGHT, WRAP, ENDPOINTS, REPLACE
 	}
 
-	public interface Wrapper {
-		void wrap(Location.Range range);
+	public interface RangeProcessor {
+		void process(Location.Range range);
 	}
 
 	public interface Highlighter {
@@ -268,7 +268,7 @@ public class MeasureOverlay {
 
 	public Highlighter highlighter;
 
-	public Wrapper wrapper;
+	public RangeProcessor processor;
 
 	public boolean parentRelativeFixed;
 
@@ -421,7 +421,10 @@ public class MeasureOverlay {
 	public void attach() {
 		switch (type) {
 		case WRAP:
-			wrapper.wrap(ensureSplitRange());
+			processor.process(ensureSplitRange());
+			break;
+		case REPLACE:
+			processor.process(ensureSplitRange());
 			break;
 		case HIGHLIGHT:
 			highlightTexts();
