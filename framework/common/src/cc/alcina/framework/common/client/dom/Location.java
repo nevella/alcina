@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.dom;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -327,7 +328,10 @@ public class Location implements Comparable<Location> {
 				start.getContainingNode().setText(replacement);
 			} else {
 				List<Range> treeRanges = asTreeRanges();
+				Collections.reverse(treeRanges);
 				treeRanges.forEach(Range::delete);
+				Range last = Ax.last(treeRanges);
+				int debug = 3;
 			}
 		}
 
@@ -625,7 +629,7 @@ public class Location implements Comparable<Location> {
 				if (cursor.isAtNodeStart()) {
 					Location nodeEnd = cursor.toOppositeEnd();
 					if (orderedRange.contains(nodeEnd)) {
-						result.add(cursor.asRange());
+						result.add(cursor.getContainingNode().asRange());
 						cursor = nodeEnd.relativeLocation(
 								RelativeDirection.NEXT_LOCATION);
 						continue;
