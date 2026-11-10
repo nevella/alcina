@@ -26,11 +26,11 @@ import com.google.code.gwt.database.client.SQLError;
 import com.google.code.gwt.database.client.SQLResultSet;
 import com.google.code.gwt.database.client.SQLResultSetRowList;
 import com.google.code.gwt.database.client.SQLTransaction;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;

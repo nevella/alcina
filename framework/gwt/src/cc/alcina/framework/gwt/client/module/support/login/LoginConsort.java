@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import java.util.Collections;
 import java.util.function.Consumer;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer;
@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.csobjects.LoginResponseState;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
-import cc.alcina.framework.common.client.remote.ReflectiveLoginRemoteServiceAsync;
+import cc.alcina.framework.gwt.client.remote.ReflectiveLoginRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;

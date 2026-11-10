@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 import com.google.gwt.dom.client.DomRect;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;

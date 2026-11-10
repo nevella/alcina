@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.servlet.servlet;
 
-import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.ServerValidator;
 
 /**
  *

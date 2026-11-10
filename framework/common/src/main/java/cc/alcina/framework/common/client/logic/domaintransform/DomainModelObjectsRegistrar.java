@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 public interface DomainModelObjectsRegistrar {
 	void registerAsync(DomainModelObject domainModelObjects,

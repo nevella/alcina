@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;

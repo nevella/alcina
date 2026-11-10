@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.RadioButton;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;

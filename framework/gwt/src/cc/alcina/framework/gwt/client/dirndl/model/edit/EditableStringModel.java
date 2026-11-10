@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;

@@ -15,9 +15,9 @@ package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 
 /**
  * 

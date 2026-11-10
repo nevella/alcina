@@ -22,8 +22,8 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 
-import cc.alcina.framework.common.client.gwittir.validator.Iso8601DateValidator;
-import cc.alcina.framework.common.client.gwittir.validator.ShortIso8601DateValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.Iso8601DateValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.ShortIso8601DateValidator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;

@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.gwittir.validator.ValidationState;
+import cc.alcina.framework.gwt.client.gwittir.validator.ValidationState;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;

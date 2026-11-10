@@ -24,12 +24,12 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.HasSatisfiesFilter;
 
 /**
@@ -86,7 +86,8 @@ public class UmbrellaCollectionProviderMultiplexer<T>
 	}
 
 	public void onDetach() {
-		TransformManager.get().removeCollectionModificationListener(this);
+		ClientTransformManager.cast()
+				.removeCollectionModificationListener(this);
 	}
 
 	private void remap(CollectionModificationEvent simpleEvent) {

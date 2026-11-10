@@ -24,7 +24,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;

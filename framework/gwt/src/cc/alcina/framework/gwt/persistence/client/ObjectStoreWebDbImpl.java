@@ -16,7 +16,7 @@ import com.google.code.gwt.database.client.SQLResultSetRowList;
 import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;

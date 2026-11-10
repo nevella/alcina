@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.logic;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;

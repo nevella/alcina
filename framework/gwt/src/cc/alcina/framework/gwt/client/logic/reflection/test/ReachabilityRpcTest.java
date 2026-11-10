@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.reflection.test;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 
@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
-import cc.alcina.framework.common.client.remote.ReflectiveRemoteServiceAsync;
+import cc.alcina.framework.gwt.client.remote.ReflectiveRemoteServiceAsync;
 
 public class ReachabilityRpcTest {
 	public interface Int1 {

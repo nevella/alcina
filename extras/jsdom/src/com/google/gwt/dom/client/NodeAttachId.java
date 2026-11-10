@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationRecord;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.Ax;
 

@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import javax.lang.model.element.ModuleElement.RequiresDirective;
 
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
-import cc.alcina.framework.common.client.gwittir.validator.Validation;
-import cc.alcina.framework.common.client.gwittir.validator.ValidationState;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotBlankValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.Validation;
+import cc.alcina.framework.gwt.client.gwittir.validator.ValidationState;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Topic;

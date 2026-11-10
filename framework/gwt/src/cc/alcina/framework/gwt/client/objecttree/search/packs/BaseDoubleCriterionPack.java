@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
-import cc.alcina.framework.common.client.gwittir.validator.DoubleValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.DoubleValidator;
 import cc.alcina.framework.common.client.search.DoubleCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;

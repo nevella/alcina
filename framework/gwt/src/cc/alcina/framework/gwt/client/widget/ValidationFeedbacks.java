@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
-import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotBlankValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.gwt.client.widget.CombiningValidationFeedback.CombiningValidationFeedbackCollector;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.AbstractValidationFeedback;

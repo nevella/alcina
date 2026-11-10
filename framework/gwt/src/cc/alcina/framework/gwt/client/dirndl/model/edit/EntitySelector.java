@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.remote.ReflectiveCommonRemoteServiceAsync;
+import cc.alcina.framework.gwt.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;

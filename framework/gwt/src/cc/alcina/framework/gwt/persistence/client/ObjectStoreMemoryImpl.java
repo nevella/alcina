@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;

@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.util;
 
 import java.util.function.Consumer;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.csobjects.ITaskResult;
 import cc.alcina.framework.common.client.util.Ax;

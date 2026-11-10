@@ -17,7 +17,7 @@ import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.AlcinaCollections;

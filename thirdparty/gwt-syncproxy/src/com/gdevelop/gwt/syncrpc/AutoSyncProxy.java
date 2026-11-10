@@ -31,7 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 
@@ -103,11 +103,11 @@ public class AutoSyncProxy implements Serializable {
 	 * Create a new Proxy for the specified <code>serviceIntf</code>
 	 * 
 	 * @param serviceIntf
-	 *            The remote service interface
+	 *                                  The remote service interface
 	 * @param moduleBaseURL
-	 *            Base URL
+	 *                                  Base URL
 	 * @param remoteServiceRelativePath
-	 *            The remote service servlet relative path
+	 *                                  The remote service servlet relative path
 	 * @return A new proxy object which implements the service interface
 	 *         serviceIntf
 	 */

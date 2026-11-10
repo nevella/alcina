@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.gwittir.widget.FileData;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;

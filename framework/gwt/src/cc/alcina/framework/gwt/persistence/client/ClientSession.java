@@ -22,7 +22,7 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.ClosingEvent;
 import com.google.gwt.user.client.Window.ClosingHandler;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -185,7 +185,8 @@ public abstract class ClientSession implements ClosingHandler {
 				String.valueOf(initialObjectsPersisted));
 	}
 
-	public static abstract class ClientSessionSingleAccess extends ClientSession {
+	public static abstract class ClientSessionSingleAccess
+			extends ClientSession {
 		private boolean initialObjectsPersisted;
 
 		@Override

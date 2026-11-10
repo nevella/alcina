@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;

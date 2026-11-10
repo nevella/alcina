@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;

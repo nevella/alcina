@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -44,10 +43,6 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.StandaloneObjectStoreClient;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
@@ -75,6 +70,7 @@ import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
@@ -96,8 +92,7 @@ import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesProp
  */
 // unchecked because reflection is always going to involve a lot of
 // casting...alas
-public abstract class TransformManager
-		implements PropertyChangeListener, CollectionModificationSource {
+public abstract class TransformManager implements PropertyChangeListener {
 	protected static final String UNSPECIFIC_PROPERTY_CHANGE = "---";
 
 	public static final String ID_FIELD_NAME = "id";
@@ -470,8 +465,6 @@ public abstract class TransformManager
 
 	private boolean replayingRemoteEvent;
 
-	protected CollectionModificationSupport collectionModificationSupport;
-
 	protected DomainTransformEvent currentEvent;
 
 	private TransformHistoryManager undoManager = new NullUndoManager();
@@ -484,28 +477,7 @@ public abstract class TransformManager
 
 	protected TransformManager() {
 		this.transformListenerSupport = new DomainTransformSupport();
-		this.collectionModificationSupport = new CollectionModificationSupport();
 		initCollections();
-	}
-
-	@Override
-	public void addCollectionModificationListener(
-			CollectionModificationListener listener) {
-		this.collectionModificationSupport
-				.addCollectionModificationListener(listener);
-	}
-
-	public void addCollectionModificationListener(
-			CollectionModificationListener listener, Class listenedClass) {
-		this.collectionModificationSupport
-				.addCollectionModificationListener(listener, listenedClass);
-	}
-
-	public void addCollectionModificationListener(
-			CollectionModificationListener listener, Class listenedClass,
-			boolean filteringListener) {
-		this.collectionModificationSupport.addCollectionModificationListener(
-				listener, listenedClass, filteringListener);
 	}
 
 	/**
@@ -953,12 +925,6 @@ public abstract class TransformManager
 
 	protected Entity ensureEndpointWriteable(Entity targetObject) {
 		return (Entity) ensureEndpointInTransformGraph(targetObject);
-	}
-
-	public void
-			fireCollectionModificationEvent(CollectionModificationEvent event) {
-		this.collectionModificationSupport
-				.fireCollectionModificationEvent(event);
 	}
 
 	protected void fireCreateObjectEvent(Class clazz, long id, long localId) {
@@ -1568,7 +1534,6 @@ public abstract class TransformManager
 
 	protected void promoteToDomain(Collection objects, boolean deregister) {
 		try {
-			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof Entity
 						&& getObjectStore().getObject((Entity) o) == null) {
@@ -1631,7 +1596,6 @@ public abstract class TransformManager
 			if (!deregister) {
 				registerProvisionalObject(objects);
 			}
-			CollectionModificationSupport.queue(false);
 		}
 	}
 
@@ -1919,13 +1883,6 @@ public abstract class TransformManager
 				sb.addPropertyChangeListener(this);
 			}
 		}
-	}
-
-	@Override
-	public void removeCollectionModificationListener(
-			CollectionModificationListener listener) {
-		this.collectionModificationSupport
-				.removeCollectionModificationListener(listener);
 	}
 
 	public int removeCreateDeleteTransforms() {

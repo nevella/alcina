@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.permissions.OnlineState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.gwt.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 

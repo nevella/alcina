@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.Collection;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 

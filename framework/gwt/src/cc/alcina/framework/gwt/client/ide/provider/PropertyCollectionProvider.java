@@ -19,13 +19,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**

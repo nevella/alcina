@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.consort;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 

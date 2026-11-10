@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;

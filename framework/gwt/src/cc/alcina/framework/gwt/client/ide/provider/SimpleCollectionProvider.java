@@ -18,10 +18,10 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 
 /**
  *
@@ -108,7 +108,8 @@ public class SimpleCollectionProvider<E>
 
 	@Override
 	public void onDetach() {
-		TransformManager.get().removeCollectionModificationListener(this);
+		ClientTransformManager.cast()
+				.removeCollectionModificationListener(this);
 	}
 
 	@Override

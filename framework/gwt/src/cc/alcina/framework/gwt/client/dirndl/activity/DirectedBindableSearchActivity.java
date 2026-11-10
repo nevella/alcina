@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
+import cc.alcina.framework.gwt.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;

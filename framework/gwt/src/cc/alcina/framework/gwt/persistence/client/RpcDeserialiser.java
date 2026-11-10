@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.persistence.client;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;

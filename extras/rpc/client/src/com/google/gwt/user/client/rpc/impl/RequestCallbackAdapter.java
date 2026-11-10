@@ -18,7 +18,7 @@ package com.google.gwt.user.client.rpc.impl;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.InvocationException;
 import com.google.gwt.user.client.rpc.RpcTokenException;
@@ -41,8 +41,8 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 	/**
 	 * {@link AsyncCallback} to notify or success or failure.
 	 */
-	private  AsyncCallback<T> callback;
-	
+	private AsyncCallback<T> callback;
+
 	public AsyncCallback<T> getCallback() {
 		return this.callback;
 	}
@@ -50,7 +50,6 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 	public void setCallback(AsyncCallback<T> callback) {
 		this.callback = callback;
 	}
-
 
 	/**
 	 * Used for stats recording.
@@ -255,6 +254,7 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 				return null;
 			}
 		};
+
 		public abstract Object read(SerializationStreamReader streamReader)
 				throws SerializationException;
 	}

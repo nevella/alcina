@@ -20,12 +20,12 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.TreeItem;
 
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.gwt.client.ide.DataTree;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.LazyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 
 /**

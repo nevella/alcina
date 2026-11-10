@@ -30,11 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;

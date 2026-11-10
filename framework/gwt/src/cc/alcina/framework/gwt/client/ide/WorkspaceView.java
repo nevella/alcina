@@ -50,7 +50,8 @@ import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -342,8 +343,8 @@ public class WorkspaceView extends Composite implements HasName,
 					domainCollection, clazz);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
 					name, imageResource, false, nodeFactory);
-			TransformManager.get().addCollectionModificationListener(provider,
-					clazz);
+			ClientTransformManager.cast()
+					.addCollectionModificationListener(provider, clazz);
 			return node;
 		}
 
@@ -380,8 +381,8 @@ public class WorkspaceView extends Composite implements HasName,
 			provider.setPredicate(cf);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
 					name, imageResource, comparator != null, nodeFactory);
-			TransformManager.get().addCollectionModificationListener(provider,
-					clazz, true);
+			ClientTransformManager.cast()
+					.addCollectionModificationListener(provider, clazz, true);
 			return node;
 		}
 
@@ -434,7 +435,7 @@ public class WorkspaceView extends Composite implements HasName,
 			UmbrellaProviderNode node = new UmbrellaProviderNode(
 					collectionProvider.getRootSubprovider(), name,
 					imageResource, nodeFactory);
-			TransformManager.get().addCollectionModificationListener(
+			ClientTransformManager.cast().addCollectionModificationListener(
 					collectionProvider, clazz, true);
 			return node;
 		}
@@ -540,7 +541,7 @@ public class WorkspaceView extends Composite implements HasName,
 											.scheduleFinally(() -> resetTree());
 								}
 							};
-							TransformManager.get()
+							ClientTransformManager.cast()
 									.addCollectionModificationListener(listener,
 											getDefaultEntityClass());
 						}

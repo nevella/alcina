@@ -1,0 +1,102 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package cc.alcina.framework.gwt.client.remote;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.google.gwt.user.client.rpc.RemoteService;
+
+import cc.alcina.framework.common.client.actions.RemoteAction;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.csobjects.LoginBean;
+import cc.alcina.framework.common.client.csobjects.LoginResponse;
+import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.csobjects.WebException;
+import cc.alcina.framework.gwt.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.log.ILogRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
+import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.search.SearchDefinition;
+
+/**
+ *
+ * @author Nick Reddel
+ */
+public interface CommonRemoteService extends RemoteService {
+	String getJobLog(long jobId);
+
+	@WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
+	public List<JobTracker> getLogsForAction(RemoteAction action,
+			Integer count);
+
+	Map<EntityLocator, EntityLocator>
+			getPersistentLocators(Set<EntityLocator> locators);
+
+	public LoginResponse hello();
+
+	@WebMethod()
+	public List<String> listRunningJobs();
+
+	@WebMethod
+	public <T extends ILogRecord> Long log(T remoteLogRecord);
+
+	public Long logClientError(String exceptionToString);
+
+	public Long logClientError(String exceptionToString, String exceptionType);
+
+	// to handle rpc interface drift, use escaped log records
+	public void logClientRecords(String serializedLogRecords);
+
+	public LoginResponse login(LoginBean loginBean);
+
+	public void logout();
+
+	@WebMethod()
+	public String performAction(RemoteAction action);
+
+	public void persistOfflineTransforms(
+			List<DeltaApplicationRecord> uncommitted) throws WebException;
+
+	public void ping();
+
+	JobTracker.Response pollJobStatus(JobTracker.Request request);
+
+	@WebMethod()
+	public JobTracker pollJobStatus(String id, boolean cancel);
+
+	public SearchResultsBase search(SearchDefinition def);
+
+	@WebMethod
+	public DomainTransformResponse transform(DomainTransformRequest request)
+			throws DomainTransformException, DomainTransformRequestException;
+
+	public List<ServerValidator> validateOnServer(
+			List<ServerValidator> validators) throws WebException;
+
+	@WebMethod
+	public DomainUpdate waitForTransforms(
+			DomainTransformCommitPosition position) throws PermissionsException;
+}

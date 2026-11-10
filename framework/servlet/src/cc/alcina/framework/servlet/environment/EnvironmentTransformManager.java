@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.environment;
 
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 
 /**
  * A single-threaded transform manager for use in full-isolated-transform remote

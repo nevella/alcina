@@ -19,7 +19,7 @@
  */
 package cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator;
 
-import cc.alcina.framework.common.client.gwittir.validator.DoubleValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.DoubleValidator;
 
 /**
  *

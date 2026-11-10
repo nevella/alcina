@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;

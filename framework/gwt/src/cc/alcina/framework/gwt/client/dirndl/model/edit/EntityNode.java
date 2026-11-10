@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.remote.ReflectiveCommonRemoteServiceAsync;
+import cc.alcina.framework.gwt.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.FromStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.ToStringRepresentation;

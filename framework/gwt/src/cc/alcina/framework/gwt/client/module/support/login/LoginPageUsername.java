@@ -2,9 +2,9 @@ package cc.alcina.framework.gwt.client.module.support.login;
 
 import com.google.gwt.user.client.History;
 
-import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
-import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator;
-import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.EmailAddressValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;

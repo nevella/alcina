@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.ConsortWithSignals;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;

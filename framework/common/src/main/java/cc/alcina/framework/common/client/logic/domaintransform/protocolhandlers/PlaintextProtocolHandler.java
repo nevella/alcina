@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.google.gwt.core.client.GWT;
-
-import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -14,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
@@ -65,7 +63,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
-		boolean full = GWT.isClient()
+		boolean full = Al.isClient()
 				|| !DomainTransformRequest.CONTEXT_EXCEPTION_DEBUG.is();
 		String newStringValue = domainTransformEvent.getNewStringValue();
 		if (!full && newStringValue != null && newStringValue.length() > 1000) {

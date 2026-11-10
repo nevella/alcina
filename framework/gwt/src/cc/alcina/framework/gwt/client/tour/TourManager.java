@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.Consort;

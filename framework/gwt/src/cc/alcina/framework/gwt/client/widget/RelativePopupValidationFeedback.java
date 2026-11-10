@@ -29,7 +29,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
+import cc.alcina.framework.gwt.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
 import cc.alcina.framework.gwt.client.util.GwtDomUtils;

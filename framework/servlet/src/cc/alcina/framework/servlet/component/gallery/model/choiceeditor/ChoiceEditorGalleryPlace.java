@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.component.gallery.model.choiceeditor;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.gwittir.validator.NotEmptyValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.NotEmptyValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;

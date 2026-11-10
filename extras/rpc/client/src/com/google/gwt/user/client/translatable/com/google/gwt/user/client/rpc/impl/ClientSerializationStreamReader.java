@@ -21,7 +21,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.UnsafeNativeLong;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AsyncDeserializer;
@@ -32,8 +32,8 @@ import com.google.gwt.core.client.GwtScriptOnly;
  * For internal use only. Used for server call serialization.
  */
 @GwtScriptOnly
-public final class ClientSerializationStreamReader extends
-		AbstractSerializationStreamReader {
+public final class ClientSerializationStreamReader
+		extends AbstractSerializationStreamReader {
 	private static native JavaScriptObject eval(String encoded) /*-{
 	return eval(encoded);
 	}-*/;
@@ -62,11 +62,12 @@ public final class ClientSerializationStreamReader extends
 		index = getLength(results);
 		super.prepareToRead(encoded);
 		if (getVersion() != SERIALIZATION_STREAM_VERSION) {
-			throw new IncompatibleRemoteServiceException("Expecting version "
-					+ SERIALIZATION_STREAM_VERSION + " from server, got "
-					+ getVersion() + ".");
+			throw new IncompatibleRemoteServiceException(
+					"Expecting version " + SERIALIZATION_STREAM_VERSION
+							+ " from server, got " + getVersion() + ".");
 		}
-		if (((getFlags() & FLAG_INCREMENTAL_DESERIALIZABLE) == 0 || getVersion() != SERIALIZATION_STREAM_VERSION)) {
+		if (((getFlags() & FLAG_INCREMENTAL_DESERIALIZABLE) == 0
+				|| getVersion() != SERIALIZATION_STREAM_VERSION)) {
 			throw new IncompatibleRemoteServiceException(
 					"requires incremental deserializable rpc");
 		}

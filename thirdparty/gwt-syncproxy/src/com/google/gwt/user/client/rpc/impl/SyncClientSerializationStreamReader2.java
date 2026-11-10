@@ -41,7 +41,7 @@ import com.google.gwt.dev.js.ast.JsStringLiteral;
 import com.google.gwt.dev.js.ast.JsUnaryOperator;
 import com.google.gwt.dev.js.ast.JsValueLiteral;
 import com.google.gwt.dev.js.ast.JsVisitor;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.Base64Utils;
@@ -308,19 +308,19 @@ public final class SyncClientSerializationStreamReader2
 		@Override
 		public boolean visit(JsArrayLiteral x, JsContext ctx) {
 			switch (state) {
-			case EXPECTING_PAYLOAD_BEGIN:
-				state = State.EXPECTING_TYPE_TABLE;
-				return true;
-			case EXPECTING_TYPE_TABLE:
-				state = State.IN_TYPE_TABLE;
-				return true;
-			case EXPECTING_STRING_TABLE:
-				state = State.IN_STRING_TABLE;
-				return true;
-			default:
-				throw new RuntimeException(
-						"Unexpected array in RPC payload. The string table has "
-								+ "already started.");
+				case EXPECTING_PAYLOAD_BEGIN:
+					state = State.EXPECTING_TYPE_TABLE;
+					return true;
+				case EXPECTING_TYPE_TABLE:
+					state = State.IN_TYPE_TABLE;
+					return true;
+				case EXPECTING_STRING_TABLE:
+					state = State.IN_STRING_TABLE;
+					return true;
+				default:
+					throw new RuntimeException(
+							"Unexpected array in RPC payload. The string table has "
+									+ "already started.");
 			}
 		}
 
@@ -427,9 +427,9 @@ public final class SyncClientSerializationStreamReader2
 		 * ADD operations or JsStringLiterals as arguments.
 		 *
 		 * @param expression
-		 *            the expression to evaluate
+		 *                   the expression to evaluate
 		 * @param builder
-		 *            a builder that the string will be appended to
+		 *                   a builder that the string will be appended to
 		 * @return true if the expression represents a valid string, or false
 		 *         otherwise
 		 */
@@ -456,7 +456,7 @@ public final class SyncClientSerializationStreamReader2
 		 * may have other ADD operations or JsStringLiterals as arguments.
 		 *
 		 * @param expression
-		 *            the expression to evaluate
+		 *                   the expression to evaluate
 		 * @return the total string length, or -1 if the given expression does
 		 *         not represent a valid string
 		 */
@@ -506,39 +506,39 @@ public final class SyncClientSerializationStreamReader2
 		public boolean execute() {
 			try {
 				switch (phase) {
-				case INSTATIATE_EMPTY_SETUP:
-					typeTableLength = reader.getTypeTableLength();
-					idx2 = 0;
-					phase = PhaseDev.INSTATIATE_EMPTY_RUN;
-					// deliberate fallthrough
-				case INSTATIATE_EMPTY_RUN:
-					if (instantiateEmptyObjects()) {
-						phase = PhaseDev.DESERIALIZE_NON_COLLECTION_PRE;
-					} else {
-						break;
-					}
-				case DESERIALIZE_NON_COLLECTION_PRE:
-					size = reader.getSeenArray().size();
-					idx2 = 0;
-					phase = PhaseDev.DESERIALIZE_NON_COLLECTION_RUN;
-					// deliberate fallthrough
-				case DESERIALIZE_NON_COLLECTION_RUN:
-					if (deserializeProperties()) {
-						phase = PhaseDev.DESERIALIZE_COLLECTION_PRE;
-					} else {
-						break;
-					}
-				case DESERIALIZE_COLLECTION_PRE:
-					idx2 = 0;
-					phase = PhaseDev.DESERIALIZE_COLLECTION_RUN;
-					// deliberate fallthrough
-				case DESERIALIZE_COLLECTION_RUN:
-					if (deserializeProperties()) {
-						reader.postPrepareCallback.onSuccess(null);
-						return false;
-					} else {
-						break;
-					}
+					case INSTATIATE_EMPTY_SETUP:
+						typeTableLength = reader.getTypeTableLength();
+						idx2 = 0;
+						phase = PhaseDev.INSTATIATE_EMPTY_RUN;
+						// deliberate fallthrough
+					case INSTATIATE_EMPTY_RUN:
+						if (instantiateEmptyObjects()) {
+							phase = PhaseDev.DESERIALIZE_NON_COLLECTION_PRE;
+						} else {
+							break;
+						}
+					case DESERIALIZE_NON_COLLECTION_PRE:
+						size = reader.getSeenArray().size();
+						idx2 = 0;
+						phase = PhaseDev.DESERIALIZE_NON_COLLECTION_RUN;
+						// deliberate fallthrough
+					case DESERIALIZE_NON_COLLECTION_RUN:
+						if (deserializeProperties()) {
+							phase = PhaseDev.DESERIALIZE_COLLECTION_PRE;
+						} else {
+							break;
+						}
+					case DESERIALIZE_COLLECTION_PRE:
+						idx2 = 0;
+						phase = PhaseDev.DESERIALIZE_COLLECTION_RUN;
+						// deliberate fallthrough
+					case DESERIALIZE_COLLECTION_RUN:
+						if (deserializeProperties()) {
+							reader.postPrepareCallback.onSuccess(null);
+							return false;
+						} else {
+							break;
+						}
 				}
 			} catch (final Throwable e) {
 				reader.postPrepareCallback.onFailure(e);

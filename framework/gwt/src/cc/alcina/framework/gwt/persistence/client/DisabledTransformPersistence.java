@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;

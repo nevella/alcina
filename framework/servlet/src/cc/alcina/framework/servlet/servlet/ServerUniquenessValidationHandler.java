@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.servlet;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Property;

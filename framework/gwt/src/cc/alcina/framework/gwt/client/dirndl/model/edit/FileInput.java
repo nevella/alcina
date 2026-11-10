@@ -10,7 +10,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.ClientDomElement.InputFileData;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import cc.alcina.framework.gwt.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;

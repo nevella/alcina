@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.domain.HasValid;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateUtil;
@@ -62,31 +63,22 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 
 	private Integer auth;
 
-	@GwtTransient
 	private String userAgent;
 
-	@GwtTransient
 	private Boolean botUserAgent;
 
-	@GwtTransient
 	private String iid;
 
-	@GwtTransient
 	private String referrer;
 
-	@GwtTransient
 	private String url;
 
-	@GwtTransient
 	private String ipAddress;
 
-	@GwtTransient
 	private Date lastAccessed;
 
-	@GwtTransient
 	private Boolean expired;
 
-	@GwtTransient
 	/*
 	 * This duplicates authenticationSession.user.id - but is needed for search
 	 * completeness (since older clientinstances have no auth session)
@@ -100,10 +92,12 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	@Transient
 	public abstract AuthenticationSession getAuthenticationSession();
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public Boolean getBotUserAgent() {
 		return this.botUserAgent;
 	}
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public Boolean getExpired() {
 		return this.expired;
 	}
@@ -121,18 +115,22 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	/*
 	 * FIXME - mvcc.5 - remove (once mvcc.auth has settled)
 	 */
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public String getIid() {
 		return this.iid;
 	}
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public String getIpAddress() {
 		return this.ipAddress;
 	}
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public Date getLastAccessed() {
 		return this.lastAccessed;
 	}
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public String getReferrer() {
 		return this.referrer;
 	}
@@ -140,14 +138,17 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	@Transient
 	public abstract ClientInstance getReplaces();
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public String getUrl() {
 		return this.url;
 	}
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public Long getUser_id() {
 		return this.user_id;
 	}
 
+	@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
 	public String getUserAgent() {
 		return this.userAgent;
 	}
