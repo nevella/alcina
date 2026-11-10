@@ -9,9 +9,9 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Timer;

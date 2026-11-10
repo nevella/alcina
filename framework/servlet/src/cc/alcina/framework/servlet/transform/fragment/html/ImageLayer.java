@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.traversal.Layer;

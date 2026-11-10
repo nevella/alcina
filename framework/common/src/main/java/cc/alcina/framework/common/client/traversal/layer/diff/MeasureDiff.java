@@ -6,11 +6,11 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Preconditions;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNodeBuilder;
-import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNodeBuilder;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;

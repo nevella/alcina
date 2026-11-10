@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.google.gwt.regexp.shared.RegExp;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;

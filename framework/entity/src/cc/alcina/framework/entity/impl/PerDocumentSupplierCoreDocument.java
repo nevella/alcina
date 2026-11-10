@@ -3,8 +3,8 @@ package cc.alcina.framework.entity.impl;
 import org.apache.xerces.dom.CoreDocumentImpl;
 import org.w3c.dom.Document;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomDocument.PerDocumentSupplier;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.DomDocument.PerDocumentSupplier;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 

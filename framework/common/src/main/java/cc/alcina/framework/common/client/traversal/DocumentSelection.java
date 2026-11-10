@@ -3,9 +3,9 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.AbstractSelection.AllowsNullValue;

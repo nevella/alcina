@@ -12,7 +12,7 @@ import com.google.gwt.http.client.Response;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleResponse;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 
 public class RemoteConsoleClientUtils {
 	public static void runAsync(Class clazz, Runnable runnable) {

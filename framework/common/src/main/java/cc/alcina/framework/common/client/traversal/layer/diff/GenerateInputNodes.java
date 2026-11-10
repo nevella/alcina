@@ -3,8 +3,8 @@ package cc.alcina.framework.common.client.traversal.layer.diff;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.diff.MeasureDiff.Peer;

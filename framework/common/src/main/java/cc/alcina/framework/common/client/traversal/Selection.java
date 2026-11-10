@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
-import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;

@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _DirectedActivity directedActivity = new _DirectedActivity();
     public static _DirectedActivity_All directedActivity_all = new _DirectedActivity_All();

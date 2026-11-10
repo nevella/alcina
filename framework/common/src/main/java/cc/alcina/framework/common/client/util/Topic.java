@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.Preconditions;
 
 /*
@@ -104,13 +102,6 @@ public class Topic<T> {
 							.onSubscription(true);
 				}
 				listeners = list;
-			}
-		}
-
-		public void clearListeners() {
-			Preconditions.checkState(GWT.isClient());
-			synchronized (this) {
-				listeners = null;
 			}
 		}
 
@@ -217,10 +208,6 @@ public class Topic<T> {
 
 	public ListenerReference addWithPublishedCheck(TopicListener<T> listener) {
 		return add(listener, true);
-	}
-
-	public void clearListeners() {
-		publisher.clearListeners();
 	}
 
 	public void clearPublished() {

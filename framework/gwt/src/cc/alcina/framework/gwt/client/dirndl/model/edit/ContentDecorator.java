@@ -15,10 +15,10 @@ import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNode.SplitResult;
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode.SplitResult;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Topic;

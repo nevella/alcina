@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.util;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.context.LooseContext;
 
 /**

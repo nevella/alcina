@@ -6,10 +6,10 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.Preconditions;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNodeType;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNodeType;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;

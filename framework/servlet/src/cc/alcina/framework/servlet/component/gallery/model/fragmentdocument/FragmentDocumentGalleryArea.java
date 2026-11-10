@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.component.gallery.model.fragmentdocument;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.FormatBuilder;

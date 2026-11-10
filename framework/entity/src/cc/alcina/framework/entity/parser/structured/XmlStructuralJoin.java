@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class XmlStructuralJoin {

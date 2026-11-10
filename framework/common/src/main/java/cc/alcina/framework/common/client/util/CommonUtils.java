@@ -49,8 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Preconditions;
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -1651,7 +1649,7 @@ public class CommonUtils {
 			} else if (collection instanceof LightSet) {
 				clone = (T) ((LightSet) collection).clone();
 			} else {
-				if (GWT.isClient()) {
+				if (Al.isClient()) {
 					throw new UnsupportedOperationException();
 				} else {
 					logger.warn("Cloning unexpected shallow collection: {}",

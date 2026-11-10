@@ -8,9 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
+import cc.alcina.framework.common.client.regexp.shared.MatchResult;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -216,13 +215,13 @@ public class TextUtils {
 
 	public static String normalizeSpaces(String input) {
 		return input == null ? null
-				: GWT.isScript() ? WS_PATTERN_NON_MULTIPLE.replace(input, " ")
+				: Al.isScript() ? WS_PATTERN_NON_MULTIPLE.replace(input, " ")
 						: normaliseWhitespaceOptNonMultiple(input);
 	}
 
 	public static String normalizeWhitespace(String input) {
 		return input == null ? null
-				: GWT.isScript() ? WS_PATTERN.replace(input, " ")
+				: Al.isScript() ? WS_PATTERN.replace(input, " ")
 						: normaliseWhitespaceOpt(input);
 	}
 

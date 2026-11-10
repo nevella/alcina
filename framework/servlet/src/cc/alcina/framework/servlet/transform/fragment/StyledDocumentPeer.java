@@ -1,8 +1,8 @@
 package cc.alcina.framework.servlet.transform.fragment;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer.State;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens.PositionedBlock.HorizontalAlignment;
 import cc.alcina.framework.servlet.transform.fragment.StyledDocument.Styles;

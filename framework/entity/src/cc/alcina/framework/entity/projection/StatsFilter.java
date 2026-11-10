@@ -36,7 +36,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -45,6 +44,7 @@ import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 
 public class StatsFilter extends CollectionProjectionFilter {
 	public static void dumpGraphStats(Object resultObject, Class... pathStats) {

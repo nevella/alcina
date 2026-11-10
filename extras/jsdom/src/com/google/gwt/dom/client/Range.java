@@ -9,10 +9,10 @@ import org.w3c.dom.ranges.RangeException;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
 
 public class Range implements org.w3c.dom.ranges.Range {
 	Location.DomLocation start;

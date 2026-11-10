@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;

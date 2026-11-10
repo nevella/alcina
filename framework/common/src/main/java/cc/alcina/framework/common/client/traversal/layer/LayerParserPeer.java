@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;

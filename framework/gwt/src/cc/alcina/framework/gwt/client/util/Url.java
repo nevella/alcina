@@ -1,0 +1,149 @@
+package cc.alcina.framework.gwt.client.util;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import cc.alcina.framework.common.client.regexp.shared.MatchResult;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
+
+import cc.alcina.framework.common.client.Preconditions;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+
+/**
+ * A cross-platform url. It's not intended to handle everything (i.e.
+ * malformed-but-valid-due-to-quirks urls), but is intended to handle partial
+ * comparisons + appends in combination with UrlBuilder
+ */
+public class Url {
+	public static Url parse(String strUrl) {
+		String regex = "^(?:(http|https|file)://)?([^:/]+)?(?::(\\d+))?([^?#]+)?(?:\\?([^#]*))?(?:#(.*))?";
+		RegExp regExp = RegExp.compile(regex, "i");
+		MatchResult match = regExp.exec(strUrl);
+		Preconditions.checkArgument(match != null,
+				Ax.format("Unparseable url: %s", strUrl));
+		String protocol = match.getGroup(1);
+		if (protocol == null) {
+			protocol = "http";
+		}
+		String host = match.getGroup(2);
+		int port = match.getGroup(3) == null ? -1
+				: Integer.parseInt(match.getGroup(3));
+		String path = match.getGroup(4);
+		String queryString = match.getGroup(5);
+		String hash = match.getGroup(6);
+		switch (protocol) {
+		case "file":
+			return new Url(protocol, null, -1, path != null ? path : host,
+					queryString, hash, strUrl);
+		default:
+			return new Url(protocol, host, port, path, queryString, hash,
+					strUrl);
+		}
+	}
+
+	public static boolean areSameHostAndProtocol(Url url1, Url url2) {
+		return CommonUtils.equals(url1.protocol, url2.protocol, url1.host,
+				url2.host, url1.port, url2.port);
+	}
+
+	public Url(String protocol, String host, int port, String path,
+			String queryString, String hash, String strUrl) {
+		this.protocol = protocol;
+		this.host = host;
+		this.port = port;
+		this.path = path;
+		this.queryString = queryString;
+		this.hash = hash;
+		this.strUrl = strUrl;
+		StringMap queryParameters = new StringMap();
+		if (queryString != null) {
+			// no encoding (yet)
+			Stream.of(queryString.split("&")).forEach(pair -> {
+				int idx = pair.indexOf("=");
+				if (idx == -1) {
+					queryParameters.put(pair, "");
+				} else {
+					String key = pair.substring(0, idx);
+					String value = pair.substring(idx + 1);
+					queryParameters.put(key, Registry
+							.impl(UrlComponentEncoder.class).decode(value));
+				}
+			});
+		}
+		this.queryParameters = Collections.unmodifiableMap(queryParameters);
+	}
+
+	public final String protocol;
+
+	public final String host;
+
+	public final int port;
+
+	public final String path;
+
+	public final String queryString;
+
+	public final String hash;
+
+	public final String strUrl;
+
+	public final Map<String, String> queryParameters;
+
+	@Override
+	public String toString() {
+		return FormatBuilder.keyValues("protocol", protocol, "host", host,
+				"port", port == -1 ? null : port, "path", path, "queryString",
+				queryString, "hash", hash);
+	}
+
+	public Url relativeTo(Url current) {
+		if (host != null) {
+			return this;
+		}
+		UrlBuilder builder = new UrlBuilder();
+		builder.populateFrom(current);
+		builder.clearFromPath();
+		builder.populateFrom(this);
+		return builder.asUrl();
+	}
+
+	public String strUrlStartingAtPath() {
+		return toBuilder().toStringStartingAtPath();
+	}
+
+	public String strUrlEndingAtPath() {
+		return toBuilder().toStringEndingAtPath();
+	}
+
+	public Url replaceWithHostFrom(Url hostFrom) {
+		String strUrl = hostFrom.strUrlEndingAtPath() + strUrlStartingAtPath();
+		return parse(strUrl);
+	}
+
+	public UrlBuilder toBuilder() {
+		UrlBuilder builder = new UrlBuilder();
+		builder.populateFrom(this);
+		return builder;
+	}
+
+	public String lastPathSegment() {
+		return path.replaceFirst(".+/(.+)", "$1");
+	}
+
+	public String lastPathSegmentWithoutExtension() {
+		return lastPathSegment().replaceFirst("(.+)\\.(.+)", "$1");
+	}
+
+	/*
+	 * simplistic - non-absolute path and no protocol
+	 */
+	public static boolean isRelative(String url) {
+		return url.matches("[^/:][^:]+");
+	}
+}

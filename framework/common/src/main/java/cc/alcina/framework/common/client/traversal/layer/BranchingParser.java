@@ -19,12 +19,12 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
-import cc.alcina.framework.common.client.dom.Location.TextTraversal;
-import cc.alcina.framework.common.client.dom.Measure;
-import cc.alcina.framework.common.client.dom.Measure.Token;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.gwt.client.dom.Location.TextTraversal;
+import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;

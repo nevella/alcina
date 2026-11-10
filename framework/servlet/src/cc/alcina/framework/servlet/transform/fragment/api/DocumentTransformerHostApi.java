@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.transform.fragment.api;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public interface DocumentTransformerHostApi {

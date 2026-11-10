@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;

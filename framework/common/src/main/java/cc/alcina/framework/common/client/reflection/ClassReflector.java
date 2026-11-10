@@ -19,8 +19,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
+import cc.alcina.framework.common.client.regexp.shared.MatchResult;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;

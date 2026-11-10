@@ -17,13 +17,13 @@ import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest.RemoteC
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleResponse;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 

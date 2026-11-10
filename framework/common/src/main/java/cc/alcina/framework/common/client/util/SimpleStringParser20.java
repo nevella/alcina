@@ -13,65 +13,19 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.UnsafeNativeLong;
+import cc.alcina.framework.common.client.service.CommonExtensions;
 
 /**
  *
  * @author Nick Reddel
  */
 public class SimpleStringParser20 {
-	// Keep synchronized with LongLib
-	private static final double TWO_PWR_16_DBL = 0x10000;
-
-	// Keep synchronized with LongLib
-	private static final double TWO_PWR_32_DBL = TWO_PWR_16_DBL
-			* TWO_PWR_16_DBL;
-
 	public static String longToGwtDoublesToString(long fieldValue) {
-		double[] parts;
-		if (GWT.isScript()) {
-			parts = makeLongComponents0(fieldValue);
-		} else {
-			parts = makeLongComponents((int) (fieldValue >> 32),
-					(int) fieldValue);
-		}
-		return parts[0] + "/" + parts[1];
+		return CommonExtensions.INSTANCE.longToGwtDoublesToString(fieldValue);
 	}
-
-	protected static double[] makeLongComponents(int highBits, int lowBits) {
-		double high = highBits * TWO_PWR_32_DBL;
-		double low = lowBits;
-		if (lowBits < 0) {
-			low += TWO_PWR_32_DBL;
-		}
-		return new double[] { low, high };
-	}
-
-	@UnsafeNativeLong
-	// Keep synchronized with LongLib
-	private static native double[] makeLongComponents0(long value) /*-{
-    return value;
-	}-*/;
-
-	@UnsafeNativeLong
-	private static native long readLong0(double low, double high) /*-{
-    return [ low, high ];
-	}-*/;
 
 	public static long toLong(String str) {
-		int idx = str.indexOf("/");
-		if (idx == -1) {
-			return Long.parseLong(str);
-		} else {
-			double d1 = Double.parseDouble(str.substring(0, idx));
-			double d2 = Double.parseDouble(str.substring(idx + 1));
-			if (GWT.isScript()) {
-				return readLong0(d1, d2);
-			} else {
-				return (long) d1 + (long) d2;
-			}
-		}
+		return CommonExtensions.INSTANCE.gwtSerLongToString(str);
 	}
 
 	private final String s;

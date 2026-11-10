@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.logic.reflection.reachability;
+package cc.alcina.framework.gwt.client.logic.reflection.reachability;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Condition;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.RuleSet;
@@ -122,7 +122,7 @@ public class StandardRulesets {
 			cc.alcina.framework.common.client.serializer.TreeSerializable.NonMultiple.class,
 			cc.alcina.framework.common.client.serializer.TreeSerializable.class,
 			cc.alcina.framework.common.client.serializer.TypeSerialization.class,
-			cc.alcina.framework.common.client.util.AlcinaBeanSerializer.class,
+			cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer.class,
 			cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator.class,
 			cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator.class,
 			cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator.class,

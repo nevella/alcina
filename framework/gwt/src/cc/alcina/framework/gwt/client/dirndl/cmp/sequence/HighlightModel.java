@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.HasFilterableText.Query;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.util.HasFilterableText.Query;
 
 /**
  * Models highlights across a list of elements, and highlights within

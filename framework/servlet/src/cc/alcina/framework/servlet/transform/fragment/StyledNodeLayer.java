@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.transform.fragment;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.AlcinaCollections;

@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 import cc.alcina.framework.servlet.transform.fragment.DocumentTransformerSelection;
 import cc.alcina.framework.servlet.transform.fragment.html.LeafBlockLayer.LeafBlock;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens;
-import cc.alcina.framework.common.client.dom.Measure.Token.Order;
+import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.layer.MeasureContainment;
 import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Containment;

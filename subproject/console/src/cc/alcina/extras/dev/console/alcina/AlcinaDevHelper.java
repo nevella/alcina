@@ -6,7 +6,6 @@ import java.util.List;
 import cc.alcina.extras.dev.console.DevHelper;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
@@ -15,6 +14,7 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayerObservables;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 

@@ -24,9 +24,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
 import cc.alcina.framework.common.client.collections.NotifyingList;
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
-import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode.DomNodeTree;
+import cc.alcina.framework.gwt.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;

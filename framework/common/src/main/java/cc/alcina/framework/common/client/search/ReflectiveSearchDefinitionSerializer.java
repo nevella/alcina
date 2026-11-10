@@ -17,9 +17,10 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.service.CommonExtensions;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 
 public class ReflectiveSearchDefinitionSerializer
 		implements SearchDefinitionSerializer {
@@ -133,9 +134,9 @@ public class ReflectiveSearchDefinitionSerializer
 				serializedDef = serializedDef.substring(RS0.length());
 			}
 			serializedDef = unescapeJsonForUrl(serializedDef);
-			SearchDefinition def = Registry.impl(AlcinaBeanSerializer.class)
-					.registerLookups(abbrevLookup, reverseAbbrevLookup)
-					.deserialize(serializedDef);
+			SearchDefinition def = CommonExtensions.INSTANCE
+					.deserializeSearchDefinition(abbrevLookup,
+							reverseAbbrevLookup, serializedDef);
 			SearchDefinition defaultInstance = Reflections
 					.newInstance(def.getClass());
 			defaultInstance.getCriteriaGroups().forEach(cg -> {

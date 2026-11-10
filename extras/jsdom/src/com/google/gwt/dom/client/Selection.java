@@ -20,9 +20,9 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Location.DomLocation;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Location.DomLocation;
 
 /**
  * Models the browser selection object. Normally use the exposed Location

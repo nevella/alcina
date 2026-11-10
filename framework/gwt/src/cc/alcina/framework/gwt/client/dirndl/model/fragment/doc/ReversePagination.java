@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 

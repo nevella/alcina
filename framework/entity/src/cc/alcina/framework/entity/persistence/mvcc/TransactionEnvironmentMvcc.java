@@ -14,8 +14,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 
-public class TransactionEnvironmentMvcc
-		implements TransactionEnvironment {
+public class TransactionEnvironmentMvcc implements TransactionEnvironment {
 	public TransactionEnvironmentMvcc() {
 		Registry.register().add(
 				BaseProjectionSupportMvcc.BplDelegateMapCreatorTransactional.class,
@@ -122,8 +121,7 @@ public class TransactionEnvironmentMvcc
 	}
 
 	@Override
-	public boolean
-			isCommittedOrRelatedCommitted(TransactionId committingTxId) {
+	public boolean isCommittedOrRelatedCommitted(TransactionId committingTxId) {
 		return Transactions.get()
 				.isCommittedOrRelatedCommitted0(committingTxId);
 	}

@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNode.TypeTag;
-import cc.alcina.framework.common.client.dom.DomNode.TypeTagClassName;
-import cc.alcina.framework.common.client.dom.DomNodeType;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode.TypeTag;
+import cc.alcina.framework.gwt.client.dom.DomNode.TypeTagClassName;
+import cc.alcina.framework.gwt.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 

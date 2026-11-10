@@ -4,10 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.gwt.core.client.GWT;
-
-import cc.alcina.framework.common.client.Preconditions;
-
 /*
  *
  * Thread-safe (accesses to lookup are synchronized - defensive copy made for
@@ -22,11 +18,6 @@ public class TopicPublisher {
 		synchronized (lookup) {
 			lookup.add(listener);
 		}
-	}
-
-	public void clearListeners() {
-		Preconditions.checkState(GWT.isClient());
-		lookup.clear();
 	}
 
 	public boolean hasListeners() {

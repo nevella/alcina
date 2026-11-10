@@ -28,8 +28,8 @@ import com.google.gwt.dom.client.NodeLocal.SiblingIterator;
 import com.google.gwt.dom.client.mutations.LocalMutations;
 import com.google.gwt.dom.client.mutations.MutationGroup;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.DomNodeType;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;

@@ -9,11 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import com.google.gwt.user.client.rpc.GwtTransient;
-import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.ImmutableMap;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
@@ -22,14 +20,12 @@ public abstract class MultikeyMapBase<V>
 		implements MultikeyMap<V>, Serializable {
 	protected int depth;
 
-	@GwtTransient
 	protected Map delegate;
 
 	protected transient ImmutableMap readonlyDelegate;
 
 	protected int depthFromRoot;
 
-	@GwtTransient
 	protected DelegateMapCreator delegateMapCreator;
 
 	public MultikeyMapBase(int depth, int depthFromRoot) {

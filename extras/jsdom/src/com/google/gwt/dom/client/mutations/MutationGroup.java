@@ -2,9 +2,9 @@ package com.google.gwt.dom.client.mutations;
 
 import com.google.gwt.dom.client.Document;
 
-import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 
 /**
  * <p>

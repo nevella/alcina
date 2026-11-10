@@ -6,8 +6,8 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.util.Url;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public interface InternalAnchorHistoryRouter extends Click.Handler {

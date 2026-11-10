@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.transform.fragment.pos;
 
 import cc.alcina.framework.servlet.transform.fragment.StyledDocument.Styles;
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 
 public interface FootnoteReferenceProvider {
 	public interface FootnoteCommon {

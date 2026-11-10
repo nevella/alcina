@@ -29,8 +29,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
+import cc.alcina.framework.common.client.regexp.shared.MatchResult;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.context.LooseContext.Key;

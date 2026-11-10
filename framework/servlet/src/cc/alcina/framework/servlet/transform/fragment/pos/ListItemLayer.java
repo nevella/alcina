@@ -16,9 +16,9 @@ import cc.alcina.framework.servlet.transform.fragment.pos.IndentRootLayer.Indent
 import cc.alcina.framework.servlet.transform.fragment.pos.ListItemLabelLayer.ListItemLabel;
 import cc.alcina.framework.servlet.transform.fragment.pos.MergedIndentLayer.IndentRun;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens;
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Measure;
-import cc.alcina.framework.common.client.dom.Measure.Token.Order;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.layer.MeasureContainment;
 import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Containment;

@@ -1,9 +1,9 @@
 package cc.alcina.framework.common.client.traversal.layer.block;
 
-import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
-import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolverHtml;
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomEnvironment.StyleResolver;
+import cc.alcina.framework.gwt.client.dom.DomEnvironment.StyleResolverHtml;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser;

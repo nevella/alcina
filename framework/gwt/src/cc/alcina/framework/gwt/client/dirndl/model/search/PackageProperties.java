@@ -12,8 +12,8 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _FilterEditor filterEditor = new _FilterEditor();
     public static _OperatorSelector operatorSelector = new _OperatorSelector();

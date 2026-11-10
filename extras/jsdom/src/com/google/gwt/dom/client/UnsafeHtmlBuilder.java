@@ -15,12 +15,13 @@
  */
 package com.google.gwt.dom.client;
 
-import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlHostedModeUtils;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.safehtml.shared.annotations.SuppressIsSafeHtmlCastCheck;
+
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 /**
  * A builder that facilitates the building up of XSS-safe HTML from text

@@ -12,10 +12,10 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.util.Async;
 
 /*

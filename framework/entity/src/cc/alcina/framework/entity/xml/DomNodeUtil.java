@@ -3,7 +3,7 @@ package cc.alcina.framework.entity.xml;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.entity.MatcherIterator;
 
 public class DomNodeUtil {

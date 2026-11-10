@@ -55,7 +55,6 @@ import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimezoneData;
@@ -93,9 +92,11 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.gwt.client.impl.CommonExtensionsGwt;
 import cc.alcina.framework.gwt.client.impl.FlatTreeSerializer_ExtensionImpl;
 import cc.alcina.framework.gwt.client.impl.ReflectiveSerializer_ExtensionImpl;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -325,8 +326,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initCommonImpl() {
-		ReflectiveSerializer.extension = new ReflectiveSerializer_ExtensionImpl();
-		FlatTreeSerializer.extension = new FlatTreeSerializer_ExtensionImpl();
+		CommonExtensionsGwt.register();
 	}
 
 	protected void initBootstrapRegistry() {

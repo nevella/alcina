@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.logic.reflection.Display;

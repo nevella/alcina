@@ -2,8 +2,8 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
+import cc.alcina.framework.common.client.regexp.shared.MatchResult;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.reflection.Reflections;

@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.transform.fragment.structure;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens;
 import cc.alcina.framework.servlet.transform.fragment.StyledNode;
 

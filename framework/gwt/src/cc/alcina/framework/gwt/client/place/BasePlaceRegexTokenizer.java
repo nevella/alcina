@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.place;
 
-import com.google.gwt.regexp.shared.RegExp;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 public abstract class BasePlaceRegexTokenizer<P extends BasePlace>
 		extends BasePlaceTokenizer<P> {

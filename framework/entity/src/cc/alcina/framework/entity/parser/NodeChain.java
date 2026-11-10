@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.XmlUtils;

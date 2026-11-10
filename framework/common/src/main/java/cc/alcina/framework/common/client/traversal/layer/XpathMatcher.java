@@ -6,11 +6,11 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.Preconditions;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.dom.Measure;
-import cc.alcina.framework.common.client.dom.Measure.Token;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 

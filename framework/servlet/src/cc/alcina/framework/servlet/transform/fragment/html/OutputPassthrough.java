@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 import cc.alcina.framework.servlet.transform.fragment.DocumentTransformerSelection;
 import cc.alcina.framework.servlet.transform.fragment.StyledNode;
 import cc.alcina.framework.servlet.transform.fragment.output.MeasureNode;
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.util.Ax;
 

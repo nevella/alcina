@@ -8,9 +8,9 @@ import java.util.List;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -40,8 +40,9 @@ public interface HasPermissionsValidation {
 					FlatTreeSerializer.serialize((TreeSerializable) hpv,
 							options);
 				} catch (RuntimeException e) {
+					String fullSerialized = ReflectiveSerializer.serialize(hpv);
 					Ax.err("HasPermissionsValidation exception (unequal serialized): %s",
-							AlcinaBeanSerializer.serializeHolder(hpv));
+							fullSerialized);
 					e.printStackTrace();
 				}
 				return null;

@@ -2,10 +2,10 @@ package com.google.gwt.dom.client.mutations;
 
 import com.google.gwt.dom.client.LocalDom;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomDocument.MutableDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwt.client.dom.DomDocument.MutableDocument;
 
 @Registration.Singleton(DomDocument.MutableDocumentDecorator.class)
 @Registration.EnvironmentSingleton

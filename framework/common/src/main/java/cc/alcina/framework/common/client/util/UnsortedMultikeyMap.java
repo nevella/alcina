@@ -19,9 +19,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.google.gwt.core.shared.GwtIncompatible;
-
 import cc.alcina.framework.common.client.collections.PublicCloneable;
+import cc.alcina.framework.common.client.shadow.GwtIncompatible;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 
 /**

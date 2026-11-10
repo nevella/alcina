@@ -21,11 +21,11 @@ import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote.ConsoleRecord
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 
 public class DevConsoleProtocolHandler extends AbstractHandler {
 	private DevConsoleRemote devConsoleRemote;

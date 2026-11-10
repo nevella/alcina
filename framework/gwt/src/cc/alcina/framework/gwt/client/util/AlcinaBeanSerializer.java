@@ -1,0 +1,160 @@
+package cc.alcina.framework.gwt.client.util;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
+
+/*
+ * For legacy compatiblity only. Use ReflectiveSerializer if possible
+ */
+public abstract class AlcinaBeanSerializer {
+	protected static final String PROPERTIES = "props";
+
+	protected static final String PROPERTIES_SHORT = "p";
+
+	public static final String CLASS_NAME = "cn";
+
+	protected static final String LITERAL = "lit";
+
+	protected static final String REF = "ref";
+
+	public static <V> V deserializeHolder(String serialized) {
+		if (serialized == null) {
+			return null;
+		}
+		AlcinaBeanSerializer impl = Registry.impl(AlcinaBeanSerializer.class);
+		Object object = impl.deserialize(serialized);
+		if (object instanceof AlcinaBeanSerializer.SerializationHolder) {
+			return (V) ((AlcinaBeanSerializer.SerializationHolder) object)
+					.provideValue();
+		} else {
+			return (V) object;
+		}
+	}
+
+	public static String serializeHolder(Object value) {
+		if (value == null) {
+			return null;
+		}
+		return Registry.impl(AlcinaBeanSerializer.class)
+				.serialize(new SerializationHolder(value));
+	}
+
+	protected Map<String, Class> abbrevLookup = new LinkedHashMap<>();
+
+	protected Map<Class, String> reverseAbbrevLookup = new LinkedHashMap<>();
+
+	protected String propertyFieldName;
+
+	private boolean throwOnUnrecognisedProperty;
+
+	private boolean throwOnUnrecognisedClass = true;
+
+	public abstract <T> T deserialize(String jsonString);
+
+	protected Class getClassMaybeAbbreviated(String cns) {
+		Class clazz;
+		if (abbrevLookup.containsKey(cns)) {
+			clazz = abbrevLookup.get(cns);
+		} else {
+			clazz = Reflections.forName(cns);
+		}
+		return clazz;
+	}
+
+	public boolean isThrowOnUnrecognisedClass() {
+		return this.throwOnUnrecognisedClass;
+	}
+
+	public boolean isThrowOnUnrecognisedProperty() {
+		return this.throwOnUnrecognisedProperty;
+	}
+
+	protected String normaliseReverseAbbreviation(Class<? extends Object> type,
+			String typeName) {
+		if (reverseAbbrevLookup.containsKey(type)) {
+			typeName = reverseAbbrevLookup.get(type);
+		}
+		return typeName;
+	}
+
+	public AlcinaBeanSerializer registerLookups(Map<String, Class> abbrevLookup,
+			Map<Class, String> reverseAbbrevLookup) {
+		this.abbrevLookup = abbrevLookup;
+		this.reverseAbbrevLookup = reverseAbbrevLookup;
+		propertyFieldName = PROPERTIES_SHORT;
+		return this;
+	}
+
+	public abstract String serialize(Object bean);
+
+	public void setThrowOnUnrecognisedClass(boolean throwOnUnrecognisedClass) {
+		this.throwOnUnrecognisedClass = throwOnUnrecognisedClass;
+	}
+
+	public AlcinaBeanSerializer throwOnUnrecognisedProperty() {
+		throwOnUnrecognisedProperty = true;
+		return this;
+	}
+
+	public static class SerializationHolder extends Bindable {
+		private List listValue;
+
+		private Map mapValue;
+
+		private List valueHolder = new ArrayList();
+
+		public SerializationHolder() {
+		}
+
+		public SerializationHolder(Object value) {
+			super();
+			if (value instanceof List) {
+				listValue = (List) value;
+			} else if (value instanceof Map) {
+				mapValue = (Map) value;
+			} else {
+				valueHolder.add(value);
+			}
+		}
+
+		public List getListValue() {
+			return this.listValue;
+		}
+
+		public Map getMapValue() {
+			return this.mapValue;
+		}
+
+		public List getValueHolder() {
+			return this.valueHolder;
+		}
+
+		public Object provideValue() {
+			if (mapValue != null) {
+				return mapValue;
+			}
+			if (listValue != null) {
+				return listValue;
+			}
+			return valueHolder.get(0);
+		}
+
+		public void setListValue(List listValue) {
+			this.listValue = listValue;
+		}
+
+		public void setMapValue(Map mapValue) {
+			this.mapValue = mapValue;
+		}
+
+		public void setValueHolder(List valueHolder) {
+			this.valueHolder = valueHolder;
+		}
+	}
+}

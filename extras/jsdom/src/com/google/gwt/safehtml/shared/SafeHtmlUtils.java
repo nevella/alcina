@@ -15,7 +15,7 @@
  */
 package com.google.gwt.safehtml.shared;
 
-import com.google.gwt.regexp.shared.RegExp;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
 /**
  * Utility class containing static methods for escaping and sanitizing strings.

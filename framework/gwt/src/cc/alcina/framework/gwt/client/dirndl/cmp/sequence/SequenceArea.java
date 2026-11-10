@@ -30,8 +30,6 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.HasFilterableText;
-import cc.alcina.framework.common.client.util.HasFilterableText.Query;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -55,6 +53,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.FilterModified;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
+import cc.alcina.framework.gwt.client.util.HasFilterableText;
+import cc.alcina.framework.gwt.client.util.HasFilterableText.Query;
 
 /*
  * wip - ds.late - add orderservice.provider interface

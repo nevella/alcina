@@ -11,8 +11,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -267,8 +265,7 @@ public class CollectionCreators {
 	 */
 	public static class CoarseIntHashMapCreator {
 		public <V> Map<Integer, V> create() {
-			return GWT.isScript() ? JsUniqueMap.create()
-					: new LinkedHashMap<>();
+			return Al.isScript() ? JsUniqueMap.create() : new LinkedHashMap<>();
 		}
 	}
 }

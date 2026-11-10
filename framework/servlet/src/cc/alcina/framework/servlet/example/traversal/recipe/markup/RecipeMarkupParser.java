@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet.example.traversal.recipe.markup;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
