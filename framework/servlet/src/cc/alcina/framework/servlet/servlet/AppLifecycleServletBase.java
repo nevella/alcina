@@ -53,6 +53,8 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -91,6 +93,8 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.gwt.client.impl.FlatTreeSerializer_ExtensionImpl;
+import cc.alcina.framework.gwt.client.impl.ReflectiveSerializer_ExtensionImpl;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
@@ -288,6 +292,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initServletConfig = servletConfig;
 			// push to registry
 			AppPersistenceBase.setInstanceReadOnly(false);
+			initCommonImpl();
 			initBootstrapRegistry();
 			initNames();
 			loadCustomProperties();
@@ -317,6 +322,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 		MetricLogging.get().end("Web app startup");
 		getStatusNotifier().ready();
+	}
+
+	protected void initCommonImpl() {
+		ReflectiveSerializer.extension = new ReflectiveSerializer_ExtensionImpl();
+		FlatTreeSerializer.extension = new FlatTreeSerializer_ExtensionImpl();
 	}
 
 	protected void initBootstrapRegistry() {

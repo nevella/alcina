@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.gwt.client.ide.provider.ActionLogProvider;
 
 public class NullActionLogProvider implements ActionLogProvider {
 	@Override
