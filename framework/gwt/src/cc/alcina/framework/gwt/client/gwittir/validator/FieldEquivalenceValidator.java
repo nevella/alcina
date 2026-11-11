@@ -4,7 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.ValidationException;
 
 @Reflected

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;

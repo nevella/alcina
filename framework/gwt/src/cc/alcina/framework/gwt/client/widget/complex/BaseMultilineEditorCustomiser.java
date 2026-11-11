@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.widget.Link;

@@ -9,7 +9,7 @@ import java.util.function.Function;
 import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocumentNode;
 

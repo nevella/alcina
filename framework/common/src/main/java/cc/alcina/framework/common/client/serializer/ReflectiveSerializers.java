@@ -38,8 +38,6 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.gwt.client.place.BasePlace;
-import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
 import elemental.json.JsonValue;
 
@@ -486,7 +484,7 @@ public class ReflectiveSerializers {
 					long.class, int.class, short.class, char.class, byte.class,
 					boolean.class, double.class, float.class, Enum.class,
 					Class.class, void.class, Void.class, byte[].class,
-					BasePlace.class, UUID.class, ExtensibleEnum.class);
+					UUID.class, ExtensibleEnum.class);
 		}
 
 		@Override
@@ -519,25 +517,6 @@ public class ReflectiveSerializers {
 		public void writeValueOrContainer(ReflectiveSerializer.GraphNode node,
 				ReflectiveSerializer.SerialNode serialNode) {
 			serialNode.write(node, node.value);
-		}
-	}
-
-	public static class ValueSerializerBasePlace
-			extends ReflectiveSerializer.ValueSerializer<BasePlace> {
-		@Override
-		protected BasePlace fromJson(Class clazz, JsonValue value) {
-			return (BasePlace) RegistryHistoryMapper.get()
-					.getPlaceOrThrow(value.asString());
-		}
-
-		@Override
-		public List<Class> serializesTypes() {
-			return Arrays.asList(BasePlace.class);
-		}
-
-		@Override
-		public JsonValue toJsonValue(BasePlace object) {
-			return Json.create(object.toTokenStringWithoutAppPrefix());
 		}
 	}
 

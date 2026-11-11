@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
@@ -22,7 +21,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.gwt.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -39,7 +37,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOrac
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleSuggestion;
+import cc.alcina.framework.gwt.client.logic.domain.EntitySuggestion;
+import cc.alcina.framework.gwt.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.util.Async;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 @Directed.Delegating
 @Bean(PropertySource.FIELDS)
@@ -61,14 +62,14 @@ public class EntitySelector<E extends Entity> extends Model.Value<E>
 
 	public static class Router implements SuggestOracleRouter<StringAsk> {
 		@Bean(PropertySource.FIELDS)
-		public static class EntitySuggestion
+		public static class SuggestionImpl
 				implements SuggestOracle.Suggestion.Noop {
 			public EntityLocator entityLocator;
 
-			public EntitySuggestion() {
+			public SuggestionImpl() {
 			}
 
-			public EntitySuggestion(EntityLocator entityLocator) {
+			public SuggestionImpl(EntityLocator entityLocator) {
 				this.entityLocator = entityLocator;
 			}
 		}
@@ -142,8 +143,8 @@ public class EntitySelector<E extends Entity> extends Model.Value<E>
 				if (suggestion instanceof BoundSuggestOracleSuggestion) {
 					Object typedValue = ((BoundSuggestOracleSuggestion) suggestion)
 							.getTypedValue();
-					if (typedValue instanceof Entity.Suggestion) {
-						Entity.Suggestion entitySuggestion = (Entity.Suggestion) typedValue;
+					if (typedValue instanceof EntitySuggestion) {
+						EntitySuggestion entitySuggestion = (EntitySuggestion) typedValue;
 						entityTexts.put(entitySuggestion.entity,
 								entitySuggestion.suggestionString);
 					}

@@ -6,7 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;

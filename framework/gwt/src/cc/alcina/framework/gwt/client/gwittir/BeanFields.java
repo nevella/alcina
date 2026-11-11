@@ -39,7 +39,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -70,7 +70,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -515,19 +515,19 @@ public class BeanFields {
 		if (location == null) {
 			location = new AnnotationLocation(obj.getClass(), property);
 		}
-		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = location
+		List<cc.alcina.framework.gwt.client.logic.reflection.Validator> validators = location
 				.getAnnotations(
-						cc.alcina.framework.common.client.logic.reflection.Validator.class)
+						cc.alcina.framework.gwt.client.logic.reflection.Validator.class)
 				.stream().collect(Collectors.toList());
 		location.getAnnotations(
-				cc.alcina.framework.common.client.logic.reflection.Validators.class)
+				cc.alcina.framework.gwt.client.logic.reflection.Validators.class)
 				.stream().flatMap(vs -> Arrays.stream(vs.value()))
 				.forEach(validators::add);
 		;
 		if (!validators.isEmpty()) {
 			Validator fieldValidator = null;
 			CompositeValidator compositeValidator = null;
-			for (cc.alcina.framework.common.client.logic.reflection.Validator validatorAnnotation : validators) {
+			for (cc.alcina.framework.gwt.client.logic.reflection.Validator validatorAnnotation : validators) {
 				Validator validator = Reflections
 						.newInstance(validatorAnnotation.value());
 				validator.onProperty(property);
@@ -551,7 +551,7 @@ public class BeanFields {
 				}
 				NamedParameter msg = NamedParameter.Support.getParameter(
 						validatorAnnotation.parameters(),
-						cc.alcina.framework.common.client.logic.reflection.Validator.FEEDBACK_MESSAGE);
+						cc.alcina.framework.gwt.client.logic.reflection.Validator.FEEDBACK_MESSAGE);
 				if (msg != null
 						&& validationFeedback instanceof AbstractValidationFeedback) {
 					((AbstractValidationFeedback) validationFeedback)

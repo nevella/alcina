@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.actions.RemoteAction;

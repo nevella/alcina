@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.gwt.client.util.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.gwt.persistence.client.DteReplayWorker;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
@@ -188,18 +189,18 @@ public class UnwrapAndRegisterObjectsPlayer
 	protected void
 			registerDomainModelHolder(DomainModelHolder domainModelHolder) {
 		domainModelHolder.registerSelfAsProvider();
-		GeneralProperties generalProperties = domainModelHolder
+		GeneralProperties generalProperties = (GeneralProperties) domainModelHolder
 				.getGeneralProperties();
 		HandshakeConsortModel.get().registerInitialObjects(
-				domainModelHolder.getGeneralProperties(),
+				(GeneralProperties) domainModelHolder.getGeneralProperties(),
 				domainModelHolder.getCurrentUser(),
 				domainModelHolder.getConfigurationPropertiesSerialized());
-		TransformManager.get()
+		ClientTransformManager.cast()
 				.registerDomainObjectsInHolderAsync(domainModelHolder, this);
 	}
 
 	private void registerUnlinked() {
-		TransformManager.get().registerDomainObjectsAsync(
+		ClientTransformManager.cast().registerDomainObjectsAsync(
 				(Collection) currentDelta.getUnlinkedObjects(), this);
 	}
 

@@ -9,20 +9,22 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObject;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformExceptionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CommitToLocalDomainTransformListener;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.RecordTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -40,6 +42,8 @@ import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModificati
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.StandaloneObjectStoreClient;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 public abstract class ClientTransformManager extends TransformManager
 		implements CollectionModificationSource {
@@ -458,5 +462,48 @@ public abstract class ClientTransformManager extends TransformManager
 	public interface PersistableTransformListener {
 		public void persistableTransform(DomainTransformRequest dtr,
 				DeltaApplicationRecordType type);
+	}
+
+	public void registerDomainObjectsAsync(Collection<Entity> entities,
+			final AsyncCallback<Void> postRegisterCallback) {
+		((StandaloneObjectStoreClient) getObjectStore()).registerAsync(entities,
+				new ScheduledCommand() {
+					@Override
+					public void execute() {
+						postRegisterCallback.onSuccess(null);
+					}
+				});
+	}
+
+	@Override
+	protected void initObjectStore() {
+		setObjectStore(new StandaloneObjectStoreClient(this));
+	}
+
+	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,
+			final AsyncCallback<Void> postRegisterCallback) {
+		if (this.getObjectStore() != null) {
+			getObjectStore().removeListeners();
+		}
+		initObjectStore();
+		((StandaloneObjectStoreClient) getObjectStore()).registerAsync(
+				h.registerableDomainObjects(), new ScheduledCommand() {
+					@Override
+					public void execute() {
+						ClassRef.add(h.getClassRefs());
+						postRegisterCallback.onSuccess(null);
+					}
+				});
+	}
+
+	public void registerModelObjectAsync(final DomainModelObject h,
+			final AsyncCallback<Void> postRegisterCallback) {
+		((StandaloneObjectStoreClient) getObjectStore())
+				.registerAsync(h.registrableObjects(), new ScheduledCommand() {
+					@Override
+					public void execute() {
+						postRegisterCallback.onSuccess(null);
+					}
+				});
 	}
 }

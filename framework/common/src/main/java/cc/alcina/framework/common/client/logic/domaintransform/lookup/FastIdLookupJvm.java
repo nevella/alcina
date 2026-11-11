@@ -6,9 +6,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -33,7 +32,7 @@ public class FastIdLookupJvm implements FastIdLookup {
 	}
 
 	public void checkId(long id) {
-		if (GWT.isClient() && id > LongWrapperHash.MAX) {
+		if (Al.isClient() && id > LongWrapperHashConstants.MAX) {
 			throw new RuntimeException("losing higher bits from long");
 		}
 	}

@@ -119,7 +119,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	Model rootModel;
 
 	Map<DomNode, NodeTransformer> domNodeTransformer = AlcinaCollections
-			.newUnqiueMap();
+			.newUniqueMap();
 
 	ModelMutation currentModelMutation;
 
@@ -506,7 +506,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 		public static class Data {
 			Map<Node, UpdateRecord> updateRecords = AlcinaCollections
-					.newUnqiueMap();
+					.newUniqueMap();
 
 			Set<Model> modifiedOrChildrenModified = AlcinaCollections
 					.newUniqueSet();

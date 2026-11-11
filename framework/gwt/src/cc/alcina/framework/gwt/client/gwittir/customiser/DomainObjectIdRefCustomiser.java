@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.gwittir.provider.DomainObjectIdRefProvider;

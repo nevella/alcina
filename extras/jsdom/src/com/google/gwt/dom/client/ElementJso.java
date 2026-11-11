@@ -16,7 +16,7 @@ import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;

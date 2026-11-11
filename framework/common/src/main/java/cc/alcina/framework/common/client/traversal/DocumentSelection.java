@@ -9,7 +9,7 @@ import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.AbstractSelection.AllowsNullValue;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class DocumentSelection extends MeasureSelection

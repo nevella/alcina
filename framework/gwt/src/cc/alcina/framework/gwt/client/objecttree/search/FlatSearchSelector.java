@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.HasClickHandlers;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;

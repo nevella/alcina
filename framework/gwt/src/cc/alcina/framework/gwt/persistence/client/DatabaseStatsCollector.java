@@ -8,7 +8,7 @@ import com.google.code.gwt.database.client.SQLResultSetRowList;
 import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.util.Ax;

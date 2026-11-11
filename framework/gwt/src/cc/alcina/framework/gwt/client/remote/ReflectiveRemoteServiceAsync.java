@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.remote;
 
 import java.util.function.Consumer;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;

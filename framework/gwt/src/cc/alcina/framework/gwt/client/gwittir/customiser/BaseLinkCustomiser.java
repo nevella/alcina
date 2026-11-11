@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundLink;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;

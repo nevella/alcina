@@ -14,8 +14,8 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.GroupKey;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.cell.ColumnMapper;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedTransform;
 
 public class GroupingMapper<V> {

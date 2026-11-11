@@ -9,9 +9,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
-import com.google.gwt.core.shared.GwtIncompatible;
-
 import cc.alcina.framework.common.client.domain.DomainCollections;
+import cc.alcina.framework.common.client.shadow.GwtIncompatible;
 
 /**
  * 

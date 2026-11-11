@@ -50,10 +50,10 @@ public class PermissibleModelResolver extends ContextResolver {
 	 */
 	public static class Support {
 		Map<Class, Permission> classAccessPermissions = AlcinaCollections
-				.newUnqiueMap();
+				.newUniqueMap();
 
 		Map<Property, Permission> propertyVisibilityPermissions = AlcinaCollections
-				.newUnqiueMap();
+				.newUniqueMap();
 
 		ContextResolver.ModelResolver modelResolver;
 

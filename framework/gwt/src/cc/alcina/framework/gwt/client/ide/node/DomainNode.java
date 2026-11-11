@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  * @author Nick Reddel

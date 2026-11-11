@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir.validator;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.Preconditions;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;

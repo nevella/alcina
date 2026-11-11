@@ -8,12 +8,10 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
-
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 /*
  * -- dependencies :: always attempt to resolve -- preconditions :: if non-null,
@@ -162,38 +160,6 @@ public abstract class Player<D> {
 	protected void wasPlayed(D dep) {
 		consort.wasPlayed(this, dep == null ? Collections.EMPTY_LIST
 				: Collections.singletonList(dep));
-	}
-
-	public abstract static class RepeatingCommandPlayer<D> extends Player<D>
-			implements Runnable, RepeatingCommand {
-		protected RepeatingCommand delegate;
-
-		public RepeatingCommandPlayer() {
-			super(null);
-			setAsynchronous(true);
-			runnable = this;
-		}
-
-		@Override
-		public boolean execute() {
-			if (!consort.isRunning()) {
-				return false;
-			}
-			try {
-				boolean result = executeRepeatingCommand();
-				if (result == false) {
-					wasPlayed();
-				}
-				return result;
-			} catch (Throwable e) {
-				consort.onFailure(e);
-				return false;
-			}
-		}
-
-		protected boolean executeRepeatingCommand() {
-			return delegate.execute();
-		}
 	}
 
 	public abstract static class RunnableAsyncCallbackPlayer<C, D>

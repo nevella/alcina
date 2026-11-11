@@ -13,13 +13,13 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.IsInstanceFilter;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.log.AlcinaLogUtils;
+import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
@@ -102,7 +102,7 @@ public class Consort<D> implements AlcinaProcess {
 
 	private boolean throwOnUnableToResolveDependencies;
 
-	protected Logger metricLogger = AlcinaLogUtils.getMetricLogger(getClass());
+	protected Logger metricLogger = TaggedLoggers.getMetricLogger(getClass());
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 

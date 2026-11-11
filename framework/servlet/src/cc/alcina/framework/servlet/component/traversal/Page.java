@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.CopySelectionFilter;
 import cc.alcina.framework.common.client.traversal.SelectionFilter;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
+import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Timer;

@@ -19,7 +19,7 @@ import com.google.gwt.dom.client.behavior.ElementBehavior;
 import cc.alcina.framework.common.client.regexp.shared.MatchResult;
 import cc.alcina.framework.common.client.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;

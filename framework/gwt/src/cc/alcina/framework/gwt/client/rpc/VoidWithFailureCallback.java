@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.rpc;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 

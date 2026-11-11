@@ -6,8 +6,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
@@ -17,7 +15,7 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.service.CommonExtensions;
+import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
@@ -134,7 +132,7 @@ public class ReflectiveSearchDefinitionSerializer
 				serializedDef = serializedDef.substring(RS0.length());
 			}
 			serializedDef = unescapeJsonForUrl(serializedDef);
-			SearchDefinition def = CommonExtensions.INSTANCE
+			SearchDefinition def = Common.extensions
 					.deserializeSearchDefinition(abbrevLookup,
 							reverseAbbrevLookup, serializedDef);
 			SearchDefinition defaultInstance = Reflections
@@ -153,7 +151,7 @@ public class ReflectiveSearchDefinitionSerializer
 			});
 			return (SD) def;
 		} catch (Exception e) {
-			GWT.log("Exception in reflective search", e);
+			Ax.out("Exception in reflective search :: %s", e);
 			e.printStackTrace();
 			AlcinaTopics.devWarning.publish(e);
 			return null;

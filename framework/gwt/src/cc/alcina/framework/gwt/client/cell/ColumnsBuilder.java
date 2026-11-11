@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -20,9 +19,8 @@ import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
-import java.util.function.Function;
+
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;

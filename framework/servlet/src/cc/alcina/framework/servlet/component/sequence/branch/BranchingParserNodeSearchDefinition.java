@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchToken.Group;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSearchDefinition;

@@ -4,9 +4,9 @@ import java.util.List;
 
 import cc.alcina.framework.gwt.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.BranchToken;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
-import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchToken;
+import cc.alcina.framework.gwt.client.traversal.layer.LayerParser.ParserState;
+import cc.alcina.framework.gwt.client.traversal.layer.LayerParserPeer;
 
 public abstract class AbstractTlStructureParserPeer extends LayerParserPeer {
 	public AbstractTlStructureParserPeer(SelectionTraversal traversal) {

@@ -11,8 +11,8 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 public class PermissibleEntityActionHandler
 		implements PermissibleActionHandler<PermissibleEntityAction> {
 	@Override
-	public void handleAction(Widget sourceWidget,
-			PermissibleEntityAction action, Object target) {
+	public void handleAction(Object source, PermissibleEntityAction action,
+			Object target) {
 		Place currentPlace = Client.currentPlace();
 		if (currentPlace instanceof CategoryNamePlace) {
 			CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)

@@ -29,8 +29,7 @@ import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.annotations.Omit;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  *
@@ -131,9 +130,6 @@ public class BaseSourcesPropertyChangeEvents
 	}
 
 	@Override
-	@Transient
-	@JsonIgnore
-	@Omit
 	public PropertyChangeListener[] propertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}

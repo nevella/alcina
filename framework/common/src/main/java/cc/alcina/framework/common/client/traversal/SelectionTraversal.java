@@ -16,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Preconditions;
-import com.google.web.bindery.event.shared.UmbrellaException;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -281,6 +279,16 @@ public class SelectionTraversal
 		public SelectionException(Selection selection, Exception exception) {
 			this.selection = selection;
 			this.exception = exception;
+		}
+	}
+
+	public static class TraversalException extends RuntimeException {
+		Set<Exception> exceptions;
+
+		public TraversalException(Set<Exception> exceptions) {
+			super(exceptions.stream().map(CommonUtils::toSimpleExceptionMessage)
+					.collect(Collectors.joining("\n")));
+			this.exceptions = exceptions;
 		}
 	}
 
@@ -1071,7 +1079,7 @@ public class SelectionTraversal
 	public void throwExceptions() {
 		Preconditions.checkState(!state.beforeExecution);
 		if (selections().exceptions.size() > 0) {
-			throw new UmbrellaException(selections().exceptions.values()
+			throw new TraversalException(selections().exceptions.values()
 					.stream().collect(AlcinaCollectors.toLinkedHashSet()));
 		}
 	}

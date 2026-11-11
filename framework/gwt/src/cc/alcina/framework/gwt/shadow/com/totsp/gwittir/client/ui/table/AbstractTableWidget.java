@@ -23,7 +23,7 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;

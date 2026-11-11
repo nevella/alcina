@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
-import cc.alcina.framework.common.client.util.ColumnMapper;
+import cc.alcina.framework.gwt.client.cell.ColumnMapper;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilderRows;

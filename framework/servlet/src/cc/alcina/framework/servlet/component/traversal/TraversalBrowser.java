@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
+import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;

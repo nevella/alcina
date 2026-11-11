@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import cc.alcina.framework.common.client.service.CommonExtensions;
+import cc.alcina.framework.common.client.service.Common;
 
 /**
  * 
@@ -113,7 +113,7 @@ public class SimpleStringParser {
 	}
 
 	public static String toString(long value) {
-		return CommonExtensions.INSTANCE.serializeLongToJs(value);
+		return Common.extensions.serializeLongToJs(value);
 	}
 
 	public static String toStringNoInfo(long value) {

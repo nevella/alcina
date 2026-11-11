@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.WithRange;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
+import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;

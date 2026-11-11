@@ -31,7 +31,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 class SyncMutations {
 	MutationsAccess mutationsAccess;
 
-	Map<NodeJso, MutationNode> mutationNodes = AlcinaCollections.newUnqiueMap();
+	Map<NodeJso, MutationNode> mutationNodes = AlcinaCollections.newUniqueMap();
 
 	// these nodes will have their outerhtml subtrees parsed at the end of the
 	// sync process
@@ -322,7 +322,7 @@ class SyncMutations {
 		// there won't normally be many of these - so use a fairly inefficent
 		// (but clear) ancestry algorithm
 		Map<NodeJso, NodeJso> topmostMutationAncestorsAtSN = AlcinaCollections
-				.newUnqiueMap();
+				.newUniqueMap();
 		Map<NodeJso, MutationNode> mutationSubtreeParentRemotes = mutationSubtreeParents
 				.stream()
 				.collect(AlcinaCollectors.toKeyMap(MutationNode::remoteNode));

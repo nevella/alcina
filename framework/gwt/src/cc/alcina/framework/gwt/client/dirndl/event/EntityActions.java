@@ -16,7 +16,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Create;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Edit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.View;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
+
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 
@@ -36,14 +37,12 @@ public class EntityActions {
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
 			Optional<EntityCriterion> o_ownerCriterion = Entity.Ownership
-					.getOwnerReflectors(entityPlace.provideEntityClass()).map(
-							ownerReflector -> currentPlace.def
-									.provideEntityCriterion(
-											ownerReflector
-													.annotation(
-															Association.class)
-													.implementationClass())
-									.orElse(null))
+					.getOwnerReflectors(entityPlace.provideEntityClass())
+					.map(ownerReflector -> currentPlace.def
+							.provideEntityCriterion(
+									ownerReflector.annotation(Association.class)
+											.implementationClass())
+							.orElse(null))
 					.filter(Objects::nonNull).findFirst();
 			if (o_ownerCriterion.isPresent()) {
 				EntityCriterion ownerCriterion = o_ownerCriterion.get();

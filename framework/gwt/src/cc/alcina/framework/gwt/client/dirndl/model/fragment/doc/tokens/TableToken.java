@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens;
 
 import cc.alcina.framework.gwt.client.dom.Measure.Token;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Block;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.FragmentDocumentOverlayToken.CanContainLeaf;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens.TextChildrenNotVisible;

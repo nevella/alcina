@@ -45,7 +45,7 @@ import com.google.gwt.dev.js.ast.JsStringLiteral;
 import com.google.gwt.dev.js.ast.JsUnaryOperator;
 import com.google.gwt.dev.js.ast.JsValueLiteral;
 import com.google.gwt.dev.js.ast.JsVisitor;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.Base64Utils;

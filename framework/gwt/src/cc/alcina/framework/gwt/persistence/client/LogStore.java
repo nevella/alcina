@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Cookies;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;

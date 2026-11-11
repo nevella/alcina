@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.consort;
 import java.util.Collection;
 import java.util.Collections;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.util.Ax;

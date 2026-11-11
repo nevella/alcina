@@ -31,8 +31,6 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -41,6 +39,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JavascriptKeyableLookup;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueMap;
 
 /**
  * <p>
@@ -870,7 +870,7 @@ public class LocalDom implements ContextFrame {
 
 	public static class LocalDomCollections {
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
-			return AlcinaCollections.newUnqiueMap();
+			return AlcinaCollections.newUniqueMap();
 		}
 
 		public Map<String, String> createStringMap() {

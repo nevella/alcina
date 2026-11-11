@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domain.Entity;

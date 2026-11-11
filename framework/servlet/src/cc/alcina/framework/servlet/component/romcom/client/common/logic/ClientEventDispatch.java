@@ -41,7 +41,7 @@ class ClientEventDispatch {
 		dispatchEventMessage0(lastEvent, null, false);
 	}
 
-	Map<String, Event> collatedPreviews = AlcinaCollections.newUnqiueMap();
+	Map<String, Event> collatedPreviews = AlcinaCollections.newUniqueMap();
 
 	@Feature.Ref(Feature_RemoteObjectComponent._ClientEventThrottling.class)
 	void dispatchEventMessage(Event event, Element listenerElement,

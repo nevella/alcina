@@ -20,8 +20,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.Preconditions;
-import com.google.gwt.user.client.rpc.GwtTransient;
-
 import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;

@@ -81,7 +81,7 @@ public final class InstanceQuery implements TreeSerializable {
 			public static synchronized Parameter
 					getSoleParameterOfType(Class clazz) {
 				if (valueTypeParameterType == null) {
-					valueTypeParameterType = AlcinaCollections.newUnqiueMap();
+					valueTypeParameterType = AlcinaCollections.newUniqueMap();
 				}
 				Class<? extends Parameter> parameterClass = valueTypeParameterType
 						.get(clazz);

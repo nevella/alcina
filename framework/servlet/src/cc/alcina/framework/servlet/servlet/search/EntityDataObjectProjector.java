@@ -9,13 +9,13 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjections;
+import cc.alcina.framework.gwt.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 /*

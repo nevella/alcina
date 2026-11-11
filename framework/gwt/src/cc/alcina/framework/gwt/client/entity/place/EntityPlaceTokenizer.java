@@ -4,7 +4,8 @@ import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
+
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.place.BindablePlaceTokenizer;
 
 public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySearchDefinition, P extends EntityPlace<SD>>

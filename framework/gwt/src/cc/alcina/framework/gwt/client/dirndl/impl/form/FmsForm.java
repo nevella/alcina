@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
-import cc.alcina.framework.common.client.logic.reflection.ModalDisplay;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -28,6 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.gwittir.customiser.OneToManyCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.OneToManyMultipleSummaryCustomiser;
+import cc.alcina.framework.gwt.client.logic.reflection.ModalDisplay;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 
 public class FmsForm {

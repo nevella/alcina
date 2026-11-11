@@ -2,8 +2,8 @@ package cc.alcina.framework.entity.projection;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.MapObjectLookupJvm;
 
 public class CollectionProjectionFilterWithCache
 		extends CollectionProjectionFilter {

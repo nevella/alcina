@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.consort;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 public interface ConsortSignalHandler<S> {
 	S handlesSignal();

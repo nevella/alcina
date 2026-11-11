@@ -14,9 +14,6 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.rpc.GwtTransient;
-import com.google.gwt.user.client.ui.SuggestOracle.HasSuggestedObject;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -25,9 +22,10 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
@@ -35,20 +33,15 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PermissionRule;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.search.EntityCriterion;
+import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.ToStringRepresentation;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 
 /**
  * <p>
@@ -114,7 +107,6 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	// has @GwtTransient annotation because we don't want to send
 	// server-generated local ids to the client - or vice-versa
-	@GwtTransient
 	volatile long localId;
 
 	protected int _compareTo(Entity o) {
@@ -201,6 +193,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		read = @Permission(access = AccessLevel.ROOT),
 		write = @Permission(access = AccessLevel.ROOT))
 	@Transient
+	@AlcinaTransient(TransienceContext.CLIENT)
 	public /**
 			 * Used for object referencing within a client domain. Generated
 			 * from a thread-safe increment counter (one counter per domain, not
@@ -273,20 +266,14 @@ public abstract class Entity<T extends Entity> extends Bindable
 			}
 			int classHash = entityClass().getName().hashCode();
 			if (getLocalId() != 0) {
-				if (GWT.isScript()) {
-					hash = LongWrapperHash.fastHash(getLocalId()) ^ classHash;
-				} else {
-					hash = ((int) getLocalId()) ^ classHash;
-				}
+				hash = Common.scriptableExtensions.entityHash(getLocalId(),
+						classHash);
 			} else {
 				if (getId() == 0) {
 					// still 0
 				} else {
-					if (GWT.isScript()) {
-						hash = LongWrapperHash.fastHash(getId()) ^ classHash;
-					} else {
-						hash = ((int) getId()) ^ classHash;
-					}
+					hash = Common.scriptableExtensions.entityHash(getId(),
+							classHash);
 					hash = TransformManager.replaceWithCreatedLocalObjectHash(
 							domainIdentity(), hash);
 				}
@@ -597,67 +584,6 @@ public abstract class Entity<T extends Entity> extends Bindable
 					return result;
 				}
 			}
-		}
-	}
-
-	@Bean(PropertySource.FIELDS)
-	public static class Suggestion implements BoundSuggestOracleResponseElement,
-			Comparable<Suggestion>, HasSuggestedObject {
-		public Entity entity;
-
-		public String suggestionString;
-
-		public Suggestion() {
-		}
-
-		public Suggestion(Entity entity) {
-			this.entity = entity;
-			if (entity instanceof HasDisplayName) {
-				suggestionString = ((HasDisplayName) entity).displayName();
-			} else {
-				suggestionString = entity.toStringEntity();
-			}
-		}
-
-		public Suggestion(Entity entity, String suggestionString) {
-			this.entity = entity;
-			this.suggestionString = suggestionString;
-		}
-
-		public Suggestion(EntityCriterion<?> criterion) {
-			this.entity = criterion.getValue();
-			this.suggestionString = criterion.getDisplayText();
-		}
-
-		@Override
-		public String toSuggestionString() {
-			return suggestionString;
-		}
-
-		@Override
-		public int compareTo(Suggestion o) {
-			return suggestionString.compareTo(o.suggestionString);
-		}
-
-		@Override
-		public String toString() {
-			return toSuggestionString();
-		}
-
-		@Registration({ ToStringRepresentation.class, Suggestion.class })
-		public static class ToStringRepresentationImpl
-				extends Binding.AbstractContextSensitiveTransform<Suggestion>
-				implements ToStringRepresentation<Suggestion> {
-			@Override
-			@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-			public String apply(Suggestion t) {
-				return t.entity.toLocator().toRecoverableNumericString();
-			}
-		}
-
-		@Override
-		public Object provideSuggestedObject() {
-			return entity;
 		}
 	}
 }

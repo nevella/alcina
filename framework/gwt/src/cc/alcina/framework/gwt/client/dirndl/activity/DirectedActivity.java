@@ -23,7 +23,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.action.PlaceAction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
+
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.view.AppController;
 import cc.alcina.framework.gwt.client.place.BasePlace;

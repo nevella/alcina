@@ -76,7 +76,7 @@ import cc.alcina.framework.gwt.client.objecttree.HasRenderContext;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 import cc.alcina.framework.gwt.client.widget.SpanPanel;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Button;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Checkbox;

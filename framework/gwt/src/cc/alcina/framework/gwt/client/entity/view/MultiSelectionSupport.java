@@ -19,7 +19,8 @@ import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
+
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntitySubPlace;
 import cc.alcina.framework.gwt.client.widget.Link;
 

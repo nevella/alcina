@@ -27,7 +27,7 @@ import com.google.gwt.core.ext.typeinfo.JType;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.Method;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.ProvidesPropertyMethod;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  * Represents a field declaration.

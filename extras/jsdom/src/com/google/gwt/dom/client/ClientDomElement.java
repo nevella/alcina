@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;

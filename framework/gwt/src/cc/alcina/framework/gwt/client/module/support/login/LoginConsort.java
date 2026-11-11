@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import java.util.Collections;
 import java.util.function.Consumer;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer;

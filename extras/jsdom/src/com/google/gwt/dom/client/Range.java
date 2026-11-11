@@ -168,7 +168,7 @@ public class Range implements org.w3c.dom.ranges.Range {
 		Preconditions.checkState(end.getLocation().isAtNodeEnd());
 		DocumentFragment documentFragment = document.createDocumentFragment();
 		Map<DomNode, com.google.gwt.dom.client.Node> originalCloned = AlcinaCollections
-				.newUnqiueMap();
+				.newUniqueMap();
 		Location cursor = start.getLocation();
 		/*
 		 * commonContainerDomNode corresponds structurally to the fragment

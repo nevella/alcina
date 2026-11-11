@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
+import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.traversal.SelectionMarkupSingle;
 import cc.alcina.framework.servlet.example.traversal.recipe.markup.IngredientLayer.IngredientSelection;

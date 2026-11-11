@@ -51,7 +51,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  * <p>

@@ -6,6 +6,7 @@ package cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans;
 
 import java.util.function.Function;
 
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding.BindingInstance;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding.DefaultPropertyChangeListener;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.interfaces.Finish;

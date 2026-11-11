@@ -17,9 +17,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 
 /**
  *
@@ -36,7 +36,7 @@ public interface DomainModelHolder extends Serializable {
 
 	public IUser getCurrentUser();
 
-	public GeneralProperties getGeneralProperties();
+	public UserPropertyPersistable getGeneralProperties();
 
 	public List registerableDomainObjects();
 

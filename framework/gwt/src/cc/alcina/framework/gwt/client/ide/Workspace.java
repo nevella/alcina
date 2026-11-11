@@ -53,7 +53,7 @@ import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.ViewProvider;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  * Hooks up the various navigation views and the editor widget

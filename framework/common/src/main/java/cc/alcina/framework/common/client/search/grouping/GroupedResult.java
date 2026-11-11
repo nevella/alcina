@@ -9,8 +9,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.google.gwt.dom.client.Style.Unit;
-
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -170,7 +168,7 @@ public class GroupedResult extends Model {
 
 		private double width;
 
-		private Unit unit;
+		private String unit;
 
 		private GroupKey key;
 
@@ -198,7 +196,7 @@ public class GroupedResult extends Model {
 		}
 
 		@XmlTransient
-		public Unit getUnit() {
+		public String getUnit() {
 			return unit;
 		}
 
@@ -230,7 +228,7 @@ public class GroupedResult extends Model {
 			this.style = style;
 		}
 
-		public void setUnit(Unit unit) {
+		public void setUnit(String unit) {
 			this.unit = unit;
 		}
 
@@ -263,7 +261,7 @@ public class GroupedResult extends Model {
 			return this;
 		}
 
-		public Col withWidth(double width, Unit unit) {
+		public Col withWidth(double width, String unit) {
 			this.setWidth(width);
 			this.setUnit(unit);
 			return this;

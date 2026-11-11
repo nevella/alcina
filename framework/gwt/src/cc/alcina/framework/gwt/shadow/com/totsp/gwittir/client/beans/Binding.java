@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;

@@ -17,8 +17,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.Preconditions;
-import com.google.gwt.user.client.rpc.GwtTransient;
-
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
@@ -40,6 +38,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -88,7 +87,6 @@ public abstract class Job extends VersionableEntity<Job>
 		return PersistentImpl.find(Job.class, id);
 	}
 
-	@GwtTransient
 	private Task task;
 
 	private String taskSerialized;
@@ -115,28 +113,22 @@ public abstract class Job extends VersionableEntity<Job>
 
 	private int performerVersionNumber;
 
-	@GwtTransient
 	private Object result;
 
-	@GwtTransient
 	private String resultSerialized;
 
-	@GwtTransient
 	@GraphProjectionTransient
 	private Object largeResult;
 
-	@GwtTransient
 	@GraphProjectionTransient
 	private String largeResultSerialized;
 
 	private String processStateSerialized;
 
-	@GwtTransient
 	private volatile ProcessState processState;
 
 	private transient String cachedDisplayName;
 
-	@GwtTransient
 	private String taskSignature;
 
 	// cached value for sequence computation
@@ -145,16 +137,13 @@ public abstract class Job extends VersionableEntity<Job>
 	// cached value for sequence computation
 	private transient Job previousForComputeFirst;
 
-	@GwtTransient
 	private String consistencyPriority;
 
 	/**
 	 * creatorInstanceId.creationLocalId
 	 */
-	@GwtTransient
 	private String uuid;
 
-	@GwtTransient
 	private String cause;
 
 	public Job() {
@@ -279,6 +268,7 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
+	@AlcinaTransient(TransienceContext.CLIENT)
 	public String getCause() {
 		return this.cause;
 	}
@@ -287,6 +277,7 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.completion;
 	}
 
+	@AlcinaTransient(TransienceContext.CLIENT)
 	public String getConsistencyPriority() {
 		return this.consistencyPriority;
 	}
@@ -341,6 +332,7 @@ public abstract class Job extends VersionableEntity<Job>
 	 */
 	@Transient
 	@DomainProperty(serialize = true)
+	@AlcinaTransient(TransienceContext.CLIENT)
 	public ProcessState getProcessState() {
 		processState = TransformManager.resolveMaybeDeserialize(processState,
 				this.processStateSerialized, null);
@@ -405,6 +397,7 @@ public abstract class Job extends VersionableEntity<Job>
 	@DomainProperty(serialize = true)
 	@Directed.Exclude
 	@Display.Exclude
+	@AlcinaTransient(TransienceContext.CLIENT)
 	public Task getTask() {
 		task = TransformManager.resolveMaybeDeserialize(task,
 				this.taskSerialized, null,
@@ -433,6 +426,7 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.taskSerialized;
 	}
 
+	@AlcinaTransient(TransienceContext.CLIENT)
 	public String getTaskSignature() {
 		return this.taskSignature;
 	}
@@ -440,6 +434,7 @@ public abstract class Job extends VersionableEntity<Job>
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
 
+	@AlcinaTransient(TransienceContext.CLIENT)
 	public String getUuid() {
 		return this.uuid;
 	}

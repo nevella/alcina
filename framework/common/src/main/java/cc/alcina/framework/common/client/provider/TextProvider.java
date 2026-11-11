@@ -13,9 +13,6 @@
  */
 package cc.alcina.framework.common.client.provider;
 
-import com.google.gwt.user.client.ui.InlineLabel;
-import com.google.gwt.user.client.ui.Label;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -67,11 +64,6 @@ public class TextProvider {
 
 	public void appShutdown() {
 		instance = null;
-	}
-
-	// For app-level subclassing, if these should be HTML
-	public Label getInlineLabel(String text) {
-		return new InlineLabel(text);
 	}
 
 	public String getLabelText(AnnotationLocation location) {

@@ -470,7 +470,7 @@ public class ReflectiveSerializer {
 
 		public Object value;
 
-		SerialNode serialNode;
+		public SerialNode serialNode;
 
 		GraphNode parent;
 

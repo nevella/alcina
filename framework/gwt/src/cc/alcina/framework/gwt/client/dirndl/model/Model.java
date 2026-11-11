@@ -51,7 +51,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.BindingBuilder;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  * <p>

@@ -11,8 +11,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTok
 import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection.IgnoreOverlaps;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection.Intermediate;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection.IgnoreOverlaps;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection.Intermediate;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**

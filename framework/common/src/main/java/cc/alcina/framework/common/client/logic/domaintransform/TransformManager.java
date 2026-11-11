@@ -34,17 +34,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.StandaloneObjectStoreClient;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
@@ -59,7 +56,8 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.service.CommonExtensions;
+import cc.alcina.framework.common.client.service.Common;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
@@ -70,8 +68,7 @@ import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 /**
  * FIXME - mvcc.adjunct - abstract parts out to ClientTransformManager. Also
@@ -1226,10 +1223,7 @@ public abstract class TransformManager implements PropertyChangeListener {
 		provisionalObjects = new IdentityHashMap<>();
 	}
 
-	protected void initObjectStore() {
-		// FIXME - dirndl 1x2 - to client tm
-		setObjectStore(new StandaloneObjectStoreClient(this));
-	}
+	protected abstract void initObjectStore();
 
 	protected boolean isAddToDomainObjects() {
 		return true;
@@ -1655,7 +1649,7 @@ public abstract class TransformManager implements PropertyChangeListener {
 				return;
 			}
 		} catch (RuntimeException e) {
-			if (GWT.isClient()) {
+			if (Al.isClient()) {
 				AlcinaTopics.transformCascadeException.publish(e);
 			}
 			throw e;
@@ -1803,17 +1797,6 @@ public abstract class TransformManager implements PropertyChangeListener {
 		}
 	}
 
-	public void registerDomainObjectsAsync(Collection<Entity> entities,
-			final AsyncCallback<Void> postRegisterCallback) {
-		((StandaloneObjectStoreClient) getObjectStore()).registerAsync(entities,
-				new ScheduledCommand() {
-					@Override
-					public void execute() {
-						postRegisterCallback.onSuccess(null);
-					}
-				});
-	}
-
 	/**
 	 * Useful for unit tests, hence here rather than clientTM
 	 */
@@ -1824,22 +1807,6 @@ public abstract class TransformManager implements PropertyChangeListener {
 		initObjectStore();
 		getObjectStore().registerObjects(h.registerableDomainObjects());
 		ClassRef.add(h.getClassRefs());
-	}
-
-	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,
-			final AsyncCallback<Void> postRegisterCallback) {
-		if (this.getObjectStore() != null) {
-			getObjectStore().removeListeners();
-		}
-		initObjectStore();
-		((StandaloneObjectStoreClient) getObjectStore()).registerAsync(
-				h.registerableDomainObjects(), new ScheduledCommand() {
-					@Override
-					public void execute() {
-						ClassRef.add(h.getClassRefs());
-						postRegisterCallback.onSuccess(null);
-					}
-				});
 	}
 
 	public <V extends Entity> Set<V> registeredObjectsAsSet(Class<V> clazz) {
@@ -1855,17 +1822,6 @@ public abstract class TransformManager implements PropertyChangeListener {
 			final AsyncCallback<Void> postRegisterCallback) {
 		getObjectStore().registerObjects(h.registrableObjects());
 		postRegisterCallback.onSuccess(null);
-	}
-
-	public void registerModelObjectAsync(final DomainModelObject h,
-			final AsyncCallback<Void> postRegisterCallback) {
-		((StandaloneObjectStoreClient) getObjectStore())
-				.registerAsync(h.registrableObjects(), new ScheduledCommand() {
-					@Override
-					public void execute() {
-						postRegisterCallback.onSuccess(null);
-					}
-				});
 	}
 
 	public void registerProvisionalObject(Object o) {
@@ -2334,7 +2290,7 @@ public abstract class TransformManager implements PropertyChangeListener {
 				return null;
 			}
 			if (serialized.startsWith("{")) {
-				return CommonExtensions.INSTANCE.deserializeV1(serialized);
+				return Common.extensions.deserializeV1(serialized);
 			} else {
 				return ReflectiveSerializer.deserialize(serialized);
 			}

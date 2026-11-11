@@ -22,14 +22,12 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.Status.StatusReason;
 
 /**
  *
  * @author Nick Reddel
  */
-public class JobTracker extends Model implements TreeSerializable {
+public class JobTracker extends Bindable implements TreeSerializable {
 	@Bean
 	public static class Request implements Serializable {
 		private List<Long> ids = new ArrayList<>();
@@ -105,21 +103,6 @@ public class JobTracker extends Model implements TreeSerializable {
 
 	public void setLeafCount(String leafCount) {
 		this.leafCount = leafCount;
-	}
-
-	public StatusReason asResultStatusReason() {
-		switch (jobResultType) {
-		case DID_NOT_COMPLETE:
-		case EXCEPTION:
-		case FAIL:
-			return StatusReason.error(jobResult, jobResult);
-		case WARN:
-			return StatusReason.warn(jobResult, jobResult);
-		case OK:
-			return StatusReason.ok(jobResult);
-		default:
-			throw new UnsupportedOperationException();
-		}
 	}
 
 	public Date getEndTime() {

@@ -166,10 +166,10 @@ public class Permissions implements DomainTransformListener {
 	public static class RegistryPermissionsExtension
 			implements PermissionsExtension {
 		Map<String, PermissionsExtensionForRule> perNameRules = AlcinaCollections
-				.newUnqiueMap();
+				.newUniqueMap();
 
 		Map<Class<? extends Permissible>, Rule> perClassRules = AlcinaCollections
-				.newUnqiueMap();
+				.newUniqueMap();
 
 		public RegistryPermissionsExtension() {
 			Registry.query(PermissionsExtensionForRule.class).implementations()

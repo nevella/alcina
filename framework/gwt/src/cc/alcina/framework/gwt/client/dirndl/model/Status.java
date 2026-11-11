@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.gwt.dom.client.DomStyleConstants;
 
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -65,6 +66,22 @@ public enum Status implements ProvidesStatus {
 
 		public static StatusReason error(Object value, String reason) {
 			return new StatusReason(Status.ERROR, reason, value);
+		}
+
+		public static StatusReason forJobTracker(JobTracker jobTracker) {
+			String jobResult = jobTracker.getJobResult();
+			switch (jobTracker.getJobResultType()) {
+			case DID_NOT_COMPLETE:
+			case EXCEPTION:
+			case FAIL:
+				return StatusReason.error(jobResult, jobResult);
+			case WARN:
+				return StatusReason.warn(jobResult, jobResult);
+			case OK:
+				return StatusReason.ok(jobResult);
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		public static StatusReason forDate(Date date, String issueReason,

@@ -5,6 +5,8 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.ClassUtil;
@@ -139,6 +141,10 @@ public class Reflections {
 	private boolean hasReflectionMetadata(Class clazz) {
 		return hasReflectionMetadata.computeIfAbsent(clazz,
 				c -> forName(c.getName()) != null);
+	}
+
+	public static boolean isIntrospectable(Class clazz) {
+		return new AnnotationLocation(clazz, null).hasAnnotation(Bean.class);
 	}
 
 	public static <T> T propertyClone(T source) {

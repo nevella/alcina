@@ -31,7 +31,7 @@ import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.ToStringRenderer;
 

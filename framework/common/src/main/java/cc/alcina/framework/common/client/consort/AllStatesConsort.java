@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.consort;
 
 import java.util.Arrays;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

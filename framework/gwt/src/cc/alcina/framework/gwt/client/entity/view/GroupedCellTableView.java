@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.domain.search.GroupingParameters;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
-import cc.alcina.framework.common.client.util.ColumnMapper;
+import cc.alcina.framework.gwt.client.cell.ColumnMapper;
 import cc.alcina.framework.gwt.client.entity.export.RowExportContentDefinition;
 import cc.alcina.framework.gwt.client.entity.place.EntitySubPlace;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;

@@ -8,13 +8,13 @@ import java.util.Set;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultiset;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueMap;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueSet;
 
 public class CollectionCreatorsClient {
 	static boolean useJsMaps() {

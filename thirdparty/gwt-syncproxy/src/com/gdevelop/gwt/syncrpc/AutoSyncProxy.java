@@ -31,7 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 

@@ -19,16 +19,17 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.function.Function;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
@@ -169,7 +170,7 @@ public class ObjectTreeRenderer {
 						TextProvider.DISPLAY_NAME + "-" + displayName,
 						CommonUtils.upperCaseFirstLetterOnly(displayName)
 								+ ": ");
-				Label label = TextProvider.get().getInlineLabel(text);
+				Label label = new InlineLabel(text);
 				label.setStyleName("level-"
 						+ ((soleChild) ? Math.max(1, depth - 1) : depth));
 				cp.add(label);

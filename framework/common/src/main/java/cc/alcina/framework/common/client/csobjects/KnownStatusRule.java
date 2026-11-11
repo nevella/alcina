@@ -9,8 +9,6 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import com.google.gwt.user.client.rpc.GwtTransient;
-
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
@@ -29,7 +27,6 @@ public @interface KnownStatusRule {
 	@Bean
 	public static class KnownStatusRuleImpl
 			implements KnownStatusRule, Serializable {
-		@GwtTransient
 		private Class<? extends Annotation> annotationType = KnownStatusRule.class;
 
 		private KnownTagAlcina area;

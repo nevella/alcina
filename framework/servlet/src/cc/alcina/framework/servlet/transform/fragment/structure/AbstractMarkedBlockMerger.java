@@ -10,7 +10,7 @@ import cc.alcina.framework.servlet.transform.fragment.html.TextLayer.IgnoreableW
 import cc.alcina.framework.gwt.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.IntPair;
 
 public abstract class AbstractMarkedBlockMerger<I extends StyledMeasureSelection> {

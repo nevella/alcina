@@ -6,6 +6,7 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.DateStyle;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -80,6 +81,17 @@ public interface ModelTransform<A, B> extends Function<A, B> {
 
 		public void setValue(String value) {
 			this.value = value;
+		}
+	}
+
+	/**
+	 * Transforms a full string classname to a nested name
+	 */
+	public static class NestedNameTransformer
+			implements ModelTransform<String, String> {
+		@Override
+		public String apply(String t) {
+			return NestedName.getNestedSimpleNameFromClassname(t);
 		}
 	}
 }

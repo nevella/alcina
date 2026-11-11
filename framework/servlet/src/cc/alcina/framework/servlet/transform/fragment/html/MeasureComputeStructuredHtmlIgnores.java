@@ -9,10 +9,10 @@ import cc.alcina.framework.servlet.transform.fragment.html.LeafBlockLayer.LeafBl
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens;
 import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Containment;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureTreeComparator;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment.Containment;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureTreeComparator;
 
 /**
  * <p>

@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.search;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -11,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -82,7 +82,7 @@ public abstract class EntityCriterion<E extends Entity> extends SearchCriterion
 			value = (E) Domain.find((Class<? extends Entity>) getObjectClass(),
 					id);
 			if (value == null) {
-				if (GWT.isClient()) {
+				if (Al.isClient()) {
 					value = Reflections.newInstance(getObjectClass());
 					value.setId(id);
 				}

@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContextService;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 

@@ -31,13 +31,13 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 public class AttachIds {
 	int counter = 1;
 
-	IntLookup<Node> byId = IntLookup.Support.create();
+	IntLookup<Node> byId = AlcinaCollections.newIntLookup();
 
 	/*
 	 * Retained only until localdom.flush(), these are required to populate
 	 * remove mutations
 	 */
-	Map<Node, Integer> removed = AlcinaCollections.newUnqiueMap();
+	Map<Node, Integer> removed = AlcinaCollections.newUniqueMap();
 
 	int nextAttachId;
 

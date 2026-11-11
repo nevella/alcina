@@ -5,11 +5,11 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
 
 @MappedSuperclass
 /**

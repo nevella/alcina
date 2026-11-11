@@ -19,19 +19,14 @@ import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.gwittir.customiser.FriendlyEnumCustomiser;
-import cc.alcina.framework.gwt.client.gwittir.customiser.ObjectActionLinkCustomiser;
-import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser;
 
 @ObjectPermissions(
 	create = @Permission(access = AccessLevel.EVERYONE),
@@ -72,11 +67,6 @@ public abstract class Publication extends Entity<Publication>
 	@Display(
 		orderingHint = 12,
 		visible = @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(
-		customiserClass = ObjectActionLinkCustomiser.class,
-		parameters = { @NamedParameter(
-			name = ObjectActionLinkCustomiser.ACTION_CLASS,
-			classValue = PublicationRepublishLink.class) })
 	public String getActions() {
 		return "actions";
 	}
@@ -101,7 +91,6 @@ public abstract class Publication extends Entity<Publication>
 		name = "Content",
 		orderingHint = 50,
 		visible = @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(customiserClass = StandardLabelCustomiser.class)
 	public String getDefinitionDescription() {
 		return this.definitionDescription;
 	}
@@ -142,7 +131,6 @@ public abstract class Publication extends Entity<Publication>
 		name = "Type",
 		orderingHint = 30,
 		visible = @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(customiserClass = FriendlyEnumCustomiser.class)
 	public String getPublicationType() {
 		return this.publicationType;
 	}

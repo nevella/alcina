@@ -6,9 +6,10 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.IntLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.IntLookup.MapAdapter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.persistence.domain.ArrayBackedIntegerMap;
 
 /*
  * FIXME - dirndl 1x3 - cleanup? Also move refs to CollectionCreators.Bootstrap
@@ -60,8 +61,7 @@ public class AlcinaCollections {
 	/*
 	 */
 	public static <V> Map<Integer, V> newCoarseIntHashMap() {
-		return Registry.impl(CollectionCreators.CoarseIntHashMapCreator.class)
-				.create();
+		return extension.newCoarseIntHashMap();
 	}
 
 	public static <T> Set<T> newLinkedHashSet() {
@@ -70,15 +70,52 @@ public class AlcinaCollections {
 		// CollectionCreators.Bootstrap.getLinkedHashSetCreator().create();
 	}
 
+	public static <V> IntLookup<V> newIntLookup() {
+		return extension.newIntLookup();
+	}
+
+	public interface Extension {
+		<T> Set<T> newUniqueSet();
+
+		<K, V> Map<K, V> newUniqueMap();
+
+		<V> Map<Integer, V> newCoarseIntHashMap();
+
+		<V> IntLookup<V> newIntLookup();
+
+		public static class Default implements Extension {
+			@Override
+			public <T> Set<T> newUniqueSet() {
+				return newHashSet();
+			}
+
+			public <K, V> Map<K, V> newUniqueMap() {
+				return newHashMap();
+			}
+
+			@Override
+			public <V> Map<Integer, V> newCoarseIntHashMap() {
+				return new ArrayBackedIntegerMap<>(1000);
+			}
+
+			@Override
+			public <V> IntLookup<V> newIntLookup() {
+				return new MapAdapter<V>();
+			}
+		}
+	}
+
+	public static Extension extension;
+
 	public static <T> Set<T> newUniqueSet() {
-		return Al.isScript() ? JsUniqueSet.create() : newHashSet();
+		return extension.newUniqueSet();
 	}
 
 	// can be implemented by a js map js.client side (object identity keys, not
 	// equals() based) - note that a hashmap will still work, although it should
 	// be an identityhashmap (non js.client)
-	public static <K, V> Map<K, V> newUnqiueMap() {
-		return Al.isScript() ? JsUniqueMap.create() : newHashMap();
+	public static <K, V> Map<K, V> newUniqueMap() {
+		return extension.newUniqueMap();
 	}
 
 	// currently no GWT implementation - but will use es6 WeakMap

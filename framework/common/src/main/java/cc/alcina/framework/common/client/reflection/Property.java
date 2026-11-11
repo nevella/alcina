@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  * <p>

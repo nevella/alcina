@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;

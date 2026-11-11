@@ -6,13 +6,13 @@ import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.BranchToken;
-import cc.alcina.framework.common.client.traversal.layer.BranchingParser;
-import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
-import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchToken;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchingParser;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchingParser.Branch;
+import cc.alcina.framework.gwt.client.traversal.layer.LayerParser;
+import cc.alcina.framework.gwt.client.traversal.layer.LayerParser.ParserState;
+import cc.alcina.framework.gwt.client.traversal.layer.LayerParserPeer;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 
 /**
  * Transforms a RawIngredientSelection (a line of text) to a IngredientSelection

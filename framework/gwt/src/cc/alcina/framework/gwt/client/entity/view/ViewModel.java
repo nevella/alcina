@@ -8,7 +8,8 @@ import cc.alcina.framework.common.client.csobjects.HasChanges;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
+
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 
 @TypeSerialization(reflectiveSerializable = false)

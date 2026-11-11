@@ -81,7 +81,7 @@ import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  *

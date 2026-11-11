@@ -12,7 +12,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.WindowState;
 import com.google.gwt.dom.client.WindowState.NodeUiState;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.servlet.component.romcom.protocol.OffsetProtocol.OffsetRegistry;
 

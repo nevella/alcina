@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  *

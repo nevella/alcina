@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.function.Consumer;
 
 import com.google.gwt.dom.client.ClientDomElement.InputFileData;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;

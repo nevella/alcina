@@ -9,7 +9,7 @@ import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FileLogger;

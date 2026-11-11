@@ -60,7 +60,7 @@ import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.DataProvider;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;

@@ -7,11 +7,11 @@ import com.google.gwt.core.client.UnsafeNativeLong;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.service.CommonExtensions;
+import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 
-public class CommonExtensionsImpl extends CommonExtensions {
+public class CommonExtensionsImpl implements Common._Extensions {
 	// Keep synchronized with LongLib
 	private static final double TWO_PWR_16_DBL = 0x10000;
 

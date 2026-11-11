@@ -4,7 +4,7 @@
  */
 package cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.interfaces;
 
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  *

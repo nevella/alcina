@@ -24,11 +24,11 @@ import cc.alcina.framework.gwt.client.dom.Measure.Token.RestrictedChildContainme
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Containment;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Overlap;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureTreeComparator;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment.Containment;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment.Overlap;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureTreeComparator;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;

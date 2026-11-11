@@ -16,8 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManySummary;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -25,6 +24,7 @@ import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
+import cc.alcina.framework.gwt.client.logic.domain.EntityDataObject.OneToManySummary;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.util.BoundWidgetProvider;

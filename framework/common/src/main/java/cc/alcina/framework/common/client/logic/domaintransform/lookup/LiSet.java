@@ -11,11 +11,10 @@ import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.util.Al;
 
 /**
  * 
@@ -154,7 +153,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		}
 		if (e.domain().isZeroIds()) {
 			// can't handle non-comparables
-			if (!GWT.isClient()
+			if (!Al.isClient()
 					&& LooseContext.has(CONTEXT_NON_DOMAIN_NOTIFIER)) {
 				NonDomainNotifier notifier = LooseContext
 						.get(CONTEXT_NON_DOMAIN_NOTIFIER);
@@ -201,7 +200,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 
 	@Override
 	public LiSet clone() {
-		if (GWT.isClient()) {
+		if (Al.isClient()) {
 			return new LiSet(this);
 		}
 		try {

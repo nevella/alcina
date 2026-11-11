@@ -29,8 +29,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.gwt.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
@@ -38,7 +36,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.Checkbox;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
@@ -138,10 +136,6 @@ public class GwittirUtils {
 		listBox.setRenderer(renderer);
 		listBox.setOptions(options);
 		return listBox;
-	}
-
-	public static boolean isIntrospectable(Class clazz) {
-		return new AnnotationLocation(clazz, null).hasAnnotation(Bean.class);
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {

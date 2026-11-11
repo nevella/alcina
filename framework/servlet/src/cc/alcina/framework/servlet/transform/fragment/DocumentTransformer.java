@@ -18,7 +18,7 @@ import cc.alcina.framework.gwt.client.dom.DomDocument;
 import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.entity.Configuration;

@@ -8,7 +8,7 @@ import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.domain.HasStringValue;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 
 /**
  * Maps pagebreaks

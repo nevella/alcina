@@ -22,7 +22,7 @@ package cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui;
 import java.util.Comparator;
 
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.action.Action;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  *

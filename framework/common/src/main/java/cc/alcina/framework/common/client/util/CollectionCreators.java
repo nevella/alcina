@@ -12,7 +12,6 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -254,18 +253,6 @@ public class CollectionCreators {
 	public static class WeakMapCreator {
 		public <K, V> Map<K, V> create() {
 			return new LinkedHashMap<>();
-		}
-	}
-
-	@Reflected
-	@Registration.Singleton
-	/*
-	 * FIXME - reflection - default (dev only, so not a big drama) impl is in
-	 * fact non-weak
-	 */
-	public static class CoarseIntHashMapCreator {
-		public <V> Map<Integer, V> create() {
-			return Al.isScript() ? JsUniqueMap.create() : new LinkedHashMap<>();
 		}
 	}
 }

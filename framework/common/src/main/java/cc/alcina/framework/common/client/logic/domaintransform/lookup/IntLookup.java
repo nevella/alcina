@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 
 public interface IntLookup<V> {
@@ -16,20 +15,7 @@ public interface IntLookup<V> {
 
 	List<V> values();
 
-	/*
-	 * static class because gwt compiler doesn't like interface static methods
-	 */
-	public static class Support {
-		public static IntLookup create() {
-			if (Al.isScript()) {
-				return JavascriptIntLookup.create();
-			} else {
-				return new MapAdapter();
-			}
-		}
-	}
-
-	static class MapAdapter<V> implements IntLookup<V> {
+	public static class MapAdapter<V> implements IntLookup<V> {
 		Map<Integer, V> map = AlcinaCollections.newCoarseIntHashMap();
 
 		@Override

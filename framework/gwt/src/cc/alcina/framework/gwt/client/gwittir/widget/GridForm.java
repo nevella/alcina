@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.action.BindingAction;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.BoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.HasDefaultBinding;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.AbstractTableWidget;

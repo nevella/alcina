@@ -15,13 +15,13 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEventView;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.logic.domaintransform.DomainTransformEventView;
 
 public class TransformHistory {
 	private static ThreadLocal<Map<EntityLocator, TransformHistory>> cache = new ThreadLocal<Map<EntityLocator, TransformHistory>>() {

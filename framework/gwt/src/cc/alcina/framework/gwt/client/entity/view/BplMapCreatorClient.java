@@ -6,9 +6,9 @@ import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreatorStd;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueMap;
 
 @Reflected
 @Registration(BaseProjectionLookupBuilder.BplDelegateMapCreator.class)

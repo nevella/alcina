@@ -14,10 +14,9 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.Col;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.GroupKey;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.common.client.util.ColumnMapper;
-import cc.alcina.framework.common.client.util.ColumnMapper.RowModel_SingleCell;
-import cc.alcina.framework.common.client.util.ColumnMapper.SingleCellColumnMapper;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.cell.ColumnMapper.RowModel_SingleCell;
+import cc.alcina.framework.gwt.client.cell.ColumnMapper.SingleCellColumnMapper;
 import cc.alcina.framework.gwt.client.group.GroupingMapper.GroupingMapperResult;
 import cc.alcina.framework.gwt.client.group.GroupingMapper.GroupingMapperRow;
 
@@ -64,7 +63,7 @@ public class ColumnsBuilderRows {
 		mappings.stream()
 				.map(cm -> new Col().withName(cm.getName())
 						.withStyle(cm.getStyle()).withNumeric(cm.isNumeric())
-						.withWidth(cm.getWidth(), cm.getUnit()))
+						.withWidth(cm.getWidth(), cm.getUnit().toString()))
 				.forEach(groupedResult.getCols()::add);
 		List<V> list = rowModels.collect(Collectors.toList());
 		list.stream().map(rowModel -> {

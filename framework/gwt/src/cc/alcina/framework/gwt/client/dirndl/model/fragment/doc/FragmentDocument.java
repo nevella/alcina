@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.HasMarkup;
-import cc.alcina.framework.common.client.traversal.layer.diff.MeasureDiff;
+import cc.alcina.framework.gwt.client.traversal.layer.diff.MeasureDiff;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -383,7 +383,7 @@ public abstract class FragmentDocument<R extends FragmentDocumentRoot> extends
 	protected DomDocument domDocument;
 
 	Map<DomNode, FragmentDocumentNode> domNodeNode = AlcinaCollections
-			.newUnqiueMap();
+			.newUniqueMap();
 
 	protected R root;
 

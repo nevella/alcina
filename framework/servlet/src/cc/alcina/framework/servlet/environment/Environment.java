@@ -33,7 +33,7 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;

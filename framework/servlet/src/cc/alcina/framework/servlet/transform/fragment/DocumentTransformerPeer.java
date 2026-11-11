@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.traversal.DocumentTransformationTravers
 import cc.alcina.framework.common.client.traversal.HasMarkup;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
+import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocument;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocumentRoot;

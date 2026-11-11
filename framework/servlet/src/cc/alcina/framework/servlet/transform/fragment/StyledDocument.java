@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.LookaheadMatcher.EmphasisOracle;
+import cc.alcina.framework.gwt.client.traversal.layer.LookaheadMatcher.EmphasisOracle;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
@@ -417,7 +417,7 @@ public class StyledDocument {
 	QuickMsoStyleParser styleParser;
 
 	private Map<DomNode, StyledNode> styledNodes = AlcinaCollections
-			.newUnqiueMap();
+			.newUniqueMap();
 
 	public StyledDocument(String markup, StyledDocumentPeer peer) {
 		this(DomDocument

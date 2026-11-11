@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;

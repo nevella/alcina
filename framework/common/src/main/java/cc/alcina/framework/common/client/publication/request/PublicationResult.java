@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.publication.request;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class PublicationResult extends Model implements TreeSerializable {
+public class PublicationResult extends Bindable implements TreeSerializable {
 	private String content;
 
 	private Long publicationId;

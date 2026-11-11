@@ -32,7 +32,7 @@ public class OverlayPositions {
 		new PositionObserver().bind();
 	}
 
-	Map<Model, RenderedOverlay> openOverlays = AlcinaCollections.newUnqiueMap();
+	Map<Model, RenderedOverlay> openOverlays = AlcinaCollections.newUniqueMap();
 
 	public boolean hasOpenOverlays() {
 		return openOverlays.size() > 0;

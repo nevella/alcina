@@ -1,0 +1,12 @@
+package cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt;
+
+import java.util.Map;
+
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
+
+public class JsRegistryDelegateCreator implements DelegateMapCreator {
+	@Override
+	public Map createDelegateMap(int depthFromRoot, int depth) {
+		return JsUniqueMap.create();
+	}
+}

@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.ide.provider.LazyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer.UmbrellaCollectionProvider;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  * @author Nick Reddel

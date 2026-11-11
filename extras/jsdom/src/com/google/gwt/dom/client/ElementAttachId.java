@@ -10,7 +10,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;

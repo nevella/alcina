@@ -9,8 +9,8 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.WithRange;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /*

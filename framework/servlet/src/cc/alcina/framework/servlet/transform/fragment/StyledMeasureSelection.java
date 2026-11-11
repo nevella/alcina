@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.transform.fragment;
 import cc.alcina.framework.gwt.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 
 public class StyledMeasureSelection extends MeasureSelection
 		implements HasStyledNode<Measure> {

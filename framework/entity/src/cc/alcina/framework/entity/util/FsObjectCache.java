@@ -16,13 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.log.AlcinaLogUtils;
+import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.domain.LockUtils.ClassStringKeyLock;
 import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrategy_Kryo;
+import cc.alcina.framework.gwt.client.util.AlcinaLogUtils;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {
@@ -167,7 +168,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 				}
 			}
 		}
-		Logger metricLogger = AlcinaLogUtils
+		Logger metricLogger = TaggedLoggers
 				.getMetricLogger(FsObjectCache.class);
 		String key = Ax.format("Deserialize cache: %s", path);
 		// MetricLogging.get().start(key);

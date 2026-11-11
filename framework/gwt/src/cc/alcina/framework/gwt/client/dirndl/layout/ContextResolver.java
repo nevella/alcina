@@ -436,7 +436,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 * "checked for service x, and there's no result" - null means not checked
 	 */
 	protected Map<Class<? extends ContextService>, Optional<? extends ContextService>> services = AlcinaCollections
-			.newUnqiueMap();
+			.newUniqueMap();
 
 	public ContextResolver() {
 		initCaches();

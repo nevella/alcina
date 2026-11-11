@@ -7,7 +7,8 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
+
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.DetailViewModel;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;

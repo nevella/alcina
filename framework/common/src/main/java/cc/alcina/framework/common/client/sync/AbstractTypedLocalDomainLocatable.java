@@ -1,10 +1,9 @@
 package cc.alcina.framework.common.client.sync;
 
-import com.google.gwt.core.shared.GWT;
-
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
 
 public interface AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLocatable>
 		extends TypedLocalDomainLocatable<T> {
@@ -39,7 +38,7 @@ public interface AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLoc
 	}
 
 	default void deleteLocalEquivalent() {
-		if (GWT.isClient() && this instanceof Entity) {
+		if (Al.isClient() && this instanceof Entity) {
 			((Entity) this).delete();
 		} else {
 			Registry.impl(TypedLocalDomainPersistence.class, getClass())

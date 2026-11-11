@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.function.Supplier;
 
 import java.util.function.Function;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;

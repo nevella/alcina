@@ -101,7 +101,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 
 /**
  *

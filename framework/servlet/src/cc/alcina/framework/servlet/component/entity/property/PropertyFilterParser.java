@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.traversal.InitialTextSelection;
 import cc.alcina.framework.common.client.traversal.PlainTextSelection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.BranchingParser;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchingParser;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.StringMatches;
 import cc.alcina.framework.common.client.util.StringMatches.PartialSubstring;

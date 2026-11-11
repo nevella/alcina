@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.csobjects;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.gwt.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -29,15 +29,6 @@ public class ServerControlParams extends Bindable implements RemoteParameters {
 		return this.propertyName;
 	}
 
-	@Custom(
-		customiserClass = TextAreaCustomiser.class,
-		parameters = {
-				@NamedParameter(
-					name = TextAreaCustomiser.WIDTH,
-					intValue = 400),
-				@NamedParameter(
-					name = TextAreaCustomiser.LINES,
-					intValue = 15) })
 	@Display(
 		name = "App property value/Task param",
 		orderingHint = 25,

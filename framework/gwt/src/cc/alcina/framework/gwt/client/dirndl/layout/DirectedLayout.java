@@ -31,9 +31,8 @@ import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
+import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
@@ -78,9 +77,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.MultiNodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.util.AlcinaLogUtils;
 import cc.alcina.framework.gwt.client.util.ClassNames;
 import cc.alcina.framework.gwt.client.util.StyleUtil;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *

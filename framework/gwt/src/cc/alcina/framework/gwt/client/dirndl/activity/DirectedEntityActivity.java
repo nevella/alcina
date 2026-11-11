@@ -15,7 +15,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
-import cc.alcina.framework.gwt.client.entity.EntityAction;
+
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 

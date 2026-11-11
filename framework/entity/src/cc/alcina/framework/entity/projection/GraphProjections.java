@@ -8,7 +8,6 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.StandaloneObjectStore;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -16,6 +15,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.StandaloneObjectStore;
 
 public class GraphProjections {
 	public static <T> T projectInstance(T t) {

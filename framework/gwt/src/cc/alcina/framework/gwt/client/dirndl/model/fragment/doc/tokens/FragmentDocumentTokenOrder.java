@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens;
 import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.gwt.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 
 public class FragmentDocumentTokenOrder extends Measure.Token.Order.Simple {
 	public static final int STRUCT_BLOCK_CONTAINS_INDENT_RUN = 32;

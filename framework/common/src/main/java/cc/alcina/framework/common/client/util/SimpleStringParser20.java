@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import cc.alcina.framework.common.client.service.CommonExtensions;
+import cc.alcina.framework.common.client.service.Common;
 
 /**
  *
@@ -21,11 +21,11 @@ import cc.alcina.framework.common.client.service.CommonExtensions;
  */
 public class SimpleStringParser20 {
 	public static String longToGwtDoublesToString(long fieldValue) {
-		return CommonExtensions.INSTANCE.longToGwtDoublesToString(fieldValue);
+		return Common.extensions.longToGwtDoublesToString(fieldValue);
 	}
 
 	public static long toLong(String str) {
-		return CommonExtensions.INSTANCE.gwtSerLongToString(str);
+		return Common.extensions.gwtSerLongToString(str);
 	}
 
 	private final String s;

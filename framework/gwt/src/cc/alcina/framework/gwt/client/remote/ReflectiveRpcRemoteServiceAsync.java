@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.remote;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 

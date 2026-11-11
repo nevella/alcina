@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.gwt.client.gwittir.validator.ShortIso8601DateValidator;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.logic.reflection.Validator;
+import cc.alcina.framework.gwt.client.logic.reflection.Validator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;

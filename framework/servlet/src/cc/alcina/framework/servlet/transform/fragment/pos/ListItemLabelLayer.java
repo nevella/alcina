@@ -11,8 +11,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTok
 import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.ContainmentMap;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment.ContainmentMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 

@@ -31,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 /**
  * Not thread-safe - but then again, should only be used by one thread
@@ -149,7 +148,7 @@ public class CloneHelper {
 			return o;
 		} else if (o instanceof Collection) {
 			return deepCollectionClone((Collection) o);
-		} else if (GwittirUtils.isIntrospectable(o.getClass())) {
+		} else if (Reflections.isIntrospectable(o.getClass())) {
 			return deepBeanClone(o);
 		} else {
 			return o;

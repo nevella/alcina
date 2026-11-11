@@ -3,9 +3,9 @@ package cc.alcina.framework.servlet.transform.fragment;
 import cc.alcina.framework.gwt.client.dom.Location;
 import cc.alcina.framework.gwt.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.layer.BranchToken;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser;
-import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
+import cc.alcina.framework.gwt.client.traversal.layer.BranchToken;
+import cc.alcina.framework.gwt.client.traversal.layer.LayerParser;
+import cc.alcina.framework.gwt.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.servlet.transform.fragment.StyledDocument.AccessorSelection;
 

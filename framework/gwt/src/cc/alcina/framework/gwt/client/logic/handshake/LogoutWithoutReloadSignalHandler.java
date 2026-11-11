@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.ConsortSignalHandler;

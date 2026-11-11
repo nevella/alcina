@@ -17,19 +17,12 @@ import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
-import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 @XmlRootElement
 /**
@@ -71,15 +64,7 @@ public class DeltaApplicationRecord extends Bindable
 		this.timestamp = new Date().getTime();
 		this.userId = Permissions.get().getUserId();
 		if (!async) {
-			if (GWT.isClient()) {
-				Registry.impl(ClientNotifications.class)
-						.metricLogStart("DTRSimpleSerialWrapper-tostr");
-				this.text = request.toString();
-				Registry.impl(ClientNotifications.class)
-						.metricLogEnd("DTRSimpleSerialWrapper-tostr");
-			} else {
-				this.text = request.toString();
-			}
+			this.text = request.toString();
 		} else {
 			// text set async
 		}
@@ -149,13 +134,6 @@ public class DeltaApplicationRecord extends Bindable
 	}
 
 	@Display(name = "Transforms", orderingHint = 40)
-	@Custom(
-		customiserClass = TextAreaCustomiser.class,
-		parameters = {
-				@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 10),
-				@NamedParameter(
-					name = TextAreaCustomiser.WIDTH,
-					intValue = 400) })
 	public String getText() {
 		return this.text;
 	}

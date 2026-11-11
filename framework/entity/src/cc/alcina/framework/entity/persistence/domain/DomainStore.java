@@ -71,10 +71,8 @@ import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.domain.TransactionId;
-import cc.alcina.framework.common.client.log.AlcinaLogUtils;
+import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
-import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary.SizeProvider;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.AssociationPropagationTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -146,6 +144,8 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.OffThreadLogger;
+import cc.alcina.framework.gwt.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
+import cc.alcina.framework.gwt.client.logic.domain.EntityDataObject.OneToManyMultipleSummary.SizeProvider;
 
 /**
  * <h3>Locking notes:</h3>
@@ -272,9 +272,9 @@ public class DomainStore implements IDomainStore {
 
 	DomainStoreDescriptor domainDescriptor;
 
-	Logger sqlLogger = AlcinaLogUtils.getTaggedLogger(getClass(), "sql");
+	Logger sqlLogger = TaggedLoggers.getTaggedLogger(getClass(), "sql");
 
-	Logger metricLogger = AlcinaLogUtils.getMetricLogger(getClass());
+	Logger metricLogger = TaggedLoggers.getMetricLogger(getClass());
 
 	Logger logger = OffThreadLogger.getLogger(getClass());
 

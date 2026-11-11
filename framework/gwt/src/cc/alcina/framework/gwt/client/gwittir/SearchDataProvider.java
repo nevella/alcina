@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import java.util.function.Function;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.reflection.Property;

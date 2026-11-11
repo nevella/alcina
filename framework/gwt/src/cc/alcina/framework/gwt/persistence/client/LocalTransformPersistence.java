@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.gwt.client.logic.domaintransform.ClientUIThreadWorker;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.Lzw;

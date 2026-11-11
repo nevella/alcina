@@ -194,7 +194,7 @@ public @interface KeyBinding {
 		}
 
 		static Map<Class<? extends ModelEvent>, Set<Class<? extends CommandContext>>> classContexts = AlcinaCollections
-				.newUnqiueMap();
+				.newUniqueMap();
 
 		/*
 		 * If there are multiple keybinding annotations (for a chord - or for

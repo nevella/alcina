@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.common.client.actions;
 
-import com.google.gwt.user.client.ui.Widget;
-
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -24,14 +22,14 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  */
 @Registration.NonGenericSubtypes(PermissibleActionHandler.class)
 public interface PermissibleActionHandler<A extends PermissibleAction> {
-	public void handleAction(Widget sourceWidget, A action, Object target);
+	public void handleAction(Object source, A action, Object target);
 
 	public static class DefaultPermissibleActionHandler {
-		public static void handleAction(Widget sourceWidget,
-				PermissibleAction action, Object target) {
+		public static void handleAction(Object source, PermissibleAction action,
+				Object target) {
 			PermissibleActionHandler handler = Registry
 					.impl(PermissibleActionHandler.class, action.getClass());
-			handler.handleAction(sourceWidget, action, target);
+			handler.handleAction(source, action, target);
 		}
 	}
 }

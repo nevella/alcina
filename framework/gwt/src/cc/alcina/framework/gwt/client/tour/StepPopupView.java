@@ -6,8 +6,8 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 
-import cc.alcina.framework.common.client.actions.InlineButtonHandler;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.action.InlineButtonHandler;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 
 public class StepPopupView extends Composite {

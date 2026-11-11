@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.logic.handshake.localstorage;
 
 import java.util.Iterator;
 
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.ConsortPlayer.SubconsortSupport;

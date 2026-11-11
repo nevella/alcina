@@ -31,7 +31,6 @@ import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;

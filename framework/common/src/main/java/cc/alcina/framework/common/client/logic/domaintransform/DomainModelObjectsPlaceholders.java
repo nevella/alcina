@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 
 // ensure that domainmodeldelta will serialize
 public class DomainModelObjectsPlaceholders {
@@ -30,7 +30,7 @@ public class DomainModelObjectsPlaceholders {
 		}
 
 		@Override
-		public GeneralProperties getGeneralProperties() {
+		public UserPropertyPersistable getGeneralProperties() {
 			return null;
 		}
 

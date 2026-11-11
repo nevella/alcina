@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.util;
 
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Timer;

@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayId;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
-import cc.alcina.framework.gwt.client.util.AsyncCallback;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.RepeatingCommandWithPostCompletionCallback;
 
