@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.TreeRenderable;
+
 /**
  * 
  * @author Nick Reddel

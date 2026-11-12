@@ -7,13 +7,13 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.SuggestOracle;
 
+import cc.alcina.framework.common.client.search.SearchUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.UntypedSuggestion;
-import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
  * Filters a list of models by a string query, and returns a corresponding list

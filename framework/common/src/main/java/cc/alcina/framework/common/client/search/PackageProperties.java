@@ -9,14 +9,14 @@ import cc.alcina.framework.common.client.search.DateRange;
 import cc.alcina.framework.common.client.search.LogicalCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.TextCriterion;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _AbstractDateCriterion abstractDateCriterion = new _AbstractDateCriterion();
     public static _AbstractUserCriterion abstractUserCriterion = new _AbstractUserCriterion();

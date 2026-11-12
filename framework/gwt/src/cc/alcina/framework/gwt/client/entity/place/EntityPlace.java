@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.entity.place;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
@@ -9,14 +12,16 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.search.EntityCriterion;
+import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.NestedName;
-
-import cc.alcina.framework.common.client.logic.domain.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
@@ -182,5 +187,34 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 
 	public boolean hasIdOrLocator() {
 		return id != 0 || locator != null;
+	}
+
+	public static List<EntityPlace>
+			toFilterPlaces(EntitySearchDefinition searchDefinition) {
+		List<EntityPlace> places = new ArrayList<>();
+		if (searchDefinition.allCriteria().size() != 1) {
+			return places;
+		}
+		for (SearchCriterion sc : searchDefinition.allCriteria()) {
+			if (sc instanceof EntityCriterion) {
+				EntityCriterion criterion = (EntityCriterion) sc;
+				if (criterion.getId() != 0) {
+					places.add(EntityPlace.forClassAndId(
+							criterion.getObjectClass(), criterion.getId()));
+				}
+			}
+		}
+		return places;
+	}
+
+	@Registration.Self
+	public static class FilteringEntitiesProviderImpl
+			implements EntitySearchDefinition.FilteringEntitiesProvider {
+		@Override
+		public List<Entity> provideFilteringEntities(
+				EntitySearchDefinition entitySearchDefinition) {
+			return (List) toFilterPlaces(entitySearchDefinition).stream()
+					.map(ep -> ep.asLocator().find()).toList();
+		}
 	}
 }

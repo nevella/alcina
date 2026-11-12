@@ -44,9 +44,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+import cc.alcina.framework.common.client.util.TreeRenderable;
 
 /**
  * <p>
@@ -181,10 +179,6 @@ public abstract class SearchCriterion extends Bindable
 
 	public void addTo(LogicalCriterion logicalCriterion) {
 		logicalCriterion.add(this);
-	}
-
-	public CollectionProvider collectionProvider() {
-		return null;
 	}
 
 	public boolean emptyCriterion() {

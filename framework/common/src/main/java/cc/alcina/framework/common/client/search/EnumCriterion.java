@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.common.client.search;
 
-import java.util.Arrays;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -22,11 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasDisplayName.PreferDisplayNameRenderer;
-import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
-import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  *
@@ -105,37 +98,6 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	public <T extends EnumCriterion<E>> T withValue(E value) {
 		setValue(value);
 		return (T) this;
-	}
-
-	public static abstract class EnumSearchable<E extends Enum, C extends EnumCriterion<E>>
-			extends FlatSearchable<C> {
-		protected Class<E> enumClass;
-
-		protected int maxSelectedItems = 999;
-
-		public EnumSearchable(Class<C> clazz, Class<E> enumClass,
-				String objectName, String criteriaName) {
-			super(clazz, objectName, criteriaName,
-					Arrays.asList(StandardSearchOperator.EQUALS));
-			this.enumClass = enumClass;
-		}
-
-		@Override
-		public AbstractBoundWidget createEditor() {
-			return new FlatSearchSelector(enumClass, 1,
-					PreferDisplayNameRenderer.INSTANCE,
-					() -> Arrays.asList(enumClass.getEnumConstants()));
-		}
-
-		@Override
-		public String getCriterionPropertyName() {
-			return "value";
-		}
-
-		@Override
-		public boolean hasValue(C sc) {
-			return sc.getValue() != null;
-		}
 	}
 
 	public String toStringWithDisplayName(boolean withDisplayName) {

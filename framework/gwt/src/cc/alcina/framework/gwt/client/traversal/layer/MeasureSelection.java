@@ -4,10 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Measure;
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -18,10 +14,15 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dom.Location.Range;
+import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwt.client.dom.Measure.Token;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
 
 public class MeasureSelection extends AbstractSelection<Measure>
-		implements Comparable<MeasureSelection>, Selection.WithRange<Measure>,
-		HasReleaseableResources {
+		implements Comparable<MeasureSelection>,
+		SelectionViewUi.WithRange<Measure>, HasReleaseableResources {
 	public interface IgnoreOverlaps {
 	}
 
@@ -39,7 +40,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	 * traversal
 	 */
 	public static class View<M extends MeasureSelection>
-			extends AbstractSelection.View<M> {
+			extends SelectionViewUi.AbstractSelectionView<M> {
 		@Override
 		public String getDiscriminator(M selection) {
 			FormatBuilder format = new FormatBuilder().separator(" - ");

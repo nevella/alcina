@@ -52,6 +52,14 @@ public class CommonExtensionsImpl implements Common._Extensions {
 				.deserialize(serializedDef);
 	}
 
+	@Override
+	public String serializeSearchDefinition(Map<String, Class> abbrevLookup,
+			Map<Class, String> reverseAbbrevLookup, SearchDefinition def) {
+		return Registry.impl(AlcinaBeanSerializer.class)
+				.registerLookups(abbrevLookup, reverseAbbrevLookup)
+				.serialize(def);
+	}
+
 	public String longToGwtDoublesToString(long fieldValue) {
 		double[] parts;
 		if (GWT.isScript()) {

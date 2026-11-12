@@ -4,8 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.Selection.TreePathModel;
-import cc.alcina.framework.common.client.traversal.Selection.View;
+import cc.alcina.framework.common.client.traversal.SelectionView;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
@@ -17,6 +16,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.StringArea;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
@@ -60,7 +60,7 @@ class PropertiesArea extends Model.Fields {
 	@Display.AllProperties
 	static class SelectionArea extends Model.All
 			implements ModelTransform<Selection, SelectionArea> {
-		TreePathModel treePath;
+		SelectionViewUi.TreePathModel treePath;
 
 		String layer;
 
@@ -74,16 +74,16 @@ class PropertiesArea extends Model.Fields {
 
 		String markup;
 
-		Model extended;
+		Object extended;
 
 		SelectionArea() {
 		}
 
 		@Override
 		public SelectionArea apply(Selection selection) {
-			View view = Registry.impl(Selection.View.class,
+			SelectionView.View view = Registry.impl(SelectionView.View.class,
 					selection.getClass());
-			treePath = view.getTreePath(selection);
+			treePath = new SelectionViewUi.TreePathModel(selection);
 			layer = Ui.traversal().layers().get(selection).getName();
 			pathSegment = view.getPathSegment(selection);
 			type = NestedName.get(selection);

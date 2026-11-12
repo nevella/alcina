@@ -28,11 +28,6 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
-import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
-import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
-import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  *
@@ -145,43 +140,5 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 		}
 
 		public boolean test(T t, Set<E> value);
-	}
-
-	public static abstract class EnumSearchable<E extends Enum, C extends EnumMultipleCriterion<E>>
-			extends FlatSearchable<C> {
-		protected Class<E> enumClass;
-
-		protected int maxSelectedItems = 999;
-
-		public EnumSearchable(Class<C> clazz, Class<E> enumClass,
-				String objectName, String criteriaName) {
-			super(clazz, objectName, criteriaName,
-					Arrays.asList(StandardSearchOperator.CONTAINS,
-							StandardSearchOperator.DOES_NOT_CONTAIN));
-			this.enumClass = enumClass;
-		}
-
-		@Override
-		public AbstractBoundWidget createEditor() {
-			return new FlatSearchSelector(enumClass, maxSelectedItems,
-					FriendlyEnumRenderer.INSTANCE,
-					() -> Arrays.asList(enumClass.getEnumConstants()));
-		}
-
-		@Override
-		public String getCriterionPropertyName() {
-			return "value";
-		}
-
-		@Override
-		public boolean hasValue(C sc) {
-			return sc.getValue() != null && sc.getValue().size() > 0;
-		}
-
-		protected <T extends EnumMultipleCriterion.EnumSearchable> T
-				maxSelectedItems(int maxSelectedItems) {
-			this.maxSelectedItems = maxSelectedItems;
-			return (T) this;
-		}
 	}
 }

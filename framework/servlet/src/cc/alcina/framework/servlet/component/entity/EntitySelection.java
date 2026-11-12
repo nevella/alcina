@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.SelectionView;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -22,6 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.Single.PropertyValues;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
 
 public class EntitySelection extends AbstractSelection<Entity> {
 	public EntitySelection(Selection parent, Entity entity) {
@@ -82,7 +84,8 @@ public class EntitySelection extends AbstractSelection<Entity> {
 		}
 	}
 
-	static class View extends AbstractSelection.View<EntitySelection> {
+	static class View
+			extends SelectionViewUi.AbstractSelectionView<EntitySelection> {
 		@Override
 		public Model getExtended(EntitySelection selection) {
 			return new Container(new EntityExtended(selection));
@@ -154,9 +157,10 @@ public class EntitySelection extends AbstractSelection<Entity> {
 		}
 	}
 
-	@Registration(value = { Selection.RowView.class, EntitySelection.class })
+	@Registration(
+		value = { SelectionView.RowView.class, EntitySelection.class })
 	public static class RowViewImpl<S extends EntitySelection>
-			extends AbstractSelection.RowView.Default<S> {
+			extends SelectionViewUi.RowView.Default<S> {
 		@Override
 		public Bindable provideBindable() {
 			return selection.get();

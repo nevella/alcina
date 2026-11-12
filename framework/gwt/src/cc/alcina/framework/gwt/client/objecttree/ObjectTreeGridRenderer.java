@@ -22,6 +22,7 @@ import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.util.TreeRenderable;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 
 /**

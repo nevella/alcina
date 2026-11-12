@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.search.SearchUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -23,7 +24,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOnBind;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.ModelSuggestion;
-import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
  * <p>

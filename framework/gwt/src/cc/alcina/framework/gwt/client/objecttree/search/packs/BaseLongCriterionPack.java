@@ -7,9 +7,9 @@ import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.gwt.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.search.LongCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
 

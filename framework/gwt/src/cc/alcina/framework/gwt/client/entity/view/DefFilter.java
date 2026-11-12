@@ -19,13 +19,13 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.SearchOperator;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchDefinitionEditor;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchRow;
-import cc.alcina.framework.gwt.client.objecttree.search.SearchOperator;
 import cc.alcina.framework.gwt.client.widget.FilterWidget;
 
 public class DefFilter extends Composite implements

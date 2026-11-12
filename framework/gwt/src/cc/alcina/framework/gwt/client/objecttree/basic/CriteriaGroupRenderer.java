@@ -17,7 +17,7 @@ import java.util.Collection;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+import cc.alcina.framework.common.client.util.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 @Registration({ TreeRenderer.class, CriteriaGroup.class })

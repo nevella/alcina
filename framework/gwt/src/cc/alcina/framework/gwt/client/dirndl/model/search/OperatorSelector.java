@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -16,7 +17,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorSingle;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.FocusOnBindMarker;
 import cc.alcina.framework.gwt.client.dirndl.model.search.Searchable.AvailableOperators;
 import cc.alcina.framework.gwt.client.dirndl.model.search.Searchable.ChoiceRenderer;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /*
 @formatter:off

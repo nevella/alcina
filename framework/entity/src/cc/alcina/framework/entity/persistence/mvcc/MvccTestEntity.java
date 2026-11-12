@@ -4,9 +4,10 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.stream.IntStream;
 
+import cc.alcina.framework.common.client.logic.domain.MvccAccess;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess.MvccAccessType;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 	public static final transient Comparator<MvccTestEntity> PRECEDENCE_COMPARATOR = new Comparator<MvccTestEntity>() {

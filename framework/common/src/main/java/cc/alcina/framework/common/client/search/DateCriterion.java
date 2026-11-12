@@ -17,7 +17,6 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DateStyle;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
  *

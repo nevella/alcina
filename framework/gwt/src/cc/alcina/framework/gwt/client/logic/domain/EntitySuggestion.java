@@ -3,13 +3,13 @@ package cc.alcina.framework.gwt.client.logic.domain;
 import com.google.gwt.user.client.ui.SuggestOracle.HasSuggestedObject;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess.MvccAccessType;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.HasDisplayName;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.ToStringRepresentation;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;

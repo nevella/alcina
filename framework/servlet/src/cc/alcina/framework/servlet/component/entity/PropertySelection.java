@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
 
 class PropertySelection extends AbstractSelection<Property>
 		implements Selection.HasTableRepresentation.Children {
@@ -41,7 +42,8 @@ class PropertySelection extends AbstractSelection<Property>
 		return String.valueOf(propertyValue);
 	}
 
-	static class View extends AbstractSelection.View<PropertySelection> {
+	static class View
+			extends SelectionViewUi.AbstractSelectionView<PropertySelection> {
 		public String computeText(PropertySelection selection) {
 			return selection.toString();
 		}

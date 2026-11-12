@@ -15,8 +15,9 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.Selection.View;
-import cc.alcina.framework.common.client.traversal.Selection.ViewAsync;
+import cc.alcina.framework.common.client.traversal.SelectionView;
+import cc.alcina.framework.common.client.traversal.SelectionView.View;
+import cc.alcina.framework.common.client.traversal.SelectionView.ViewAsync;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -243,8 +244,8 @@ class LayerSelections extends Model.All implements IfNotEqual {
 
 			SelectionArea(Selection selection) {
 				this.selection = selection;
-				View view = selection.view();
-				if (view instanceof ViewAsync) {
+				SelectionView.View view = selection.view();
+				if (view instanceof SelectionView.ViewAsync) {
 					Client.eventBus().queued().lambda(this::render).deferred()
 							.dispatch();
 				} else {
@@ -269,7 +270,7 @@ class LayerSelections extends Model.All implements IfNotEqual {
 			}
 
 			void render() {
-				View view = selection.view();
+				SelectionView.View view = selection.view();
 				InstanceProperties properties = properties();
 				properties.pathSegment().set(view.getPathSegment(selection));
 				String text = view.getText(selection);

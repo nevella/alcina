@@ -10,8 +10,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.DocumentTransformationTraversal;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.Selection.WithRange;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi.WithRange;
 import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -105,7 +106,8 @@ public class SelectionMarkupFull extends SelectionMarkup {
 						getContainerClassNames(input), true, List.of(), -1);
 			}
 
-			DomNode getContainingNode(Selection.WithRange withRangeSelection) {
+			DomNode getContainingNode(
+					SelectionViewUi.WithRange withRangeSelection) {
 				if (withRangeSelection != null
 						&& withRangeSelection.provideRange() != null
 						&& withRangeSelection.provideRange()
@@ -166,13 +168,13 @@ public class SelectionMarkupFull extends SelectionMarkup {
 					.getIndex();
 			int originalDocIndex = elementRange.toIntPair().i1
 					- containingRange.toIntPair().i1 + originalDocOffset;
-			List<WithRange> matching = traversal.selections()
-					.get(Selection.WithRange.class, true).stream()
+			List<SelectionViewUi.WithRange> matching = traversal.selections()
+					.get(SelectionViewUi.WithRange.class, true).stream()
 					.filter(sel -> sel.provideRange() != null
 							&& sel.provideRange().toIntPair()
 									.contains(originalDocIndex))
 					.filter(sel -> query.input ? true : this.isOutput(sel))
-					.sorted(new Selection.WithRange.MostSpecificComparator())
+					.sorted(new SelectionViewUi.WithRange.MostSpecificComparator())
 					.toList();
 			return Ax.first(matching);
 		}

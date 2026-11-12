@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.ClassUtil;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -159,8 +160,8 @@ public class FlatTreeSerializer {
 
 	private static String NULL_MARKER_ESCAPED = "%5F_fts_NULL__";
 
-	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
-			.impl(ConcurrentMapCreator.class).create();
+	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = CollectionCreators.Bootstrap
+			.createConcurrentClassMap();
 
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).create();

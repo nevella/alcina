@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import cc.alcina.framework.common.client.shadow.GwtIncompatible;
+import cc.alcina.framework.common.client.shadow.com.google.gwt.GwtIncompatible;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 
 /**

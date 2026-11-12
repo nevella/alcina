@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess.MvccAccessType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -44,7 +46,6 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -55,11 +56,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.HasEquivalenceString;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 
 @MappedSuperclass
 @ObjectPermissions(
@@ -295,7 +291,6 @@ public abstract class Job extends VersionableEntity<Job>
 	@Transient
 	@DomainProperty(serialize = true)
 	@AlcinaTransient
-	@Directed.Exclude
 	@Display.Exclude
 	public Object getLargeResult() {
 		largeResult = TransformManager.resolveMaybeDeserialize(largeResult,
@@ -349,7 +344,6 @@ public abstract class Job extends VersionableEntity<Job>
 	@Transient
 	@DomainProperty(serialize = true)
 	@AlcinaTransient
-	@Directed.Exclude
 	@Display.Exclude
 	public Object getResult() {
 		result = TransformManager.resolveMaybeDeserialize(result,
@@ -395,7 +389,6 @@ public abstract class Job extends VersionableEntity<Job>
 
 	@Transient
 	@DomainProperty(serialize = true)
-	@Directed.Exclude
 	@Display.Exclude
 	@AlcinaTransient(TransienceContext.CLIENT)
 	public Task getTask() {
@@ -406,18 +399,8 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	@Display(orderingHint = -1)
-	@ValueTransformer(ClassNameStringNestedName.class)
 	public String getTaskClassName() {
 		return this.taskClassName;
-	}
-
-	@Reflected
-	public static class ClassNameStringNestedName
-			implements ModelTransform<String, String> {
-		@Override
-		public String apply(String t) {
-			return t == null ? null : t.replaceFirst(".+\\.([A-Z_].+)", "$1");
-		}
 	}
 
 	@Lob

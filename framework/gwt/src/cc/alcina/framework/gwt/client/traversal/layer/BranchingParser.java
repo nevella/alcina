@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.ConditionalLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
-import cc.alcina.framework.gwt.client.util.HasBind;
+import cc.alcina.framework.common.client.logic.HasBind;
 
 /**
  * <p>

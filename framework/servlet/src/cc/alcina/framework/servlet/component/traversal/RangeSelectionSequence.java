@@ -7,8 +7,9 @@ import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.Selection.WithRange;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi.WithRange;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -17,9 +18,9 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * computes the input + output selections from a given selection
  */
 class RangeSelectionSequence {
-	Selection.WithRange<?> input;
+	SelectionViewUi.WithRange<?> input;
 
-	Selection.WithRange<?> output;
+	SelectionViewUi.WithRange<?> output;
 
 	Selection highestAncestor;
 
@@ -27,7 +28,7 @@ class RangeSelectionSequence {
 
 	Query query;
 
-	Selection.WithRange<?> from;
+	SelectionViewUi.WithRange<?> from;
 
 	boolean fullDocument;
 
@@ -37,11 +38,11 @@ class RangeSelectionSequence {
 		Selection fromCursor = query.selection;
 		// query.selection will be the whole (input/output) doc if not defined
 		if (fromCursor == null) {
-			WithRange inputSelection = traversal.selections()
-					.get(Selection.WithRange.class, true).stream().findFirst()
-					.orElse(null);
-			WithRange outputSelection = traversal.selections()
-					.get(Selection.WithRange.class, true).stream()
+			SelectionViewUi.WithRange inputSelection = traversal.selections()
+					.get(SelectionViewUi.WithRange.class, true).stream()
+					.findFirst().orElse(null);
+			SelectionViewUi.WithRange outputSelection = traversal.selections()
+					.get(SelectionViewUi.WithRange.class, true).stream()
 					.filter(this::isOutput).findFirst().orElse(null);
 			fromCursor = query.input ? inputSelection : outputSelection;
 			fullDocument = true;
@@ -49,15 +50,16 @@ class RangeSelectionSequence {
 		if (fromCursor == null) {
 			return;
 		}
-		while (!(fromCursor instanceof Selection.WithRange<?>)) {
+		while (!(fromCursor instanceof SelectionViewUi.WithRange<?>)) {
 			fromCursor = fromCursor.parentSelection();
 		}
-		from = (WithRange<?>) fromCursor;
-		Selection.WithRange<?> cursor = from;
+		from = (SelectionViewUi.WithRange<?>) fromCursor;
+		SelectionViewUi.WithRange<?> cursor = from;
 		if (isOutput(cursor)) {
 			output = cursor;
 			while (isOutput(cursor)) {
-				cursor = (WithRange<?>) cursor.parentSelection();
+				cursor = (SelectionViewUi.WithRange<?>) cursor
+						.parentSelection();
 			}
 			input = cursor;
 		} else {
@@ -70,10 +72,11 @@ class RangeSelectionSequence {
 				return selection instanceof Selection.Output;
 			});
 			output = filtered.findFirst()
-					.map(n -> (Selection.WithRange) n.getValue()).orElse(null);
+					.map(n -> (SelectionViewUi.WithRange) n.getValue())
+					.orElse(null);
 			if (output == null) {
 				output = traversal.selections()
-						.get(Selection.WithRange.class, true).stream()
+						.get(SelectionViewUi.WithRange.class, true).stream()
 						.filter(this::isOutput).findFirst().orElse(null);
 				fullDocument = true;
 			}
@@ -89,13 +92,13 @@ class RangeSelectionSequence {
 	}
 
 	Measure ioSelection() {
-		Selection.WithRange<?> selection = query.input ? input : output;
+		SelectionViewUi.WithRange<?> selection = query.input ? input : output;
 		return selection != null && selection instanceof MeasureSelection
 				? ((MeasureSelection) selection).get()
 				: null;
 	}
 
-	public WithRange getRange(boolean input) {
+	public SelectionViewUi.WithRange getRange(boolean input) {
 		return input ? this.input : this.output;
 	}
 }

@@ -9,10 +9,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class GroupedResult extends Model {
+public class GroupedResult extends Bindable {
 	private String name;
 
 	private String json;
@@ -104,7 +104,7 @@ public class GroupedResult extends Model {
 				.collect(Collectors.toList());
 	}
 
-	public static class Cell extends Model {
+	public static class Cell extends Bindable {
 		public transient Object rawValue;
 
 		private String value;
@@ -161,7 +161,7 @@ public class GroupedResult extends Model {
 		}
 	}
 
-	public static class Col extends Model {
+	public static class Col extends Bindable {
 		private String name;
 
 		private String style;
@@ -268,13 +268,13 @@ public class GroupedResult extends Model {
 		}
 	}
 
-	public static class GroupKey extends Model {
+	public static class GroupKey extends Bindable {
 		public GroupKey() {
 		}
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class Row extends Model {
+	public static class Row extends Bindable {
 		public transient Object in;
 
 		private GroupKey key;

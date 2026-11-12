@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui;
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
 import cc.alcina.framework.servlet.component.entity.property.PropertyFilterParser;
@@ -274,7 +275,8 @@ class EntityTraversalQueryLayer extends Layer
 			return String.valueOf(value);
 		}
 
-		static class View extends AbstractSelection.View<ValueSelection> {
+		static class View
+				extends SelectionViewUi.AbstractSelectionView<ValueSelection> {
 			public String computeText(PropertySelection selection) {
 				return selection.toString();
 			}

@@ -20,14 +20,14 @@ import cc.alcina.framework.common.client.search.BooleanEnumCriterion;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.SearchUtils;
 import cc.alcina.framework.common.client.search.SelfNamingCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.TextUtils;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseEnumCriterionPack.BaseEnumCriterionHandler;
-import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 public class FlightEventCriterion {
 	@TypeSerialization(

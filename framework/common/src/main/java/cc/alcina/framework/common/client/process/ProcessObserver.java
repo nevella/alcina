@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicListener;
-import cc.alcina.framework.gwt.client.util.HasBind;
+import cc.alcina.framework.common.client.logic.HasBind;
 
 /**
  * Marker interface: observes AlcinaProcess observable topics

@@ -82,7 +82,7 @@ public class ActivityManager
 	 *
 	 * @param mapper
 	 *            finds the {@link Activity} for a given
-	 *            {@link com.google.gwt.place.shared.Place}
+	 *            {@link com.google.gwt.place.shared.cc.alcina.framework.common.client.shadow.com.google.gwt.place.shared.Place}
 	 * @param eventBus
 	 *            source of {@link PlaceChangeEvent} and
 	 *            {@link PlaceChangeRequestEvent} events.
@@ -263,7 +263,7 @@ public class ActivityManager
 	/**
 	 * Reject the place change if the current activity is not willing to stop.
 	 *
-	 * @see com.google.gwt.place.shared.PlaceChangeRequestEvent.Handler#onPlaceChangeRequest(PlaceChangeRequestEvent)
+	 * @see com.google.gwt.place.shared.cc.alcina.framework.common.client.shadow.com.google.gwt.place.shared.PlaceChangeRequestEvent.Handler#onPlaceChangeRequest(PlaceChangeRequestEvent)
 	 */
 	@Override
 	public void onPlaceChangeRequest(PlaceChangeRequestEvent event) {

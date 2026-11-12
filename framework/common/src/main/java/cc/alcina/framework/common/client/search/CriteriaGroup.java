@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+import cc.alcina.framework.common.client.util.TreeRenderable;
 
 @Registrations({ @Registration(JaxbContextRegistration.class), })
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable

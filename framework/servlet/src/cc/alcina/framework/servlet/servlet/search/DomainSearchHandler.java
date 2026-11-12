@@ -100,10 +100,8 @@ public class DomainSearchHandler {
 			} else {
 				queried = project(queried, modelSearchResults,
 						def.isReturnSingleDataObjectImplementations());
-				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
-				modelSearchResults.setFilteringEntities((List) filterPlaces
-						.stream().map(EntityPlace::asLocator).map(Domain::find)
-						.collect(Collectors.toList()));
+				modelSearchResults
+						.setFilteringEntities(def.provideFilteringEntities());
 				/*
 				 * Just get non-entity properties, essentially - for things like
 				 * breadcrumbs client-side

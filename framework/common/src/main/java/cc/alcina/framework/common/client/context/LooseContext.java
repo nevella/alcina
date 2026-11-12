@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
-import cc.alcina.framework.entity.util.AlcinaParallel;
 
 /**
  * Beginnings of a general approach to decoupling hints - let's see if it works

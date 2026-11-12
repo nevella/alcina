@@ -11,6 +11,7 @@ import javax.persistence.Transient;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess.MvccAccessType;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -25,8 +26,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 @MappedSuperclass
 @ObjectPermissions(

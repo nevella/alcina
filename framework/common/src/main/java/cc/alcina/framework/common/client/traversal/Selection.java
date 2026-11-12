@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -17,28 +16,17 @@ import java.util.stream.StreamSupport;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Preconditions;
-
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.csobjects.IsBindable;
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.search.SearchUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasFilterableString;
-import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.Link;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
  * An example of "side composition" - selections form a tree, but the tree
@@ -176,91 +164,11 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	public interface ImmutableInput {
 	}
 
-	@Registration.NonGenericSubtypes(View.class)
-	public interface View<S extends Selection>
-			extends Registration.AllSubtypes {
-		default String getDiscriminator(S selection) {
-			return "";
-		}
-
-		default String getMarkup(S selection) {
-			return "";
-		}
-
-		default String getPathSegment(S selection) {
-			return selection.getPathSegment();
-		}
-
-		default String getText(S selection) {
-			return HasFilterableString.filterableString(selection.get());
-		}
-
-		default TreePathModel getTreePath(Selection selection) {
-			return new TreePathModel(selection);
-		}
-
-		default Model getExtended(S selection) {
-			return null;
-		}
-	}
-
-	@Reflected
-	static class TreePathModel extends Model.All {
-		String path;
-
-		Link link;
-
-		TreePathModel(Selection selection) {
-			path = selection.processNode().treePath();
-			link = new Link().withModelEvent(CopySelectionFilter.class)
-					.withText("Copy filter").withModelEventData(selection);
-		}
-	}
-
-	public static class CopySelectionFilter
-			extends ModelEvent<Selection, CopySelectionFilter.Handler> {
-		public interface Handler extends NodeEvent.Handler {
-			void onCopySelectionFilter(CopySelectionFilter event);
-		}
-
-		@Override
-		public void dispatch(CopySelectionFilter.Handler handler) {
-			handler.onCopySelectionFilter(this);
-		}
-	}
-
-	@Registration.NonGenericSubtypes(View.class)
-	public interface RowView<S extends Selection>
-			extends Registration.AllSubtypes, IsBindable {
-		void putSelection(S selection);
-
-		S getSelection();
-	}
-
-	/*
-	 * Marker, view should be lazy-loaded. It's not an inner interface of view
-	 * to avoid class structure cycles
-	 */
-	public interface ViewAsync {
-	}
-
 	/*
 	 * Marker, the selection is a logical output of a deep (e.g. document)
 	 * transformation traversal
 	 */
 	public interface Output {
-	}
-
-	public interface WithRange<T> extends Selection<T>, Location.Range.Has {
-		public static class MostSpecificComparator
-				implements Comparator<WithRange> {
-			@Override
-			public int compare(WithRange o1, WithRange o2) {
-				return IntPair.MostSpecificComparator.INSTANCE.compare(
-						o1.provideRange().toIntPair(),
-						o2.provideRange().toIntPair());
-			}
-		}
 	}
 
 	/**
@@ -516,7 +424,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	}
 
 	default boolean matchesText(String textFilter) {
-		View view = view();
+		SelectionView.View view = view();
 		return SearchUtils.containsIgnoreCase(textFilter, view.getText(this),
 				view.getDiscriminator(this), getPathSegment(),
 				processNode().treePath());
@@ -601,9 +509,9 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 				.collect(Collectors.joining("\n"));
 	}
 
-	View view();
+	SelectionView.View view();
 
-	RowView rowView();
+	SelectionView.RowView rowView();
 
 	boolean hasReplacedBy();
 

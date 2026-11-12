@@ -5,6 +5,8 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.EntityCriterion;
+import cc.alcina.framework.common.client.search.SearchOperator;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracle;

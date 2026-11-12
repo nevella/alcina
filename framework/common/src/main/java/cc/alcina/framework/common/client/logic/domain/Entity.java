@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess.MvccAccessType;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
@@ -40,8 +41,6 @@ import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 /**
  * <p>

@@ -19,19 +19,17 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.regexp.shared.MatchResult;
-import cc.alcina.framework.common.client.regexp.shared.RegExp;
-
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.regexp.shared.MatchResult;
+import cc.alcina.framework.common.client.regexp.shared.RegExp;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 
 /**
  * <p>
@@ -221,7 +219,7 @@ public class ClassReflector<T> implements HasAnnotations {
 	 * This is the resolved bounds of this class - i.e
 	 * {@code A extends B<String> would have a genericBounds of [String.class] }.
 	 * Note that this takes into account both direct superclass and interface
-	 * bounds - with more detail in {@link JClassType.Members#computeBounds}
+	 * bounds - with more detail in {JClassType.Members#computeBounds}
 	 */
 	public TypeBounds getGenericBounds() {
 		return this.genericBounds;

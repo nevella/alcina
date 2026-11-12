@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
 
 public class ReflectiveSearchDefinitionSerializer
 		implements SearchDefinitionSerializer {
@@ -233,9 +232,8 @@ public class ReflectiveSearchDefinitionSerializer
 			return ocg != null && ocg.equivalentTo(cg)
 					&& ocg.getCriteria().isEmpty();
 		});
-		String str = Registry.impl(AlcinaBeanSerializer.class)
-				.registerLookups(abbrevLookup, reverseAbbrevLookup)
-				.serialize(def);
+		String str = Common.extensions.serializeSearchDefinition(abbrevLookup,
+				reverseAbbrevLookup, def);
 		if (flatTreeException != null) {
 			// if (GWT.isClient()) {
 			// Client.commonRemoteService().logClientError(Ax.format(

@@ -3,10 +3,10 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.List;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class TableEvents {
 	public static class SortTable

@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.Preconditions;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
@@ -25,13 +24,12 @@ import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.SearchUtils;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
-import cc.alcina.framework.gwt.client.place.BindablePlace;
 
 /**
  *
@@ -178,12 +176,6 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 
 	public void setSearchOrders(SearchOrders searchOrders) {
 		this.searchOrders = searchOrders;
-	}
-
-	public BindablePlace toPlace() {
-		BindablePlace place = BindablePlace.forClass(queriedBindableClass());
-		place.def = this;
-		return place;
 	}
 
 	@Override

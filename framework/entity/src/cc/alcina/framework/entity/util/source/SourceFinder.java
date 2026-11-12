@@ -100,13 +100,14 @@ public interface SourceFinder {
 				}
 				sourceFileLocation = new URI(sourceFileLocation.toString()
 						.replace("/alcina/framework/entity/src/",
-								"/alcina/framework/common/src/")).toURL();
+								"/alcina/framework/common/src/main/java/"))
+										.toURL();
 				File file3 = new File(toPath(sourceFileLocation));
 				if (file3.exists()) {
 					return file3;
 				}
 				sourceFileLocation = new URI(sourceFileLocation.toString()
-						.replace("/alcina/framework/common/src/",
+						.replace("/alcina/framework/common/src/main/java/",
 								"/alcina/framework/gwt/src/")).toURL();
 				File file4 = new File(toPath(sourceFileLocation));
 				if (file4.exists()) {

@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.domain.DomainCollections;
-import cc.alcina.framework.common.client.shadow.GwtIncompatible;
+import cc.alcina.framework.common.client.shadow.com.google.gwt.GwtIncompatible;
 
 /**
  * 

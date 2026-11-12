@@ -380,6 +380,8 @@ public abstract class DevHelper {
 				.initLifecycleServiceClasses(LifecycleService.AlsoDev.class);
 	}
 
+	AppLifecycleServletBase lifecycleServlet;
+
 	public void initLightweightServices() {
 		AppPersistenceBase.setTest();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
@@ -392,6 +394,7 @@ public abstract class DevHelper {
 		initDataFolder();
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
 		scanRegistry();
+		AppLifecycleServletBase.initCommonImpl();
 		Document.initialiseContextProvider(null);
 		SchedulerFrame.initialiseContextProvider(true);
 		LocalDom.initalize();

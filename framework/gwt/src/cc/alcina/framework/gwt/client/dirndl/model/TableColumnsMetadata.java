@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public interface TableColumnsMetadata {
 	public static class ColumnMetadata {

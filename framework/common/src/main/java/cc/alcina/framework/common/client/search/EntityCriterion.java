@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public abstract class EntityCriterion<E extends Entity> extends SearchCriterion
 		implements HasId {

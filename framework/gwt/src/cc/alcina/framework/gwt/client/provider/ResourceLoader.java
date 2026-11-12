@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 public interface ResourceLoader {
+	//
 	public enum Type {
 		style, handoff_script
 	}

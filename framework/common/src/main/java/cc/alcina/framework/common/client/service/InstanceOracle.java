@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.gwt.client.util.HasBind;
+import cc.alcina.framework.common.client.logic.HasBind;
 
 /**
  * <p>

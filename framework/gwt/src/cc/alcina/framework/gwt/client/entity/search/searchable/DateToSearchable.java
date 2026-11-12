@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.entity.search.searchable;
 
 import cc.alcina.framework.common.client.domain.search.criterion.CreatedToCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.objecttree.search.DateCriterionSearchable;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class DateToSearchable
 		extends DateCriterionSearchable<CreatedToCriterion> {

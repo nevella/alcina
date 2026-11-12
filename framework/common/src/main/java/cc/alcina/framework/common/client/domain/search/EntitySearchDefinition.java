@@ -1,18 +1,16 @@
 package cc.alcina.framework.common.client.domain.search;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.search.EntityCriterion;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.OrderGroup;
-import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
-import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 
 /*
  * I'd call this CrudSearch...but that'd be mean
@@ -30,23 +28,6 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 
 	public boolean isReturnSingleDataObjectImplementations() {
 		return this.returnSingleDataObjectImplementations;
-	}
-
-	public List<EntityPlace> provideFilterPlaces() {
-		List<EntityPlace> places = new ArrayList<>();
-		if (allCriteria().size() != 1) {
-			return places;
-		}
-		for (SearchCriterion sc : allCriteria()) {
-			if (sc instanceof EntityCriterion) {
-				EntityCriterion criterion = (EntityCriterion) sc;
-				if (criterion.getId() != 0) {
-					places.add(EntityPlace.forClassAndId(
-							criterion.getObjectClass(), criterion.getId()));
-				}
-			}
-		}
-		return places;
 	}
 
 	public boolean provideIsDefaultSortOrder() {
@@ -120,5 +101,16 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 				}
 			}
 		}
+	}
+
+	public List<Entity> provideFilteringEntities() {
+		return Registry.impl(FilteringEntitiesProvider.class)
+				.provideFilteringEntities(this);
+	}
+
+	@Registration.Self
+	public interface FilteringEntitiesProvider {
+		List<Entity> provideFilteringEntities(
+				EntitySearchDefinition entitySearchDefinition);
 	}
 }

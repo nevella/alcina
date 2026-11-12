@@ -11,7 +11,8 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.Selection.RowView;
+import cc.alcina.framework.common.client.traversal.SelectionView;
+import cc.alcina.framework.common.client.traversal.SelectionView.RowView;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
@@ -103,7 +104,7 @@ public class SelectionTableArea extends Model.Fields
 		@Override
 		public List<? extends Bindable> getSelectionBindables() {
 			return (List) filteredLayerSelections.stream().map(sel -> {
-				RowView rowView = ((Selection) sel).rowView();
+				SelectionView.RowView rowView = ((Selection) sel).rowView();
 				return rowView == null ? null : rowView.provideBindable();
 			}).filter(Objects::nonNull).collect(Collectors.toList());
 		}

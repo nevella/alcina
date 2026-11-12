@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client.objecttree.search;
 import java.util.List;
 
 import cc.alcina.framework.common.client.search.DateCriterion;
+import cc.alcina.framework.common.client.search.SearchOperator;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
 

@@ -4,18 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.Preconditions;
-
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
-import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.HasFilterableString;
-import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public abstract class AbstractSelection<T> implements Selection<T> {
 	T value;
@@ -77,12 +68,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	}
 
 	protected String contentsToString() {
-		T t = get();
-		if (t instanceof DomNode) {
-			return "[DomNode]";
-		} else {
-			return t.toString();
-		}
+		return Ax.trimForLogging(get().toString());
 	}
 
 	public int ensureSegmentCounter() {
@@ -133,78 +119,24 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	public interface AllowsNullValue {
 	}
 
-	Selection.View view;
+	SelectionView.View view;
 
 	@Override
-	public Selection.View view() {
+	public SelectionView.View view() {
 		if (view == null) {
-			view = Registry.impl(Selection.View.class, getClass());
+			view = Registry.impl(SelectionView.View.class, getClass());
 		}
 		return view;
 	}
 
-	Selection.RowView rowView;
+	SelectionView.RowView rowView;
 
 	@Override
-	public Selection.RowView rowView() {
+	public SelectionView.RowView rowView() {
 		if (rowView == null) {
-			rowView = Registry.impl(Selection.RowView.class, getClass());
+			rowView = Registry.impl(SelectionView.RowView.class, getClass());
 			rowView.putSelection(this);
 		}
 		return rowView;
-	}
-
-	protected static class View<S extends AbstractSelection>
-			implements Selection.View<S> {
-		@Property.Not
-		String text;
-
-		@Directed.Exclude
-		@Display.Exclude
-		public final String getText(S selection) {
-			if (text == null) {
-				text = computeText(selection);
-			}
-			return text;
-		}
-
-		protected String computeText(S selection) {
-			return HasFilterableString.filterableString(selection.get());
-		}
-	}
-
-	public abstract static class RowView<S extends AbstractSelection>
-			extends Model.All implements Selection.RowView<S> {
-		@Property.Not
-		protected S selection;
-
-		@Directed.Exclude
-		@Display.Exclude
-		public S getSelection() {
-			return selection;
-		}
-
-		@Override
-		public void putSelection(S selection) {
-			this.selection = selection;
-		}
-
-		@Registration(
-			value = { Selection.RowView.class, AbstractSelection.class })
-		public static class Default<S extends AbstractSelection>
-				extends RowView<S> {
-			public String type;
-
-			@Directed(className = "x-wide")
-			public String text;
-
-			@Override
-			public void putSelection(S selection) {
-				super.putSelection(selection);
-				Selection.View view = selection.view();
-				this.type = NestedName.get(selection);
-				this.text = view.getText(selection);
-			}
-		}
 	}
 }

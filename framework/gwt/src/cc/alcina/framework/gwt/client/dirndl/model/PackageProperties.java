@@ -1,10 +1,10 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree;
@@ -16,7 +16,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 import cc.alcina.framework.gwt.client.dirndl.model.TreePath;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.table.Field;
 import com.google.gwt.dom.client.Element;
@@ -24,8 +23,8 @@ import java.util.Collection;
 import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _Choices choices = new _Choices();
     static _Choices_Category choices_category = new _Choices_Category();

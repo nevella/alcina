@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -48,7 +49,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.EntitySelector.EntityCon
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.ToStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /*
  * wip - ds - late - the choice editor edit width should be determined by the

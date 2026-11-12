@@ -17,6 +17,8 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import java.util.function.Function;
+
+import cc.alcina.framework.common.client.util.TreeRenderable;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.beans.Binding;

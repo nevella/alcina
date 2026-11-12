@@ -1,8 +1,8 @@
 package cc.alcina.framework.servlet.example.traversal.recipe.plain;
 
-import cc.alcina.framework.common.client.traversal.DocumentSelection;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.PlainTextSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.DocumentSelection;
 
 /*
  * Emits a Document selection containing a single-element DOM document, the

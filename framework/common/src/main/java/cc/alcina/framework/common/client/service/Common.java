@@ -2,12 +2,12 @@ package cc.alcina.framework.common.client.service;
 
 import java.util.Map;
 
-import org.apache.bcel.generic.INSTANCEOF;
-
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.service.Common._Extensions;
+import elemental.json.JsonType;
+import elemental.json.JsonValue;
 
 public class Common {
+	@SuppressWarnings("deprecation")
 	public interface _ScriptableExtensions {
 		int entityHash(long lValue, int classHash);
 
@@ -16,7 +16,14 @@ public class Common {
 			public int entityHash(long lValue, int classHash) {
 				return ((int) lValue) ^ classHash;
 			}
+
+			@Override
+			public boolean isNull(JsonValue jsonValue) {
+				return jsonValue.getType() == JsonType.NULL;
+			}
 		}
+
+		boolean isNull(JsonValue jsonValue);
 	}
 
 	public interface _Extensions {
@@ -65,7 +72,20 @@ public class Common {
 				throw new UnsupportedOperationException(
 						"Unimplemented method 'gwtSerLongToString'");
 			}
+
+			@Override
+			public String serializeSearchDefinition(
+					Map<String, Class> abbrevLookup,
+					Map<Class, String> reverseAbbrevLookup,
+					SearchDefinition def) {
+				// TODO Auto-generated method stub
+				throw new UnsupportedOperationException(
+						"Unimplemented method 'serializeSearchDefinition'");
+			}
 		}
+
+		String serializeSearchDefinition(Map<String, Class> abbrevLookup,
+				Map<Class, String> reverseAbbrevLookup, SearchDefinition def);
 	}
 
 	public static Common._Extensions extensions = new _Extensions.Default();

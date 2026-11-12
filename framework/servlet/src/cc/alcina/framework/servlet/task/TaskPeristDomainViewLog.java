@@ -3,10 +3,10 @@ package cc.alcina.framework.servlet.task;
 import java.io.File;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.gwt.client.dirndl.model.DomainViewNodeContent;
 import cc.alcina.framework.servlet.domain.view.DomainViews;
 import cc.alcina.framework.servlet.domain.view.LiveTree;
 import cc.alcina.framework.servlet.domain.view.LiveTree.ProcessLoggerImpl;

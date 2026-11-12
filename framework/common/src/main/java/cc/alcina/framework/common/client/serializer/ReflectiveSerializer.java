@@ -42,11 +42,13 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode.PropertyNode;
+import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeSerializerForType;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -138,8 +140,8 @@ import elemental.json.impl.JsonUtil;
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
 	// FIXME - reflection - jsclassmap if client (and general switch to Maps)
-	private static Map<Class, TypeSerializerForType> typeSerializers = Registry
-			.impl(ConcurrentMapCreator.class).create();
+	private static Map<Class, TypeSerializerForType> typeSerializers = CollectionCreators.Bootstrap
+			.createConcurrentClassMap();
 
 	public static <T> T clone(T object) {
 		return (T) deserialize(serialize(object));
@@ -803,11 +805,7 @@ public class ReflectiveSerializer {
 		 * problematic when jsonValue === false
 		 */
 		private boolean isNullValue() {
-			if (Al.isScript()) {
-				return JsJsonFactory.isNull(jsonValue);
-			} else {
-				return jsonValue.getType() == JsonType.NULL;
-			}
+			return Common.scriptableExtensions.isNull(jsonValue);
 		}
 
 		@Override

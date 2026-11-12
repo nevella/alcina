@@ -9,7 +9,6 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.IntLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.IntLookup.MapAdapter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.persistence.domain.ArrayBackedIntegerMap;
 
 /*
  * FIXME - dirndl 1x3 - cleanup? Also move refs to CollectionCreators.Bootstrap
@@ -95,7 +94,7 @@ public class AlcinaCollections {
 
 			@Override
 			public <V> Map<Integer, V> newCoarseIntHashMap() {
-				return new ArrayBackedIntegerMap<>(1000);
+				return newHashMap();
 			}
 
 			@Override
@@ -105,7 +104,7 @@ public class AlcinaCollections {
 		}
 	}
 
-	public static Extension extension;
+	public static Extension extension = new Extension.Default();
 
 	public static <T> Set<T> newUniqueSet() {
 		return extension.newUniqueSet();

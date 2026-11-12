@@ -3,13 +3,13 @@ package cc.alcina.framework.servlet.component.sequence.branch;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.BooleanEnum;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNode;
 import cc.alcina.framework.servlet.component.sequence.branch.BranchingParserNodeCriterion;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _BranchingParserNodeCriterion_BranchMinDepthCriterion branchingParserNodeCriterion_branchMinDepthCriterion = new _BranchingParserNodeCriterion_BranchMinDepthCriterion();
     static _BranchingParserNodeCriterion_GroupTypeCriterion branchingParserNodeCriterion_groupTypeCriterion = new _BranchingParserNodeCriterion_GroupTypeCriterion();

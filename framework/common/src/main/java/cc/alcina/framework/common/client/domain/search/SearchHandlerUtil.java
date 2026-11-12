@@ -4,9 +4,9 @@ import java.util.Date;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.search.DateCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.DateUtil;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class SearchHandlerUtil {
 	public static boolean allowDate(DateCriterion sc, Date date,

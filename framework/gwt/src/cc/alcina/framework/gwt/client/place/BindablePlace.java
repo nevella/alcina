@@ -65,4 +65,12 @@ public abstract class BindablePlace<SD extends BindableSearchDefinition>
 	public <T extends BindablePlace> T withId(String stringId) {
 		return withId(Long.parseLong(stringId));
 	}
+
+	public static BindablePlace
+			toPlace(BindableSearchDefinition searchDefinition) {
+		BindablePlace place = BindablePlace
+				.forClass(searchDefinition.queriedBindableClass());
+		place.def = searchDefinition;
+		return place;
+	}
 }

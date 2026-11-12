@@ -23,10 +23,8 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.Selection.CopySelectionFilter;
 import cc.alcina.framework.common.client.traversal.SelectionFilter;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Timer;
@@ -45,6 +43,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
+import cc.alcina.framework.gwt.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableEntry;
 import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
@@ -93,7 +93,7 @@ class Page extends Model.All
 		TraversalEvents.LayerSelectionChange.Handler,
 		TraversalBrowserCommand.ToggleHelp.Handler,
 		ModelEvents.ApplicationHelp.Handler,
-		Selection.CopySelectionFilter.Handler, CopyToClipboardHandler,
+		SelectionViewUi.CopySelectionFilter.Handler, CopyToClipboardHandler,
 		ExecCommand.PerformCommand.Handler,
 		TraversalEvents.SelectionTableAreaChange.Handler, Binding.TabIndexZero {
 	public static class CommandContextProviderImpl
@@ -363,7 +363,8 @@ class Page extends Model.All
 	}
 
 	@Override
-	public void onCopySelectionFilter(CopySelectionFilter event) {
+	public void
+			onCopySelectionFilter(SelectionViewUi.CopySelectionFilter event) {
 		Selection selection = event.getModel();
 		SelectionFilter filter = SelectionFilter
 				.ofSelections(List.of(selection));

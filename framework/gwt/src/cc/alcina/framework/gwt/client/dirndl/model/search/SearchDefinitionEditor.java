@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.SearchUtils;
 import cc.alcina.framework.common.client.search.SearchDefinition.EditSupport;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -48,7 +49,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.ChoicesEditorMultiple;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOracleRouter;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
-import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 import cc.alcina.framework.gwt.client.util.Async;
 
 @TypedProperties

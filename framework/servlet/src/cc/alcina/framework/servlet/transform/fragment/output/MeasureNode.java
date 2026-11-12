@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -27,7 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocument
  */
 public class MeasureNode extends AbstractSelection<FragmentDocumentNode>
 		implements HasDisplayName, Selection.ImmutableInput, Selection.Output,
-		Selection.WithRange<FragmentDocumentNode> {
+		SelectionViewUi.WithRange<FragmentDocumentNode> {
 	public static final transient String CONTEXT_IN_DISPLAY_NAME = MeasureNode.class
 			.getName() + ".CONTEXT_IN_DISPLAY_NAME";
 

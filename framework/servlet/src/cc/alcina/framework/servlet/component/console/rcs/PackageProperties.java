@@ -3,11 +3,11 @@ package cc.alcina.framework.servlet.component.console.rcs;
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.BooleanEnum;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.SubHeading;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 import cc.alcina.framework.servlet.component.console.ServerConsolePlace;
 import cc.alcina.framework.servlet.component.console.rcs.PresetsArea;
 import cc.alcina.framework.servlet.component.console.rcs.RomcomSessionDetailArea;
@@ -17,8 +17,8 @@ import java.util.Date;
 import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _RomcomSessionArea romcomSessionArea = new _RomcomSessionArea();
     static _RomcomSessionCriterion_ActiveCriterion romcomSessionCriterion_activeCriterion = new _RomcomSessionCriterion_ActiveCriterion();

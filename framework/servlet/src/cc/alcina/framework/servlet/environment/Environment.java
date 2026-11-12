@@ -33,6 +33,8 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -906,6 +908,7 @@ class Environment {
 		client = Client.contextProvider.createFrame(ui);
 		client.getPlaceController();
 		GWTBridgeHeadless.inClient.set(true);
+		Al.CONTEXT_CLIENT.setTrue();
 		client.setupPlaceMapping();
 		client.setupActivityManager();
 		scheduler = SchedulerFrame.contextProvider.createFrame(null);

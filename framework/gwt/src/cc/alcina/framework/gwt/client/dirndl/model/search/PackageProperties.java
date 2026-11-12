@@ -5,10 +5,11 @@ import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCr
 import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.search.Searchable;
 import cc.alcina.framework.gwt.client.dirndl.model.search.ValueEditor;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+
 import java.util.List;
 
 public class PackageProperties {

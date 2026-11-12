@@ -20,7 +20,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+import cc.alcina.framework.common.client.util.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 @Registration({ TreeRenderer.class, SearchDefinition.class })

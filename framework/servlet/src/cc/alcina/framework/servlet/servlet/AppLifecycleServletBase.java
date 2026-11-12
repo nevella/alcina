@@ -325,7 +325,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		getStatusNotifier().ready();
 	}
 
-	protected void initCommonImpl() {
+	public static void initCommonImpl() {
 		CommonExtensionsGwt.register();
 	}
 

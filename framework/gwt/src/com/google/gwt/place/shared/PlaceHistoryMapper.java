@@ -15,6 +15,8 @@
  */
 package com.google.gwt.place.shared;
 
+import com.google.gwt.place.shared.WithTokenizers;
+
 import cc.alcina.framework.gwt.client.place.UnparseablePlaceException;
 
 /**

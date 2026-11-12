@@ -94,4 +94,13 @@ public interface ModelTransform<A, B> extends Function<A, B> {
 			return NestedName.getNestedSimpleNameFromClassname(t);
 		}
 	}
+
+	@Reflected
+	public static class ClassNameStringNestedName
+			implements ModelTransform<String, String> {
+		@Override
+		public String apply(String t) {
+			return t == null ? null : t.replaceFirst(".+\\.([A-Z_].+)", "$1");
+		}
+	}
 }

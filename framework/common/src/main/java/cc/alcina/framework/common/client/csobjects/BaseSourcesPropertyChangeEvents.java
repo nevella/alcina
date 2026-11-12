@@ -27,14 +27,15 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.TopicListener;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
-import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.common.client.logic.SourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess;
+import cc.alcina.framework.common.client.logic.domain.MvccAccess.MvccAccessType;
 
 /**
  *
  * @author Nick Reddel
  */
+@SuppressWarnings("unchecked")
 public class BaseSourcesPropertyChangeEvents
 		implements SourcesPropertyChangeEvents {
 	private transient LazyPropertyChangeSupport propertyChangeSupport;

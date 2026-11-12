@@ -9,13 +9,15 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
-import com.google.gwt.place.shared.Place;
+
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.place.shared.Place;
+
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _AbstractUi abstractUi = new _AbstractUi();
     

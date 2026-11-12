@@ -1,8 +1,8 @@
 package cc.alcina.framework.servlet.component.entity.property;
 
-import cc.alcina.framework.common.client.traversal.DocumentSelection;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.PlainTextSelection;
+import cc.alcina.framework.gwt.client.traversal.layer.DocumentSelection;
 import cc.alcina.framework.servlet.component.entity.property.PropertyFilterParser.Query;
 
 /*

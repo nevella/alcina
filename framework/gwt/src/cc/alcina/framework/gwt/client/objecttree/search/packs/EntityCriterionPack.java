@@ -12,9 +12,9 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.EntityCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSuggestorSearchable;
-import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class EntityCriterionPack {
 	public interface EntityCriterionHandler<I, O extends Entity, SC extends EntityCriterion<O>>
