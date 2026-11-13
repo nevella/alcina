@@ -225,7 +225,7 @@ public class DevConsoleRemote {
 		server.addConnector(connector);
 		ClassLoader cl = DevConsoleRemote.class.getClassLoader();
 		URL consoleGwtHtmlFile = cl.getResource(
-				"cc/alcina/extras/dev/console/remote/war/remote.html");
+				"cc/alcina/framework/dev/console/remote/war/remote.html");
 		if (consoleGwtHtmlFile == null) {
 			throw new RuntimeException("Unable to find resource directory");
 		}
