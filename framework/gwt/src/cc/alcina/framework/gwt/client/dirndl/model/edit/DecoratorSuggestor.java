@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import com.google.gwt.dom.client.Element;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;

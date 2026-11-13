@@ -1,8 +1,8 @@
 package cc.alcina.framework.entity.parser.structured;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNode.DomNodeDebugSupport;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.DomNodeDebugSupport;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;

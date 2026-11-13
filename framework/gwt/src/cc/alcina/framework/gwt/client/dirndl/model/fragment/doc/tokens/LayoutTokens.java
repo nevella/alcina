@@ -3,9 +3,9 @@ package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
-import cc.alcina.framework.gwt.client.dom.Measure.Token.CheckDescendantContainment;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.CheckDescendantContainment;
 import cc.alcina.framework.common.client.logic.domain.HasStringValue;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;

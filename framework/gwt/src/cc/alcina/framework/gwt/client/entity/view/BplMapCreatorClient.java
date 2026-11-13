@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreatorStd;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueMap;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JsUniqueMap;
 
 @Reflected
 @Registration(BaseProjectionLookupBuilder.BplDelegateMapCreator.class)

@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.impl;
 
 import cc.alcina.framework.common.client.service.Common;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.LongWrapperHash;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.LongWrapperHash;
 import elemental.json.JsonValue;
 
 @SuppressWarnings("deprecation")

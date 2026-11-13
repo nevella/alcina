@@ -6,12 +6,12 @@ import java.util.Objects;
 
 import cc.alcina.framework.common.client.Preconditions;
 
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
-import cc.alcina.framework.gwt.client.dom.Location.TextTraversal;
-import cc.alcina.framework.gwt.client.dom.Measure;
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.gwtpeer.client.dom.Location.TextTraversal;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.GlobalObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;

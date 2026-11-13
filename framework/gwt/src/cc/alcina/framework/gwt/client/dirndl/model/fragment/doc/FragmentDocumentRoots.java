@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.MarkupSchema.SchemaOracle;
 

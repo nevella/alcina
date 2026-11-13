@@ -4,9 +4,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNodeType;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;

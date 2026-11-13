@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;

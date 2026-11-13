@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens;
 
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Block;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.FragmentDocumentOverlayToken.CanContainLeaf;

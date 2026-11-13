@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 import javax.xml.bind.annotation.XmlType;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.BindableCriteriaGroup;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;

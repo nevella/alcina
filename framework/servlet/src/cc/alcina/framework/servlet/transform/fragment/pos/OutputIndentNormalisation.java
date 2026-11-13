@@ -8,7 +8,7 @@ import cc.alcina.framework.servlet.transform.fragment.DocumentTransformerSelecti
 import cc.alcina.framework.servlet.transform.fragment.StyledMeasureSelection.NonIndentContainer;
 import cc.alcina.framework.servlet.transform.fragment.html.TableLayer;
 import cc.alcina.framework.servlet.transform.fragment.pos.MergedIndentLayer.IndentRun;
-import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureContainment.Containment;

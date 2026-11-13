@@ -9,10 +9,10 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Preconditions;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.gwt.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;

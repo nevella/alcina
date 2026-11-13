@@ -13,8 +13,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultiset;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueMap;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueSet;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JsUniqueSet;
 
 public class CollectionCreatorsClient {
 	static boolean useJsMaps() {

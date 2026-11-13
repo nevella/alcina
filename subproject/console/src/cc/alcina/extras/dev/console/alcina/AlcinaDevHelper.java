@@ -3,9 +3,9 @@ package cc.alcina.extras.dev.console.alcina;
 import java.io.File;
 import java.util.List;
 
-import cc.alcina.extras.dev.console.DevHelper;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.dev.console.DevHelper;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;

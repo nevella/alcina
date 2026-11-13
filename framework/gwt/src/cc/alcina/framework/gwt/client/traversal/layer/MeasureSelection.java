@@ -14,10 +14,10 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Measure;
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
 import cc.alcina.framework.gwt.client.traversal.SelectionViewUi;
 
 public class MeasureSelection extends AbstractSelection<Measure>

@@ -15,7 +15,7 @@ import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;

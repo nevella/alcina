@@ -9,7 +9,7 @@ import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;

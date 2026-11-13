@@ -16,8 +16,8 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.collections.NotifyingList;
 import cc.alcina.framework.common.client.collections.NotifyingList.Notification;
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;

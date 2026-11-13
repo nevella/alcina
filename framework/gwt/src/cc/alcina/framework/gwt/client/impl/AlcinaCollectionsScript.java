@@ -5,9 +5,9 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.IntLookup;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JavascriptIntLookup;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueMap;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsUniqueSet;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JavascriptIntLookup;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JsUniqueSet;
 
 public class AlcinaCollectionsScript {
 	public static void register() {

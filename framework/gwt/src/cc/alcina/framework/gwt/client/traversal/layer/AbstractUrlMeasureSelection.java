@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.traversal.layer;
 
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.Selection;

@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.example.traversal.recipe.markup;
 
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;

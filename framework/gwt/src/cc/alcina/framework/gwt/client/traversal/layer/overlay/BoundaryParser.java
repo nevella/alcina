@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.traversal.layer.overlay;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;

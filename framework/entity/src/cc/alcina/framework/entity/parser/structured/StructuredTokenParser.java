@@ -5,9 +5,9 @@ import java.util.Stack;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomTokenStream;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomTokenStream;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.parser.structured.StructuredTokenParserContext.PerNodeExceptionHandler;
 

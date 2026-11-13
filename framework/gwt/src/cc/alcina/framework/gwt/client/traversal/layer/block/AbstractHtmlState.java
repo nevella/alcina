@@ -1,9 +1,9 @@
 package cc.alcina.framework.gwt.client.traversal.layer.block;
 
-import cc.alcina.framework.gwt.client.dom.DomEnvironment.StyleResolver;
-import cc.alcina.framework.gwt.client.dom.DomEnvironment.StyleResolverHtml;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.DomEnvironment.StyleResolver;
+import cc.alcina.framework.gwtpeer.client.dom.DomEnvironment.StyleResolverHtml;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.gwt.client.traversal.layer.BranchToken;
 import cc.alcina.framework.gwt.client.traversal.layer.LayerParser;

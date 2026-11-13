@@ -1,9 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNode.TypeTag;
-import cc.alcina.framework.gwt.client.dom.DomNode.TypeTagClassName;
-import cc.alcina.framework.gwt.client.dom.DomNodeType;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.TypeTag;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.TypeTagClassName;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;

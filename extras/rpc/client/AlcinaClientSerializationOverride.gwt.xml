@@ -1,3 +1,0 @@
-<module>
-	<super-source path="src" includes="/com/google/gwt/user/client/rpc/impl/*"/>
-</module>

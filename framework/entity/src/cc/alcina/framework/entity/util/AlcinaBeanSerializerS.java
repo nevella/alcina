@@ -219,6 +219,11 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			return null;
 		}
 		String cn = (String) jsonObj.get(CLASS_NAME);
+		switch (cn) {
+		case "cc.alcina.framework.common.client.util.AlcinaBeanSerializer$SerializationHolder":
+			cn = AlcinaBeanSerializer.SerializationHolder.class.getName();
+			break;
+		}
 		Class clazz = null;
 		try {
 			clazz = getClassMaybeAbbreviated(cn);

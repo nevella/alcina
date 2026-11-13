@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.Element;
 
-import cc.alcina.framework.gwt.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;

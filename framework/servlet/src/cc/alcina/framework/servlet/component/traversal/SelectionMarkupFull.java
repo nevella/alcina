@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.google.gwt.dom.client.Element;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.DocumentTransformationTraversal;
 import cc.alcina.framework.common.client.traversal.Layer;

@@ -14,8 +14,8 @@ import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import cc.alcina.framework.common.client.regexp.shared.MatchResult;
 import cc.alcina.framework.common.client.regexp.shared.RegExp;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNode.SplitResult;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.SplitResult;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;

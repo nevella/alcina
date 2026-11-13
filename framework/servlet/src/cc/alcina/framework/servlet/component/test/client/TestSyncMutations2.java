@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 class TestSyncMutations2 {

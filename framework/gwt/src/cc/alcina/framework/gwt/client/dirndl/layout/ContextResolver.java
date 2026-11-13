@@ -28,7 +28,7 @@ import com.google.gwt.dom.client.behavior.HasElementBehaviors;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.gwt.client.dom.DomNodeType;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;

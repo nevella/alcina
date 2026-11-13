@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.transform.fragment;
 
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Selection;
 
 public class TopLevelStructuralElement extends StyledMeasureSelection {

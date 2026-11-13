@@ -77,7 +77,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.MultiNodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.util.AlcinaLogUtils;
 import cc.alcina.framework.gwt.client.util.ClassNames;
 import cc.alcina.framework.gwt.client.util.StyleUtil;

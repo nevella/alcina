@@ -1,6 +1,6 @@
 package cc.alcina.extras.dev.console.alcina;
 
-import cc.alcina.extras.dev.console.DevConsoleRunnable;
+import cc.alcina.framework.dev.console.DevConsoleRunnable;
 
 public abstract class AlcinaDevConsoleRunnable extends DevConsoleRunnable {
 	public AlcinaTag[] tags() {

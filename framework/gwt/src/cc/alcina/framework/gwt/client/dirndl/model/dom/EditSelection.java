@@ -7,10 +7,10 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Selection;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNode.DomNodeTree;
-import cc.alcina.framework.gwt.client.dom.DomNode.SplitResult;
-import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.DomNodeTree;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.SplitResult;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 

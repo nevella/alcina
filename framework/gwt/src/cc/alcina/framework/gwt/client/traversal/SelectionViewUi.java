@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
 
 public class SelectionViewUi {
 	@Reflected

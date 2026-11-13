@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gwt.dom.client.HtmlParser;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Block.SectionHeader;
 

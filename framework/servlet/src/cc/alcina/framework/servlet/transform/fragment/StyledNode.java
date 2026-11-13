@@ -3,9 +3,9 @@ package cc.alcina.framework.servlet.transform.fragment;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.servlet.transform.fragment.StyledDocument.Styles;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.EmittedBySoleLayer;
 import cc.alcina.framework.common.client.traversal.Selection;

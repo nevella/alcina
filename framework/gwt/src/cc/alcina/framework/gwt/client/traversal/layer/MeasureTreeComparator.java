@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.traversal.layer;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
-import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 

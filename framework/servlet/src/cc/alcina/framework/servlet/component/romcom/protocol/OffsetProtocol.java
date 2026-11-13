@@ -16,7 +16,7 @@ import com.google.gwt.dom.client.WindowState.OffsetsDelta.ElementOffsets;
 import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.IntPair;

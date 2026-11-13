@@ -12,8 +12,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.gwt.client.dom.Measure;
-import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;

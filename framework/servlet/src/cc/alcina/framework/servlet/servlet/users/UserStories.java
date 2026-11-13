@@ -20,10 +20,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNodeHtmlTableBuilder;
-import cc.alcina.framework.gwt.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeHtmlTableBuilder;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;

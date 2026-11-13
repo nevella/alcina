@@ -11,7 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 
 public class DomEnvironmentAndroidImpl extends DomEnvironmentJvmBase {
 	@Override

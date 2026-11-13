@@ -10,10 +10,10 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 /**

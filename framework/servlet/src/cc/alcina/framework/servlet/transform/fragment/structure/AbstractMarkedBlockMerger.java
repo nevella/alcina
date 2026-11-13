@@ -7,7 +7,7 @@ import java.util.List;
 import cc.alcina.framework.servlet.transform.fragment.StyledMeasureSelection;
 import cc.alcina.framework.servlet.transform.fragment.html.TextLayer;
 import cc.alcina.framework.servlet.transform.fragment.html.TextLayer.IgnoreableWhitespace;
-import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;

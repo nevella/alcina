@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.component.test.client;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 class TestLocationMutationExtended {

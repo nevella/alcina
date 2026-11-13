@@ -81,12 +81,12 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomEnvironment.StyleResolver;
-import cc.alcina.framework.gwt.client.dom.DomEnvironment.StyleResolverHtml;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNode.DomNodeTree;
-import cc.alcina.framework.gwt.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomEnvironment.StyleResolver;
+import cc.alcina.framework.gwtpeer.client.dom.DomEnvironment.StyleResolverHtml;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.DomNodeTree;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;

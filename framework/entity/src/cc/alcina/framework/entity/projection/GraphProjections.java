@@ -15,7 +15,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.StandaloneObjectStore;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.StandaloneObjectStore;
 
 public class GraphProjections {
 	public static <T> T projectInstance(T t) {

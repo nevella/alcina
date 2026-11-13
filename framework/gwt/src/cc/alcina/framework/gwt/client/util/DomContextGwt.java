@@ -4,7 +4,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
 
 public class DomContextGwt extends DomContext {
 	DomDocument doc = null;

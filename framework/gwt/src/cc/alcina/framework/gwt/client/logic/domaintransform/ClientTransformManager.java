@@ -36,14 +36,14 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.gwt.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.StandaloneObjectStoreClient;
-import cc.alcina.framework.common.client.util.AsyncCallback;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.StandaloneObjectStoreClient;
 
 public abstract class ClientTransformManager extends TransformManager
 		implements CollectionModificationSource {

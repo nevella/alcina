@@ -13,10 +13,10 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Measure;
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
-import cc.alcina.framework.gwt.client.dom.Measure.Token.Order;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;

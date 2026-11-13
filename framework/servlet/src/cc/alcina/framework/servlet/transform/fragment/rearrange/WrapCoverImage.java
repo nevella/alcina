@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.transform.fragment.rearrange;
 import cc.alcina.framework.servlet.transform.fragment.output.MeasureNode;
 import cc.alcina.framework.servlet.transform.fragment.output.OutputPagination2;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Inline;
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.Layer;
 
 /**

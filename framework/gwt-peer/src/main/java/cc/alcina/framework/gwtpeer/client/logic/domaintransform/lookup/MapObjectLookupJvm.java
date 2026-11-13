@@ -1,0 +1,25 @@
+package cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup;
+
+import java.util.Collection;
+
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.FastIdLookup;
+
+public class MapObjectLookupJvm extends StandaloneObjectStore {
+	@Override
+	public void mapObject(Entity entity) {
+		if ((entity.getId() == 0 && entity.getLocalId() == 0)) {
+			return;
+		}
+		Class<? extends Entity> clazz = entity.entityClass();
+		FastIdLookup lookup = ensureLookup(clazz);
+		lookup.put(entity, entity.getId() == 0);
+	}
+
+	@Override
+	public void registerObjects(Collection objects) {
+		for (Object o : objects) {
+			mapObject((Entity) o);
+		}
+	}
+}

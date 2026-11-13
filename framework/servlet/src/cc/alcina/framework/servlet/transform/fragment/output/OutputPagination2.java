@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;

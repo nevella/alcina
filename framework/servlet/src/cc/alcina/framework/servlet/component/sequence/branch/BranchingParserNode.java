@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.gwt.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.gwt.client.traversal.layer.BranchingParser.BranchNode;
 import cc.alcina.framework.common.client.util.Ax;

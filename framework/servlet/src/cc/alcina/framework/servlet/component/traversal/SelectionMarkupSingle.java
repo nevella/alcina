@@ -6,12 +6,12 @@ import java.util.stream.Collectors;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HtmlParser;
 
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Location.RelativeDirection;
-import cc.alcina.framework.gwt.client.dom.Location.TextTraversal;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Location.RelativeDirection;
+import cc.alcina.framework.gwtpeer.client.dom.Location.TextTraversal;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;

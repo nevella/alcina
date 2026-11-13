@@ -1,7 +1,7 @@
 package cc.alcina.extras.dev.console.alcina.sub1;
 
 import cc.alcina.extras.dev.console.alcina.AlcinaDevConsoleRunnable;
-import cc.alcina.extras.webdriver.story.WdContextPart;
+import cc.alcina.framework.dev.webdriver.story.WdContextPart;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
 import cc.alcina.framework.gwt.client.story.StoryTellerPeer;
 import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalBrowser;

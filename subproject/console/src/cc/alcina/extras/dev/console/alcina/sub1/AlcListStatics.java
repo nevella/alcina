@@ -1,9 +1,9 @@
 package cc.alcina.extras.dev.console.alcina.sub1;
 
 import cc.alcina.extras.dev.console.alcina.AlcinaDevConsoleRunnable;
-import cc.alcina.extras.dev.console.code.env.TaskAnalyseStatics;
-import cc.alcina.extras.dev.console.code.env.TaskAnalyseStatics.PersistentResult;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.dev.console.code.env.TaskAnalyseStatics;
+import cc.alcina.framework.dev.console.code.env.TaskAnalyseStatics.PersistentResult;
 import cc.alcina.framework.entity.Io;
 
 /*

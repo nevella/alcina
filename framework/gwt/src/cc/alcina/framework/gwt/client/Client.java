@@ -43,12 +43,10 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus.QueuedEvent;
-import cc.alcina.framework.gwt.client.dom.DomDocument.PerDocumentSupplier;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument.PerDocumentSupplier;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JavascriptKeyableLookup;
-import cc.alcina.framework.gwt.client.logic.domaintransform.lookup.gwt.JsRegistryDelegateCreator;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -56,6 +54,8 @@ import cc.alcina.framework.gwt.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.util.Url;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 @Reflected

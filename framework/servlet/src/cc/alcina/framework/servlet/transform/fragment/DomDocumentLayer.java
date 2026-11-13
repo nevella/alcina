@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.transform.fragment;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
 import cc.alcina.framework.gwt.client.traversal.layer.DocumentSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 

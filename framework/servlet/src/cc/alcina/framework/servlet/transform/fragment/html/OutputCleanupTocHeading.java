@@ -10,7 +10,7 @@ import cc.alcina.framework.servlet.transform.fragment.structure.TocLayer;
 import cc.alcina.framework.servlet.transform.fragment.structure.TocLayer.TocEntry;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Block;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Inline;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 
 /**

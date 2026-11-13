@@ -3,10 +3,10 @@ package cc.alcina.extras.dev.console.alcina;
 import java.io.File;
 import java.util.stream.Collectors;
 
-import cc.alcina.extras.dev.console.DevConsoleCommand;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.dev.console.DevConsoleCommand;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.Io.ReadOp.MapType;
 import cc.alcina.framework.gwt.client.story.StoryTeller;

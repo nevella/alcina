@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.util;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 

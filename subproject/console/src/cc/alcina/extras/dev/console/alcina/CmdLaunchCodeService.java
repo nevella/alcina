@@ -2,9 +2,9 @@ package cc.alcina.extras.dev.console.alcina;
 
 import java.util.List;
 
-import cc.alcina.extras.dev.codeservice.CodeService;
-import cc.alcina.extras.dev.codeservice.PackagePropertiesGenerator;
-import cc.alcina.extras.dev.console.DevConsole;
+import cc.alcina.framework.dev.codeservice.CodeService;
+import cc.alcina.framework.dev.codeservice.PackagePropertiesGenerator;
+import cc.alcina.framework.dev.console.DevConsole;
 import cc.alcina.framework.entity.Io;
 
 public class CmdLaunchCodeService extends AlcinaDevConsoleCommand {

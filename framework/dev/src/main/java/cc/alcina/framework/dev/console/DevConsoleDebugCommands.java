@@ -1,0 +1,1129 @@
+package cc.alcina.framework.dev.console;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import org.apache.commons.lang.StringEscapeUtils;
+
+import java.util.function.Function;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.entity.ClientLogRecord;
+import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
+import cc.alcina.framework.common.client.entity.ReplayInstruction;
+import cc.alcina.framework.common.client.log.ILogRecord;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.SortedMultimap;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
+import cc.alcina.framework.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths;
+import cc.alcina.framework.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths.ModuleSymbolPaths;
+import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.console.FilterArgvFlag;
+import cc.alcina.framework.entity.console.FilterArgvParam;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
+import cc.alcina.framework.entity.util.FileUtils;
+import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.entity.util.SqlUtils;
+import cc.alcina.framework.entity.util.StreamBuffer;
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import elemental.json.Json;
+import elemental.json.JsonObject;
+
+@SuppressWarnings("deprecation")
+public class DevConsoleDebugCommands {
+	public static final String USER_AGENT = "User agent: ";
+
+	public static final Pattern UA_PATTERN = Pattern
+			.compile(USER_AGENT + "(.+)");
+
+	static DevConsoleDebugPeer getPeer() {
+		return Registry.impl(DevConsoleDebugPeer.class);
+	}
+
+	public static class CmdCountClientExceptions extends DevConsoleCommand {
+		@Override
+		public boolean clsBeforeRun() {
+			return true;
+		}
+
+		private List<ILogRecord> filterByComponent(List<ILogRecord> logRecords,
+				String componentKey) {
+			return getPeer().filterByComponent(logRecords, componentKey);
+		}
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dxc" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Count and format exceptions\n(filter"
+					+ " by {key:=key|all|pub,d,c,r,parser,t,m,j} and/or {user_id} ";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxc  {-c key} {-u userid} {-d days} {--no-exclusions} {-cu count by user} "
+					+ " {-i min-id} {-r regex} {-rn not-regex} {-fu id - list(client)users with similar exceptions to id}";
+		}
+
+		public String getUsername(ILogRecord record) {
+			String userName = console.state.getUser(record.getUserId())
+					.getUserName();
+			if (userName == null) {
+				userName = "anonymous";
+				Matcher matcher = Pattern
+						.compile("User name/id/cli: \\[(.+?)/(.+?)/(.+?)\\]")
+						.matcher(record.getText());
+				if (matcher.find()) {
+					userName = matcher.group(1);
+				}
+			}
+			return userName;
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			List<ILogRecord> logRecords = console.getState().logRecords.stream()
+					.collect(Collectors.toList());
+			StringMap excludePatterns = IgnoreExceptionPatternProvider.get()
+					.getIgnoreExceptionPatterns();
+			int size = logRecords.size();
+			FilterArgvFlag flag = new FilterArgvFlag(argv, "--no-exclusions");
+			argv = flag.argv;
+			if (!flag.contains) {
+				Ax.out("Applying filter 1");
+				logRecords = logRecords.stream().parallel().filter(lr -> {
+					return !(excludePatterns.matchesPatternKeys(lr.getText())
+							|| excludePatterns
+									.matchesPatternKeys(lr.getComponentKey()));
+				}).collect(Collectors.toList());
+			}
+			if (logRecords.size() < size) {
+				logger.info(Ax.format("Exclude patterns removed %s records",
+						size - logRecords.size()));
+			}
+			for (ILogRecord o : logRecords) {
+				o.setText(CommonUtils.nullToEmpty(o.getText()));
+			}
+			if (CommonUtils.isNullOrEmpty(logRecords)) {
+				runSubcommand(new CmdGetExceptionLogs(), null);
+				logRecords = console.getState().logRecords;
+			}
+			CountingMap<String> affectedUserNames = new CountingMap<String>();
+			Pattern clientP = Pattern.compile(
+					"(?:cc\\.alcina\\.framework\\.common\\.client\\.csobjects\\.WebException:|RPC exception:)(.+)",
+					Pattern.MULTILINE | Pattern.DOTALL);
+			Pattern p = clientP;
+			FilterArgvParam filterArgvResult = new FilterArgvParam(argv, "-c");
+			String componentKey = filterArgvResult.value;
+			argv = filterArgvResult.argv;
+			if (componentKey != null) {
+				p = Pattern.compile("(.*)", Pattern.MULTILINE | Pattern.DOTALL);
+			}
+			if (componentKey != null) {
+				logRecords = filterByComponent(logRecords, componentKey);
+			}
+			Ax.out("Applying filter 2");
+			Predicate<ILogRecord> customFilter = new Predicate<ILogRecord>() {
+				Pattern p = Pattern.compile(
+						"(Citables initialization failed|CitablesSingletonHolder|Citable\\.root)",
+						Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
+				@Override
+				public boolean test(ILogRecord o) {
+					boolean matches = p.matcher(o.getText()).find();
+					return !matches;
+				}
+			};
+			logRecords = logRecords.stream().parallel().filter(customFilter)
+					.collect(Collectors.toList());
+			Collections.sort((List<? extends Entity>) (List) logRecords,
+					EntityComparator.REVERSED_INSTANCE);
+			filterArgvResult = new FilterArgvParam(argv, "-u");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				long userId = Long.parseLong(filterArgvResult.value);
+				if (userId != 0) {
+					logRecords = logRecords.stream()
+							.filter(l -> Objects.equals(l.getUserId(), userId))
+							.collect(Collectors.toList());
+				}
+			}
+			filterArgvResult = new FilterArgvParam(argv, "-r");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				final Pattern rp = Pattern.compile(filterArgvResult.value,
+						Pattern.CASE_INSENSITIVE);
+				Predicate<ILogRecord> containsTextFilter = new Predicate<ILogRecord>() {
+					@Override
+					public boolean test(ILogRecord o) {
+						return rp.matcher(o.getText()).find();
+					}
+				};
+				logRecords = logRecords.stream().filter(containsTextFilter)
+						.collect(Collectors.toList());
+			}
+			filterArgvResult = new FilterArgvParam(argv, "-tzadj");
+			argv = filterArgvResult.argv;
+			long tzAdj = filterArgvResult.value != null
+					? Long.parseLong(filterArgvResult.value)
+					: 0;
+			filterArgvResult = new FilterArgvParam(argv, "-age");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				long ageMs = Long.parseLong(filterArgvResult.value);
+				logRecords = logRecords.stream()
+						.filter(l -> System.currentTimeMillis()
+								- (l.getCreatedOn().getTime() + tzAdj) < ageMs)
+						.collect(Collectors.toList());
+			}
+			filterArgvResult = new FilterArgvParam(argv, "-cu");
+			argv = filterArgvResult.argv;
+			boolean showByUserCount = filterArgvResult.value != null;
+			filterArgvResult = new FilterArgvParam(argv, "-rn");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				final Pattern rp = Pattern.compile(filterArgvResult.value,
+						Pattern.CASE_INSENSITIVE);
+				Predicate<ILogRecord> containsTextFilter = new Predicate<ILogRecord>() {
+					@Override
+					public boolean test(ILogRecord o) {
+						return !rp.matcher(o.getText()).find();
+					}
+				};
+				logRecords = logRecords.stream().filter(containsTextFilter)
+						.collect(Collectors.toList());
+			}
+			CountingMap<String> byType = new CountingMap<String>();
+			filterArgvResult = new FilterArgvParam(argv, "-d");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				int days = Integer.parseInt(filterArgvResult.value);
+				if (days != 0) {
+					final Calendar c = Calendar.getInstance();
+					c.setTime(new Date());
+					c.add(Calendar.DATE, -days);
+					Predicate<ILogRecord> dayRecencyFilter = new Predicate<ILogRecord>() {
+						@Override
+						public boolean test(ILogRecord o) {
+							return c.getTime().compareTo(o.getCreatedOn()) <= 0;
+						}
+					};
+					logRecords = logRecords.stream().filter(dayRecencyFilter)
+							.collect(Collectors.toList());
+				}
+			}
+			filterArgvResult = new FilterArgvParam(argv, "-i");
+			argv = filterArgvResult.argv;
+			if (filterArgvResult.value != null) {
+				final int minId = Integer.parseInt(filterArgvResult.value);
+				Predicate<ILogRecord> minIdFilter = new Predicate<ILogRecord>() {
+					@Override
+					public boolean test(ILogRecord o) {
+						return o.getId() > minId;
+					}
+				};
+				logRecords = logRecords.stream().filter(minIdFilter)
+						.collect(Collectors.toList());
+			}
+			filterArgvResult = new FilterArgvParam(argv, "-fu");
+			argv = filterArgvResult.argv;
+			List<Long> similarToIds = new ArrayList<Long>();
+			if (filterArgvResult.value != null) {
+				similarToIds = TransformManager
+						.idListToLongs(filterArgvResult.value);
+			}
+			final Multimap<String, List<Long>> textIdLookup = new Multimap<String, List<Long>>();
+			String pad = "\n" + CommonUtils.padStringLeft("", 20, " ");
+			Map<Long, ILogRecord> idLkp = new LinkedHashMap<Long, ILogRecord>();
+			for (ILogRecord l : logRecords) {
+				byType.add(l.getComponentKey());
+			}
+			for (ILogRecord l : logRecords) {
+				String str = l.getText();
+				Matcher m = p.matcher(str);
+				if (m.find()) {
+					String exText = CommonUtils
+							.trimToWsChars(m.group(1), 250, true)
+							.replace("\n", pad);
+					textIdLookup.add(exText, l.getId());
+					idLkp.put(l.getId(), l);
+				}
+			}
+			Set<Entry<Integer, List<String>>> entrySet = new CountingMap(
+					textIdLookup).reverseMap(true).entrySet();
+			for (Entry<Integer, List<String>> entry : entrySet) {
+				String o = "";
+				List<String> keys = entry.getValue();
+				for (String v : entry.getValue()) {
+					List<Long> ids = textIdLookup.get(v);
+					Collections.sort(ids);
+				}
+				Collections.sort(keys, new Comparator<String>() {
+					@Override
+					public int compare(String o1, String o2) {
+						List<Long> ids = textIdLookup.get(o1);
+						long id1 = CommonUtils.last(ids);
+						ids = textIdLookup.get(o2);
+						long id2 = CommonUtils.last(ids);
+						return (int) (id2 - id1);
+					}
+				});
+				for (String v : entry.getValue()) {
+					List<Long> ids = textIdLookup.get(v);
+					String allIds = ids.size() == 1 ? ""
+							: String.format("[%s]",
+									CommonUtils.join(ids, ", "));
+					if (similarToIds.isEmpty()) {
+						CountingMap<String> userNames = new CountingMap<String>();
+						for (Long id : ids) {
+							ILogRecord record = idLkp.get(id);
+							userNames.add(getUsername(record));
+						}
+						o += String.format("%-20s%s\n%-20s%s\n%-20s%s\n",
+								CommonUtils.last(ids), v, "",
+								userNames.keySet(), "", allIds);
+						if (showByUserCount) {
+							o += "\n"
+									+ userNames.toLinkedHashMap(true).entrySet()
+											.stream().map(Objects::toString)
+											.collect(Collectors.joining("\n"))
+									+ "\n\n";
+						}
+					} else {
+						Set intersection = CommonUtils.intersection(ids,
+								similarToIds);
+						if (intersection.size() > 0) {
+							for (Long id : ids) {
+								ILogRecord record = idLkp.get(id);
+								o += String.format(
+										"%-20s %-20s  %-20s  %-20s\n",
+										intersection.iterator().next(), id,
+										record.getUserId(), console.getState()
+												.getUser(record.getUserId()));
+								affectedUserNames.add(getUsername(record));
+							}
+						}
+					}
+				}
+				System.out.println(
+						String.format("Count: %s\n%s\n", entry.getKey(), o));
+			}
+			if (affectedUserNames.size() > 0) {
+				System.out.format("\n\n%s\n\n", affectedUserNames.keySet()
+						.stream().collect(Collectors.joining(", ")));
+				if (showByUserCount) {
+					affectedUserNames.toLinkedHashMap(true).entrySet()
+							.forEach(Ax::out);
+				}
+			}
+			Ax.out("Record count: %s", logRecords.size());
+			if (byType.size() > 1) {
+				SortedMultimap<Integer, List<String>> reverseMap = byType
+						.reverseMap(true);
+				String template = "%-50s  %s\n";
+				System.out.format(template, "Type", "Count");
+				System.out.println(CommonUtils.padStringLeft("", 66, "-"));
+				for (Entry<Integer, List<String>> types : reverseMap
+						.entrySet()) {
+					for (String type : types.getValue()) {
+						if (type.contains("EXCEPTION")) {
+							System.out.format(template, type, types.getKey());
+						}
+					}
+				}
+			}
+			return "";
+		}
+	}
+
+	public static class CmdCountExceptionsByUser extends DevConsoleCommand {
+		private static final int DEFAULT_COUNT_EXCEPTIONS_IN_LAST_X_DAYS = 30;
+
+		@Override
+		public boolean canUseProductionConn() {
+			return true;
+		}
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dxu" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Count exceptions by user, last x days";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxu {x}:";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			Connection conn = getConn();
+			int days = getIntArg(argv, 0,
+					DEFAULT_COUNT_EXCEPTIONS_IN_LAST_X_DAYS);
+			String ckFilter = new CmdGetExceptionLogs()
+					.getExceptionIgnoreClause();
+			String sql = String.format(
+					"select u.username,u.id, count(l.id) as errct from logging l inner join users u on l.user_id=u.id"
+							+ " where age(created_on)<'%s days' and "
+							+ " not (l.component_key in %s)"
+							+ "group by u.username,u.id order by count(l.id) desc;",
+					days, ckFilter);
+			System.out.format(
+					"Exceptions in last %s days, by user\n---------------------\n\n",
+					days);
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			SqlUtils.dumpResultSet(rs);
+			return String.format("Counted exceptions for last %s days - \n"
+					+ " remember to cache all exceptions for that period  "
+					+ "before drilldown/count by running \n\tdxg %s\n\n ", days,
+					days);
+		}
+	}
+
+	public static class CmdDrillClientException extends DevConsoleCommand {
+		private static final String PATH_MARKER = "{{PATH}}";
+
+		static ILogRecord lastRecord;
+
+		private File module;
+
+		private File symbol;
+
+		private boolean getJs;
+
+		private File jsfDir;
+
+		private String fnOverride;
+
+		List<File> jsFiles = new ArrayList<File>();
+
+		@Override
+		public boolean canUseProductionConn() {
+			return true;
+		}
+
+		@Override
+		public boolean clsBeforeRun() {
+			return true;
+		}
+
+		private void deObfStacktrace(String text, String mn) throws Exception {
+			Pattern symbolMapPattern = Pattern.compile("(.+?),(.+)");
+			Pattern wkp = Pattern
+					.compile("Unknown\\.(.+?)\\(Unknown Source\\)");
+			Pattern wkp2 = Pattern.compile("Unknown\\.(.+?)\\(.+");
+			Pattern ie6p = wkp;
+			// Pattern ffp = Pattern.compile("(?:stack: )(.+?)\\(.+");
+			Pattern ffp2 = Pattern.compile("([^@(]+)(?:\\([^@]*\\))?@.+");
+			Pattern sf6 = Pattern.compile("Unknown\\.anonymous\\((.+?)@.+");
+			Pattern ie10 = Pattern
+					.compile(".* at (.+?) \\(Unknown script code.+");
+			Pattern wkStr = Pattern.compile("(?:stack: )?(.+?)@https://jade.+");
+			Pattern[] trialsFF = { ffp2, wkp2 };
+			Pattern[] trialsNonFF = { wkStr, sf6, wkp, wkp2, ie10 };
+			Pattern[] trials = trialsNonFF;
+			String moduleContents = Io.read().file(module).asString();
+			// Matcher m2 = stp.matcher(stf);
+			LinkedHashMap<String, String> km = new LinkedHashMap<String, String>();
+			LinkedHashMap<String, String> stm = new LinkedHashMap<String, String>();
+			boolean ffStack = false;
+			// ");
+			String regex = ffStack && text.contains("stack:")
+					? "stack:(.+)-----\n"
+					: text.contains("compatible; MSIE 10.0")
+							? String.format("%s(.+)%s", "", USER_AGENT)
+							: String.format("%s(.+)%s", "-----\n", USER_AGENT);
+			Pattern stackTraceExtract = Pattern.compile(regex,
+					Pattern.MULTILINE | Pattern.DOTALL);
+			Matcher stem = stackTraceExtract.matcher(text);
+			stem.find();
+			String obfStacktrace = stem.group(1);
+			try (Stream<String> stream = Files.lines(symbol.toPath())) {
+				stream.forEach(line -> {
+					Matcher symbolMapMatcher = symbolMapPattern.matcher(line);
+					if (symbolMapMatcher.find()) {
+						km.put(symbolMapMatcher.group(1),
+								symbolMapMatcher.group(2));
+					}
+				});
+			} catch (IOException e) {
+				throw new WrappedRuntimeException(e);
+			}
+			CountingMap<Pattern> counter = new CountingMap<Pattern>();
+			for (Pattern trial : trials) {
+				Matcher m = trial.matcher(obfStacktrace);
+				while (m.find()) {
+					if (!m.group()
+							.equals("Unknown.anonymous(Unknown Source)")) {
+						counter.add(trial);
+					}
+				}
+			}
+			if (counter.isEmpty()) {
+				return;
+			}
+			Pattern max = counter.max();
+			Matcher m2 = max.matcher(obfStacktrace);
+			int ctr = 0;
+			String firstFrame = "";
+			Pattern lnp = Pattern.compile("^\\s+Line: (\\d+)",
+					Pattern.MULTILINE);
+			Matcher lnm = lnp.matcher(text);
+			int lineNumber = 0;
+			String[] moduleLines = null;
+			System.out.println("\n\nDeobfuscated stacktrace:\n\n");
+			if (lnm.find()) {
+				try {
+					lineNumber = Integer.parseInt(lnm.group(1));
+					moduleLines = moduleContents.split("\n");
+					Pattern moduleLineFuncPat = Pattern
+							.compile("function (.+?)\\(");
+					Matcher m3 = moduleLineFuncPat
+							.matcher(moduleLines[lineNumber - 1]);
+					if (m3.find()) {
+						String fn = m3.group(1).trim();
+						String unobffn = km.get(fn);
+						System.out.format("\tLine number %s:\n\t%s\n\n",
+								lineNumber,
+								(unobffn == null ? "***" + m3.group()
+										: unobffn));
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+					System.out.println("**invliad line number, rpperply");
+					lineNumber = 0;
+				}
+			}
+			int last = 0;
+			boolean breakForFn = false;
+			while (m2.find()) {
+				if (m2.start() - last > 10) {
+					System.out.println("\n-----\n");
+				}
+				last = m2.end();
+				String fn = m2.group(1).trim();
+				fn = fnOverride == null ? fn : fnOverride;
+				String unobffn = km.get(fn);
+				if (fnOverride != null && unobffn != null) {
+					breakForFn = true;
+				}
+				System.out.println("\t"
+						+ (unobffn == null ? "***" + m2.group() : unobffn));
+				if (ctr == 0) {
+					String js = null;
+					StringMap defJsLines = new StringMap();
+					if (lineNumber != 0) {
+						js = moduleLines[lineNumber - 1];
+					} else {
+						Pattern modP = Pattern
+								.compile(String.format("function %s\\(.+", fn));
+						int indexOf = moduleContents
+								.indexOf(String.format("function %s(", fn));
+						Matcher modM = modP.matcher(moduleContents);
+						if (modM.find()) {
+							js = modM.group();
+						}
+						if (getJs) {
+							defJsLines.putAll(getDefJsFunctionLines(fn));
+						}
+					}
+					if (js != null) {
+						defJsLines.put("initial-module", js);
+					}
+					if (lineNumber != 0) {
+						if (getJs) {
+							defJsLines.putAll(getDefJsLines(lineNumber));
+						}
+					}
+					if (defJsLines.size() > 0) {
+						ScriptEngineManager manager = new ScriptEngineManager();
+						ScriptEngine engine = manager
+								.getEngineByMimeType("text/javascript");
+						if (engine != null) {
+							for (Entry<String, String> jsLine : defJsLines
+									.entrySet()) {
+								List<String> result = new ArrayList<String>();
+								engine.put("result", result);
+								String script = Io.read()
+										.resource("beautify.js").asString();
+								// String eval = String.format(
+								// "%s\nvar
+								// js='%s';result.add(js_beautify(js));",
+								// script,
+								// StringEscapeUtils.escapeJavaScript(
+								// CommonUtils.trimToWsChars(
+								// jsLine.getValue(), 500)));
+								// engine.eval(eval);
+								// firstFrame += String.format(
+								// "\n%s\n============\n%s\n", jsLine.getKey(),
+								// result.get(0));
+								firstFrame += String.format(
+										"\n%s\n============\n%s\n",
+										jsLine.getKey(),
+										StringEscapeUtils.escapeJavaScript(
+												CommonUtils.trimToWsChars(
+														jsLine.getValue(),
+														500)));
+							}
+						}
+					}
+				}
+				ctr++;
+				if (breakForFn) {
+					fnOverride = null;
+					break;
+				}
+			}
+			String whichFrame = lineNumber == 0 ? "First frame:"
+					: String.format("Exception line (%s):", lineNumber);
+			System.out.format("\n" + whichFrame + "\n\n\t%s\n\n",
+					firstFrame.replace("\\n", "\n").replace("\n", "\n\t"));
+		}
+
+		private void dumpHistory(String serializedLogRecords) {
+			List<ClientLogRecord> clrs = parseSerializedLogRecords(
+					serializedLogRecords);
+			Function<ClientLogRecord, String> recordsConverter = new Function<ClientLogRecord, String>() {
+				@Override
+				public String apply(ClientLogRecord record) {
+					return String.format("%-30s | %-30s | %s", record.getTime(),
+							record.getTopic(), console.breakAndPad(0, 100,
+									record.getMessage(), 66));
+				}
+			};
+			System.out.println(String.format("%-30s | %-30s | %s", "Time",
+					"Topic", "Event"));
+			Collections.reverse(clrs);
+			for (ClientLogRecord clientLogRecord : clrs) {
+				if (clientLogRecord.getMessage()
+						.contains("Localdom unable to parse issue debug")) {
+					Io.log().toFile(clientLogRecord.getMessage());
+					// just get the first
+					break;
+				}
+			}
+			Ax.out(clrs.stream().map(recordsConverter)
+					.collect(Collectors.joining("\n")));
+		}
+
+		private boolean ensureModuleAndSymbolMap(String moduleStrongName)
+				throws Exception {
+			DevConsoleDebugPaths paths = getPeer().getPaths(console.getProps());
+			File devFolder = console.getDevHelper().getDevFolder();
+			File gwtSymbols = FileUtils.child(devFolder, "gwt-symbols");
+			gwtSymbols.mkdir();
+			module = new File(String.format("%s/%s.cache.js",
+					gwtSymbols.getPath(), moduleStrongName));
+			symbol = new File(String.format("%s/%s.symbolMap",
+					gwtSymbols.getPath(), moduleStrongName));
+			String pathMarker = PATH_MARKER;
+			if (!module.exists()) {
+				importViaRsync(
+						String.format("%s%s/%s.cache.js", paths.remoteRoot,
+								pathMarker, moduleStrongName),
+						module, paths, true);
+			}
+			if (getJs) {
+				jsfDir = new File(String.format("%s/deferredjs/%s",
+						gwtSymbols.getPath(), moduleStrongName));
+				jsfDir.mkdirs();
+				if (jsfDir.listFiles().length != 9) {
+					importViaRsync(String.format("%s%s/deferredjs/%s/*",
+							paths.remoteRoot, pathMarker, moduleStrongName),
+							jsfDir, paths, true);
+				}
+			}
+			if (!symbol.exists()) {
+				importViaRsync(
+						String.format("%s%s/%s.symbolMap", paths.remoteRoot,
+								pathMarker, moduleStrongName),
+						symbol, paths, false);
+			}
+			return module.exists() && symbol.exists();
+		}
+
+		private String extractReplay(String serializedLogRecords) {
+			List<ClientLogRecord> clrs = parseSerializedLogRecords(
+					serializedLogRecords);
+			List<ReplayInstruction> ris = clrs.stream()
+					.map(o -> ReplayInstruction.fromClientLogRecord(o))
+					.filter(Objects::nonNull).collect(Collectors.toList());
+			return CommonUtils.join(ris, "\n");
+		}
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dxd" };
+		}
+
+		private StringMap getDefJsFunctionLines(String fn) throws Exception {
+			StringMap jsLines = new StringMap();
+			String rgxfn = fn.replace("$", "\\$");
+			Pattern modP = Pattern
+					.compile(String.format("function %s\\(.+", rgxfn));
+			for (File f : jsfDir.listFiles()) {
+				String fileContents = Io.read().file(f).asString();
+				int indexOf = fileContents
+						.indexOf(String.format("function %s(", fn));
+				Matcher modM = modP.matcher(fileContents);
+				if (modM.find()) {
+					jsLines.put(f.getName(), modM.group());
+				}
+			}
+			return jsLines;
+		}
+
+		private StringMap getDefJsLines(int lineNumber) throws Exception {
+			StringMap jsLines = new StringMap();
+			for (File f : jsfDir.listFiles()) {
+				String[] lines = Io.read().file(f).asString().split("\n");
+				if (lines.length > lineNumber) {
+					jsLines.put(f.getName(), lines[lineNumber]);
+				}
+			}
+			return jsLines;
+		}
+
+		@Override
+		public String getDescription() {
+			return "Drill down to exception - run with zero params for usage";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxd  {id} <-js> <-fn fname> <-o outputformat>";
+		}
+
+		private void importViaRsync(String fromOriginal, File to,
+				DevConsoleDebugPaths paths, boolean module) throws Exception {
+			for (ModuleSymbolPaths tuple : paths.modulePaths) {
+				String folderPath = module ? tuple.modPath : tuple.symPath;
+				String from = fromOriginal.replace(PATH_MARKER, folderPath);
+				System.out.format("rsync %s -> %s\n", from, to.getPath());
+				ProcessBuilder pb = new ProcessBuilder("/usr/bin/rsync", "-avz",
+						"--progress", from, to.getPath());
+				Process proc = pb.start();
+				StreamBuffer errorBuffer = new StreamBuffer(
+						proc.getErrorStream(), "ERROR");
+				StreamBuffer outputBuffer = new StreamBuffer(
+						proc.getInputStream(), "OUTPUT");
+				Shell.receiveStream(errorBuffer);
+				Shell.receiveStream(outputBuffer);
+				int returnCode = proc.waitFor();
+				if (returnCode == 0) {
+					break;
+				}
+			}
+		}
+
+		public List<ClientLogRecord>
+				parseSerializedLogRecords(String serializedLogRecords) {
+			Function<String, ClientLogRecords> converter = new Function<String, ClientLogRecord.ClientLogRecords>() {
+				@Override
+				public ClientLogRecords apply(String original) {
+					try {
+						return TransformManager.deserialize(original);
+					} catch (Exception e) {
+						System.out.format(
+								"problem deserializing clientlogrecord:\n%s\n",
+								original);
+						e.printStackTrace();
+						if (Configuration.is(CommonRemoteServiceServlet.class,
+								"throwLogClientRecordExceptions")) {
+							throw new WrappedRuntimeException(e);
+						}
+						return null;
+					}
+				}
+			};
+			List<String> lines = Arrays
+					.asList(serializedLogRecords.split("\n"));
+			List<ClientLogRecords> records = lines.stream().map(converter)
+					.filter(Objects::nonNull).collect(Collectors.toList());
+			List<ClientLogRecord> clrs = new ArrayList<ClientLogRecord>();
+			for (ClientLogRecords clientLogRecords : records) {
+				clrs.addAll(clientLogRecords.getLogRecords());
+			}
+			return clrs;
+		}
+
+		@Override
+		public void printUsage() {
+			System.out.println(getUsage());
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.clear();
+			return run0(argv);
+		}
+
+		String run0(String[] argv) throws Exception {
+			if (argv.length == 0) {
+				printUsage();
+				return null;
+			}
+			ILogRecord record = null;
+			String id = argv[0];
+			long recId = 0;
+			if (id.matches("\\d+")) {
+				recId = Long.parseLong(argv[0]);
+				record = console.getState().logRecordById(recId);
+				if (record == null) {
+					if (lastRecord != null && lastRecord.getId() == recId) {
+						record = lastRecord;
+					}
+				}
+				if (record == null) {
+					List<ILogRecord> logRecords = new ArrayList<ILogRecord>();
+					Connection conn = getConn();
+					String sql = "select l.*,u.username "
+							+ "from logging l left outer join users u on l.user_id=u.id "
+							+ "where l.id=? ";
+					PreparedStatement ps = conn.prepareStatement(sql);
+					ps.setLong(1, recId);
+					ResultSet rs = ps.executeQuery();
+					CmdGetExceptionLogs subCmd = new CmdGetExceptionLogs();
+					subCmd.setEnvironment(console);
+					subCmd.addLogRecords(rs, logRecords);
+					record = CommonUtils.first(logRecords);
+					ps.close();
+				}
+			} else {
+				record = Registry.impl(ILogRecord.class);
+				record.setText(Io.read().path(id).asString());
+			}
+			lastRecord = record;
+			FilterArgvParam param = new FilterArgvParam(argv, "-o");
+			argv = param.argv;
+			String format = param.valueOrDefault("all");
+			boolean all = format.equals("all");
+			boolean replay = format.equals("replay");
+			Pattern clientLogPattern = Pattern
+					.compile("\nSession History:\n----\n(.+)", Pattern.DOTALL);
+			Pattern clientLogPattern2 = Pattern.compile("(\\{\"cn\":.+)",
+					Pattern.DOTALL);
+			String text = record.getText();
+			Matcher clientLogMatcher = clientLogPattern.matcher(text);
+			if (clientLogMatcher.find()) {
+				text = text.substring(0, clientLogMatcher.start());
+			}
+			text = text.replace("\n", "\n\t");
+			try {
+				JsonObject jsonNode = Json.parse(text);
+				if (jsonNode.hasKey("log")) {
+					text = text + "\n=========\nLog:\n=======\n"
+							+ jsonNode.get("log").asString()
+									.replace("StackTrace:", "\nStackTrace:\n");
+				}
+				if (jsonNode.hasKey("stack")) {
+					text = text + "\n=========\nStack:\n=======\n"
+							+ jsonNode.get("stack").asString();
+				}
+			} catch (Exception e) {
+			}
+			System.out.format(
+					"-------\nId:\t%s\nUser:\t%s (%s)\nCmp:\t%s\nDate:\t%s\nHost:\t%s\nText:\t%s\n",
+					record.getId(),
+					console.getState().getUser(record.getUserId()),
+					record.getUserId(), record.getComponentKey(),
+					record.getCreatedOn(), record.getHost(),
+					replay ? "" : text);
+			Matcher uam = UA_PATTERN.matcher(record.getText());
+			Pattern moduleNamePattern = Pattern
+					.compile("Permutation name: (\\S+)");
+			Matcher m = moduleNamePattern.matcher(record.getText());
+			String recordText = record.getText();
+			FilterArgvFlag f = new FilterArgvFlag(argv, "-js");
+			argv = f.argv;
+			getJs = f.contains;
+			FilterArgvParam p = new FilterArgvParam(argv, "-fn");
+			if (p.value != null) {
+				argv = p.argv;
+				fnOverride = p.value;
+			}
+			if (m.find()) {
+				uam.find();
+				String userAgentString = uam.group(1);
+				String mn = m.group(1);
+				if (!mn.equals("HostedMode")
+						&& !text.contains("fillInStackTrace") && all
+						&& ensureModuleAndSymbolMap(mn)) {
+					deObfStacktrace(text, mn);
+				} else {
+					if (all) {
+						System.out.println("Unable to import module/symbol");
+					}
+				}
+			}
+			clientLogMatcher = clientLogPattern.matcher(record.getText());
+			Matcher clientLogMatcher2 = clientLogPattern2
+					.matcher(record.getText());
+			if (!clientLogMatcher.find() && clientLogMatcher2.find()) {
+				clientLogMatcher = clientLogMatcher2;
+			}
+			clientLogMatcher.reset();
+			if (clientLogMatcher.find()) {
+				if (all) {
+					dumpHistory(clientLogMatcher.group(1));
+				} else if (replay) {
+					String replayStr = extractReplay(clientLogMatcher.group(1));
+					System.out.format("\n\n%s\n\n", replayStr);
+					console.setClipboardContents(replayStr);
+				}
+			}
+			return String.format("Drilldown - %s", recId);
+		}
+
+		public static class DevConsoleDebugPaths {
+			public List<ModuleSymbolPaths> modulePaths = new ArrayList<>();
+
+			public String remoteRoot;
+
+			public static class ModuleSymbolPaths {
+				public String symPath;
+
+				public String modPath;
+
+				public ModuleSymbolPaths(String symPath, String modPath) {
+					this.symPath = symPath;
+					this.modPath = modPath;
+				}
+			}
+		}
+	}
+
+	public static class CmdGetExceptionLogs<IL extends Entity & ILogRecord>
+			extends DevConsoleCommand {
+		private static final int DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS = 2;
+
+		String regexFilter = null;
+
+		int maxRecordLength = 100000;
+
+		private SystemoutCounter counter;
+
+		public void addLogRecords(ResultSet rs, List<IL> logRecords)
+				throws SQLException {
+			Optional<Pattern> ignorePattern = Optional.ofNullable(
+					regexFilter != null ? Pattern.compile(regexFilter) : null);
+			while (rs.next()) {
+				IUser u = console.getState().ensureUser(rs.getLong("user_id"),
+						rs.getString("username"));
+				IL l = (IL) Registry.impl(ILogRecord.class);
+				l.setId(rs.getLong("id"));
+				l.setComponentKey(rs.getString("component_key"));
+				l.setUserId(rs.getLong("user_id"));
+				l.setText(rs.getString("text"));
+				l.setHost(rs.getString("host"));
+				l.setCreatedOn(
+						new Date(rs.getTimestamp("created_on").getTime()));
+				if (ignorePattern.isPresent()
+						&& ignorePattern.get().matcher(l.getText()).find()) {
+				} else {
+					logRecords.add(l);
+				}
+				counter.tick();
+			}
+			logRecords.sort(Entity.EntityComparator.INSTANCE);
+		}
+
+		@Override
+		public boolean canUseProductionConn() {
+			return true;
+		}
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dxg" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Download meaningful app exceptions for the last x days";
+		}
+
+		protected String getExceptionIgnoreClause() {
+			return getPeer().getExceptionIgnoreClause();
+		}
+
+		@Override
+		public String getUsage() {
+			return "dxg {days} <-a --all types> <-gtid id : log record id gt specified>";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			boolean saveUseProd = console.getProps().connection_useProduction;
+			try {
+				console.getProps().connection_useProduction = true;
+				Connection conn = getConn();
+				int days = getIntArg(argv, 0,
+						DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS);
+				String ckFilter = getExceptionIgnoreClause();
+				FilterArgvFlag filterArgvResult = new FilterArgvFlag(argv,
+						"-a");
+				argv = filterArgvResult.argv;
+				String exceptionFilter = filterArgvResult.contains ? ""
+						: "and l.component_key ='CLIENT_EXCEPTION' ";
+				filterArgvResult = new FilterArgvFlag(argv, "-ex");
+				argv = filterArgvResult.argv;
+				FilterArgvParam filterArgvParam = new FilterArgvParam(argv,
+						"-ignore");
+				regexFilter = filterArgvParam.value;
+				argv = filterArgvParam.argv;
+				filterArgvParam = new FilterArgvParam(argv, "-maxLength");
+				if (filterArgvParam.value != null) {
+					maxRecordLength = Integer.parseInt(filterArgvParam.value);
+				}
+				argv = filterArgvParam.argv;
+				List<String> exceptions = Arrays.asList(
+						"UNEXPECTED_SERVLET_EXCEPTION",
+						"ALERT_GENERATION_FAILURE", "JOB_FAILURE_EXCEPTION",
+						"CLUSTER_EXCEPTION", "CLIENT_EXCEPTION",
+						"RPC_EXCEPTION", "CLIENT_EXCEPTION_IE_CRUD",
+						"PUBLICATION_EXCEPTION", "TRANSFORM_EXCEPTION",
+						"PARSER_EXCEPTION");
+				exceptionFilter = filterArgvResult.contains
+						? String.format("and l.component_key in %s",
+								EntityPersistenceHelper
+										.toInStringsClause(exceptions))
+						: exceptionFilter;
+				filterArgvParam = new FilterArgvParam(argv, "-extypes");
+				String customExceptionFilter = filterArgvParam.value;
+				if (customExceptionFilter != null) {
+					exceptions = Arrays.stream(customExceptionFilter.split(","))
+							.collect(Collectors.toList());
+					exceptionFilter = String.format("and l.component_key in %s",
+							EntityPersistenceHelper
+									.toInStringsClause(exceptions));
+				}
+				argv = filterArgvParam.argv;
+				filterArgvParam = new FilterArgvParam(argv, "-gtid");
+				argv = filterArgvParam.argv;
+				String gtOnlyFilter = filterArgvParam.value == null ? ""
+						: String.format("and l.id>=%s ", filterArgvParam.value);
+				filterArgvParam = new FilterArgvParam(argv, "-limit");
+				argv = filterArgvParam.argv;
+				String limitClause = filterArgvParam.value == null ? ""
+						: Ax.format(" limit %s", filterArgvParam.value);
+				String orderClause = limitClause.isEmpty() ? "random()"
+						: "l.id desc";
+				String limitDisplayClause = filterArgvParam.value == null ? ""
+						: Ax.format(" %s of ", filterArgvParam.value);
+				String sqlFromEtc = String.format(
+						"from logging l inner join users u on l.user_id=u.id "
+								+ "where  l.created_on>? %s %s and "
+								+ " not (l.component_key in %s) and (l.textLength IS NULL OR l.textLength<%s)"
+								+ " order by %s %s",
+						exceptionFilter, gtOnlyFilter, ckFilter,
+						maxRecordLength, orderClause, limitClause);
+				int size = 0;
+				Calendar c = Calendar.getInstance();
+				c.add(Calendar.DATE, -days);
+				Date d = c.getTime();
+				java.sql.Date cutoffSqlDate = new java.sql.Date(d.getTime());
+				{
+					String sql = "select count(l.id) "
+							+ sqlFromEtc.replaceFirst("(.+) order .+", "$1");
+					PreparedStatement ps = conn.prepareStatement(sql);
+					ps.setDate(1, cutoffSqlDate);
+					ResultSet rs = ps.executeQuery();
+					if (rs.next()) {
+						size += rs.getLong(1);
+					}
+					ps.close();
+				}
+				Ax.out("Retrieving %s%s log records...", limitDisplayClause,
+						size);
+				{
+					String sql = "select l.*,u.username " + sqlFromEtc;
+					PreparedStatement ps = conn.prepareStatement(sql);
+					Ax.out(sql);
+					ps.setDate(1, cutoffSqlDate);
+					ResultSet rs = ps.executeQuery();
+					console.getState().logRecords = new ArrayList<>();
+					List<IL> logRecords = (List<IL>) (List<?>) console
+							.getState().logRecords;
+					counter = SystemoutCounter.standardJobCounter(size,
+							"records");
+					addLogRecords(rs, logRecords);
+					ps.close();
+				}
+				console.serializeState();
+				return String.format("retrieved %s log records",
+						console.getState().logRecords.size());
+			} finally {
+				console.getProps().connection_useProduction = saveUseProd;
+			}
+		}
+	}
+
+	@Registration(DevConsoleDebugPeer.class)
+	public static abstract class DevConsoleDebugPeer {
+		public abstract List<ILogRecord> filterByComponent(
+				List<ILogRecord> logRecords, String componentKey);
+
+		public abstract String getExceptionIgnoreClause();
+
+		public abstract DevConsoleDebugPaths
+				getPaths(DevConsoleProperties props);
+	}
+
+	@Registration.Singleton
+	public static class IgnoreExceptionPatternProvider {
+		public static DevConsoleDebugCommands.IgnoreExceptionPatternProvider
+				get() {
+			return Registry.impl(
+					DevConsoleDebugCommands.IgnoreExceptionPatternProvider.class);
+		}
+
+		public StringMap getIgnoreExceptionPatterns() {
+			return new StringMap();
+		}
+	}
+}

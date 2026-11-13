@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet.transform.fragment;
 
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.traversal.layer.BranchToken;
 import cc.alcina.framework.gwt.client.traversal.layer.LayerParser.ParserState;

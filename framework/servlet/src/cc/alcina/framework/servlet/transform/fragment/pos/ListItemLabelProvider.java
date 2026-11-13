@@ -6,10 +6,10 @@ import java.util.Optional;
 import cc.alcina.framework.servlet.transform.fragment.StyledDocument;
 import cc.alcina.framework.servlet.transform.fragment.StyledNode;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.Location;
-import cc.alcina.framework.gwt.client.dom.Location.Range;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Location;
+import cc.alcina.framework.gwtpeer.client.dom.Location.Range;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TextUtils;
 

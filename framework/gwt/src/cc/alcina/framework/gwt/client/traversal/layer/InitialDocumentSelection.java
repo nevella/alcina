@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.traversal.layer;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
 import cc.alcina.framework.common.client.process.TreeProcess;
 
 public abstract class InitialDocumentSelection extends DocumentSelection {

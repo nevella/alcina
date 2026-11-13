@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens;
 
-import cc.alcina.framework.gwt.client.dom.Measure;
-import cc.alcina.framework.gwt.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 

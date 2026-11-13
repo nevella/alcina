@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.transform.fragment;
 
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens;
-import cc.alcina.framework.gwt.client.dom.Measure;
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.EmittedBySoleLayer;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;

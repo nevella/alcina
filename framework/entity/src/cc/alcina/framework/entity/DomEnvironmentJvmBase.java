@@ -12,10 +12,10 @@ import com.google.gwt.dom.client.Document.RemoteType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomEnvironment;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNode.XpathEvaluator;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomEnvironment;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class DomEnvironmentJvmBase implements DomEnvironment {

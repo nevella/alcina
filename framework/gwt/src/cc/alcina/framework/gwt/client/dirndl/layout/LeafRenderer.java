@@ -5,7 +5,7 @@ import java.util.Date;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 
-import cc.alcina.framework.gwt.client.dom.DomNodeType;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasStringValue;
 import cc.alcina.framework.common.client.logic.reflection.Registration;

@@ -2,7 +2,7 @@ package cc.alcina.extras.dev.console.alcina;
 
 import javax.xml.bind.UnmarshalException;
 
-import cc.alcina.extras.dev.console.DevConsole;
+import cc.alcina.framework.dev.console.DevConsole;
 import cc.alcina.framework.entity.util.TerminalStreams;
 
 public class AlcinaDevConsole extends DevConsole {

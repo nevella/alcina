@@ -10,12 +10,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.gwt.client.dom.DomDocument;
-import cc.alcina.framework.gwt.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dom.DomNodeBuilder;
-import cc.alcina.framework.gwt.client.dom.DomNodeHtmlTableBuilder;
-import cc.alcina.framework.gwt.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
-import cc.alcina.framework.gwt.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
+import cc.alcina.framework.gwtpeer.client.dom.DomDocument;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeBuilder;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeHtmlTableBuilder;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
+import cc.alcina.framework.gwtpeer.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;

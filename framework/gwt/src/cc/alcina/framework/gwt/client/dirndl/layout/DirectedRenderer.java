@@ -125,8 +125,8 @@ public abstract class DirectedRenderer {
 
 	protected abstract void render(DirectedLayout.RendererInput input);
 
-	public cc.alcina.framework.gwt.client.dom.DomNodeType rendersAsType() {
-		return cc.alcina.framework.gwt.client.dom.DomNodeType.ELEMENT;
+	public cc.alcina.framework.gwtpeer.client.dom.DomNodeType rendersAsType() {
+		return cc.alcina.framework.gwtpeer.client.dom.DomNodeType.ELEMENT;
 	}
 
 	/**
