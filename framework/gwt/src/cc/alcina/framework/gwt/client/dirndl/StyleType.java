@@ -1,10 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl;
 
+import com.google.gwt.dom.client.ClassNames;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
-
-import cc.alcina.framework.gwt.client.util.ClassNames;
 
 public interface StyleType {
 	default void addTo(UIObject uiObject) {

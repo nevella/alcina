@@ -10,6 +10,8 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.ClientDomElement.InputFileData;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Html5File;
+
 import cc.alcina.framework.common.client.util.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -28,7 +30,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.gwittir.widget.FileData;
-import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
 import cc.alcina.framework.gwt.client.util.Async;
 
 /**

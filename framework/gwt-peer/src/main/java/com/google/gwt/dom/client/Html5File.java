@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.gwittir.widget;
+package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 

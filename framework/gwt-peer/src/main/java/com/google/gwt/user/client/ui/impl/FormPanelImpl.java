@@ -29,7 +29,7 @@ public class FormPanelImpl {
 	 * @return the response html
 	 */
 	public native String getContents(Element iframe_mult) /*-{
-		@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(iframe_mult);
+		@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(iframe_mult);
 		var iframe = iframe_mult.@com.google.gwt.dom.client.Element::jsoRemote()();
 		try {
 		// Make sure the iframe's window & document are loaded.
@@ -51,7 +51,7 @@ public class FormPanelImpl {
 	 * @return the form's encoding type
 	 */
 	public native String getEncoding(Element form_multi) /*-{
-															@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
+															@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
 															var form = form_multi.@com.google.gwt.dom.client.Element::jsoRemote()();
 															// We can always get 'enctype', no matter which browser, because we set
 															// both 'encoding' and 'enctype' in setEncoding().
@@ -70,9 +70,9 @@ public class FormPanelImpl {
 	 */
 	public native void hookEvents(Element iframe_multi, Element form_multi,
 			FormPanelImplHost listener) /*-{
-										@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
+										@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
 										if (iframe_multi != null) {
-										@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(iframe_multi);
+										@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(iframe_multi);
 										}
 										var form = form_multi.@com.google.gwt.dom.client.Element::jsoRemote()();
 										var iframe = iframe_multi == null ? null
@@ -104,7 +104,7 @@ public class FormPanelImpl {
 	 *            the form to be reset
 	 */
 	public native void reset(Element form_multi) /*-{
-													@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
+													@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
 													var form = form_multi.@com.google.gwt.dom.client.Element::jsoRemote()();
 													form.reset();
 													}-*/;
@@ -118,7 +118,7 @@ public class FormPanelImpl {
 	 *            the new encoding type
 	 */
 	public native void setEncoding(Element form_multi, String encoding) /*-{
-																		@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
+																		@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
 																		var form = form_multi.@com.google.gwt.dom.client.Element::jsoRemote()();
 																		// To be safe, setting both.
 																		form.enctype = encoding;
@@ -134,9 +134,9 @@ public class FormPanelImpl {
 	 *            the iframe that is targetted, or <code>null</code>
 	 */
 	public native void submit(Element form_multi, Element iframe_multi) /*-{
-																		@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
+																		@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
 																		if (iframe_multi != null) {
-																		@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(iframe_multi);
+																		@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(iframe_multi);
 																		}
 																		var form = form_multi.@com.google.gwt.dom.client.Element::jsoRemote()();
 																		var iframe = iframe_multi == null ? null
@@ -157,9 +157,9 @@ public class FormPanelImpl {
 	 *            the form whose onSubmit event is to be unhooked
 	 */
 	public native void unhookEvents(Element iframe_multi, Element form_multi) /*-{
-								@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
+								@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
 								if (iframe_multi != null) {
-								@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(iframe_multi);
+								@com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(iframe_multi);
 								}
 								var form = form_multi.@com.google.gwt.dom.client.Element::jsoRemote()();
 								var iframe = iframe_multi == null ? null

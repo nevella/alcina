@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.util;
+package cc.alcina.framework.gwtpeer.client.dom;
 
 import java.util.ArrayList;
 import java.util.List;

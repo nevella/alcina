@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.TextUtils;
-import cc.alcina.framework.gwt.client.util.DomUtils;
 
 /**
  * <p>
@@ -778,7 +777,7 @@ public class HtmlParser {
 		 * sky - instead, improve parser (to retain exact source refs)
 		 */
 		if (markup.contains("/>")) {
-			markup = DomUtils.expandEmptyElements(markup);
+			markup = MarkupUtils.expandEmptyElements(markup);
 		}
 		if (markup.matches("(?si)<!doctype.*")) {
 			markup = markup.replaceFirst("(?si)<!doctype.*?>\n?", "");

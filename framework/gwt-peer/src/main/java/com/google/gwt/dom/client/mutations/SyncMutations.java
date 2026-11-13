@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JavascriptObjectUtils;
 
 class SyncMutations {
 	MutationsAccess mutationsAccess;
@@ -238,7 +238,7 @@ class SyncMutations {
 		records = filterForRepeatedModificationAndConnection(records);
 		LocalDom.getRemoteMutations().log(Ax.format("Syncing records :: %s/%s",
 				records.length(), unfilteredLength), false);
-		List<MutationRecordJso> recordJsoList = ClientUtils
+		List<MutationRecordJso> recordJsoList = JavascriptObjectUtils
 				.jsArrayToTypedArray(records);
 		List<MutationRecord> recordList = recordJsoList.stream()
 				.map(jso -> new MutationRecord(this, jso))

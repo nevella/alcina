@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import com.google.gwt.dom.client.Html5File;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HasEnabled;

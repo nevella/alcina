@@ -238,15 +238,6 @@ public class ClientUtils {
     debugger;
 	}-*/;
 
-	public static <T extends JavaScriptObject> List<T>
-			jsArrayToTypedArray(JsArray<T> typedArray) {
-		List<T> result = new ArrayList<T>();
-		for (int i = 0; i < typedArray.length(); i++) {
-			result.add(typedArray.get(i));
-		}
-		return result;
-	}
-
 	public static native JavaScriptObject jsonParse(String json) /*-{
     var dateTimeReviver = function(key, value) {
       var a;

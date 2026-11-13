@@ -8,6 +8,7 @@ import com.google.gwt.core.client.JsArrayString;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwtpeer.client.logic.domaintransform.lookup.JavascriptObjectUtils;
 
 public final class TourJso extends JavaScriptObject implements Tour {
 	static native TourJso fromJson(String tourJson) /*-{
@@ -25,7 +26,7 @@ public final class TourJso extends JavaScriptObject implements Tour {
 
 	@Override
 	public List<? extends Tour.Step> getSteps() {
-		return ClientUtils.jsArrayToTypedArray(getStepsArray());
+		return JavascriptObjectUtils.jsArrayToTypedArray(getStepsArray());
 	}
 
 	final native JsArray<StepJso> getStepsArray() /*-{
@@ -39,7 +40,8 @@ public final class TourJso extends JavaScriptObject implements Tour {
 
 		@Override
 		public final List<? extends Tour.Condition> getConditions() {
-			return ClientUtils.jsArrayToTypedArray(getConditionsArray());
+			return JavascriptObjectUtils
+					.jsArrayToTypedArray(getConditionsArray());
 		}
 
 		final private native JsArray<ConditionJso> getConditionsArray()/*-{
@@ -237,7 +239,7 @@ public final class TourJso extends JavaScriptObject implements Tour {
 
 		@Override
 		public final List<? extends Tour.PopupInfo> providePopups() {
-			return ClientUtils.jsArrayToTypedArray(getPopupsArray());
+			return JavascriptObjectUtils.jsArrayToTypedArray(getPopupsArray());
 		}
 
 		@Override

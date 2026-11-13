@@ -48,8 +48,6 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.impl.PopupImpl;
 
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-
 /**
  * A panel that can "pop up" over other widgets. It overlays the browser's
  * client area (and any previously-created popups).
@@ -186,8 +184,6 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	private int topPosition = -1;
 
 	private boolean initialPopupPosition;
-
-	Boolean cachedIsMobile = null;
 
 	/**
 	 * Creates an empty popup panel. A child widget must be added to it before
@@ -822,10 +818,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		boolean eventTargetsPopupOrPartner = eventTargetsPopup(nativeEvent)
 				|| eventTargetsPartner(nativeEvent);
 		boolean eventTargetsScrollBar = elem.hasTagName("html");
-		if (cachedIsMobile == null) {
-			cachedIsMobile = BrowserMod.isMobile();
-		}
-		boolean wasTouchMaybeDrag = cachedIsMobile && (BrowserEvents.TOUCHSTART
+		boolean wasTouchMaybeDrag = (BrowserEvents.TOUCHSTART
 				.equals(nativeEvent.getType())
 				|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
 				|| BrowserEvents.TOUCHMOVE.equals(nativeEvent.getType())

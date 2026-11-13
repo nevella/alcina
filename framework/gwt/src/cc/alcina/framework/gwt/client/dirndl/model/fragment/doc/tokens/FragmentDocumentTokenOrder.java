@@ -1,9 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
-import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 
 public class FragmentDocumentTokenOrder extends Measure.Token.Order.Simple {
 	public static final int STRUCT_BLOCK_CONTAINS_INDENT_RUN = 32;
@@ -14,27 +13,27 @@ public class FragmentDocumentTokenOrder extends Measure.Token.Order.Simple {
 	}
 
 	@Override
-	public int customCompare(MeasureSelection o1, MeasureSelection o2) {
-		MeasureSelection leafBlockSelection = null;
-		MeasureSelection imageSelection = null;
-		if (o1.get().token == LayoutTokens.LeafBlock.TYPE) {
-			leafBlockSelection = o1;
+	public int customCompare(Measure o1, Measure o2) {
+		Measure leafBlockMeasure = null;
+		Measure imageMeasure = null;
+		if (o1.token == LayoutTokens.LeafBlock.TYPE) {
+			leafBlockMeasure = o1;
 		}
-		if (o2.get().token == LayoutTokens.LeafBlock.TYPE) {
-			leafBlockSelection = o2;
+		if (o2.token == LayoutTokens.LeafBlock.TYPE) {
+			leafBlockMeasure = o2;
 		}
-		if (o1.get().token == LayoutTokens.Image.TYPE) {
-			imageSelection = o1;
+		if (o1.token == LayoutTokens.Image.TYPE) {
+			imageMeasure = o1;
 		}
-		if (o2.get().token == LayoutTokens.Image.TYPE) {
-			imageSelection = o2;
+		if (o2.token == LayoutTokens.Image.TYPE) {
+			imageMeasure = o2;
 		}
-		if (leafBlockSelection != null && imageSelection != null) {
-			if (leafBlockSelection.get().startContainingNode().isText()) {
-				int cmp = leafBlockSelection.get().startContainingNode()
-						.asLocation().compareTo(imageSelection.get()
-								.startContainingNode().asLocation());
-				boolean o1IsLeaf = leafBlockSelection == o1;
+		if (leafBlockMeasure != null && imageMeasure != null) {
+			if (leafBlockMeasure.startContainingNode().isText()) {
+				int cmp = leafBlockMeasure.startContainingNode().asLocation()
+						.compareTo(imageMeasure.startContainingNode()
+								.asLocation());
+				boolean o1IsLeaf = leafBlockMeasure == o1;
 				return cmp * (o1IsLeaf ? 1 : -1);
 			}
 		}

@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
 
 public final class ElementJso extends NodeJso implements ElementRemote {
 	/*

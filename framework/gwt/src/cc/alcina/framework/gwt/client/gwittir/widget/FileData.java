@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import java.io.Serializable;
 import java.util.function.Consumer;
 
+import com.google.gwt.dom.client.Html5File;
 import com.google.gwt.dom.client.ClientDomElement.InputFileData;
 import cc.alcina.framework.common.client.util.AsyncCallback;
 

@@ -54,7 +54,6 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
-import cc.alcina.framework.gwt.client.util.StyleUtil;
 import cc.alcina.framework.gwtpeer.client.dom.DomEnvironment.StyleResolver;
 import cc.alcina.framework.gwtpeer.client.dom.DomNode.DomNodeReadonlyLookup.DomNodeReadonlyLookupQuery;
 import cc.alcina.framework.gwtpeer.client.dom.Location.IndexTuple;

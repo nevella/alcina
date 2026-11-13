@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.util;
+package com.google.gwt.dom.client;
 
 public class ClassNames {
 	public static String addClassName(String existingClassNames,

@@ -3,11 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.gwtpeer.client.dom.DomNode;
-import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
-import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.CheckDescendantContainment;
 import cc.alcina.framework.common.client.logic.domain.HasStringValue;
-import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Block;
@@ -17,7 +13,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocument
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.FragmentDocumentRoot;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.Inline;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.FragmentDocumentOverlayToken.CanContainLeaf;
-import cc.alcina.framework.gwt.client.util.StyleUtil;
+import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
+import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.CheckDescendantContainment;
+import cc.alcina.framework.gwtpeer.client.dom.StyleUtil;
 
 /*
  * These act as a bridge between the input and output models - the input model

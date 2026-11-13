@@ -517,7 +517,7 @@ public class WidgetUtils {
     if (!($doc.querySelector)) {
       return null;
     }
-    @cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(elto);
+    @com.google.gwt.dom.client.Element::ensureJsoRemote(Lcom/google/gwt/dom/client/Element;)(elto);
     var elt = elto.@com.google.gwt.dom.client.Element::jsoRemote()();
     var from = (elt) ? elt : $doc;
     var splits = selector.split("::");

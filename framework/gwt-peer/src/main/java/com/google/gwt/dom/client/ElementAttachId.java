@@ -10,13 +10,13 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.behavior.ElementBehavior;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import cc.alcina.framework.common.client.util.AsyncCallback;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.AsyncCallback;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwtpeer.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.util.Async;
 
 /*
  * Currently an outlier in this is support for the 'value' property - which
@@ -655,12 +655,19 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void getFileData(AsyncCallback<InputFileData> callback) {
-		AsyncCallback<String> strCallback = Async.<String> callbackBuilder()
-				.success(str -> {
-					List<InputFileData> list = ReflectiveSerializer
-							.deserialize(str);
-					callback.onSuccess(Ax.first(list));
-				}).build();
+		AsyncCallback<String> strCallback = new AsyncCallback<String>() {
+			@Override
+			public void onSuccess(String result) {
+				List<InputFileData> list = ReflectiveSerializer
+						.deserialize(result);
+				callback.onSuccess(Ax.first(list));
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				WrappedRuntimeException.throwWrapped(caught);
+			}
+		};
 		invokeAsync("provideFileData", List.of(), List.of(), null, strCallback);
 	}
 }

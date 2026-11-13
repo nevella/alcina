@@ -6,13 +6,11 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FileLogger;
 import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.gwt.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.gwtpeer.client.dom.Location.RelativeDirection;
 
 // FIXME - selection - Measure extends HasSelection? or hasParentSelection?
@@ -74,10 +72,6 @@ public class Measure extends Location.Range {
 		super(start, end);
 		Preconditions.checkNotNull(token);
 		this.token = token;
-	}
-
-	public Selection asSelection(Selection parent) {
-		return new MeasureSelection(parent, this);
 	}
 
 	public boolean hasDataAssignableClass(Class<?> dataClass) {
@@ -340,8 +334,7 @@ public class Measure extends Location.Range {
 				}
 			}
 
-			default int customCompare(MeasureSelection o1,
-					MeasureSelection o2) {
+			default int customCompare(Measure o1, Measure o2) {
 				return 0;
 			}
 		}

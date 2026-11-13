@@ -4,8 +4,6 @@ import java.util.Objects;
 
 import com.google.gwt.safehtml.shared.SafeHtml;
 
-import cc.alcina.framework.gwt.client.util.ClassNames;
-
 public class ClientDomElementStatic {
 	/**
 	 * Adds a name to this element's class property. If the name is already

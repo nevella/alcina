@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.traversal.layer;
 
 import java.util.Comparator;
 
+import cc.alcina.framework.gwtpeer.client.dom.Measure;
 import cc.alcina.framework.gwtpeer.client.dom.Measure.Token;
 import cc.alcina.framework.gwtpeer.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.Ax;
@@ -12,6 +13,12 @@ public class MeasureTreeComparator implements Comparator<MeasureSelection> {
 
 	public MeasureTreeComparator(Token.Order order) {
 		this.order = order;
+	}
+
+	int compareByMeasure(MeasureSelection o1, MeasureSelection o2) {
+		Measure m1 = o1.get();
+		Measure m2 = o2.get();
+		return order.customCompare(m1, m2);
 	}
 
 	@Override
@@ -26,7 +33,7 @@ public class MeasureTreeComparator implements Comparator<MeasureSelection> {
 		IntPair pair1 = o1.get().toIntPair();
 		IntPair pair2 = o2.get().toIntPair();
 		if (IntPair.sameStartAndAtLeastOnePoint(pair1, pair2)) {
-			int cmp = order.customCompare(o1, o2);
+			int cmp = compareByMeasure(o1, o2);
 			if (cmp != 0) {
 				// rare path
 				return cmp;

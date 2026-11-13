@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.ClassNames;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.collections.NotifyingList;
@@ -77,10 +78,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.MultiNodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.NodeEventTypeValidator;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
-import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.util.AlcinaLogUtils;
-import cc.alcina.framework.gwt.client.util.ClassNames;
-import cc.alcina.framework.gwt.client.util.StyleUtil;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.gwtpeer.client.dom.StyleUtil;
 
 /**
  *

@@ -1,11 +1,10 @@
-package com.google.gwt.dom.client.mutations;
+package cc.alcina.framework.gwt.client.test;
 
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.mutations.MutationsTests.Tests.Phase;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.RootPanel;
 
@@ -23,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagText;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.test.MutationsTests.Tests.Phase;
 
 /**
  * A set of tests that mutate the dom in different ways, and validate the

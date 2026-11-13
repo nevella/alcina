@@ -60,7 +60,6 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.gwt.client.gwittir.widget.Html5File;
 
 /**
  * All HTML element interfaces derive from this class.
