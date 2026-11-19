@@ -6,8 +6,8 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import elemental.json.JsonType;
 import elemental.json.JsonValue;
 
+@SuppressWarnings("deprecation")
 public class Common {
-	@SuppressWarnings("deprecation")
 	public interface _ScriptableExtensions {
 		int entityHash(long lValue, int classHash);
 
@@ -82,10 +82,18 @@ public class Common {
 				throw new UnsupportedOperationException(
 						"Unimplemented method 'serializeSearchDefinition'");
 			}
+
+			@Override
+			public String stringify(JsonValue jsonValue, int i) {
+				throw new UnsupportedOperationException(
+						"Unimplemented method 'stringify'");
+			}
 		}
 
 		String serializeSearchDefinition(Map<String, Class> abbrevLookup,
 				Map<Class, String> reverseAbbrevLookup, SearchDefinition def);
+
+		String stringify(JsonValue jsonValue, int i);
 	}
 
 	public static Common._Extensions extensions = new _Extensions.Default();

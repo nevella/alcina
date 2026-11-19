@@ -10,7 +10,10 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.gwt.client.util.AlcinaBeanSerializer;
+import elemental.json.JsonValue;
+import elemental.json.impl.JsonUtil;
 
+@SuppressWarnings("deprecation")
 public class CommonExtensionsImpl implements Common._Extensions {
 	// Keep synchronized with LongLib
 	private static final double TWO_PWR_16_DBL = 0x10000;
@@ -105,5 +108,10 @@ public class CommonExtensionsImpl implements Common._Extensions {
 				return (long) d1 + (long) d2;
 			}
 		}
+	}
+
+	@Override
+	public String stringify(JsonValue jsonValue, int i) {
+		return JsonUtil.stringify(jsonValue, 2);
 	}
 }

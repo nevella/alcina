@@ -42,25 +42,22 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode.PropertyNode;
-import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeSerializerForType;
+import cc.alcina.framework.common.client.service.Common;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
-import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import elemental.js.json.JsJsonFactory;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import elemental.json.JsonString;
 import elemental.json.JsonType;
 import elemental.json.JsonValue;
-import elemental.json.impl.JsonUtil;
 
 /**
  * <p>
@@ -871,7 +868,8 @@ public class ReflectiveSerializer {
 		public String toJson(boolean pretty) {
 			// FIXME - dirndl 1x2 - extend jsonValue.toJson, remove GWT.isScript
 			// check
-			return pretty && !Al.isScript() ? JsonUtil.stringify(jsonValue, 2)
+			return pretty && !Al.isScript()
+					? Common.extensions.stringify(jsonValue, 2)
 					: jsonValue.toJson();
 		}
 
