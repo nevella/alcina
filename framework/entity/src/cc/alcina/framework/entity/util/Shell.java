@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -28,6 +28,7 @@ import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class Shell {
+
 	public static String exec(String script, Object... args) {
 		try {
 			String command = Ax.format(script, args);
@@ -37,9 +38,9 @@ public class Shell {
 			shell.logLaunchMessage = false;
 			Output output = shell.runBashScript(command, false)
 					.throwOnException();
-			if (Ax.notBlank(output.error)) {
-				Ax.err(output.error);
-			}
+				if (Ax.notBlank(output.error)) {
+					Ax.err(output.error);
+				}
 			return output.output;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

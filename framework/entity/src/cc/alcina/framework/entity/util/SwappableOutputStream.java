@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 

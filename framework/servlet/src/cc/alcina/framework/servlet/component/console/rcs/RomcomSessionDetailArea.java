@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage.HeadingArea;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.console.rcs.Feature_RomcomSessionConsole;
 import cc.alcina.framework.servlet.component.console.ServerConsoleContents;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
 import cc.alcina.framework.servlet.environment.replay.SessionReplay;

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;

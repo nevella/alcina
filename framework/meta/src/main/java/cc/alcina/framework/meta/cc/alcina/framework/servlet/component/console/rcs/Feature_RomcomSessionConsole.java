@@ -1,0 +1,82 @@
+package cc.alcina.framework.meta.cc.alcina.framework.servlet.component.console.rcs;
+
+import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.console.Feature_ServerConsole;
+
+/**
+ * <h4>The romcom session console</h4>
+ * <p>
+ * List active + past sessions, filter by conditions such as 'long wait time',
+ * 'large packet' etc
+ */
+@Feature.Status.Ref(Feature.Status.Open.class)
+@Feature.Parent(Feature_ServerConsole.class)
+public interface Feature_RomcomSessionConsole extends Feature {
+	/*
+	 * the dashboard displays various category summaries + a detail view of the
+	 * active + historical sessions
+	 */
+	@Feature.Parent(Feature_RomcomSessionConsole.class)
+	public interface _Dashboard extends Feature {
+	}
+
+	/*
+	 * The cache can be an fs-backed summary store (from an fs-backed sequence
+	 * store), or a similar persistent-object backed store
+	 */
+	@Feature.Parent(Feature_RomcomSessionConsole.class)
+	public interface _Cache extends Feature {
+	}
+
+	/*
+	 * Prune that cache
+	 */
+	@Feature.Parent(Feature_RomcomSessionConsole.class)
+	public interface _Retention extends Feature {
+	}
+
+	/*
+	 * Collect metrics of interest (large packets, slow first/second paint,
+	 * exceptions) + add to the dashboard + search filters
+	 */
+	@Feature.Parent(Feature_RomcomSessionConsole.class)
+	public interface _Canned extends Feature {
+	}
+
+	/*
+	 * Ability to replay a session, assoc. UI
+
+	@formatter:off
+
+	Sketch:
+	- framework package, SessionReplay
+	- instruments a wd session (not story?)
+	- init browser - set cookie to indicate replaying
+	- navigate to url
+	- wait for 'server message received' id prior to next ui (dommessage) event
+	  - this is the tricky bit - 
+	- emit dommessage, emit status
+	- loop
+	- exit
+
+
+	@formatter:on
+	 */
+	@Feature.Parent(Feature_RomcomSessionConsole.class)
+	public interface _Replay extends Feature {
+	}
+
+	/**
+	 * *
+	 * <li>Measure startup performance with a StartupPerformance metadata in the
+	 * flight event
+	 * <li>Time from session creation to startup message send
+	 * <li>Time from startupmessage send to first mutation paint
+	 * <li>Size of shim
+	 * <li>Bytes in first paint
+	 * <li>Bytes in second paint
+	 */
+	@Feature.Parent(Feature_RomcomSessionConsole.class)
+	public interface _Performance extends Feature {
+	}
+}

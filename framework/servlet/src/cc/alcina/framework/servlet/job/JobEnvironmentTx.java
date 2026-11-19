@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.job;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.NonRootTask;

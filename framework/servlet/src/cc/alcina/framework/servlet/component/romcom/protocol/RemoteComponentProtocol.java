@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
+import cc.alcina.framework.meta.cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;

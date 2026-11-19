@@ -12,4 +12,9 @@ public class StartDateCriterion extends DateCriterion {
 	public StartDateCriterion() {
 		super("Start", Direction.ASCENDING);
 	}
+
+	@Override
+	public boolean rangeControlledByDirection() {
+		return true;
+	}
 }

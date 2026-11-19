@@ -5,7 +5,8 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
 import cc.alcina.framework.gwt.client.story.TellerContext;
-import cc.alcina.framework.gwt.client.story.doc.Feature_StoryDoc;
+import cc.alcina.framework.gwt.client.story.doc.StoryDocObservable;
+import cc.alcina.framework.meta.cc.alcina.framework.gwt.client.story.doc.Feature_StoryDoc;
 
 /**
  * <p>

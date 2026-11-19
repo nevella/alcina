@@ -13,7 +13,7 @@ public class SearchPerformers {
 	public static class DefaultSearchPerformerImpl implements SearchPerformer {
 		@Override
 		public ModelSearchResults<?> search(BindableSearchDefinition def) {
-			return DomainSearchHandler.get().searchModel(def);
+			return BindableSearchHandler.get().searchModel(def);
 		}
 	}
 }

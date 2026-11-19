@@ -4,7 +4,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.domain.search.DomainDefinitionHandler;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
@@ -45,9 +45,10 @@ public class BranchingParserNodeSearchDefinition
 	static class DomainDefinitionHandlerImpl extends
 			DomainDefinitionHandler<BranchingParserNodeSearchDefinition> {
 		@Override
-		public DomainFilter getFilter(BranchingParserNodeSearchDefinition sc) {
+		public BindableFilter
+				getFilter(BranchingParserNodeSearchDefinition sc) {
 			SearchContext.register();
-			return new DomainFilter(o -> true);
+			return new BindableFilter(o -> true);
 		}
 
 		@Override

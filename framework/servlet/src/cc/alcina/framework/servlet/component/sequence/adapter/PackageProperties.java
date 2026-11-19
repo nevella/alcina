@@ -4,12 +4,11 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.BooleanEnum;
 import cc.alcina.framework.common.client.search.StandardSearchOperator;
-
 import java.util.List;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _FlightEventCriterion_IsMutationsCriterion flightEventCriterion_isMutationsCriterion = new _FlightEventCriterion_IsMutationsCriterion();
     

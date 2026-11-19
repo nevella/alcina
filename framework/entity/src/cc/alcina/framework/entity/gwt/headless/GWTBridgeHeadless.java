@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -70,11 +70,6 @@ public class GWTBridgeHeadless extends GWTBridge {
 		@Override
 		public void attachListener() {
 			Window.Location.topicHistoryChanged().add(this);
-		}
-
-		@Override
-		public void attachListenerIe8() {
-			// NOOP (this modifies the browser listener)
 		}
 
 		@Override

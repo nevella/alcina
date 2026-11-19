@@ -29,6 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents.TopLevelMissedEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.entity.Feature_EntityBrowser;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.EntitySelection.EntityTypeExtended.EntityDeletionHandler;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;

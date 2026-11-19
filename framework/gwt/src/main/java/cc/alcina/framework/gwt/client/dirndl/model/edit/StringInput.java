@@ -1,0 +1,778 @@
+package cc.alcina.framework.gwt.client.dirndl.model.edit;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+
+import cc.alcina.framework.common.client.Preconditions;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.behavior.ElementBehavior;
+import com.google.gwt.dom.client.behavior.ElementOffsetsRequired;
+import com.google.gwt.dom.client.behavior.HasElementBehaviors;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.user.client.ui.impl.FocusImpl;
+
+import cc.alcina.framework.gwt.client.gwittir.validator.Iso8601DateValidator;
+import cc.alcina.framework.gwt.client.gwittir.validator.ShortIso8601DateValidator;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyPress;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextService;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
+import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
+
+/**
+ * <p>
+ * This class models an editable text field, rendering as either an
+ * <code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code> DOM element.
+ *
+ * <p>
+ * It maintains a 'currentValue' r/o property, tracking the current edited (but
+ * not committed) value of the element (an element is committed - and the value
+ * property changed - on focus loss or [enter] in the case of input elements -
+ * not on every change to the visible text) - see
+ * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event
+ *
+ * <p>
+ * Note that the StringInput.value property may be out of sync with the
+ * element.value property - since the StringInput.value property tracks the
+ * committed value
+ *
+ * <p>
+ * It fires modelevents <code>&lt;Change&gt;</code> and
+ * <code>&lt;Input&gt;</code>, wrapping the corresponding DOM events
+ *
+ * <p>
+ * Note that any input value null will be normalised to an empty string
+ * 
+ * FIXME - dirndl - to Model.Fields
+ *
+ */
+@Directed(
+	bindings = { @Binding(type = Binding.Type.PROPERTY, from = "value"),
+			@Binding(type = Binding.Type.PROPERTY, from = "placeholder"),
+			@Binding(type = Binding.Type.PROPERTY, from = "type"),
+			@Binding(type = Binding.Type.PROPERTY, from = "spellcheck"),
+			@Binding(type = Binding.Type.PROPERTY, from = "autocomplete"),
+			@Binding(type = Binding.Type.PROPERTY, from = "rows"),
+			@Binding(type = Binding.Type.PROPERTY, from = "disabled"),
+			@Binding(type = Binding.Type.PROPERTY, from = "title") },
+	emits = { ModelEvents.Change.class, ModelEvents.Input.class,
+			ModelEvents.Commit.class })
+@TypeSerialization(reflectiveSerializable = false)
+@TypedProperties
+public class StringInput extends Model.Value<String> implements FocusOnBind,
+		HasTag, DomEvents.Change.Handler, DomEvents.Input.Handler,
+		LayoutEvents.BeforeRender.Handler, DomEvents.Focusin.Handler,
+		DomEvents.Focusout.Handler, DomEvents.KeyDown.Handler,
+		ReflectedEvents.FormElementLabelClicked.Handler, HasElementBehaviors,
+		ReflectedEvents.FocusEditor.Handler,
+		ReflectedEvents.CommitEditor.Handler {
+	PackageProperties._StringInput.InstanceProperties properties() {
+		return PackageProperties.stringInput.instance(this);
+	}
+
+	private String value;
+
+	private String currentValue;
+
+	private String placeholder;
+
+	private String autocomplete = "off";
+
+	private String type = "text";
+
+	private boolean focusOnBind;
+
+	private String tag = "input";
+
+	private boolean selectAllOnFocus;
+
+	private boolean moveCaretToEndOnFocus;
+
+	private String spellcheck = "false";
+
+	SelectionState selectOnFocus;
+
+	private boolean preserveSelectionOverFocusChange;
+
+	private String rows;
+
+	private boolean ensureContentVisible;
+
+	private boolean commitOnEnter;
+
+	private boolean disabled;
+
+	private String title;
+
+	private Integer maxLength;
+
+	public interface Service extends ContextService {
+		boolean isCommitOnEnter();
+	}
+
+	@Binding(type = Type.PROPERTY, to = "maxlength")
+	public Integer getMaxLength() {
+		return maxLength;
+	}
+
+	public void setMaxLength(Integer maxLength) {
+		set("maxLength", this.maxLength, maxLength,
+				() -> this.maxLength = maxLength);
+	}
+
+	private String pattern;
+
+	@Binding(type = Type.PROPERTY)
+	public String getPattern() {
+		return pattern;
+	}
+
+	public void setPattern(String pattern) {
+		set("pattern", this.pattern, pattern, () -> this.pattern = pattern);
+	}
+
+	private String inputMode;
+
+	@Binding(type = Type.PROPERTY, to = "inputmode")
+	public String getInputMode() {
+		return inputMode;
+	}
+
+	public void setInputMode(String inputMode) {
+		set("inputMode", this.inputMode, inputMode,
+				() -> this.inputMode = inputMode);
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		set("title", this.title, title, () -> this.title = title);
+	}
+
+	public StringInput() {
+	}
+
+	@Override
+	public List<ElementBehavior> getBehaviors() {
+		return commitOnEnter
+				? List.of(new ElementBehavior.PreventDefaultEnterBehaviour(),
+						ElementOffsetsRequired.INSTANCE)
+				: List.of(ElementOffsetsRequired.INSTANCE);
+	}
+
+	public StringInput(String value) {
+		setValue(value);
+	}
+
+	public void clear() {
+		setValue("");
+	}
+
+	public void copyStateFrom(StringInput input) {
+		setValue(input.elementValue());
+		selectOnFocus = new SelectionState().snapshot(input.provideElement());
+		selectAllOnFocus = false;
+	}
+
+	String elementValue() {
+		return provideElement().getPropertyString("value");
+	}
+
+	public void focus() {
+		if (!provideIsBound()) {
+			return;
+		}
+		FocusImpl.getFocusImplForWidget().focus(provideElement());
+	}
+
+	public String getAutocomplete() {
+		return this.autocomplete;
+	}
+
+	public String getCurrentValue() {
+		if (currentValue == null && provideIsBound()) {
+			currentValue = elementValue();
+		}
+		return this.currentValue;
+	}
+
+	public String getPlaceholder() {
+		return this.placeholder;
+	}
+
+	public String getRows() {
+		return rows;
+	}
+
+	public String getSpellcheck() {
+		return this.spellcheck;
+	}
+
+	public String getTag() {
+		return this.tag;
+	}
+
+	public String getType() {
+		return this.type;
+	}
+
+	@Override
+	public String getValue() {
+		return this.value;
+	}
+
+	public boolean isCommitOnEnter() {
+		return commitOnEnter;
+	}
+
+	public boolean isDisabled() {
+		return disabled;
+	}
+
+	public boolean isEnsureContentVisible() {
+		return ensureContentVisible;
+	}
+
+	@Override
+	public boolean isFocusOnBind() {
+		return focusOnBind;
+	}
+
+	public boolean isMoveCaretToEndOnFocus() {
+		return moveCaretToEndOnFocus;
+	}
+
+	public boolean isPreserveSelectionOverFocusChange() {
+		return this.preserveSelectionOverFocusChange;
+	}
+
+	public boolean isSelectAllOnFocus() {
+		return this.selectAllOnFocus;
+	}
+
+	@Override
+	public void onNodeContext(NodeContext event) {
+		node.optional(Placeholder.class)
+				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
+		node.optional(Autocomplete.class).ifPresent(
+				autocomplete -> setAutocomplete(autocomplete.value()));
+		node.optional(Validation.class).ifPresent(validation -> {
+			if (validation.maxLength().length() > 0) {
+				setMaxLength(Integer.parseInt(validation.maxLength()));
+			}
+			setInputMode(validation.inputMode());
+			setPattern(validation.pattern());
+		});
+		node.optional(InputType.class).ifPresent(type -> setType(type.value()));
+		node.optional(SelectAllOnFocus.class)
+				.ifPresent(ann -> setSelectAllOnFocus(true));
+		node.optional(FocusOnBindMarker.class)
+				.ifPresent(ann -> setFocusOnBind(true));
+		node.optional(TextArea.class).ifPresent(ann -> setTag("textarea"));
+		Service service = service(Service.class);
+		if (service != null) {
+			setCommitOnEnter(service.isCommitOnEnter());
+		}
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		updateSize();
+	}
+
+	@Override
+	public void onChange(Change event) {
+		handleChange(event);
+	}
+
+	protected void handleChange(NodeEvent event) {
+		currentValue = elementValue();
+		setValue(currentValue);
+		if (provideIsBound()) {
+			event.reemitAs(this, ModelEvents.Change.class, currentValue);
+		}
+	}
+
+	@Override
+	public void onFocusin(Focusin event) {
+		if (selectOnFocus != null) {
+			Scheduler.get().scheduleDeferred(() -> {
+				// null check handles double-focus in/out
+				if (selectOnFocus != null) {
+					selectOnFocus.apply(provideElement());
+					selectOnFocus = null;
+				}
+			});
+		} else if (isSelectAllOnFocus()) {
+			Rendered rendered = event.getContext().node.getRendered();
+			Element elem = rendered.asElement();
+			String propertyString = elem.getPropertyString("value");
+			if (!propertyString.isEmpty()) {
+				elem.setSelectionRange(0, propertyString.length());
+			}
+		} else if (isMoveCaretToEndOnFocus()) {
+			Rendered rendered = event.getContext().node.getRendered();
+			Element elem = rendered.asElement();
+			String propertyString = elem.getPropertyString("value");
+			if (!propertyString.isEmpty()) {
+				elem.setSelectionRange(propertyString.length(),
+						propertyString.length());
+			}
+		}
+	}
+
+	@Override
+	public void onFocusout(Focusout event) {
+		if (preserveSelectionOverFocusChange && Ax.notBlank(value)) {
+			selectOnFocus = new SelectionState();
+			selectOnFocus.selectionStart = value.length();
+			selectOnFocus.selectionEnd = value.length();
+		}
+	}
+
+	@Override
+	public void onInput(Input event) {
+		currentValue = elementValue();
+		WidgetUtils.squelchCurrentEvent();
+		updateSize();
+		event.reemitAs(this, ModelEvents.Input.class, currentValue);
+	}
+
+	@Override
+	public void onKeyDown(KeyDown event) {
+		NodeEvent.Context context = event.getContext();
+		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
+		switch (domEvent.getNativeKeyCode()) {
+		case KeyCodes.KEY_ENTER:
+			if (commitOnEnter) {
+				commitCurrentValue();
+				event.reemitAs(this, Commit.class);
+				domEvent.preventDefault();
+			}
+			// simulate a 'commit' event
+			break;
+		}
+	}
+
+	public void commitCurrentValue() {
+		setValue(getCurrentValue());
+	}
+
+	@Override
+	public String provideTag() {
+		return getTag();
+	}
+
+	public void setAutocomplete(String autocomplete) {
+		this.autocomplete = autocomplete;
+	}
+
+	public void setCommitOnEnter(boolean commitOnEnter) {
+		this.commitOnEnter = commitOnEnter;
+	}
+
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+
+	public void setEnsureContentVisible(boolean ensureContentVisible) {
+		this.ensureContentVisible = ensureContentVisible;
+	}
+
+	public void setFocusOnBind(boolean focusOnBind) {
+		this.focusOnBind = focusOnBind;
+	}
+
+	public void setMoveCaretToEndOnFocus(boolean moveCaretToEndOnFocus) {
+		this.moveCaretToEndOnFocus = moveCaretToEndOnFocus;
+	}
+
+	public void setPlaceholder(String placeholder) {
+		this.placeholder = placeholder;
+	}
+
+	public void setPreserveSelectionOverFocusChange(
+			boolean preserveSelectionOverFocusChange) {
+		this.preserveSelectionOverFocusChange = preserveSelectionOverFocusChange;
+	}
+
+	public void setRows(String rows) {
+		this.rows = rows;
+	}
+
+	public void setSelectAllOnFocus(boolean selectAllOnFocus) {
+		this.selectAllOnFocus = selectAllOnFocus;
+	}
+
+	public void setSpellcheck(String spellcheck) {
+		this.spellcheck = spellcheck;
+	}
+
+	public void setTag(String tag) {
+		this.tag = tag;
+	}
+
+	public void setType(String type) {
+		// must set before attach
+		Preconditions.checkState(!provideIsBound());
+		this.type = type;
+	}
+
+	@Override
+	public void setValue(String value) {
+		String normalisedValue = value == null ? "" : value;
+		if (provideIsBound()
+				&& !Objects.equals(normalisedValue, currentValue)) {
+			provideElement().setPropertyString("value", normalisedValue);
+			currentValue = normalisedValue;
+		}
+		set("value", this.value, normalisedValue,
+				() -> this.value = normalisedValue);
+	}
+
+	void updateSize() {
+		if (ensureContentVisible) {
+			Client.RenderState.queueWithRenderedState(() -> {
+				if (!provideIsBound()) {
+					return;
+				}
+				Element element = provideElement();
+				if (tag.equals("input")) {
+					element.getStyle().setProperty("minWidth",
+							Ax.format("%sch", getCurrentValue().length() + 2));
+				} else {
+					// textarea
+					element.getStyle().setProperty("height", "auto");
+					// fixme - romcom - group + make async
+					String paddingTop = element
+							.getComputedStyleValue("paddingTop");
+					String paddingBottom = element
+							.getComputedStyleValue("paddingBottom");
+					String computedHeight = element
+							.getComputedStyleValue("height");
+					double paddingTopPx = paddingTop.endsWith("px")
+							? Double.parseDouble(paddingTop.replace("px", ""))
+							: 0;
+					double paddingBottomPx = paddingBottom.endsWith("px")
+							? Double.parseDouble(
+									paddingBottom.replace("px", ""))
+							: 0;
+					double computedHeightPx = computedHeight.endsWith("px")
+							? Double.parseDouble(
+									computedHeight.replace("px", ""))
+							: 0;
+					int scrollHeight = element.getScrollHeight();
+					if (scrollHeight != 0) {
+						if (scrollHeight == computedHeightPx + paddingBottomPx
+								+ paddingTopPx) {
+							// no need to change
+						} else {
+							element.getStyle().setHeight(scrollHeight,
+									// - paddingTopPx - paddingBottomPx,
+									Unit.PX);
+						}
+					}
+				}
+			});
+		}
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface TextArea {
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Autocomplete {
+		String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Validation {
+		String pattern();
+
+		String inputMode();
+
+		String maxLength();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface InputType {
+		String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface SelectAllOnFocus {
+	}
+
+	static class SelectionState {
+		int selectionStart;
+
+		int selectionEnd;
+
+		SelectionState() {
+		}
+
+		void apply(Element element) {
+			element.setSelectionRange(selectionStart,
+					selectionEnd - selectionStart);
+		}
+
+		SelectionState snapshot(Element element) {
+			selectionStart = element.getPropertyInt("selectionStart");
+			selectionEnd = element.getPropertyInt("selectionEnd");
+			return this;
+		}
+	}
+
+	@Override
+	public void onFormElementLabelClicked(
+			ReflectedEvents.FormElementLabelClicked event) {
+		focus();
+	}
+
+	public static class DateTimeInput extends DateInput {
+		public DateTimeInput() {
+		}
+
+		protected void setType() {
+			setType("datetime-local");
+		}
+
+		protected void checkType(String type) {
+			Preconditions.checkArgument(type.equals("datetime-local"));
+		}
+	}
+
+	public static class DateInput extends StringInput
+			implements DomEvents.KeyPress.Handler, DomEvents.Focusout.Handler {
+		public DateInput() {
+			setType();
+		}
+
+		protected void setType() {
+			setType("date");
+		}
+
+		boolean suppressedChange = false;
+
+		@Override
+		public void onChange(Change event) {
+			if (TimeConstants.within(lastKeyPress, 100)
+					&& provideElement() != null
+					&& Document.get().getActiveElement() == provideElement()) {
+				suppressedChange = true;
+				return;
+			}
+			super.onChange(event);
+		}
+
+		@Override
+		public void setType(String type) {
+			checkType(type);
+			super.setType(type);
+		}
+
+		protected void checkType(String type) {
+			Preconditions.checkArgument(type.equals("date"));
+		}
+
+		long lastKeyPress;
+
+		@Override
+		public void onKeyPress(KeyPress event) {
+			lastKeyPress = System.currentTimeMillis();
+		}
+
+		@Override
+		public void onFocusout(Focusout event) {
+			if (suppressedChange) {
+				handleChange(event);
+				suppressedChange = false;
+			}
+			super.onFocusout(event);
+		}
+	}
+
+	@Registration(
+		value = { Model.Value.class, FormModel.Editor.class, Date.class },
+		priority = Priority.REMOVE)
+	public static class DateTimeEditor extends DateEditor {
+		@Override
+		public void onNodeContext(NodeContext event) {
+			input = new DateTimeInput();
+			Iso8601DateValidator validator = new Iso8601DateValidator();
+			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
+					.inverseValidator();
+			Function<String, Date> typedValidator = (Function<String, Date>) validator;
+			from(properties().value()).map(revTypedValidator)
+					.to(input.properties().value()).map(typedValidator).bidi();
+			from(properties().value()).withSetOnInitialise(false)
+					.signal(this::emitValueChange);
+		}
+
+		public static class To implements ModelTransform<Date, DateTimeEditor> {
+			@Override
+			public DateTimeEditor apply(Date t) {
+				return new DateTimeEditor(t);
+			}
+		}
+
+		public DateTimeEditor() {
+		}
+
+		public DateTimeEditor(Date date) {
+			super(date);
+		}
+	}
+
+	@Directed.Delegating
+	@Bean(PropertySource.FIELDS)
+	@TypedProperties
+	@Registration({ Model.Value.class, FormModel.Editor.class, Date.class })
+	public static class DateEditor extends Model.Value<Date>
+			implements ModelEvents.Change.Handler {
+		PackageProperties._StringInput_DateEditor.InstanceProperties
+				properties() {
+			return PackageProperties.stringInput_dateEditor.instance(this);
+		}
+
+		private Date value;
+
+		public Date getValue() {
+			return value;
+		}
+
+		@Directed
+		DateInput input;
+
+		public void setValue(Date value) {
+			set("value", this.value, value, () -> this.value = value);
+		}
+
+		public DateEditor() {
+		}
+
+		public DateEditor(Date date) {
+			setValue(date);
+		}
+
+		@Override
+		public void onNodeContext(NodeContext event) {
+			input = new DateInput();
+			ShortIso8601DateValidator validator = new ShortIso8601DateValidator();
+			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
+					.inverseValidator();
+			Function<String, Date> typedValidator = (Function<String, Date>) validator;
+			from(properties().value()).map(revTypedValidator)
+					.to(input.properties().value()).map(typedValidator).bidi();
+			from(properties().value()).withSetOnInitialise(false)
+					.signal(this::emitValueChange);
+		}
+
+		void emitValueChange() {
+			emitEvent(ModelEvents.Change.class, getValue());
+		}
+
+		public static class To implements ModelTransform<Date, DateEditor> {
+			@Override
+			public DateEditor apply(Date t) {
+				return new DateEditor(t);
+			}
+		}
+
+		/**
+		 * Capture events emitted by the DateInput child
+		 */
+		@Override
+		public void onChange(ModelEvents.Change event) {
+			if (event.getModel() instanceof String) {
+				// capture
+			} else {
+				event.bubble();
+			}
+		}
+	}
+
+	@Registration({ Model.Value.class, FormModel.Editor.class, String.class })
+	@Registration({ Model.Value.class, FormModel.Editor.class, Number.class })
+	public static class Editor extends StringInput {
+	}
+
+	public static class To implements ModelTransform<String, StringInput> {
+		@Override
+		public StringInput apply(String t) {
+			return new StringInput(t);
+		}
+	}
+
+	@Override
+	public void onFocusEditor(ReflectedEvents.FocusEditor event) {
+		event.setHandled(true);
+		setFocusOnBind(true);
+		Model.FocusOnBind.focusIfAttached(provideNode());
+	}
+
+	@Override
+	public void onCommitEditor(ReflectedEvents.CommitEditor event) {
+		commitCurrentValue();
+	}
+}

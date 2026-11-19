@@ -8,7 +8,7 @@
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<name>Alcina parent</name>
+	<name>alcina</name>
 	<url>https://alcina.cc</url>
 
 	<properties>
@@ -17,7 +17,9 @@
 	</properties>
 	<modules>
 		<module>common</module>
-		<module>gwt-peer</module>
+		<module>gwt-user-peer</module>
+		<module>meta</module>
+		<module>gwt</module>
 	</modules>
 
 

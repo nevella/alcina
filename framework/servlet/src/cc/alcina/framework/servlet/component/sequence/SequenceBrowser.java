@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequenceSettings;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.sequence.Feature_SequenceBrowser;
 import cc.alcina.framework.servlet.component.romcom.protocol.StringProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.CacheableStringProviderImpl.StylesheetProvider;

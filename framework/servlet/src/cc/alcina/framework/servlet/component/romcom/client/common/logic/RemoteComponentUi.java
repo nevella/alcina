@@ -33,7 +33,7 @@ import cc.alcina.framework.gwt.client.history.push.HistoryImplDelegate;
 import cc.alcina.framework.gwt.client.logic.ClientProperties;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
-import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;

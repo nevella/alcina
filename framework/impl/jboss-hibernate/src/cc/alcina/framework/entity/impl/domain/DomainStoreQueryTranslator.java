@@ -39,12 +39,12 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.transform.ResultTransformer;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -144,7 +144,7 @@ public class DomainStoreQueryTranslator {
 		return propertyPath;
 	}
 
-	protected DomainFilter criterionToFilter(
+	protected BindableFilter criterionToFilter(
 			DomainStoreCriteria domainStoreCriteria, Criterion criterion)
 			throws NotHandledException {
 		boolean handled = false;
@@ -152,7 +152,7 @@ public class DomainStoreQueryTranslator {
 				.query(CriterionTranslator.class).implementations()
 				.filter(t -> t.handles(criterion.getClass())).findFirst();
 		if (translator.isPresent()) {
-			DomainFilter filter = translator.get().handle(criterion,
+			BindableFilter filter = translator.get().handle(criterion,
 					domainStoreCriteria, this);
 			return filter;
 		} else {
@@ -291,7 +291,7 @@ public class DomainStoreQueryTranslator {
 	public static class ConjunctionTranslator
 			extends CriterionTranslator<Conjunction> {
 		@Override
-		protected DomainFilter handle(Conjunction criterion,
+		protected BindableFilter handle(Conjunction criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
@@ -331,7 +331,7 @@ public class DomainStoreQueryTranslator {
 			return fieldHelper.getValue(object, fieldNames);
 		}
 
-		protected abstract DomainFilter handle(C criterion,
+		protected abstract BindableFilter handle(C criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException;
@@ -344,7 +344,7 @@ public class DomainStoreQueryTranslator {
 	public static class DisjunctionTranslator
 			extends CriterionTranslator<Disjunction> {
 		@Override
-		protected DomainFilter handle(Disjunction criterion,
+		protected BindableFilter handle(Disjunction criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
@@ -630,7 +630,7 @@ public class DomainStoreQueryTranslator {
 	public static class InExpressionTranslator
 			extends CriterionTranslator<InExpression> {
 		@Override
-		protected DomainFilter handle(InExpression criterion,
+		protected BindableFilter handle(InExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator) {
 			Object value = getValue(criterion, "values");
@@ -644,7 +644,7 @@ public class DomainStoreQueryTranslator {
 			} else {
 				collection = new LinkedHashSet((Collection) value);
 			}
-			return new DomainFilter(
+			return new BindableFilter(
 					translator.translatePropertyPath(criterion,
 							domainStoreCriteria,
 							getStringFieldValue(criterion, "propertyName")),
@@ -655,21 +655,21 @@ public class DomainStoreQueryTranslator {
 	public static class NotNullTranslator
 			extends CriterionTranslator<NotNullExpression> {
 		@Override
-		protected DomainFilter handle(NotNullExpression criterion,
+		protected BindableFilter handle(NotNullExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
 			String propertyName = translator.translatePropertyPath(criterion,
 					domainStoreCriteria,
 					getStringFieldValue(criterion, "propertyName"));
-			return new DomainFilter(propertyName, null, FilterOperator.NE);
+			return new BindableFilter(propertyName, null, FilterOperator.NE);
 		}
 	}
 
 	public static class NotTranslator
 			extends CriterionTranslator<NotExpression> {
 		@Override
-		protected DomainFilter handle(NotExpression criterion,
+		protected BindableFilter handle(NotExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
@@ -683,14 +683,14 @@ public class DomainStoreQueryTranslator {
 	public static class NullTranslator
 			extends CriterionTranslator<NullExpression> {
 		@Override
-		protected DomainFilter handle(NullExpression criterion,
+		protected BindableFilter handle(NullExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
 			String propertyName = translator.translatePropertyPath(criterion,
 					domainStoreCriteria,
 					getStringFieldValue(criterion, "propertyName"));
-			return new DomainFilter(propertyName, null, FilterOperator.EQ);
+			return new BindableFilter(propertyName, null, FilterOperator.EQ);
 		}
 	}
 
@@ -799,7 +799,7 @@ public class DomainStoreQueryTranslator {
 	public static class SimpleExpressionTranslator
 			extends CriterionTranslator<SimpleExpression> {
 		@Override
-		protected DomainFilter handle(SimpleExpression criterion,
+		protected BindableFilter handle(SimpleExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator)
 				throws NotHandledException {
@@ -827,15 +827,15 @@ public class DomainStoreQueryTranslator {
 			if (fop == null) {
 				throw new NotHandledException("Not handled operator - " + op);
 			}
-			return new DomainFilter(propertyName, getValue(criterion, "value"),
-					fop);
+			return new BindableFilter(propertyName,
+					getValue(criterion, "value"), fop);
 		}
 	}
 
 	public static class SimpleSubqueryExpressionTranslator
 			extends CriterionTranslator<SimpleSubqueryExpression> {
 		@Override
-		protected DomainFilter handle(SimpleSubqueryExpression criterion,
+		protected BindableFilter handle(SimpleSubqueryExpression criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator) {
 			CriteriaImpl criteriaImpl = (CriteriaImpl) getValue(criterion,
@@ -853,7 +853,7 @@ public class DomainStoreQueryTranslator {
 					continue;
 				} else {
 					try {
-						DomainFilter child = translator.criterionToFilter(
+						BindableFilter child = translator.criterionToFilter(
 								subDomainStoreCriteria,
 								criterionEntry.getCriterion());
 						filter.add(child);
@@ -869,7 +869,7 @@ public class DomainStoreQueryTranslator {
 	public static class SqlInCriterionTranslator
 			extends CriterionTranslator<SQLCriterion> {
 		@Override
-		protected DomainFilter handle(SQLCriterion criterion,
+		protected BindableFilter handle(SQLCriterion criterion,
 				DomainStoreCriteria domainStoreCriteria,
 				DomainStoreQueryTranslator translator) {
 			String sql = SEUtilities.normalizeWhitespaceAndTrim(
@@ -878,8 +878,10 @@ public class DomainStoreQueryTranslator {
 			Matcher m = p.matcher(sql);
 			Preconditions.checkState(m.matches());
 			Collection ids = TransformManager.idListToLongs(m.group(1));
-			return new DomainFilter(translator.translatePropertyPath(criterion,
-					domainStoreCriteria, "id"), ids, FilterOperator.IN);
+			return new BindableFilter(
+					translator.translatePropertyPath(criterion,
+							domainStoreCriteria, "id"),
+					ids, FilterOperator.IN);
 		}
 	}
 }

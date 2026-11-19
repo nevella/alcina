@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.model.Feature_Dirndl_TableModel;
+import cc.alcina.framework.meta.cc.alcina.framework.gwt.client.dirndl.model.Feature_Dirndl_TableModel;
 import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 import cc.alcina.framework.servlet.component.sequence.SequenceComponentEditor;
 import cc.alcina.framework.servlet.component.sequence.adapter.FlightEventSearchDefinition;

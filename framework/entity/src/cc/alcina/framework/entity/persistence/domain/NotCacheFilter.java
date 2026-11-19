@@ -2,13 +2,13 @@ package cc.alcina.framework.entity.persistence.domain;
 
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.util.Ax;
 
-public class NotCacheFilter extends DomainFilter {
-	private DomainFilter filter;
+public class NotCacheFilter extends BindableFilter {
+	private BindableFilter filter;
 
-	public NotCacheFilter(DomainFilter filter) {
+	public NotCacheFilter(BindableFilter filter) {
 		super(null);
 		this.filter = filter;
 		this.setPredicate(new NotPredicate<>(filter.asPredicate()));

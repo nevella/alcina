@@ -3,8 +3,8 @@ package cc.alcina.framework.servlet.story.component.traversal;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_DotBurger;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_Header;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_DotBurger;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_Header;
 
 @Decl.Feature(Feature_TraversalBrowser_Header.class)
 /*

@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;

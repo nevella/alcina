@@ -36,9 +36,32 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  * Uses 'searchorders' rather than 'order groups'
  */
 public abstract class BindableSearchDefinition extends SearchDefinition {
+	@Reflected
+	@TypeSerialization(flatSerializable = false)
+	public static class DataNullSearchDefinition
+			extends EntitySearchDefinition {
+		@Override
+		public boolean provideHasNoCriteria() {
+			return true;
+		}
+
+		@Override
+		public <C extends Entity> Class<C> queriedEntityClass() {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public interface SearchPerformer {
+		ModelSearchResults<?> search(BindableSearchDefinition def);
+	}
+
 	private GroupingParameters groupingParameters;
 
 	private SearchOrders searchOrders = new SearchOrders<>();
+
+	// return editable dataobjects (either the entity class or a dataobject
+	// extending it)
+	private boolean returnSingleDataObjectImplementations;
 
 	/**
 	 * Note that the subclass constructor must call init() immediately after
@@ -46,6 +69,14 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	 */
 	public BindableSearchDefinition() {
 		super();
+	}
+
+	public boolean isReturnSingleDataObjectImplementations() {
+		return this.returnSingleDataObjectImplementations;
+	}
+
+	public boolean provideIsDefaultSortOrder() {
+		return getSearchOrders().isEmpty();
 	}
 
 	public void orderBy(TypedProperty property, boolean ascending) {
@@ -74,19 +105,6 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return getCriteriaTypes().contains(criterionType);
 	}
 
-	@Property.Not
-	List<Class<? extends SearchCriterion>> getCriteriaTypes() {
-		Class<? extends BindableCriteriaGroup> cgClass = getSoleCriteriaGroupType();
-		TypeSerialization typeSerialization = Reflections.at(cgClass)
-				.annotation(TypeSerialization.class);
-		List<Class<? extends SearchCriterion>> criteriaTypes = Arrays
-				.asList(Arrays.stream(typeSerialization.properties())
-						.filter(ps -> ps.name()
-								.equals(CriteriaGroup.PROPERTY_CRITERIA))
-						.findFirst().get().types());
-		return criteriaTypes;
-	}
-
 	@Override
 	@PropertySerialization(ignore = true)
 	public Set<OrderGroup> getOrderGroups() {
@@ -96,25 +114,6 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	@PropertySerialization(path = "o")
 	public SearchOrders getSearchOrders() {
 		return this.searchOrders;
-	}
-
-	protected void init() {
-		Class<? extends CriteriaGroup> soleCriteriaGroupType = getSoleCriteriaGroupType();
-		getCriteriaGroups().add(Reflections.newInstance(soleCriteriaGroupType));
-		setResultsPerPage(50);
-	}
-
-	@Property.Not
-	@XmlTransient
-	Class<? extends BindableCriteriaGroup> getSoleCriteriaGroupType() {
-		TypeSerialization typeSerialization = Reflections.at(getClass())
-				.annotation(TypeSerialization.class);
-		Class<? extends BindableCriteriaGroup> cgClass = Arrays
-				.stream(typeSerialization.properties())
-				.filter(ps -> ps.name()
-						.equals(SearchDefinition.PROPERTY_CRITERIA_GROUPS))
-				.findFirst().get().types()[0];
-		return cgClass;
 	}
 
 	public boolean provideHasNoCriteria() {
@@ -192,22 +191,35 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return (G) groupingParameters;
 	}
 
-	@Reflected
-	@TypeSerialization(flatSerializable = false)
-	public static class DataNullSearchDefinition
-			extends EntitySearchDefinition {
-		@Override
-		public boolean provideHasNoCriteria() {
-			return true;
-		}
-
-		@Override
-		public <C extends Entity> Class<C> queriedEntityClass() {
-			throw new UnsupportedOperationException();
-		}
+	protected void init() {
+		Class<? extends CriteriaGroup> soleCriteriaGroupType = getSoleCriteriaGroupType();
+		getCriteriaGroups().add(Reflections.newInstance(soleCriteriaGroupType));
+		setResultsPerPage(50);
 	}
 
-	public interface SearchPerformer {
-		ModelSearchResults<?> search(BindableSearchDefinition def);
+	@Property.Not
+	List<Class<? extends SearchCriterion>> getCriteriaTypes() {
+		Class<? extends BindableCriteriaGroup> cgClass = getSoleCriteriaGroupType();
+		TypeSerialization typeSerialization = Reflections.at(cgClass)
+				.annotation(TypeSerialization.class);
+		List<Class<? extends SearchCriterion>> criteriaTypes = Arrays
+				.asList(Arrays.stream(typeSerialization.properties())
+						.filter(ps -> ps.name()
+								.equals(CriteriaGroup.PROPERTY_CRITERIA))
+						.findFirst().get().types());
+		return criteriaTypes;
+	}
+
+	@Property.Not
+	@XmlTransient
+	Class<? extends BindableCriteriaGroup> getSoleCriteriaGroupType() {
+		TypeSerialization typeSerialization = Reflections.at(getClass())
+				.annotation(TypeSerialization.class);
+		Class<? extends BindableCriteriaGroup> cgClass = Arrays
+				.stream(typeSerialization.properties())
+				.filter(ps -> ps.name()
+						.equals(SearchDefinition.PROPERTY_CRITERIA_GROUPS))
+				.findFirst().get().types()[0];
+		return cgClass;
 	}
 }

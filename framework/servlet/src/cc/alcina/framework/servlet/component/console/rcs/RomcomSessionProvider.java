@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.console.rcs.Feature_RomcomSessionConsole;
 
 @Feature.Ref(Feature_RomcomSessionConsole._Cache.class)
 public interface RomcomSessionProvider {

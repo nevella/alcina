@@ -78,10 +78,12 @@ public interface SourceFinder {
 				URL sourceFileLocation = new URI(
 						Ax.format("%s%s.java", classFileLocation.toString(),
 								clazz.getName().replace(".", "/"))).toURL();
-				File file = new File(toPath(sourceFileLocation));
-				if (file.exists()
-						&& !sourceFileLocation.toString().contains("/build/")) {
-					return file;
+				{
+					File file = new File(toPath(sourceFileLocation));
+					if (file.exists() && !sourceFileLocation.toString()
+							.contains("/build/")) {
+						return file;
+					}
 				}
 				sourceFileLocation = new URI(sourceFileLocation.toString()
 						.replace("/alcina/bin/",
@@ -98,37 +100,22 @@ public interface SourceFinder {
 				if (file2.exists()) {
 					return file2;
 				}
-				sourceFileLocation = new URI(sourceFileLocation.toString()
-						.replace("/alcina/framework/entity/src/",
-								"/alcina/framework/common/src/main/java/"))
-										.toURL();
-				File file3 = new File(toPath(sourceFileLocation));
-				if (file3.exists()) {
-					return file3;
-				}
-				sourceFileLocation = new URI(sourceFileLocation.toString()
-						.replace("/alcina/framework/common/src/main/java/",
-								"/alcina/framework/gwt/src/")).toURL();
-				File file4 = new File(toPath(sourceFileLocation));
-				if (file4.exists()) {
-					return file4;
-				}
-				sourceFileLocation = new URI(sourceFileLocation.toString()
-						.replace("/alcina/framework/gwt/src/",
-								"/alcina/framework/servlet/src/")).toURL();
-				File file5 = new File(toPath(sourceFileLocation));
-				if (file5.exists()) {
-					return file5;
-				}
-				Optional<SourceFinderFsHelper> helper = Registry
-						.optional(SourceFinderFsHelper.class);
-				if (helper.isPresent()) {
-					sourceFileLocation = new URI(sourceFileLocation.toString()
-							.replace("/alcina/framework/entity/src/",
-									"/alcina/framework/common/src/")).toURL();
-					File file6 = new File(toPath(sourceFileLocation));
-					if (file6.exists()) {
-						return file5;
+				if (sourceFileLocation.getPath()
+						.contains("/alcina/framework/entity/src/")) {
+					List<String> alcinaRoots = List.of(
+							"/alcina/framework/common/src/main/java/",
+							"/alcina/framework/gwt-user-peer/src/main/java/",
+							"/alcina/framework/gwt-dev-peer/src/main/java/",
+							"/alcina/framework/gwt/src/",
+							"/alcina/framework/servlet/src/");
+					for (String alcinaRoot : alcinaRoots) {
+						URL testLocation = new URI(sourceFileLocation.toString()
+								.replace("/alcina/framework/entity/src/",
+										alcinaRoot)).toURL();
+						File file = new File(toPath(testLocation));
+						if (file.exists()) {
+							return file;
+						}
 					}
 				}
 				return null;
@@ -140,9 +127,5 @@ public interface SourceFinder {
 		private String toPath(URL sourceFileLocation) {
 			return sourceFileLocation.toString().replaceFirst("^file:/*/", "/");
 		}
-	}
-
-	public static interface SourceFinderFsHelper {
-		public URL transformPath(URL path);
 	}
 }

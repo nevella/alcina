@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
@@ -74,10 +74,11 @@ public class StandardLayerAttributes {
 			return value == null ? null : value.replaceFirst("^'(.+)'$", "$1");
 		}
 
-		public DomainFilter toDomainFilter(Class<?> filteredClass) {
+		public BindableFilter toDomainFilter(Class<?> filteredClass) {
 			String normalisedValue = normalisedValue();
 			Property property = Reflections.at(filteredClass).property(key);
-			return DomainFilter.ofSearchProperty(property, op, normalisedValue);
+			return BindableFilter.ofSearchProperty(property, op,
+					normalisedValue);
 		}
 	}
 }

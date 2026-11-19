@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.BaseProjection;
@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.domain.DomainProjection;
-import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.domain.BindableQuery;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.domain.TransactionId;
@@ -357,7 +357,7 @@ public class JobDomain {
 
 	public Stream<? extends Job> getJobsForTask(Class<? extends Task> taskClass,
 			boolean loadAllProperties) {
-		DomainQuery query = Domain.query(jobImplClass);
+		BindableQuery query = Domain.query(jobImplClass);
 		if (loadAllProperties) {
 			query.contextTrue(
 					LazyPropertyLoadTask.CONTEXT_POPULATE_LAZY_PROPERTIES);

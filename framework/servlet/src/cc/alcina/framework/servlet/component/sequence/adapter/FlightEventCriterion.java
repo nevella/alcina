@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 
 import javax.xml.bind.annotation.XmlType;
 
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.domain.search.BindableCriteriaGroup;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.domain.search.criterion.CreatedFromCriterion;
@@ -81,12 +81,12 @@ public class FlightEventCriterion {
 	public static class TextCriterionHandler
 			extends CriterionHandler<TextCriterion> {
 		@Override
-		public DomainFilter getFilter(TextCriterion sc) {
+		public BindableFilter getFilter(TextCriterion sc) {
 			String text = TextUtils.normalisedLcKey(sc.getValue());
 			if (text.isEmpty()) {
 				return null;
 			}
-			return new DomainFilter(new Predicate<FlightEvent>() {
+			return new BindableFilter(new Predicate<FlightEvent>() {
 				@Override
 				public boolean test(FlightEvent o) {
 					return SearchUtils.matches(text,

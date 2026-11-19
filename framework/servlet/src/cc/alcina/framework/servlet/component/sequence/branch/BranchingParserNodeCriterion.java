@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.gwtpeer.client.dom.Location;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.domain.search.BindableCriteriaGroup;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -67,12 +67,12 @@ public class BranchingParserNodeCriterion {
 
 	static class TextCriterionHandler extends CriterionHandler<TextCriterion> {
 		@Override
-		public DomainFilter getFilter(TextCriterion sc) {
+		public BindableFilter getFilter(TextCriterion sc) {
 			String text = TextUtils.normalisedLcKey(sc.getValue());
 			if (text.isEmpty()) {
 				return null;
 			}
-			return new DomainFilter(new Predicate<BranchingParserNode>() {
+			return new BindableFilter(new Predicate<BranchingParserNode>() {
 				Pattern p = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
 
 				@Override
@@ -165,13 +165,13 @@ public class BranchingParserNodeCriterion {
 
 		static class Handler extends CriterionHandler<TokenDistanceCriterion> {
 			@Override
-			public DomainFilter getFilter(TokenDistanceCriterion sc) {
+			public BindableFilter getFilter(TokenDistanceCriterion sc) {
 				TermDistance tokenDistance = sc.value;
 				String text = TextUtils.normalisedLcKey(tokenDistance.text);
 				if (text.isEmpty()) {
 					return null;
 				}
-				return new DomainFilter(new Predicate<BranchingParserNode>() {
+				return new BindableFilter(new Predicate<BranchingParserNode>() {
 					Pattern p = Pattern.compile(text, Pattern.CASE_INSENSITIVE);
 
 					@Override
@@ -194,13 +194,13 @@ public class BranchingParserNodeCriterion {
 
 		static class Handler extends CriterionHandler<TextDistanceCriterion> {
 			@Override
-			public DomainFilter getFilter(TextDistanceCriterion sc) {
+			public BindableFilter getFilter(TextDistanceCriterion sc) {
 				TermDistance termDistance = sc.value;
 				String text = termDistance.text;
 				if (text.isEmpty()) {
 					return null;
 				}
-				return new DomainFilter(new Predicate<BranchingParserNode>() {
+				return new BindableFilter(new Predicate<BranchingParserNode>() {
 					String documentContent;
 
 					@Override

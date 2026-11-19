@@ -18,7 +18,7 @@ import com.barbarysoftware.watchservice.StandardWatchEventKind;
 import com.barbarysoftware.watchservice.WatchEvent;
 import com.barbarysoftware.watchservice.WatchService;
 import com.barbarysoftware.watchservice.WatchableFile;
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 

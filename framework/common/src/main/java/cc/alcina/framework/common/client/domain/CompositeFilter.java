@@ -3,10 +3,10 @@ package cc.alcina.framework.common.client.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CompositeFilter extends DomainFilter {
+public class CompositeFilter extends BindableFilter {
 	boolean or = false;
 
-	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
+	private List<BindableFilter> filters = new ArrayList<BindableFilter>();
 
 	public CompositeFilter() {
 		this(false);
@@ -20,7 +20,7 @@ public class CompositeFilter extends DomainFilter {
 						or));
 	}
 
-	public void add(DomainFilter filter) {
+	public void add(BindableFilter filter) {
 		filters.add(filter);
 		((cc.alcina.framework.common.client.collections.CompositeFilter) getPredicate())
 				.add(filter.asPredicate());
@@ -31,7 +31,7 @@ public class CompositeFilter extends DomainFilter {
 		if (or && filters.size() > 1) {
 			return false;
 		}
-		for (DomainFilter filter : filters) {
+		for (BindableFilter filter : filters) {
 			if (!filter.canFlatten()) {
 				return false;
 			}
@@ -39,7 +39,7 @@ public class CompositeFilter extends DomainFilter {
 		return true;
 	}
 
-	public List<DomainFilter> getFilters() {
+	public List<BindableFilter> getFilters() {
 		return filters;
 	}
 }

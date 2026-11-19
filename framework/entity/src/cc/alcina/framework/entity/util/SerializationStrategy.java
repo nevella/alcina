@@ -2,7 +2,7 @@ package cc.alcina.framework.entity.util;
 
 import java.io.File;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;

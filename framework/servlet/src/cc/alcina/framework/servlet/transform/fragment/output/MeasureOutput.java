@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.gwtpeer.client.dom.Measure;

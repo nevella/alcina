@@ -415,8 +415,16 @@ public class RemoteComponentHandler {
 				}
 				applyOutgoingMessagesToServletResponse(servletResponse,
 						response);
-				servletResponse.getWriter()
-						.write(ReflectiveSerializer.serializeForRpc(response));
+				String serializeForRpc = ReflectiveSerializer
+						.serializeForRpc(response);
+				// #FIXME #alcina-maven
+				serializeForRpc = serializeForRpc.replace(
+						"cc.alcina.framework.gwt.client.behavior.InterceptKeys",
+						"com.google.gwt.dom.client.behavior.InterceptKeys");
+				serializeForRpc = serializeForRpc.replace(
+						"cc.alcina.framework.gwt.client.behavior.EditAreaBehavior",
+						"com.google.gwt.dom.client.behavior.EditAreaBehavior");
+				servletResponse.getWriter().write(serializeForRpc);
 			}
 			servletResponse.setStatus(HttpServletResponse.SC_OK);
 		} catch (Throwable e) {

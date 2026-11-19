@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -66,7 +66,7 @@ class EntityTraversalQueryLayer extends Layer
 		Layer layer = getTraversal().layers().get(selection);
 		Filter filter = Ui.traversingPlace().attributesOrEmpty(layer.index + 1)
 				.get(Filter.class);
-		DomainFilter domainFilter = filter == null ? null
+		BindableFilter bindableFilter = filter == null ? null
 				: filter.toDomainFilter(entityClass);
 		String cacheMarker = filter != null
 				? Ui.traversingPlace().truncateTo(2).withoutPaths()
@@ -79,8 +79,9 @@ class EntityTraversalQueryLayer extends Layer
 		 * note that we *can* cache the results of this layer - since there's no
 		 * layered filters on this layer. The trick is reuse
 		 */
-		Stream domainStream = domainFilter == null ? Domain.stream(entityClass)
-				: Domain.query(entityClass).filter(domainFilter).stream();
+		Stream domainStream = bindableFilter == null
+				? Domain.stream(entityClass)
+				: Domain.query(entityClass).filter(bindableFilter).stream();
 		Stream<Entity> stream = Stream.concat(Stream.of(selected), domainStream)
 				.distinct().filter(Objects::nonNull);
 		addStream(selection, stream, cacheMarker);

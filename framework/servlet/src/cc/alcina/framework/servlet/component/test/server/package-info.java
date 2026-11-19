@@ -5,5 +5,5 @@
 package cc.alcina.framework.servlet.component.test.server;
 
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.test.Feature_AlcinaGwtTest;
 import cc.alcina.framework.servlet.annotation.ComponentMeta;
-import cc.alcina.framework.servlet.component.test.Feature_AlcinaGwtTest;

@@ -15,16 +15,17 @@ import javax.servlet.http.Cookie;
 
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.behavior.BehaviorRegistry;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.BindableQuery;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
-import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -55,6 +56,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvent;
 import cc.alcina.framework.gwt.client.logic.domaintransform.DomainHandlerClient;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.dom.Feature_EnvironmentManager;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
@@ -66,7 +68,6 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
-import cc.alcina.framework.servlet.dom.Feature_EnvironmentManager;
 
 /**
  * <p>
@@ -226,7 +227,7 @@ public class EnvironmentManager {
 			return handler().listByProperty(clazz, propertyName, value);
 		}
 
-		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+		public <B extends Bindable> BindableQuery<B> query(Class<B> clazz) {
 			return handler().query(clazz);
 		}
 

@@ -17,8 +17,8 @@ import java.util.Date;
 import java.util.List;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     static _RomcomSessionArea romcomSessionArea = new _RomcomSessionArea();
     static _RomcomSessionCriterion_ActiveCriterion romcomSessionCriterion_activeCriterion = new _RomcomSessionCriterion_ActiveCriterion();

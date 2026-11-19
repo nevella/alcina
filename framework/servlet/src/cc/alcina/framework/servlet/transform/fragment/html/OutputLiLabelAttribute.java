@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.transform.fragment.html;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.servlet.transform.fragment.output.MeasureNode;
 import cc.alcina.framework.gwtpeer.client.dom.DomNode;

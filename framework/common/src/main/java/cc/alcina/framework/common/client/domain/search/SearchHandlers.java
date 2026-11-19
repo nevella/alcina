@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
-import cc.alcina.framework.common.client.domain.DomainFilter;
-import cc.alcina.framework.common.client.domain.search.DomainSearcher.DomainSearcherFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
+import cc.alcina.framework.common.client.domain.search.BindableSearcher.BindableSearcherFilter;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion;
 import cc.alcina.framework.common.client.domain.search.criterion.PropertyOrderCriterion.PropertyOrderComparator;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
@@ -36,7 +36,7 @@ public class SearchHandlers {
 	static Map<Class, DomainDefinitionHandler> definitionHandlers = new LinkedHashMap<>();
 
 	static synchronized void ensureHandlers() {
-		Logger logger = LoggerFactory.getLogger(DomainSearcher.class);
+		Logger logger = LoggerFactory.getLogger(BindableSearcher.class);
 		if (handlers.isEmpty()) {
 			List<DomainCriterionHandler> impls = Registry
 					.query(DomainCriterionHandler.class).implementations()
@@ -81,7 +81,7 @@ public class SearchHandlers {
 	}
 
 	static void processDefinitionHandler(SearchDefinition def,
-			Consumer<DomainFilter> filterConsumer) {
+			Consumer<BindableFilter> filterConsumer) {
 		DomainDefinitionHandler handler = SearchHandlers.definitionHandlers
 				.get(def.getClass());
 		if (handler != null) {
@@ -100,7 +100,7 @@ public class SearchHandlers {
 	}
 
 	static void processHandlers(SearchDefinition def,
-			Consumer<DomainFilter> filterConsumer) {
+			Consumer<BindableFilter> filterConsumer) {
 		CONTEXT_DEFINITION.runWithValue(() -> {
 			processHandlers(def, filterConsumer, 0);
 			processHandlers(def, filterConsumer, 1);
@@ -112,7 +112,7 @@ public class SearchHandlers {
 	 * filters will be 1, all others zero
 	 */
 	private static void processHandlers(SearchDefinition def,
-			Consumer<DomainFilter> filterConsumer, int pass) {
+			Consumer<BindableFilter> filterConsumer, int pass) {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
 			if (!cg.provideIsEmpty()) {
@@ -136,9 +136,9 @@ public class SearchHandlers {
 					if (handler.queryCost() != pass) {
 						continue;
 					}
-					DomainFilter filter = handler.getFilter(sc);
+					BindableFilter filter = handler.getFilter(sc);
 					if (filter != null) {
-						DomainSearcherFilter searcherFilter = new DomainSearcherFilter(
+						BindableSearcherFilter searcherFilter = new BindableSearcherFilter(
 								filter, sc);
 						if (or) {
 							orFilter.add(filter);

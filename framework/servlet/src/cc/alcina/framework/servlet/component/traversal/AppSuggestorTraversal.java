@@ -5,6 +5,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_AppSuggestorImplementation;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 @Directed(renderer = DirectedRenderer.Delegating.class)

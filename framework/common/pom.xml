@@ -7,7 +7,7 @@
 	<artifactId>common</artifactId>
 	<version>1.0-SNAPSHOT</version>
 
-	<name>common-common</name>
+	<name>alcina-common</name>
 	<url>https://alcina.cc</url>
 
 	<properties>
@@ -51,10 +51,11 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.google.gwt</groupId>
-			<artifactId>gwt-elemental</artifactId>
-			<version>2.9.0</version>
-			<scope>compile</scope>
+			<groupId>gwt-pruned</groupId>
+			<artifactId>gwt-elemental-2.9.0-pruned.jar</artifactId>
+			<scope>system</scope>
+			<version>1.0</version>
+			<systemPath>${basedir}/lib/pruned/gwt-elemental-2.9.0-pruned.jar</systemPath>
 		</dependency>
 	</dependencies>
 

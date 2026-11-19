@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.domain.search.SearchHandlers;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
@@ -54,7 +54,7 @@ public abstract class LogicalCriterion extends SearchCriterion
 		static class Sub {
 			SearchCriterion criterion;
 
-			DomainFilter filter;
+			BindableFilter filter;
 
 			Predicate predicate;
 
@@ -74,12 +74,12 @@ public abstract class LogicalCriterion extends SearchCriterion
 		IntPair criteriaMatchCount;
 
 		@Override
-		public DomainFilter getFilter(LC criterion) {
+		public BindableFilter getFilter(LC criterion) {
 			this.criterion = criterion;
 			subs = criterion.getValue().criteria.stream().map(Sub::new)
 					.toList();
 			criteriaMatchCount = criterion.criteriaMatchCount();
-			return new DomainFilter(new CountingPredicate());
+			return new BindableFilter(new CountingPredicate());
 		}
 
 		class CountingPredicate implements Predicate {

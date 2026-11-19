@@ -223,6 +223,9 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		case "cc.alcina.framework.common.client.util.AlcinaBeanSerializer$SerializationHolder":
 			cn = AlcinaBeanSerializer.SerializationHolder.class.getName();
 			break;
+		case "cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest":
+			cn = "cc.alcina.framework.dev.console.remote.protocol.RemoteConsoleRequest";
+			break;
 		}
 		Class clazz = null;
 		try {
@@ -450,6 +453,20 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 		String typeName = type.getName();
 		typeName = normaliseReverseAbbreviation(type, typeName);
+		switch (typeName) {
+		case "cc.alcina.framework.dev.console.remote.protocol.RemoteConsoleResponse":
+			typeName = "cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleResponse";
+			break;
+		case "cc.alcina.framework.dev.console.remote.protocol.RemoteConsoleConsoleChanges":
+			typeName = "cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleConsoleChanges";
+			break;
+		case "cc.alcina.framework.dev.console.remote.protocol.RemoteConsoleStartup":
+			typeName = "cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleStartup";
+			break;
+		case "cc.alcina.framework.dev.console.remote.protocol.RemoteConsoleStartupModel":
+			typeName = "cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleStartupModel";
+			break;
+		}
 		jo.put(CLASS_NAME, typeName);
 		Class<? extends Object> clazz = type;
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)

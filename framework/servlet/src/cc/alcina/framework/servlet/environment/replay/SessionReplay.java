@@ -20,7 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.Sequence;
 import cc.alcina.framework.gwt.client.dirndl.cmp.sequence.SequencePlace;
 import cc.alcina.framework.gwt.client.util.Url;
 import cc.alcina.framework.gwt.client.util.UrlBuilder;
-import cc.alcina.framework.servlet.component.console.rcs.Feature_RomcomSessionConsole;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.console.rcs.Feature_RomcomSessionConsole;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;

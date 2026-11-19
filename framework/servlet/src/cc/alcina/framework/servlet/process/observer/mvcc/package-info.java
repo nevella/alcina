@@ -27,3 +27,4 @@ cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()));
 package cc.alcina.framework.servlet.process.observer.mvcc;
 
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.process.observer.mvcc.Feature_MvccHistory;

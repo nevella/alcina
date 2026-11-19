@@ -3,7 +3,7 @@ package cc.alcina.framework.dev.console.test;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.TrieProjection;

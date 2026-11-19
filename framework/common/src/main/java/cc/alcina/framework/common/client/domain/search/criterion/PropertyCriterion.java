@@ -5,7 +5,7 @@ import java.util.Objects;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.domain.search.SearchContext;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
@@ -49,13 +49,13 @@ public class PropertyCriterion extends SearchCriterion
 
 	public interface Handler extends DomainCriterionFilter<PropertyCriterion> {
 		@Override
-		default DomainFilter getFilter(PropertyCriterion criterion) {
+		default BindableFilter getFilter(PropertyCriterion criterion) {
 			Class<? extends Bindable> type = SearchContext.get()
 					.getPostTransformBindableClass();
 			Property property = Reflections.at(type)
 					.property(criterion.value.propertyName);
 			return property == null ? null
-					: DomainFilter.ofSearchProperty(property,
+					: BindableFilter.ofSearchProperty(property,
 							criterion.getOperator().toFilterOperator(),
 							criterion.value.filterValue);
 		}

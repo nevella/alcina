@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.model.HasClassNames;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.console.rcs.Feature_RomcomSessionConsole;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportHistory;
 import cc.alcina.framework.servlet.component.romcom.protocol.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.AwaitTimedOutException;

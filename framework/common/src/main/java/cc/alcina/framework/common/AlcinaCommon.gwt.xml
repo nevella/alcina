@@ -1,28 +1,26 @@
 <module>
 	<!-- Inherit the core Web Toolkit stuff.                        -->
 	<inherits name='com.google.gwt.user.User' />
-	<inherits name='com.google.common.GoogleCommonBase' />
 	<inherits name='com.googlecode.gwtx.Java' />
 	<inherits name='com.google.gwt.activity.Activity' />
-	<inherits name='com.totsp.gwittir.GwittirNoDeps' />
 	<inherits name='org.w3c.Xml' />
-	
+
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeRegex' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeImpl' />
-	<inherits name='de.benediktmeurer.gwt.slf4j.jul.JUL'/>
+	<inherits name='de.benediktmeurer.gwt.slf4j.jul.JUL' />
 	<!-- FIXME - 2022 - cleanup unused -->
-	<define-configuration-property name="alcina.introspectorFilter.classname" is-multi-valued="false"/>
-	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" is-multi-valued="false"/>
-	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" value="false"/>
-	<define-configuration-property name="alcina.introspectorFilter.dataFile" is-multi-valued="false"/>
-	<extend-configuration-property name="rpc.blacklist" value="cc.alcina.framework.common.client.util.AlcinaBeanSerializer.SerializationHolder"/>
-	
-	 <set-property name="gwt.logging.enabled" value="FALSE"/>         
-    <set-property name="gwt.logging.consoleHandler" value="DISABLED"/>
-    <set-property name="gwt.logging.developmentModeHandler" value="DISABLED"/>
+	<define-configuration-property name="alcina.introspectorFilter.classname" is-multi-valued="false" />
+	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" is-multi-valued="false" />
+	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" value="false" />
+	<define-configuration-property name="alcina.introspectorFilter.dataFile" is-multi-valued="false" />
+	<extend-configuration-property name="rpc.blacklist" value="cc.alcina.framework.common.client.util.AlcinaBeanSerializer.SerializationHolder" />
+
+	<set-property name="gwt.logging.enabled" value="FALSE" />
+	<set-property name="gwt.logging.consoleHandler" value="DISABLED" />
+	<set-property name="gwt.logging.developmentModeHandler" value="DISABLED" />
 	<source path="client" />
 	<!-- chromium 73 issues with iframe loader -->
 	<add-linker name="direct_install" />
-	
+
 </module>

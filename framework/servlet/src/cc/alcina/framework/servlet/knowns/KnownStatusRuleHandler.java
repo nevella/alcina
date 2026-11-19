@@ -6,7 +6,7 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.csobjects.KnownNodeMetadata;
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;

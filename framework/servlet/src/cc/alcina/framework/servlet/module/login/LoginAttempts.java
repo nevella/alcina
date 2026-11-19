@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.module.login;
 import java.util.Date;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;

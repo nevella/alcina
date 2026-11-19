@@ -6,10 +6,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.domain.BindableQuery;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
-public class DomainStoreQuery<V extends Entity> extends DomainQuery<V> {
+public class DomainStoreQuery<V extends Entity> extends BindableQuery<V> {
 	private DomainStore store;
 
 	public DomainStoreQuery(Class<V> entityClass, DomainStore store) {
@@ -42,6 +42,6 @@ public class DomainStoreQuery<V extends Entity> extends DomainQuery<V> {
 
 	@Override
 	public Stream<V> stream() {
-		return store.query(entityClass, this);
+		return store.query(bindableClass, this);
 	}
 }

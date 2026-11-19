@@ -16,22 +16,10 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
  * I'd call this CrudSearch...but that'd be mean
  */
 public abstract class EntitySearchDefinition extends BindableSearchDefinition {
-	// return editable dataobjects (either the entity class or a dataobject
-	// extending it)
-	private boolean returnSingleDataObjectImplementations;
-
 	@Override
 	@PropertySerialization(ignore = true)
 	public Set<OrderGroup> getOrderGroups() {
 		return super.getOrderGroups();
-	}
-
-	public boolean isReturnSingleDataObjectImplementations() {
-		return this.returnSingleDataObjectImplementations;
-	}
-
-	public boolean provideIsDefaultSortOrder() {
-		return getSearchOrders().isEmpty();
 	}
 
 	@Override
@@ -40,11 +28,6 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	}
 
 	public abstract <C extends Entity> Class<C> queriedEntityClass();
-
-	public void setReturnSingleDataObjectImplementations(
-			boolean returnSingleDataObjectImplementations) {
-		this.returnSingleDataObjectImplementations = returnSingleDataObjectImplementations;
-	}
 
 	public static abstract class DefaultIdOrder extends EntitySearchDefinition {
 		public DefaultIdOrder() {

@@ -1,11 +1,11 @@
 package cc.alcina.framework.servlet.story.component.gallery;
 
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.gwt.client.dirndl.model.search.Feature_Dirndl_SearchDefinitionEditor;
 import cc.alcina.framework.gwt.client.story.SeleniumKeys;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.gwt.client.story.Waypoints;
+import cc.alcina.framework.meta.cc.alcina.framework.gwt.client.dirndl.model.search.Feature_Dirndl_SearchDefinitionEditor;
 
 /*
  * This tests the SearchDefinitionEditor gallery page. Each child resets the

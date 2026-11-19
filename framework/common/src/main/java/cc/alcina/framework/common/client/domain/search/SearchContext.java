@@ -42,7 +42,7 @@ public class SearchContext {
 
 	public ModelSearchResults modelSearchResults;
 
-	public List<Entity> queried;
+	public List<Bindable> queried;
 
 	public void end() {
 	}

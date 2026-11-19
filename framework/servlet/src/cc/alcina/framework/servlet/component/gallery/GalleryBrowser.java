@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.gallery.Feature_GalleryBrowser;
 import cc.alcina.framework.servlet.component.gallery.home.GalleryHomePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;

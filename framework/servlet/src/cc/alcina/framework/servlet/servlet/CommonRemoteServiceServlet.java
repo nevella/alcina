@@ -31,7 +31,7 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 import com.google.gwt.user.server.rpc.RPCRequest;
@@ -45,7 +45,7 @@ import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
-import cc.alcina.framework.common.client.domain.search.DomainSearcher;
+import cc.alcina.framework.common.client.domain.search.BindableSearcher;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.gwt.client.gwittir.validator.ServerValidator;
@@ -370,7 +370,7 @@ public abstract class CommonRemoteServiceServlet extends AlcinaRpcServlet
 	@WebMethod
 	public Response suggest(BoundSuggestOracleRequest request) {
 		try {
-			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
+			LooseContext.set(BindableSearcher.CONTEXT_HINT, request.getHint());
 			Class<? extends BoundSuggestOracleResponseElement> clazz = (Class<? extends BoundSuggestOracleResponseElement>) Class
 					.forName(request.getTargetClassName());
 			Registry.Query<BoundSuggestOracleRequestHandler> query = Registry

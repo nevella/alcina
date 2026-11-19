@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import org.apache.log4j.Level;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;

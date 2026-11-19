@@ -1,0 +1,314 @@
+package cc.alcina.framework.gwt.client.place;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceHistoryMapper;
+import com.google.gwt.place.shared.UnparseablePlaceException;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
+
+/**
+ * This must be registered manually (different apps use different mappers, and
+ * it's trickier to isolate the classpaths than register manually)
+ */
+@Reflected
+@EnvironmentRegistration
+public class RegistryHistoryMapper implements PlaceHistoryMapper {
+	public static RegistryHistoryMapper get() {
+		return Registry.impl(RegistryHistoryMapper.class);
+	}
+
+	/*
+	 * All tokenizers are really templates, the instances in the maps should not
+	 * be used to serialize/deserialize
+	 */
+	Multimap<String, List<BasePlaceTokenizer>> tokenizersByPrefix = new Multimap<>();
+
+	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
+
+	Map<Class<? extends Bindable>, BasePlaceTokenizer> tokenizersByModelClass = new LinkedHashMap<>();
+
+	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
+
+	public RegistryHistoryMapper() {
+		this(null, "");
+	}
+
+	Class<? extends Place> permittedPlaceSupertype;
+
+	String appPrefix;
+
+	public RegistryHistoryMapper(
+			Class<? extends Place> permittedPlaceSupertype) {
+		this(permittedPlaceSupertype, "");
+	}
+
+	public RegistryHistoryMapper(Class<? extends Place> permittedPlaceSupertype,
+			String appPrefix) {
+		this.permittedPlaceSupertype = permittedPlaceSupertype;
+		this.appPrefix = appPrefix;
+		initPlaceLookup();
+	}
+
+	private String cleanGwtCodesvr(String token) {
+		return token.replaceFirst("[?&](gwt.codesvr=127.0.0.1:\\d+|gwt.l)$",
+				"");
+	}
+
+	public <T extends Place> T copyPlace(T place) {
+		String token = getToken(place);
+		try {
+			// should never throw
+			return (T) getPlace(token);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
+	void initPlaceLookup() {
+		listTokenizers().forEach(tokenizer -> {
+			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
+			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
+			if (tokenizer.isCanonicalModelClassTokenizer()) {
+				if (tokenizer instanceof EntityPlaceTokenizer) {
+					tokenizersByModelClass.put(
+							((EntityPlaceTokenizer) tokenizer).getModelClass(),
+							tokenizer);
+				}
+				if (tokenizer instanceof BindablePlaceTokenizer) {
+					tokenizersByModelClass
+							.put(((BindablePlaceTokenizer) tokenizer)
+									.getModelClass(), tokenizer);
+				}
+			}
+			tokenizer.register(tokenizersByModelClass);
+		});
+		listPlaces().filter(p -> p instanceof SubPlace)
+				.forEach(place -> placesBySubPlace
+						.put(((SubPlace) place).getSub(), place));
+	}
+
+	public boolean equalPlaces(Place place1, Place place2) {
+		return getToken(place1).equals(getToken(place2));
+	}
+
+	protected String getAppPrefix() {
+		return appPrefix;
+	}
+
+	public Class<? extends Entity>
+			getEntityClass(Class<? extends EntityPlace> placeClass) {
+		return ((EntityPlaceTokenizer) tokenizersByPlace.get(placeClass))
+				.getModelClass();
+	}
+
+	/**
+	 * Call this if the token (serialized form) is not trusted (e.g. a browser
+	 * url, say) and thus quite possibly will throw
+	 */
+	@Override
+	public Place getPlace(String token) throws UnparseablePlaceException {
+		return parseAndReturnPlace(token, true);
+	}
+
+	public synchronized Place getPlaceByModelClass(Class<?> clazz) {
+		return tokenizersByModelClass.containsKey(clazz)
+				? tokenizersByModelClass.get(clazz).createDefaultPlace()
+				: null;
+	}
+
+	public synchronized BasePlace getPlaceBySubPlace(Enum value) {
+		return placesBySubPlace.get(value).copy();
+	}
+
+	public Optional<Place> getPlaceIfParseable(String token) {
+		return getPlaceIfParseable(token, true);
+	}
+
+	public Optional<Place> getPlaceIfParseable(String token,
+			boolean logUnparseable) {
+		try {
+			return Optional.ofNullable(parseAndReturnPlace(token, false));
+		} catch (UnparseablePlaceException e) {
+			// fixme - dirndl - send dev warning to server
+			if (logUnparseable) {
+				Ax.err("unparesable place: %s", token);
+			}
+			return Optional.empty();
+		} catch (Exception e) {
+			Ax.err("unparesable place: %s", token);
+			// new ClientTopics.DevMessage("unparesable place",
+			// token).publish();
+			return Optional.empty();
+		}
+	}
+
+	/**
+	 * Call this if the token (serialized form) is trusted (not a browser url,
+	 * say) and thus not expected to throw - *or* if an unparseable place is
+	 * broken (e.g. during deserialization)
+	 */
+	public Place getPlaceOrThrow(String token) {
+		try {
+			return getPlace(token);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
+	@Override
+	public synchronized String getToken(Place place) {
+		if (place == null || tokenizersByPlace.isEmpty()
+				|| place == Place.NOWHERE) {
+			return "";
+		}
+		BasePlace basePlace = (BasePlace) place;
+		String token = getTokenizerByClass(place).mutableInstance()
+				.getToken(basePlace);
+		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
+	}
+
+	public synchronized BasePlaceTokenizer getTokenizer(Place place) {
+		if (place == null || tokenizersByPlace.isEmpty()) {
+			return null;
+		}
+		return getTokenizerByClass(place).mutableInstance();
+	}
+
+	BasePlaceTokenizer<?> getTokenizerByClass(Place place) {
+		Class<? extends Place> clazz = place.getClass();
+		{
+			BasePlaceTokenizer tokenizer = tokenizersByPlace.get(clazz);
+			if (tokenizer != null) {
+				return tokenizer;
+			}
+		}
+		{
+			BasePlaceTokenizer tokenizer = tokenizersByPlace
+					.get(clazz.getSuperclass());
+			if (tokenizer != null && tokenizer.handlesPlaceSubclasses()) {
+				return tokenizer;
+			}
+		}
+		return null;
+	}
+
+	protected Stream<BasePlace> listPlaces() {
+		return Registry.query(BasePlace.class).registrations()
+				.filter(this::testPlaceType).map(Reflections::newInstance);
+	}
+
+	boolean testPlaceType(Class<? extends BasePlace> placeType) {
+		return permittedPlaceSupertype == null || Reflections
+				.isAssignableFrom(permittedPlaceSupertype, placeType);
+	}
+
+	protected Stream<BasePlaceTokenizer> listTokenizers() {
+		return Registry.query(BasePlaceTokenizer.class).implementations()
+				.filter(t -> testPlaceType(t.getTokenizedClass()));
+	}
+
+	/**
+	 * On startup, apps should catch the UnparseablePlaceException and sub null.
+	 * But generally it's better to force the app to explicitly handle
+	 * unparseable places than just 'null'
+	 *
+	 * @throws UnparseablePlaceException
+	 */
+	protected synchronized Place parseAndReturnPlace(String token0,
+			boolean logExceptions) throws UnparseablePlaceException {
+		String token1 = token0;
+		if (token1.matches(".+[^/]\\?.*")) {
+			token1 = token1.replace("?", "/?");
+		}
+		String token = cleanGwtCodesvr(
+				removeAppPrefixAndLeadingSlashes(token1));
+		String[] split = token.split("/");
+		String top = split[0];
+		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
+				.getAndEnsure(top).stream()
+				.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		if (!o_tokenizer.isPresent() && tokenizersByPrefix.containsKey("")) {
+			o_tokenizer = tokenizersByPrefix.getAndEnsure("").stream()
+					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		}
+		if (!o_tokenizer.isPresent() && token.equals("")) {
+			o_tokenizer = tokenizersByPrefix.allValues().stream().filter(
+					tokenizer -> tokenizer instanceof BasePlaceTokenizer.BlankTokenTokenizer)
+					.findFirst();
+		}
+		if (!o_tokenizer.isPresent() && top.length() > 1 && split.length > 1) {
+			top = split[0] + "/" + split[1];
+			o_tokenizer = tokenizersByPrefix.getAndEnsure(top).stream()
+					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		}
+		Place place = null;
+		try {
+			place = o_tokenizer.isPresent()
+					? o_tokenizer.get().mutableInstance().getPlace(token)
+					: null;
+		} catch (Exception e) {
+			if (logExceptions) {
+				e.printStackTrace();
+			}
+			// emit as null
+		}
+		if (place == null) {
+			throw new UnparseablePlaceException(token0);
+			// nope - client must handle null
+			// if (GWT.isClient()) {
+			// // handle doc internal hrefs
+			// place = lastPlace;
+			// }
+			// }
+			// lastPlace = place;
+		}
+		return place;
+	}
+
+	public String removeAppPrefixAndLeadingSlashes(String tokenString) {
+		String appPrefix = getAppPrefix();
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
+		}
+		if (appPrefix.length() > 0) {
+			String matchesPattern = Ax.format("/?%s(/.*|$)", appPrefix);
+			if (tokenString.matches(matchesPattern)) {
+				tokenString = tokenString.substring(appPrefix.length());
+			}
+		}
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
+		}
+		return tokenString;
+	}
+
+	public void removeTokenizer(Predicate<BasePlaceTokenizer> matcher) {
+		tokenizersByModelClass.entrySet()
+				.removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPlace.entrySet().removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPrefix.values()
+				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
+	}
+
+	public static void registerDefaultMapper() {
+		RegistryHistoryMapper mapper = new RegistryHistoryMapper();
+		Registry.register().singleton(RegistryHistoryMapper.class, mapper);
+	}
+}

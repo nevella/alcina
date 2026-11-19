@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.schedule;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;

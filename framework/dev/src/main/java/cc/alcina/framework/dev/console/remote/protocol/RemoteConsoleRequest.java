@@ -2,7 +2,7 @@ package cc.alcina.framework.dev.console.remote.protocol;
 
 import java.util.Date;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;

@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.entity.Feature_EntityBrowser;
 
 @Feature.Ref(Feature_EntityBrowser._QueryCache.class)
 class NonOptimisedQueryCache {

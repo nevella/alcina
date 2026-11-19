@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.service;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -88,7 +87,7 @@ public final class InstanceQuery implements TreeSerializable {
 				if (parameterClass == null) {
 					List<Class<? extends Parameter>> candidates = Registry
 							.query(Parameter.class).registrations()
-							.filter(t -> !Modifier.isAbstract(t.getModifiers()))
+							.filter(t -> !Reflections.at(t).isAbstract())
 							.filter(t -> Reflections.isAssignableFrom(
 									Reflections.at(t).firstGenericBound(),
 									clazz))

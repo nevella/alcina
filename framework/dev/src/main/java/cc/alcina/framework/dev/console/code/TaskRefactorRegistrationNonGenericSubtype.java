@@ -20,7 +20,7 @@ import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.TypeParameter;
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -131,7 +131,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				case DomainCriterionHandler:
 					if (method.getNameAsString().equals("getFilter")
 							&& method.getType().toString()
-									.contains("DomainFilter")
+									.contains("BindableFilter")
 							&& method.toString()
 									.contains("return getFilter0(sc);")) {
 						unitType.dirty();

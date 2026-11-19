@@ -6,11 +6,11 @@ import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 
 /**
- * Similar to DomainSearcher, but much simpler implementation (since just sed as
- * a filter)
+ * Similar to BindableSearcher, but much simpler implementation (since just sed
+ * as a filter)
  * 
  * 
  *
@@ -72,7 +72,7 @@ public class BindableSearchFilter implements Predicate, Comparator {
 		}
 	}
 
-	void addFilter(DomainFilter filter) {
+	void addFilter(BindableFilter filter) {
 		predicate = predicate.and(filter.asPredicate());
 	}
 }

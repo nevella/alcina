@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet.story.component.traversal;
 
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
 import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalBrowser.State;
 import cc.alcina.framework.servlet.story.console.Story_Console;
 

@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.servlet.transform.fragment.DocumentTransformerSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.doc.tokens.LayoutTokens.IndentRun;

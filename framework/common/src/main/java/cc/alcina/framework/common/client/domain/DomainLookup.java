@@ -92,7 +92,7 @@ public class DomainLookup<T, E extends Entity>
 
 	@Override
 	public FilterCost estimateFilterCost(int entityCount,
-			DomainFilter... filters) {
+			BindableFilter... filters) {
 		return FilterCost.lookupProjectionCost();
 	}
 

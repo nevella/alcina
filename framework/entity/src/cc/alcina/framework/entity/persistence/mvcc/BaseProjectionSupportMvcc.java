@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreator;
 import cc.alcina.framework.common.client.domain.IDomainStore;

@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom;
 
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 @Feature.Status.Ref(Feature.Status.Open.class)
 // ref the client-visible package version of this 'feature'

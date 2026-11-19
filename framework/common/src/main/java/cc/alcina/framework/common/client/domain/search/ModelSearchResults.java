@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -33,7 +34,7 @@ public class ModelSearchResults<B extends IsBindable & SearchResult>
 
 	private DomainTransformCommitPosition transformLogPosition;
 
-	private transient Entity rawEntity;
+	private transient Bindable rawBindable;
 
 	private List<Entity> filteringEntities = new ArrayList<>();
 
@@ -58,8 +59,8 @@ public class ModelSearchResults<B extends IsBindable & SearchResult>
 	}
 
 	@AlcinaTransient
-	public Entity getRawEntity() {
-		return rawEntity;
+	public Bindable getRawBindable() {
+		return rawBindable;
 	}
 
 	public int getRecordCount() {
@@ -115,8 +116,8 @@ public class ModelSearchResults<B extends IsBindable & SearchResult>
 		this.queriedResultObjects = queriedResultObjects;
 	}
 
-	public void setRawEntity(Entity rawEntity) {
-		this.rawEntity = rawEntity;
+	public void setRawBindable(Bindable rawBindable) {
+		this.rawBindable = rawBindable;
 	}
 
 	public void setRecordCount(int recordCount) {

@@ -41,7 +41,9 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasListSelectionText;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.TreeRenderable;
@@ -289,5 +291,43 @@ public abstract class SearchCriterion extends Bindable
 	}
 
 	public void populateDisplayText() {
+	}
+
+	public static class SelectableCriterion
+			implements Comparable<SelectableCriterion> {
+		public String selectableText;
+
+		public SelectableCriterion(String selectableText) {
+			this.selectableText = selectableText;
+		}
+
+		@Override
+		public int compareTo(SelectableCriterion o) {
+			return String.CASE_INSENSITIVE_ORDER.compare(selectableText,
+					o.selectableText);
+		}
+	}
+
+	@Property.Not
+	public boolean isEmpty() {
+		return Ax.isEmpty(valueProperty().get());
+	}
+
+	public SelectableCriterion toSelectableCriterion() {
+		FormatBuilder builder = new FormatBuilder().separator(" - ");
+		builder.append(CommonUtils
+				.deInfix(NestedName.get(this).replace("Criterion", "")));
+		if (!isEmpty()) {
+			builder.append(toString());
+		}
+		return new SelectableCriterion(builder.toString());
+	}
+
+	public static class ListSelectionTransform
+			implements HasListSelectionText.To<SearchCriterion> {
+		@Override
+		public Object apply(SearchCriterion t) {
+			return t.toSelectableCriterion().selectableText;
+		}
 	}
 }

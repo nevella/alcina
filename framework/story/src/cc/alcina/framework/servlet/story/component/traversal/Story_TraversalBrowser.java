@@ -2,9 +2,8 @@ package cc.alcina.framework.servlet.story.component.traversal;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.Story;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_SelectionCards;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_SelectionTable;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_SelectionTable;
 
 /**
  * <p>

@@ -1,0 +1,151 @@
+package cc.alcina.framework.gwt.client.dirndl.activity;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import com.google.gwt.place.shared.StructuredPlace;
+
+import cc.alcina.framework.common.client.Preconditions;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Delegating;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.NodeContext;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ReflectedEvents;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+
+/**
+ * <p>
+ * The basic renderer of a fully place-driven Dirndl app. {@link #mainActivity}
+ * corresponds to the main place, {@link #fragmentActivities} to the place's
+ * fragments
+ * 
+ * <p>
+ * Since this model is delegating (to mainActivity), we're forced to render the
+ * fragmentActivities as overlays - *however* that's actually correct. If a
+ * top-level activity could render fragments, they should be modelled as
+ * properties somewhere inside the model's descendant objects top-level (and
+ * hooked up to the main activity Topic with a filter). So rendering the
+ * fragments is logically correct - and in the first use case (a help UI), it's
+ * the correct modality
+ */
+@Delegating
+@TypedProperties
+public class RootArea extends Model.Fields
+		implements ModelEvent.DelegatesDispatch,
+		// implemented here (for hookup), but actual dispatch is done by the
+		// dispatch delegate (which must also implement this interface)
+		ReflectedEvents.TopLevelMissedEvent.Reflector {
+	public static transient PackageProperties._RootArea properties = PackageProperties.rootArea;
+
+	@Directed
+	public DirectedActivity mainActivity;
+
+	Map<Class<? extends BasePlace>, ChannelOverlay> channelOverlays = new LinkedHashMap<>();
+
+	@Delegating
+	@TypedProperties
+	@Bean(PropertySource.FIELDS)
+	static class ChannelOverlay extends Model.Fields {
+		public static transient PackageProperties._RootArea properties = PackageProperties.rootArea;
+
+		Class<? extends BasePlace> channel;
+
+		@Directed
+		DirectedActivity activity;
+
+		Overlay overlay;
+
+		ChannelOverlay(Class<? extends BasePlace> channel,
+				DirectedActivity activity) {
+			this.channel = channel;
+			Overlay.Attributes attributes = Overlay.attributes()
+					.withContents(this).withCloseOnMouseDownOutside(false);
+			Registry.impl(ChannelOverlayPosition.class, channel)
+					.position(attributes);
+			this.overlay = attributes.create();
+			overlay.open();
+		}
+
+		public void setActivity(DirectedActivity activity) {
+			set("activity", this.activity, activity,
+					() -> this.activity = activity);
+		}
+	}
+
+	/**
+	 * Positions the overlay (builder) before creation; keyed to the channel
+	 * class
+	 */
+	@Registration(ChannelOverlayPosition.class)
+	public static class ChannelOverlayPosition {
+		public void position(Overlay.Attributes attributes) {
+			attributes.positionViewportCentered();
+		}
+	}
+
+	/*
+	 * Note that a method handle block returns a new lambda each time - so we
+	 * make a field ref, which can be correctly removed
+	 */
+	transient TopicListener<DirectedActivity> onActivityStartedRef = this::onActivityStarted;
+
+	transient TopicListener<Class<? extends StructuredPlace>> onChannelStoppedRef = this::onChannelStopped;
+
+	public RootArea() {
+	}
+
+	@Override
+	public void onNodeContext(NodeContext event) {
+		DirectedActivity.Topics.get().topicActivityStarted
+				.addWithPublishedCheck(onActivityStartedRef);
+		DirectedActivity.Topics.get().topicChannelStopped
+				.addWithPublishedCheck(onChannelStoppedRef);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			Preconditions.checkNotNull(onActivityStartedRef);
+		} else {
+			DirectedActivity.Topics.get().topicActivityStarted
+					.remove(onActivityStartedRef);
+			DirectedActivity.Topics.get().topicChannelStopped
+					.remove(onChannelStoppedRef);
+		}
+	}
+
+	protected void onActivityStarted(DirectedActivity activity) {
+		if (activity.channel == null) {
+			properties.mainActivity.set(this, activity);
+		} else {
+			updateFragmentOverlays(activity);
+		}
+	}
+
+	protected void onChannelStopped(Class<? extends StructuredPlace> channel) {
+		channelOverlays.remove(channel).overlay.close();
+	}
+	//
+
+	void updateFragmentOverlays(DirectedActivity activity) {
+		channelOverlays
+				.computeIfAbsent(activity.channel,
+						channel -> new ChannelOverlay(channel, activity))
+				.setActivity(activity);
+	}
+
+	@Override
+	public Model provideDispatchDelegate() {
+		return mainActivity;
+	}
+}

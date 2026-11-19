@@ -13,7 +13,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.logic.domain.UserProperty;

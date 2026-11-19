@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
@@ -129,13 +129,13 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	public interface Handler<T, E extends Enum, SC extends EnumMultipleCriterion<E>>
 			extends DomainCriterionFilter<SC> {
 		@Override
-		default DomainFilter getFilter(SC sc) {
+		default BindableFilter getFilter(SC sc) {
 			Set<E> values = sc.getValue();
 			if (values.isEmpty()) {
 				return null;
 			}
 			Predicate<T> pred = t -> test(t, values);
-			return new DomainFilter(pred).invertIf(sc
+			return new BindableFilter(pred).invertIf(sc
 					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
 		}
 

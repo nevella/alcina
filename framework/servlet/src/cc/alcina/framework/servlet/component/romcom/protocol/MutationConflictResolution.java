@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.behavior.EditAreaBehavior.RejectConflictingMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -20,7 +19,8 @@ import cc.alcina.framework.common.client.process.ContextObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
+import cc.alcina.framework.gwt.client.behavior.EditAreaBehavior.RejectConflictingMutation;
+import cc.alcina.framework.meta.cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_MutationConflictResolution;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.BeforeHandled;

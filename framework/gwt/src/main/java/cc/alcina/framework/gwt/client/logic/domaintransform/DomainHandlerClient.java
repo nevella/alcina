@@ -1,0 +1,139 @@
+package cc.alcina.framework.gwt.client.logic.domaintransform;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import com.google.gwt.core.client.Scheduler;
+
+import cc.alcina.framework.common.client.Preconditions;
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
+import cc.alcina.framework.common.client.domain.BindableQuery;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Query;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener.State;
+
+public class DomainHandlerClient implements DomainHandler {
+	@Override
+	public <V extends Entity> void async(EntityLocator locator, boolean create,
+			Consumer<V> resultConsumer) {
+		Class<? extends Entity> clazz = locator.getClazz();
+		if (create) {
+			V obj = (V) TransformManager.get().createProvisionalObject(clazz);
+			Scheduler.get().scheduleDeferred(() -> resultConsumer.accept(obj));
+			return;
+		} else {
+			Query<DomainHandlerClientRemoteResolver> query = Registry
+					.query(DomainHandlerClientRemoteResolver.class);
+			if (clazz != null) {
+				query.addKeys(clazz);
+			}
+			query.impl().resolve(locator, resultConsumer);
+		}
+	}
+
+	@Override
+	public <V extends Entity> V detachedVersion(V v) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <V extends Entity> V find(Class clazz, long id) {
+		return (V) TransformManager.get().getObjectStore().getObject(clazz, id,
+				0);
+	}
+
+	@Override
+	public <V extends Entity> V find(V v) {
+		V find = find(v.getClass(), v.getId());
+		return find == null ? v : find;
+	}
+
+	@Override
+	public <V extends Entity> boolean isDomainVersion(V v) {
+		return v.getId() != 0 || v.getLocalId() != 0;
+	}
+
+	@Override
+	public <V extends Entity> boolean isMvccObject(V v) {
+		return false;
+	}
+
+	@Override
+	public <B extends Bindable> BindableQuery<B> query(Class<B> clazz) {
+		return new QueryImpl<>(clazz);
+	}
+
+	@Override
+	public <V extends Entity> Stream<V> stream(Class<V> clazz) {
+		return values(clazz).stream();
+	}
+
+	private <V extends Entity> Collection<V> values(Class<V> clazz) {
+		return TransformManager.get().getCollection(clazz);
+	}
+
+	public interface DomainHandlerClientRemoteResolver {
+		<V extends Entity> void resolve(EntityLocator locator,
+				Consumer<V> resultConsumer);
+	}
+
+	static class QueryImpl<E extends Bindable> extends BindableQuery<E> {
+		public QueryImpl(Class<E> bindableClass) {
+			super(bindableClass);
+		}
+
+		@Override
+		public Stream<E> stream() {
+			Stream<E> stream = getSourceStream().isPresent()
+					? getSourceStream().get()
+					: TransformManager.get().getCollection(bindableClass)
+							.stream();
+			stream = applyFilters(stream);
+			stream = applyEndOfStreamOperators(stream);
+			return stream;
+		}
+
+		@Override
+		public List<E> list() {
+			return stream().toList();
+		}
+
+		@Override
+		public Topic<Stream<E>> topic() {
+			Preconditions.checkState(
+					Reflections.isAssignableFrom(Entity.class, bindableClass));
+			Topic<Stream<E>> topic = Topic.create().withRetainPublished(true);
+			ListenerReference listenerReference = CommitToStorageTransformListener
+					.topicStateChanged().add(state -> {
+						if (state == State.COMMITTING) {
+							TransformCollation collation = CommitToStorageTransformListener
+									.committingCollation();
+							if (collation.query((Class) bindableClass).stream()
+									.findFirst().isPresent()) {
+								topic.publish(stream());
+							}
+						}
+					});
+			topic.publish(stream());
+			topic.onUnbind(() -> listenerReference.remove());
+			return topic;
+		}
+
+		static class WrappingImpl extends ListenerReference.Wrapping {
+			public WrappingImpl(ListenerReference wrapped) {
+				super(wrapped);
+			}
+		}
+	}
+}

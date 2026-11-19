@@ -12,7 +12,7 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.domain.BindableQuery;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.MvccAccess;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
@@ -59,7 +59,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public static <KVP extends KeyValuePersistent> Optional<KVP>
 			byKey(String key, boolean populate) {
-		DomainQuery<? extends KeyValuePersistent> query = Domain
+		BindableQuery<? extends KeyValuePersistent> query = Domain
 				.query(implementation());
 		if (populate) {
 			query.contextTrue(

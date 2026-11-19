@@ -49,3 +49,4 @@ load job
 package cc.alcina.framework.servlet.process.observer.job;
 
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.process.observer.job.Feature_JobHistory;

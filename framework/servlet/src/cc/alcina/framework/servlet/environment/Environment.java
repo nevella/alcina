@@ -16,7 +16,7 @@ import javax.servlet.http.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.AttachIdException;
 import com.google.gwt.dom.client.Document;

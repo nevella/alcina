@@ -1,10 +1,10 @@
 package cc.alcina.framework.servlet.story.component.gallery;
 
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_ChoiceEditor;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.gwt.client.story.Waypoints.Wait1000;
+import cc.alcina.framework.meta.cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_ChoiceEditor;
 import cc.alcina.framework.servlet.story.component.gallery.Point_GalleryBrowser_ChoiceEditor_MutationConflict.SetDelayConfigurationOff;
 
 /*

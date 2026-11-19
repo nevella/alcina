@@ -6,12 +6,11 @@ import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.StandardSearchOperator;
-
 import java.util.Date;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _CreatedFromCriterion createdFromCriterion = new _CreatedFromCriterion();
     public static _CreatedToCriterion createdToCriterion = new _CreatedToCriterion();

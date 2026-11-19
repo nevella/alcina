@@ -12,13 +12,14 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
-import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.domain.BindableQuery;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.LocalDomain;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
@@ -313,7 +314,7 @@ public class LocalDomainStore {
 		}
 
 		@Override
-		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+		public <B extends Bindable> BindableQuery<B> query(Class<B> clazz) {
 			return new Query(clazz);
 		}
 
@@ -323,7 +324,7 @@ public class LocalDomainStore {
 			return domain.getCache().stream(clazz);
 		}
 
-		class Query<V extends Entity> extends DomainQuery<V> {
+		class Query<V extends Entity> extends BindableQuery<V> {
 			public Query(Class<V> entityClass) {
 				super(entityClass);
 			}
@@ -336,7 +337,7 @@ public class LocalDomainStore {
 			@Override
 			public Stream<V> stream() {
 				LocalDomainQueue.checkInDomainContext();
-				return query0(entityClass, this);
+				return query0(bindableClass, this);
 			}
 		}
 	}

@@ -1,0 +1,129 @@
+package cc.alcina.framework.gwt.client.objecttree.search.packs;
+
+import java.util.Arrays;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import cc.alcina.framework.common.client.domain.BindableFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
+import cc.alcina.framework.gwt.client.gwittir.validator.LongValidator;
+import cc.alcina.framework.common.client.search.LongCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
+import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
+
+public class BaseLongComparatorCriterionPack {
+	public interface BaseLongComparatorCriterionHandler<SC extends LongCriterion, T>
+			extends Function<T, Long>, DomainCriterionFilter<SC> {
+		@Override
+		public Long apply(T t);
+
+		@Override
+		default BindableFilter getFilter(SC sc) {
+			Long value = sc.getValue();
+			if (value == null) {
+				return null;
+			}
+			long p_value = value;
+			return new BindableFilter(new Predicate<T>() {
+				@Override
+				public boolean test(T o) {
+					Long d = apply(o);
+					if (d == null) {
+						return false;
+					}
+					long p_d = d;
+					switch (sc.getOperator()) {
+					case GREATER_THAN:
+						return p_d > p_value;
+					case LESS_THAN:
+						return p_d < p_value;
+					case EQUALS:
+						return p_d == p_value;
+					case DOES_NOT_EQUAL:
+						return p_d != p_value;
+					case GREATER_THAN_OR_EQUAL_TO:
+						return p_d >= p_value;
+					case LESS_THAN_OR_EQUAL_TO:
+						return p_d <= p_value;
+					default:
+						return false;
+					}
+				}
+			});
+		}
+	}
+
+	public static abstract class BaseLongComparatorCriterionSearchable<T extends LongCriterion>
+			extends FlatSearchable<T> {
+		public BaseLongComparatorCriterionSearchable(Class<T> clazz,
+				String objectName, String fieldName) {
+			super(clazz, objectName, fieldName,
+					Arrays.asList(StandardSearchOperator.EQUALS,
+							StandardSearchOperator.DOES_NOT_EQUAL,
+							StandardSearchOperator.GREATER_THAN,
+							StandardSearchOperator.LESS_THAN));
+		}
+
+		@Override
+		public AbstractBoundWidget createEditor() {
+			return new TextBox();
+		}
+
+		@Override
+		public String getCriterionPropertyName() {
+			return "value";
+		}
+
+		@Override
+		public Validator getValidator() {
+			return new LongValidator();
+		}
+
+		@Override
+		public boolean hasValue(LongCriterion sc) {
+			return sc.getValue() != null;
+		}
+	}
+
+	public interface BaseLongStreamCriterionHandler<T>
+			extends Function<T, Stream<Long>> {
+		@Override
+		public Stream<Long> apply(T t);
+
+		default BindableFilter getFilter0(LongCriterion sc) {
+			Long value = sc.getValue();
+			if (value == null) {
+				return null;
+			}
+			long p_value = value;
+			return new BindableFilter(new Predicate<T>() {
+				@Override
+				public boolean test(T o) {
+					Stream<Long> stream = apply(o);
+					if (stream == null) {
+						return false;
+					}
+					return stream.anyMatch(d -> {
+						long p_d = d;
+						switch (sc.getOperator()) {
+						case GREATER_THAN:
+							return p_d > p_value;
+						case LESS_THAN:
+							return p_d < p_value;
+						case EQUALS:
+							return p_d == p_value;
+						case DOES_NOT_EQUAL:
+							return p_d != p_value;
+						default:
+							return false;
+						}
+					});
+				}
+			});
+		}
+	}
+}

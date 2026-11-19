@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.story.component.serverconsole;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Waypoint;
-import cc.alcina.framework.servlet.component.console.Feature_ServerConsole;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.console.Feature_ServerConsole;
 import cc.alcina.framework.servlet.story.console.Story_Console;
 
 /**

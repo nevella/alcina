@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -178,7 +179,7 @@ public class Domain {
 		return Optional.ofNullable(by(clazz, propertyName, value));
 	}
 
-	public static <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+	public static <B extends Bindable> BindableQuery<B> query(Class<B> clazz) {
 		return handler.query(clazz);
 	}
 
@@ -256,7 +257,7 @@ public class Domain {
 					.collect(Collectors.toList());
 		}
 
-		<V extends Entity> DomainQuery<V> query(Class<V> clazz);
+		<B extends Bindable> BindableQuery<B> query(Class<B> clazz);
 
 		default <V extends Entity> V resolve(V v) {
 			return v;
@@ -315,7 +316,7 @@ public class Domain {
 		}
 
 		@Override
-		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+		public <B extends Bindable> BindableQuery<B> query(Class<B> clazz) {
 			throw new UnsupportedOperationException();
 		}
 

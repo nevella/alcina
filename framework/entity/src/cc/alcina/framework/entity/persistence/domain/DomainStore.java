@@ -41,13 +41,14 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.UmbrellaException;
 
+import cc.alcina.framework.common.client.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
 import cc.alcina.framework.common.client.domain.ComplexFilter.ComplexFilterContext;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -55,12 +56,12 @@ import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
-import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.BindableFilter;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.DomainLookup;
-import cc.alcina.framework.common.client.domain.DomainQuery;
-import cc.alcina.framework.common.client.domain.DomainQuery.Hint;
-import cc.alcina.framework.common.client.domain.DomainQuery.HintResolver;
+import cc.alcina.framework.common.client.domain.BindableQuery;
+import cc.alcina.framework.common.client.domain.BindableQuery.Hint;
+import cc.alcina.framework.common.client.domain.BindableQuery.HintResolver;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.domain.FilterCost;
@@ -146,6 +147,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueu
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.gwt.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
 import cc.alcina.framework.gwt.client.logic.domain.EntityDataObject.OneToManyMultipleSummary.SizeProvider;
+import cc.alcina.framework.gwt.client.logic.domaintransform.DomainHandlerClient;
 
 /**
  * <h3>Locking notes:</h3>
@@ -381,7 +383,8 @@ public class DomainStore implements IDomainStore {
 	}
 
 	private <E extends Entity> void applyFilter(final Class clazz,
-			DomainFilter filter, DomainFilter nextFilter, QueryToken<E> token) {
+			BindableFilter filter, BindableFilter nextFilter,
+			QueryToken<E> token) {
 		ComplexFilter complexFilter = getComplexFilterFor(clazz, filter,
 				nextFilter);
 		if (complexFilter != null) {
@@ -616,7 +619,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	private ComplexFilter getComplexFilterFor(Class clazz,
-			DomainFilter... filters) {
+			BindableFilter... filters) {
 		return domainDescriptor.complexFilters.stream()
 				.filter(cf -> cf.handles(clazz, filters)).findFirst()
 				.orElse(null);
@@ -765,15 +768,15 @@ public class DomainStore implements IDomainStore {
 		return loader.loadTransformRequest(id);
 	}
 
-	private DomainFilter maybeConvertEntityToIdFilter(Class clazz,
-			DomainFilter filter) {
+	private BindableFilter maybeConvertEntityToIdFilter(Class clazz,
+			BindableFilter filter) {
 		if (filter.getPropertyPath() != null
 				&& !filter.getPropertyPath().contains(".")
 				&& filter.getFilterOperator() == FilterOperator.EQ
 				&& filter.getPropertyValue() instanceof Entity) {
 			String idPath = filter.getPropertyPath() + ".id";
 			if (getValueProviderFor(clazz, idPath) != null) {
-				return new DomainFilter(idPath,
+				return new BindableFilter(idPath,
 						((Entity) filter.getPropertyValue()).getId());
 			} else {
 				return filter;
@@ -1089,8 +1092,8 @@ public class DomainStore implements IDomainStore {
 		for (; token.idx < filterSize; token.idx++) {
 			int idx = token.idx;
 			long start = System.nanoTime();
-			DomainFilter cacheFilter = query.getFilters().get(idx);
-			DomainFilter nextFilter = idx == filterSize - 1 ? null
+			BindableFilter cacheFilter = query.getFilters().get(idx);
+			BindableFilter nextFilter = idx == filterSize - 1 ? null
 					: query.getFilters().get(idx + 1);
 			applyFilter(clazz, cacheFilter, nextFilter, token);
 			if (debugMetrics) {
@@ -1223,7 +1226,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public FilterCost estimateFilterCost(int entityCount,
-				DomainFilter... filters) {
+				BindableFilter... filters) {
 			return FilterCost.lookupProjectionCost();
 		}
 
@@ -1333,7 +1336,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public FilterCost estimateFilterCost(int entityCount,
-				DomainFilter... filters) {
+				BindableFilter... filters) {
 			return FilterCost.lookupProjectionCost();
 		}
 
@@ -1395,18 +1398,18 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public void optimiseFilters() {
-			DomainQuery<E> query = token.query;
-			List<DomainFilter> filters = query.getFilters();
+			BindableQuery<E> query = token.query;
+			List<BindableFilter> filters = query.getFilters();
 			List<FilterCostTuple> filterCosts = new ArrayList<>();
-			Class<E> clazz = query.getEntityClass();
+			Class<E> clazz = query.getBindableClass();
 			int entityCount = cache.size(clazz);
 			for (int idx = 0; idx < filters.size();) {
-				DomainFilter filter = query.getFilters().get(idx);
-				DomainFilter nextFilter = idx == filters.size() - 1 ? null
+				BindableFilter filter = query.getFilters().get(idx);
+				BindableFilter nextFilter = idx == filters.size() - 1 ? null
 						: query.getFilters().get(idx + 1);
 				ComplexFilter complexFilter = getComplexFilterFor(clazz, filter,
 						nextFilter);
-				List<DomainFilter> consumedFilters = Collections
+				List<BindableFilter> consumedFilters = Collections
 						.singletonList(filter);
 				FilterCost filterCost = null;
 				if (complexFilter != null) {
@@ -1455,11 +1458,11 @@ public class DomainStore implements IDomainStore {
 		}
 
 		class FilterCostTuple {
-			List<DomainFilter> filters;
+			List<BindableFilter> filters;
 
 			FilterCost filterCost;
 
-			public FilterCostTuple(List<DomainFilter> filters,
+			public FilterCostTuple(List<BindableFilter> filters,
 					FilterCost filterCost) {
 				this.filters = filters;
 				this.filterCost = filterCost;
@@ -1626,9 +1629,12 @@ public class DomainStore implements IDomainStore {
 			return Domain.query(clazz).filter(propertyName, value).list();
 		}
 
-		@Override
-		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
-			return new DomainStoreQuery<>(clazz, DomainStore.this);
+		public <B extends Bindable> BindableQuery<B> query(Class<B> clazz) {
+			if (Entity.class.isAssignableFrom(clazz)) {
+				return new DomainStoreQuery<>((Class) clazz, DomainStore.this);
+			} else {
+				return new DomainHandlerClient().query(clazz);
+			}
 		}
 
 		@Override
@@ -1944,7 +1950,7 @@ public class DomainStore implements IDomainStore {
 			};
 
 			@Override
-			public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
+			public <B extends Bindable> BindableQuery<B> query(Class<B> clazz) {
 				return storeHandler(clazz).query(clazz);
 			}
 
@@ -2266,7 +2272,7 @@ public class DomainStore implements IDomainStore {
 
 		Stream<E> stream;
 
-		DomainQuery<E> query;
+		BindableQuery<E> query;
 
 		DomainQueryPlanner planner;
 
@@ -2305,12 +2311,12 @@ public class DomainStore implements IDomainStore {
 				} else {
 					stream = streamFromCacheValues();
 				}
-				if (LooseContext.has(DomainQuery.CONTEXT_DEBUG_CONSUMER)) {
-					DomainQuery.DebugConsumer consumer = LooseContext
-							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER);
+				if (LooseContext.has(BindableQuery.CONTEXT_DEBUG_CONSUMER)) {
+					BindableQuery.DebugConsumer consumer = LooseContext
+							.get(BindableQuery.CONTEXT_DEBUG_CONSUMER);
 					consumer.queryToken = this;
 					stream = stream.peek(LooseContext
-							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
+							.get(BindableQuery.CONTEXT_DEBUG_CONSUMER));
 				}
 			}
 			return stream;
@@ -2337,7 +2343,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		private Stream<E> streamFromCacheValues() {
-			return cache.stream(query.getEntityClass());
+			return cache.stream(query.getBindableClass());
 		}
 	}
 

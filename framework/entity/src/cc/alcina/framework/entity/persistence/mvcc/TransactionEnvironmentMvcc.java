@@ -3,7 +3,7 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.domain.TransactionId;

@@ -11,32 +11,46 @@ import cc.alcina.framework.common.client.util.DateUtil;
 public class SearchHandlerUtil {
 	public static boolean allowDate(DateCriterion sc, Date date,
 			boolean nullAsOk) {
+		return allowDate(sc, date, nullAsOk, null, true);
+	}
+
+	public static boolean allowDate(DateCriterion sc, Date date,
+			boolean nullAsOk, StandardSearchOperator op, boolean roundDate) {
 		if (date == null) {
 			return nullAsOk;
 		}
-		Date criterionDate = new Date(sc.getValue().getTime());
-		DateUtil.roundDate(criterionDate,
-				sc.getDirection() == Direction.DESCENDING);
+		Date criterionDate = sc.getValue();
+		if (roundDate) {
+			criterionDate = new Date(sc.getValue().getTime());
+			DateUtil.roundDate(criterionDate,
+					sc.getDirection() == Direction.DESCENDING);
+		}
 		boolean eq = criterionDate.equals(date);
 		boolean lt = date.before(criterionDate);
 		boolean gt = date.after(criterionDate);
-		StandardSearchOperator op = sc.rangeControlledByDirection()
-				? sc.getDirection() == Direction.ASCENDING
-						? StandardSearchOperator.GREATER_THAN
-						: StandardSearchOperator.LESS_THAN
-				: sc.getOperator();
-		if (eq) {
-			return true;
+		if (op == null) {
+			op = sc.rangeControlledByDirection()
+					? sc.getDirection() == Direction.ASCENDING
+							? StandardSearchOperator.GREATER_THAN
+							: StandardSearchOperator.LESS_THAN
+					: sc.getOperator();
 		}
 		switch (op) {
 		case EQUALS:
-			return false;
+			return eq;
+		case DOES_NOT_EQUAL:
+			return !eq;
 		case GREATER_THAN:
 			return gt;
 		case LESS_THAN:
 			return lt;
+		case GREATER_THAN_OR_EQUAL_TO:
+			return gt || eq;
+		case LESS_THAN_OR_EQUAL_TO:
+			return lt || eq;
+		default:
+			throw new UnsupportedOperationException();
 		}
-		return false;
 	}
 
 	public static <V> boolean matches(StandardSearchOperator operator,

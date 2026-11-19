@@ -38,7 +38,7 @@ public interface FilterCost {
 
 	public interface HasFilterCost {
 		public FilterCost estimateFilterCost(int entityCount,
-				DomainFilter... filters);
+				BindableFilter... filters);
 	}
 
 	public static class NaiveCost implements FilterCost {

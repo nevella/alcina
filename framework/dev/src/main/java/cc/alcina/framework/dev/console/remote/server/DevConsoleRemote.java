@@ -29,7 +29,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 
-import com.google.common.base.Preconditions;
+import cc.alcina.framework.common.client.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -40,7 +40,7 @@ import cc.alcina.framework.dev.console.DevConsole;
 import cc.alcina.framework.dev.console.DevConsole.DevConsoleStyle;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.gwtpeer.jscodeserver.JsCodeServerServlet;
+import cc.alcina.framework.gwtdevpeer.jscodeserver.JsCodeServerServlet;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentHandler;
 import cc.alcina.framework.servlet.component.test.server.AlcinaDevTestHandler;

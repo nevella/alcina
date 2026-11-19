@@ -13,11 +13,11 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 
-import cc.alcina.framework.gwtpeer.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.gwt.client.util.EventCollator;
-import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
+import cc.alcina.framework.gwtpeer.client.dom.DomNode;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 

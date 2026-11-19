@@ -1,0 +1,72 @@
+package cc.alcina.framework.gwt.client.objecttree.search.packs;
+
+import java.util.Arrays;
+import java.util.function.Predicate;
+
+import cc.alcina.framework.common.client.domain.BindableFilter;
+import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
+import cc.alcina.framework.gwt.client.gwittir.validator.LongValidator;
+import cc.alcina.framework.common.client.search.LongCriterion;
+import cc.alcina.framework.common.client.search.StandardSearchOperator;
+import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import cc.alcina.framework.gwt.shadow.com.totsp.gwittir.client.validator.Validator;
+
+public class BaseLongCriterionPack {
+	public interface BaseLongCriterionHandler<SC extends LongCriterion, T>
+			extends DomainCriterionFilter<SC> {
+		@Override
+		default BindableFilter getFilter(SC sc) {
+			Long value = sc.getValue();
+			if (value == null) {
+				return null;
+			}
+			return new BindableFilter(new Predicate<T>() {
+				@Override
+				public boolean test(T o) {
+					return BaseLongCriterionHandler.this.test(o, value);
+				}
+			}).invertIf(sc
+					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
+		}
+
+		public boolean test(T t, Long value);
+	}
+
+	public static abstract class BaseLongCriterionSearchable
+			extends SubLongCriterionSearchable<LongCriterion> {
+		public BaseLongCriterionSearchable(String objectName) {
+			super(LongCriterion.class, objectName);
+		}
+	}
+
+	public static abstract class SubLongCriterionSearchable<T extends LongCriterion>
+			extends FlatSearchable<T> {
+		public SubLongCriterionSearchable(Class<T> clazz, String objectName) {
+			super(clazz, "", objectName,
+					Arrays.asList(StandardSearchOperator.CONTAINS,
+							StandardSearchOperator.DOES_NOT_CONTAIN));
+		}
+
+		@Override
+		public AbstractBoundWidget createEditor() {
+			return new TextBox();
+		}
+
+		@Override
+		public String getCriterionPropertyName() {
+			return "value";
+		}
+
+		@Override
+		public Validator getValidator() {
+			return new LongValidator();
+		}
+
+		@Override
+		public boolean hasValue(LongCriterion sc) {
+			return sc.getValue() != null;
+		}
+	}
+}

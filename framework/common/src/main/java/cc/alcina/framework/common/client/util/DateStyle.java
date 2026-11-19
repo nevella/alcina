@@ -11,7 +11,8 @@ public enum DateStyle {
 	TIMESTAMP, NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, SHORT_MONTH_SLASH,
 	SHORT_MONTH_DOT, SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, MD_DATE_SLASH,
 	TIMESTAMP_NO_DAY, DATE_MONTH_NO_PAD_DAY, DATE_TIME_SHORT, DATESTAMP_HUMAN,
-	DATE_TIME_TZ, DATESTAMP_DASHED, DATE_MONTH_YEAR_TIME, SQL_DATE_YMD;
+	DATE_TIME_TZ, DATESTAMP_DASHED, DATE_MONTH_YEAR_TIME, SQL_DATE_YMD,
+	TIME_HHMM;
 
 	public String format(Date date) {
 		return formatDate(date, this);
@@ -216,6 +217,9 @@ public enum DateStyle {
 			return Ax.format("%s-%s-%s",
 					CommonUtils.padTwo(date.getYear() + 1900),
 					date.getMonth() + 1, CommonUtils.padTwo(date.getDate()));
+		case TIME_HHMM:
+			return Ax.format("%s%s", CommonUtils.padTwo(date.getHours()),
+					CommonUtils.padTwo(date.getMinutes()));
 		}
 		return date.toString();
 	}

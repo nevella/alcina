@@ -8,6 +8,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.meta.cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_AppSuggestorImplementation;
 
 @Feature.Ref(Feature_TraversalBrowser_AppSuggestorImplementation.Shortcuts.class)
 @AppSuggestorCommand(
